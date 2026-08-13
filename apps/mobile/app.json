@@ -1,0 +1,41 @@
+{
+  "expo": {
+    "name": "CARIBBEAN ONE",
+    "slug": "caribbean-one",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#090D16"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.caribbeanone.app",
+      "infoPlist": {
+        "NSCameraUsageDescription": "CARIBBEAN ONE requires camera access to record stories, reels, and host live streams.",
+        "NSMicrophoneUsageDescription": "CARIBBEAN ONE requires microphone access for live streams, podcasts, and audio messages."
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#090D16"
+      },
+      "package": "com.caribbeanone.app",
+      "permissions": [
+        "CAMERA",
+        "RECORD_AUDIO",
+        "ACCESS_FINE_LOCATION",
+        "USE_BIOMETRIC"
+      ]
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "scheme": "caribbeanone"
+  }
+}
