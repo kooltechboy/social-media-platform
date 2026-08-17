@@ -57,6 +57,6 @@ INSERT INTO public.countries (iso_code, iso2_code, name, official_name, classifi
 ('TCA', 'TC', 'Turks & Caicos Islands', 'Turks and Caicos Islands', 'territory', 'USD', 'en-TC', '+1-649', '🇹🇨'),
 ('BMU', 'BM', 'Bermuda', 'Bermuda', 'territory', 'BMD', 'en-BM', '+1-441', '🇧🇲'),
 ('AIA', 'AI', 'Anguilla', 'Anguilla', 'territory', 'XCD', 'en-AI', '+1-264', '🇦🇮'),
-('MTSR', 'MS', 'Montserrat', 'Montserrat', 'territory', 'XCD', 'en-MS', '+1-664', '🇲🇸'),
+('MSR', 'MS', 'Montserrat', 'Montserrat', 'territory', 'XCD', 'en-MS', '+1-664', '🇲🇸'),
 ('GLP', 'GP', 'Guadeloupe', 'Guadeloupe', 'territory', 'EUR', 'fr-GP', '+590', '🇬🇵'),
 ('MTQ', 'MQ', 'Martinique', 'Martinique', 'territory', 'EUR', 'fr-MQ', '+596', '🇲🇶');
