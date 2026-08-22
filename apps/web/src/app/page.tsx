@@ -1,6 +1,7 @@
 import React from 'react';
 import { Plus, Flame, Globe, Image as ImageIcon, Video as VideoIcon, MapPin, Sparkles } from 'lucide-react';
 import { createSupabaseServerClient, getCurrentUser } from '../lib/supabase/server';
+import PostComposer from '../components/post-composer';
 
 export const dynamic = 'force-dynamic';
 
@@ -32,7 +33,7 @@ export default async function HomePage() {
       .select('id, content, created_at, profiles(display_name, username)')
       .order('created_at', { ascending: false })
       .limit(25);
-    posts = (data ?? []) as FeedPost[];
+    posts = (data ?? []) as unknown as FeedPost[];
   }
 
   return (
@@ -88,32 +89,7 @@ export default async function HomePage() {
         {/* Minimalist Composer */}
         <section aria-label="Create Post" className="px-2">
           {user ? (
-            <div className="bg-slate-900/30 rounded-3xl p-5 border border-slate-800/40 focus-within:border-sky-500/40 focus-within:bg-slate-900/60 transition-all">
-              <div className="flex gap-4">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-sky-500 to-amber-500 p-0.5 flex-shrink-0">
-                  <div className="w-full h-full bg-slate-900 rounded-full flex items-center justify-center font-extrabold text-white text-sm">
-                    {user.displayName.slice(0, 2).toUpperCase()}
-                  </div>
-                </div>
-                <div className="flex-1 space-y-3">
-                  <textarea 
-                    placeholder="Share what's happening in your Caribbean world..." 
-                    className="w-full bg-transparent text-lg text-white placeholder-slate-500 focus:outline-none resize-none pt-2 font-medium"
-                    rows={1}
-                  />
-                  <div className="flex items-center justify-between pt-2 border-t border-slate-800/60">
-                    <div className="flex items-center gap-1 text-slate-400">
-                      <button className="p-2 hover:text-sky-400 hover:bg-sky-500/10 rounded-full transition-colors"><ImageIcon className="w-4 h-4" /></button>
-                      <button className="p-2 hover:text-emerald-400 hover:bg-emerald-500/10 rounded-full transition-colors"><VideoIcon className="w-4 h-4" /></button>
-                      <button className="p-2 hover:text-amber-400 hover:bg-amber-500/10 rounded-full transition-colors"><MapPin className="w-4 h-4" /></button>
-                    </div>
-                    <button className="bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold px-5 py-1.5 rounded-full text-sm transition-colors">
-                      Publish
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
+            <PostComposer displayName={user.displayName} />
           ) : (
             <div className="bg-gradient-to-r from-sky-900/20 to-emerald-900/20 rounded-3xl p-6 border border-sky-500/10 flex items-center justify-between gap-4">
               <div>

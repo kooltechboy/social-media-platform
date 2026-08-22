@@ -62,7 +62,7 @@ export async function askCaribbean(query: string): Promise<AskResponse> {
           .limit(20);
         if (horizonEnd) request = request.lte('starts_at', horizonEnd);
         const { data } = await request;
-        for (const event of (data ?? []) as Array<{
+        for (const event of (data ?? []) as unknown as Array<{
           id: string; title: string; description: string | null; starts_at: string;
           venue: string | null; cities: { name: string } | null;
         }>) {
@@ -115,7 +115,7 @@ export async function askCaribbean(query: string): Promise<AskResponse> {
           .or(buildOrPattern(keywords, 'content'))
           .order('created_at', { ascending: false })
           .limit(10);
-        for (const post of (data ?? []) as Array<{ id: string; content: string | null; profiles: { display_name: string } | null }>) {
+        for (const post of (data ?? []) as unknown as Array<{ id: string; content: string | null; profiles: { display_name: string } | null }>) {
           results.push({
             entityType: 'posts',
             entityId: post.id,

@@ -64,7 +64,7 @@ export default async function CommunitiesPage() {
       .select('id, name, slug, description, join_policy, member_count, country_iso, created_by, countries(name, flag_emoji)')
       .order('member_count', { ascending: false })
       .limit(30);
-    communities = (data ?? []) as Community[];
+    communities = (data ?? []) as unknown as Community[];
 
     if (user && communities.length > 0) {
       const { data: memberships } = await supabase

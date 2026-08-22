@@ -111,7 +111,7 @@ export async function askCaribbean(query: string): Promise<AskResponse> {
           .ilike('content', like)
           .order('created_at', { ascending: false })
           .limit(5);
-        for (const post of data ?? []) {
+        for (const post of (data ?? []) as unknown as Array<{ id: string; content: string | null; profiles: { display_name: string } | null }>) {
           results.push({
             entityType: 'posts',
             entityId: post.id,

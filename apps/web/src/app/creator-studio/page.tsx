@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation';
 import { Radio, Video, Mic, DollarSign, Users, TrendingUp, BarChart2, Plus } from 'lucide-react';
 import Link from 'next/link';
 import { createSupabaseServerClient, getCurrentUser } from '../../lib/supabase/server';
+import { PayoutRequestButton } from '../../components/payout-request-button';
 import { applyFees, evaluatePayout, isSubscriptionActive } from '@caribbean/creator';
 import { Money } from '@caribbean/spotpay';
 import BecomeCreatorClientButton from '../../components/become-creator-button';
@@ -104,10 +105,10 @@ export default async function CreatorStudioPage() {
 
   // Compute active subscription count and monthly revenue
   const activeSubscriptions = subscriptions.filter((s) =>
-    isSubscriptionActive({ status: s.status as 'active' | 'cancelled' | 'expired' | 'grace', current_period_end: s.current_period_end }),
+    isSubscriptionActive(s.status, s.current_period_end),
   );
   const grossMonthlyMinor = activeSubscriptions.reduce((sum, s) => sum + s.price_minor, 0);
-  const feeResult = grossMonthlyMinor > 0 ? applyFees({ grossAmountMinor: grossMonthlyMinor, currency: 'USD', platformFeeBps: 1500, paymentProviderFeeBps: 290 }) : null;
+  const feeResult = grossMonthlyMinor > 0 ? applyFees(grossMonthlyMinor) : null;
 
   // Compute creator pending balance
   let pendingBalanceMinor = 0;
@@ -126,10 +127,11 @@ export default async function CreatorStudioPage() {
   // Payout eligibility
   const payoutEligibility = evaluatePayout({
     kycStatus: account.kyc_status as 'unverified' | 'pending' | 'verified' | 'rejected',
-    isFraudReview: false,
-    reserveHoldMinor: 0,
+    fraudHold: false,
+    chargebackReserveMinor: 0,
+    availableBalanceMinor: Math.abs(pendingBalanceMinor),
     pendingBalanceMinor: Math.abs(pendingBalanceMinor),
-    thresholdMinor: account.payout_threshold_minor,
+    payoutThresholdMinor: account.payout_threshold_minor,
   });
 
   const totalVideoViews = videos.reduce((sum, v) => sum + (v.view_count ?? 0), 0);
@@ -182,7 +184,7 @@ export default async function CreatorStudioPage() {
             {new Money(Math.abs(pendingBalanceMinor), currency).format()}
           </div>
           <span className={`text-[11px] font-semibold ${payoutEligibility.eligible ? 'text-emerald-400' : 'text-amber-400'}`}>
-            {payoutEligibility.eligible ? 'Eligible for payout' : payoutEligibility.reason}
+            {payoutEligibility.eligible ? 'Eligible for payout' : (payoutEligibility.reasons[0] ?? 'Pending review')}
           </span>
         </div>
 
@@ -212,7 +214,7 @@ export default async function CreatorStudioPage() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs">
             <div>
               <p className="text-slate-400 mb-1">Gross</p>
-              <p className="text-lg font-black text-white">{new Money(feeResult.grossAmountMinor, 'USD').format()}</p>
+              <p className="text-lg font-black text-white">{new Money(feeResult.grossMinor, 'USD').format()}</p>
             </div>
             <div>
               <p className="text-slate-400 mb-1">Platform Fee (15%)</p>
@@ -220,12 +222,20 @@ export default async function CreatorStudioPage() {
             </div>
             <div>
               <p className="text-slate-400 mb-1">Processing Fee</p>
-              <p className="text-lg font-black text-rose-400">−{new Money(feeResult.paymentProviderFeeMinor, 'USD').format()}</p>
+              <p className="text-lg font-black text-rose-400">−{new Money(feeResult.processingFeeMinor, 'USD').format()}</p>
             </div>
             <div>
               <p className="text-slate-400 mb-1">Net to Creator</p>
               <p className="text-lg font-black text-emerald-400">{new Money(feeResult.netToCreatorMinor, 'USD').format()}</p>
             </div>
+          </div>
+
+          <div className="mt-5 pt-4 border-t border-slate-800">
+            <PayoutRequestButton
+              eligible={payoutEligibility.eligible}
+              ineligibleReason={payoutEligibility.reasons[0]}
+              netMinor={feeResult.netToCreatorMinor}
+            />
           </div>
         </div>
       )}

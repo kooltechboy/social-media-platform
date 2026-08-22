@@ -1,4 +1,5 @@
 import React from 'react';
+import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { Users, Search, BadgeCheck, ShieldAlert } from 'lucide-react';
 import { createAdminSupabaseClient, getAdminSession } from '../../lib/supabase/server';
@@ -51,7 +52,7 @@ export default async function AdminUsersPage({
           <Users className="w-6 h-6 text-sky-400" /> Users
           <span className="text-sm font-normal text-slate-500 ml-2">{(count ?? 0).toLocaleString()} total</span>
         </h1>
-        <a href="/" className="text-xs text-slate-400 hover:text-white">← Dashboard</a>
+        <Link href="/" className="text-xs text-slate-400 hover:text-white">← Dashboard</Link>
       </div>
 
       <form method="GET" className="flex gap-2">

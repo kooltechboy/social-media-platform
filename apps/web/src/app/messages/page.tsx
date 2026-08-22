@@ -42,7 +42,7 @@ export default async function MessagesPage({ searchParams }: { searchParams: Pro
     .is('left_at', null)
     .order('last_message_at', { ascending: false, foreignTable: 'conversations' });
 
-  const rows = (membershipsResult.data ?? []) as Array<{
+  const rows = (membershipsResult.data ?? []) as unknown as Array<{
     conversation_id: string;
     conversations: { id: string; kind: 'direct' | 'group'; title: string | null; last_message_at: string | null } | null;
   }>;
@@ -69,7 +69,7 @@ export default async function MessagesPage({ searchParams }: { searchParams: Pro
     ]);
 
     membersByConversation = new Map();
-    for (const member of (membersResult.data ?? []) as Array<{
+    for (const member of (membersResult.data ?? []) as unknown as Array<{
       conversation_id: string;
       profile_id: string;
       profiles: { display_name: string } | null;

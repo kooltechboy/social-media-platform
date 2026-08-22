@@ -120,3 +120,38 @@ describe('Refunds (partial refund accounting)', () => {
     expect(() => computeRefundBreakdown(10000, [3000], 7001)).toThrow('exceeds refundable balance');
   });
 });
+
+describe('PSP Adapters (Stripe, PayPal, SpotPay Wallet)', () => {
+  it('charges and refunds via StripeAdapter sandbox fallback', async () => {
+    const { StripeAdapter } = await import('../../packages/spotpay/src/index');
+    const adapter = new StripeAdapter();
+    const charge = await adapter.charge({
+      amountMinor: 2500,
+      currency: 'USD',
+      idempotencyKey: 'test_charge_123',
+    });
+    expect(charge.success).toBe(true);
+    expect(charge.providerTransactionId).toContain('ch_stripe_sandbox_test_charge_123');
+
+    const refund = await adapter.refund({
+      providerTransactionId: charge.providerTransactionId,
+      amountMinor: 2500,
+      currency: 'USD',
+      idempotencyKey: 'test_refund_123',
+    });
+    expect(refund.success).toBe(true);
+    expect(refund.providerRefundId).toContain('re_stripe_sandbox_test_refund_123');
+  });
+
+  it('charges via SpotPayWalletAdapter internal ledger', async () => {
+    const { SpotPayWalletAdapter } = await import('../../packages/spotpay/src/index');
+    const wallet = new SpotPayWalletAdapter();
+    const charge = await wallet.charge({
+      amountMinor: 1500,
+      currency: 'USD',
+      idempotencyKey: 'test_wallet_123',
+    });
+    expect(charge.success).toBe(true);
+    expect(charge.providerName).toBe('spotpay');
+  });
+});

@@ -1,4 +1,5 @@
 import React from 'react';
+import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { ShieldCheck, AlertTriangle, Eye, Flag } from 'lucide-react';
 import { createAdminSupabaseClient, getAdminSession } from '../../lib/supabase/server';
@@ -65,7 +66,7 @@ export default async function AdminTrustSafetyPage({
         <h1 className="text-xl font-extrabold text-white flex items-center gap-2">
           <ShieldCheck className="w-6 h-6 text-sky-400" /> Trust &amp; Safety
         </h1>
-        <a href="/" className="text-xs text-slate-400 hover:text-white">← Dashboard</a>
+        <Link href="/" className="text-xs text-slate-400 hover:text-white">← Dashboard</Link>
       </div>
 
       {/* Summary stats */}

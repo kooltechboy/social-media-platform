@@ -1,6 +1,7 @@
 import React from 'react';
+import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { Wallet, ArrowUpRight, ArrowDownLeft, ShieldCheck } from 'lucide-react';
+import { Wallet, DollarSign, ArrowUpRight, ArrowDownLeft, ShieldCheck, AlertCircle } from 'lucide-react';
 import { createAdminSupabaseClient, getAdminSession } from '../../lib/supabase/server';
 
 export const dynamic = 'force-dynamic';
@@ -62,7 +63,7 @@ export default async function AdminPaymentsPage({
         <h1 className="text-xl font-extrabold text-white flex items-center gap-2">
           <Wallet className="w-6 h-6 text-emerald-400" /> Payments
         </h1>
-        <a href="/" className="text-xs text-slate-400 hover:text-white">← Dashboard</a>
+        <Link href="/" className="text-xs text-slate-400 hover:text-white">← Dashboard</Link>
       </div>
 
       {/* Revenue summary */}

@@ -55,7 +55,7 @@ export async function followPodcastAction(podcastId: string): Promise<PodcastAct
 
   if (error) return { error: error.message, success: null };
 
-  await supabase.rpc('increment_podcast_followers', { p_podcast_id: podcastId }).maybeSingle().catch(() => null);
+  await supabase.rpc('increment_podcast_followers', { p_podcast_id: podcastId });
 
   revalidatePath('/podcasts');
   return { error: null, success: 'Following.' };

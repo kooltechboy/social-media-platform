@@ -1,4 +1,5 @@
 import React from 'react';
+import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { Flag, Search } from 'lucide-react';
 import { createAdminSupabaseClient, getAdminSession } from '../../lib/supabase/server';
@@ -50,7 +51,7 @@ export default async function AdminReportsPage({
           <Flag className="w-6 h-6 text-amber-400" /> Reports
           <span className="text-sm font-normal text-slate-500 ml-2">{(count ?? 0).toLocaleString()} {status}</span>
         </h1>
-        <a href="/" className="text-xs text-slate-400 hover:text-white">← Dashboard</a>
+        <Link href="/" className="text-xs text-slate-400 hover:text-white">← Dashboard</Link>
       </div>
 
       {/* Status tabs */}

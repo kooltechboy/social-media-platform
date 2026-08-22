@@ -3,6 +3,7 @@ import { Tv, Flame, Gift, MessageSquare, Send, Plus } from 'lucide-react';
 import Link from 'next/link';
 import { createSupabaseServerClient, getCurrentUser } from '../../lib/supabase/server';
 import LiveChatClient from '../../components/live-chat-client';
+import { LiveGiftModal } from '../../components/live-gift-modal';
 
 export const dynamic = 'force-dynamic';
 
@@ -131,13 +132,7 @@ export default async function LivePage() {
                   </p>
                 </div>
               </div>
-              <button
-                disabled
-                title="Gift sending requires SpotPay integration (in progress)"
-                className="bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-4 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 opacity-60 cursor-not-allowed"
-              >
-                <Gift className="w-4 h-4" /> Send Gift
-              </button>
+              <LiveGiftModal livestreamId={featuredStream.id} isAuthenticated={!!user} />
             </div>
           </div>
 

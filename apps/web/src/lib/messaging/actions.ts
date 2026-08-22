@@ -1,6 +1,6 @@
 'use server';
 
-import { revalidatePath } from 'next/navigation';
+import { revalidatePath } from 'next/cache';
 import { createSupabaseServerClient, getCurrentUser } from '../supabase/server';
 
 export interface MessageActionState {

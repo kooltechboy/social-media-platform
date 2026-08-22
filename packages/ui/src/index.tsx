@@ -104,3 +104,70 @@ export const Avatar: React.FC<AvatarProps> = ({ src, fallback, size = 'md' }: Av
     </div>
   );
 };
+
+export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
+  label?: string;
+  error?: string;
+}
+
+export const Input: React.FC<InputProps> = ({ label, error, className = '', ...props }: InputProps) => {
+  return (
+    <div className="space-y-1.5 w-full">
+      {label && <label className="block text-xs font-bold text-slate-300">{label}</label>}
+      <input
+        className={`w-full bg-slate-900/80 border ${error ? 'border-rose-500' : 'border-slate-800'} rounded-xl px-4 py-2.5 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-sky-500 transition-colors ${className}`}
+        {...props}
+      />
+      {error && <p className="text-xs text-rose-400 font-medium">{error}</p>}
+    </div>
+  );
+};
+
+export interface TextareaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
+  label?: string;
+  error?: string;
+}
+
+export const Textarea: React.FC<TextareaProps> = ({ label, error, className = '', ...props }: TextareaProps) => {
+  return (
+    <div className="space-y-1.5 w-full">
+      {label && <label className="block text-xs font-bold text-slate-300">{label}</label>}
+      <textarea
+        className={`w-full bg-slate-900/80 border ${error ? 'border-rose-500' : 'border-slate-800'} rounded-xl px-4 py-2.5 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-sky-500 transition-colors resize-none ${className}`}
+        {...props}
+      />
+      {error && <p className="text-xs text-rose-400 font-medium">{error}</p>}
+    </div>
+  );
+};
+
+export interface SkeletonProps {
+  className?: string;
+}
+
+export const Skeleton: React.FC<SkeletonProps> = ({ className = '' }: SkeletonProps) => {
+  return <div className={`animate-pulse bg-slate-800/60 rounded-xl ${className}`} />;
+};
+
+export interface EmptyStateProps {
+  icon?: React.ReactNode;
+  title: string;
+  description: string;
+  action?: React.ReactNode;
+}
+
+export const EmptyState: React.FC<EmptyStateProps> = ({
+  icon,
+  title,
+  description,
+  action,
+}: EmptyStateProps) => {
+  return (
+    <div className="bg-slate-900/40 border border-dashed border-slate-800 rounded-3xl p-10 text-center space-y-3">
+      {icon && <div className="mx-auto text-slate-600 flex justify-center">{icon}</div>}
+      <h3 className="text-base font-bold text-slate-200">{title}</h3>
+      <p className="text-xs text-slate-400 max-w-sm mx-auto leading-relaxed">{description}</p>
+      {action && <div className="pt-2">{action}</div>}
+    </div>
+  );
+};

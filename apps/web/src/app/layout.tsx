@@ -16,8 +16,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className="dark">
-      <body className="bg-[#090D16] text-slate-100 antialiased min-h-screen">
+    <html lang="en" className="dark" suppressHydrationWarning>
+      <body className="bg-[#090D16] text-slate-100 antialiased min-h-screen" suppressHydrationWarning>
         <AppHeader />
         <div className="flex-1 max-w-7xl w-full mx-auto grid grid-cols-1 md:grid-cols-4 gap-6 p-4 pb-20 md:pb-4">
           <AppSidebar />

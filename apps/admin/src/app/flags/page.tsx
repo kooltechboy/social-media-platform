@@ -1,4 +1,5 @@
 import React from 'react';
+import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { ToggleLeft, RefreshCw } from 'lucide-react';
 import { createAdminSupabaseClient, getAdminSession } from '../../lib/supabase/server';
@@ -33,7 +34,7 @@ export default async function AdminFlagsPage() {
           <ToggleLeft className="w-6 h-6 text-amber-400" /> Feature Flags
           <span className="text-sm font-normal text-slate-500 ml-2">{flags.length} total</span>
         </h1>
-        <a href="/" className="text-xs text-slate-400 hover:text-white">← Dashboard</a>
+        <Link href="/" className="text-xs text-slate-400 hover:text-white">← Dashboard</Link>
       </div>
 
       <p className="text-xs text-slate-400">

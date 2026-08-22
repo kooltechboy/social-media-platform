@@ -1,4 +1,5 @@
 import React from 'react';
+import Link from 'next/link';
 import { Search, Wallet, Bell, MessageSquare } from 'lucide-react';
 import SessionWidget from './session-widget';
 
@@ -9,7 +10,7 @@ export default function AppHeader() {
       role="banner"
     >
       <div className="flex items-center gap-6">
-        <a
+        <Link
           href="/"
           className="flex items-center gap-2 text-xl font-extrabold tracking-tight text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0F172A] rounded-md"
           aria-label="CARIBBEAN ONE — Home"
@@ -20,7 +21,7 @@ export default function AppHeader() {
           <span className="text-xs font-semibold px-2 py-0.5 rounded bg-sky-950 text-sky-400 border border-sky-800/50">
             ECOSYSTEM
           </span>
-        </a>
+        </Link>
 
         <form
           action="/search"

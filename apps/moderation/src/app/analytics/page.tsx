@@ -1,4 +1,5 @@
 import React from 'react';
+import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { BarChart3, TrendingUp, Clock, CheckCircle } from 'lucide-react';
 import { createModerationSupabaseClient, getModeratorSession } from '../../lib/supabase/server';
@@ -90,7 +91,7 @@ export default async function ModerationAnalyticsPage() {
         <h1 className="text-xl font-extrabold text-white flex items-center gap-2">
           <BarChart3 className="w-6 h-6 text-emerald-400" /> Moderation Analytics
         </h1>
-        <a href="/" className="text-xs text-slate-400 hover:text-white">← Queue</a>
+        <Link href="/" className="text-xs text-slate-400 hover:text-white">← Queue</Link>
       </div>
 
       {/* Top stats */}

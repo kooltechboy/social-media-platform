@@ -38,8 +38,14 @@ export async function createOrderAction(
   if (product.inventory_count !== null && product.inventory_count < quantity)
     return { error: 'Insufficient inventory.', success: null };
 
-  const items = [{ unitPrice: product.price_minor, quantity }];
-  const totals = computeOrderTotals(items, 800);
+  const items = [{
+    productId: product.id,
+    sellerId: product.seller_id,
+    unitPriceMinor: product.price_minor,
+    quantity,
+    productKind: (product.product_kind as 'physical' | 'digital' | 'service') || 'physical',
+  }];
+  const totals = computeOrderTotals(items);
 
   const idempotencyKey = `order_${user.id}_${productId}_${Date.now()}`;
 
@@ -48,9 +54,9 @@ export async function createOrderAction(
     .insert({
       buyer_id: user.id,
       status: 'pending_payment',
-      subtotal_minor: totals.subtotal,
-      platform_fee_minor: totals.platformFee,
-      total_minor: totals.total,
+      subtotal_minor: totals.subtotalMinor,
+      platform_fee_minor: totals.platformFeeMinor,
+      total_minor: totals.totalMinor,
       currency: product.currency,
       idempotency_key: idempotencyKey,
     })

@@ -36,7 +36,7 @@ export async function GET(
     .order('published_at', { ascending: false })
     .limit(100);
 
-  const pod = podcast as {
+  const pod = podcast as unknown as {
     id: string;
     title: string;
     slug: string;
@@ -61,29 +61,24 @@ export async function GET(
 
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://caribbeanone.app';
   const podcastUrl = `${baseUrl}/podcasts/${pod.slug}`;
+  const feedUrl = `${baseUrl}/api/v1/podcasts/${pod.id}/rss`;
 
-  const rssXml = buildRssFeed(
-    {
-      title: pod.title,
-      description: pod.description ?? '',
-      link: podcastUrl,
-      language: pod.language ?? 'en',
-      author: (pod.profiles as { display_name: string } | null)?.display_name ?? 'Caribbean One Creator',
-      imageUrl: pod.cover_path ? `${baseUrl}/${pod.cover_path}` : undefined,
-    },
-    eps.map((ep) => ({
+  const rssXml = buildRssFeed({
+    podcastTitle: pod.title,
+    podcastDescription: pod.description ?? '',
+    siteUrl: podcastUrl,
+    feedUrl: feedUrl,
+    language: pod.language ?? 'en',
+    coverUrl: pod.cover_path ? `${baseUrl}/${pod.cover_path}` : `${baseUrl}/default-cover.jpg`,
+    episodes: eps.map((ep) => ({
       guid: ep.id,
       title: ep.title,
+      description: ep.show_notes ?? '',
       audioUrl: `${baseUrl}/${ep.audio_path}`,
       durationSeconds: ep.duration_seconds,
-      description: ep.show_notes ?? '',
-      transcript: ep.transcript ?? undefined,
-      chapters: Array.isArray(ep.chapters) ? ep.chapters : [],
       publishedAt: ep.published_at,
-      seasonNumber: ep.season_number,
-      episodeNumber: ep.episode_number,
     })),
-  );
+  });
 
   return new NextResponse(rssXml, {
     status: 200,

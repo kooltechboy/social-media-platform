@@ -2,6 +2,8 @@ import React from 'react';
 import { Compass, Search, Globe, MapPin } from 'lucide-react';
 import { createServerSupabase, flagEmoji } from '../../lib/supabase';
 
+import { ExploreSearch } from '../../components/explore-search';
+
 export const revalidate = 300;
 
 interface CountryRow {
@@ -71,13 +73,8 @@ export default async function ExplorePage() {
           </p>
         </div>
 
-        <div className="relative w-full md:w-96">
-          <Search className="absolute left-3.5 top-3 w-4 h-4 text-slate-400" />
-          <input
-            type="text"
-            placeholder="Search islands, creators, food, or cities..."
-            className="w-full bg-slate-900 border border-slate-700/70 rounded-full pl-10 pr-4 py-2 text-sm text-slate-200 focus:outline-none focus:border-sky-500 transition-colors"
-          />
+        <div className="w-full md:w-1/2">
+          <ExploreSearch />
         </div>
       </div>
 

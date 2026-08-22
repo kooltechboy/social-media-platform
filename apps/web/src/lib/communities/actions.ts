@@ -44,16 +44,13 @@ export async function joinCommunityAction(
       return { error: 'You are not permitted to join this community.', success: null };
   }
 
-  const policy = new CommunityPolicy({
-    id: community.id,
-    join_policy: community.join_policy as 'public' | 'private' | 'invite_only',
-    member_count: community.member_count,
-  });
-
-  const memberStatus = existing?.membership_status as 'active' | 'banned' | 'pending' | undefined;
-  const canJoin = policy.canJoin(memberStatus);
-  if (!canJoin) {
-    return { error: 'This community requires an invitation to join.', success: null };
+  const policy = new CommunityPolicy();
+  const decision = policy.canJoin(
+    community.join_policy as 'public' | 'private' | 'invite_only',
+    { hasInvite: false },
+  );
+  if (!decision.allowed) {
+    return { error: decision.reason ?? 'This community requires an invitation to join.', success: null };
   }
 
   const membershipStatus =
@@ -148,7 +145,8 @@ export async function createCommunityAction(
   const supabase = await createSupabaseServerClient();
   if (!supabase) return { error: 'Service unavailable.', success: null };
 
-  const slug = CommunityPolicy.slugify(name);
+  const policy = new CommunityPolicy();
+  const slug = policy.slugify(name);
 
   const { error: insertErr } = await supabase.from('communities').insert({
     name,
