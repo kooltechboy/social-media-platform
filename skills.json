@@ -1,0 +1,42 @@
+{
+  "skills": [
+    {
+      "name": "ai-sdk",
+      "source": "vercel/ai",
+      "version": "latest",
+      "purpose": "model providers, structured output, RAG, streaming for Caribbean AI services",
+      "owner": "ai",
+      "description": "Vercel AI SDK for OpenRouter integration and multi-model provider abstraction",
+      "configured": true,
+      "status": "active"
+    }
+  ],
+  "integrations": {
+    "openrouter": {
+      "apiUrl": "https://openrouter.ai/api/v1/chat/completions",
+      "provider": "openai",
+      "defaultModel": "meta-llama/llama-3.3-70b-instruct:free",
+      "configured": true,
+      "status": "ready"
+    },
+    "caribbean_languages": {
+      "supported": ["en", "es", "fr", "ht", "nl", "pap"],
+      "translation_engine": "enabled",
+      "status": "ready"
+    },
+    "risk_assessment": {
+      "enabled": true,
+      "models": ["openai/gpt-4o-mini", "anthropic/claude-3-5-sonnet"],
+      "status": "ready"
+    }
+  },
+  "configuration": {
+    "defaultModel": "meta-llama/llama-3.3-70b-instruct:free",
+    "maxRetries": 3,
+    "timeout": 30000,
+    "rateLimit": {
+      "requests": 100,
+      "windowMs": 60000
+    }
+  }
+}

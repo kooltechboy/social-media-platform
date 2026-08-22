@@ -69,3 +69,84 @@ Text: "${text}"`;
     return data.choices?.[0]?.message?.content || "";
   }
 }
+
+// ---------------------------------------------------------------------------
+// Ask Caribbean: natural-language query planning over the Caribbean Graph.
+// Answers are retrieval-grounded with citations; inference is never presented as fact.
+
+export type AskCaribbeanEntity =
+  | 'events' | 'businesses' | 'communities' | 'creators' | 'profiles'
+  | 'posts' | 'podcasts' | 'videos' | 'products' | 'locations';
+
+export type CaribAILocale = 'en' | 'es' | 'fr' | 'ht' | 'nl' | 'pap';
+
+export interface AskQueryPlan {
+  term: string;
+  entities: AskCaribbeanEntity[];
+  locationHints: string[];
+  locale: CaribAILocale;
+  timeWindowDays: number | null;
+}
+
+const LOCATION_HINTS = [
+  'miami', 'new york', 'toronto', 'montreal', 'london', 'amsterdam',
+  'kingston', 'santo domingo', 'port of spain', 'bridgetown', 'nassau', 'port-au-prince',
+  'montego bay', 'brooklyn', 'caribbean',
+];
+
+const LOCALE_MARKERS: Record<CaribAILocale, RegExp> = {
+  en: /\b(in english)\b/i,
+  es: /\b(en español)\b/i,
+  fr: /\b(en français)\b/i,
+  ht: /\b(an kreyòl)\b/i,
+  nl: /\b(in het nederlands)\b/i,
+  pap: /\b na papiamento\b/i,
+};
+
+export class AskCaribbeanPlanner {
+  public plan(term: string, defaultLocale: CaribAILocale = 'en'): AskQueryPlan {
+    const normalized = term.trim();
+    const entities = new Set<AskCaribbeanEntity>(['profiles', 'posts']);
+    const locationHints: string[] = [];
+
+    for (const hint of LOCATION_HINTS) {
+      if (normalized.toLowerCase().includes(hint)) locationHints.push(hint);
+    }
+    if (/\b(restaurants?|food|eat|eating|menu|kitchen|café|cafe)\b/i.test(normalized)) {
+      entities.add('businesses');
+      entities.add('products');
+    }
+    if (/\b(events?|parties|party|festivals?|carnival|concerts?|fete|weekend|tonight)\b/i.test(normalized)) entities.add('events');
+    if (/\b(creators?|artists?|musicians?|djs?|influencers?)\b/i.test(normalized)) entities.add('creators');
+    if (/\b(podcasts?|episodes?|listen|shows?)\b/i.test(normalized)) entities.add('podcasts');
+    if (/\b(videos?|watch|reels?|streams?)\b/i.test(normalized)) entities.add('videos');
+    if (/\b(communities?|groups?|join|members?)\b/i.test(normalized)) entities.add('communities');
+    if (/\b(buy|shop|price|prices|order|products?)\b/i.test(normalized)) entities.add('products');
+
+    let locale = defaultLocale;
+    for (const [candidate, marker] of Object.entries(LOCALE_MARKERS) as Array<[CaribAILocale, RegExp]>) {
+      if (marker.test(normalized)) locale = candidate;
+    }
+
+    const weekendMatch = /\b(this|next)?\s*(weekend|week)\b/i.test(normalized);
+    const todayMatch = /\b(today|tonight)\b/i.test(normalized);
+    const timeWindowDays = todayMatch ? 1 : weekendMatch ? 7 : null;
+
+    return {
+      term: normalized,
+      entities: [...entities],
+      locationHints,
+      locale,
+      timeWindowDays,
+    };
+  }
+}
+
+export interface GroundedAnswer {
+  answer: string;
+  citations: Array<{ entityType: AskCaribbeanEntity; entityId: string; title: string }>;
+}
+
+export function isGrounded(answer: GroundedAnswer): boolean {
+  return answer.citations.length > 0;
+}

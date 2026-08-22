@@ -23,7 +23,21 @@
       "@caribbean/spotpay": ["./packages/spotpay/src"],
       "@caribbean/ai": ["./packages/ai/src"],
       "@caribbean/trust-safety": ["./packages/trust-safety/src"],
-      "@caribbean/localization": ["./packages/localization/src"]
+      "@caribbean/localization": ["./packages/localization/src"],
+      "@caribbean/social": ["./packages/social/src"],
+      "@caribbean/media": ["./packages/media/src"],
+      "@caribbean/messaging": ["./packages/messaging/src"],
+      "@caribbean/notifications": ["./packages/notifications/src"],
+      "@caribbean/analytics": ["./packages/analytics/src"],
+      "@caribbean/search": ["./packages/search/src"],
+      "@caribbean/communities": ["./packages/communities/src"],
+      "@caribbean/creator": ["./packages/creator/src"],
+      "@caribbean/live": ["./packages/live/src"],
+      "@caribbean/podcasts": ["./packages/podcasts/src"],
+      "@caribbean/recommendations": ["./packages/recommendations/src"],
+      "@caribbean/advertising": ["./packages/advertising/src"],
+      "@caribbean/business": ["./packages/business/src"],
+      "@caribbean/marketplace": ["./packages/marketplace/src"]
     }
   },
   "exclude": ["node_modules", "dist", ".next"]

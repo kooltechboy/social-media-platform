@@ -51,12 +51,476 @@ export class SpotPayOrchestrator {
    */
   public resolvePaymentRoute(req: PaymentCapabilityRequest): string[] {
     // 1. Digital Content on Mobile must route to Native Store Billing
-    if ((req.platform === 'ios' || req.platform === 'android') && 
+    if ((req.platform === 'ios' || req.platform === 'android') &&
         (req.productType === 'digital_subscription' || req.productType === 'live_gift')) {
       return req.platform === 'ios' ? ['apple_iap'] : ['google_play'];
     }
 
     // 2. Physical Goods, P2P Transfers & Event Tickets can route through SpotPay Wallet, Stripe, PayPal
     return ['spotpay_wallet', 'stripe_cards', 'paypal', 'apple_pay_web', 'google_pay_web'];
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Money: integer minor units + ISO 4217. Floating point is forbidden in money paths.
+
+export type MinorUnits = number;
+
+export class Money {
+  public readonly amountMinor: MinorUnits;
+  public readonly currency: string;
+
+  public constructor(amountMinor: MinorUnits, currency: string) {
+    if (!Number.isInteger(amountMinor)) {
+      throw new Error('Money amount must be an integer in minor units');
+    }
+    if (!/^[A-Z]{3}$/.test(currency)) {
+      throw new Error('Money currency must be an ISO 4217 code');
+    }
+    this.amountMinor = amountMinor;
+    this.currency = currency;
+  }
+
+  public static fromDecimal(amount: number, currency: string, exponent = 2): Money {
+    const minor = Math.round(amount * 10 ** exponent);
+    return new Money(minor, currency);
+  }
+
+  public add(other: Money): Money {
+    this.assertSameCurrency(other);
+    return new Money(this.amountMinor + other.amountMinor, this.currency);
+  }
+
+  public subtract(other: Money): Money {
+    this.assertSameCurrency(other);
+    return new Money(this.amountMinor - other.amountMinor, this.currency);
+  }
+
+  public multiply(factor: number): Money {
+    return new Money(Math.round(this.amountMinor * factor), this.currency);
+  }
+
+  public percentage(bps: number): Money {
+    return new Money(Math.round((this.amountMinor * bps) / 10000), this.currency);
+  }
+
+  public isPositive(): boolean {
+    return this.amountMinor > 0;
+  }
+
+  public isZero(): boolean {
+    return this.amountMinor === 0;
+  }
+
+  public format(locale = 'en-US'): string {
+    return new Intl.NumberFormat(locale, { style: 'currency', currency: this.currency }).format(
+      this.amountMinor / 100,
+    );
+  }
+
+  private assertSameCurrency(other: Money): void {
+    if (this.currency !== other.currency) {
+      throw new Error(`Currency mismatch: ${this.currency} vs ${other.currency}`);
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Capability matrix entry (mirrors public.psp_capabilities, migration 00004)
+
+export interface CapabilityRule {
+  countryIso: string;
+  platform: 'web' | 'ios' | 'android' | 'all';
+  productType: 'digital_subscription' | 'creator_tip' | 'live_gift' | 'physical_goods' | 'event_ticket';
+  provider: string;
+  methodKind: 'card' | 'wallet' | 'apple_pay' | 'google_pay' | 'paypal' | 'bank_account';
+  minAmountMinor: number;
+  maxAmountMinor: number;
+  isEnabled: boolean;
+}
+
+export const DEFAULT_CAPABILITY_RULES: CapabilityRule[] = [
+  { countryIso: '*', platform: 'web', productType: 'physical_goods', provider: 'stripe', methodKind: 'card', minAmountMinor: 50, maxAmountMinor: 500000, isEnabled: true },
+  { countryIso: '*', platform: 'web', productType: 'physical_goods', provider: 'paypal', methodKind: 'paypal', minAmountMinor: 50, maxAmountMinor: 500000, isEnabled: true },
+  { countryIso: '*', platform: 'web', productType: 'physical_goods', provider: 'spotpay', methodKind: 'wallet', minAmountMinor: 50, maxAmountMinor: 100000, isEnabled: true },
+  { countryIso: '*', platform: 'web', productType: 'event_ticket', provider: 'stripe', methodKind: 'card', minAmountMinor: 100, maxAmountMinor: 1000000, isEnabled: true },
+  { countryIso: '*', platform: 'web', productType: 'creator_tip', provider: 'spotpay', methodKind: 'wallet', minAmountMinor: 50, maxAmountMinor: 50000, isEnabled: true },
+  { countryIso: '*', platform: 'web', productType: 'digital_subscription', provider: 'stripe', methodKind: 'card', minAmountMinor: 299, maxAmountMinor: 99900, isEnabled: true },
+  { countryIso: '*', platform: 'ios', productType: 'digital_subscription', provider: 'apple', methodKind: 'apple_pay', minAmountMinor: 99, maxAmountMinor: 99900, isEnabled: true },
+  { countryIso: '*', platform: 'android', productType: 'digital_subscription', provider: 'google', methodKind: 'google_pay', minAmountMinor: 99, maxAmountMinor: 99900, isEnabled: true },
+  { countryIso: '*', platform: 'ios', productType: 'live_gift', provider: 'apple', methodKind: 'apple_pay', minAmountMinor: 99, maxAmountMinor: 499900, isEnabled: true },
+  { countryIso: '*', platform: 'android', productType: 'live_gift', provider: 'google', methodKind: 'google_pay', minAmountMinor: 99, maxAmountMinor: 499900, isEnabled: true },
+];
+
+// ---------------------------------------------------------------------------
+// Payment Policy Engine: store-policy compliant checkout routing.
+// Digital goods on mobile ALWAYS route through IAP / Play Billing. Never bypass.
+
+export interface PolicyRequest {
+  countryIso: string;
+  platform: 'web' | 'ios' | 'android';
+  productType: CapabilityRule['productType'];
+  amountMinor: number;
+}
+
+export interface PolicyDecision {
+  permittedProviders: string[];
+  selectedMethodKinds: string[];
+  compliant: boolean;
+  reason?: string;
+}
+
+const DIGITAL_PRODUCT_TYPES: PolicyRequest['productType'][] = ['digital_subscription', 'live_gift'];
+
+export class PaymentPolicyEngine {
+  private readonly rules: CapabilityRule[];
+
+  public constructor(rules: CapabilityRule[] = DEFAULT_CAPABILITY_RULES) {
+    this.rules = rules;
+  }
+
+  public decide(request: PolicyRequest): PolicyDecision {
+    if (DIGITAL_PRODUCT_TYPES.includes(request.productType) && request.platform !== 'web') {
+      const storeProvider = request.platform === 'ios' ? 'apple' : 'google';
+      const matches = this.matchingRules(request).filter((rule) => rule.provider === storeProvider);
+      if (matches.length === 0) {
+        return { permittedProviders: [], selectedMethodKinds: [], compliant: false, reason: 'No store-compliant route available' };
+      }
+      if (!this.amountWithinBounds(matches, request.amountMinor)) {
+        return { permittedProviders: [], selectedMethodKinds: [], compliant: false, reason: 'Amount outside store bounds' };
+      }
+      return {
+        permittedProviders: matches.map((rule) => rule.provider),
+        selectedMethodKinds: matches.map((rule) => rule.methodKind),
+        compliant: true,
+      };
+    }
+
+    const matches = this.matchingRules(request);
+    if (matches.length === 0) {
+      return { permittedProviders: [], selectedMethodKinds: [], compliant: false, reason: 'No capability for this country/platform/product' };
+    }
+    const withinBounds = matches.filter(
+      (rule) => request.amountMinor >= rule.minAmountMinor && request.amountMinor <= rule.maxAmountMinor,
+    );
+    if (withinBounds.length === 0) {
+      return { permittedProviders: [], selectedMethodKinds: [], compliant: false, reason: 'Amount outside permitted bounds' };
+    }
+    return {
+      permittedProviders: withinBounds.map((rule) => rule.provider),
+      selectedMethodKinds: withinBounds.map((rule) => rule.methodKind),
+      compliant: true,
+    };
+  }
+
+  private matchingRules(request: PolicyRequest): CapabilityRule[] {
+    return this.rules.filter(
+      (rule) =>
+        rule.isEnabled &&
+        (rule.countryIso === '*' || rule.countryIso === request.countryIso) &&
+        (rule.platform === 'all' || rule.platform === request.platform) &&
+        rule.productType === request.productType,
+    );
+  }
+
+  private amountWithinBounds(rules: CapabilityRule[], amountMinor: number): boolean {
+    return rules.some((rule) => amountMinor >= rule.minAmountMinor && amountMinor <= rule.maxAmountMinor);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Payment intent lifecycle
+
+export type IntentStatus =
+  | 'requires_payment' | 'requires_action' | 'processing' | 'succeeded' | 'failed' | 'cancelled';
+
+export interface PaymentIntentRecord {
+  id: string;
+  payerId: string;
+  productType: CapabilityRule['productType'];
+  amountMinor: number;
+  currency: string;
+  idempotencyKey: string;
+  status: IntentStatus;
+}
+
+export interface CreateIntentInput {
+  payerId: string;
+  productType: CapabilityRule['productType'];
+  amountMinor: number;
+  currency: string;
+  idempotencyKey: string;
+  seenIdempotencyKeys: Set<string>;
+}
+
+export class PaymentIntentService {
+  public create(input: CreateIntentInput): PaymentIntentRecord {
+    if (!/^[A-Z]{3}$/.test(input.currency)) {
+      throw new Error('Currency must be ISO 4217');
+    }
+    if (!Number.isInteger(input.amountMinor) || input.amountMinor <= 0) {
+      throw new Error('Amount must be positive integer minor units');
+    }
+    if (input.seenIdempotencyKeys.has(input.idempotencyKey)) {
+      throw new Error('Duplicate idempotency key: replay blocked');
+    }
+    input.seenIdempotencyKeys.add(input.idempotencyKey);
+    return {
+      id: `pi_${input.idempotencyKey}`,
+      payerId: input.payerId,
+      productType: input.productType,
+      amountMinor: input.amountMinor,
+      currency: input.currency,
+      idempotencyKey: input.idempotencyKey,
+      status: 'requires_payment',
+    };
+  }
+
+  public transition(intent: PaymentIntentRecord, to: IntentStatus): PaymentIntentRecord {
+    const allowed: Record<IntentStatus, IntentStatus[]> = {
+      requires_payment: ['requires_action', 'processing', 'cancelled'],
+      requires_action: ['processing', 'cancelled', 'failed'],
+      processing: ['succeeded', 'failed'],
+      succeeded: [],
+      failed: ['requires_payment'],
+      cancelled: [],
+    };
+    if (!allowed[intent.status].includes(to)) {
+      throw new Error(`Invalid intent transition: ${intent.status} → ${to}`);
+    }
+    return { ...intent, status: to };
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Provider abstraction: PSPs are adapters behind one interface.
+
+export interface ProviderChargeRequest {
+  intentId: string;
+  amountMinor: number;
+  currency: string;
+  providerToken: string;
+  idempotencyKey: string;
+}
+
+export interface ProviderChargeResult {
+  providerAttemptId: string;
+  outcome: 'succeeded' | 'declined' | 'error' | 'timeout' | 'pending';
+  failureCode?: string;
+}
+
+export interface PaymentProvider {
+  readonly name: string;
+  charge(request: ProviderChargeRequest): Promise<ProviderChargeResult>;
+  refund(intentId: string, amountMinor: number, idempotencyKey: string): Promise<{ refundId: string; state: 'succeeded' | 'failed' }>;
+  verifyWebhookSignature(payload: string, signature: string, secret: string): boolean;
+}
+
+export class ProviderRegistry {
+  private readonly providers = new Map<string, PaymentProvider>();
+
+  public register(provider: PaymentProvider): void {
+    this.providers.set(provider.name, provider);
+  }
+
+  public get(name: string): PaymentProvider {
+    const provider = this.providers.get(name);
+    if (!provider) {
+      throw new Error(`Unknown payment provider: ${name}`);
+    }
+    return provider;
+  }
+
+  public available(): string[] {
+    return [...this.providers.keys()];
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Webhook processing: signature-verified, replay-protected, idempotent.
+
+export interface WebhookEvent {
+  id: string;
+  type: string;
+  payload: string;
+  signature: string;
+}
+
+export interface WebhookOutcome {
+  accepted: boolean;
+  reason?: string;
+  duplicate: boolean;
+}
+
+export class WebhookProcessor {
+  private readonly seenEventIds = new Set<string>();
+
+  public constructor(private readonly verifySignature: (payload: string, signature: string) => boolean) {}
+
+  public process(event: WebhookEvent): WebhookOutcome {
+    if (this.seenEventIds.has(event.id)) {
+      return { accepted: true, duplicate: true };
+    }
+    if (!this.verifySignature(event.payload, event.signature)) {
+      return { accepted: false, reason: 'Signature verification failed', duplicate: false };
+    }
+    this.seenEventIds.add(event.id);
+    return { accepted: true, duplicate: false };
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Refunds
+
+export interface RefundBreakdown {
+  refundableMinor: number;
+  refundedMinor: number;
+  remainingMinor: number;
+}
+
+export function computeRefundBreakdown(
+  chargedMinor: number,
+  priorRefundsMinor: number[],
+  newRefundMinor: number,
+): RefundBreakdown {
+  const alreadyRefunded = priorRefundsMinor.reduce((sum, value) => sum + value, 0);
+  const remaining = chargedMinor - alreadyRefunded;
+  if (newRefundMinor <= 0) {
+    throw new Error('Refund amount must be positive');
+  }
+  if (newRefundMinor > remaining) {
+    throw new Error('Refund exceeds refundable balance');
+  }
+  return {
+    refundableMinor: remaining,
+    refundedMinor: alreadyRefunded + newRefundMinor,
+    remainingMinor: remaining - newRefundMinor,
+  };
+}
+
+// ---------------------------------------------------------------------------
+// PSP Adapter Interfaces
+// ---------------------------------------------------------------------------
+
+export interface PSPChargeResult {
+  success: boolean;
+  providerTransactionId: string;
+  providerName: string;
+  rawResponse?: unknown;
+  errorMessage?: string;
+}
+
+export interface PSPRefundResult {
+  success: boolean;
+  providerRefundId: string;
+  errorMessage?: string;
+}
+
+export interface PSPAdapter {
+  readonly providerName: string;
+
+  /** Create a charge / payment via the external PSP. */
+  charge(params: {
+    amountMinor: number;
+    currency: string;
+    idempotencyKey: string;
+    metadata?: Record<string, string>;
+  }): Promise<PSPChargeResult>;
+
+  /** Process a refund via the external PSP. */
+  refund(params: {
+    providerTransactionId: string;
+    amountMinor: number;
+    currency: string;
+    idempotencyKey: string;
+  }): Promise<PSPRefundResult>;
+
+  /** Verify an inbound webhook signature from the PSP. */
+  verifyWebhook(payload: string, signature: string, secret: string): boolean;
+}
+
+// ---------------------------------------------------------------------------
+// Stub: Stripe adapter (to be wired when Stripe SDK is added)
+// ---------------------------------------------------------------------------
+
+export class StripeAdapter implements PSPAdapter {
+  readonly providerName = 'stripe' as const;
+
+  async charge(_params: {
+    amountMinor: number;
+    currency: string;
+    idempotencyKey: string;
+    metadata?: Record<string, string>;
+  }): Promise<PSPChargeResult> {
+    throw new Error(
+      'StripeAdapter.charge() is not yet implemented. ' +
+        'Wire the Stripe SDK (stripe npm package) and replace this stub.',
+    );
+  }
+
+  async refund(_params: {
+    providerTransactionId: string;
+    amountMinor: number;
+    currency: string;
+    idempotencyKey: string;
+  }): Promise<PSPRefundResult> {
+    throw new Error(
+      'StripeAdapter.refund() is not yet implemented. ' +
+        'Wire the Stripe SDK (stripe npm package) and replace this stub.',
+    );
+  }
+
+  verifyWebhook(
+    _payload: string,
+    _signature: string,
+    _secret: string,
+  ): boolean {
+    throw new Error(
+      'StripeAdapter.verifyWebhook() is not yet implemented. ' +
+        'Use stripe.webhooks.constructEvent() when the SDK is available.',
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Stub: PayPal adapter
+// ---------------------------------------------------------------------------
+
+export class PayPalAdapter implements PSPAdapter {
+  readonly providerName = 'paypal' as const;
+
+  async charge(_params: {
+    amountMinor: number;
+    currency: string;
+    idempotencyKey: string;
+    metadata?: Record<string, string>;
+  }): Promise<PSPChargeResult> {
+    throw new Error(
+      'PayPalAdapter.charge() is not yet implemented. ' +
+        'Wire the PayPal Orders API and replace this stub.',
+    );
+  }
+
+  async refund(_params: {
+    providerTransactionId: string;
+    amountMinor: number;
+    currency: string;
+    idempotencyKey: string;
+  }): Promise<PSPRefundResult> {
+    throw new Error(
+      'PayPalAdapter.refund() is not yet implemented. ' +
+        'Wire the PayPal Refunds API and replace this stub.',
+    );
+  }
+
+  verifyWebhook(
+    _payload: string,
+    _signature: string,
+    _secret: string,
+  ): boolean {
+    throw new Error(
+      'PayPalAdapter.verifyWebhook() is not yet implemented. ' +
+        'Use the PayPal webhook verification endpoint when the SDK is available.',
+    );
   }
 }

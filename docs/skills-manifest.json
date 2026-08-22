@@ -1,0 +1,10 @@
+{
+  "name": "ai-sdk",
+  "source": "vercel/ai",
+  "version": "latest",
+  "purpose": "model providers, structured output, RAG, streaming for Caribbean AI services",
+  "owner": "ai",
+  "description": "Vercel AI SDK for OpenRouter integration and multi-model provider abstraction",
+  "configured": true,
+  "status": "active"
+}
