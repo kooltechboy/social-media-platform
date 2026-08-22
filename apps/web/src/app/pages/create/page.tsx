@@ -86,14 +86,46 @@ export default function CreatePageWizard() {
   const [enableStore, setEnableStore] = useState(true);
   const [isCreated, setIsCreated] = useState(false);
 
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
   function handleNameChange(val: string) {
     setPageName(val);
     setPageSlug(val.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''));
   }
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setIsCreated(true);
+    if (!pageName.trim() || !pageSlug.trim()) return;
+
+    setIsSubmitting(true);
+    setErrorMessage(null);
+
+    const formData = new FormData();
+    formData.set('name', pageName);
+    formData.set('slug', pageSlug);
+    formData.set('category', selectedType);
+    formData.set('description', description);
+    formData.set('countryIso', country.slice(-5, -3) || 'JM');
+
+    try {
+      const { createBusinessPageAction } = await import('../../../lib/business/actions');
+      const res = await createBusinessPageAction({ error: null }, formData);
+
+      if (res.error) {
+        setErrorMessage(res.error);
+        return;
+      }
+
+      if (res.slug) {
+        setPageSlug(res.slug);
+      }
+      setIsCreated(true);
+    } catch (err) {
+      setErrorMessage(err instanceof Error ? err.message : 'Failed to publish page.');
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   if (isCreated) {
@@ -328,6 +360,12 @@ export default function CreatePageWizard() {
             </div>
           </div>
 
+          {errorMessage && (
+            <div className="p-3 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs font-bold">
+              {errorMessage}
+            </div>
+          )}
+
           <div className="pt-4 flex items-center justify-between">
             <button
               type="button"
@@ -338,9 +376,10 @@ export default function CreatePageWizard() {
             </button>
             <button
               type="submit"
-              className="bg-gradient-to-r from-emerald-500 to-sky-500 hover:from-emerald-400 hover:to-sky-400 text-slate-950 font-black px-8 py-3 rounded-2xl text-xs flex items-center gap-2 transition-all shadow-xl shadow-emerald-500/20"
+              disabled={isSubmitting}
+              className="bg-gradient-to-r from-emerald-500 to-sky-500 hover:from-emerald-400 hover:to-sky-400 text-slate-950 font-black px-8 py-3 rounded-2xl text-xs flex items-center gap-2 transition-all shadow-xl shadow-emerald-500/20 disabled:opacity-50"
             >
-              <CheckCircle className="w-4 h-4" /> Publish Verified Page
+              <CheckCircle className="w-4 h-4" /> {isSubmitting ? 'Publishing Page...' : 'Publish Verified Page'}
             </button>
           </div>
         </form>

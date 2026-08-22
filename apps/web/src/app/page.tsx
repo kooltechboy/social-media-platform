@@ -9,30 +9,18 @@ import {
   Mic,
   Users,
   Sparkles,
-  Heart,
-  Repeat,
-  MessageCircle,
-  Share2,
-  Wallet,
   Play,
   Calendar,
   CheckCircle,
-  ArrowUpRight,
 } from 'lucide-react';
 import { createSupabaseServerClient, getCurrentUser } from '../lib/supabase/server';
-import PostComposer from '../components/post-composer';
+import UniversalComposer from '../components/universal-composer';
+import FeedStream, { type FeedPostData } from '../components/feed-stream';
 import CaribbeanNowSidebar from '../components/caribbean-now-sidebar';
 
 export const dynamic = 'force-dynamic';
 
-interface FeedPost {
-  id: string;
-  content: string | null;
-  created_at: string;
-  profiles: { display_name: string; username: string } | null;
-}
-
-const CURATED_CARIBBEAN_POSTS = [
+const CURATED_CARIBBEAN_POSTS: FeedPostData[] = [
   {
     id: 'curated-1',
     author: 'Karene Reid',
@@ -41,11 +29,12 @@ const CURATED_CARIBBEAN_POSTS = [
     location: 'Kingston, Jamaica 🇯🇲',
     time: '12m ago',
     content:
-      'The energy in Kingston tonight is unmatched! Sound system culture alive and vibrant. Big up to everyone streaming in from London, Brooklyn, and Toronto on Caribbean One! 🇯🇲🔊✨',
+      'The energy in Kingston tonight is unmatched! Sound system culture alive and vibrant. Big up to everyone streaming in from London, Brooklyn, and Toronto on Caribbean One! 🇯🇲🔊✨\n\n#KingstonVibes #SoundSystemCulture',
     likes: 428,
     reposts: 89,
     comments: 34,
     tag: '#KingstonVibes',
+    category: 'caribbean',
   },
   {
     id: 'curated-2',
@@ -55,11 +44,12 @@ const CURATED_CARIBBEAN_POSTS = [
     location: 'Santo Domingo, Dominican Rep. 🇩🇴',
     time: '45m ago',
     content:
-      'Excited to launch our Caribbean Tech Founders Circle right here on Caribbean One. If you are building software, fintech, or media across the islands or the diaspora, let’s connect! 🇩🇴🚀',
+      'Excited to launch our Caribbean Tech Founders Circle right here on Caribbean One. If you are building software, fintech, or media across the islands or the diaspora, let’s connect! 🇩🇴🚀\n\n#CaribTech #Founders',
     likes: 312,
     reposts: 64,
     comments: 28,
     tag: '#CaribTech',
+    category: 'foryou',
   },
   {
     id: 'curated-3',
@@ -69,11 +59,27 @@ const CURATED_CARIBBEAN_POSTS = [
     location: 'Port of Spain, Trinidad 🇹🇹',
     time: '2h ago',
     content:
-      'Carnival 2026 band launch tickets officially live on SpotPay! Instant checkout, zero foreign exchange hassle. See you on the road! 🇹🇹🎭✨',
+      'Carnival 2026 band launch tickets officially live on SpotPay! Instant checkout, zero foreign exchange hassle. See you on the road! 🇹🇹🎭✨\n\n#CarnivalTT #SpotPay',
     likes: 892,
     reposts: 145,
     comments: 72,
     tag: '#CarnivalTT',
+    category: 'creator',
+  },
+  {
+    id: 'curated-4',
+    author: 'Marcus Garvey Guild',
+    handle: 'garvey_diaspora',
+    verified: true,
+    location: 'Toronto / London Diaspora 🌍',
+    time: '4h ago',
+    content:
+      'Connecting 59M+ people across 30+ island territories and global diaspora hubs. Empowering regional commerce, cultural preservation, and creative independence.',
+    likes: 640,
+    reposts: 112,
+    comments: 53,
+    tag: '#DiasporaUnite',
+    category: 'diaspora',
   },
 ];
 
@@ -91,20 +97,40 @@ export default async function HomePage() {
   const user = await getCurrentUser();
   const supabase = await createSupabaseServerClient();
 
-  let posts: FeedPost[] = [];
+  let livePosts: FeedPostData[] = [];
   if (supabase) {
     const { data } = await supabase
       .from('posts')
-      .select('id, content, created_at, profiles(display_name, username)')
+      .select('id, content, created_at, media_urls, cultural_tags, likes_count, comments_count, shares_count, profiles(display_name, username)')
       .order('created_at', { ascending: false })
-      .limit(25);
-    posts = (data ?? []) as unknown as FeedPost[];
+      .limit(30);
+
+    if (data && data.length > 0) {
+      livePosts = data.map((p: any) => ({
+        id: p.id,
+        author: p.profiles?.display_name || 'Caribbean Member',
+        handle: p.profiles?.username || 'member',
+        verified: true,
+        location: 'Caribbean One Network 🌴',
+        time: relativeTime(p.created_at),
+        content: p.content || '',
+        mediaUrls: p.media_urls || [],
+        culturalTags: p.cultural_tags || [],
+        likes: p.likes_count || 0,
+        reposts: p.shares_count || 0,
+        comments: p.comments_count || 0,
+        category: 'caribbean',
+      }));
+    }
   }
+
+  // Combined feed (Live database posts prioritized, followed by curated regional highlights)
+  const combinedPosts = [...livePosts, ...CURATED_CARIBBEAN_POSTS];
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
       {/* Main Stream (Col 8) */}
-      <div className="lg:col-span-8 space-y-8">
+      <div className="lg:col-span-8 space-y-6">
         {/* Caribbean Moments Cinema Rail */}
         <section aria-label="Caribbean Moments" className="space-y-3">
           <div className="flex items-center justify-between px-1">
@@ -153,10 +179,15 @@ export default async function HomePage() {
           </div>
         </section>
 
-        {/* Post Publisher or Sign In Banner */}
-        <section aria-label="Create Post">
+        {/* ────────────────────────────────────────────────────────── */}
+        {/* P0: PRIMARY UNIVERSAL INLINE COMPOSER                      */}
+        {/* ────────────────────────────────────────────────────────── */}
+        <section aria-label="Create Post" className="space-y-2">
           {user ? (
-            <PostComposer displayName={user.displayName} />
+            <UniversalComposer
+              displayName={user.displayName}
+              avatarInitials={user.displayName.slice(0, 2).toUpperCase()}
+            />
           ) : (
             <div className="bg-gradient-to-r from-sky-950/80 via-slate-900 to-emerald-950/60 rounded-3xl p-6 border border-sky-500/20 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-xl">
               <div>
@@ -164,19 +195,19 @@ export default async function HomePage() {
                   <Globe className="w-4 h-4 text-sky-400" /> Welcome to Caribbean One
                 </h3>
                 <p className="text-xs text-slate-300 mt-1">
-                  The digital home of 59M+ Caribbean people, creators, and the global diaspora.
+                  The digital home for Caribbean people, creators, businesses, and the global diaspora.
                 </p>
               </div>
               <div className="flex items-center gap-3">
                 <Link
                   href="/login"
-                  className="bg-white hover:bg-slate-200 text-slate-950 font-black px-5 py-2 rounded-2xl text-xs transition-all shadow-md"
+                  className="bg-white hover:bg-slate-200 text-slate-950 font-black px-5 py-2.5 rounded-2xl text-xs transition-all shadow-md"
                 >
                   Join the Diaspora
                 </Link>
                 <Link
                   href="/explore"
-                  className="bg-slate-800/80 hover:bg-slate-700 text-slate-200 font-bold px-4 py-2 rounded-2xl text-xs border border-slate-700 transition-all"
+                  className="bg-slate-800/80 hover:bg-slate-700 text-slate-200 font-bold px-4 py-2.5 rounded-2xl text-xs border border-slate-700 transition-all"
                 >
                   Explore First
                 </Link>
@@ -207,128 +238,11 @@ export default async function HomePage() {
           </Link>
         </section>
 
-        {/* Feed Tab Navigation */}
-        <section aria-label="Timeline" className="space-y-5">
-          <div className="flex gap-4 border-b border-slate-800 pb-2 overflow-x-auto scrollbar-none" role="tablist">
-            {[
-              { label: 'Caribbean Now', active: true },
-              { label: 'For You', active: false },
-              { label: 'Diaspora Hubs', active: false },
-              { label: 'Creators & Music', active: false },
-            ].map((tab, idx) => (
-              <button
-                key={idx}
-                role="tab"
-                aria-selected={tab.active}
-                className={`pb-2 whitespace-nowrap text-xs font-black transition-all relative focus-visible:outline-none ${
-                  tab.active ? 'text-sky-400' : 'text-slate-400 hover:text-slate-200'
-                }`}
-              >
-                {tab.label}
-                {tab.active && (
-                  <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-sky-400 to-emerald-400 rounded-full" />
-                )}
-              </button>
-            ))}
-          </div>
-
-          {/* Feed Post List */}
-          <div className="space-y-4">
-            {/* Live Database Posts if present */}
-            {posts.map((post) => (
-              <article
-                key={post.id}
-                className="bg-slate-900/70 border border-slate-800/80 rounded-3xl p-5 shadow-lg space-y-3 hover:border-slate-700/80 transition-all"
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-sky-500 to-emerald-500 flex items-center justify-center text-slate-950 font-black text-xs shadow-md">
-                      {(post.profiles?.display_name ?? 'CO').slice(0, 2).toUpperCase()}
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-1.5">
-                        <h4 className="font-extrabold text-sm text-white">{post.profiles?.display_name ?? 'Caribbean Member'}</h4>
-                        <span className="text-xs text-slate-500">@{post.profiles?.username ?? 'member'}</span>
-                      </div>
-                      <time className="text-[11px] text-slate-400">{relativeTime(post.created_at)}</time>
-                    </div>
-                  </div>
-                </div>
-
-                <p className="text-sm text-slate-200 leading-relaxed font-medium whitespace-pre-wrap">
-                  {post.content}
-                </p>
-
-                <div className="flex items-center justify-between pt-2 border-t border-slate-800/60 text-slate-400 text-xs">
-                  <button className="flex items-center gap-1.5 hover:text-rose-400 transition-colors">
-                    <Heart className="w-4 h-4" /> <span>0</span>
-                  </button>
-                  <button className="flex items-center gap-1.5 hover:text-emerald-400 transition-colors">
-                    <Repeat className="w-4 h-4" /> <span>0</span>
-                  </button>
-                  <button className="flex items-center gap-1.5 hover:text-sky-400 transition-colors">
-                    <MessageCircle className="w-4 h-4" /> <span>Reply</span>
-                  </button>
-                  <Link href="/spotpay" className="flex items-center gap-1 text-emerald-400 font-bold hover:underline">
-                    <Wallet className="w-3.5 h-3.5" /> Tip SpotPay
-                  </Link>
-                </div>
-              </article>
-            ))}
-
-            {/* Curated Authentic Caribbean Feed Posts */}
-            {CURATED_CARIBBEAN_POSTS.map((post) => (
-              <article
-                key={post.id}
-                className="bg-slate-900/70 border border-slate-800/80 rounded-3xl p-5 shadow-lg space-y-3 hover:border-slate-700/80 transition-all"
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-500 via-rose-500 to-sky-500 flex items-center justify-center text-white font-black text-xs shadow-md">
-                      {post.author.slice(0, 2).toUpperCase()}
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-1.5">
-                        <h4 className="font-extrabold text-sm text-white">{post.author}</h4>
-                        {post.verified && <CheckCircle className="w-3.5 h-3.5 text-sky-400 fill-sky-400/20" />}
-                        <span className="text-xs text-slate-500">@{post.handle}</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-[11px] text-slate-400">
-                        <span>{post.location}</span>
-                        <span>•</span>
-                        <span>{post.time}</span>
-                      </div>
-                    </div>
-                  </div>
-                  <span className="text-[11px] font-bold text-sky-400 bg-sky-500/10 px-2.5 py-1 rounded-full border border-sky-500/20">
-                    {post.tag}
-                  </span>
-                </div>
-
-                <p className="text-sm text-slate-200 leading-relaxed font-medium">
-                  {post.content}
-                </p>
-
-                <div className="flex items-center justify-between pt-2 border-t border-slate-800/60 text-slate-400 text-xs">
-                  <button className="flex items-center gap-1.5 hover:text-rose-400 transition-colors">
-                    <Heart className="w-4 h-4 text-rose-500" /> <span className="font-bold text-slate-300">{post.likes}</span>
-                  </button>
-                  <button className="flex items-center gap-1.5 hover:text-emerald-400 transition-colors">
-                    <Repeat className="w-4 h-4 text-emerald-400" /> <span className="font-bold text-slate-300">{post.reposts}</span>
-                  </button>
-                  <button className="flex items-center gap-1.5 hover:text-sky-400 transition-colors">
-                    <MessageCircle className="w-4 h-4 text-sky-400" /> <span className="font-bold text-slate-300">{post.comments}</span>
-                  </button>
-                  <Link
-                    href="/spotpay"
-                    className="flex items-center gap-1 text-emerald-400 font-extrabold hover:text-emerald-300 transition-colors bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/20"
-                  >
-                    <Wallet className="w-3.5 h-3.5" /> Tip Creator
-                  </Link>
-                </div>
-              </article>
-            ))}
-          </div>
+        {/* ────────────────────────────────────────────────────────── */}
+        {/* INTERACTIVE FEED STREAM WITH LIVE LIKES, COMMENTS & TABS   */}
+        {/* ────────────────────────────────────────────────────────── */}
+        <section aria-label="Caribbean Feed Stream">
+          <FeedStream initialPosts={combinedPosts} currentUserId={user?.id} />
         </section>
       </div>
 
@@ -339,3 +253,4 @@ export default async function HomePage() {
     </div>
   );
 }
+
