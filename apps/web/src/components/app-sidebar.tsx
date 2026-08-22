@@ -15,7 +15,8 @@ import {
   User,
   Sparkles,
   Settings,
-  Briefcase,
+  Building2,
+  MapPin,
   PlusCircle,
 } from 'lucide-react';
 
@@ -28,16 +29,19 @@ interface NavItem {
 
 const PRIMARY_NAV: NavItem[] = [
   { href: '/', label: 'Home Feed', icon: <Home className="w-4 h-4 text-sky-400" /> },
+  { href: '/create', label: 'Create Hub', icon: <PlusCircle className="w-4 h-4 text-emerald-400" />, badge: 'NEW' },
   { href: '/explore', label: 'Explore & Diaspora', icon: <Compass className="w-4 h-4 text-amber-400" /> },
-  { href: '/reels', label: 'Reels & Sounds', icon: <Video className="w-4 h-4 text-rose-400" /> },
+  { href: '/map', label: 'Caribbean Map', icon: <MapPin className="w-4 h-4 text-rose-400" /> },
+  { href: '/reels', label: 'Reels & Sounds', icon: <Video className="w-4 h-4 text-pink-400" /> },
   { href: '/live', label: 'Live Streams', icon: <Tv className="w-4 h-4 text-red-400" />, badge: 'LIVE' },
   { href: '/podcasts', label: 'Podcasts Network', icon: <Mic className="w-4 h-4 text-purple-400" /> },
-  { href: '/communities', label: 'Diaspora Hubs', icon: <Users className="w-4 h-4 text-emerald-400" /> },
+  { href: '/communities', label: 'Diaspora Hubs', icon: <Users className="w-4 h-4 text-cyan-400" /> },
 ];
 
 const COMMERCE_NAV: NavItem[] = [
   { href: '/marketplace', label: 'Marketplace', icon: <ShoppingBag className="w-4 h-4 text-orange-400" /> },
   { href: '/events', label: 'Cultural Events', icon: <Calendar className="w-4 h-4 text-yellow-400" /> },
+  { href: '/pages', label: 'Pages & Stores', icon: <Building2 className="w-4 h-4 text-emerald-400" />, badge: 'VERIFIED' },
   { href: '/spotpay', label: 'SpotPay Wallet', icon: <Wallet className="w-4 h-4 text-emerald-400" /> },
   { href: '/creator-studio', label: 'Creator Studio', icon: <Sparkles className="w-4 h-4 text-sky-400" /> },
 ];
@@ -83,7 +87,13 @@ export default function AppSidebar({ currentPath = '/' }: AppSidebarProps) {
               <span>{item.label}</span>
             </div>
             {item.badge && (
-              <span className="text-[9px] font-black px-1.5 py-0.5 rounded-full bg-red-500/20 text-red-400 border border-red-500/30 animate-pulse">
+              <span className={`text-[9px] font-black px-1.5 py-0.5 rounded-full border ${
+                item.badge === 'LIVE'
+                  ? 'bg-red-500/20 text-red-400 border-red-500/30 animate-pulse'
+                  : item.badge === 'NEW'
+                  ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
+                  : 'bg-slate-800 text-slate-400 border-slate-700'
+              }`}>
                 {item.badge}
               </span>
             )}
@@ -96,7 +106,7 @@ export default function AppSidebar({ currentPath = '/' }: AppSidebarProps) {
   return (
     <aside className="hidden md:block col-span-1 space-y-5" aria-label="Primary navigation">
       <div className="bg-slate-900/80 border border-slate-800/80 rounded-3xl p-3 shadow-xl space-y-4">
-        {renderNavGroup(PRIMARY_NAV, 'Discover')}
+        {renderNavGroup(PRIMARY_NAV, 'Ecosystem')}
         <div className="h-px bg-slate-800/60 my-2" />
         {renderNavGroup(COMMERCE_NAV, 'Economy & Culture')}
         <div className="h-px bg-slate-800/60 my-2" />
