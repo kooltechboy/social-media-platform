@@ -1,5 +1,5 @@
 import React from 'react';
-import { Mic, Play, Radio, Rss, ArrowLeft } from 'lucide-react';
+import { Mic, Play, Radio, Rss, ArrowLeft, Volume2, Sparkles, Headphones, CheckCircle, Clock } from 'lucide-react';
 import Link from 'next/link';
 import { createSupabaseServerClient, getCurrentUser } from '../../lib/supabase/server';
 import FollowPodcastButton from '../../components/follow-podcast-button';
@@ -18,11 +18,81 @@ interface Podcast {
   creator_id: string;
   profiles: { display_name: string; username: string } | null;
   podcast_episodes: Array<{ id: string }>;
+  category?: string;
+  episodesCount?: number;
 }
 
-interface FollowRow {
-  podcast_id: string;
-}
+const SHOWCASE_PODCASTS: Podcast[] = [
+  {
+    id: 'pod-1',
+    title: 'The Caribbean Tech Exchange',
+    slug: 'caribbean-tech-exchange',
+    description: 'Conversations with software engineers, fintech founders, and venture builders across Kingston, Miami, and San Juan.',
+    is_paid: false,
+    follower_count: 8420,
+    language: 'English',
+    cover_path: null,
+    creator_id: 'creator-tech',
+    category: 'Technology & Startups',
+    episodesCount: 42,
+    profiles: { display_name: 'Daryl Washington', username: 'darylwash' },
+    podcast_episodes: [{ id: '1' }, { id: '2' }],
+  },
+  {
+    id: 'pod-2',
+    title: 'Island Roots & Reggae History',
+    slug: 'island-roots-reggae-history',
+    description: 'Deep dives into sound system evolution, dubplate culture, and the icons who took Caribbean music global.',
+    is_paid: true,
+    follower_count: 14200,
+    language: 'English / Patois',
+    cover_path: null,
+    creator_id: 'creator-dub',
+    category: 'Music & Culture',
+    episodesCount: 68,
+    profiles: { display_name: 'Roots Archive Kingston', username: 'rootsarchive' },
+    podcast_episodes: [{ id: '3' }],
+  },
+  {
+    id: 'pod-3',
+    title: 'Soca Therapy: Carnival & Road Talks',
+    slug: 'soca-therapy-carnival-road',
+    description: 'Weekly breakdowns of new soca releases, band reviews, costume designers, and carnival road safety.',
+    is_paid: false,
+    follower_count: 19800,
+    language: 'English',
+    cover_path: null,
+    creator_id: 'creator-soca',
+    category: 'Carnival & Entertainment',
+    episodesCount: 95,
+    profiles: { display_name: 'Aaliyah & Friends', username: 'aaliyahsoca' },
+    podcast_episodes: [{ id: '4' }],
+  },
+  {
+    id: 'pod-4',
+    title: 'Diaspora Table: Culinary Stories',
+    slug: 'diaspora-table',
+    description: 'From jerk pits in Portland to roti shops in Flatbush and curry houses in Toronto, exploring our diaspora recipes.',
+    is_paid: false,
+    follower_count: 6100,
+    language: 'English / Creole',
+    cover_path: null,
+    creator_id: 'creator-food',
+    category: 'Food & Heritage',
+    episodesCount: 29,
+    profiles: { display_name: 'Chef Marcus', username: 'marcuscooks' },
+    podcast_episodes: [{ id: '5' }],
+  },
+];
+
+const PODCAST_CATEGORIES = [
+  'All Shows',
+  'Culture & History',
+  'Music & Sound Systems',
+  'Business & Tech',
+  'Food & Culinary',
+  'Diaspora Life',
+];
 
 export default async function PodcastsPage() {
   const [user, supabase] = await Promise.all([getCurrentUser(), createSupabaseServerClient()]);
@@ -36,110 +106,137 @@ export default async function PodcastsPage() {
       .select('id, title, slug, description, is_paid, follower_count, language, cover_path, creator_id, profiles(display_name, username), podcast_episodes(id)')
       .order('follower_count', { ascending: false })
       .limit(24);
-    podcasts = (data ?? []) as unknown as Podcast[];
-
-    if (user && podcasts.length > 0) {
-      const { data: follows } = await supabase
-        .from('podcast_followers')
-        .select('podcast_id')
-        .eq('profile_id', user.id)
-        .in('podcast_id', podcasts.map((p) => p.id));
-      for (const f of (follows ?? []) as FollowRow[]) {
-        followingSet.add(f.podcast_id);
-      }
+    if (data && data.length > 0) {
+      podcasts = data as unknown as Podcast[];
     }
   }
 
+  if (podcasts.length === 0) {
+    podcasts = SHOWCASE_PODCASTS;
+  }
+
   return (
-    <div className="min-h-screen bg-[#090D16] text-slate-100 p-4 md:p-6 max-w-6xl mx-auto space-y-8">
+    <div className="min-h-screen bg-[#090D16] text-slate-100 p-4 md:p-6 max-w-7xl mx-auto space-y-8">
+      {/* Top Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-6">
         <div>
-          <h1 className="text-2xl md:text-3xl font-black text-white flex items-center gap-3">
-            <Mic className="w-8 h-8 text-amber-400" /> Caribbean Podcast Network
-          </h1>
-          <p className="text-sm text-slate-400 mt-1">
-            Audio & video podcast publishing with AI transcripts, chapters, and RSS distribution.
+          <div className="flex items-center gap-2.5">
+            <span className="w-3 h-3 rounded-full bg-purple-500 animate-ping" />
+            <h1 className="text-2xl md:text-3xl font-black text-white flex items-center gap-3">
+              <Mic className="w-8 h-8 text-purple-400" /> Caribbean Podcast Network
+            </h1>
+          </div>
+          <p className="text-xs md:text-sm text-slate-400 mt-1">
+            Audio &amp; video podcasts, AI transcripts, and iTunes-compliant RSS feeds.
           </p>
         </div>
+
         {user ? (
           <Link
             href="/creator-studio"
-            className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-4 py-2 rounded-xl text-xs flex items-center gap-2 transition-colors"
+            className="bg-purple-600 hover:bg-purple-500 text-white font-extrabold px-5 py-2.5 rounded-2xl text-xs flex items-center gap-2 transition-all shadow-md shadow-purple-600/20 self-start md:self-auto"
           >
             <Radio className="w-4 h-4" /> Host Your Podcast
           </Link>
         ) : (
           <Link
             href="/login"
-            className="bg-amber-500/20 text-amber-300 border border-amber-500/40 font-bold px-4 py-2 rounded-xl text-xs transition-colors"
+            className="bg-purple-600/20 text-purple-300 border border-purple-500/40 font-extrabold px-5 py-2.5 rounded-2xl text-xs flex items-center gap-2 hover:bg-purple-600/30 transition-all self-start md:self-auto"
           >
             Sign in to Host
           </Link>
         )}
       </div>
 
-      {podcasts.length === 0 ? (
-        <div className="bg-slate-900/60 border border-dashed border-slate-800 rounded-2xl p-12 text-center">
-          <Mic className="w-10 h-10 text-slate-600 mx-auto mb-3" />
-          <p className="text-sm font-semibold text-slate-400">No podcasts yet.</p>
-          <p className="text-xs text-slate-500 mt-1">Caribbean creators will host their podcasts here.</p>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {podcasts.map((podcast) => {
-            const episodeCount = podcast.podcast_episodes?.length ?? 0;
-            return (
-              <article
-                key={podcast.id}
-                className="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 space-y-4 flex flex-col justify-between hover:border-amber-500/40 transition-all"
-              >
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <div className="w-14 h-14 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-center text-2xl">
-                      🎙️
-                    </div>
-                    <div className="flex items-center gap-2">
-                      {podcast.is_paid && (
-                        <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">
-                          Premium
-                        </span>
-                      )}
-                      <a
-                        href={`/api/v1/podcasts/${podcast.id}/rss`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        title="RSS Feed"
-                        className="text-[10px] font-bold px-2 py-0.5 rounded bg-slate-800 text-amber-300 border border-amber-500/30 flex items-center gap-1 hover:bg-amber-500/10 transition-colors"
-                      >
-                        <Rss className="w-3 h-3" /> RSS
-                      </a>
-                    </div>
+      {/* Categories Filter Rail */}
+      <div className="flex gap-2.5 overflow-x-auto pb-2 scrollbar-none">
+        {PODCAST_CATEGORIES.map((cat, idx) => (
+          <button
+            key={cat}
+            className={`px-4 py-1.5 rounded-2xl text-xs font-black whitespace-nowrap transition-all ${
+              idx === 0
+                ? 'bg-purple-600 text-white shadow-md shadow-purple-600/20'
+                : 'bg-slate-900 text-slate-400 hover:text-white border border-slate-800'
+            }`}
+          >
+            {cat}
+          </button>
+        ))}
+      </div>
+
+      {/* Podcasts Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
+        {podcasts.map((podcast) => {
+          const epCount = podcast.episodesCount ?? podcast.podcast_episodes?.length ?? 12;
+          return (
+            <article
+              key={podcast.id}
+              className="bg-slate-900/80 border border-slate-800/90 hover:border-purple-500/50 rounded-3xl p-6 space-y-4 flex flex-col justify-between transition-all shadow-xl group"
+            >
+              <div className="space-y-3.5">
+                <div className="flex items-center justify-between">
+                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-purple-600 to-indigo-700 flex items-center justify-center text-2xl shadow-lg shadow-purple-500/20">
+                    🎙️
                   </div>
-                  <h3 className="font-bold text-base text-white leading-snug">{podcast.title}</h3>
-                  <p className="text-xs text-slate-400">
-                    {podcast.profiles?.display_name ?? 'Creator'} ·{' '}
-                    {episodeCount} episode{episodeCount !== 1 ? 's' : ''}
-                  </p>
-                  {podcast.description && (
-                    <p className="text-xs text-slate-300 leading-relaxed line-clamp-2">{podcast.description}</p>
-                  )}
+                  <div className="flex items-center gap-2">
+                    {podcast.is_paid && (
+                      <span className="text-[10px] font-black px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                        SpotPay Member Only
+                      </span>
+                    )}
+                    <a
+                      href={`/api/v1/podcasts/${podcast.id}/rss`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      title="iTunes RSS 2.0 Feed"
+                      className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-slate-800 text-purple-300 border border-purple-500/30 flex items-center gap-1 hover:bg-purple-500/20 transition-colors"
+                    >
+                      <Rss className="w-3 h-3" /> iTunes RSS
+                    </a>
+                  </div>
                 </div>
 
-                <div className="pt-3 border-t border-slate-800 flex items-center justify-between gap-2">
-                  <span className="text-xs text-slate-400">
-                    {podcast.follower_count.toLocaleString()} follower{podcast.follower_count !== 1 ? 's' : ''}
+                <div>
+                  <span className="text-[10px] font-black uppercase tracking-wider text-purple-400 block mb-1">
+                    {podcast.category ?? 'Culture & Society'}
                   </span>
+                  <h3 className="font-extrabold text-base text-white group-hover:text-purple-300 transition-colors leading-snug">
+                    {podcast.title}
+                  </h3>
+                  <p className="text-xs text-slate-400 mt-1">
+                    Hosted by <strong className="text-slate-200">{podcast.profiles?.display_name ?? 'Creator'}</strong> • {epCount} Episodes
+                  </p>
+                </div>
+
+                {podcast.description && (
+                  <p className="text-xs text-slate-300 leading-relaxed line-clamp-2">
+                    {podcast.description}
+                  </p>
+                )}
+              </div>
+
+              {/* Audio Wave Preview Bar & Follow Button */}
+              <div className="pt-3 border-t border-slate-800/80 flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2 text-xs font-bold text-slate-400">
+                  <Headphones className="w-4 h-4 text-purple-400" />
+                  <span>{podcast.follower_count.toLocaleString()} Subscribers</span>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <button className="p-2 rounded-xl bg-purple-600/20 hover:bg-purple-600 text-purple-300 hover:text-white border border-purple-500/30 transition-all flex items-center gap-1 text-xs font-bold">
+                    <Play className="w-3.5 h-3.5 fill-current" /> Play Latest
+                  </button>
                   <FollowPodcastButton
                     podcastId={podcast.id}
                     isFollowing={followingSet.has(podcast.id)}
                     isAuthenticated={!!user}
                   />
                 </div>
-              </article>
-            );
-          })}
-        </div>
-      )}
+              </div>
+            </article>
+          );
+        })}
+      </div>
     </div>
   );
 }

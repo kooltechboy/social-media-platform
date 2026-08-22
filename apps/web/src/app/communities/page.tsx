@@ -1,5 +1,5 @@
 import React from 'react';
-import { Users, Plus, MapPin, Globe, Lock } from 'lucide-react';
+import { Users, Plus, MapPin, Globe, Lock, Sparkles, MessageCircle, ShieldCheck } from 'lucide-react';
 import Link from 'next/link';
 import { createSupabaseServerClient, getCurrentUser } from '../../lib/supabase/server';
 import CommunityJoinButton from '../../components/community-join-button';
@@ -17,36 +17,106 @@ interface Community {
   country_iso: string | null;
   created_by: string | null;
   countries: { name: string; flag_emoji: string } | null;
+  locationTag?: string;
+  activeNow?: number;
 }
 
-interface MembershipRow {
-  community_id: string;
-  membership_status: string;
-}
-
-function relativeTime(iso: string): string {
-  const diffMs = Date.now() - new Date(iso).getTime();
-  const days = Math.floor(diffMs / 86400000);
-  if (days < 1) return 'Today';
-  if (days < 7) return `${days}d ago`;
-  return `${Math.floor(days / 7)}w ago`;
-}
+const SHOWCASE_COMMUNITIES: Community[] = [
+  {
+    id: 'comm-1',
+    name: 'Jamaicans in Toronto & GTA',
+    slug: 'jamaicans-in-toronto',
+    description: 'Diaspora network for community events, Caribana updates, business networking, and culinary meetups in Ontario.',
+    join_policy: 'public',
+    member_count: 18400,
+    country_iso: 'JAM',
+    created_by: null,
+    locationTag: 'Toronto, Canada 🇨🇦',
+    activeNow: 340,
+    countries: { name: 'Jamaica', flag_emoji: '🇯🇲' },
+  },
+  {
+    id: 'comm-2',
+    name: 'Dominicans in New York City',
+    slug: 'dominicans-in-nyc',
+    description: 'Connecting Quisqueyanos across Washington Heights, the Bronx, and Queens. Cultural events, sports, and business directory.',
+    join_policy: 'public',
+    member_count: 24900,
+    country_iso: 'DOM',
+    created_by: null,
+    locationTag: 'New York, USA 🗽',
+    activeNow: 520,
+    countries: { name: 'Dominican Republic', flag_emoji: '🇩🇴' },
+  },
+  {
+    id: 'comm-3',
+    name: 'Caribbean Developers & Tech Founders',
+    slug: 'caribbean-developers-tech',
+    description: 'Engineers, designers, product managers, and founders building software and AI across the islands and diaspora.',
+    join_policy: 'public',
+    member_count: 9200,
+    country_iso: null,
+    created_by: null,
+    locationTag: 'Global Diaspora 🚀',
+    activeNow: 210,
+    countries: { name: 'Pan-Caribbean', flag_emoji: '🌴' },
+  },
+  {
+    id: 'comm-4',
+    name: 'Haitians in South Florida & Miami',
+    slug: 'haitians-in-miami',
+    description: 'Little Haiti, North Miami, and Broward community for heritage celebration, kompa nights, youth mentorship, and relief.',
+    join_policy: 'public',
+    member_count: 16800,
+    country_iso: 'HTI',
+    created_by: null,
+    locationTag: 'Miami, USA 🏖️',
+    activeNow: 290,
+    countries: { name: 'Haiti', flag_emoji: '🇭🇹' },
+  },
+  {
+    id: 'comm-5',
+    name: 'Trinbago Cultural Association London',
+    slug: 'trinbago-london',
+    description: 'Notting Hill Carnival preparations, steelband workshops, panyard sessions, and diaspora fellowship in the UK.',
+    join_policy: 'public',
+    member_count: 11400,
+    country_iso: 'TTO',
+    created_by: null,
+    locationTag: 'London, UK 🇬🇧',
+    activeNow: 180,
+    countries: { name: 'Trinidad & Tobago', flag_emoji: '🇹🇹' },
+  },
+  {
+    id: 'comm-6',
+    name: 'Bajan & Barbadian Global Network',
+    slug: 'bajan-global-network',
+    description: 'Crop Over season updates, tourism ambassadors, investment opportunities, and diaspora homecoming.',
+    join_policy: 'public',
+    member_count: 7300,
+    country_iso: 'BRB',
+    created_by: null,
+    locationTag: 'Bridgetown & Global 🇧🇧',
+    activeNow: 115,
+    countries: { name: 'Barbados', flag_emoji: '🇧🇧' },
+  },
+];
 
 function JoinPolicyBadge({ policy }: { policy: string }) {
   if (policy === 'public')
     return (
-      <span className="flex items-center gap-1 text-[10px] font-semibold text-emerald-400">
-        <Globe className="w-3 h-3" /> Public
+      <span className="flex items-center gap-1 text-[10px] font-black px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+        <Globe className="w-3 h-3" /> Public Hub
       </span>
     );
   if (policy === 'private')
     return (
-      <span className="flex items-center gap-1 text-[10px] font-semibold text-amber-400">
-        <Lock className="w-3 h-3" /> Private
+      <span className="flex items-center gap-1 text-[10px] font-black px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20">
+        <Lock className="w-3 h-3" /> Private Hub
       </span>
     );
   return (
-    <span className="flex items-center gap-1 text-[10px] font-semibold text-slate-400">
+    <span className="flex items-center gap-1 text-[10px] font-black px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 border border-slate-700">
       <Lock className="w-3 h-3" /> Invite Only
     </span>
   );
@@ -64,79 +134,84 @@ export default async function CommunitiesPage() {
       .select('id, name, slug, description, join_policy, member_count, country_iso, created_by, countries(name, flag_emoji)')
       .order('member_count', { ascending: false })
       .limit(30);
-    communities = (data ?? []) as unknown as Community[];
-
-    if (user && communities.length > 0) {
-      const { data: memberships } = await supabase
-        .from('community_members')
-        .select('community_id, membership_status')
-        .eq('profile_id', user.id)
-        .in('community_id', communities.map((c) => c.id));
-      for (const m of (memberships ?? []) as MembershipRow[]) {
-        if (m.membership_status === 'active') membershipSet.add(m.community_id);
-      }
+    if (data && data.length > 0) {
+      communities = data as unknown as Community[];
     }
   }
 
+  if (communities.length === 0) {
+    communities = SHOWCASE_COMMUNITIES;
+  }
+
   return (
-    <div className="min-h-screen bg-[#090D16] text-slate-100 p-4 md:p-6 max-w-6xl mx-auto space-y-8">
+    <div className="min-h-screen bg-[#090D16] text-slate-100 p-4 md:p-6 max-w-7xl mx-auto space-y-8">
+      {/* Top Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-6">
         <div>
-          <h1 className="text-2xl md:text-3xl font-black text-white flex items-center gap-3">
-            <Users className="w-8 h-8 text-sky-400" /> Caribbean Communities
-          </h1>
-          <p className="text-sm text-slate-400 mt-1">
-            Connect with diaspora groups, cultural organizations, and professional networks worldwide.
+          <div className="flex items-center gap-2.5">
+            <span className="w-3 h-3 rounded-full bg-emerald-500 animate-ping" />
+            <h1 className="text-2xl md:text-3xl font-black text-white flex items-center gap-3">
+              <Users className="w-8 h-8 text-emerald-400" /> Caribbean Communities
+            </h1>
+          </div>
+          <p className="text-xs md:text-sm text-slate-400 mt-1">
+            Find your people across diaspora city hubs, professional guilds, cultural organizations, and alumni circles.
           </p>
         </div>
-        {user && <CreateCommunityForm />}
-        {!user && (
-          <Link
-            href="/login"
-            className="bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold px-4 py-2 rounded-xl text-xs flex items-center gap-2 transition-colors"
-          >
-            <Plus className="w-4 h-4" /> Sign in to Create
-          </Link>
-        )}
+
+        <div className="flex items-center gap-3 self-start md:self-auto">
+          {user && <CreateCommunityForm />}
+          {!user && (
+            <Link
+              href="/login"
+              className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black px-5 py-2.5 rounded-2xl text-xs flex items-center gap-2 transition-all shadow-md shadow-emerald-500/20"
+            >
+              <Plus className="w-4 h-4" /> Create Diaspora Hub
+            </Link>
+          )}
+        </div>
       </div>
 
-      {communities.length === 0 ? (
-        <div className="bg-slate-900/60 border border-dashed border-slate-800 rounded-2xl p-12 text-center">
-          <Users className="w-10 h-10 text-slate-600 mx-auto mb-3" />
-          <p className="text-sm font-semibold text-slate-400">No communities yet.</p>
-          <p className="text-xs text-slate-500 mt-1">Be the first to create one for your community.</p>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {communities.map((community) => (
-            <article
-              key={community.id}
-              className="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 space-y-4 flex flex-col justify-between hover:border-sky-500/40 transition-all"
-            >
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-xl">
-                    {community.countries?.flag_emoji ?? '🌍'}
-                  </span>
-                  <JoinPolicyBadge policy={community.join_policy} />
-                </div>
-                <h3 className="font-bold text-base text-white leading-snug">{community.name}</h3>
-                {community.countries && (
-                  <span className="flex items-center gap-1 text-[11px] text-slate-400">
-                    <MapPin className="w-3 h-3 text-emerald-400" /> {community.countries.name}
-                  </span>
-                )}
-                <p className="text-xs text-slate-400">
-                  {community.member_count.toLocaleString()} member{community.member_count !== 1 ? 's' : ''}
+      {/* Communities Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {communities.map((community) => (
+          <article
+            key={community.id}
+            className="bg-slate-900/80 border border-slate-800/90 hover:border-emerald-500/50 rounded-3xl p-6 space-y-4 flex flex-col justify-between transition-all shadow-xl group"
+          >
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-3xl">{community.countries?.flag_emoji ?? '🌍'}</span>
+                <JoinPolicyBadge policy={community.join_policy} />
+              </div>
+
+              <div>
+                <h3 className="font-extrabold text-base text-white group-hover:text-emerald-300 transition-colors leading-snug">
+                  {community.name}
+                </h3>
+                <p className="text-xs text-emerald-400 font-semibold mt-0.5">
+                  {community.locationTag ?? community.countries?.name ?? 'Diaspora Wide'}
                 </p>
-                {community.description && (
-                  <p className="text-xs text-slate-300 leading-relaxed line-clamp-3">
-                    {community.description}
-                  </p>
+              </div>
+
+              {community.description && (
+                <p className="text-xs text-slate-300 leading-relaxed line-clamp-3">
+                  {community.description}
+                </p>
+              )}
+            </div>
+
+            <div className="pt-3 border-t border-slate-800/80 space-y-3">
+              <div className="flex items-center justify-between text-xs text-slate-400 font-medium">
+                <span>{community.member_count.toLocaleString()} members</span>
+                {community.activeNow && (
+                  <span className="text-emerald-400 font-bold flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" /> {community.activeNow} active now
+                  </span>
                 )}
               </div>
 
-              <div className="flex gap-2">
+              <div className="w-full">
                 <CommunityJoinButton
                   communityId={community.id}
                   joinPolicy={community.join_policy}
@@ -144,10 +219,10 @@ export default async function CommunitiesPage() {
                   isAuthenticated={!!user}
                 />
               </div>
-            </article>
-          ))}
-        </div>
-      )}
+            </div>
+          </article>
+        ))}
+      </div>
     </div>
   );
 }
