@@ -182,34 +182,28 @@ export default async function HomePage() {
         {/* ────────────────────────────────────────────────────────── */}
         {/* P0: PRIMARY UNIVERSAL INLINE COMPOSER                      */}
         {/* ────────────────────────────────────────────────────────── */}
-        <section aria-label="Create Post" className="space-y-2">
-          {user ? (
-            <UniversalComposer
-              displayName={user.displayName}
-              avatarInitials={user.displayName.slice(0, 2).toUpperCase()}
-            />
-          ) : (
-            <div className="bg-gradient-to-r from-sky-950/80 via-slate-900 to-emerald-950/60 rounded-3xl p-6 border border-sky-500/20 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-xl">
+        <section aria-label="Create Post" className="space-y-4">
+          <UniversalComposer
+            displayName={user?.displayName || 'Caribbean Diaspora Member'}
+            avatarInitials={user?.displayName ? user.displayName.slice(0, 2).toUpperCase() : 'CO'}
+          />
+
+          {!user && (
+            <div className="bg-gradient-to-r from-sky-950/90 via-slate-900/90 to-emerald-950/80 rounded-3xl p-4 sm:p-5 border border-sky-500/30 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-xl backdrop-blur-xl">
               <div>
-                <h3 className="text-base font-black text-white flex items-center gap-2">
-                  <Globe className="w-4 h-4 text-sky-400" /> Welcome to Caribbean One
+                <h3 className="text-xs font-black text-white flex items-center gap-2">
+                  <Globe className="w-4 h-4 text-sky-400" /> Caribbean One Community Access
                 </h3>
-                <p className="text-xs text-slate-300 mt-1">
-                  The digital home for Caribbean people, creators, businesses, and the global diaspora.
+                <p className="text-[11px] text-slate-300 mt-0.5">
+                  Sign in or create your profile to access SpotPay wallet, direct messaging, and verified business pages.
                 </p>
               </div>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
                 <Link
                   href="/login"
-                  className="bg-white hover:bg-slate-200 text-slate-950 font-black px-5 py-2.5 rounded-2xl text-xs transition-all shadow-md"
+                  className="bg-gradient-to-r from-sky-400 to-emerald-400 hover:from-sky-300 hover:to-emerald-300 text-slate-950 font-black px-4 py-2 rounded-xl text-xs transition-all shadow-md whitespace-nowrap"
                 >
-                  Join the Diaspora
-                </Link>
-                <Link
-                  href="/explore"
-                  className="bg-slate-800/80 hover:bg-slate-700 text-slate-200 font-bold px-4 py-2.5 rounded-2xl text-xs border border-slate-700 transition-all"
-                >
-                  Explore First
+                  Sign In / Register
                 </Link>
               </div>
             </div>

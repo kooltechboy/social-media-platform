@@ -154,7 +154,12 @@ export default async function MessagesPage({ searchParams }: { searchParams: Pro
         </aside>
 
         {selectedId ? (
-          <MessageThread conversationId={selectedId} initialMessages={threadMessages} currentUserId={user.id} />
+          <MessageThread
+            conversationId={selectedId}
+            initialMessages={threadMessages}
+            currentUserId={user.id}
+            peerName={summaries.find((s) => s.id === selectedId)?.displayName || 'Caribbean Member'}
+          />
         ) : (
           <section className="md:col-span-2 bg-slate-900/60 border border-slate-800 rounded-2xl flex items-center justify-center min-h-[70vh]">
             <p className="text-sm text-slate-500">Select a conversation to start chatting.</p>

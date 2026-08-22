@@ -3,8 +3,13 @@
 @tailwind utilities;
 
 :root {
-  --background: #090d16;
-  --foreground: #f8fafc;
+  --background: #060B14;
+  --foreground: #F8FAFC;
+  --caribbean-azure: #0284C7;
+  --caribbean-emerald: #059669;
+  --caribbean-gold: #F59E0B;
+  --caribbean-coral: #F97316;
+  --caribbean-turquoise: #06B6D4;
 }
 
 body {
@@ -12,3 +17,29 @@ body {
   background: var(--background);
   font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
 }
+
+/* Caribbean Radiant Background Utilities */
+.caribbean-gradient-bg {
+  background: radial-gradient(circle at 15% 15%, rgba(2, 132, 199, 0.22) 0%, transparent 45%),
+              radial-gradient(circle at 85% 25%, rgba(5, 150, 105, 0.18) 0%, transparent 45%),
+              radial-gradient(circle at 50% 80%, rgba(245, 158, 11, 0.12) 0%, transparent 50%),
+              linear-gradient(180deg, #060B14 0%, #0A1220 50%, #040810 100%);
+}
+
+.caribbean-glass-card {
+  background: rgba(15, 23, 42, 0.82);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(56, 189, 248, 0.2);
+  box-shadow: 0 10px 35px -10px rgba(0, 0, 0, 0.5), 0 0 20px -5px rgba(2, 132, 199, 0.15);
+}
+
+@keyframes pulseGlow {
+  0%, 100% { opacity: 0.6; transform: scale(1); }
+  50% { opacity: 0.9; transform: scale(1.05); }
+}
+
+.animate-pulse-glow {
+  animation: pulseGlow 6s ease-in-out infinite;
+}
+

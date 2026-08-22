@@ -17,12 +17,17 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className="dark" suppressHydrationWarning>
-      <body className="bg-[#070B12] text-slate-100 antialiased min-h-screen relative overflow-x-hidden" suppressHydrationWarning>
-        {/* Layer 1 & 2: Atmospheric Ambient Ocean & Emerald Glows */}
+      <body className="caribbean-gradient-bg text-slate-100 antialiased min-h-screen relative overflow-x-hidden" suppressHydrationWarning>
+        {/* Caribbean Multi-Layered Radiant Atmosphere */}
         <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
-          <div className="absolute -top-40 -right-40 w-96 h-96 rounded-full bg-sky-500/10 blur-[120px]" />
-          <div className="absolute top-1/3 -left-40 w-96 h-96 rounded-full bg-emerald-500/10 blur-[130px]" />
-          <div className="absolute bottom-10 right-10 w-96 h-96 rounded-full bg-amber-500/05 blur-[140px]" />
+          {/* Azure Ocean Water Glow top right */}
+          <div className="absolute -top-32 -right-32 w-[550px] h-[550px] rounded-full bg-gradient-to-br from-sky-500/25 via-cyan-500/15 to-transparent blur-[110px] animate-pulse-glow" />
+          {/* Emerald Island Bloom mid left */}
+          <div className="absolute top-1/4 -left-32 w-[500px] h-[500px] rounded-full bg-gradient-to-tr from-emerald-500/20 via-teal-500/15 to-transparent blur-[120px] animate-pulse-glow" />
+          {/* Coral Sunset Glow bottom right */}
+          <div className="absolute bottom-10 -right-20 w-[450px] h-[450px] rounded-full bg-gradient-to-tl from-amber-500/15 via-rose-500/10 to-transparent blur-[130px]" />
+          {/* Fine Caribbean Water Ripple Texture Overlay */}
+          <div className="absolute inset-0 bg-[radial-gradient(#38bdf8_1px,transparent_1px)] [background-size:32px_32px] opacity-[0.04]" />
         </div>
 
         {/* Main Application Container */}
@@ -40,4 +45,5 @@ export default function RootLayout({
     </html>
   );
 }
+
 
