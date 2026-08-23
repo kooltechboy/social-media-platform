@@ -1,5 +1,6 @@
 'use server';
 
+import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import { createSupabaseServerClient, getCurrentUser } from '../supabase/server';
 import { evaluatePayout, type PayoutContext } from '@caribbean/creator';
@@ -21,19 +22,21 @@ export async function setupCreatorAccountAction() {
     return { error: 'Database service unavailable.' };
   }
 
-  const { error: insertError } = await supabase.from('creator_accounts').insert({
-    profile_id: user.id,
-    kyc_status: 'unverified',
-    payout_threshold_minor: 5000,
-  });
+  const { error: upsertError } = await supabase.from('creator_accounts').upsert(
+    {
+      profile_id: user.id,
+      kyc_status: 'unverified',
+      payout_threshold_minor: 5000,
+    },
+    { onConflict: 'profile_id' },
+  );
 
-  if (insertError) {
-    console.error('Creator account insert error:', insertError);
-    return { error: insertError.message || 'Failed to set up creator account' };
+  if (upsertError) {
+    console.error('Creator account upsert error:', upsertError);
+    return { error: upsertError.message || 'Failed to set up creator account' };
   }
 
-  revalidatePath('/creator-studio');
-  return { success: true };
+  redirect('/creator-studio');
 }
 export async function requestPayoutAction(
   prevState: PayoutActionState,
