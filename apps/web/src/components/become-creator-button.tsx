@@ -1,38 +1,20 @@
 'use client';
 
 import React, { useTransition, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { createSupabaseBrowserClient } from '../lib/supabase/browser';
+import { setupCreatorAccountAction } from '../lib/creator/actions';
 
 export default function BecomeCreatorClientButton() {
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
-  const router = useRouter();
 
   const handle = () => {
     setError(null);
     startTransition(async () => {
       try {
-        const supabase = createSupabaseBrowserClient();
-        if (!supabase) return;
-        const { data: { user }, error: authError } = await supabase.auth.getUser();
-        if (authError || !user) { router.push('/login'); return; }
-        
-        const { error: insertError } = await supabase.from('creator_accounts').insert({
-          profile_id: user.id,
-          kyc_status: 'unverified',
-          payout_threshold_minor: 5000,
-        });
-
-        if (insertError) {
-          console.error('Insert error:', insertError);
-          setError(insertError.message || 'Failed to set up creator account');
-          return;
+        const result = await setupCreatorAccountAction();
+        if (result?.error) {
+          setError(result.error);
         }
-
-        // Force a full router navigation to ensure Next.js clears the cache
-        router.push('/creator-studio');
-        router.refresh();
       } catch (err: any) {
         console.error('Unexpected error:', err);
         setError(err.message || 'An unexpected error occurred');

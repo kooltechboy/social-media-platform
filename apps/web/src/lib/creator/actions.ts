@@ -10,6 +10,31 @@ export interface PayoutActionState {
   message?: string;
 }
 
+export async function setupCreatorAccountAction() {
+  const user = await getCurrentUser();
+  if (!user) {
+    return { error: 'You must be signed in.' };
+  }
+
+  const supabase = await createSupabaseServerClient();
+  if (!supabase) {
+    return { error: 'Database service unavailable.' };
+  }
+
+  const { error: insertError } = await supabase.from('creator_accounts').insert({
+    profile_id: user.id,
+    kyc_status: 'unverified',
+    payout_threshold_minor: 5000,
+  });
+
+  if (insertError) {
+    console.error('Creator account insert error:', insertError);
+    return { error: insertError.message || 'Failed to set up creator account' };
+  }
+
+  revalidatePath('/creator-studio');
+  return { success: true };
+}
 export async function requestPayoutAction(
   prevState: PayoutActionState,
   formData: FormData,
