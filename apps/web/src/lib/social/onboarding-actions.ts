@@ -1,32 +1,20 @@
 'use server';
 
-import { createServerClient } from '@supabase/ssr';
-import { cookies } from 'next/headers';
 import { revalidatePath } from 'next/cache';
+import { createSupabaseServerClient, getCurrentUser } from '../supabase/server';
 
 export async function updateOnboardingIdentity(
   originCountryIso: string,
   diasporaHubId: string | null
 ) {
-  const cookieStore = await cookies();
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL || 'http://localhost:54321',
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'public-anon-key',
-    {
-      cookies: {
-        getAll() {
-          return cookieStore.getAll();
-        },
-      },
-    }
-  );
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
+  const user = await getCurrentUser();
   if (!user) {
-    throw new Error('Not authenticated');
+    return { error: 'Not authenticated' };
+  }
+
+  const supabase = await createSupabaseServerClient();
+  if (!supabase) {
+    return { error: 'Database service unavailable' };
   }
 
   // Update or insert profile_identity
@@ -39,7 +27,7 @@ export async function updateOnboardingIdentity(
 
   if (error) {
     console.error('Failed to update onboarding identity', error);
-    throw new Error('Could not save identity profile');
+    return { error: 'Could not save identity profile' };
   }
 
   revalidatePath('/');

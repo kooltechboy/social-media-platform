@@ -72,7 +72,18 @@ export default function FeedStream({ initialPosts }: FeedStreamProps) {
     try {
       await toggleLikeAction(postId);
     } catch {
-      // Revert if error
+      // Revert optimistic update on error
+      setPosts((prev) =>
+        prev.map((p) => {
+          if (p.id !== postId) return p;
+          const wasLiked = !p.isUserLiked;
+          return {
+            ...p,
+            isUserLiked: wasLiked,
+            likes: wasLiked ? p.likes + 1 : Math.max(0, p.likes - 1),
+          };
+        })
+      );
     }
   }
 

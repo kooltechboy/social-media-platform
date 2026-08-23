@@ -96,6 +96,9 @@ export default function UniversalComposer({
       const saved = localStorage.getItem(DRAFT_KEY);
       if (saved) {
         const parsed = JSON.parse(saved);
+        if (parsed.content) {
+          setContent(parsed.content);
+        }
       }
     } catch {
       // Ignore local storage read errors

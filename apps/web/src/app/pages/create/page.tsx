@@ -106,7 +106,17 @@ export default function CreatePageWizard() {
     formData.set('slug', pageSlug);
     formData.set('category', selectedType);
     formData.set('description', description);
-    formData.set('countryIso', country.slice(-5, -3) || 'JM');
+    const COUNTRY_ISO_MAP: Record<string, string> = {
+      'Jamaica 🇯🇲': 'JM',
+      'Trinidad & Tobago 🇹🇹': 'TT',
+      'Dominican Republic 🇩🇴': 'DO',
+      'Barbados 🇧🇧': 'BB',
+      'Haiti 🇭🇹': 'HT',
+      'Bahamas 🇧🇸': 'BS',
+      'Puerto Rico 🇵🇷': 'PR',
+      'Global Diaspora 🌍': 'WW',
+    };
+    formData.set('countryIso', COUNTRY_ISO_MAP[country] || 'JM');
 
     try {
       const { createBusinessPageAction } = await import('../../../lib/business/actions');

@@ -57,7 +57,7 @@ export function ExploreSearch() {
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Ask Caribbean AI... (e.g. best jerk spots in Brooklyn, upcoming fத்துக் in Trinidad)"
+          placeholder="Ask Caribbean AI... (e.g. best jerk spots in Brooklyn, upcoming fetes in Trinidad)"
           className="w-full bg-slate-900/90 border border-slate-700/80 rounded-full pl-11 pr-24 py-3 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-sky-500 transition-all shadow-inner"
         />
         <button

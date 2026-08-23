@@ -2,6 +2,7 @@
 
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
+import crypto from 'crypto';
 import { createSupabaseServerClient, getCurrentUser } from '../supabase/server';
 import { evaluatePayout, type PayoutContext } from '@caribbean/creator';
 
@@ -145,4 +146,82 @@ export async function requestPayoutAction(
     success: true,
     message: `Payout of $${(decision.amountMinor / 100).toFixed(2)} USD successfully initiated to your linked SpotPay account.`,
   };
+}
+
+export async function sendTipAction(
+  creatorHandle: string,
+  amountMinor: number,
+  note: string,
+) {
+  const user = await getCurrentUser();
+  if (!user) return { error: 'You must be signed in.' };
+
+  const supabase = await createSupabaseServerClient();
+  if (!supabase) return { error: 'Database service unavailable.' };
+
+  // Look up creator profile
+  const { data: creatorProfile } = await supabase
+    .from('profiles')
+    .select('id')
+    .eq('username', creatorHandle)
+    .maybeSingle();
+
+  if (!creatorProfile) return { error: 'Creator not found.' };
+
+  // Find the creator's pending ledger account
+  const { data: creatorLedger } = await supabase
+    .from('ledger_accounts')
+    .select('id, owner_id')
+    .eq('owner_id', creatorProfile.id)
+    .eq('account_type', 'creator_pending')
+    .maybeSingle();
+
+  if (!creatorLedger) return { error: 'Creator has no payment account.' };
+
+  // Find sender's spotpay wallet
+  const { data: senderWallet } = await supabase
+    .from('ledger_accounts')
+    .select('id')
+    .eq('owner_id', user.id)
+    .eq('account_type', 'spotpay_wallet')
+    .maybeSingle();
+
+  if (!senderWallet) return { error: 'You need a SpotPay wallet. Top up first.' };
+
+  const transactionId = crypto.randomUUID();
+  const amountMajor = (amountMinor / 100).toFixed(4);
+
+  // Use service role for ledger inserts
+  const { createClient } = await import('@supabase/supabase-js');
+  const supabaseAdmin = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  );
+
+  const { error: insertErr } = await supabaseAdmin.from('ledger_entries').insert([
+    {
+      transaction_id: transactionId,
+      account_id: senderWallet.id,
+      entry_type: 'DEBIT',
+      amount: -Number(amountMajor),
+      idempotency_key: `tip_${transactionId}_debit`,
+      description: note ? `Tip to @${creatorHandle}: ${note}` : `Tip to @${creatorHandle}`,
+    },
+    {
+      transaction_id: transactionId,
+      account_id: creatorLedger.id,
+      entry_type: 'CREDIT',
+      amount: Number(amountMajor),
+      idempotency_key: `tip_${transactionId}_credit`,
+      description: note ? `Tip from @${user.username || user.id}: ${note}` : `Tip from @${user.username || user.id}`,
+    },
+  ]);
+
+  if (insertErr) {
+    console.error('Tip ledger insert error:', insertErr);
+    return { error: 'Failed to process tip.' };
+  }
+
+  revalidatePath('/creator-studio');
+  return { success: true, message: `$${(amountMinor / 100).toFixed(2)} USD tip sent!` };
 }

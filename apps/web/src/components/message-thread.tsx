@@ -89,7 +89,7 @@ export default function MessageThread({
 
   // Call duration timer
   useEffect(() => {
-    let interval: NodeJS.Timeout;
+    let interval: ReturnType<typeof setInterval>;
     if (isVoiceCallActive || isVideoCallActive) {
       interval = setInterval(() => {
         setCallDuration((prev) => prev + 1);
@@ -102,7 +102,7 @@ export default function MessageThread({
 
   // Audio recording timer
   useEffect(() => {
-    let interval: NodeJS.Timeout;
+    let interval: ReturnType<typeof setInterval>;
     if (isRecordingAudio) {
       interval = setInterval(() => {
         setRecordingSeconds((prev) => prev + 1);

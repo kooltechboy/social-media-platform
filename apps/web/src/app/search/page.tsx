@@ -10,7 +10,7 @@ const ENTITY_META: Record<string, { label: string; icon: React.ReactNode; color:
   communities: { label: 'Communities', icon: <Users className="w-4 h-4" />, color: 'text-sky-400' },
   businesses: { label: 'Businesses', icon: <Store className="w-4 h-4" />, color: 'text-emerald-400' },
   posts: { label: 'Posts', icon: <FileText className="w-4 h-4" />, color: 'text-slate-300' },
-  profiles: { label: 'Posts', icon: <FileText className="w-4 h-4" />, color: 'text-slate-300' },
+  profiles: { label: 'Profiles', icon: <FileText className="w-4 h-4" />, color: 'text-slate-300' },
 };
 
 export default async function SearchPage({ searchParams }: { searchParams: Promise<{ q?: string }> }) {

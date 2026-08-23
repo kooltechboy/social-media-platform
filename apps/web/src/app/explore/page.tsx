@@ -15,7 +15,8 @@ import {
   TrendingUp,
   Headphones,
 } from 'lucide-react';
-import { createServerSupabase, flagEmoji } from '../../lib/supabase';
+import { createSupabaseServerClient } from '../../lib/supabase/server';
+import { flagEmoji } from '../../lib/supabase';
 import { ExploreSearch } from '../../components/explore-search';
 
 export const revalidate = 300;
@@ -67,7 +68,7 @@ const FALLBACK_HUBS: HubRow[] = [
 ];
 
 async function loadGeography(): Promise<{ islands: CountryRow[]; hubs: HubRow[] }> {
-  const supabase = createServerSupabase();
+  const supabase = await createSupabaseServerClient();
   if (!supabase) {
     return { islands: FALLBACK_ISLANDS, hubs: FALLBACK_HUBS };
   }

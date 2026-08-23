@@ -8,6 +8,7 @@ interface SpotPayTipModalProps {
   onClose: () => void;
   creatorName: string;
   creatorHandle: string;
+  creatorId?: string;
 }
 
 const TIP_AMOUNTS = [2, 5, 10, 25, 50];
@@ -17,12 +18,14 @@ export default function SpotPayTipModal({
   onClose,
   creatorName,
   creatorHandle,
+  creatorId,
 }: SpotPayTipModalProps) {
   const [selectedAmount, setSelectedAmount] = useState<number>(5);
   const [customAmount, setCustomAmount] = useState<string>('');
   const [message, setMessage] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   if (!isOpen) return null;
 
@@ -33,14 +36,25 @@ export default function SpotPayTipModal({
     if (finalAmount <= 0) return;
 
     setIsProcessing(true);
-    // Simulate instantaneous double-entry ledger settlement
-    await new Promise((r) => setTimeout(r, 900));
-    setIsProcessing(false);
-    setIsSuccess(true);
-    setTimeout(() => {
-      setIsSuccess(false);
-      onClose();
-    }, 2500);
+    setError(null);
+
+    try {
+      const { sendTipAction } = await import('../lib/creator/actions');
+      const result = await sendTipAction(creatorHandle, Math.round(finalAmount * 100), message);
+      if (result?.error) {
+        setError(result.error);
+        return;
+      }
+      setIsSuccess(true);
+      setTimeout(() => {
+        setIsSuccess(false);
+        onClose();
+      }, 2500);
+    } catch (err: any) {
+      setError(err.message || 'Failed to process tip');
+    } finally {
+      setIsProcessing(false);
+    }
   }
 
   return (
@@ -136,6 +150,9 @@ export default function SpotPayTipModal({
 
             {/* Submit */}
             <div className="pt-2">
+              {error && (
+                <p className="text-rose-400 text-xs mb-2 font-medium">{error}</p>
+              )}
               <button
                 type="submit"
                 disabled={isProcessing || finalAmount <= 0}

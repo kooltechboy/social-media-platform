@@ -23,6 +23,8 @@ interface Props {
 
 const INITIAL: LiveActionState = { error: null, success: null };
 
+const profileCache = new Map<string, string>();
+
 export default function LiveChatClient({ livestreamId, initialMessages, isLive, isAuthenticated }: Props) {
   const [messages, setMessages] = useState<ChatMessage[]>(initialMessages);
   const [input, setInput] = useState('');
@@ -45,19 +47,25 @@ export default function LiveChatClient({ livestreamId, initialMessages, isLive, 
           filter: `livestream_id=eq.${livestreamId}`,
         },
         async (payload) => {
-          const row = payload.new as { id: number; body: string; sender_id: string | null; created_at: string };
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('display_name')
-            .eq('id', row.sender_id ?? '')
-            .maybeSingle();
+          const row = payload.new as { id: string; body: string; sender_id: string | null; created_at: string };
+          const senderId = row.sender_id ?? '';
+          let displayName = profileCache.get(senderId);
+          if (!displayName && senderId) {
+            const { data: profile } = await supabase
+              .from('profiles')
+              .select('display_name')
+              .eq('id', senderId)
+              .maybeSingle();
+            displayName = (profile as { display_name: string } | null)?.display_name ?? 'Viewer';
+            if (senderId) profileCache.set(senderId, displayName);
+          }
           setMessages((prev) => [
             ...prev,
             {
               id: String(row.id),
               body: row.body,
               sender_id: row.sender_id,
-              display_name: (profile as { display_name: string } | null)?.display_name ?? 'Viewer',
+              display_name: displayName ?? 'Viewer',
               created_at: row.created_at,
             },
           ]);
