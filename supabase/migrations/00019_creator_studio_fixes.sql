@@ -8,6 +8,7 @@ ALTER TABLE public.ledger_accounts ADD COLUMN balance NUMERIC(18, 4) DEFAULT 0 N
 CREATE OR REPLACE FUNCTION public.update_ledger_account_balance()
 RETURNS TRIGGER
 LANGUAGE plpgsql
+SECURITY DEFINER
 AS $$
 BEGIN
     UPDATE public.ledger_accounts
@@ -25,6 +26,7 @@ FOR EACH ROW EXECUTE FUNCTION public.update_ledger_account_balance();
 CREATE OR REPLACE FUNCTION public.auto_create_creator_pending_ledger()
 RETURNS TRIGGER
 LANGUAGE plpgsql
+SECURITY DEFINER
 AS $$
 BEGIN
     INSERT INTO public.ledger_accounts (owner_id, account_type, currency)
