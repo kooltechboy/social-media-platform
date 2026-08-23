@@ -1,19 +1,19 @@
-# System Architecture — CARIBBEAN ONE
+# System Architecture — ANTILIA
 
 ## Overview
-CARIBBEAN ONE is engineered as a modular monorepo combining Next.js 15 (Web), Expo React Native (iOS/Android Mobile), Supabase PostgreSQL with RLS, SpotPay Financial Orchestration, Cloudflare R2/Stream, Redis, and CaribAI via OpenRouter.
+ANTILIA is engineered as a modular monorepo combining Next.js 15 (Web), Expo React Native (iOS/Android Mobile), Supabase PostgreSQL with RLS, SpotPay Financial Orchestration, Cloudflare R2/Stream, Redis, and Antilia AI via OpenRouter.
 
 ```
                                ┌────────────────────────────────────────┐
-                               │           CARIBBEAN GRAPH              │
+                               │            ANTILIA GRAPH               │
                                │  People • Culture • Geography • Commerce│
                                └───────────────────┬────────────────────┘
                                                    │
          ┌───────────────────┬─────────────────────┼─────────────────────┬───────────────────┐
          │                   │                     │                     │                   │
     ┌────┴────┐         ┌────┴────┐           ┌────┴────┐           ┌────┴────┐         ┌────┴────┐
-    │ SOCIAL  │         │ CREATOR │           │ SPOTPAY │           │ BUSINESS│         │ CARIBAI │
-    │   OS    │         │   OS    │           │ WALLET  │           │   OS    │         │ INTELL. │
+    │ ANTILIA │         │ ANTILIA │           │ SPOTPAY │           │ BUSINESS│         │ ANTILIA │
+    │ SOCIAL  │         │ STUDIO  │           │ WALLET  │           │   OS    │         │   AI    │
     └─────────┘         └─────────┘           └─────────┘           └─────────┘         └─────────┘
 ```
 

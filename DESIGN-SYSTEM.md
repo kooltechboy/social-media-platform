@@ -1,10 +1,10 @@
-# Design System — CARIBBEAN ONE
+# Design System — ANTILIA
 
 _Authoritative reference. Agents may NOT invent UI patterns outside `@caribbean/design-system` tokens and `@caribbean/ui` components. See AGENTS.md Mandate 5._
 
 ## 1. Design Language
 
-**Caribbean + premium + modern + technology-forward. Editorial, warm, energetic, international.**
+**Caribbean Futurism: premium, editorial, modern, and technology-forward. The palette relies on deep ocean, volcanic stone, and limestone to evoke the region without cliché.**
 
 Explicitly prohibited: flag spam, palm-tree graphics, cheap turquoise gradients, tourist-brochure imagery, stereotypical tropical styling.
 

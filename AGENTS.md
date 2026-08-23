@@ -23,9 +23,10 @@ Every line of code, migration, and configuration must adhere to NASA-grade softw
    - Never commit raw API keys, secrets, or tokens.
    - Client authorization is UI feedback only; database RLS and server middleware enforce security boundaries.
 
-5. **Design System Adherence**
+5. **Design System Adherence (ANTILIA)**
    - All UI elements must use predefined tokens from `@caribbean/design-system`.
-   - Avoid tropical clichés (no flag spamming, zero cheap turquoise gradients, no tropical tree graphics). Maintain a modern, editorial, technologically forward visual language.
+   - Enforce the Antilia "Caribbean Futurism" aesthetic (deep ocean blues, volcanic charcoal, limestone whites).
+   - Avoid tropical clichés (no flag spamming, zero cheap turquoise gradients, no tropical tree graphics). Maintain a premium, editorial, technologically forward visual language.
 
 6. **Definition of Done**
    - A feature is only complete when TypeScript typechecks with zero errors, versioned migration SQL is added, unit/RLS tests pass, and mobile/web UI behavior is verified.

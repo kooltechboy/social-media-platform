@@ -462,7 +462,7 @@ export class StripeAdapter implements PSPAdapter {
     const apiKey = config.apiKey || process.env.STRIPE_SECRET_KEY || '';
     if (apiKey) {
       this.stripeClient = new Stripe(apiKey, {
-        apiVersion: '2025-01-27.acacia',
+        apiVersion: '2026-07-29.dahlia',
         appInfo: {
           name: 'SpotPay Engine',
         },

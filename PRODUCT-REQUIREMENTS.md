@@ -1,7 +1,7 @@
-# Product Requirements — CARIBBEAN ONE
+# Product Requirements — ANTILIA
 
 > **North Star:** The digital home of the Caribbean and its global diaspora.
-> Not "Facebook for the Caribbean" — a five-system ecosystem: Social OS, Caribbean Graph, Creator OS, Business OS, AI OS, unified by SpotPay.
+> Not "Facebook for the Caribbean" — a five-system ecosystem: Antilia Social, Antilia Graph, Antilia Studio, Business OS, Antilia AI, unified by SpotPay by Antilia.
 
 ## 1. Problem Statement
 
