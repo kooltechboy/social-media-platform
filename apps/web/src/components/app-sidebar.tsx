@@ -105,16 +105,56 @@ export default function AppSidebar({ currentPath = '/' }: AppSidebarProps) {
 
   return (
     <aside className="hidden md:block col-span-1 space-y-5" aria-label="Primary navigation">
-      <div className="bg-slate-900/80 border border-slate-800/80 rounded-3xl p-3 shadow-xl space-y-4">
+      <div className="bg-slate-950/85 backdrop-blur-2xl border border-slate-800/80 rounded-3xl p-3 shadow-2xl space-y-4">
         {renderNavGroup(PRIMARY_NAV, 'Ecosystem')}
         <div className="h-px bg-slate-800/60 my-2" />
-        {renderNavGroup(COMMERCE_NAV, 'Economy & Culture')}
+        
+        {/* Accordion for secondary features to reduce visual clutter */}
+        <details className="group">
+          <summary className="text-[10px] font-black tracking-wider uppercase text-slate-500 px-3 py-1.5 cursor-pointer list-none flex justify-between items-center hover:text-slate-300 transition-colors">
+            Economy & Culture
+            <span className="transition group-open:rotate-180">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </span>
+          </summary>
+          <div className="mt-2 space-y-1">
+            {COMMERCE_NAV.map((item) => {
+              const isActive = currentPath.startsWith(item.href);
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={`flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-xs font-bold transition-all ${
+                    isActive
+                      ? 'bg-gradient-to-r from-sky-500/20 to-emerald-500/10 text-white border border-sky-500/30 shadow-sm'
+                      : 'text-slate-300 hover:bg-slate-800/60 hover:text-white border border-transparent'
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    {item.icon}
+                    <span>{item.label}</span>
+                  </div>
+                  {item.badge && (
+                    <span className={`text-[9px] font-black px-1.5 py-0.5 rounded-full border ${
+                      item.badge === 'VERIFIED'
+                        ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
+                        : 'bg-slate-800 text-slate-400 border-slate-700'
+                    }`}>
+                      {item.badge}
+                    </span>
+                  )}
+                </Link>
+              );
+            })}
+          </div>
+        </details>
+
         <div className="h-px bg-slate-800/60 my-2" />
         {renderNavGroup(PERSONAL_NAV, 'Account')}
       </div>
 
       {/* Creator Studio Action Card */}
-      <div className="bg-gradient-to-br from-slate-900 via-slate-900 to-sky-950/60 border border-sky-500/30 rounded-3xl p-4 text-center shadow-lg space-y-2.5">
+      <div className="bg-gradient-to-br from-slate-950/90 via-slate-900/90 to-sky-950/90 backdrop-blur-2xl border border-sky-500/30 rounded-3xl p-4 text-center shadow-lg space-y-2.5">
         <div className="flex items-center justify-center gap-1.5 text-xs font-black text-sky-400 uppercase tracking-wide">
           <Sparkles className="w-3.5 h-3.5" /> Caribbean Creator Hub
         </div>

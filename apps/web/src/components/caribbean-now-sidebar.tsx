@@ -28,7 +28,7 @@ export default function CaribbeanNowSidebar() {
       <OnlineFriendsWidget />
 
       {/* Caribbean Now Live Ticker */}
-      <div className="bg-slate-900/80 border border-slate-800/80 rounded-3xl p-5 shadow-xl space-y-4">
+      <div className="bg-slate-950/85 backdrop-blur-2xl border border-slate-800/80 rounded-3xl p-5 shadow-2xl space-y-4">
         <div className="flex items-center justify-between">
           <h3 className="font-extrabold text-sm text-white flex items-center gap-2">
             <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-ping" />
@@ -46,7 +46,7 @@ export default function CaribbeanNowSidebar() {
             <Link
               key={pulse.city}
               href={`/explore?q=${encodeURIComponent(pulse.city)}`}
-              className="flex items-center justify-between p-2.5 rounded-2xl bg-slate-950/60 hover:bg-slate-800/60 border border-slate-800/60 hover:border-sky-500/40 transition-all group"
+              className="flex items-center justify-between p-2.5 rounded-2xl bg-slate-900/60 hover:bg-slate-800/80 border border-slate-800/60 hover:border-sky-500/40 transition-all group"
             >
               <div className="flex items-center gap-2.5">
                 <span className="text-xl">{pulse.flag}</span>
@@ -67,7 +67,7 @@ export default function CaribbeanNowSidebar() {
       </div>
 
       {/* SpotPay Instant Wallet Quick Card */}
-      <div className="bg-gradient-to-br from-slate-900 via-slate-900 to-emerald-950/40 border border-emerald-500/30 rounded-3xl p-5 space-y-3 shadow-lg">
+      <div className="bg-gradient-to-br from-slate-950/90 via-slate-900/90 to-emerald-950/40 backdrop-blur-2xl border border-emerald-500/30 rounded-3xl p-5 space-y-3 shadow-2xl">
         <div className="flex items-center justify-between">
           <span className="text-[10px] font-black text-emerald-400 uppercase tracking-wider flex items-center gap-1.5">
             <Wallet className="w-3.5 h-3.5" /> SpotPay Ledger
@@ -87,7 +87,7 @@ export default function CaribbeanNowSidebar() {
           </Link>
           <Link
             href="/spotpay"
-            className="bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold py-2 px-3 rounded-xl text-xs text-center border border-slate-700 transition-colors"
+            className="bg-transparent hover:bg-slate-800 text-slate-300 font-bold py-2 px-3 rounded-xl text-xs text-center border border-slate-600 transition-colors"
           >
             Add Funds
           </Link>
@@ -95,7 +95,7 @@ export default function CaribbeanNowSidebar() {
       </div>
 
       {/* Upcoming Cultural Fetes & Events */}
-      <div className="bg-slate-900/80 border border-slate-800/80 rounded-3xl p-5 shadow-xl space-y-3">
+      <div className="bg-slate-950/85 backdrop-blur-2xl border border-slate-800/80 rounded-3xl p-5 shadow-2xl space-y-3">
         <div className="flex items-center justify-between">
           <h3 className="font-extrabold text-sm text-white flex items-center gap-2">
             <Calendar className="w-4 h-4 text-amber-400" /> Featured Cultural Fetes
@@ -111,7 +111,7 @@ export default function CaribbeanNowSidebar() {
             { title: 'Caribana Toronto Grand Parade', date: 'Aug 1 • Lakeshore Toronto', tickets: 'Free RSVP' },
             { title: 'Dominican Food & Merengue Festival', date: 'Sunday • Washington Heights, NY', tickets: 'SpotPay $15' },
           ].map((event, idx) => (
-            <div key={idx} className="p-3 rounded-2xl bg-slate-950/60 border border-slate-800/60 space-y-1">
+            <div key={idx} className="p-3 rounded-2xl bg-slate-900/60 border border-slate-800/60 space-y-1">
               <h4 className="font-bold text-xs text-slate-200 leading-snug">{event.title}</h4>
               <div className="flex items-center justify-between text-[11px]">
                 <span className="text-slate-400">{event.date}</span>
