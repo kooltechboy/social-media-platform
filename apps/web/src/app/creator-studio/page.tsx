@@ -51,6 +51,7 @@ interface LedgerAccount {
   id: string;
   account_type: string;
   currency: string;
+  balance: number;
 }
 
 export default async function CreatorStudioPage() {
@@ -92,7 +93,7 @@ export default async function CreatorStudioPage() {
       .eq('creator_id', user.id),
     supabase
       .from('ledger_accounts')
-      .select('id, account_type, currency')
+      .select('id, account_type, currency, balance')
       .eq('owner_id', user.id)
       .eq('account_type', 'creator_pending')
       .maybeSingle(),
@@ -110,18 +111,10 @@ export default async function CreatorStudioPage() {
   const grossMonthlyMinor = activeSubscriptions.reduce((sum, s) => sum + s.price_minor, 0);
   const feeResult = grossMonthlyMinor > 0 ? applyFees(grossMonthlyMinor) : null;
 
-  // Compute creator pending balance
+  // Compute creator pending balance using materialized balance
   let pendingBalanceMinor = 0;
-  if (ledgerAccount) {
-    const { data: entries } = await supabase
-      .from('ledger_entries')
-      .select('amount, entry_type')
-      .eq('account_id', ledgerAccount.id);
-    for (const entry of (entries ?? []) as LedgerEntry[]) {
-      const delta = entry.entry_type === 'CREDIT' ? Number(entry.amount) : -Number(entry.amount);
-      pendingBalanceMinor += delta * 100;
-    }
-    pendingBalanceMinor = Math.round(pendingBalanceMinor);
+  if (ledgerAccount && ledgerAccount.balance) {
+    pendingBalanceMinor = Math.round(Number(ledgerAccount.balance) * 100);
   }
 
   // Payout eligibility
@@ -234,7 +227,7 @@ export default async function CreatorStudioPage() {
             <PayoutRequestButton
               eligible={payoutEligibility.eligible}
               ineligibleReason={payoutEligibility.reasons[0]}
-              netMinor={feeResult.netToCreatorMinor}
+              netMinor={pendingBalanceMinor}
             />
           </div>
         </div>
@@ -243,9 +236,16 @@ export default async function CreatorStudioPage() {
       {/* Recent Videos */}
       {videos.length > 0 && (
         <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-6 space-y-3">
-          <h3 className="text-sm font-bold text-white flex items-center gap-2">
-            <Video className="w-4 h-4 text-sky-400" /> Recent Videos
-          </h3>
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-bold text-white flex items-center gap-2">
+              <Video className="w-4 h-4 text-sky-400" /> Recent Videos
+            </h3>
+            {videos.length >= 10 && (
+              <Link href="/creator-studio/videos" className="text-[11px] font-black uppercase tracking-wider text-sky-500 hover:text-sky-400 transition-colors">
+                View All
+              </Link>
+            )}
+          </div>
           <div className="space-y-2">
             {videos.map((video) => (
               <div key={video.id} className="flex items-center justify-between bg-slate-950 border border-slate-800 rounded-xl px-4 py-3">
