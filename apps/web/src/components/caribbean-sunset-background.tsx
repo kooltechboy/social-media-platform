@@ -5,74 +5,104 @@ import React, { useState } from 'react';
 const PHOTOREALISTIC_CARIBBEAN_WALLPAPERS = [
   {
     id: 'sunset-golden',
-    name: 'Golden Caribbean Sunset',
-    url: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=2400&q=90',
-    description: 'Golden sun setting over crystal clear Caribbean sea with palm beach framing',
+    name: 'Golden Beach Sunset',
+    url: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=2400&q=95',
+    description: 'Bright sunlit Caribbean beach with turquoise sea and golden sunrise/sunset',
   },
   {
     id: 'ocean-horizon',
-    name: 'Turquoise Ocean Horizon',
-    url: 'https://images.unsplash.com/photo-1519046904884-53103b34b206?auto=format&fit=crop&w=2400&q=90',
-    description: 'Vibrant turquoise Caribbean waves glowing under warm sun rays',
+    name: 'Turquoise Tropical Ocean',
+    url: 'https://images.unsplash.com/photo-1519046904884-53103b34b206?auto=format&fit=crop&w=2400&q=95',
+    description: 'Vibrant turquoise Caribbean ocean glowing under bright tropical sun',
   },
   {
     id: 'resort-dusk',
-    name: 'Resort Beach Dusk',
-    url: 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=2400&q=90',
-    description: 'Serene dusk waves crashing along a tropical palm coast',
+    name: 'Caribbean Island Coast',
+    url: 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=2400&q=95',
+    description: 'Luminous sun rays over tropical palm shoreline and azure waves',
   },
 ];
 
 export default function CaribbeanSunsetBackground() {
   const [activeWallpaperIndex, setActiveWallpaperIndex] = useState(0);
+  const [brightness, setBrightness] = useState<'vivid' | 'bright' | 'soft'>('vivid');
 
   const current = PHOTOREALISTIC_CARIBBEAN_WALLPAPERS[activeWallpaperIndex];
 
+  const opacityMap = {
+    vivid: 0.9,
+    bright: 0.75,
+    soft: 0.6,
+  };
+
   return (
     <>
-      <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden bg-[#0A1120]">
-        {/* Photorealistic High-Definition Background Image Layer */}
+      <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden bg-[#071324]">
+        {/* Photorealistic High-Definition Background Image Layer (Bright & Luminous) */}
         <div
-          className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-all duration-1000 transform scale-105"
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-all duration-700 transform scale-100"
           style={{
             backgroundImage: `url('${current.url}')`,
-            opacity: 0.55,
+            opacity: opacityMap[brightness],
+            filter: 'saturate(1.15) brightness(1.05)',
           }}
         />
 
-        {/* Realistic Golden Sunset & Oceanic Wave Gradient Blends */}
-        <div className="absolute inset-0 bg-gradient-to-b from-[#0A1120]/80 via-[#0C1B33]/65 to-[#060D1A]/90 mix-blend-multiply" />
+        {/* Soft, Transparent Luminous Sun & Azure Atmospheric Tint (Non-Darkening) */}
+        <div className="absolute inset-0 bg-gradient-to-b from-sky-950/25 via-transparent to-slate-950/60" />
 
-        {/* Radiant Golden Sun Rays & Turquoise Ocean Glow */}
-        <div className="absolute top-0 right-1/4 w-[700px] h-[700px] rounded-full bg-radial-gradient from-amber-400/25 via-orange-500/15 to-transparent blur-[140px] pointer-events-none" />
-        <div className="absolute bottom-10 left-10 w-[650px] h-[650px] rounded-full bg-radial-gradient from-sky-400/20 via-teal-500/15 to-transparent blur-[150px] pointer-events-none" />
+        {/* Radiant Golden Sun Glow & Ocean Cyan Lighting */}
+        <div className="absolute -top-10 right-1/4 w-[750px] h-[750px] rounded-full bg-gradient-to-br from-amber-300/30 via-orange-400/20 to-transparent blur-[110px] pointer-events-none" />
+        <div className="absolute bottom-0 left-10 w-[700px] h-[700px] rounded-full bg-gradient-to-tr from-cyan-400/25 via-sky-500/20 to-transparent blur-[120px] pointer-events-none" />
 
-        {/* Subtle Water Shimmer Ripple Overlay */}
-        <div className="absolute inset-0 bg-[radial-gradient(#38bdf8_1px,transparent_1px)] [background-size:28px_28px] opacity-[0.05]" />
+        {/* Subtle Crystal Water Shimmer Ripple Overlay */}
+        <div className="absolute inset-0 bg-[radial-gradient(#38bdf8_1px,transparent_1px)] [background-size:30px_30px] opacity-[0.04]" />
       </div>
 
-      {/* Photorealistic Wallpaper Switcher Widget */}
-      <div className="fixed bottom-4 right-4 z-40 hidden lg:flex items-center gap-1.5 bg-slate-950/85 backdrop-blur-xl border border-sky-500/30 p-1.5 rounded-full shadow-2xl">
-        <span className="text-[10px] font-black px-2 text-amber-300 uppercase tracking-widest">
-          🌅 Theme:
+      {/* Photorealistic Wallpaper & Brightness Switcher Widget */}
+      <div className="fixed bottom-4 right-4 z-40 hidden md:flex items-center gap-2 bg-slate-950/90 backdrop-blur-2xl border border-amber-400/40 px-3 py-1.5 rounded-full shadow-2xl">
+        <span className="text-[10px] font-black text-amber-300 uppercase tracking-widest flex items-center gap-1">
+          ☀️ Caribbean Theme:
         </span>
-        {PHOTOREALISTIC_CARIBBEAN_WALLPAPERS.map((wp, idx) => (
-          <button
-            key={wp.id}
-            type="button"
-            onClick={() => setActiveWallpaperIndex(idx)}
-            className={`text-[10px] font-extrabold px-3 py-1 rounded-full transition-all ${
-              activeWallpaperIndex === idx
-                ? 'bg-gradient-to-r from-amber-400 to-sky-400 text-slate-950 shadow-md scale-105'
-                : 'text-slate-300 hover:text-white hover:bg-slate-800/80'
-            }`}
-            title={wp.description}
-          >
-            {wp.name}
-          </button>
-        ))}
+        <div className="flex items-center gap-1">
+          {PHOTOREALISTIC_CARIBBEAN_WALLPAPERS.map((wp, idx) => (
+            <button
+              key={wp.id}
+              type="button"
+              onClick={() => setActiveWallpaperIndex(idx)}
+              className={`text-[10px] font-black px-2.5 py-1 rounded-full transition-all ${
+                activeWallpaperIndex === idx
+                  ? 'bg-gradient-to-r from-amber-400 via-orange-400 to-sky-400 text-slate-950 shadow-md scale-105'
+                  : 'text-slate-300 hover:text-white hover:bg-slate-800/80'
+              }`}
+              title={wp.description}
+            >
+              {wp.name}
+            </button>
+          ))}
+        </div>
+
+        <div className="h-3 w-px bg-slate-700 mx-1" />
+
+        <div className="flex items-center gap-1">
+          {(['vivid', 'bright', 'soft'] as const).map((level) => (
+            <button
+              key={level}
+              type="button"
+              onClick={() => setBrightness(level)}
+              className={`text-[9px] font-extrabold px-2 py-0.5 rounded-full capitalize transition-all ${
+                brightness === level
+                  ? 'bg-sky-400 text-slate-950 shadow'
+                  : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              {level}
+            </button>
+          ))}
+        </div>
       </div>
     </>
   );
 }
+
 
