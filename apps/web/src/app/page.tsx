@@ -184,8 +184,8 @@ export default async function HomePage() {
         {/* ────────────────────────────────────────────────────────── */}
         <section aria-label="Create Post" className="space-y-4">
           <UniversalComposer
-            displayName={user?.displayName || 'Caribbean Diaspora Member'}
-            avatarInitials={user?.displayName ? user.displayName.slice(0, 2).toUpperCase() : 'CO'}
+            displayName={user ? `@${user.username}` : 'Caribbean Diaspora Member'}
+            avatarInitials={user?.username ? user.username.slice(0, 2).toUpperCase() : 'CO'}
           />
 
           {!user && (

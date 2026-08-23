@@ -6,17 +6,22 @@ import { createSupabaseBrowserClient } from '../lib/supabase/browser';
 import { signOutAction } from '../lib/auth/actions';
 
 export default function SessionWidget() {
-  const [user, setUser] = useState<{ id: string; displayName: string } | null>(null);
+  const [user, setUser] = useState<{ id: string; username: string } | null>(null);
 
   useEffect(() => {
     const supabase = createSupabaseBrowserClient();
     if (!supabase) return;
 
-    void supabase.auth.getUser().then(({ data }) => {
-      if (data?.user) {
-        const name = data.user.user_metadata?.display_name || data.user.email?.split('@')[0] || 'Member';
-        setUser({ id: data.user.id, displayName: name });
-      }
+    void supabase.auth.getUser().then(async ({ data }) => {
+      if (!data?.user) return;
+      // Always prefer the username stored in the profiles table
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('username')
+        .eq('id', data.user.id)
+        .maybeSingle();
+      const username = profile?.username || data.user.email?.split('@')[0] || 'member';
+      setUser({ id: data.user.id, username });
     });
   }, []);
 
@@ -36,11 +41,11 @@ export default function SessionWidget() {
       <Link href="/profile" className="flex items-center gap-2 group">
         <div className="w-8 h-8 rounded-full bg-gradient-to-br from-amber-400 via-sky-400 to-emerald-400 p-0.5 shadow-md">
           <div className="w-full h-full bg-slate-950 rounded-full flex items-center justify-center text-xs font-black text-white">
-            {user.displayName.slice(0, 2).toUpperCase()}
+            {user.username.slice(0, 2).toUpperCase()}
           </div>
         </div>
         <span className="hidden md:block text-xs font-bold text-slate-200 group-hover:text-amber-300 transition-colors">
-          {user.displayName}
+          @{user.username}
         </span>
       </Link>
       <form action={signOutAction}>
@@ -51,4 +56,3 @@ export default function SessionWidget() {
     </div>
   );
 }
-
