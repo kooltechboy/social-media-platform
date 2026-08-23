@@ -80,7 +80,14 @@ export async function requestPayoutAction(
   const transactionId = crypto.randomUUID();
   const payoutAmountMajor = (decision.amountMinor / 100).toFixed(4);
 
-  const { error: insertErr } = await supabase.from('ledger_entries').insert([
+  // We must use the Service Role key to insert into ledger_entries since clients cannot directly manipulate the ledger
+  const { createClient } = await import('@supabase/supabase-js');
+  const supabaseAdmin = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+
+  const { error: insertErr } = await supabaseAdmin.from('ledger_entries').insert([
     {
       transaction_id: transactionId,
       account_id: creatorLedger.id,
