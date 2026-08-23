@@ -20,7 +20,23 @@ export async function middleware(request: NextRequest) {
     },
   });
 
-  await supabase.auth.getUser();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  const isAuthPage = request.nextUrl.pathname.startsWith('/login');
+  const isOnboardingPage = request.nextUrl.pathname.startsWith('/onboarding');
+  
+  if (user && !isAuthPage && !isOnboardingPage) {
+    const { data: identity } = await supabase
+      .from('profile_identity')
+      .select('origin_country_iso')
+      .eq('profile_id', user.id)
+      .single();
+
+    if (!identity?.origin_country_iso) {
+      return NextResponse.redirect(new URL('/onboarding', request.url));
+    }
+  }
+
   return response;
 }
 

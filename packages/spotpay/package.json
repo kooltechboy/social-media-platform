@@ -9,5 +9,8 @@
   },
   "devDependencies": {
     "typescript": "^5.5.0"
+  },
+  "dependencies": {
+    "stripe": "^22.5.0"
   }
 }

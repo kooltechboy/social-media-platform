@@ -41,42 +41,7 @@ export interface UniversalComposerProps {
   defaultExpanded?: boolean;
 }
 
-export const CARIBBEAN_COUNTRIES = [
-  'Jamaica 🇯🇲',
-  'Trinidad & Tobago 🇹🇹',
-  'Dominican Republic 🇩🇴',
-  'Barbados 🇧🇧',
-  'Haiti 🇭🇹',
-  'Bahamas 🇧🇸',
-  'Cuba 🇨🇺',
-  'Puerto Rico 🇵🇷',
-  'Guyana 🇬🇾',
-  'Suriname 🇸🇷',
-  'Belize 🇧🇿',
-  'Grenada 🇬🇩',
-  'Saint Lucia 🇱🇨',
-  'Antigua & Barbuda 🇦🇬',
-  'Dominica 🇩🇲',
-  'St. Vincent & Grenadines 🇻🇨',
-  'St. Kitts & Nevis 🇰🇳',
-  'Curaçao 🇨🇼',
-  'Aruba 🇦🇼',
-  'Global Diaspora 🌍',
-];
 
-export const DIASPORA_HUBS = [
-  'Island Local',
-  'Toronto, Canada 🇨🇦',
-  'Miami / South FL, USA 🌴',
-  'Brooklyn / NYC, USA 🗽',
-  'London, UK 🇬🇧',
-  'Montreal, Canada 🇨🇦',
-  'Amsterdam, Netherlands 🇳🇱',
-  'Atlanta, USA 🍑',
-  'Orlando, USA ☀️',
-  'Washington DC / DMV, USA 🏛️',
-  'Paris, France 🇫🇷',
-];
 
 interface UploadedMediaItem {
   id: string;
@@ -98,9 +63,8 @@ export default function UniversalComposer({
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
   const [mode, setMode] = useState<ComposerMode>('text');
   const [content, setContent] = useState('');
-  const [selectedCountry, setSelectedCountry] = useState(CARIBBEAN_COUNTRIES[0]);
-  const [selectedHub, setSelectedHub] = useState(DIASPORA_HUBS[0]);
   const [visibility, setVisibility] = useState<'public' | 'followers' | 'friends' | 'private'>('public');
+  const [audienceContext, setAudienceContext] = useState<'diaspora' | 'local'>('diaspora');
 
   // Media files & uploads
   const [mediaList, setMediaList] = useState<UploadedMediaItem[]>([]);
@@ -132,9 +96,6 @@ export default function UniversalComposer({
       const saved = localStorage.getItem(DRAFT_KEY);
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (parsed.content) setContent(parsed.content);
-        if (parsed.selectedCountry) setSelectedCountry(parsed.selectedCountry);
-        if (parsed.selectedHub) setSelectedHub(parsed.selectedHub);
       }
     } catch {
       // Ignore local storage read errors
@@ -149,8 +110,6 @@ export default function UniversalComposer({
           DRAFT_KEY,
           JSON.stringify({
             content,
-            selectedCountry,
-            selectedHub,
             updatedAt: Date.now(),
           })
         );
@@ -158,7 +117,7 @@ export default function UniversalComposer({
         // Ignore local storage write errors
       }
     }
-  }, [content, selectedCountry, selectedHub]);
+  }, [content]);
 
   function handleFileSelect(files: FileList | null) {
     if (!files || files.length === 0) return;
@@ -291,12 +250,7 @@ export default function UniversalComposer({
         finalContent = `🚨 **OFFICIAL CARIBBEAN ADVISORY** 🚨\n\n${finalContent}`;
       }
 
-      // Add Country & Diaspora geographic metadata
-      finalContent = `${finalContent}\n\n📍 ${selectedCountry} • ${selectedHub}`;
-
       const tags = [
-        selectedCountry.split(' ')[0].toLowerCase(),
-        selectedHub.split(',')[0].toLowerCase().replace(/[^a-z0-9]/g, ''),
         mode,
       ].filter(Boolean);
 
@@ -485,34 +439,42 @@ export default function UniversalComposer({
                   )}
                 </h4>
 
-                {/* Geography & Visibility Pill selectors */}
+                {/* Audience Context Toggle */}
+                <div className="flex items-center gap-2 mt-1.5 mb-1">
+                  <button
+                    type="button"
+                    onClick={() => setAudienceContext('diaspora')}
+                    className={`border text-[11px] font-bold rounded-lg px-2 py-1 flex items-center gap-1 transition-colors ${
+                      audienceContext === 'diaspora'
+                        ? 'bg-slate-950 border-sky-500/50 text-sky-400'
+                        : 'bg-slate-900 border-slate-800 text-slate-400 hover:bg-slate-800'
+                    }`}
+                  >
+                    Global Diaspora 🌍
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setAudienceContext('local')}
+                    className={`border text-[11px] font-bold rounded-lg px-2 py-1 flex items-center gap-1 transition-colors ${
+                      audienceContext === 'local'
+                        ? 'bg-slate-950 border-sky-500/50 text-sky-400'
+                        : 'bg-slate-900 border-slate-800 text-slate-400 hover:bg-slate-800'
+                    }`}
+                  >
+                    Island Local 🏝️
+                  </button>
+                </div>
+
+                {/* Visibility Pill selector */}
                 <div className="flex items-center flex-wrap gap-1.5 mt-1">
-                  <select
-                    value={selectedCountry}
-                    onChange={(e) => setSelectedCountry(e.target.value)}
-                    className="bg-slate-950 border border-slate-800 text-[11px] font-bold text-slate-300 rounded-lg px-2 py-0.5 focus:outline-none focus:border-sky-500 cursor-pointer"
-                  >
-                    {CARIBBEAN_COUNTRIES.map((c) => (
-                      <option key={c} value={c}>{c}</option>
-                    ))}
-                  </select>
-
-                  <select
-                    value={selectedHub}
-                    onChange={(e) => setSelectedHub(e.target.value)}
-                    className="bg-slate-950 border border-slate-800 text-[11px] font-bold text-slate-300 rounded-lg px-2 py-0.5 focus:outline-none focus:border-sky-500 cursor-pointer"
-                  >
-                    {DIASPORA_HUBS.map((h) => (
-                      <option key={h} value={h}>{h}</option>
-                    ))}
-                  </select>
-
                   <select
                     value={visibility}
                     onChange={(e) => setVisibility(e.target.value as typeof visibility)}
-                    className="bg-slate-950 border border-slate-800 text-[11px] font-bold text-sky-400 rounded-lg px-2 py-0.5 focus:outline-none focus:border-sky-500 cursor-pointer"
+                    className="bg-sky-950/40 border border-sky-500/50 text-[11px] font-bold text-sky-400 rounded-full px-2.5 py-0.5 focus:outline-none focus:border-sky-500 cursor-pointer appearance-none flex items-center"
                   >
-                    <option value="public">🌍 Public (Diaspora)</option>
+                    <option value="public">
+                      {audienceContext === 'diaspora' ? '🌍 Public (Diaspora)' : '🏝️ Public (Local)'}
+                    </option>
                     <option value="followers">👥 Followers Only</option>
                     <option value="friends">🤝 Close Friends</option>
                     <option value="private">🔒 Private Only</option>
@@ -537,7 +499,13 @@ export default function UniversalComposer({
             <textarea
               value={content}
               onChange={(e) => setContent(e.target.value)}
-              placeholder={`What is happening across the Caribbean or diaspora, ${firstName}?`}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  handlePublish(e);
+                }
+              }}
+              placeholder={`What is happening across the ${audienceContext === 'diaspora' ? 'diaspora' : 'island'}, ${firstName}?`}
               rows={4}
               maxLength={3000}
               className="w-full bg-slate-950/80 border border-slate-800/80 rounded-2xl p-4 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-sky-500/60 focus:ring-1 focus:ring-sky-500/60 transition-all resize-none leading-relaxed"
@@ -830,7 +798,7 @@ export default function UniversalComposer({
                 ) : (
                   <>
                     <Send className="w-3.5 h-3.5" />
-                    <span>Post to Diaspora</span>
+                    <span>{audienceContext === 'diaspora' ? 'Post to Diaspora' : 'Post Locally'}</span>
                   </>
                 )}
               </button>

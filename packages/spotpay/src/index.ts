@@ -446,6 +446,7 @@ export interface PSPAdapter {
 // ---------------------------------------------------------------------------
 // Stripe Adapter: Supports live Stripe API & resilient sandbox fallback
 // ---------------------------------------------------------------------------
+import Stripe from 'stripe';
 
 export interface StripeAdapterConfig {
   apiKey?: string;
@@ -454,11 +455,19 @@ export interface StripeAdapterConfig {
 
 export class StripeAdapter implements PSPAdapter {
   readonly providerName = 'stripe' as const;
-  private apiKey: string;
+  private stripeClient: Stripe | null = null;
   private webhookSecret: string;
 
   constructor(config: StripeAdapterConfig = {}) {
-    this.apiKey = config.apiKey || process.env.STRIPE_SECRET_KEY || '';
+    const apiKey = config.apiKey || process.env.STRIPE_SECRET_KEY || '';
+    if (apiKey) {
+      this.stripeClient = new Stripe(apiKey, {
+        apiVersion: '2025-01-27.acacia',
+        appInfo: {
+          name: 'SpotPay Engine',
+        },
+      });
+    }
     this.webhookSecret = config.webhookSecret || process.env.STRIPE_WEBHOOK_SECRET || '';
   }
 
@@ -468,7 +477,7 @@ export class StripeAdapter implements PSPAdapter {
     idempotencyKey: string;
     metadata?: Record<string, string>;
   }): Promise<PSPChargeResult> {
-    if (!this.apiKey) {
+    if (!this.stripeClient) {
       // Sandbox / Test Mode Simulation
       return {
         success: true,
@@ -479,44 +488,26 @@ export class StripeAdapter implements PSPAdapter {
     }
 
     try {
-      const body = new URLSearchParams({
-        amount: params.amountMinor.toString(),
-        currency: params.currency.toLowerCase(),
-        'payment_method_types[]': 'card',
-        'metadata[idempotencyKey]': params.idempotencyKey,
-      });
-
-      if (params.metadata) {
-        for (const [key, val] of Object.entries(params.metadata)) {
-          body.append(`metadata[${key}]`, val);
-        }
-      }
-
-      const res = await fetch('https://api.stripe.com/v1/payment_intents', {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${this.apiKey}`,
-          'Content-Type': 'application/x-www-form-urlencoded',
-          'Idempotency-Key': params.idempotencyKey,
+      const paymentIntent = await this.stripeClient.paymentIntents.create(
+        {
+          amount: params.amountMinor,
+          currency: params.currency.toLowerCase(),
+          payment_method_types: ['card'],
+          metadata: {
+            ...params.metadata,
+            idempotencyKey: params.idempotencyKey,
+          },
         },
-        body: body.toString(),
-      });
-
-      const data = await res.json();
-      if (!res.ok) {
-        return {
-          success: false,
-          providerTransactionId: '',
-          providerName: 'stripe',
-          errorMessage: data.error?.message || 'Stripe payment failed',
-        };
-      }
+        {
+          idempotencyKey: params.idempotencyKey,
+        }
+      );
 
       return {
         success: true,
-        providerTransactionId: data.id,
+        providerTransactionId: paymentIntent.id,
         providerName: 'stripe',
-        rawResponse: data,
+        rawResponse: paymentIntent,
       };
     } catch (err) {
       return {
@@ -534,7 +525,7 @@ export class StripeAdapter implements PSPAdapter {
     currency: string;
     idempotencyKey: string;
   }): Promise<PSPRefundResult> {
-    if (!this.apiKey) {
+    if (!this.stripeClient) {
       return {
         success: true,
         providerRefundId: `re_stripe_sandbox_${params.idempotencyKey}`,
@@ -542,33 +533,19 @@ export class StripeAdapter implements PSPAdapter {
     }
 
     try {
-      const body = new URLSearchParams({
-        payment_intent: params.providerTransactionId,
-        amount: params.amountMinor.toString(),
-      });
-
-      const res = await fetch('https://api.stripe.com/v1/refunds', {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${this.apiKey}`,
-          'Content-Type': 'application/x-www-form-urlencoded',
-          'Idempotency-Key': params.idempotencyKey,
+      const refund = await this.stripeClient.refunds.create(
+        {
+          payment_intent: params.providerTransactionId,
+          amount: params.amountMinor,
         },
-        body: body.toString(),
-      });
-
-      const data = await res.json();
-      if (!res.ok) {
-        return {
-          success: false,
-          providerRefundId: '',
-          errorMessage: data.error?.message || 'Stripe refund failed',
-        };
-      }
+        {
+          idempotencyKey: params.idempotencyKey,
+        }
+      );
 
       return {
         success: true,
-        providerRefundId: data.id,
+        providerRefundId: refund.id,
       };
     } catch (err) {
       return {
@@ -581,24 +558,12 @@ export class StripeAdapter implements PSPAdapter {
 
   verifyWebhook(payload: string, signature: string, secret?: string): boolean {
     const key = secret || this.webhookSecret;
-    if (!key) return true; // Permissive in local sandbox if secret unconfigured
+    if (!key || !this.stripeClient) return true; // Permissive in local sandbox if secret unconfigured
+    
     try {
-      const parts = signature.split(',').reduce<Record<string, string>>((acc, part) => {
-        const [k, v] = part.split('=');
-        if (k && v) acc[k] = v;
-        return acc;
-      }, {});
-
-      const timestamp = parts['t'];
-      const v1 = parts['v1'];
-      if (!timestamp || !v1) return false;
-
-      const signedPayload = `${timestamp}.${payload}`;
-      // Constant-time HMAC comparison using crypto
-      const { createHmac, timingSafeEqual } = require('crypto');
-      const expected = createHmac('sha256', key).update(signedPayload).digest('hex');
-      return timingSafeEqual(Buffer.from(v1), Buffer.from(expected));
-    } catch {
+      this.stripeClient.webhooks.constructEvent(payload, signature, key);
+      return true;
+    } catch (err) {
       return false;
     }
   }

@@ -265,6 +265,22 @@ export default function MessageThread({
           <Mic className="w-4 h-4" />
         </button>
 
+        <button
+          type="button"
+          onClick={() => {
+            // Mock triggering file input
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.multiple = true;
+            input.accept = 'image/*,video/*,.pdf,.doc,.docx';
+            input.click();
+          }}
+          className="p-2.5 rounded-full text-slate-400 hover:text-white hover:bg-slate-800 transition-all"
+          title="Attach Media or File"
+        >
+          <Paperclip className="w-4 h-4" />
+        </button>
+
         <input
           name="body"
           type="text"

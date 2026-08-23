@@ -1,3 +1,5 @@
+import { createClient } from '@supabase/supabase-js';
+
 // Mobile Supabase Client with graceful fallback for offline / development
 export interface MobileProfile {
   id: string;
@@ -17,32 +19,7 @@ export interface MobilePost {
   isLiked?: boolean;
 }
 
-export const INITIAL_POSTS: MobilePost[] = [
-  {
-    id: 'p1',
-    author: 'Dancehall Culture Hub',
-    location: 'Kingston, Jamaica',
-    time: '2h ago',
-    body: 'Episode 14 of the podcast is live — the evolution of Reggae & Dancehall globally. Support the creator via SpotPay!',
-    likes: 1240,
-    comments: 84,
-  },
-  {
-    id: 'p2',
-    author: 'Ana\'s Kitchen RD',
-    location: 'Santo Domingo, DR',
-    time: '5h ago',
-    body: 'New menu drop: mangú with los tres golpes. Delivery across the capital all weekend.',
-    likes: 612,
-    comments: 47,
-  },
-  {
-    id: 'p3',
-    author: 'Jamaicans in Toronto',
-    location: 'Toronto, Canada',
-    time: '8h ago',
-    body: 'Caribana band launch tickets are live for members. Community presale ends Friday night.',
-    likes: 308,
-    comments: 52,
-  },
-];
+const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL || 'http://localhost:54321';
+const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || 'public-anon-key';
+
+export const supabase = createClient(supabaseUrl, supabaseAnonKey);

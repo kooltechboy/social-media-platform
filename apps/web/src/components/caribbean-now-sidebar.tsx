@@ -1,6 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { Flame, Radio, Calendar, Sparkles, TrendingUp, ArrowUpRight, Wallet, MapPin } from 'lucide-react';
+import OnlineFriendsWidget from './online-friends-widget';
 
 interface IslandPulse {
   city: string;
@@ -23,6 +24,9 @@ const ISLAND_PULSES: IslandPulse[] = [
 export default function CaribbeanNowSidebar() {
   return (
     <aside className="hidden lg:block col-span-1 space-y-5" aria-label="Caribbean Now Discovery">
+      {/* Online Friends Widget */}
+      <OnlineFriendsWidget />
+
       {/* Caribbean Now Live Ticker */}
       <div className="bg-slate-900/80 border border-slate-800/80 rounded-3xl p-5 shadow-xl space-y-4">
         <div className="flex items-center justify-between">

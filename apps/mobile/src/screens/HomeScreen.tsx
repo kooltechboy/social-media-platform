@@ -9,19 +9,49 @@ import {
   RefreshControl,
 } from 'react-native';
 import { TOKENS } from '../theme/tokens';
-import { INITIAL_POSTS, type MobilePost } from '../lib/supabase';
+import { supabase, type MobilePost } from '../lib/supabase';
 
 export function HomeScreen() {
-  const [posts, setPosts] = useState<MobilePost[]>(INITIAL_POSTS);
+  const [posts, setPosts] = useState<MobilePost[]>([]);
   const [refreshing, setRefreshing] = useState(false);
   const [draft, setDraft] = useState('');
   const [activeTab, setActiveTab] = useState('For You');
 
-  const onRefresh = () => {
+  const fetchPosts = async () => {
+    try {
+      // Fetching from a fictional 'posts' or 'feed' view/table as an example
+      const { data, error } = await supabase
+        .from('posts')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(20);
+
+      if (data && !error) {
+        // Map data to MobilePost format
+        const formatted = data.map((item: any) => ({
+          id: item.id,
+          author: item.profiles?.display_name || 'Caribbean Member',
+          location: item.profiles?.home_location || 'Caribbean',
+          time: new Date(item.created_at).toLocaleDateString(),
+          body: item.content || '',
+          likes: item.likes_count || 0,
+          comments: item.comments_count || 0,
+        }));
+        setPosts(formatted);
+      }
+    } catch (err) {
+      console.warn('Could not fetch posts', err);
+    }
+  };
+
+  React.useEffect(() => {
+    fetchPosts();
+  }, []);
+
+  const onRefresh = async () => {
     setRefreshing(true);
-    setTimeout(() => {
-      setRefreshing(false);
-    }, 800);
+    await fetchPosts();
+    setRefreshing(false);
   };
 
   const handlePublish = () => {

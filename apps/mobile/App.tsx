@@ -1,44 +1,37 @@
-import React, { useState } from 'react';
-import { StyleSheet, View, SafeAreaView, StatusBar } from 'react-native';
+import React from 'react';
+import { StyleSheet, SafeAreaView, StatusBar } from 'react-native';
+import { NavigationContainer } from '@react-navigation/native';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { TOKENS } from './src/theme/tokens';
 import { Header } from './src/components/Header';
-import { BottomNav, type MobileTab } from './src/components/BottomNav';
 import { HomeScreen } from './src/screens/HomeScreen';
 import { ExploreScreen } from './src/screens/ExploreScreen';
 import { CommunitiesScreen } from './src/screens/CommunitiesScreen';
 import { MessagesScreen } from './src/screens/MessagesScreen';
 import { SpotPayScreen } from './src/screens/SpotPayScreen';
 
+const Tab = createBottomTabNavigator();
+
 export default function App() {
-  const [tab, setTab] = useState<MobileTab>('home');
-
-  const renderScreen = () => {
-    switch (tab) {
-      case 'home':
-        return <HomeScreen />;
-      case 'explore':
-        return <ExploreScreen />;
-      case 'communities':
-        return <CommunitiesScreen />;
-      case 'messages':
-        return <MessagesScreen />;
-      case 'spotpay':
-        return <SpotPayScreen />;
-      default:
-        return <HomeScreen />;
-    }
-  };
-
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor={TOKENS.canvas} />
-      <Header onWalletPress={() => setTab('spotpay')} />
-      <View style={styles.content}>{renderScreen()}</View>
-      <BottomNav
-        currentTab={tab}
-        onSelectTab={setTab}
-        onCreatePress={() => setTab('home')}
-      />
+      <NavigationContainer>
+        <Tab.Navigator
+          screenOptions={{
+            header: () => <Header onWalletPress={() => {}} />,
+            tabBarStyle: { backgroundColor: TOKENS.surface, borderTopColor: TOKENS.border },
+            tabBarActiveTintColor: TOKENS.action,
+            tabBarInactiveTintColor: TOKENS.textMuted,
+          }}
+        >
+          <Tab.Screen name="Home" component={HomeScreen} />
+          <Tab.Screen name="Explore" component={ExploreScreen} />
+          <Tab.Screen name="Communities" component={CommunitiesScreen} />
+          <Tab.Screen name="Messages" component={MessagesScreen} />
+          <Tab.Screen name="SpotPay" component={SpotPayScreen} />
+        </Tab.Navigator>
+      </NavigationContainer>
     </SafeAreaView>
   );
 }
