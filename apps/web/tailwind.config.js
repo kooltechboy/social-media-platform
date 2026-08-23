@@ -8,11 +8,12 @@ module.exports = {
     extend: {
       colors: {
         brand: {
-          dark: "#0F172A",
+          volcanic: "#0F172A",
+          limestone: "#F8FAFC",
+          ocean: "#031525",
           azure: "#0284C7",
-          gold: "#F59E0B",
-          emerald: "#059669",
-          obsidian: "#090D16"
+          abyss: "#070B12",
+          raised: "#1E293B"
         }
       }
     },
