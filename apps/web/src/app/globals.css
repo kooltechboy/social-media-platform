@@ -3,12 +3,12 @@
 @tailwind utilities;
 
 :root {
-  --background: #060B14;
-  --foreground: #F8FAFC;
-  --caribbean-azure: #0284C7;
+  --background: #110D17;
+  --foreground: #FDF2E9;
+  --caribbean-azure: #00B4D8;
   --caribbean-emerald: #059669;
-  --caribbean-gold: #F59E0B;
-  --caribbean-coral: #F97316;
+  --caribbean-gold: #FFB347;
+  --caribbean-coral: #FF7A59;
   --caribbean-turquoise: #06B6D4;
 }
 
@@ -20,18 +20,18 @@ body {
 
 /* Caribbean Radiant Background Utilities */
 .caribbean-gradient-bg {
-  background: radial-gradient(circle at 15% 15%, rgba(2, 132, 199, 0.22) 0%, transparent 45%),
-              radial-gradient(circle at 85% 25%, rgba(5, 150, 105, 0.18) 0%, transparent 45%),
-              radial-gradient(circle at 50% 80%, rgba(245, 158, 11, 0.12) 0%, transparent 50%),
-              linear-gradient(180deg, #060B14 0%, #0A1220 50%, #040810 100%);
+  background: radial-gradient(circle at 15% 15%, rgba(255, 122, 89, 0.22) 0%, transparent 45%),
+              radial-gradient(circle at 85% 25%, rgba(0, 180, 216, 0.18) 0%, transparent 45%),
+              radial-gradient(circle at 50% 80%, rgba(255, 179, 71, 0.12) 0%, transparent 50%),
+              linear-gradient(180deg, #110D17 0%, #1D1429 50%, #110D17 100%);
 }
 
 .caribbean-glass-card {
-  background: rgba(15, 23, 42, 0.82);
+  background: rgba(29, 20, 41, 0.82);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(56, 189, 248, 0.2);
-  box-shadow: 0 10px 35px -10px rgba(0, 0, 0, 0.5), 0 0 20px -5px rgba(2, 132, 199, 0.15);
+  border: 1px solid rgba(255, 179, 71, 0.2);
+  box-shadow: 0 10px 35px -10px rgba(0, 0, 0, 0.5), 0 0 20px -5px rgba(255, 122, 89, 0.15);
 }
 
 @keyframes pulseGlow {
@@ -42,4 +42,3 @@ body {
 .animate-pulse-glow {
   animation: pulseGlow 6s ease-in-out infinite;
 }
-
