@@ -31,21 +31,21 @@ export default function FeatureFlagToggle({ flagKey, enabled: initialEnabled, de
     <button
       onClick={handle}
       disabled={pending}
-      className="flex items-center justify-between bg-slate-950 border border-slate-800 hover:border-slate-700 rounded-xl px-4 py-2.5 transition-colors disabled:opacity-50 w-full text-left"
+      className="flex items-center justify-between bg-brand-twilight border border-slate-800 hover:border-slate-700 rounded-xl px-4 py-2.5 transition-colors disabled:opacity-50 w-full text-left"
       aria-pressed={enabled}
       aria-label={`Toggle ${flagKey}`}
     >
       <div>
         <code className="text-xs text-slate-300">{flagKey}</code>
         {description && (
-          <p className="text-[10px] text-slate-500 mt-0.5">{description}</p>
+          <p className="text-[10px] text-brand-sandstone/40 mt-0.5">{description}</p>
         )}
       </div>
       <span
         className={`text-[10px] font-bold px-2 py-0.5 rounded border flex-shrink-0 ${
           enabled
-            ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
-            : 'bg-slate-800 text-slate-400 border-slate-700'
+            ? 'bg-brand-sunriseCoral/20 text-emerald-300 border-brand-sunriseCoral/30'
+            : 'bg-brand-dusk text-brand-sandstone/60 border-slate-700'
         }`}
       >
         {pending ? '…' : enabled ? 'ON' : 'OFF'}

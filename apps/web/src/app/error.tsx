@@ -12,13 +12,13 @@ export default function RootError({
   reset: () => void;
 }) {
   return (
-    <div className="min-h-[70vh] flex items-center justify-center p-6 text-slate-100">
-      <div className="bg-slate-900/70 border border-slate-800 rounded-3xl p-8 max-w-md w-full text-center space-y-4">
+    <div className="min-h-[70vh] flex items-center justify-center p-6 text-brand-sandstone">
+      <div className="bg-brand-dusk/70 border border-slate-800 rounded-3xl p-8 max-w-md w-full text-center space-y-4">
         <div className="w-12 h-12 rounded-full bg-rose-500/10 text-rose-400 flex items-center justify-center mx-auto">
           <AlertTriangle className="w-6 h-6" />
         </div>
-        <h2 className="text-xl font-black text-white">Something went wrong</h2>
-        <p className="text-xs text-slate-400 leading-relaxed">
+        <h2 className="text-xl font-black text-brand-sandstone">Something went wrong</h2>
+        <p className="text-xs text-brand-sandstone/60 leading-relaxed">
           {error.message || 'An unexpected error occurred while loading this page.'}
         </p>
         <div className="pt-2 flex justify-center">

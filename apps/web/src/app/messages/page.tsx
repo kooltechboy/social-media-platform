@@ -22,12 +22,12 @@ export default async function MessagesPage({ searchParams }: { searchParams: Pro
 
   if (!user || !supabase) {
     return (
-      <div className="min-h-screen bg-[#090D16] text-slate-100 flex items-center justify-center p-6">
-        <div className="bg-slate-900/70 border border-slate-800 rounded-2xl p-8 text-center max-w-sm">
-          <MessageSquare className="w-8 h-8 text-sky-400 mx-auto mb-3" />
-          <h1 className="text-lg font-bold text-white mb-2">Messages</h1>
-          <p className="text-sm text-slate-400 mb-4">Sign in to chat with your communities, friends and the diaspora.</p>
-          <a href="/login" className="inline-block bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold px-5 py-2 rounded-full text-xs transition-colors">
+      <div className="min-h-screen bg-[#090D16] text-brand-sandstone flex items-center justify-center p-6">
+        <div className="bg-brand-dusk/70 border border-slate-800 rounded-2xl p-8 text-center max-w-sm">
+          <MessageSquare className="w-8 h-8 text-brand-caribbeanSea mx-auto mb-3" />
+          <h1 className="text-lg font-bold text-brand-sandstone mb-2">Messages</h1>
+          <p className="text-sm text-brand-sandstone/60 mb-4">Sign in to chat with your communities, friends and the diaspora.</p>
+          <a href="/login" className="inline-block bg-brand-caribbeanSea hover:bg-brand-caribbeanSea text-slate-950 font-bold px-5 py-2 rounded-full text-xs transition-colors">
             Sign In
           </a>
         </div>
@@ -117,38 +117,38 @@ export default async function MessagesPage({ searchParams }: { searchParams: Pro
   }
 
   return (
-    <div className="min-h-screen bg-[#090D16] text-slate-100">
+    <div className="min-h-screen bg-[#090D16] text-brand-sandstone">
       <header className="sticky top-0 z-50 bg-[#0F172A]/90 backdrop-blur-md border-b border-slate-800 px-4 py-3 flex items-center gap-4">
-        <Link href="/" className="flex items-center gap-2 text-slate-300 hover:text-white text-sm font-semibold">
+        <Link href="/" className="flex items-center gap-2 text-slate-300 hover:text-brand-sandstone text-sm font-semibold">
           <ArrowLeft className="w-4 h-4" /> Back
         </Link>
-        <h1 className="text-lg font-extrabold text-white flex items-center gap-2">
-          <MessageSquare className="w-5 h-5 text-sky-400" /> Messages
+        <h1 className="text-lg font-extrabold text-brand-sandstone flex items-center gap-2">
+          <MessageSquare className="w-5 h-5 text-brand-caribbeanSea" /> Messages
         </h1>
       </header>
 
       <div className="max-w-5xl mx-auto p-4 grid md:grid-cols-3 gap-4">
         <aside className="md:col-span-1 space-y-2">
           {summaries.length === 0 && (
-            <div className="bg-slate-900/40 border border-dashed border-slate-800 rounded-2xl p-6 text-center">
-              <p className="text-xs text-slate-500">No conversations yet. New members receive a welcome message from Antilia.</p>
+            <div className="bg-brand-dusk/40 border border-dashed border-slate-800 rounded-2xl p-6 text-center">
+              <p className="text-xs text-brand-sandstone/40">No conversations yet. New members receive a welcome message from Antilia.</p>
             </div>
           )}
           {summaries.map((summary) => (
             <Link
               key={summary.id}
               href={`/messages?c=${summary.id}`}
-              className={`block w-full text-left bg-slate-900/70 border rounded-2xl p-4 hover:border-sky-500/40 transition-colors ${
+              className={`block w-full text-left bg-brand-dusk/70 border rounded-2xl p-4 hover:border-brand-caribbeanSea/40 transition-colors ${
                 summary.id === selectedId ? 'border-sky-600/60' : 'border-slate-800'
               }`}
             >
               <div className="flex items-center justify-between">
-                <span className="text-sm font-bold text-white flex items-center gap-2">
-                  {summary.kind === 'group' && <Users className="w-3.5 h-3.5 text-slate-400" />}
+                <span className="text-sm font-bold text-brand-sandstone flex items-center gap-2">
+                  {summary.kind === 'group' && <Users className="w-3.5 h-3.5 text-brand-sandstone/60" />}
                   {summary.displayName}
                 </span>
               </div>
-              <p className="text-xs text-slate-400 mt-1 truncate">{summary.preview}</p>
+              <p className="text-xs text-brand-sandstone/60 mt-1 truncate">{summary.preview}</p>
             </Link>
           ))}
         </aside>
@@ -161,8 +161,8 @@ export default async function MessagesPage({ searchParams }: { searchParams: Pro
             peerName={summaries.find((s) => s.id === selectedId)?.displayName || 'Caribbean Member'}
           />
         ) : (
-          <section className="md:col-span-2 bg-slate-900/60 border border-slate-800 rounded-2xl flex items-center justify-center min-h-[70vh]">
-            <p className="text-sm text-slate-500">Select a conversation to start chatting.</p>
+          <section className="md:col-span-2 bg-brand-dusk/60 border border-slate-800 rounded-2xl flex items-center justify-center min-h-[70vh]">
+            <p className="text-sm text-brand-sandstone/40">Select a conversation to start chatting.</p>
           </section>
         )}
       </div>

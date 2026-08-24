@@ -59,7 +59,7 @@ export default function CaribbeanSunsetBackground() {
       </div>
 
       {/* Photorealistic Wallpaper & Brightness Switcher Widget */}
-      <div className="fixed bottom-4 right-4 z-40 hidden md:flex items-center gap-2 bg-slate-950/90 backdrop-blur-2xl border border-amber-400/40 px-3 py-1.5 rounded-full shadow-2xl">
+      <div className="fixed bottom-4 right-4 z-40 hidden md:flex items-center gap-2 bg-brand-twilight/90 backdrop-blur-2xl border border-brand-goldenHour/40 px-3 py-1.5 rounded-full shadow-2xl">
         <span className="text-[10px] font-black text-amber-300 uppercase tracking-widest flex items-center gap-1">
           ☀️ Caribbean Theme:
         </span>
@@ -71,8 +71,8 @@ export default function CaribbeanSunsetBackground() {
               onClick={() => setActiveWallpaperIndex(idx)}
               className={`text-[10px] font-black px-2.5 py-1 rounded-full transition-all ${
                 activeWallpaperIndex === idx
-                  ? 'bg-gradient-to-r from-amber-400 via-orange-400 to-sky-400 text-slate-950 shadow-md scale-105'
-                  : 'text-slate-300 hover:text-white hover:bg-slate-800/80'
+                  ? 'bg-gradient-to-r from-brand-goldenHour via-orange-400 to-brand-caribbeanSea text-slate-950 shadow-md scale-105'
+                  : 'text-slate-300 hover:text-brand-sandstone hover:bg-brand-dusk/80'
               }`}
               title={wp.description}
             >
@@ -91,8 +91,8 @@ export default function CaribbeanSunsetBackground() {
               onClick={() => setBrightness(level)}
               className={`text-[9px] font-extrabold px-2 py-0.5 rounded-full capitalize transition-all ${
                 brightness === level
-                  ? 'bg-sky-400 text-slate-950 shadow'
-                  : 'text-slate-400 hover:text-slate-200'
+                  ? 'bg-brand-caribbeanSea text-slate-950 shadow'
+                  : 'text-brand-sandstone/60 hover:text-slate-200'
               }`}
             >
               {level}

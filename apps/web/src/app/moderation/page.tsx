@@ -29,9 +29,9 @@ interface ModerationCase {
 
 const PRIORITY_COLORS: Record<string, { text: string; border: string; bg: string }> = {
   critical: { text: 'text-rose-400', border: 'border-rose-500/40', bg: 'bg-rose-500/10' },
-  high: { text: 'text-amber-400', border: 'border-amber-500/40', bg: 'bg-amber-500/10' },
-  medium: { text: 'text-sky-400', border: 'border-sky-500/40', bg: 'bg-sky-500/10' },
-  low: { text: 'text-slate-300', border: 'border-slate-600/40', bg: 'bg-slate-800/40' },
+  high: { text: 'text-brand-goldenHour', border: 'border-brand-goldenHour/40', bg: 'bg-brand-goldenHour/10' },
+  medium: { text: 'text-brand-caribbeanSea', border: 'border-brand-caribbeanSea/40', bg: 'bg-brand-caribbeanSea/10' },
+  low: { text: 'text-slate-300', border: 'border-slate-600/40', bg: 'bg-brand-dusk/40' },
 };
 
 export default async function ModerationPage() {
@@ -83,15 +83,15 @@ export default async function ModerationPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#090D16] text-slate-100">
+    <div className="min-h-screen bg-[#090D16] text-brand-sandstone">
       <header className="sticky top-0 z-50 bg-[#0F172A]/90 backdrop-blur-md border-b border-slate-800 px-4 py-3 flex items-center gap-4">
-        <Link href="/" className="flex items-center gap-2 text-slate-300 hover:text-white text-sm font-semibold">
+        <Link href="/" className="flex items-center gap-2 text-slate-300 hover:text-brand-sandstone text-sm font-semibold">
           <ArrowLeft className="w-4 h-4" /> Back
         </Link>
-        <h1 className="text-lg font-extrabold text-white flex items-center gap-2">
-          <ShieldAlert className="w-5 h-5 text-amber-400" /> Moderation Center
+        <h1 className="text-lg font-extrabold text-brand-sandstone flex items-center gap-2">
+          <ShieldAlert className="w-5 h-5 text-brand-goldenHour" /> Moderation Center
         </h1>
-        <span className="ml-auto text-[11px] text-slate-400 hidden md:block">
+        <span className="ml-auto text-[11px] text-brand-sandstone/60 hidden md:block">
           Human-in-the-loop · every action is logged
         </span>
       </header>
@@ -112,17 +112,17 @@ export default async function ModerationPage() {
 
         <section className="grid lg:grid-cols-3 gap-4">
           {/* Current case */}
-          <div className="lg:col-span-2 bg-slate-900/70 border border-slate-800 rounded-2xl p-5 space-y-4">
+          <div className="lg:col-span-2 bg-brand-dusk/70 border border-slate-800 rounded-2xl p-5 space-y-4">
             {!currentCase ? (
               <div className="py-10 text-center">
-                <CheckCircle className="w-10 h-10 text-emerald-400 mx-auto mb-2" />
-                <p className="text-sm font-semibold text-emerald-400">Queue is clear.</p>
-                <p className="text-xs text-slate-500 mt-1">No cases awaiting review.</p>
+                <CheckCircle className="w-10 h-10 text-brand-sunriseCoral mx-auto mb-2" />
+                <p className="text-sm font-semibold text-brand-sunriseCoral">Queue is clear.</p>
+                <p className="text-xs text-brand-sandstone/40 mt-1">No cases awaiting review.</p>
               </div>
             ) : (
               <>
                 <div className="flex items-center justify-between">
-                  <h2 className="text-sm font-bold text-white">Case #{currentCase.id.slice(0, 8)}</h2>
+                  <h2 className="text-sm font-bold text-brand-sandstone">Case #{currentCase.id.slice(0, 8)}</h2>
                   <span
                     className={`text-[10px] font-bold px-2 py-0.5 rounded border uppercase ${
                       PRIORITY_COLORS[currentCase.priority].bg
@@ -132,7 +132,7 @@ export default async function ModerationPage() {
                   </span>
                 </div>
 
-                <div className="text-xs text-slate-400 space-y-1">
+                <div className="text-xs text-brand-sandstone/60 space-y-1">
                   <p>
                     Content type:{' '}
                     <span className="text-slate-200 font-semibold capitalize">{currentCase.target_type}</span>
@@ -152,16 +152,16 @@ export default async function ModerationPage() {
                 {/* AI signals */}
                 {Object.keys(currentCase.signals).length > 0 && (
                   <div className="space-y-2">
-                    <h3 className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">AI Risk Signals</h3>
+                    <h3 className="text-[11px] font-bold text-brand-sandstone/60 uppercase tracking-wider">AI Risk Signals</h3>
                     {Object.entries(currentCase.signals).map(([label, score]) => {
                       const pct = Math.round(Number(score) * 100);
                       return (
                         <div key={label} className="flex items-center gap-3 text-xs">
-                          <span className="w-24 text-slate-400 font-semibold capitalize">{label}</span>
-                          <div className="flex-1 h-2 bg-slate-800 rounded-full overflow-hidden">
+                          <span className="w-24 text-brand-sandstone/60 font-semibold capitalize">{label}</span>
+                          <div className="flex-1 h-2 bg-brand-dusk rounded-full overflow-hidden">
                             <div
                               className={`h-full rounded-full ${
-                                pct >= 90 ? 'bg-rose-500' : pct >= 70 ? 'bg-amber-500' : 'bg-sky-500'
+                                pct >= 90 ? 'bg-rose-500' : pct >= 70 ? 'bg-brand-goldenHour' : 'bg-brand-caribbeanSea'
                               }`}
                               style={{ width: `${pct}%` }}
                             />
@@ -182,7 +182,7 @@ export default async function ModerationPage() {
                 </div>
 
                 {currentCase.ai_recommendation && (
-                  <p className="text-[11px] text-slate-500">
+                  <p className="text-[11px] text-brand-sandstone/40">
                     AI recommendation:{' '}
                     <span className="text-amber-300 font-semibold uppercase">
                       {currentCase.ai_recommendation}
@@ -196,45 +196,45 @@ export default async function ModerationPage() {
 
           {/* Sidebar */}
           <aside className="space-y-4">
-            <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-5">
-              <h3 className="text-sm font-bold text-white flex items-center gap-2 mb-3">
-                <Eye className="w-4 h-4 text-sky-400" /> Recent Cases
+            <div className="bg-brand-dusk/60 border border-slate-800 rounded-2xl p-5">
+              <h3 className="text-sm font-bold text-brand-sandstone flex items-center gap-2 mb-3">
+                <Eye className="w-4 h-4 text-brand-caribbeanSea" /> Recent Cases
               </h3>
               {recentCases.length === 0 ? (
-                <p className="text-xs text-slate-500">No recent cases.</p>
+                <p className="text-xs text-brand-sandstone/40">No recent cases.</p>
               ) : (
                 <ul className="space-y-2 text-xs">
                   {recentCases.map((c) => (
-                    <li key={c.id} className="flex justify-between text-slate-400">
+                    <li key={c.id} className="flex justify-between text-brand-sandstone/60">
                       <span>#{c.id.slice(0, 8)} {c.target_type} ({c.priority})</span>
-                      <span className="text-slate-500">{relativeTime(c.created_at)}</span>
+                      <span className="text-brand-sandstone/40">{relativeTime(c.created_at)}</span>
                     </li>
                   ))}
                 </ul>
               )}
             </div>
 
-            <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-5">
-              <h3 className="text-sm font-bold text-white flex items-center gap-2 mb-3">
-                <Flag className="w-4 h-4 text-amber-400" /> Queue Summary
+            <div className="bg-brand-dusk/60 border border-slate-800 rounded-2xl p-5">
+              <h3 className="text-sm font-bold text-brand-sandstone flex items-center gap-2 mb-3">
+                <Flag className="w-4 h-4 text-brand-goldenHour" /> Queue Summary
               </h3>
-              <ul className="space-y-2 text-xs text-slate-400">
+              <ul className="space-y-2 text-xs text-brand-sandstone/60">
                 <li className="flex justify-between">
                   <span>Total queued</span>
-                  <span className="text-white font-semibold">{allQueued.length}</span>
+                  <span className="text-brand-sandstone font-semibold">{allQueued.length}</span>
                 </li>
                 <li className="flex justify-between">
                   <span>Critical</span>
-                  <span className={`font-semibold ${queueCounts[0].count > 0 ? 'text-rose-400' : 'text-emerald-400'}`}>
+                  <span className={`font-semibold ${queueCounts[0].count > 0 ? 'text-rose-400' : 'text-brand-sunriseCoral'}`}>
                     {queueCounts[0].count}
                   </span>
                 </li>
               </ul>
             </div>
 
-            <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-5 flex items-center gap-3">
-              <EyeOff className="w-4 h-4 text-slate-500 flex-shrink-0" />
-              <p className="text-[11px] text-slate-500">
+            <div className="bg-brand-dusk/60 border border-slate-800 rounded-2xl p-5 flex items-center gap-3">
+              <EyeOff className="w-4 h-4 text-brand-sandstone/40 flex-shrink-0" />
+              <p className="text-[11px] text-brand-sandstone/40">
                 Auto-action applies only to high-confidence categories. All others require human review.
               </p>
             </div>

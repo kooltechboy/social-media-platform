@@ -316,8 +316,8 @@ export default function UniversalComposer({
       onDrop={handleDrop}
       className={`relative transition-all duration-300 rounded-3xl border shadow-xl ${
         isDragging
-          ? 'border-sky-400 bg-sky-950/40 ring-4 ring-sky-500/20'
-          : 'border-slate-800/90 bg-slate-900/90 backdrop-blur-xl hover:border-slate-700/90'
+          ? 'border-brand-caribbeanSea bg-sky-950/40 ring-4 ring-brand-caribbeanSea/20'
+          : 'border-slate-800/90 bg-brand-dusk/90 backdrop-blur-xl hover:border-slate-700/90'
       }`}
     >
       {/* Hidden Multi-file input */}
@@ -332,10 +332,10 @@ export default function UniversalComposer({
 
       {/* Dragging Overlay */}
       {isDragging && (
-        <div className="absolute inset-0 z-30 rounded-3xl bg-slate-950/90 backdrop-blur-md flex flex-col items-center justify-center border-2 border-dashed border-sky-400 p-6 text-center space-y-2 pointer-events-none">
-          <UploadCloud className="w-12 h-12 text-sky-400 animate-bounce" />
-          <h3 className="text-base font-black text-white">Drop Photos or Videos Here</h3>
-          <p className="text-xs text-sky-300">Attach directly to your Antilia post</p>
+        <div className="absolute inset-0 z-30 rounded-3xl bg-brand-twilight/90 backdrop-blur-md flex flex-col items-center justify-center border-2 border-dashed border-brand-caribbeanSea p-6 text-center space-y-2 pointer-events-none">
+          <UploadCloud className="w-12 h-12 text-brand-caribbeanSea animate-bounce" />
+          <h3 className="text-base font-black text-brand-sandstone">Drop Photos or Videos Here</h3>
+          <p className="text-xs text-brand-caribbeanSea">Attach directly to your Antilia post</p>
         </div>
       )}
 
@@ -345,8 +345,8 @@ export default function UniversalComposer({
       {!isExpanded ? (
         <div className="p-4 sm:p-5 space-y-4">
           <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-sky-500 via-emerald-500 to-amber-500 p-0.5 shadow-md flex-shrink-0">
-              <div className="w-full h-full bg-slate-950 rounded-2xl flex items-center justify-center font-black text-xs text-white">
+            <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-brand-caribbeanSea via-brand-sunriseCoral to-brand-goldenHour p-0.5 shadow-md flex-shrink-0">
+              <div className="w-full h-full bg-brand-twilight rounded-2xl flex items-center justify-center font-black text-xs text-brand-sandstone">
                 {avatarInitials}
               </div>
             </div>
@@ -355,11 +355,11 @@ export default function UniversalComposer({
             <button
               type="button"
               onClick={() => setIsExpanded(true)}
-              className="flex-1 bg-slate-950/90 hover:bg-slate-950 border border-slate-800/90 hover:border-sky-500/40 text-left px-5 py-3 rounded-2xl text-xs sm:text-sm text-slate-400 hover:text-slate-200 transition-all flex items-center justify-between group shadow-inner"
+              className="flex-1 bg-brand-twilight/90 hover:bg-brand-twilight border border-slate-800/90 hover:border-brand-caribbeanSea/40 text-left px-5 py-3 rounded-2xl text-xs sm:text-sm text-brand-sandstone/60 hover:text-slate-200 transition-all flex items-center justify-between group shadow-inner"
             >
               <span>What&apos;s happening, {firstName}?</span>
-              <span className="text-[11px] font-bold text-sky-400/80 group-hover:text-sky-400 flex items-center gap-1">
-                <Sparkles className="w-3.5 h-3.5 text-amber-400" /> Post
+              <span className="text-[11px] font-bold text-brand-caribbeanSea/80 group-hover:text-brand-caribbeanSea flex items-center gap-1">
+                <Sparkles className="w-3.5 h-3.5 text-brand-goldenHour" /> Post
               </span>
             </button>
           </div>
@@ -369,16 +369,16 @@ export default function UniversalComposer({
             <button
               type="button"
               onClick={() => openWithMode('photo')}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-bold text-slate-300 hover:text-sky-300 hover:bg-slate-800/80 transition-all whitespace-nowrap"
+              className="flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-bold text-slate-300 hover:text-brand-caribbeanSea hover:bg-brand-dusk/80 transition-all whitespace-nowrap"
             >
-              <ImageIcon className="w-4 h-4 text-emerald-400" />
+              <ImageIcon className="w-4 h-4 text-brand-sunriseCoral" />
               <span>Photo</span>
             </button>
 
             <button
               type="button"
               onClick={() => openWithMode('video')}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-bold text-slate-300 hover:text-rose-300 hover:bg-slate-800/80 transition-all whitespace-nowrap"
+              className="flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-bold text-slate-300 hover:text-rose-300 hover:bg-brand-dusk/80 transition-all whitespace-nowrap"
             >
               <Video className="w-4 h-4 text-rose-400" />
               <span>Video</span>
@@ -387,16 +387,16 @@ export default function UniversalComposer({
             <button
               type="button"
               onClick={() => openWithMode('reel')}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-bold text-slate-300 hover:text-amber-300 hover:bg-slate-800/80 transition-all whitespace-nowrap"
+              className="flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-bold text-slate-300 hover:text-amber-300 hover:bg-brand-dusk/80 transition-all whitespace-nowrap"
             >
-              <Film className="w-4 h-4 text-amber-400" />
+              <Film className="w-4 h-4 text-brand-goldenHour" />
               <span>Reel</span>
             </button>
 
             <button
               type="button"
               onClick={() => openWithMode('poll')}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-bold text-slate-300 hover:text-purple-300 hover:bg-slate-800/80 transition-all whitespace-nowrap"
+              className="flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-bold text-slate-300 hover:text-purple-300 hover:bg-brand-dusk/80 transition-all whitespace-nowrap"
             >
               <BarChart2 className="w-4 h-4 text-purple-400" />
               <span>Poll</span>
@@ -405,7 +405,7 @@ export default function UniversalComposer({
             <button
               type="button"
               onClick={() => openWithMode('event')}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-bold text-slate-300 hover:text-yellow-300 hover:bg-slate-800/80 transition-all whitespace-nowrap"
+              className="flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-bold text-slate-300 hover:text-yellow-300 hover:bg-brand-dusk/80 transition-all whitespace-nowrap"
             >
               <Calendar className="w-4 h-4 text-yellow-400" />
               <span>Event</span>
@@ -414,9 +414,9 @@ export default function UniversalComposer({
             <button
               type="button"
               onClick={() => openWithMode('product')}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-bold text-slate-300 hover:text-emerald-300 hover:bg-slate-800/80 transition-all whitespace-nowrap"
+              className="flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-bold text-slate-300 hover:text-emerald-300 hover:bg-brand-dusk/80 transition-all whitespace-nowrap"
             >
-              <ShoppingBag className="w-4 h-4 text-emerald-400" />
+              <ShoppingBag className="w-4 h-4 text-brand-sunriseCoral" />
               <span>Store</span>
             </button>
           </div>
@@ -429,14 +429,14 @@ export default function UniversalComposer({
           {/* Header & Metadata selectors */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-800/80">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-sky-500 to-emerald-500 text-slate-950 font-black flex items-center justify-center text-xs shadow-md">
+              <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-brand-caribbeanSea to-brand-sunriseCoral text-slate-950 font-black flex items-center justify-center text-xs shadow-md">
                 {avatarInitials}
               </div>
               <div>
-                <h4 className="font-extrabold text-sm text-white flex items-center gap-1.5">
+                <h4 className="font-extrabold text-sm text-brand-sandstone flex items-center gap-1.5">
                   {displayName}
                   {accountType !== 'personal' && (
-                    <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                    <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded-full bg-brand-sunriseCoral/20 text-emerald-300 border border-brand-sunriseCoral/30">
                       {accountType}
                     </span>
                   )}
@@ -449,8 +449,8 @@ export default function UniversalComposer({
                     onClick={() => setAudienceContext('diaspora')}
                     className={`border text-[11px] font-bold rounded-lg px-2 py-1 flex items-center gap-1 transition-colors ${
                       audienceContext === 'diaspora'
-                        ? 'bg-slate-950 border-sky-500/50 text-sky-400'
-                        : 'bg-slate-900 border-slate-800 text-slate-400 hover:bg-slate-800'
+                        ? 'bg-brand-twilight border-brand-caribbeanSea/50 text-brand-caribbeanSea'
+                        : 'bg-brand-dusk border-slate-800 text-brand-sandstone/60 hover:bg-brand-dusk'
                     }`}
                   >
                     Global Diaspora 🌍
@@ -460,8 +460,8 @@ export default function UniversalComposer({
                     onClick={() => setAudienceContext('local')}
                     className={`border text-[11px] font-bold rounded-lg px-2 py-1 flex items-center gap-1 transition-colors ${
                       audienceContext === 'local'
-                        ? 'bg-slate-950 border-sky-500/50 text-sky-400'
-                        : 'bg-slate-900 border-slate-800 text-slate-400 hover:bg-slate-800'
+                        ? 'bg-brand-twilight border-brand-caribbeanSea/50 text-brand-caribbeanSea'
+                        : 'bg-brand-dusk border-slate-800 text-brand-sandstone/60 hover:bg-brand-dusk'
                     }`}
                   >
                     Island Local 🏝️
@@ -473,7 +473,7 @@ export default function UniversalComposer({
                   <select
                     value={visibility}
                     onChange={(e) => setVisibility(e.target.value as typeof visibility)}
-                    className="bg-sky-950/40 border border-sky-500/50 text-[11px] font-bold text-sky-400 rounded-full px-2.5 py-0.5 focus:outline-none focus:border-sky-500 cursor-pointer appearance-none flex items-center"
+                    className="bg-sky-950/40 border border-brand-caribbeanSea/50 text-[11px] font-bold text-brand-caribbeanSea rounded-full px-2.5 py-0.5 focus:outline-none focus:border-brand-caribbeanSea cursor-pointer appearance-none flex items-center"
                   >
                     <option value="public">
                       {audienceContext === 'diaspora' ? '🌍 Public (Diaspora)' : '🏝️ Public (Local)'}
@@ -490,7 +490,7 @@ export default function UniversalComposer({
             <button
               type="button"
               onClick={() => setIsExpanded(false)}
-              className="self-end sm:self-auto p-1.5 rounded-full text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+              className="self-end sm:self-auto p-1.5 rounded-full text-brand-sandstone/60 hover:text-brand-sandstone hover:bg-brand-dusk transition-colors"
               title="Close composer"
             >
               <X className="w-5 h-5" />
@@ -511,18 +511,18 @@ export default function UniversalComposer({
               placeholder={`What is happening across the ${audienceContext === 'diaspora' ? 'diaspora' : 'island'}, ${firstName}?`}
               rows={4}
               maxLength={3000}
-              className="w-full bg-slate-950/80 border border-slate-800/80 rounded-2xl p-4 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-sky-500/60 focus:ring-1 focus:ring-sky-500/60 transition-all resize-none leading-relaxed"
+              className="w-full bg-brand-twilight/80 border border-slate-800/80 rounded-2xl p-4 text-sm text-brand-sandstone placeholder-brand-sandstone/40 focus:outline-none focus:border-brand-caribbeanSea/60 focus:ring-1 focus:ring-brand-caribbeanSea/60 transition-all resize-none leading-relaxed"
             />
-            <div className="absolute bottom-3 right-3 text-[10px] font-mono text-slate-500">
+            <div className="absolute bottom-3 right-3 text-[10px] font-mono text-brand-sandstone/40">
               {content.length}/3000
             </div>
           </div>
 
           {/* Media Previews Grid */}
           {mediaList.length > 0 && (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5 p-3 rounded-2xl bg-slate-950/80 border border-slate-800">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5 p-3 rounded-2xl bg-brand-twilight/80 border border-slate-800">
               {mediaList.map((item) => (
-                <div key={item.id} className="relative group rounded-xl overflow-hidden aspect-video bg-slate-900 border border-slate-800">
+                <div key={item.id} className="relative group rounded-xl overflow-hidden aspect-video bg-brand-dusk border border-slate-800">
                   {item.type === 'video' ? (
                     <video src={item.previewUrl} className="w-full h-full object-cover" />
                   ) : (
@@ -532,12 +532,12 @@ export default function UniversalComposer({
                   <button
                     type="button"
                     onClick={() => removeMediaItem(item.id)}
-                    className="absolute top-1.5 right-1.5 p-1 rounded-full bg-slate-950/80 text-rose-400 hover:text-rose-300 hover:bg-rose-950 border border-rose-500/30 transition-all shadow-md"
+                    className="absolute top-1.5 right-1.5 p-1 rounded-full bg-brand-twilight/80 text-rose-400 hover:text-rose-300 hover:bg-rose-950 border border-rose-500/30 transition-all shadow-md"
                     title="Remove media"
                   >
                     <X className="w-3.5 h-3.5" />
                   </button>
-                  <span className="absolute bottom-1.5 left-1.5 text-[9px] font-bold px-1.5 py-0.5 rounded bg-slate-950/80 text-slate-300 uppercase">
+                  <span className="absolute bottom-1.5 left-1.5 text-[9px] font-bold px-1.5 py-0.5 rounded bg-brand-twilight/80 text-slate-300 uppercase">
                     {item.type}
                   </span>
                 </div>
@@ -547,7 +547,7 @@ export default function UniversalComposer({
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className="rounded-xl border border-dashed border-slate-700 hover:border-sky-400 flex flex-col items-center justify-center gap-1 text-slate-400 hover:text-sky-300 transition-all aspect-video"
+                  className="rounded-xl border border-dashed border-slate-700 hover:border-brand-caribbeanSea flex flex-col items-center justify-center gap-1 text-brand-sandstone/60 hover:text-brand-caribbeanSea transition-all aspect-video"
                 >
                   <Plus className="w-5 h-5" />
                   <span className="text-[11px] font-bold">Add More</span>
@@ -562,12 +562,12 @@ export default function UniversalComposer({
 
           {/* Poll Builder */}
           {mode === 'poll' && (
-            <div className="p-4 rounded-2xl bg-slate-950 border border-purple-500/30 space-y-3 animate-fadeIn">
+            <div className="p-4 rounded-2xl bg-brand-twilight border border-purple-500/30 space-y-3 animate-fadeIn">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-purple-400 flex items-center gap-1.5">
                   <BarChart2 className="w-4 h-4" /> Caribbean Community Poll
                 </span>
-                <button type="button" onClick={() => setMode('text')} className="text-slate-500 hover:text-white">
+                <button type="button" onClick={() => setMode('text')} className="text-brand-sandstone/40 hover:text-brand-sandstone">
                   <X className="w-4 h-4" />
                 </button>
               </div>
@@ -576,7 +576,7 @@ export default function UniversalComposer({
                 value={pollQuestion}
                 onChange={(e) => setPollQuestion(e.target.value)}
                 placeholder="Ask a question (e.g. Best Carnival fete in Trinidad?)..."
-                className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-purple-500"
+                className="w-full bg-brand-dusk border border-slate-800 rounded-xl px-3 py-2 text-xs text-brand-sandstone placeholder-brand-sandstone/40 focus:outline-none focus:border-purple-500"
               />
               <div className="space-y-2">
                 {pollOptions.map((opt, idx) => (
@@ -590,7 +590,7 @@ export default function UniversalComposer({
                       setPollOptions(next);
                     }}
                     placeholder={`Option ${idx + 1}`}
-                    className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-purple-500"
+                    className="w-full bg-brand-dusk border border-slate-800 rounded-xl px-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-purple-500"
                   />
                 ))}
               </div>
@@ -608,12 +608,12 @@ export default function UniversalComposer({
 
           {/* Product / Commerce Attachment */}
           {mode === 'product' && (
-            <div className="p-4 rounded-2xl bg-slate-950 border border-emerald-500/30 space-y-3 animate-fadeIn">
+            <div className="p-4 rounded-2xl bg-brand-twilight border border-brand-sunriseCoral/30 space-y-3 animate-fadeIn">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-emerald-400 flex items-center gap-1.5">
+                <span className="text-xs font-bold text-brand-sunriseCoral flex items-center gap-1.5">
                   <ShoppingBag className="w-4 h-4" /> Attach Marketplace Product / Service
                 </span>
-                <button type="button" onClick={() => setMode('text')} className="text-slate-500 hover:text-white">
+                <button type="button" onClick={() => setMode('text')} className="text-brand-sandstone/40 hover:text-brand-sandstone">
                   <X className="w-4 h-4" />
                 </button>
               </div>
@@ -623,16 +623,16 @@ export default function UniversalComposer({
                   value={productTitle}
                   onChange={(e) => setProductTitle(e.target.value)}
                   placeholder="Product name (e.g. Handmade Mas Costume)"
-                  className="bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500"
+                  className="bg-brand-dusk border border-slate-800 rounded-xl px-3 py-2 text-xs text-brand-sandstone focus:outline-none focus:border-brand-sunriseCoral"
                 />
                 <div className="relative">
-                  <span className="absolute left-3 top-2 text-xs text-slate-500 font-bold">$</span>
+                  <span className="absolute left-3 top-2 text-xs text-brand-sandstone/40 font-bold">$</span>
                   <input
                     type="number"
                     value={productPrice}
                     onChange={(e) => setProductPrice(e.target.value)}
                     placeholder="Price (USD on SpotPay)"
-                    className="w-full bg-slate-900 border border-slate-800 rounded-xl pl-7 pr-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500"
+                    className="w-full bg-brand-dusk border border-slate-800 rounded-xl pl-7 pr-3 py-2 text-xs text-brand-sandstone focus:outline-none focus:border-brand-sunriseCoral"
                   />
                 </div>
               </div>
@@ -641,12 +641,12 @@ export default function UniversalComposer({
 
           {/* Cultural Event Attachment */}
           {mode === 'event' && (
-            <div className="p-4 rounded-2xl bg-slate-950 border border-yellow-500/30 space-y-3 animate-fadeIn">
+            <div className="p-4 rounded-2xl bg-brand-twilight border border-yellow-500/30 space-y-3 animate-fadeIn">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-yellow-400 flex items-center gap-1.5">
                   <Calendar className="w-4 h-4" /> Attach Cultural Event / Fete
                 </span>
-                <button type="button" onClick={() => setMode('text')} className="text-slate-500 hover:text-white">
+                <button type="button" onClick={() => setMode('text')} className="text-brand-sandstone/40 hover:text-brand-sandstone">
                   <X className="w-4 h-4" />
                 </button>
               </div>
@@ -656,13 +656,13 @@ export default function UniversalComposer({
                   value={eventTitle}
                   onChange={(e) => setEventTitle(e.target.value)}
                   placeholder="Event Title (e.g. Jouvert Sunrise Party)"
-                  className="bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-yellow-500"
+                  className="bg-brand-dusk border border-slate-800 rounded-xl px-3 py-2 text-xs text-brand-sandstone focus:outline-none focus:border-yellow-500"
                 />
                 <input
                   type="date"
                   value={eventDate}
                   onChange={(e) => setEventDate(e.target.value)}
-                  className="bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-300 focus:outline-none focus:border-yellow-500"
+                  className="bg-brand-dusk border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-300 focus:outline-none focus:border-yellow-500"
                 />
               </div>
             </div>
@@ -670,12 +670,12 @@ export default function UniversalComposer({
 
           {/* Fundraiser / Community Relief */}
           {mode === 'fundraiser' && (
-            <div className="p-4 rounded-2xl bg-slate-950 border border-rose-500/30 space-y-3 animate-fadeIn">
+            <div className="p-4 rounded-2xl bg-brand-twilight border border-rose-500/30 space-y-3 animate-fadeIn">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-rose-400 flex items-center gap-1.5">
                   <HeartHandshake className="w-4 h-4" /> Launch SpotPay Fundraiser / Relief
                 </span>
-                <button type="button" onClick={() => setMode('text')} className="text-slate-500 hover:text-white">
+                <button type="button" onClick={() => setMode('text')} className="text-brand-sandstone/40 hover:text-brand-sandstone">
                   <X className="w-4 h-4" />
                 </button>
               </div>
@@ -685,16 +685,16 @@ export default function UniversalComposer({
                   value={fundraiserTitle}
                   onChange={(e) => setFundraiserTitle(e.target.value)}
                   placeholder="Cause (e.g. Island Hurricane Relief Fund)"
-                  className="bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-rose-500"
+                  className="bg-brand-dusk border border-slate-800 rounded-xl px-3 py-2 text-xs text-brand-sandstone focus:outline-none focus:border-rose-500"
                 />
                 <div className="relative">
-                  <span className="absolute left-3 top-2 text-xs text-slate-500 font-bold">$</span>
+                  <span className="absolute left-3 top-2 text-xs text-brand-sandstone/40 font-bold">$</span>
                   <input
                     type="number"
                     value={fundraiserTarget}
                     onChange={(e) => setFundraiserTarget(e.target.value)}
                     placeholder="Funding Goal (USD on SpotPay)"
-                    className="w-full bg-slate-900 border border-slate-800 rounded-xl pl-7 pr-3 py-2 text-xs text-white focus:outline-none focus:border-rose-500"
+                    className="w-full bg-brand-dusk border border-slate-800 rounded-xl pl-7 pr-3 py-2 text-xs text-brand-sandstone focus:outline-none focus:border-rose-500"
                   />
                 </div>
               </div>
@@ -703,19 +703,19 @@ export default function UniversalComposer({
 
           {/* Civic Alert for Government / Institution */}
           {(accountType === 'government' || accountType === 'institution') && (
-            <div className="flex items-center justify-between p-3 rounded-2xl bg-amber-950/30 border border-amber-500/30">
+            <div className="flex items-center justify-between p-3 rounded-2xl bg-amber-950/30 border border-brand-goldenHour/30">
               <div className="flex items-center gap-2">
-                <Shield className="w-4 h-4 text-amber-400" />
+                <Shield className="w-4 h-4 text-brand-goldenHour" />
                 <div>
                   <p className="text-xs font-bold text-amber-300">Mark as Official Civic Advisory</p>
-                  <p className="text-[10px] text-slate-400">High priority alert for residents and diaspora</p>
+                  <p className="text-[10px] text-brand-sandstone/60">High priority alert for residents and diaspora</p>
                 </div>
               </div>
               <input
                 type="checkbox"
                 checked={isOfficialAlert}
                 onChange={(e) => setIsOfficialAlert(e.target.checked)}
-                className="w-4 h-4 accent-amber-500 rounded cursor-pointer"
+                className="w-4 h-4 accent-brand-goldenHour rounded cursor-pointer"
               />
             </div>
           )}
@@ -731,10 +731,10 @@ export default function UniversalComposer({
                 onClick={() => fileInputRef.current?.click()}
                 title="Add Photos or Videos"
                 className={`p-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all ${
-                  mediaList.length > 0 ? 'bg-sky-500/20 text-sky-400 border border-sky-500/30' : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                  mediaList.length > 0 ? 'bg-brand-caribbeanSea/20 text-brand-caribbeanSea border border-brand-caribbeanSea/30' : 'text-brand-sandstone/60 hover:text-brand-sandstone hover:bg-brand-dusk'
                 }`}
               >
-                <ImageIcon className="w-4 h-4 text-sky-400" />
+                <ImageIcon className="w-4 h-4 text-brand-caribbeanSea" />
                 <span className="hidden md:inline">Media ({mediaList.length})</span>
               </button>
 
@@ -743,7 +743,7 @@ export default function UniversalComposer({
                 onClick={() => setMode(mode === 'poll' ? 'text' : 'poll')}
                 title="Create Poll"
                 className={`p-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all ${
-                  mode === 'poll' ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30' : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                  mode === 'poll' ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30' : 'text-brand-sandstone/60 hover:text-brand-sandstone hover:bg-brand-dusk'
                 }`}
               >
                 <BarChart2 className="w-4 h-4 text-purple-400" />
@@ -755,10 +755,10 @@ export default function UniversalComposer({
                 onClick={() => setMode(mode === 'product' ? 'text' : 'product')}
                 title="Attach Product"
                 className={`p-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all ${
-                  mode === 'product' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                  mode === 'product' ? 'bg-brand-sunriseCoral/20 text-brand-sunriseCoral border border-brand-sunriseCoral/30' : 'text-brand-sandstone/60 hover:text-brand-sandstone hover:bg-brand-dusk'
                 }`}
               >
-                <ShoppingBag className="w-4 h-4 text-emerald-400" />
+                <ShoppingBag className="w-4 h-4 text-brand-sunriseCoral" />
                 <span className="hidden md:inline">Store</span>
               </button>
 
@@ -767,7 +767,7 @@ export default function UniversalComposer({
                 onClick={() => setMode(mode === 'event' ? 'text' : 'event')}
                 title="Attach Event"
                 className={`p-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all ${
-                  mode === 'event' ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30' : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                  mode === 'event' ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30' : 'text-brand-sandstone/60 hover:text-brand-sandstone hover:bg-brand-dusk'
                 }`}
               >
                 <Calendar className="w-4 h-4 text-yellow-400" />
@@ -779,7 +779,7 @@ export default function UniversalComposer({
                 onClick={() => setMode(mode === 'fundraiser' ? 'text' : 'fundraiser')}
                 title="Launch Fundraiser"
                 className={`p-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all ${
-                  mode === 'fundraiser' ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30' : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                  mode === 'fundraiser' ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30' : 'text-brand-sandstone/60 hover:text-brand-sandstone hover:bg-brand-dusk'
                 }`}
               >
                 <HeartHandshake className="w-4 h-4 text-rose-400" />
@@ -792,7 +792,7 @@ export default function UniversalComposer({
               <button
                 type="submit"
                 disabled={isSubmitting || (!content.trim() && mediaList.length === 0 && mode === 'text')}
-                className="w-full sm:w-auto bg-gradient-to-r from-sky-500 via-emerald-500 to-amber-500 hover:from-sky-400 hover:to-emerald-400 text-slate-950 font-black px-6 py-2.5 rounded-2xl text-xs flex items-center justify-center gap-2 transition-all shadow-lg shadow-sky-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full sm:w-auto bg-gradient-to-r from-brand-caribbeanSea via-brand-sunriseCoral to-brand-goldenHour hover:from-brand-caribbeanSea hover:to-brand-sunriseCoral text-slate-950 font-black px-6 py-2.5 rounded-2xl text-xs flex items-center justify-center gap-2 transition-all shadow-lg shadow-brand-caribbeanSea/20 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isSubmitting ? (
                   <>
@@ -818,8 +818,8 @@ export default function UniversalComposer({
           )}
 
           {successMessage && (
-            <div className="p-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs font-bold flex items-center gap-2">
-              <CheckCircle className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+            <div className="p-3 rounded-2xl bg-brand-sunriseCoral/10 border border-brand-sunriseCoral/30 text-emerald-300 text-xs font-bold flex items-center gap-2">
+              <CheckCircle className="w-4 h-4 text-brand-sunriseCoral flex-shrink-0" />
               <span>{successMessage}</span>
             </div>
           )}

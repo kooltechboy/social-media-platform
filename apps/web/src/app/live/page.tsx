@@ -80,17 +80,17 @@ export default async function LivePage() {
   const featuredStream = liveStreams.find((s) => s.state === 'live') ?? liveStreams[0];
 
   return (
-    <div className="min-h-screen bg-[#090D16] text-slate-100 p-4 md:p-6 max-w-7xl mx-auto space-y-8">
+    <div className="min-h-screen bg-[#090D16] text-brand-sandstone p-4 md:p-6 max-w-7xl mx-auto space-y-8">
       {/* Top Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-6">
         <div>
           <div className="flex items-center gap-2.5">
             <span className="w-3 h-3 rounded-full bg-red-500 animate-ping" />
-            <h1 className="text-2xl md:text-3xl font-black text-white flex items-center gap-3">
+            <h1 className="text-2xl md:text-3xl font-black text-brand-sandstone flex items-center gap-3">
               <Tv className="w-8 h-8 text-red-500" /> Caribbean Live Streams
             </h1>
           </div>
-          <p className="text-xs md:text-sm text-slate-400 mt-1">
+          <p className="text-xs md:text-sm text-brand-sandstone/60 mt-1">
             Real-time Caribbean broadcasts, fete streams, podcasts, and SpotPay virtual gifts.
           </p>
         </div>
@@ -98,7 +98,7 @@ export default async function LivePage() {
         {user ? (
           <Link
             href="/creator-studio"
-            className="bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white font-extrabold px-6 py-2.5 rounded-2xl text-xs flex items-center gap-2 shadow-lg shadow-red-600/20 transition-all self-start md:self-auto"
+            className="bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-brand-sandstone font-extrabold px-6 py-2.5 rounded-2xl text-xs flex items-center gap-2 shadow-lg shadow-red-600/20 transition-all self-start md:self-auto"
           >
             🔴 Broadcast Live
           </Link>
@@ -116,17 +116,17 @@ export default async function LivePage() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         {/* Stream Ingest Video Container (Col 8) */}
         <div className="lg:col-span-8 space-y-4">
-          <div className="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden shadow-2xl flex flex-col">
-            <div className="aspect-video bg-slate-950 flex flex-col items-center justify-center relative p-6 overflow-hidden">
+          <div className="bg-brand-dusk border border-slate-800 rounded-3xl overflow-hidden shadow-2xl flex flex-col">
+            <div className="aspect-video bg-brand-twilight flex flex-col items-center justify-center relative p-6 overflow-hidden">
               <div className="absolute inset-0 bg-gradient-to-tr from-red-950/40 via-slate-950 to-slate-900" />
 
               {/* Status Pill */}
               <div className="absolute top-4 left-4 z-10 flex items-center gap-2">
-                <span className="bg-red-600 text-white text-xs font-black px-3 py-1 rounded-full flex items-center gap-1.5 shadow-md animate-pulse">
+                <span className="bg-red-600 text-brand-sandstone text-xs font-black px-3 py-1 rounded-full flex items-center gap-1.5 shadow-md animate-pulse">
                   <span className="w-2 h-2 rounded-full bg-white animate-ping" /> LIVE
                 </span>
-                <span className="bg-slate-950/80 backdrop-blur-md text-slate-200 text-xs font-bold px-3 py-1 rounded-full border border-slate-800 flex items-center gap-1.5">
-                  <Users className="w-3.5 h-3.5 text-sky-400" /> {featuredStream.peak_viewers.toLocaleString()} watching
+                <span className="bg-brand-twilight/80 backdrop-blur-md text-slate-200 text-xs font-bold px-3 py-1 rounded-full border border-slate-800 flex items-center gap-1.5">
+                  <Users className="w-3.5 h-3.5 text-brand-caribbeanSea" /> {featuredStream.peak_viewers.toLocaleString()} watching
                 </span>
               </div>
 
@@ -135,10 +135,10 @@ export default async function LivePage() {
                 <div className="w-20 h-20 rounded-3xl bg-red-600/20 border border-red-500/40 flex items-center justify-center mx-auto text-red-400 shadow-2xl shadow-red-500/20">
                   <Tv className="w-10 h-10" />
                 </div>
-                <h3 className="text-lg md:text-xl font-extrabold text-white leading-snug">
+                <h3 className="text-lg md:text-xl font-extrabold text-brand-sandstone leading-snug">
                   {featuredStream.title}
                 </h3>
-                <p className="text-xs text-slate-400 flex items-center justify-center gap-2">
+                <p className="text-xs text-brand-sandstone/60 flex items-center justify-center gap-2">
                   <span>WebRTC / Ultra-low Latency Ingest</span>
                   <span>•</span>
                   <span>1080p 60fps</span>
@@ -147,14 +147,14 @@ export default async function LivePage() {
             </div>
 
             {/* Streamer Info Bar & SpotPay Gifts CTA */}
-            <div className="p-5 flex flex-col sm:flex-row items-center justify-between gap-4 bg-slate-900/90 border-t border-slate-800">
+            <div className="p-5 flex flex-col sm:flex-row items-center justify-between gap-4 bg-brand-dusk/90 border-t border-slate-800">
               <div className="flex items-center gap-3.5">
-                <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-red-500 to-amber-500 text-slate-950 font-black flex items-center justify-center text-sm shadow-md">
+                <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-red-500 to-brand-goldenHour text-slate-950 font-black flex items-center justify-center text-sm shadow-md">
                   {(featuredStream.profiles?.display_name ?? 'CO').slice(0, 2).toUpperCase()}
                 </div>
                 <div>
-                  <h4 className="text-sm font-extrabold text-white">{featuredStream.profiles?.display_name ?? 'Caribbean Host'}</h4>
-                  <p className="text-xs text-slate-400">
+                  <h4 className="text-sm font-extrabold text-brand-sandstone">{featuredStream.profiles?.display_name ?? 'Caribbean Host'}</h4>
+                  <p className="text-xs text-brand-sandstone/60">
                     @{featuredStream.profiles?.username ?? 'creator'} • Verified Caribbean Broadcaster
                   </p>
                 </div>
@@ -184,32 +184,32 @@ export default async function LivePage() {
 
       {/* More Caribbean Broadcasts Grid */}
       <div className="space-y-4 pt-4 border-t border-slate-800">
-        <h3 className="font-extrabold text-sm text-white uppercase tracking-wider flex items-center gap-2">
-          <Radio className="w-4 h-4 text-sky-400" /> Active Island &amp; Diaspora Broadcasts
+        <h3 className="font-extrabold text-sm text-brand-sandstone uppercase tracking-wider flex items-center gap-2">
+          <Radio className="w-4 h-4 text-brand-caribbeanSea" /> Active Island &amp; Diaspora Broadcasts
         </h3>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {liveStreams.map((stream) => (
             <div
               key={stream.id}
-              className="bg-slate-900/80 border border-slate-800 hover:border-red-500/50 rounded-3xl p-5 transition-all cursor-pointer group shadow-lg space-y-3"
+              className="bg-brand-dusk/80 border border-slate-800 hover:border-red-500/50 rounded-3xl p-5 transition-all cursor-pointer group shadow-lg space-y-3"
             >
               <div className="flex items-center justify-between">
                 <span className={`text-[10px] font-black px-2.5 py-0.5 rounded-full border ${
                   stream.state === 'live'
                     ? 'bg-red-500/20 text-red-300 border-red-500/30 animate-pulse'
-                    : 'bg-amber-500/20 text-amber-300 border-amber-500/30'
+                    : 'bg-brand-goldenHour/20 text-amber-300 border-brand-goldenHour/30'
                 }`}>
                   {stream.state === 'live' ? '🔴 LIVE NOW' : '📅 UPCOMING'}
                 </span>
-                <span className="text-[11px] font-bold text-slate-400">{stream.peak_viewers} viewers</span>
+                <span className="text-[11px] font-bold text-brand-sandstone/60">{stream.peak_viewers} viewers</span>
               </div>
-              <h4 className="font-extrabold text-sm text-white leading-snug group-hover:text-sky-400 transition-colors line-clamp-2">
+              <h4 className="font-extrabold text-sm text-brand-sandstone leading-snug group-hover:text-brand-caribbeanSea transition-colors line-clamp-2">
                 {stream.title}
               </h4>
-              <div className="flex items-center justify-between text-xs text-slate-400 pt-1 border-t border-slate-800/60">
+              <div className="flex items-center justify-between text-xs text-brand-sandstone/60 pt-1 border-t border-slate-800/60">
                 <span>{stream.profiles?.display_name ?? 'Broadcaster'}</span>
-                <span className="text-sky-400 font-bold">Watch Stream →</span>
+                <span className="text-brand-caribbeanSea font-bold">Watch Stream →</span>
               </div>
             </div>
           ))}

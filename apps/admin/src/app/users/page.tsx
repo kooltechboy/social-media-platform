@@ -46,33 +46,33 @@ export default async function AdminUsersPage({
   const totalPages = Math.ceil((count ?? 0) / pageSize);
 
   return (
-    <div className="min-h-screen bg-[#090D16] text-slate-100 p-6 max-w-6xl mx-auto space-y-6">
+    <div className="min-h-screen bg-[#090D16] text-brand-sandstone p-6 max-w-6xl mx-auto space-y-6">
       <div className="flex items-center justify-between border-b border-slate-800 pb-4">
-        <h1 className="text-xl font-extrabold text-white flex items-center gap-2">
-          <Users className="w-6 h-6 text-sky-400" /> Users
-          <span className="text-sm font-normal text-slate-500 ml-2">{(count ?? 0).toLocaleString()} total</span>
+        <h1 className="text-xl font-extrabold text-brand-sandstone flex items-center gap-2">
+          <Users className="w-6 h-6 text-brand-caribbeanSea" /> Users
+          <span className="text-sm font-normal text-brand-sandstone/40 ml-2">{(count ?? 0).toLocaleString()} total</span>
         </h1>
-        <Link href="/" className="text-xs text-slate-400 hover:text-white">← Dashboard</Link>
+        <Link href="/" className="text-xs text-brand-sandstone/60 hover:text-brand-sandstone">← Dashboard</Link>
       </div>
 
       <form method="GET" className="flex gap-2">
         <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-sandstone/60" />
           <input
             name="q"
             defaultValue={query}
             placeholder="Search username or display name…"
-            className="w-full bg-slate-900 border border-slate-700 rounded-xl pl-9 pr-4 py-2 text-sm text-slate-100 focus:outline-none focus:border-sky-500 transition-colors"
+            className="w-full bg-brand-dusk border border-slate-700 rounded-xl pl-9 pr-4 py-2 text-sm text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea transition-colors"
           />
         </div>
-        <button type="submit" className="bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold px-4 py-2 rounded-xl text-xs">
+        <button type="submit" className="bg-brand-caribbeanSea hover:bg-brand-caribbeanSea text-slate-950 font-bold px-4 py-2 rounded-xl text-xs">
           Search
         </button>
       </form>
 
-      <div className="bg-slate-900/70 border border-slate-800 rounded-2xl overflow-hidden">
+      <div className="bg-brand-dusk/70 border border-slate-800 rounded-2xl overflow-hidden">
         <table className="w-full text-sm text-slate-300">
-          <thead className="bg-slate-950 text-[11px] text-slate-400 uppercase tracking-wider border-b border-slate-800">
+          <thead className="bg-brand-twilight text-[11px] text-brand-sandstone/60 uppercase tracking-wider border-b border-slate-800">
             <tr>
               <th className="p-3 text-left">User</th>
               <th className="p-3 text-left">Username</th>
@@ -83,30 +83,30 @@ export default async function AdminUsersPage({
           <tbody className="divide-y divide-slate-800/60">
             {profiles.length === 0 ? (
               <tr>
-                <td colSpan={4} className="p-8 text-center text-slate-500 text-xs">No users found.</td>
+                <td colSpan={4} className="p-8 text-center text-brand-sandstone/40 text-xs">No users found.</td>
               </tr>
             ) : (
               profiles.map((profile) => (
-                <tr key={profile.id} className="hover:bg-slate-800/30 transition-colors">
+                <tr key={profile.id} className="hover:bg-brand-dusk/30 transition-colors">
                   <td className="p-3">
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-sky-950 border border-sky-800 text-sky-400 font-bold flex items-center justify-center text-xs flex-shrink-0">
+                      <div className="w-8 h-8 rounded-full bg-sky-950 border border-sky-800 text-brand-caribbeanSea font-bold flex items-center justify-center text-xs flex-shrink-0">
                         {profile.display_name.slice(0, 2).toUpperCase()}
                       </div>
-                      <span className="font-semibold text-white truncate">{profile.display_name}</span>
+                      <span className="font-semibold text-brand-sandstone truncate">{profile.display_name}</span>
                     </div>
                   </td>
-                  <td className="p-3 text-slate-400">@{profile.username}</td>
+                  <td className="p-3 text-brand-sandstone/60">@{profile.username}</td>
                   <td className="p-3">
                     {profile.is_verified ? (
-                      <span className="flex items-center gap-1 text-sky-400 text-xs font-semibold">
+                      <span className="flex items-center gap-1 text-brand-caribbeanSea text-xs font-semibold">
                         <BadgeCheck className="w-3.5 h-3.5" /> Verified
                       </span>
                     ) : (
                       <span className="text-slate-600 text-xs">—</span>
                     )}
                   </td>
-                  <td className="p-3 text-slate-500 text-xs">
+                  <td className="p-3 text-brand-sandstone/40 text-xs">
                     {new Date(profile.created_at).toLocaleDateString()}
                   </td>
                 </tr>
@@ -119,13 +119,13 @@ export default async function AdminUsersPage({
       {totalPages > 1 && (
         <div className="flex items-center justify-center gap-2 text-xs">
           {page > 1 && (
-            <a href={`?q=${query}&page=${page - 1}`} className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg transition-colors">
+            <a href={`?q=${query}&page=${page - 1}`} className="px-3 py-1.5 bg-brand-dusk hover:bg-slate-700 text-slate-200 rounded-lg transition-colors">
               ← Prev
             </a>
           )}
-          <span className="text-slate-400">Page {page} of {totalPages}</span>
+          <span className="text-brand-sandstone/60">Page {page} of {totalPages}</span>
           {page < totalPages && (
-            <a href={`?q=${query}&page=${page + 1}`} className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg transition-colors">
+            <a href={`?q=${query}&page=${page + 1}`} className="px-3 py-1.5 bg-brand-dusk hover:bg-slate-700 text-slate-200 rounded-lg transition-colors">
               Next →
             </a>
           )}

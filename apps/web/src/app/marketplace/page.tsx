@@ -147,17 +147,17 @@ export default async function MarketplacePage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#090D16] text-slate-100 p-4 md:p-6 max-w-7xl mx-auto space-y-8">
+    <div className="min-h-screen bg-[#090D16] text-brand-sandstone p-4 md:p-6 max-w-7xl mx-auto space-y-8">
       {/* Top Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-6">
         <div>
           <div className="flex items-center gap-2.5">
             <span className="w-3 h-3 rounded-full bg-orange-500 animate-ping" />
-            <h1 className="text-2xl md:text-3xl font-black text-white flex items-center gap-3">
+            <h1 className="text-2xl md:text-3xl font-black text-brand-sandstone flex items-center gap-3">
               <ShoppingBag className="w-8 h-8 text-orange-400" /> Shop the Caribbean
             </h1>
           </div>
-          <p className="text-xs md:text-sm text-slate-400 mt-1">
+          <p className="text-xs md:text-sm text-brand-sandstone/60 mt-1">
             Authentic island goods, artisan craft, food, coffee, and digital audio — SpotPay protected with 30-day dispute settlement.
           </p>
         </div>
@@ -187,7 +187,7 @@ export default async function MarketplacePage() {
             className={`px-4 py-1.5 rounded-2xl text-xs font-black whitespace-nowrap transition-all ${
               idx === 0
                 ? 'bg-orange-500 text-slate-950 shadow-md shadow-orange-500/20'
-                : 'bg-slate-900 text-slate-400 hover:text-white border border-slate-800'
+                : 'bg-brand-dusk text-brand-sandstone/60 hover:text-brand-sandstone border border-slate-800'
             }`}
           >
             {tab}
@@ -198,14 +198,14 @@ export default async function MarketplacePage() {
       {/* Trust & Guarantee Banner */}
       <div className="bg-gradient-to-r from-slate-900 via-orange-950/20 to-slate-900 border border-orange-500/20 rounded-3xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-lg text-xs">
         <div className="flex items-center gap-3">
-          <ShieldCheck className="w-5 h-5 text-emerald-400 flex-shrink-0" />
+          <ShieldCheck className="w-5 h-5 text-brand-sunriseCoral flex-shrink-0" />
           <p className="text-slate-300">
-            <strong className="text-white">SpotPay Buyer &amp; Seller Protection:</strong> Every purchase is held in escrow until dispatch confirmation with guaranteed double-entry settlement.
+            <strong className="text-brand-sandstone">SpotPay Buyer &amp; Seller Protection:</strong> Every purchase is held in escrow until dispatch confirmation with guaranteed double-entry settlement.
           </p>
         </div>
-        <div className="flex items-center gap-4 text-[11px] text-slate-400 flex-shrink-0">
-          <span className="flex items-center gap-1"><Truck className="w-3.5 h-3.5 text-sky-400" /> Global Island Shipping</span>
-          <span className="flex items-center gap-1"><CheckCircle className="w-3.5 h-3.5 text-emerald-400" /> Verified Sellers</span>
+        <div className="flex items-center gap-4 text-[11px] text-brand-sandstone/60 flex-shrink-0">
+          <span className="flex items-center gap-1"><Truck className="w-3.5 h-3.5 text-brand-caribbeanSea" /> Global Island Shipping</span>
+          <span className="flex items-center gap-1"><CheckCircle className="w-3.5 h-3.5 text-brand-sunriseCoral" /> Verified Sellers</span>
         </div>
       </div>
 
@@ -218,32 +218,32 @@ export default async function MarketplacePage() {
           return (
             <article
               key={product.id}
-              className="bg-slate-900/80 border border-slate-800/90 hover:border-orange-500/50 rounded-3xl p-6 space-y-4 flex flex-col justify-between transition-all shadow-xl group"
+              className="bg-brand-dusk/80 border border-slate-800/90 hover:border-orange-500/50 rounded-3xl p-6 space-y-4 flex flex-col justify-between transition-all shadow-xl group"
             >
               <div className="space-y-3.5">
                 <div className="aspect-video bg-gradient-to-br from-slate-950 to-slate-900 rounded-2xl flex flex-col items-center justify-center border border-slate-800 relative overflow-hidden group-hover:border-slate-700 transition-colors">
                   <div className="text-4xl mb-1">📦</div>
                   {product.origin && (
-                    <span className="absolute top-3 left-3 text-[10px] font-black px-2.5 py-0.5 rounded-full bg-slate-950/80 text-orange-400 border border-orange-500/30 backdrop-blur-md">
+                    <span className="absolute top-3 left-3 text-[10px] font-black px-2.5 py-0.5 rounded-full bg-brand-twilight/80 text-orange-400 border border-orange-500/30 backdrop-blur-md">
                       {product.origin}
                     </span>
                   )}
                 </div>
 
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-extrabold text-slate-400 truncate">{sellerName}</span>
+                  <span className="text-xs font-extrabold text-brand-sandstone/60 truncate">{sellerName}</span>
                   <span className={`text-[10px] font-black px-2.5 py-0.5 rounded-full border ${
                     product.product_kind === 'physical'
-                      ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                      ? 'bg-brand-sunriseCoral/10 text-brand-sunriseCoral border-brand-sunriseCoral/20'
                       : product.product_kind === 'digital'
-                      ? 'bg-sky-500/10 text-sky-400 border-sky-500/20'
-                      : 'bg-amber-500/10 text-amber-400 border-amber-500/20'
+                      ? 'bg-brand-caribbeanSea/10 text-brand-caribbeanSea border-brand-caribbeanSea/20'
+                      : 'bg-brand-goldenHour/10 text-brand-goldenHour border-brand-goldenHour/20'
                   }`}>
                     {product.product_kind.toUpperCase()}
                   </span>
                 </div>
 
-                <h3 className="font-extrabold text-sm text-white group-hover:text-orange-300 transition-colors leading-snug">
+                <h3 className="font-extrabold text-sm text-brand-sandstone group-hover:text-orange-300 transition-colors leading-snug">
                   {product.title}
                 </h3>
 
@@ -254,12 +254,12 @@ export default async function MarketplacePage() {
                 )}
 
                 <div className="flex items-baseline justify-between pt-1">
-                  <div className="text-2xl font-black text-white">
-                    {price.format()} <span className="text-xs font-semibold text-slate-400">{product.currency}</span>
+                  <div className="text-2xl font-black text-brand-sandstone">
+                    {price.format()} <span className="text-xs font-semibold text-brand-sandstone/60">{product.currency}</span>
                   </div>
                   {product.rating && (
-                    <div className="flex items-center gap-1 text-xs font-bold text-amber-400">
-                      <Star className="w-3.5 h-3.5 fill-amber-400" /> {product.rating}
+                    <div className="flex items-center gap-1 text-xs font-bold text-brand-goldenHour">
+                      <Star className="w-3.5 h-3.5 fill-brand-goldenHour" /> {product.rating}
                     </div>
                   )}
                 </div>

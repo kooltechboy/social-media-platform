@@ -86,18 +86,18 @@ export default async function ProfilePage({
   const initials = profileRow.display_name.slice(0, 2).toUpperCase();
 
   return (
-    <div className="min-h-screen bg-[#090D16] text-slate-100">
+    <div className="min-h-screen bg-[#090D16] text-brand-sandstone">
       <header className="sticky top-0 z-50 bg-[#0F172A]/90 backdrop-blur-md border-b border-slate-800 px-4 py-3 flex items-center gap-4">
-        <Link href="/" className="flex items-center gap-2 text-slate-300 hover:text-white text-sm font-semibold">
+        <Link href="/" className="flex items-center gap-2 text-slate-300 hover:text-brand-sandstone text-sm font-semibold">
           ← Back
         </Link>
-        <h1 className="text-lg font-extrabold text-white truncate">{profileRow.display_name}</h1>
+        <h1 className="text-lg font-extrabold text-brand-sandstone truncate">{profileRow.display_name}</h1>
         <div className="ml-auto flex items-center gap-2">
-          <button aria-label="Share profile" className="p-2 text-slate-300 hover:text-white rounded-full hover:bg-slate-800 transition-colors">
+          <button aria-label="Share profile" className="p-2 text-slate-300 hover:text-brand-sandstone rounded-full hover:bg-brand-dusk transition-colors">
             <Share2 className="w-4 h-4" />
           </button>
           {isOwnProfile && (
-            <Link href="/settings" aria-label="Profile settings" className="p-2 text-slate-300 hover:text-white rounded-full hover:bg-slate-800 transition-colors">
+            <Link href="/settings" aria-label="Profile settings" className="p-2 text-slate-300 hover:text-brand-sandstone rounded-full hover:bg-brand-dusk transition-colors">
               <Settings className="w-4 h-4" />
             </Link>
           )}
@@ -105,33 +105,33 @@ export default async function ProfilePage({
       </header>
 
       <main className="max-w-3xl mx-auto p-4 space-y-6">
-        <section className="bg-slate-900/70 border border-slate-800 rounded-2xl overflow-hidden">
+        <section className="bg-brand-dusk/70 border border-slate-800 rounded-2xl overflow-hidden">
           <div className="h-32 bg-gradient-to-r from-sky-950 via-slate-900 to-amber-950/40" />
           <div className="p-5 -mt-12">
-            <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-sky-500 to-amber-500 p-0.5">
-              <div className="w-full h-full bg-slate-900 rounded-xl flex items-center justify-center text-2xl font-extrabold">
+            <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-brand-caribbeanSea to-brand-goldenHour p-0.5">
+              <div className="w-full h-full bg-brand-dusk rounded-xl flex items-center justify-center text-2xl font-extrabold">
                 {initials}
               </div>
             </div>
             <div className="mt-3 flex items-center gap-2">
-              <h2 className="text-xl font-extrabold text-white">{profileRow.display_name}</h2>
+              <h2 className="text-xl font-extrabold text-brand-sandstone">{profileRow.display_name}</h2>
               {profileRow.is_verified && (
-                <BadgeCheck className="w-5 h-5 text-sky-400" aria-label="Verified" />
+                <BadgeCheck className="w-5 h-5 text-brand-caribbeanSea" aria-label="Verified" />
               )}
             </div>
-            <p className="text-sm text-slate-400">@{profileRow.username}</p>
+            <p className="text-sm text-brand-sandstone/60">@{profileRow.username}</p>
 
             {profileRow.bio && (
               <p className="text-sm text-slate-200 mt-3 leading-relaxed">{profileRow.bio}</p>
             )}
 
-            <div className="mt-4 flex flex-wrap items-center gap-3 text-xs text-slate-400">
+            <div className="mt-4 flex flex-wrap items-center gap-3 text-xs text-brand-sandstone/60">
               {profileRow.website && (
                 <a
                   href={profileRow.website}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-1.5 text-sky-400 hover:underline"
+                  className="flex items-center gap-1.5 text-brand-caribbeanSea hover:underline"
                 >
                   <Globe className="w-3.5 h-3.5" /> {profileRow.website.replace(/^https?:\/\//, '')}
                 </a>
@@ -142,7 +142,7 @@ export default async function ProfilePage({
               {isOwnProfile ? (
                 <Link
                   href="/settings"
-                  className="bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold text-xs px-5 py-2 rounded-full transition-colors"
+                  className="bg-brand-caribbeanSea hover:bg-brand-caribbeanSea text-slate-950 font-bold text-xs px-5 py-2 rounded-full transition-colors"
                 >
                   Edit Profile
                 </Link>
@@ -157,7 +157,7 @@ export default async function ProfilePage({
               {!currentUser && (
                 <Link
                   href="/login"
-                  className="flex items-center gap-1.5 bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold text-xs px-4 py-2 rounded-full transition-colors"
+                  className="flex items-center gap-1.5 bg-brand-caribbeanSea hover:bg-brand-caribbeanSea text-slate-950 font-bold text-xs px-4 py-2 rounded-full transition-colors"
                 >
                   <UserPlus className="w-3.5 h-3.5" /> Follow
                 </Link>
@@ -166,16 +166,16 @@ export default async function ProfilePage({
 
             <div className="mt-5 flex gap-6 text-sm">
               <span>
-                <strong className="text-white">{(profileRow.post_count ?? recentPosts.length).toLocaleString()}</strong>{' '}
-                <span className="text-slate-400">Posts</span>
+                <strong className="text-brand-sandstone">{(profileRow.post_count ?? recentPosts.length).toLocaleString()}</strong>{' '}
+                <span className="text-brand-sandstone/60">Posts</span>
               </span>
               <span>
-                <strong className="text-white">{(profileRow.follower_count ?? 0).toLocaleString()}</strong>{' '}
-                <span className="text-slate-400">Followers</span>
+                <strong className="text-brand-sandstone">{(profileRow.follower_count ?? 0).toLocaleString()}</strong>{' '}
+                <span className="text-brand-sandstone/60">Followers</span>
               </span>
               <span>
-                <strong className="text-white">{(profileRow.following_count ?? 0).toLocaleString()}</strong>{' '}
-                <span className="text-slate-400">Following</span>
+                <strong className="text-brand-sandstone">{(profileRow.following_count ?? 0).toLocaleString()}</strong>{' '}
+                <span className="text-brand-sandstone/60">Following</span>
               </span>
             </div>
           </div>
@@ -183,14 +183,14 @@ export default async function ProfilePage({
 
         <section className="space-y-3">
           {recentPosts.length === 0 ? (
-            <div className="bg-slate-900/60 border border-dashed border-slate-800 rounded-2xl p-8 text-center">
-              <p className="text-sm text-slate-500">No posts yet.</p>
+            <div className="bg-brand-dusk/60 border border-dashed border-slate-800 rounded-2xl p-8 text-center">
+              <p className="text-sm text-brand-sandstone/40">No posts yet.</p>
             </div>
           ) : (
             recentPosts.map((post) => (
-              <article key={post.id} className="bg-slate-900/60 border border-slate-800 rounded-2xl p-5">
+              <article key={post.id} className="bg-brand-dusk/60 border border-slate-800 rounded-2xl p-5">
                 <p className="text-sm text-slate-200 leading-relaxed whitespace-pre-wrap">{post.content}</p>
-                <span className="text-[11px] text-slate-500 mt-2 block">{relativeTime(post.created_at)}</span>
+                <span className="text-[11px] text-brand-sandstone/40 mt-2 block">{relativeTime(post.created_at)}</span>
               </article>
             ))
           )}

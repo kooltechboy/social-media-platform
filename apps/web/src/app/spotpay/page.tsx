@@ -148,13 +148,13 @@ export default async function SpotPayPage() {
   const creatorMoney = new Money(Math.abs(creatorBalanceMinor), creatorCurrency);
 
   return (
-    <div className="min-h-screen bg-[#090D16] text-slate-100 p-4 md:p-6 max-w-6xl mx-auto space-y-8">
+    <div className="min-h-screen bg-[#090D16] text-brand-sandstone p-4 md:p-6 max-w-6xl mx-auto space-y-8">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-6">
         <div>
-          <h1 className="text-2xl md:text-3xl font-black text-white flex items-center gap-3">
-            <Wallet className="w-8 h-8 text-emerald-400" /> SpotPay Financial Hub
+          <h1 className="text-2xl md:text-3xl font-black text-brand-sandstone flex items-center gap-3">
+            <Wallet className="w-8 h-8 text-brand-sunriseCoral" /> SpotPay Financial Hub
           </h1>
-          <p className="text-sm text-slate-400 mt-1">
+          <p className="text-sm text-brand-sandstone/60 mt-1">
             Double-entry ledger wallet, payment methods, and transaction history.
           </p>
         </div>
@@ -162,14 +162,14 @@ export default async function SpotPayPage() {
           <button
             disabled
             title="Coming soon — payment processor integration in progress"
-            className="bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-bold px-4 py-2 rounded-xl text-xs flex items-center gap-2 opacity-60 cursor-not-allowed"
+            className="bg-brand-sunriseCoral/20 text-emerald-300 border border-brand-sunriseCoral/40 font-bold px-4 py-2 rounded-xl text-xs flex items-center gap-2 opacity-60 cursor-not-allowed"
           >
             <ArrowDownLeft className="w-4 h-4" /> Add Money
           </button>
           <button
             disabled
             title="Coming soon"
-            className="bg-sky-500/20 text-sky-300 border border-sky-500/40 font-bold px-4 py-2 rounded-xl text-xs flex items-center gap-2 opacity-60 cursor-not-allowed"
+            className="bg-brand-caribbeanSea/20 text-brand-caribbeanSea border border-brand-caribbeanSea/40 font-bold px-4 py-2 rounded-xl text-xs flex items-center gap-2 opacity-60 cursor-not-allowed"
           >
             <Send className="w-4 h-4" /> Send SpotPay P2P
           </button>
@@ -178,68 +178,68 @@ export default async function SpotPayPage() {
 
       {/* Balance Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-gradient-to-br from-slate-900 via-slate-900 to-emerald-950/40 border border-emerald-500/30 rounded-2xl p-6 space-y-3">
-          <span className="text-xs font-bold text-emerald-400 uppercase tracking-wider">SpotPay Wallet Balance</span>
+        <div className="bg-gradient-to-br from-slate-900 via-slate-900 to-emerald-950/40 border border-brand-sunriseCoral/30 rounded-2xl p-6 space-y-3">
+          <span className="text-xs font-bold text-brand-sunriseCoral uppercase tracking-wider">SpotPay Wallet Balance</span>
           {walletAccount ? (
             <>
-              <div className="text-3xl font-black text-white">
+              <div className="text-3xl font-black text-brand-sandstone">
                 {walletMoney.format()}{' '}
-                <span className="text-xs text-slate-400 font-normal">{walletCurrency}</span>
+                <span className="text-xs text-brand-sandstone/60 font-normal">{walletCurrency}</span>
               </div>
-              <p className="text-xs text-slate-400 flex items-center gap-1">
-                <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" /> Double-entry ledger secured
+              <p className="text-xs text-brand-sandstone/60 flex items-center gap-1">
+                <ShieldCheck className="w-3.5 h-3.5 text-brand-sunriseCoral" /> Double-entry ledger secured
               </p>
             </>
           ) : (
-            <div className="text-sm text-slate-400">No wallet account yet.</div>
+            <div className="text-sm text-brand-sandstone/60">No wallet account yet.</div>
           )}
         </div>
 
-        <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-6 space-y-3">
-          <span className="text-xs font-bold text-sky-400 uppercase tracking-wider">Creator Pending Earnings</span>
+        <div className="bg-brand-dusk/80 border border-slate-800 rounded-2xl p-6 space-y-3">
+          <span className="text-xs font-bold text-brand-caribbeanSea uppercase tracking-wider">Creator Pending Earnings</span>
           {creatorAccount ? (
             <>
-              <div className="text-3xl font-black text-white">
+              <div className="text-3xl font-black text-brand-sandstone">
                 {creatorMoney.format()}{' '}
-                <span className="text-xs text-slate-400 font-normal">{creatorCurrency}</span>
+                <span className="text-xs text-brand-sandstone/60 font-normal">{creatorCurrency}</span>
               </div>
-              <p className="text-xs text-slate-400">Available for payout request</p>
+              <p className="text-xs text-brand-sandstone/60">Available for payout request</p>
             </>
           ) : (
-            <div className="text-sm text-slate-400">No creator account. <Link href="/creator-studio" className="text-sky-400 hover:underline">Set up Creator Studio.</Link></div>
+            <div className="text-sm text-brand-sandstone/60">No creator account. <Link href="/creator-studio" className="text-brand-caribbeanSea hover:underline">Set up Creator Studio.</Link></div>
           )}
         </div>
 
-        <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-6 space-y-3">
-          <span className="text-xs font-bold text-amber-400 uppercase tracking-wider">Payment Methods</span>
+        <div className="bg-brand-dusk/80 border border-slate-800 rounded-2xl p-6 space-y-3">
+          <span className="text-xs font-bold text-brand-goldenHour uppercase tracking-wider">Payment Methods</span>
           {paymentMethods.length === 0 ? (
-            <div className="text-sm text-slate-400">No payment methods added.</div>
+            <div className="text-sm text-brand-sandstone/60">No payment methods added.</div>
           ) : (
             <div className="flex flex-wrap gap-2 pt-1">
               {paymentMethods.map((method) => (
                 <span
                   key={method.id}
-                  className="px-2.5 py-1 rounded-md bg-slate-800 text-xs font-bold text-slate-200 border border-slate-700 flex items-center gap-1"
+                  className="px-2.5 py-1 rounded-md bg-brand-dusk text-xs font-bold text-slate-200 border border-slate-700 flex items-center gap-1"
                 >
-                  <CreditCard className="w-3 h-3 text-slate-400" />
+                  <CreditCard className="w-3 h-3 text-brand-sandstone/60" />
                   {methodLabel(method)}
                   {method.is_default && (
-                    <span className="text-[9px] text-emerald-400 ml-0.5">DEFAULT</span>
+                    <span className="text-[9px] text-brand-sunriseCoral ml-0.5">DEFAULT</span>
                   )}
                 </span>
               ))}
             </div>
           )}
-          <p className="text-xs text-slate-500">Tokenized — card numbers never stored</p>
+          <p className="text-xs text-brand-sandstone/40">Tokenized — card numbers never stored</p>
         </div>
       </div>
 
       {/* Recent Ledger Transactions */}
-      <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-6 space-y-4">
-        <h3 className="text-base font-bold text-white">Recent Ledger Entries</h3>
+      <div className="bg-brand-dusk/60 border border-slate-800 rounded-2xl p-6 space-y-4">
+        <h3 className="text-base font-bold text-brand-sandstone">Recent Ledger Entries</h3>
         {recentEntries.length === 0 ? (
           <div className="text-center py-8">
-            <p className="text-sm text-slate-500">No transactions yet.</p>
+            <p className="text-sm text-brand-sandstone/40">No transactions yet.</p>
             <p className="text-xs text-slate-600 mt-1">
               Transactions appear here after your first SpotPay activity.
             </p>
@@ -247,7 +247,7 @@ export default async function SpotPayPage() {
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs text-slate-300">
-              <thead className="bg-slate-950 text-slate-400 uppercase text-[10px] tracking-wider border-b border-slate-800">
+              <thead className="bg-brand-twilight text-brand-sandstone/60 uppercase text-[10px] tracking-wider border-b border-slate-800">
                 <tr>
                   <th className="p-3">Transaction ID</th>
                   <th className="p-3">Account</th>
@@ -259,22 +259,22 @@ export default async function SpotPayPage() {
               </thead>
               <tbody className="divide-y divide-slate-800/60">
                 {recentEntries.map((entry) => (
-                  <tr key={entry.id} className="hover:bg-slate-800/30 transition-colors">
-                    <td className="p-3 font-mono text-[10px] text-slate-500">
+                  <tr key={entry.id} className="hover:bg-brand-dusk/30 transition-colors">
+                    <td className="p-3 font-mono text-[10px] text-brand-sandstone/40">
                       {entry.transaction_id.slice(0, 8)}…
                     </td>
                     <td className="p-3 text-slate-300">
                       {accountTypeLabel(entry.ledger_accounts?.account_type ?? '')}
                     </td>
-                    <td className="p-3 text-white font-medium max-w-[200px] truncate">
+                    <td className="p-3 text-brand-sandstone font-medium max-w-[200px] truncate">
                       {entry.description ?? '—'}
                     </td>
                     <td className="p-3">
                       <span
                         className={`text-[10px] font-bold px-2 py-0.5 rounded border ${
                           entry.entry_type === 'CREDIT'
-                            ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
-                            : 'bg-slate-800 text-slate-400 border-slate-700'
+                            ? 'bg-brand-sunriseCoral/20 text-emerald-300 border-brand-sunriseCoral/30'
+                            : 'bg-brand-dusk text-brand-sandstone/60 border-slate-700'
                         }`}
                       >
                         {entry.entry_type}
@@ -282,13 +282,13 @@ export default async function SpotPayPage() {
                     </td>
                     <td
                       className={`p-3 font-bold ${
-                        entry.entry_type === 'CREDIT' ? 'text-emerald-400' : 'text-slate-300'
+                        entry.entry_type === 'CREDIT' ? 'text-brand-sunriseCoral' : 'text-slate-300'
                       }`}
                     >
                       {entry.entry_type === 'CREDIT' ? '+' : '-'}
                       {new Money(Math.round(Math.abs(Number(entry.amount)) * 100), entry.ledger_accounts?.currency ?? 'USD').format()}
                     </td>
-                    <td className="p-3 text-slate-500">{relativeTime(entry.created_at)}</td>
+                    <td className="p-3 text-brand-sandstone/40">{relativeTime(entry.created_at)}</td>
                   </tr>
                 ))}
               </tbody>

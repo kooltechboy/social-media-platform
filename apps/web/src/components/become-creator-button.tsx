@@ -27,7 +27,7 @@ export default function BecomeCreatorClientButton() {
       <button
         onClick={handle}
         disabled={pending}
-        className="bg-sky-500 hover:bg-sky-400 disabled:opacity-50 text-slate-950 font-bold px-6 py-2.5 rounded-xl text-sm transition-colors"
+        className="bg-brand-caribbeanSea hover:bg-brand-caribbeanSea disabled:opacity-50 text-slate-950 font-bold px-6 py-2.5 rounded-xl text-sm transition-colors"
       >
         {pending ? 'Setting up…' : 'Set Up Creator Studio'}
       </button>

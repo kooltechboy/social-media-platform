@@ -95,17 +95,17 @@ export default async function ExplorePage() {
   const { islands, hubs } = await loadGeography();
 
   return (
-    <div className="min-h-screen bg-[#090D16] text-slate-100 p-4 md:p-6 max-w-7xl mx-auto space-y-10">
+    <div className="min-h-screen bg-[#090D16] text-brand-sandstone p-4 md:p-6 max-w-7xl mx-auto space-y-10">
       {/* Top Header & Ask AI Integration */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 border-b border-slate-800 pb-6">
         <div>
           <div className="flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-sky-400 animate-ping" />
-            <h1 className="text-2xl md:text-3xl font-black text-white flex items-center gap-2.5 tracking-tight">
-              <Compass className="w-8 h-8 text-sky-400" /> Caribbean Discovery Engine
+            <span className="w-2.5 h-2.5 rounded-full bg-brand-caribbeanSea animate-ping" />
+            <h1 className="text-2xl md:text-3xl font-black text-brand-sandstone flex items-center gap-2.5 tracking-tight">
+              <Compass className="w-8 h-8 text-brand-caribbeanSea" /> Caribbean Discovery Engine
             </h1>
           </div>
-          <p className="text-xs md:text-sm text-slate-400 mt-1.5 leading-relaxed">
+          <p className="text-xs md:text-sm text-brand-sandstone/60 mt-1.5 leading-relaxed">
             Discover {islands.length}+ island nations, diaspora hubs, creators, and Caribbean culture worldwide.
           </p>
         </div>
@@ -118,10 +118,10 @@ export default async function ExplorePage() {
       {/* Explore By Vibe Category Rail */}
       <section className="space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-sm font-extrabold text-white flex items-center gap-2 uppercase tracking-wider">
-            <Sparkles className="w-4 h-4 text-amber-400" /> Explore by Vibe
+          <h2 className="text-sm font-extrabold text-brand-sandstone flex items-center gap-2 uppercase tracking-wider">
+            <Sparkles className="w-4 h-4 text-brand-goldenHour" /> Explore by Vibe
           </h2>
-          <span className="text-xs text-slate-500">Curated cultural themes</span>
+          <span className="text-xs text-brand-sandstone/40">Curated cultural themes</span>
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-4 gap-3.5">
@@ -129,17 +129,17 @@ export default async function ExplorePage() {
             <Link
               key={vibe.id}
               href={`/explore?vibe=${vibe.id}`}
-              className="bg-slate-900/80 hover:bg-slate-800/80 border border-slate-800 hover:border-sky-500/50 rounded-3xl p-4 transition-all group flex flex-col justify-between shadow-lg"
+              className="bg-brand-dusk/80 hover:bg-brand-dusk/80 border border-slate-800 hover:border-brand-caribbeanSea/50 rounded-3xl p-4 transition-all group flex flex-col justify-between shadow-lg"
             >
               <div className="flex items-center justify-between">
                 <span className="text-2xl">{vibe.icon}</span>
-                <ArrowUpRight className="w-4 h-4 text-slate-600 group-hover:text-sky-400 transition-colors" />
+                <ArrowUpRight className="w-4 h-4 text-slate-600 group-hover:text-brand-caribbeanSea transition-colors" />
               </div>
               <div className="mt-3">
-                <h3 className="font-extrabold text-sm text-white group-hover:text-sky-400 transition-colors">
+                <h3 className="font-extrabold text-sm text-brand-sandstone group-hover:text-brand-caribbeanSea transition-colors">
                   {vibe.name}
                 </h3>
-                <p className="text-[11px] text-slate-400 mt-0.5 leading-snug">{vibe.desc}</p>
+                <p className="text-[11px] text-brand-sandstone/60 mt-0.5 leading-snug">{vibe.desc}</p>
               </div>
             </Link>
           ))}
@@ -149,10 +149,10 @@ export default async function ExplorePage() {
       {/* Caribbean by Location Grid */}
       <section className="space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-sm font-extrabold text-white flex items-center gap-2 uppercase tracking-wider">
-            <Globe className="w-4 h-4 text-emerald-400" /> Island Nations &amp; Territories
+          <h2 className="text-sm font-extrabold text-brand-sandstone flex items-center gap-2 uppercase tracking-wider">
+            <Globe className="w-4 h-4 text-brand-sunriseCoral" /> Island Nations &amp; Territories
           </h2>
-          <span className="text-xs text-slate-500">{islands.length} Countries</span>
+          <span className="text-xs text-brand-sandstone/40">{islands.length} Countries</span>
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
@@ -160,16 +160,16 @@ export default async function ExplorePage() {
             <Link
               key={item.iso_code}
               href={`/explore?country=${item.iso_code}`}
-              className="bg-slate-900/70 border border-slate-800/80 hover:border-sky-500/60 rounded-3xl p-4 flex flex-col justify-between transition-all group shadow-md hover:scale-[1.02]"
+              className="bg-brand-dusk/70 border border-slate-800/80 hover:border-brand-caribbeanSea/60 rounded-3xl p-4 flex flex-col justify-between transition-all group shadow-md hover:scale-[1.02]"
             >
               <div className="text-3xl mb-2 group-hover:scale-110 transition-transform">
                 {flagEmoji(item.iso2_code)}
               </div>
               <div>
-                <h3 className="font-extrabold text-sm text-white group-hover:text-sky-400 transition-colors truncate">
+                <h3 className="font-extrabold text-sm text-brand-sandstone group-hover:text-brand-caribbeanSea transition-colors truncate">
                   {item.name}
                 </h3>
-                <p className="text-[10px] text-slate-400 font-medium mt-0.5">
+                <p className="text-[10px] text-brand-sandstone/60 font-medium mt-0.5">
                   {item.creatorCount ?? 800}+ Creators
                 </p>
               </div>
@@ -181,10 +181,10 @@ export default async function ExplorePage() {
       {/* Diaspora Global Hubs */}
       <section className="space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-sm font-extrabold text-white flex items-center gap-2 uppercase tracking-wider">
-            <MapPin className="w-4 h-4 text-amber-400" /> Global Diaspora Hubs
+          <h2 className="text-sm font-extrabold text-brand-sandstone flex items-center gap-2 uppercase tracking-wider">
+            <MapPin className="w-4 h-4 text-brand-goldenHour" /> Global Diaspora Hubs
           </h2>
-          <span className="text-xs text-slate-500">Diaspora Communities</span>
+          <span className="text-xs text-brand-sandstone/40">Diaspora Communities</span>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
@@ -194,15 +194,15 @@ export default async function ExplorePage() {
               className="bg-gradient-to-br from-slate-900 via-slate-900 to-sky-950/40 border border-slate-800/80 rounded-3xl p-5 flex items-center justify-between shadow-lg"
             >
               <div className="space-y-1">
-                <span className="text-[10px] font-black text-amber-400 uppercase tracking-wider">
+                <span className="text-[10px] font-black text-brand-goldenHour uppercase tracking-wider">
                   {hub.country_iso}
                 </span>
-                <h4 className="font-extrabold text-slate-100 text-sm">{hub.name}</h4>
-                <p className="text-[11px] text-slate-400">{hub.members ?? '120.0K'} Active Members</p>
+                <h4 className="font-extrabold text-brand-sandstone text-sm">{hub.name}</h4>
+                <p className="text-[11px] text-brand-sandstone/60">{hub.members ?? '120.0K'} Active Members</p>
               </div>
               <Link
                 href={`/communities?hub=${encodeURIComponent(hub.name)}`}
-                className="bg-sky-500/20 hover:bg-sky-500 text-sky-400 hover:text-slate-950 border border-sky-500/30 px-3.5 py-2 rounded-2xl text-xs font-black transition-all shadow-sm"
+                className="bg-brand-caribbeanSea/20 hover:bg-brand-caribbeanSea text-brand-caribbeanSea hover:text-slate-950 border border-brand-caribbeanSea/30 px-3.5 py-2 rounded-2xl text-xs font-black transition-all shadow-sm"
               >
                 Join Hub
               </Link>

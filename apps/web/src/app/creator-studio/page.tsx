@@ -132,13 +132,13 @@ export default async function CreatorStudioPage() {
   const currency = ledgerAccount?.currency ?? 'USD';
 
   return (
-    <div className="min-h-screen bg-[#090D16] text-slate-100 p-4 md:p-6 max-w-6xl mx-auto space-y-8">
+    <div className="min-h-screen bg-[#090D16] text-brand-sandstone p-4 md:p-6 max-w-6xl mx-auto space-y-8">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-6">
         <div>
-          <h1 className="text-2xl md:text-3xl font-black text-white flex items-center gap-3">
-            <Radio className="w-8 h-8 text-sky-400" /> Creator Studio
+          <h1 className="text-2xl md:text-3xl font-black text-brand-sandstone flex items-center gap-3">
+            <Radio className="w-8 h-8 text-brand-caribbeanSea" /> Creator Studio
           </h1>
-          <p className="text-sm text-slate-400 mt-1">
+          <p className="text-sm text-brand-sandstone/60 mt-1">
             {user.displayName} · {account.is_verified ? '✓ Verified Creator' : `KYC: ${account.kyc_status}`}
             {account.category && ` · ${account.category}`}
           </p>
@@ -146,13 +146,13 @@ export default async function CreatorStudioPage() {
         <div className="flex items-center gap-3">
           <Link
             href="/podcasts"
-            className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-4 py-2 rounded-xl text-xs flex items-center gap-2 transition-colors"
+            className="bg-brand-goldenHour hover:bg-brand-goldenHour text-slate-950 font-bold px-4 py-2 rounded-xl text-xs flex items-center gap-2 transition-colors"
           >
             <Mic className="w-4 h-4" /> Manage Podcasts
           </Link>
           <Link
             href="/live"
-            className="bg-red-600 hover:bg-red-500 text-white font-bold px-4 py-2 rounded-xl text-xs flex items-center gap-2 transition-colors"
+            className="bg-red-600 hover:bg-red-500 text-brand-sandstone font-bold px-4 py-2 rounded-xl text-xs flex items-center gap-2 transition-colors"
           >
             <Video className="w-4 h-4" /> Go Live
           </Link>
@@ -161,65 +161,65 @@ export default async function CreatorStudioPage() {
 
       {/* Metric Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
-        <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 space-y-2">
-          <span className="text-xs font-bold text-sky-400 uppercase tracking-wider flex items-center gap-1.5">
+        <div className="bg-brand-dusk/80 border border-slate-800 rounded-2xl p-5 space-y-2">
+          <span className="text-xs font-bold text-brand-caribbeanSea uppercase tracking-wider flex items-center gap-1.5">
             <Users className="w-3.5 h-3.5" /> Active Subscribers
           </span>
-          <div className="text-2xl font-black text-white">{activeSubscriptions.length.toLocaleString()}</div>
-          <span className="text-[11px] text-slate-400">{subscriptions.length} total subscriptions</span>
+          <div className="text-2xl font-black text-brand-sandstone">{activeSubscriptions.length.toLocaleString()}</div>
+          <span className="text-[11px] text-brand-sandstone/60">{subscriptions.length} total subscriptions</span>
         </div>
 
-        <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 space-y-2">
-          <span className="text-xs font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-1.5">
+        <div className="bg-brand-dusk/80 border border-slate-800 rounded-2xl p-5 space-y-2">
+          <span className="text-xs font-bold text-brand-sunriseCoral uppercase tracking-wider flex items-center gap-1.5">
             <DollarSign className="w-3.5 h-3.5" /> Pending Balance
           </span>
-          <div className="text-2xl font-black text-white">
+          <div className="text-2xl font-black text-brand-sandstone">
             {new Money(Math.abs(pendingBalanceMinor), currency).format()}
           </div>
-          <span className={`text-[11px] font-semibold ${payoutEligibility.eligible ? 'text-emerald-400' : 'text-amber-400'}`}>
+          <span className={`text-[11px] font-semibold ${payoutEligibility.eligible ? 'text-brand-sunriseCoral' : 'text-brand-goldenHour'}`}>
             {payoutEligibility.eligible ? 'Eligible for payout' : (payoutEligibility.reasons[0] ?? 'Pending review')}
           </span>
         </div>
 
-        <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 space-y-2">
-          <span className="text-xs font-bold text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
+        <div className="bg-brand-dusk/80 border border-slate-800 rounded-2xl p-5 space-y-2">
+          <span className="text-xs font-bold text-brand-goldenHour uppercase tracking-wider flex items-center gap-1.5">
             <TrendingUp className="w-3.5 h-3.5" /> Video Views
           </span>
-          <div className="text-2xl font-black text-white">{totalVideoViews.toLocaleString()}</div>
-          <span className="text-[11px] text-amber-400 font-semibold">Across {videos.length} video{videos.length !== 1 ? 's' : ''}</span>
+          <div className="text-2xl font-black text-brand-sandstone">{totalVideoViews.toLocaleString()}</div>
+          <span className="text-[11px] text-brand-goldenHour font-semibold">Across {videos.length} video{videos.length !== 1 ? 's' : ''}</span>
         </div>
 
-        <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 space-y-2">
+        <div className="bg-brand-dusk/80 border border-slate-800 rounded-2xl p-5 space-y-2">
           <span className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
             <Mic className="w-3.5 h-3.5" /> Podcasts
           </span>
-          <div className="text-2xl font-black text-white">{podcasts.length}</div>
-          <span className="text-[11px] text-slate-400">{totalEpisodes} episode{totalEpisodes !== 1 ? 's' : ''} total</span>
+          <div className="text-2xl font-black text-brand-sandstone">{podcasts.length}</div>
+          <span className="text-[11px] text-brand-sandstone/60">{totalEpisodes} episode{totalEpisodes !== 1 ? 's' : ''} total</span>
         </div>
       </div>
 
       {/* Monthly revenue breakdown */}
       {feeResult && (
-        <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-6">
-          <h3 className="text-sm font-bold text-white mb-4 flex items-center gap-2">
-            <BarChart2 className="w-4 h-4 text-sky-400" /> Monthly Subscription Revenue Breakdown
+        <div className="bg-brand-dusk/60 border border-slate-800 rounded-2xl p-6">
+          <h3 className="text-sm font-bold text-brand-sandstone mb-4 flex items-center gap-2">
+            <BarChart2 className="w-4 h-4 text-brand-caribbeanSea" /> Monthly Subscription Revenue Breakdown
           </h3>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs">
             <div>
-              <p className="text-slate-400 mb-1">Gross</p>
-              <p className="text-lg font-black text-white">{new Money(feeResult.grossMinor, 'USD').format()}</p>
+              <p className="text-brand-sandstone/60 mb-1">Gross</p>
+              <p className="text-lg font-black text-brand-sandstone">{new Money(feeResult.grossMinor, 'USD').format()}</p>
             </div>
             <div>
-              <p className="text-slate-400 mb-1">Platform Fee (15%)</p>
+              <p className="text-brand-sandstone/60 mb-1">Platform Fee (15%)</p>
               <p className="text-lg font-black text-rose-400">−{new Money(feeResult.platformFeeMinor, 'USD').format()}</p>
             </div>
             <div>
-              <p className="text-slate-400 mb-1">Processing Fee</p>
+              <p className="text-brand-sandstone/60 mb-1">Processing Fee</p>
               <p className="text-lg font-black text-rose-400">−{new Money(feeResult.processingFeeMinor, 'USD').format()}</p>
             </div>
             <div>
-              <p className="text-slate-400 mb-1">Net to Creator</p>
-              <p className="text-lg font-black text-emerald-400">{new Money(feeResult.netToCreatorMinor, 'USD').format()}</p>
+              <p className="text-brand-sandstone/60 mb-1">Net to Creator</p>
+              <p className="text-lg font-black text-brand-sunriseCoral">{new Money(feeResult.netToCreatorMinor, 'USD').format()}</p>
             </div>
           </div>
 
@@ -235,23 +235,23 @@ export default async function CreatorStudioPage() {
 
       {/* Recent Videos */}
       {videos.length > 0 && (
-        <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-6 space-y-3">
+        <div className="bg-brand-dusk/60 border border-slate-800 rounded-2xl p-6 space-y-3">
           <div className="flex items-center justify-between">
-            <h3 className="text-sm font-bold text-white flex items-center gap-2">
-              <Video className="w-4 h-4 text-sky-400" /> Recent Videos
+            <h3 className="text-sm font-bold text-brand-sandstone flex items-center gap-2">
+              <Video className="w-4 h-4 text-brand-caribbeanSea" /> Recent Videos
             </h3>
             {videos.length >= 10 && (
-              <Link href="/creator-studio/videos" className="text-[11px] font-black uppercase tracking-wider text-sky-500 hover:text-sky-400 transition-colors">
+              <Link href="/creator-studio/videos" className="text-[11px] font-black uppercase tracking-wider text-brand-caribbeanSea hover:text-brand-caribbeanSea transition-colors">
                 View All
               </Link>
             )}
           </div>
           <div className="space-y-2">
             {videos.map((video) => (
-              <div key={video.id} className="flex items-center justify-between bg-slate-950 border border-slate-800 rounded-xl px-4 py-3">
+              <div key={video.id} className="flex items-center justify-between bg-brand-twilight border border-slate-800 rounded-xl px-4 py-3">
                 <div>
-                  <p className="text-sm font-semibold text-white truncate max-w-xs">{video.title}</p>
-                  <p className="text-[11px] text-slate-400">{video.video_kind} · {video.view_count.toLocaleString()} views</p>
+                  <p className="text-sm font-semibold text-brand-sandstone truncate max-w-xs">{video.title}</p>
+                  <p className="text-[11px] text-brand-sandstone/60">{video.video_kind} · {video.view_count.toLocaleString()} views</p>
                 </div>
               </div>
             ))}
@@ -260,9 +260,9 @@ export default async function CreatorStudioPage() {
       )}
 
       {videos.length === 0 && podcasts.length === 0 && (
-        <div className="bg-slate-900/60 border border-dashed border-slate-800 rounded-2xl p-10 text-center">
+        <div className="bg-brand-dusk/60 border border-dashed border-slate-800 rounded-2xl p-10 text-center">
           <Plus className="w-8 h-8 text-slate-600 mx-auto mb-2" />
-          <p className="text-sm text-slate-400">No content yet. Start by going live or hosting a podcast.</p>
+          <p className="text-sm text-brand-sandstone/60">No content yet. Start by going live or hosting a podcast.</p>
         </div>
       )}
     </div>
@@ -271,11 +271,11 @@ export default async function CreatorStudioPage() {
 
 function CreatorOnboarding({ userId, displayName }: { userId: string; displayName: string }) {
   return (
-    <div className="min-h-screen bg-[#090D16] text-slate-100 flex items-center justify-center p-6">
-      <div className="bg-slate-900/70 border border-slate-800 rounded-2xl p-8 max-w-md w-full text-center space-y-5">
-        <Radio className="w-10 h-10 text-sky-400 mx-auto" />
-        <h1 className="text-xl font-extrabold text-white">Become a Creator</h1>
-        <p className="text-sm text-slate-400">
+    <div className="min-h-screen bg-[#090D16] text-brand-sandstone flex items-center justify-center p-6">
+      <div className="bg-brand-dusk/70 border border-slate-800 rounded-2xl p-8 max-w-md w-full text-center space-y-5">
+        <Radio className="w-10 h-10 text-brand-caribbeanSea mx-auto" />
+        <h1 className="text-xl font-extrabold text-brand-sandstone">Become a Creator</h1>
+        <p className="text-sm text-brand-sandstone/60">
           Set up your Creator Studio to host podcasts, live streams, earn from subscriptions, tips, and gifts.
         </p>
         <BecomeCreatorClientButton />

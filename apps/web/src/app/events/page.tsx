@@ -134,17 +134,17 @@ export default async function EventsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#090D16] text-slate-100 p-4 md:p-6 max-w-7xl mx-auto space-y-8">
+    <div className="min-h-screen bg-[#090D16] text-brand-sandstone p-4 md:p-6 max-w-7xl mx-auto space-y-8">
       {/* Top Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-6">
         <div>
           <div className="flex items-center gap-2.5">
             <span className="w-3 h-3 rounded-full bg-yellow-500 animate-ping" />
-            <h1 className="text-2xl md:text-3xl font-black text-white flex items-center gap-3">
+            <h1 className="text-2xl md:text-3xl font-black text-brand-sandstone flex items-center gap-3">
               <Calendar className="w-8 h-8 text-yellow-400" /> Caribbean Events &amp; Fetes
             </h1>
           </div>
-          <p className="text-xs md:text-sm text-slate-400 mt-1">
+          <p className="text-xs md:text-sm text-brand-sandstone/60 mt-1">
             Carnivals, festivals, concerts, culinary gatherings, and diaspora meetups with SpotPay ticketing.
           </p>
         </div>
@@ -171,11 +171,11 @@ export default async function EventsPage() {
           return (
             <div
               key={event.id}
-              className="bg-slate-900/80 border border-slate-800/90 hover:border-yellow-500/50 rounded-3xl p-6 space-y-4 flex flex-col justify-between transition-all shadow-xl group"
+              className="bg-brand-dusk/80 border border-slate-800/90 hover:border-yellow-500/50 rounded-3xl p-6 space-y-4 flex flex-col justify-between transition-all shadow-xl group"
             >
               <div className="space-y-3.5">
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-black px-2.5 py-0.5 rounded-full bg-sky-500/10 text-sky-400 border border-sky-500/20 uppercase tracking-wider">
+                  <span className="text-[10px] font-black px-2.5 py-0.5 rounded-full bg-brand-caribbeanSea/10 text-brand-caribbeanSea border border-brand-caribbeanSea/20 uppercase tracking-wider">
                     {event.event_kind.replace('_', ' ')}
                   </span>
                   {event.event_kind !== 'in_person' && (
@@ -190,7 +190,7 @@ export default async function EventsPage() {
                   <span>{formatEventDate(event.starts_at)}</span>
                 </div>
 
-                <h3 className="font-extrabold text-base text-white group-hover:text-yellow-300 transition-colors leading-snug">
+                <h3 className="font-extrabold text-base text-brand-sandstone group-hover:text-yellow-300 transition-colors leading-snug">
                   {event.title}
                 </h3>
 
@@ -200,18 +200,18 @@ export default async function EventsPage() {
                   </p>
                 )}
 
-                <div className="space-y-1.5 pt-1 text-xs text-slate-400">
+                <div className="space-y-1.5 pt-1 text-xs text-brand-sandstone/60">
                   <p className="flex items-center gap-1.5">
-                    <MapPin className="w-3.5 h-3.5 text-sky-400 flex-shrink-0" />
+                    <MapPin className="w-3.5 h-3.5 text-brand-caribbeanSea flex-shrink-0" />
                     <span>{event.venue ? `${event.venue} — ` : ''}{event.cities ? `${event.cities.name}, ${event.cities.country_iso}` : 'Caribbean'}</span>
                   </p>
                   <p className="flex items-center justify-between">
                     <span className="flex items-center gap-1.5">
-                      <Users className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" />
+                      <Users className="w-3.5 h-3.5 text-brand-sunriseCoral flex-shrink-0" />
                       <span>{going.length > 0 ? `${going.length} attending` : 'Open RSVP'}</span>
                     </span>
                     {event.price && (
-                      <span className="font-extrabold text-white text-xs">{event.price}</span>
+                      <span className="font-extrabold text-brand-sandstone text-xs">{event.price}</span>
                     )}
                   </p>
                 </div>
@@ -224,8 +224,8 @@ export default async function EventsPage() {
                       type="submit"
                       className={`w-full font-black py-2.5 rounded-2xl text-xs transition-all shadow-md ${
                         userGoing
-                          ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 hover:bg-emerald-500/30'
-                          : 'bg-gradient-to-r from-yellow-500 to-amber-500 hover:from-yellow-400 hover:to-amber-400 text-slate-950 shadow-yellow-500/20'
+                          ? 'bg-brand-sunriseCoral/20 text-emerald-300 border border-brand-sunriseCoral/40 hover:bg-brand-sunriseCoral/30'
+                          : 'bg-gradient-to-r from-yellow-500 to-brand-goldenHour hover:from-yellow-400 hover:to-brand-goldenHour text-slate-950 shadow-yellow-500/20'
                       }`}
                     >
                       {userGoing ? '✓ You Are Going (SpotPay Confirmed)' : 'RSVP / Get SpotPay Ticket'}
@@ -234,7 +234,7 @@ export default async function EventsPage() {
                 ) : (
                   <Link
                     href="/login"
-                    className="w-full block text-center bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold py-2.5 rounded-2xl text-xs border border-slate-700 transition-colors"
+                    className="w-full block text-center bg-brand-dusk hover:bg-slate-700 text-slate-200 font-bold py-2.5 rounded-2xl text-xs border border-slate-700 transition-colors"
                   >
                     Sign in to RSVP
                   </Link>

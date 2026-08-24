@@ -58,9 +58,9 @@ export default function LoginPage() {
         {/* Branding */}
         <div className="text-center space-y-2">
           <div className="flex items-center justify-center gap-2 mb-4">
-            <ShieldAlert className="w-8 h-8 text-amber-400" aria-hidden="true" />
+            <ShieldAlert className="w-8 h-8 text-brand-goldenHour" aria-hidden="true" />
           </div>
-          <h1 className="text-lg font-extrabold text-white tracking-tight">
+          <h1 className="text-lg font-extrabold text-brand-sandstone tracking-tight">
             ANTILIA
           </h1>
           <p className="text-sm font-semibold text-amber-300">
@@ -73,7 +73,7 @@ export default function LoginPage() {
           <div>
             <label
               htmlFor="login-email"
-              className="block text-xs font-semibold text-slate-400 mb-1.5"
+              className="block text-xs font-semibold text-brand-sandstone/60 mb-1.5"
             >
               Email address
             </label>
@@ -86,14 +86,14 @@ export default function LoginPage() {
               onChange={(e) => setEmail(e.target.value)}
               placeholder="moderator@caribbeanone.com"
               disabled={loading}
-              className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent disabled:opacity-50 transition-colors"
+              className="w-full bg-brand-dusk border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-brand-sandstone placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-brand-caribbeanSea focus:border-transparent disabled:opacity-50 transition-colors"
             />
           </div>
 
           <div>
             <label
               htmlFor="login-password"
-              className="block text-xs font-semibold text-slate-400 mb-1.5"
+              className="block text-xs font-semibold text-brand-sandstone/60 mb-1.5"
             >
               Password
             </label>
@@ -106,7 +106,7 @@ export default function LoginPage() {
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Enter your password"
               disabled={loading}
-              className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent disabled:opacity-50 transition-colors"
+              className="w-full bg-brand-dusk border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-brand-sandstone placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-brand-caribbeanSea focus:border-transparent disabled:opacity-50 transition-colors"
             />
           </div>
 
@@ -122,7 +122,7 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full flex items-center justify-center gap-2 bg-sky-600 hover:bg-sky-500 disabled:bg-sky-800 disabled:opacity-60 text-white font-bold text-sm px-4 py-2.5 rounded-xl transition-colors focus:outline-none focus:ring-2 focus:ring-sky-400 focus:ring-offset-2 focus:ring-offset-[#090D16]"
+            className="w-full flex items-center justify-center gap-2 bg-sky-600 hover:bg-brand-caribbeanSea disabled:bg-sky-800 disabled:opacity-60 text-brand-sandstone font-bold text-sm px-4 py-2.5 rounded-xl transition-colors focus:outline-none focus:ring-2 focus:ring-brand-caribbeanSea focus:ring-offset-2 focus:ring-offset-[#090D16]"
           >
             {loading ? (
               <>

@@ -22,7 +22,7 @@ export default function OrderButton({ productId, disabled, isAuthenticated, isSe
     return (
       <Link
         href="/login"
-        className="w-full text-center bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30 border border-emerald-500/40 font-bold py-2 rounded-xl text-xs flex items-center justify-center gap-2 transition-colors"
+        className="w-full text-center bg-brand-sunriseCoral/20 text-emerald-300 hover:bg-brand-sunriseCoral/30 border border-brand-sunriseCoral/40 font-bold py-2 rounded-xl text-xs flex items-center justify-center gap-2 transition-colors"
       >
         <Wallet className="w-4 h-4" /> Sign in to Buy
       </Link>
@@ -31,7 +31,7 @@ export default function OrderButton({ productId, disabled, isAuthenticated, isSe
 
   if (isSeller) {
     return (
-      <div className="w-full text-center text-[11px] text-slate-500 py-2">Your product</div>
+      <div className="w-full text-center text-[11px] text-brand-sandstone/40 py-2">Your product</div>
     );
   }
 
@@ -49,8 +49,8 @@ export default function OrderButton({ productId, disabled, isAuthenticated, isSe
   if (state.orderId) {
     return (
       <div className="space-y-1">
-        <p className="text-xs text-emerald-400 text-center font-semibold">Order created — proceed to payment.</p>
-        <p className="text-[10px] text-slate-500 text-center font-mono">{state.orderId}</p>
+        <p className="text-xs text-brand-sunriseCoral text-center font-semibold">Order created — proceed to payment.</p>
+        <p className="text-[10px] text-brand-sandstone/40 text-center font-mono">{state.orderId}</p>
       </div>
     );
   }
@@ -60,7 +60,7 @@ export default function OrderButton({ productId, disabled, isAuthenticated, isSe
       <button
         onClick={handle}
         disabled={disabled || pending}
-        className="w-full bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30 border border-emerald-500/40 font-bold py-2 rounded-xl text-xs flex items-center justify-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        className="w-full bg-brand-sunriseCoral/20 text-emerald-300 hover:bg-brand-sunriseCoral/30 border border-brand-sunriseCoral/40 font-bold py-2 rounded-xl text-xs flex items-center justify-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
       >
         <Wallet className="w-4 h-4" />
         {pending ? 'Processing…' : disabled ? 'Unavailable' : 'Buy with SpotPay'}

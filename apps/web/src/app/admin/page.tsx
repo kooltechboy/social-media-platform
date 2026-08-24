@@ -74,13 +74,13 @@ export default async function AdminPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-[#090D16] text-slate-100">
+    <div className="min-h-screen bg-[#090D16] text-brand-sandstone">
       <header className="sticky top-0 z-50 bg-[#0F172A]/90 backdrop-blur-md border-b border-slate-800 px-4 py-3 flex items-center gap-4">
-        <Link href="/" className="flex items-center gap-2 text-slate-300 hover:text-white text-sm font-semibold">
+        <Link href="/" className="flex items-center gap-2 text-slate-300 hover:text-brand-sandstone text-sm font-semibold">
           ← Home
         </Link>
-        <h1 className="text-lg font-extrabold text-white flex items-center gap-2">
-          <LayoutDashboard className="w-5 h-5 text-sky-400" /> Admin Console
+        <h1 className="text-lg font-extrabold text-brand-sandstone flex items-center gap-2">
+          <LayoutDashboard className="w-5 h-5 text-brand-caribbeanSea" /> Admin Console
         </h1>
         <span className="ml-auto text-[11px] text-rose-300 border border-rose-500/40 bg-rose-500/10 px-2 py-0.5 rounded font-semibold hidden md:block">
           Restricted — all actions audited
@@ -88,12 +88,12 @@ export default async function AdminPage() {
       </header>
 
       <main className="max-w-6xl mx-auto p-4 grid lg:grid-cols-4 gap-4">
-        <aside className="lg:col-span-1 bg-slate-900/70 border border-slate-800 rounded-2xl p-3 space-y-1 h-fit">
+        <aside className="lg:col-span-1 bg-brand-dusk/70 border border-slate-800 rounded-2xl p-3 space-y-1 h-fit">
           {SECTIONS.map((section) => (
             <Link
               key={section.label}
               href={section.href}
-              className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-slate-300 hover:bg-slate-800/60 hover:text-white text-sm font-medium transition-colors"
+              className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-slate-300 hover:bg-brand-dusk/60 hover:text-brand-sandstone text-sm font-medium transition-colors"
             >
               <section.icon className="w-4 h-4" /> {section.label}
             </Link>
@@ -104,10 +104,10 @@ export default async function AdminPage() {
           {/* Live Stats */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             {stats.map((metric) => (
-              <div key={metric.label} className="bg-slate-900/70 border border-slate-800 rounded-2xl p-4">
-                <p className="text-[11px] font-semibold text-slate-400 uppercase">{metric.label}</p>
-                <p className="text-2xl font-extrabold text-white mt-1">{metric.value}</p>
-                <p className={`text-[11px] font-semibold mt-0.5 ${metric.positive ? 'text-emerald-400' : 'text-amber-400'}`}>
+              <div key={metric.label} className="bg-brand-dusk/70 border border-slate-800 rounded-2xl p-4">
+                <p className="text-[11px] font-semibold text-brand-sandstone/60 uppercase">{metric.label}</p>
+                <p className="text-2xl font-extrabold text-brand-sandstone mt-1">{metric.value}</p>
+                <p className={`text-[11px] font-semibold mt-0.5 ${metric.positive ? 'text-brand-sunriseCoral' : 'text-brand-goldenHour'}`}>
                   {metric.delta}
                 </p>
               </div>
@@ -115,13 +115,13 @@ export default async function AdminPage() {
           </div>
 
           {/* Feature Flags — live from DB */}
-          <div className="bg-slate-900/70 border border-slate-800 rounded-2xl p-5">
-            <h2 className="text-sm font-bold text-white flex items-center gap-2 mb-4">
-              <ToggleLeft className="w-4 h-4 text-amber-400" /> Feature Flags
-              <span className="text-[10px] text-slate-500 font-normal ml-auto">Live from feature_flags table</span>
+          <div className="bg-brand-dusk/70 border border-slate-800 rounded-2xl p-5">
+            <h2 className="text-sm font-bold text-brand-sandstone flex items-center gap-2 mb-4">
+              <ToggleLeft className="w-4 h-4 text-brand-goldenHour" /> Feature Flags
+              <span className="text-[10px] text-brand-sandstone/40 font-normal ml-auto">Live from feature_flags table</span>
             </h2>
             {flags.length === 0 ? (
-              <p className="text-xs text-slate-500">No feature flags found in database.</p>
+              <p className="text-xs text-brand-sandstone/40">No feature flags found in database.</p>
             ) : (
               <div className="grid md:grid-cols-2 gap-2">
                 {flags.map((flag) => (
@@ -129,37 +129,37 @@ export default async function AdminPage() {
                 ))}
               </div>
             )}
-            <p className="text-[11px] text-slate-500 mt-3">
+            <p className="text-[11px] text-brand-sandstone/40 mt-3">
               Flags gate server-side code paths and act as kill switches. Persisted to{' '}
-              <code className="text-slate-400">feature_flags</code> table (migration 00006).
+              <code className="text-brand-sandstone/60">feature_flags</code> table (migration 00006).
             </p>
           </div>
 
           {/* System Health */}
-          <div className="bg-slate-900/70 border border-slate-800 rounded-2xl p-5">
-            <h2 className="text-sm font-bold text-white flex items-center gap-2 mb-3">
-              <ShieldCheck className="w-4 h-4 text-emerald-400" /> System Health
+          <div className="bg-brand-dusk/70 border border-slate-800 rounded-2xl p-5">
+            <h2 className="text-sm font-bold text-brand-sandstone flex items-center gap-2 mb-3">
+              <ShieldCheck className="w-4 h-4 text-brand-sunriseCoral" /> System Health
             </h2>
-            <ul className="space-y-2 text-xs text-slate-400">
+            <ul className="space-y-2 text-xs text-brand-sandstone/60">
               <li className="flex justify-between">
                 <span>Postgres primary</span>
-                <span className="text-emerald-400 font-semibold">Operational</span>
+                <span className="text-brand-sunriseCoral font-semibold">Operational</span>
               </li>
               <li className="flex justify-between">
                 <span>Supabase Realtime</span>
-                <span className="text-emerald-400 font-semibold">Connected</span>
+                <span className="text-brand-sunriseCoral font-semibold">Connected</span>
               </li>
               <li className="flex justify-between">
                 <span>Row Level Security</span>
-                <span className="text-emerald-400 font-semibold">All tables enforced</span>
+                <span className="text-brand-sunriseCoral font-semibold">All tables enforced</span>
               </li>
               <li className="flex justify-between">
                 <span>Feature flags loaded</span>
-                <span className="text-emerald-400 font-semibold">{flags.length} flags</span>
+                <span className="text-brand-sunriseCoral font-semibold">{flags.length} flags</span>
               </li>
               <li className="flex justify-between">
                 <span>Ledger sum-zero trigger</span>
-                <span className="text-emerald-400 font-semibold">Active</span>
+                <span className="text-brand-sunriseCoral font-semibold">Active</span>
               </li>
             </ul>
           </div>

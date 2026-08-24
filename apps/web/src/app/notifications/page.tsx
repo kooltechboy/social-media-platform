@@ -27,13 +27,13 @@ function relativeTime(iso: string): string {
 
 function NotificationIcon({ kind }: { kind: string }) {
   const cls = 'w-4 h-4';
-  if (kind === 'reaction' || kind === 'post_reaction') return <Heart className={`${cls} text-amber-400`} />;
-  if (kind === 'comment') return <MessageCircle className={`${cls} text-sky-400`} />;
-  if (kind === 'follow') return <UserPlus className={`${cls} text-emerald-400`} />;
-  if (kind === 'payment' || kind === 'creator_tip' || kind === 'live_gift') return <Wallet className={`${cls} text-emerald-400`} />;
-  if (kind === 'event_reminder') return <Calendar className={`${cls} text-amber-400`} />;
-  if (kind === 'moderation_resolved' || kind === 'appeal_outcome') return <ShieldCheck className={`${cls} text-sky-400`} />;
-  return <Bell className={`${cls} text-slate-400`} />;
+  if (kind === 'reaction' || kind === 'post_reaction') return <Heart className={`${cls} text-brand-goldenHour`} />;
+  if (kind === 'comment') return <MessageCircle className={`${cls} text-brand-caribbeanSea`} />;
+  if (kind === 'follow') return <UserPlus className={`${cls} text-brand-sunriseCoral`} />;
+  if (kind === 'payment' || kind === 'creator_tip' || kind === 'live_gift') return <Wallet className={`${cls} text-brand-sunriseCoral`} />;
+  if (kind === 'event_reminder') return <Calendar className={`${cls} text-brand-goldenHour`} />;
+  if (kind === 'moderation_resolved' || kind === 'appeal_outcome') return <ShieldCheck className={`${cls} text-brand-caribbeanSea`} />;
+  return <Bell className={`${cls} text-brand-sandstone/60`} />;
 }
 
 function notificationText(n: DBNotification): string {
@@ -70,12 +70,12 @@ export default async function NotificationsPage() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-[#090D16] text-slate-100 flex items-center justify-center p-6">
-        <div className="bg-slate-900/70 border border-slate-800 rounded-2xl p-8 text-center max-w-sm">
-          <Bell className="w-8 h-8 text-sky-400 mx-auto mb-3" />
-          <h1 className="text-lg font-bold text-white mb-2">Notifications</h1>
-          <p className="text-sm text-slate-400 mb-4">Sign in to see your notifications.</p>
-          <Link href="/login" className="inline-block bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold px-5 py-2 rounded-full text-xs transition-colors">
+      <div className="min-h-screen bg-[#090D16] text-brand-sandstone flex items-center justify-center p-6">
+        <div className="bg-brand-dusk/70 border border-slate-800 rounded-2xl p-8 text-center max-w-sm">
+          <Bell className="w-8 h-8 text-brand-caribbeanSea mx-auto mb-3" />
+          <h1 className="text-lg font-bold text-brand-sandstone mb-2">Notifications</h1>
+          <p className="text-sm text-brand-sandstone/60 mb-4">Sign in to see your notifications.</p>
+          <Link href="/login" className="inline-block bg-brand-caribbeanSea hover:bg-brand-caribbeanSea text-slate-950 font-bold px-5 py-2 rounded-full text-xs transition-colors">
             Sign In
           </Link>
         </div>
@@ -100,15 +100,15 @@ export default async function NotificationsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#090D16] text-slate-100">
+    <div className="min-h-screen bg-[#090D16] text-brand-sandstone">
       <header className="sticky top-0 z-50 bg-[#0F172A]/90 backdrop-blur-md border-b border-slate-800 px-4 py-3 flex items-center gap-4">
-        <Link href="/" className="flex items-center gap-2 text-slate-300 hover:text-white text-sm font-semibold">
+        <Link href="/" className="flex items-center gap-2 text-slate-300 hover:text-brand-sandstone text-sm font-semibold">
           <ArrowLeft className="w-4 h-4" /> Back
         </Link>
-        <h1 className="text-lg font-extrabold text-white flex items-center gap-2">
-          <Bell className="w-5 h-5 text-sky-400" /> Notifications
+        <h1 className="text-lg font-extrabold text-brand-sandstone flex items-center gap-2">
+          <Bell className="w-5 h-5 text-brand-caribbeanSea" /> Notifications
           {unreadCount > 0 && (
-            <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-sky-500/20 text-sky-400 border border-sky-500/40">
+            <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-brand-caribbeanSea/20 text-brand-caribbeanSea border border-brand-caribbeanSea/40">
               {unreadCount} new
             </span>
           )}
@@ -122,38 +122,38 @@ export default async function NotificationsPage() {
 
       <main className="max-w-2xl mx-auto p-4 space-y-2">
         {notifications.length === 0 ? (
-          <div className="bg-slate-900/60 border border-dashed border-slate-800 rounded-2xl p-10 text-center mt-6">
+          <div className="bg-brand-dusk/60 border border-dashed border-slate-800 rounded-2xl p-10 text-center mt-6">
             <Bell className="w-8 h-8 text-slate-600 mx-auto mb-2" />
-            <p className="text-sm text-slate-400">No notifications yet.</p>
-            <p className="text-xs text-slate-500 mt-1">When people interact with your content, you will see it here.</p>
+            <p className="text-sm text-brand-sandstone/60">No notifications yet.</p>
+            <p className="text-xs text-brand-sandstone/40 mt-1">When people interact with your content, you will see it here.</p>
           </div>
         ) : (
           notifications.map((notification) => (
             <div
               key={notification.id}
-              className={`flex items-start gap-3 bg-slate-900/70 border rounded-2xl p-4 transition-colors ${
+              className={`flex items-start gap-3 bg-brand-dusk/70 border rounded-2xl p-4 transition-colors ${
                 !notification.read_at ? 'border-sky-600/40' : 'border-slate-800'
               }`}
             >
-              <div className="w-9 h-9 rounded-xl bg-slate-800 flex items-center justify-center flex-shrink-0">
+              <div className="w-9 h-9 rounded-xl bg-brand-dusk flex items-center justify-center flex-shrink-0">
                 <NotificationIcon kind={notification.kind} />
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm text-slate-200 leading-snug">
                   {notification.actor && (
-                    <Link href={`/profile/${notification.actor.username}`} className="font-bold text-white hover:underline">
+                    <Link href={`/profile/${notification.actor.username}`} className="font-bold text-brand-sandstone hover:underline">
                       {notification.actor.display_name}
                     </Link>
                   )}{' '}
                   {notificationText(notification)}
                 </p>
-                <span className="text-[11px] text-slate-500 mt-0.5 block">
+                <span className="text-[11px] text-brand-sandstone/40 mt-0.5 block">
                   {relativeTime(notification.created_at)}
                 </span>
               </div>
               {!notification.read_at && (
                 <div className="flex items-center gap-2 flex-shrink-0">
-                  <span className="w-2 h-2 bg-sky-400 rounded-full" aria-label="Unread" />
+                  <span className="w-2 h-2 bg-brand-caribbeanSea rounded-full" aria-label="Unread" />
                   <NotificationMarkRead mode="single" notificationId={notification.id} />
                 </div>
               )}
@@ -161,7 +161,7 @@ export default async function NotificationsPage() {
           ))
         )}
         {notifications.length > 0 && (
-          <p className="text-center text-xs text-slate-500 py-6">
+          <p className="text-center text-xs text-brand-sandstone/40 py-6">
             Showing last {notifications.length} notification{notifications.length !== 1 ? 's' : ''}.
           </p>
         )}

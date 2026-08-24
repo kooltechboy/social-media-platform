@@ -116,17 +116,17 @@ export default async function PodcastsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#090D16] text-slate-100 p-4 md:p-6 max-w-7xl mx-auto space-y-8">
+    <div className="min-h-screen bg-[#090D16] text-brand-sandstone p-4 md:p-6 max-w-7xl mx-auto space-y-8">
       {/* Top Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-6">
         <div>
           <div className="flex items-center gap-2.5">
             <span className="w-3 h-3 rounded-full bg-purple-500 animate-ping" />
-            <h1 className="text-2xl md:text-3xl font-black text-white flex items-center gap-3">
+            <h1 className="text-2xl md:text-3xl font-black text-brand-sandstone flex items-center gap-3">
               <Mic className="w-8 h-8 text-purple-400" /> Caribbean Podcast Network
             </h1>
           </div>
-          <p className="text-xs md:text-sm text-slate-400 mt-1">
+          <p className="text-xs md:text-sm text-brand-sandstone/60 mt-1">
             Audio &amp; video podcasts, AI transcripts, and iTunes-compliant RSS feeds.
           </p>
         </div>
@@ -134,7 +134,7 @@ export default async function PodcastsPage() {
         {user ? (
           <Link
             href="/creator-studio"
-            className="bg-purple-600 hover:bg-purple-500 text-white font-extrabold px-5 py-2.5 rounded-2xl text-xs flex items-center gap-2 transition-all shadow-md shadow-purple-600/20 self-start md:self-auto"
+            className="bg-purple-600 hover:bg-purple-500 text-brand-sandstone font-extrabold px-5 py-2.5 rounded-2xl text-xs flex items-center gap-2 transition-all shadow-md shadow-purple-600/20 self-start md:self-auto"
           >
             <Radio className="w-4 h-4" /> Host Your Podcast
           </Link>
@@ -155,8 +155,8 @@ export default async function PodcastsPage() {
             key={cat}
             className={`px-4 py-1.5 rounded-2xl text-xs font-black whitespace-nowrap transition-all ${
               idx === 0
-                ? 'bg-purple-600 text-white shadow-md shadow-purple-600/20'
-                : 'bg-slate-900 text-slate-400 hover:text-white border border-slate-800'
+                ? 'bg-purple-600 text-brand-sandstone shadow-md shadow-purple-600/20'
+                : 'bg-brand-dusk text-brand-sandstone/60 hover:text-brand-sandstone border border-slate-800'
             }`}
           >
             {cat}
@@ -171,7 +171,7 @@ export default async function PodcastsPage() {
           return (
             <article
               key={podcast.id}
-              className="bg-slate-900/80 border border-slate-800/90 hover:border-purple-500/50 rounded-3xl p-6 space-y-4 flex flex-col justify-between transition-all shadow-xl group"
+              className="bg-brand-dusk/80 border border-slate-800/90 hover:border-purple-500/50 rounded-3xl p-6 space-y-4 flex flex-col justify-between transition-all shadow-xl group"
             >
               <div className="space-y-3.5">
                 <div className="flex items-center justify-between">
@@ -180,7 +180,7 @@ export default async function PodcastsPage() {
                   </div>
                   <div className="flex items-center gap-2">
                     {podcast.is_paid && (
-                      <span className="text-[10px] font-black px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                      <span className="text-[10px] font-black px-2.5 py-0.5 rounded-full bg-brand-goldenHour/20 text-amber-300 border border-brand-goldenHour/30">
                         SpotPay Member Only
                       </span>
                     )}
@@ -189,7 +189,7 @@ export default async function PodcastsPage() {
                       target="_blank"
                       rel="noopener noreferrer"
                       title="iTunes RSS 2.0 Feed"
-                      className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-slate-800 text-purple-300 border border-purple-500/30 flex items-center gap-1 hover:bg-purple-500/20 transition-colors"
+                      className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-brand-dusk text-purple-300 border border-purple-500/30 flex items-center gap-1 hover:bg-purple-500/20 transition-colors"
                     >
                       <Rss className="w-3 h-3" /> iTunes RSS
                     </a>
@@ -200,10 +200,10 @@ export default async function PodcastsPage() {
                   <span className="text-[10px] font-black uppercase tracking-wider text-purple-400 block mb-1">
                     {podcast.category ?? 'Culture & Society'}
                   </span>
-                  <h3 className="font-extrabold text-base text-white group-hover:text-purple-300 transition-colors leading-snug">
+                  <h3 className="font-extrabold text-base text-brand-sandstone group-hover:text-purple-300 transition-colors leading-snug">
                     {podcast.title}
                   </h3>
-                  <p className="text-xs text-slate-400 mt-1">
+                  <p className="text-xs text-brand-sandstone/60 mt-1">
                     Hosted by <strong className="text-slate-200">{podcast.profiles?.display_name ?? 'Creator'}</strong> • {epCount} Episodes
                   </p>
                 </div>
@@ -217,13 +217,13 @@ export default async function PodcastsPage() {
 
               {/* Audio Wave Preview Bar & Follow Button */}
               <div className="pt-3 border-t border-slate-800/80 flex items-center justify-between gap-3">
-                <div className="flex items-center gap-2 text-xs font-bold text-slate-400">
+                <div className="flex items-center gap-2 text-xs font-bold text-brand-sandstone/60">
                   <Headphones className="w-4 h-4 text-purple-400" />
                   <span>{podcast.follower_count.toLocaleString()} Subscribers</span>
                 </div>
 
                 <div className="flex items-center gap-2">
-                  <button className="p-2 rounded-xl bg-purple-600/20 hover:bg-purple-600 text-purple-300 hover:text-white border border-purple-500/30 transition-all flex items-center gap-1 text-xs font-bold">
+                  <button className="p-2 rounded-xl bg-purple-600/20 hover:bg-purple-600 text-purple-300 hover:text-brand-sandstone border border-purple-500/30 transition-all flex items-center gap-1 text-xs font-bold">
                     <Play className="w-3.5 h-3.5 fill-current" /> Play Latest
                   </button>
                   <FollowPodcastButton

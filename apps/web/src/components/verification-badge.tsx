@@ -29,9 +29,9 @@ export default function VerificationBadge({
       return (
         <span
           title="Government Verified Civic Entity"
-          className={`inline-flex items-center gap-1 text-[10px] font-black px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-sm ${className}`}
+          className={`inline-flex items-center gap-1 text-[10px] font-black px-2 py-0.5 rounded-full bg-brand-goldenHour/20 text-amber-300 border border-brand-goldenHour/40 shadow-sm ${className}`}
         >
-          <Landmark className="w-3 h-3 text-amber-400" />
+          <Landmark className="w-3 h-3 text-brand-goldenHour" />
           {showLabel && <span>GOVERNMENT</span>}
         </span>
       );
@@ -40,9 +40,9 @@ export default function VerificationBadge({
       return (
         <span
           title="Verified Caribbean Business & Merchant"
-          className={`inline-flex items-center gap-1 text-[10px] font-black px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-sm ${className}`}
+          className={`inline-flex items-center gap-1 text-[10px] font-black px-2 py-0.5 rounded-full bg-brand-sunriseCoral/20 text-emerald-300 border border-brand-sunriseCoral/40 shadow-sm ${className}`}
         >
-          <Building2 className="w-3 h-3 text-emerald-400" />
+          <Building2 className="w-3 h-3 text-brand-sunriseCoral" />
           {showLabel && <span>BUSINESS</span>}
         </span>
       );
@@ -51,9 +51,9 @@ export default function VerificationBadge({
       return (
         <span
           title="Verified Caribbean Creator"
-          className={`inline-flex items-center gap-1 text-[10px] font-black px-2 py-0.5 rounded-full bg-sky-500/20 text-sky-300 border border-sky-500/40 shadow-sm ${className}`}
+          className={`inline-flex items-center gap-1 text-[10px] font-black px-2 py-0.5 rounded-full bg-brand-caribbeanSea/20 text-brand-caribbeanSea border border-brand-caribbeanSea/40 shadow-sm ${className}`}
         >
-          <Sparkles className="w-3 h-3 text-sky-400" />
+          <Sparkles className="w-3 h-3 text-brand-caribbeanSea" />
           {showLabel && <span>CREATOR</span>}
         </span>
       );
@@ -73,9 +73,9 @@ export default function VerificationBadge({
       return (
         <span
           title="Identity Verified Caribbean Citizen / Diaspora"
-          className={`inline-flex items-center gap-1 text-[10px] font-black px-1.5 py-0.5 rounded-full bg-sky-500/10 text-sky-400 border border-sky-500/30 ${className}`}
+          className={`inline-flex items-center gap-1 text-[10px] font-black px-1.5 py-0.5 rounded-full bg-brand-caribbeanSea/10 text-brand-caribbeanSea border border-brand-caribbeanSea/30 ${className}`}
         >
-          <CheckCircle className="w-3 h-3 text-sky-400 fill-sky-400/20" />
+          <CheckCircle className="w-3 h-3 text-brand-caribbeanSea fill-brand-caribbeanSea/20" />
           {showLabel && <span>VERIFIED</span>}
         </span>
       );
@@ -86,9 +86,9 @@ export default function VerificationBadge({
       return (
         <span
           title="Contact Verified"
-          className={`inline-flex items-center gap-1 text-[10px] font-semibold text-slate-400 ${className}`}
+          className={`inline-flex items-center gap-1 text-[10px] font-semibold text-brand-sandstone/60 ${className}`}
         >
-          <ShieldCheck className="w-3 h-3 text-slate-500" />
+          <ShieldCheck className="w-3 h-3 text-brand-sandstone/40" />
         </span>
       );
   }

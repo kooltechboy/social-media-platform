@@ -35,8 +35,8 @@ export default function FollowButton({ targetUserId, isFollowing: initialFollowi
         disabled={pending}
         className={`flex items-center gap-1.5 font-bold text-xs px-4 py-2 rounded-full transition-colors disabled:opacity-50 ${
           following
-            ? 'bg-slate-800 hover:bg-rose-500/20 hover:text-rose-400 hover:border-rose-500/40 text-slate-300 border border-slate-700'
-            : 'bg-sky-500 hover:bg-sky-400 text-slate-950'
+            ? 'bg-brand-dusk hover:bg-rose-500/20 hover:text-rose-400 hover:border-rose-500/40 text-slate-300 border border-slate-700'
+            : 'bg-brand-caribbeanSea hover:bg-brand-caribbeanSea text-slate-950'
         }`}
       >
         {following ? (

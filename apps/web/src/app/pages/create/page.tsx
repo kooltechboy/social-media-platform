@@ -34,21 +34,21 @@ const PAGE_TYPE_OPTIONS: PageTypeOption[] = [
     type: 'business',
     title: 'Business & Storefront',
     desc: 'Retail, restaurants, hotels, manufacturers, professional services, and tech startups.',
-    icon: <Building2 className="w-6 h-6 text-emerald-400" />,
+    icon: <Building2 className="w-6 h-6 text-brand-sunriseCoral" />,
     badge: 'COMMERCE ENABLED',
   },
   {
     type: 'creator',
     title: 'Creator & Artist Hub',
     desc: 'Musicians, designers, influencers, chefs, podcasters, athletes, and writers.',
-    icon: <Sparkles className="w-6 h-6 text-sky-400" />,
+    icon: <Sparkles className="w-6 h-6 text-brand-caribbeanSea" />,
     badge: 'MONETIZED',
   },
   {
     type: 'government',
     title: 'Government & Civic Entity',
     desc: 'Ministries, municipalities, agencies, embassies, and public officials.',
-    icon: <Landmark className="w-6 h-6 text-amber-400" />,
+    icon: <Landmark className="w-6 h-6 text-brand-goldenHour" />,
     badge: 'CIVIC VERIFIED',
   },
   {
@@ -140,28 +140,28 @@ export default function CreatePageWizard() {
 
   if (isCreated) {
     return (
-      <div className="min-h-screen bg-[#090D16] text-slate-100 p-6 max-w-2xl mx-auto flex flex-col items-center justify-center text-center space-y-6">
-        <div className="w-20 h-20 rounded-3xl bg-emerald-500/20 border border-emerald-500/50 flex items-center justify-center text-emerald-400 shadow-2xl shadow-emerald-500/20">
+      <div className="min-h-screen bg-[#090D16] text-brand-sandstone p-6 max-w-2xl mx-auto flex flex-col items-center justify-center text-center space-y-6">
+        <div className="w-20 h-20 rounded-3xl bg-brand-sunriseCoral/20 border border-brand-sunriseCoral/50 flex items-center justify-center text-brand-sunriseCoral shadow-2xl shadow-brand-sunriseCoral/20">
           <CheckCircle className="w-10 h-10" />
         </div>
         <div className="space-y-2">
-          <h2 className="text-2xl md:text-3xl font-black text-white">
+          <h2 className="text-2xl md:text-3xl font-black text-brand-sandstone">
             {pageName} is Officially Published!
           </h2>
-          <p className="text-xs md:text-sm text-slate-400 max-w-md">
+          <p className="text-xs md:text-sm text-brand-sandstone/60 max-w-md">
             Your verified Caribbean Page is live on the Antilia network with instant SpotPay storefront and community reach.
           </p>
         </div>
         <div className="flex items-center gap-3">
           <Link
             href={`/pages/${pageSlug || 'preview'}`}
-            className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black px-6 py-2.5 rounded-2xl text-xs transition-all shadow-md shadow-emerald-500/20"
+            className="bg-brand-sunriseCoral hover:bg-brand-sunriseCoral text-slate-950 font-black px-6 py-2.5 rounded-2xl text-xs transition-all shadow-md shadow-brand-sunriseCoral/20"
           >
             Visit Live Page →
           </Link>
           <Link
             href="/pages"
-            className="bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold px-5 py-2.5 rounded-2xl text-xs border border-slate-700 transition-colors"
+            className="bg-brand-dusk hover:bg-slate-700 text-slate-200 font-bold px-5 py-2.5 rounded-2xl text-xs border border-slate-700 transition-colors"
           >
             All Pages
           </Link>
@@ -171,20 +171,20 @@ export default function CreatePageWizard() {
   }
 
   return (
-    <div className="min-h-screen bg-[#090D16] text-slate-100 p-4 md:p-6 max-w-3xl mx-auto space-y-8">
+    <div className="min-h-screen bg-[#090D16] text-brand-sandstone p-4 md:p-6 max-w-3xl mx-auto space-y-8">
       {/* Step Counter */}
       <div className="border-b border-slate-800 pb-4 flex items-center justify-between">
         <div>
-          <span className="text-[10px] font-black text-emerald-400 uppercase tracking-widest">
+          <span className="text-[10px] font-black text-brand-sunriseCoral uppercase tracking-widest">
             Page Onboarding • Step {step} of 3
           </span>
-          <h1 className="text-xl md:text-2xl font-black text-white mt-0.5">
+          <h1 className="text-xl md:text-2xl font-black text-brand-sandstone mt-0.5">
             {step === 1 && 'Select Your Page Entity Type'}
             {step === 2 && 'Identity, Geography & Mission'}
             {step === 3 && 'Storefront, Verification & SpotPay'}
           </h1>
         </div>
-        <Link href="/pages" className="text-xs text-slate-400 hover:text-white">
+        <Link href="/pages" className="text-xs text-brand-sandstone/60 hover:text-brand-sandstone">
           ✕ Cancel
         </Link>
       </div>
@@ -192,7 +192,7 @@ export default function CreatePageWizard() {
       {/* Step 1: Entity Type */}
       {step === 1 && (
         <div className="space-y-4">
-          <p className="text-xs text-slate-400">
+          <p className="text-xs text-brand-sandstone/60">
             Choose the entity class that best represents your organization or brand on Antilia:
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
@@ -202,21 +202,21 @@ export default function CreatePageWizard() {
                 onClick={() => setSelectedType(opt.type)}
                 className={`p-4 rounded-3xl border transition-all cursor-pointer flex flex-col justify-between space-y-3 ${
                   selectedType === opt.type
-                    ? 'bg-emerald-500/10 border-emerald-500 shadow-lg shadow-emerald-500/10'
-                    : 'bg-slate-900/80 border-slate-800 hover:border-slate-700'
+                    ? 'bg-brand-sunriseCoral/10 border-brand-sunriseCoral shadow-lg shadow-brand-sunriseCoral/10'
+                    : 'bg-brand-dusk/80 border-slate-800 hover:border-slate-700'
                 }`}
               >
                 <div className="flex items-center justify-between">
-                  <div className="p-2.5 rounded-2xl bg-slate-950 border border-slate-800">
+                  <div className="p-2.5 rounded-2xl bg-brand-twilight border border-slate-800">
                     {opt.icon}
                   </div>
-                  <span className="text-[9px] font-black px-2 py-0.5 rounded-full bg-slate-950 text-slate-300 border border-slate-700">
+                  <span className="text-[9px] font-black px-2 py-0.5 rounded-full bg-brand-twilight text-slate-300 border border-slate-700">
                     {opt.badge}
                   </span>
                 </div>
                 <div>
-                  <h3 className="font-extrabold text-sm text-white">{opt.title}</h3>
-                  <p className="text-[11px] text-slate-400 mt-1 leading-snug">{opt.desc}</p>
+                  <h3 className="font-extrabold text-sm text-brand-sandstone">{opt.title}</h3>
+                  <p className="text-[11px] text-brand-sandstone/60 mt-1 leading-snug">{opt.desc}</p>
                 </div>
               </div>
             ))}
@@ -225,7 +225,7 @@ export default function CreatePageWizard() {
             <button
               type="button"
               onClick={() => setStep(2)}
-              className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black px-6 py-2.5 rounded-2xl text-xs flex items-center gap-2 transition-all shadow-md shadow-emerald-500/20"
+              className="bg-brand-sunriseCoral hover:bg-brand-sunriseCoral text-slate-950 font-black px-6 py-2.5 rounded-2xl text-xs flex items-center gap-2 transition-all shadow-md shadow-brand-sunriseCoral/20"
             >
               Continue to Identity <ArrowRight className="w-4 h-4" />
             </button>
@@ -246,7 +246,7 @@ export default function CreatePageWizard() {
                 value={pageName}
                 onChange={(e) => handleNameChange(e.target.value)}
                 placeholder="e.g. Kingston Artisan Rum Co."
-                className="w-full bg-slate-900 border border-slate-800 rounded-2xl px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
+                className="w-full bg-brand-dusk border border-slate-800 rounded-2xl px-4 py-2.5 text-sm text-brand-sandstone placeholder-brand-sandstone/40 focus:outline-none focus:border-brand-sunriseCoral"
               />
             </div>
 
@@ -254,13 +254,13 @@ export default function CreatePageWizard() {
               <label className="block text-xs font-bold text-slate-300 mb-1">
                 Custom Page Slug URL
               </label>
-              <div className="flex items-center bg-slate-950 border border-slate-800 rounded-2xl px-4 py-2 text-xs text-slate-400 font-mono">
+              <div className="flex items-center bg-brand-twilight border border-slate-800 rounded-2xl px-4 py-2 text-xs text-brand-sandstone/60 font-mono">
                 <span>caribbeanone.com/pages/</span>
                 <input
                   type="text"
                   value={pageSlug}
                   onChange={(e) => setPageSlug(e.target.value)}
-                  className="bg-transparent text-emerald-400 font-bold focus:outline-none flex-1 ml-1"
+                  className="bg-transparent text-brand-sunriseCoral font-bold focus:outline-none flex-1 ml-1"
                 />
               </div>
             </div>
@@ -273,7 +273,7 @@ export default function CreatePageWizard() {
                 <select
                   value={country}
                   onChange={(e) => setCountry(e.target.value)}
-                  className="w-full bg-slate-900 border border-slate-800 rounded-2xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-emerald-500"
+                  className="w-full bg-brand-dusk border border-slate-800 rounded-2xl px-4 py-2.5 text-xs text-brand-sandstone focus:outline-none focus:border-brand-sunriseCoral"
                 >
                   <option>Jamaica 🇯🇲</option>
                   <option>Trinidad & Tobago 🇹🇹</option>
@@ -295,7 +295,7 @@ export default function CreatePageWizard() {
                   value={city}
                   onChange={(e) => setCity(e.target.value)}
                   placeholder="e.g. Kingston or Miami"
-                  className="w-full bg-slate-900 border border-slate-800 rounded-2xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-emerald-500"
+                  className="w-full bg-brand-dusk border border-slate-800 rounded-2xl px-4 py-2.5 text-xs text-brand-sandstone focus:outline-none focus:border-brand-sunriseCoral"
                 />
               </div>
             </div>
@@ -309,7 +309,7 @@ export default function CreatePageWizard() {
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="Describe your organization, mission, and services to the Caribbean diaspora..."
                 rows={3}
-                className="w-full bg-slate-900 border border-slate-800 rounded-2xl p-4 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 resize-none"
+                className="w-full bg-brand-dusk border border-slate-800 rounded-2xl p-4 text-xs text-brand-sandstone placeholder-brand-sandstone/40 focus:outline-none focus:border-brand-sunriseCoral resize-none"
               />
             </div>
           </div>
@@ -318,7 +318,7 @@ export default function CreatePageWizard() {
             <button
               type="button"
               onClick={() => setStep(1)}
-              className="text-xs font-bold text-slate-400 hover:text-white flex items-center gap-1.5"
+              className="text-xs font-bold text-brand-sandstone/60 hover:text-brand-sandstone flex items-center gap-1.5"
             >
               <ArrowLeft className="w-4 h-4" /> Back
             </button>
@@ -326,7 +326,7 @@ export default function CreatePageWizard() {
               type="button"
               disabled={!pageName.trim()}
               onClick={() => setStep(3)}
-              className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black px-6 py-2.5 rounded-2xl text-xs flex items-center gap-2 transition-all shadow-md shadow-emerald-500/20 disabled:opacity-50"
+              className="bg-brand-sunriseCoral hover:bg-brand-sunriseCoral text-slate-950 font-black px-6 py-2.5 rounded-2xl text-xs flex items-center gap-2 transition-all shadow-md shadow-brand-sunriseCoral/20 disabled:opacity-50"
             >
               Continue to Commerce <ArrowRight className="w-4 h-4" />
             </button>
@@ -337,14 +337,14 @@ export default function CreatePageWizard() {
       {/* Step 3: Storefront & SpotPay Settlement */}
       {step === 3 && (
         <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="bg-slate-900/80 border border-slate-800 rounded-3xl p-5 space-y-4">
-            <h3 className="font-extrabold text-sm text-white flex items-center gap-2">
-              <Store className="w-4 h-4 text-emerald-400" /> Digital Storefront &amp; Social Commerce
+          <div className="bg-brand-dusk/80 border border-slate-800 rounded-3xl p-5 space-y-4">
+            <h3 className="font-extrabold text-sm text-brand-sandstone flex items-center gap-2">
+              <Store className="w-4 h-4 text-brand-sunriseCoral" /> Digital Storefront &amp; Social Commerce
             </h3>
-            <div className="flex items-center justify-between p-3.5 rounded-2xl bg-slate-950 border border-slate-800">
+            <div className="flex items-center justify-between p-3.5 rounded-2xl bg-brand-twilight border border-slate-800">
               <div>
-                <p className="text-xs font-bold text-white">Enable Antilia Storefront</p>
-                <p className="text-[11px] text-slate-400">
+                <p className="text-xs font-bold text-brand-sandstone">Enable Antilia Storefront</p>
+                <p className="text-[11px] text-brand-sandstone/60">
                   Allows selling physical goods, digital assets, tickets, and services directly on your Page.
                 </p>
               </div>
@@ -352,21 +352,21 @@ export default function CreatePageWizard() {
                 type="checkbox"
                 checked={enableStore}
                 onChange={(e) => setEnableStore(e.target.checked)}
-                className="w-5 h-5 accent-emerald-500 rounded cursor-pointer"
+                className="w-5 h-5 accent-brand-sunriseCoral rounded cursor-pointer"
               />
             </div>
           </div>
 
-          <div className="bg-slate-900/80 border border-slate-800 rounded-3xl p-5 space-y-3">
-            <h3 className="font-extrabold text-sm text-white flex items-center gap-2">
-              <ShieldCheck className="w-4 h-4 text-sky-400" /> Verification Class
+          <div className="bg-brand-dusk/80 border border-slate-800 rounded-3xl p-5 space-y-3">
+            <h3 className="font-extrabold text-sm text-brand-sandstone flex items-center gap-2">
+              <ShieldCheck className="w-4 h-4 text-brand-caribbeanSea" /> Verification Class
             </h3>
-            <p className="text-xs text-slate-400">
+            <p className="text-xs text-brand-sandstone/60">
               Your page will receive a verified badge reflecting your entity class:
             </p>
-            <div className="p-3 rounded-2xl bg-slate-950 border border-slate-800 flex items-center gap-3">
-              <span className="text-xs font-black text-white capitalize">{selectedType} Verified Tier</span>
-              <span className="text-[10px] text-slate-400">• Includes dispute protection &amp; instant SpotPay settlement</span>
+            <div className="p-3 rounded-2xl bg-brand-twilight border border-slate-800 flex items-center gap-3">
+              <span className="text-xs font-black text-brand-sandstone capitalize">{selectedType} Verified Tier</span>
+              <span className="text-[10px] text-brand-sandstone/60">• Includes dispute protection &amp; instant SpotPay settlement</span>
             </div>
           </div>
 
@@ -380,14 +380,14 @@ export default function CreatePageWizard() {
             <button
               type="button"
               onClick={() => setStep(2)}
-              className="text-xs font-bold text-slate-400 hover:text-white flex items-center gap-1.5"
+              className="text-xs font-bold text-brand-sandstone/60 hover:text-brand-sandstone flex items-center gap-1.5"
             >
               <ArrowLeft className="w-4 h-4" /> Back
             </button>
             <button
               type="submit"
               disabled={isSubmitting}
-              className="bg-gradient-to-r from-emerald-500 to-sky-500 hover:from-emerald-400 hover:to-sky-400 text-slate-950 font-black px-8 py-3 rounded-2xl text-xs flex items-center gap-2 transition-all shadow-xl shadow-emerald-500/20 disabled:opacity-50"
+              className="bg-gradient-to-r from-brand-sunriseCoral to-brand-caribbeanSea hover:from-brand-sunriseCoral hover:to-brand-caribbeanSea text-slate-950 font-black px-8 py-3 rounded-2xl text-xs flex items-center gap-2 transition-all shadow-xl shadow-brand-sunriseCoral/20 disabled:opacity-50"
             >
               <CheckCircle className="w-4 h-4" /> {isSubmitting ? 'Publishing Page...' : 'Publish Verified Page'}
             </button>

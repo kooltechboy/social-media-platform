@@ -45,16 +45,16 @@ export default function OnboardingPage() {
 
   return (
     <div className="max-w-2xl mx-auto pt-16 px-4">
-      <div className="bg-[#0B132B]/80 backdrop-blur-md border border-slate-800/80 rounded-2xl p-8 shadow-2xl">
-        <h1 className="text-3xl font-bold text-white mb-2">Welcome to ANTILIA</h1>
-        <p className="text-slate-400 mb-8">
+      <div className="bg-brand-twilight/80 backdrop-blur-md border border-slate-800/80 rounded-2xl p-8 shadow-2xl">
+        <h1 className="text-3xl font-bold text-brand-sandstone mb-2">Welcome to ANTILIA</h1>
+        <p className="text-brand-sandstone/60 mb-8">
           To personalize your experience and connect you with your community, let&apos;s establish your Caribbean roots.
         </p>
 
         <form onSubmit={handleSubmit} className="space-y-8">
           {/* Origin Country */}
           <div className="space-y-4">
-            <label className="block text-sm font-semibold text-sky-400">Where are your Caribbean roots?</label>
+            <label className="block text-sm font-semibold text-brand-caribbeanSea">Where are your Caribbean roots?</label>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
               {CARIBBEAN_COUNTRIES.map((c) => (
                 <button
@@ -63,8 +63,8 @@ export default function OnboardingPage() {
                   onClick={() => setOriginIso(c.iso)}
                   className={`flex flex-col items-center p-4 rounded-xl border transition-all ${
                     originIso === c.iso
-                      ? 'bg-sky-500/20 border-sky-500/50 text-white'
-                      : 'bg-slate-900 border-slate-800 text-slate-400 hover:bg-slate-800'
+                      ? 'bg-brand-caribbeanSea/20 border-brand-caribbeanSea/50 text-brand-sandstone'
+                      : 'bg-brand-dusk border-slate-800 text-brand-sandstone/60 hover:bg-brand-dusk'
                   }`}
                 >
                   <span className="text-3xl mb-2">{c.flag}</span>
@@ -81,7 +81,7 @@ export default function OnboardingPage() {
                 type="checkbox"
                 checked={isDiaspora}
                 onChange={(e) => setIsDiaspora(e.target.checked)}
-                className="w-5 h-5 rounded border-slate-700 bg-slate-900 text-sky-500 focus:ring-sky-500 focus:ring-offset-slate-950"
+                className="w-5 h-5 rounded border-slate-700 bg-brand-dusk text-brand-caribbeanSea focus:ring-brand-caribbeanSea focus:ring-offset-slate-950"
               />
               <span className="text-sm font-semibold text-slate-200">I currently live in the Global Diaspora</span>
             </label>
@@ -95,8 +95,8 @@ export default function OnboardingPage() {
                     onClick={() => setDiasporaId(hub.id)}
                     className={`flex items-center gap-2 p-3 rounded-xl border transition-all ${
                       diasporaId === hub.id
-                        ? 'bg-sky-500/20 border-sky-500/50 text-white'
-                        : 'bg-slate-900 border-slate-800 text-slate-400 hover:bg-slate-800'
+                        ? 'bg-brand-caribbeanSea/20 border-brand-caribbeanSea/50 text-brand-sandstone'
+                        : 'bg-brand-dusk border-slate-800 text-brand-sandstone/60 hover:bg-brand-dusk'
                     }`}
                   >
                     <span className="text-xl">{hub.flag}</span>
@@ -111,7 +111,7 @@ export default function OnboardingPage() {
             <button
               type="submit"
               disabled={!originIso || loading}
-              className="w-full bg-sky-600 hover:bg-sky-500 disabled:opacity-50 disabled:hover:bg-sky-600 text-white font-bold py-3 px-4 rounded-xl transition-colors"
+              className="w-full bg-sky-600 hover:bg-brand-caribbeanSea disabled:opacity-50 disabled:hover:bg-sky-600 text-brand-sandstone font-bold py-3 px-4 rounded-xl transition-colors"
             >
               {loading ? 'Saving...' : 'Enter the Platform'}
             </button>

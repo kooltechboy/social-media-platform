@@ -29,7 +29,7 @@ export default function ProfileEditForm({ currentDisplayName, currentBio, curren
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
-        <label htmlFor="displayName" className="text-xs font-semibold text-slate-400 block mb-1">
+        <label htmlFor="displayName" className="text-xs font-semibold text-brand-sandstone/60 block mb-1">
           Display Name *
         </label>
         <input
@@ -38,12 +38,12 @@ export default function ProfileEditForm({ currentDisplayName, currentBio, curren
           required
           maxLength={100}
           defaultValue={currentDisplayName}
-          className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-sky-500 transition-colors"
+          className="w-full bg-brand-twilight border border-slate-700 rounded-xl px-3 py-2 text-sm text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea transition-colors"
         />
       </div>
 
       <div>
-        <label htmlFor="bio" className="text-xs font-semibold text-slate-400 block mb-1">
+        <label htmlFor="bio" className="text-xs font-semibold text-brand-sandstone/60 block mb-1">
           Bio
         </label>
         <textarea
@@ -53,12 +53,12 @@ export default function ProfileEditForm({ currentDisplayName, currentBio, curren
           rows={3}
           defaultValue={currentBio}
           placeholder="Tell your Caribbean story…"
-          className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-sky-500 transition-colors resize-none"
+          className="w-full bg-brand-twilight border border-slate-700 rounded-xl px-3 py-2 text-sm text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea transition-colors resize-none"
         />
       </div>
 
       <div>
-        <label htmlFor="website" className="text-xs font-semibold text-slate-400 block mb-1">
+        <label htmlFor="website" className="text-xs font-semibold text-brand-sandstone/60 block mb-1">
           Website
         </label>
         <input
@@ -67,7 +67,7 @@ export default function ProfileEditForm({ currentDisplayName, currentBio, curren
           type="url"
           defaultValue={currentWebsite}
           placeholder="https://yoursite.com"
-          className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-sky-500 transition-colors"
+          className="w-full bg-brand-twilight border border-slate-700 rounded-xl px-3 py-2 text-sm text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea transition-colors"
         />
       </div>
 
@@ -77,7 +77,7 @@ export default function ProfileEditForm({ currentDisplayName, currentBio, curren
         </p>
       )}
       {state.success && (
-        <p className="text-xs text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 rounded-xl px-3 py-2">
+        <p className="text-xs text-brand-sunriseCoral bg-brand-sunriseCoral/10 border border-brand-sunriseCoral/30 rounded-xl px-3 py-2">
           {state.success}
         </p>
       )}
@@ -85,7 +85,7 @@ export default function ProfileEditForm({ currentDisplayName, currentBio, curren
       <button
         type="submit"
         disabled={pending}
-        className="bg-sky-500 hover:bg-sky-400 disabled:opacity-50 text-slate-950 font-bold px-6 py-2 rounded-xl text-xs transition-colors"
+        className="bg-brand-caribbeanSea hover:bg-brand-caribbeanSea disabled:opacity-50 text-slate-950 font-bold px-6 py-2 rounded-xl text-xs transition-colors"
       >
         {pending ? 'Saving…' : 'Save Changes'}
       </button>

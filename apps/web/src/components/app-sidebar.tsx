@@ -28,9 +28,9 @@ interface NavItem {
 }
 
 const PRIMARY_NAV: NavItem[] = [
-  { href: '/', label: 'Home Feed', icon: <Home className="w-4 h-4 text-sky-400" /> },
-  { href: '/create', label: 'Create Hub', icon: <PlusCircle className="w-4 h-4 text-emerald-400" />, badge: 'NEW' },
-  { href: '/explore', label: 'Explore & Diaspora', icon: <Compass className="w-4 h-4 text-amber-400" /> },
+  { href: '/', label: 'Home Feed', icon: <Home className="w-4 h-4 text-brand-caribbeanSea" /> },
+  { href: '/create', label: 'Create Hub', icon: <PlusCircle className="w-4 h-4 text-brand-sunriseCoral" />, badge: 'NEW' },
+  { href: '/explore', label: 'Explore & Diaspora', icon: <Compass className="w-4 h-4 text-brand-goldenHour" /> },
   { href: '/map', label: 'Caribbean Map', icon: <MapPin className="w-4 h-4 text-rose-400" /> },
   { href: '/reels', label: 'Reels & Sounds', icon: <Video className="w-4 h-4 text-pink-400" /> },
   { href: '/live', label: 'Live Streams', icon: <Tv className="w-4 h-4 text-red-400" />, badge: 'LIVE' },
@@ -41,9 +41,9 @@ const PRIMARY_NAV: NavItem[] = [
 const COMMERCE_NAV: NavItem[] = [
   { href: '/marketplace', label: 'Marketplace', icon: <ShoppingBag className="w-4 h-4 text-orange-400" /> },
   { href: '/events', label: 'Cultural Events', icon: <Calendar className="w-4 h-4 text-yellow-400" /> },
-  { href: '/pages', label: 'Pages & Stores', icon: <Building2 className="w-4 h-4 text-emerald-400" />, badge: 'VERIFIED' },
-  { href: '/spotpay', label: 'SpotPay Wallet', icon: <Wallet className="w-4 h-4 text-emerald-400" /> },
-  { href: '/creator-studio', label: 'Creator Studio', icon: <Sparkles className="w-4 h-4 text-sky-400" /> },
+  { href: '/pages', label: 'Pages & Stores', icon: <Building2 className="w-4 h-4 text-brand-sunriseCoral" />, badge: 'VERIFIED' },
+  { href: '/spotpay', label: 'SpotPay Wallet', icon: <Wallet className="w-4 h-4 text-brand-sunriseCoral" /> },
+  { href: '/creator-studio', label: 'Creator Studio', icon: <Sparkles className="w-4 h-4 text-brand-caribbeanSea" /> },
 ];
 
 const PERSONAL_NAV: NavItem[] = [
@@ -61,7 +61,7 @@ export default function AppSidebar({ currentPath = '/' }: AppSidebarProps) {
   const renderNavGroup = (items: NavItem[], title?: string) => (
     <div className="space-y-1">
       {title && (
-        <p className="text-[10px] font-black tracking-wider uppercase text-slate-500 px-3 py-1.5">
+        <p className="text-[10px] font-black tracking-wider uppercase text-brand-sandstone/40 px-3 py-1.5">
           {title}
         </p>
       )}
@@ -78,8 +78,8 @@ export default function AppSidebar({ currentPath = '/' }: AppSidebarProps) {
             aria-current={isActive ? 'page' : undefined}
             className={`flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-xs font-bold transition-all ${
               isActive
-                ? 'bg-gradient-to-r from-sky-500/20 to-emerald-500/10 text-white border border-sky-500/30 shadow-sm'
-                : 'text-slate-300 hover:bg-slate-800/60 hover:text-white border border-transparent'
+                ? 'bg-gradient-to-r from-brand-caribbeanSea/20 to-brand-sunriseCoral/10 text-brand-sandstone border border-brand-caribbeanSea/30 shadow-sm'
+                : 'text-slate-300 hover:bg-brand-dusk/60 hover:text-brand-sandstone border border-transparent'
             }`}
           >
             <div className="flex items-center gap-3">
@@ -91,8 +91,8 @@ export default function AppSidebar({ currentPath = '/' }: AppSidebarProps) {
                 item.badge === 'LIVE'
                   ? 'bg-red-500/20 text-red-400 border-red-500/30 animate-pulse'
                   : item.badge === 'NEW'
-                  ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
-                  : 'bg-slate-800 text-slate-400 border-slate-700'
+                  ? 'bg-brand-sunriseCoral/20 text-brand-sunriseCoral border-brand-sunriseCoral/30'
+                  : 'bg-brand-dusk text-brand-sandstone/60 border-slate-700'
               }`}>
                 {item.badge}
               </span>
@@ -105,13 +105,13 @@ export default function AppSidebar({ currentPath = '/' }: AppSidebarProps) {
 
   return (
     <aside className="hidden md:block col-span-1 space-y-5" aria-label="Primary navigation">
-      <div className="bg-slate-950/85 backdrop-blur-2xl border border-slate-800/80 rounded-3xl p-3 shadow-2xl space-y-4">
+      <div className="bg-brand-twilight/85 backdrop-blur-2xl border border-slate-800/80 rounded-3xl p-3 shadow-2xl space-y-4">
         {renderNavGroup(PRIMARY_NAV, 'Ecosystem')}
-        <div className="h-px bg-slate-800/60 my-2" />
+        <div className="h-px bg-brand-dusk/60 my-2" />
         
         {/* Accordion for secondary features to reduce visual clutter */}
         <details className="group">
-          <summary className="text-[10px] font-black tracking-wider uppercase text-slate-500 px-3 py-1.5 cursor-pointer list-none flex justify-between items-center hover:text-slate-300 transition-colors">
+          <summary className="text-[10px] font-black tracking-wider uppercase text-brand-sandstone/40 px-3 py-1.5 cursor-pointer list-none flex justify-between items-center hover:text-slate-300 transition-colors">
             Economy & Culture
             <span className="transition group-open:rotate-180">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
@@ -126,8 +126,8 @@ export default function AppSidebar({ currentPath = '/' }: AppSidebarProps) {
                   href={item.href}
                   className={`flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-xs font-bold transition-all ${
                     isActive
-                      ? 'bg-gradient-to-r from-sky-500/20 to-emerald-500/10 text-white border border-sky-500/30 shadow-sm'
-                      : 'text-slate-300 hover:bg-slate-800/60 hover:text-white border border-transparent'
+                      ? 'bg-gradient-to-r from-brand-caribbeanSea/20 to-brand-sunriseCoral/10 text-brand-sandstone border border-brand-caribbeanSea/30 shadow-sm'
+                      : 'text-slate-300 hover:bg-brand-dusk/60 hover:text-brand-sandstone border border-transparent'
                   }`}
                 >
                   <div className="flex items-center gap-3">
@@ -137,8 +137,8 @@ export default function AppSidebar({ currentPath = '/' }: AppSidebarProps) {
                   {item.badge && (
                     <span className={`text-[9px] font-black px-1.5 py-0.5 rounded-full border ${
                       item.badge === 'VERIFIED'
-                        ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
-                        : 'bg-slate-800 text-slate-400 border-slate-700'
+                        ? 'bg-brand-sunriseCoral/20 text-brand-sunriseCoral border-brand-sunriseCoral/30'
+                        : 'bg-brand-dusk text-brand-sandstone/60 border-slate-700'
                     }`}>
                       {item.badge}
                     </span>
@@ -149,21 +149,21 @@ export default function AppSidebar({ currentPath = '/' }: AppSidebarProps) {
           </div>
         </details>
 
-        <div className="h-px bg-slate-800/60 my-2" />
+        <div className="h-px bg-brand-dusk/60 my-2" />
         {renderNavGroup(PERSONAL_NAV, 'Account')}
       </div>
 
       {/* Creator Studio Action Card */}
-      <div className="bg-gradient-to-br from-slate-950/90 via-slate-900/90 to-sky-950/90 backdrop-blur-2xl border border-sky-500/30 rounded-3xl p-4 text-center shadow-lg space-y-2.5">
-        <div className="flex items-center justify-center gap-1.5 text-xs font-black text-sky-400 uppercase tracking-wide">
+      <div className="bg-gradient-to-br from-slate-950/90 via-slate-900/90 to-sky-950/90 backdrop-blur-2xl border border-brand-caribbeanSea/30 rounded-3xl p-4 text-center shadow-lg space-y-2.5">
+        <div className="flex items-center justify-center gap-1.5 text-xs font-black text-brand-caribbeanSea uppercase tracking-wide">
           <Sparkles className="w-3.5 h-3.5" /> Caribbean Creator Hub
         </div>
         <p className="text-[11px] text-slate-300 leading-relaxed">
-          Keep <strong className="text-emerald-400">82.1% net</strong> of all subscriptions, gifts, and event ticket sales.
+          Keep <strong className="text-brand-sunriseCoral">82.1% net</strong> of all subscriptions, gifts, and event ticket sales.
         </p>
         <Link
           href="/creator-studio"
-          className="w-full block bg-gradient-to-r from-sky-500 to-emerald-500 hover:from-sky-400 hover:to-emerald-400 text-slate-950 font-black text-xs py-2.5 rounded-2xl transition-all shadow-md shadow-sky-500/20 text-center"
+          className="w-full block bg-gradient-to-r from-brand-caribbeanSea to-brand-sunriseCoral hover:from-brand-caribbeanSea hover:to-brand-sunriseCoral text-slate-950 font-black text-xs py-2.5 rounded-2xl transition-all shadow-md shadow-brand-caribbeanSea/20 text-center"
         >
           Open Creator Studio
         </Link>

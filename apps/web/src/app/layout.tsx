@@ -26,7 +26,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className="dark" suppressHydrationWarning>
-      <body className="bg-[#0B132B] text-slate-100 antialiased min-h-screen relative overflow-x-hidden" suppressHydrationWarning>
+      <body className="bg-brand-twilight text-brand-sandstone antialiased min-h-screen relative overflow-x-hidden" suppressHydrationWarning>
         {/* High Definition Caribbean Beach Sunset Atmosphere */}
         <CaribbeanSunsetBackground />
 

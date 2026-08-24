@@ -161,12 +161,12 @@ export default function FeedStream({ initialPosts }: FeedStreamProps) {
               aria-selected={isActive}
               onClick={() => setActiveTab(tab.id as typeof activeTab)}
               className={`pb-2 whitespace-nowrap text-xs font-black transition-all relative focus-visible:outline-none px-1 ${
-                isActive ? 'text-sky-400' : 'text-slate-400 hover:text-slate-200'
+                isActive ? 'text-brand-caribbeanSea' : 'text-brand-sandstone/60 hover:text-slate-200'
               }`}
             >
               {tab.label}
               {isActive && (
-                <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-sky-400 via-emerald-400 to-amber-400 rounded-full" />
+                <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-brand-caribbeanSea via-brand-sunriseCoral to-brand-goldenHour rounded-full" />
               )}
             </button>
           );
@@ -175,8 +175,8 @@ export default function FeedStream({ initialPosts }: FeedStreamProps) {
 
       {/* Share Toast */}
       {shareToast && (
-        <div className="p-3 rounded-2xl bg-sky-500/20 border border-sky-500/40 text-sky-300 text-xs font-bold flex items-center gap-2 animate-fadeIn">
-          <CheckCircle className="w-4 h-4 text-sky-400" />
+        <div className="p-3 rounded-2xl bg-brand-caribbeanSea/20 border border-brand-caribbeanSea/40 text-brand-caribbeanSea text-xs font-bold flex items-center gap-2 animate-fadeIn">
+          <CheckCircle className="w-4 h-4 text-brand-caribbeanSea" />
           <span>{shareToast}</span>
         </div>
       )}
@@ -184,36 +184,36 @@ export default function FeedStream({ initialPosts }: FeedStreamProps) {
       {/* Feed Stream */}
       <div className="space-y-4">
         {displayedPosts.length === 0 ? (
-          <div className="p-8 text-center bg-slate-900/60 border border-slate-800 rounded-3xl space-y-2">
+          <div className="p-8 text-center bg-brand-dusk/60 border border-slate-800 rounded-3xl space-y-2">
             <Globe className="w-8 h-8 text-slate-600 mx-auto" />
             <h4 className="text-sm font-black text-slate-300">No posts in this channel yet</h4>
-            <p className="text-xs text-slate-500">Be the first to share an update to the Caribbean diaspora!</p>
+            <p className="text-xs text-brand-sandstone/40">Be the first to share an update to the Caribbean diaspora!</p>
           </div>
         ) : (
           displayedPosts.map((post) => (
             <article
               key={post.id}
               id={post.id}
-              className="bg-slate-900/80 backdrop-blur-xl border border-slate-800/90 rounded-3xl p-5 shadow-xl space-y-4 hover:border-slate-700/90 transition-all"
+              className="bg-brand-dusk/80 backdrop-blur-xl border border-slate-800/90 rounded-3xl p-5 shadow-xl space-y-4 hover:border-slate-700/90 transition-all"
             >
               {/* Post Author Header */}
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-amber-500 via-rose-500 to-sky-500 p-0.5 shadow-md flex-shrink-0">
-                    <div className="w-full h-full bg-slate-950 rounded-2xl flex items-center justify-center font-black text-xs text-white">
+                  <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-brand-goldenHour via-rose-500 to-brand-caribbeanSea p-0.5 shadow-md flex-shrink-0">
+                    <div className="w-full h-full bg-brand-twilight rounded-2xl flex items-center justify-center font-black text-xs text-brand-sandstone">
                       {post.author.slice(0, 2).toUpperCase()}
                     </div>
                   </div>
                   <div>
                     <div className="flex items-center gap-1.5">
-                      <h4 className="font-extrabold text-sm text-white">{post.author}</h4>
-                      {post.verified && <CheckCircle className="w-3.5 h-3.5 text-sky-400 fill-sky-400/20" />}
-                      <span className="text-xs text-slate-500">@{post.handle}</span>
+                      <h4 className="font-extrabold text-sm text-brand-sandstone">{post.author}</h4>
+                      {post.verified && <CheckCircle className="w-3.5 h-3.5 text-brand-caribbeanSea fill-brand-caribbeanSea/20" />}
+                      <span className="text-xs text-brand-sandstone/40">@{post.handle}</span>
                     </div>
-                    <div className="flex items-center gap-2 text-[11px] text-slate-400 mt-0.5">
+                    <div className="flex items-center gap-2 text-[11px] text-brand-sandstone/60 mt-0.5">
                       {post.location && (
                         <span className="flex items-center gap-1">
-                          <MapPin className="w-3 h-3 text-emerald-400" />
+                          <MapPin className="w-3 h-3 text-brand-sunriseCoral" />
                           {post.location}
                         </span>
                       )}
@@ -224,7 +224,7 @@ export default function FeedStream({ initialPosts }: FeedStreamProps) {
                 </div>
 
                 {post.tag && (
-                  <span className="text-[10px] font-black px-2.5 py-1 rounded-full bg-sky-500/10 text-sky-400 border border-sky-500/20">
+                  <span className="text-[10px] font-black px-2.5 py-1 rounded-full bg-brand-caribbeanSea/10 text-brand-caribbeanSea border border-brand-caribbeanSea/20">
                     {post.tag}
                   </span>
                 )}
@@ -243,7 +243,7 @@ export default function FeedStream({ initialPosts }: FeedStreamProps) {
                   }`}
                 >
                   {post.mediaUrls.map((url, idx) => (
-                    <div key={idx} className="relative bg-slate-950 rounded-xl overflow-hidden max-h-96">
+                    <div key={idx} className="relative bg-brand-twilight rounded-xl overflow-hidden max-h-96">
                       {url.endsWith('.mp4') || url.includes('video') ? (
                         <video src={url} controls className="w-full h-full object-cover" />
                       ) : (
@@ -260,7 +260,7 @@ export default function FeedStream({ initialPosts }: FeedStreamProps) {
               )}
 
               {/* Interaction Bar */}
-              <div className="flex items-center justify-between pt-3 border-t border-slate-800/70 text-slate-400 text-xs">
+              <div className="flex items-center justify-between pt-3 border-t border-slate-800/70 text-brand-sandstone/60 text-xs">
                 {/* Like Button */}
                 <button
                   type="button"
@@ -277,8 +277,8 @@ export default function FeedStream({ initialPosts }: FeedStreamProps) {
                 <button
                   type="button"
                   onClick={() => handleToggleComments(post.id)}
-                  className={`flex items-center gap-1.5 hover:text-sky-400 transition-colors ${
-                    expandedCommentsPostId === post.id ? 'text-sky-400 font-bold' : ''
+                  className={`flex items-center gap-1.5 hover:text-brand-caribbeanSea transition-colors ${
+                    expandedCommentsPostId === post.id ? 'text-brand-caribbeanSea font-bold' : ''
                   }`}
                 >
                   <MessageCircle className="w-4 h-4" />
@@ -289,7 +289,7 @@ export default function FeedStream({ initialPosts }: FeedStreamProps) {
                 <button
                   type="button"
                   onClick={() => handleShare(post)}
-                  className="flex items-center gap-1.5 hover:text-emerald-400 transition-colors"
+                  className="flex items-center gap-1.5 hover:text-brand-sunriseCoral transition-colors"
                 >
                   <Share2 className="w-4 h-4" />
                   <span className="hidden sm:inline">Share</span>
@@ -299,7 +299,7 @@ export default function FeedStream({ initialPosts }: FeedStreamProps) {
                 <button
                   type="button"
                   onClick={() => setTipTarget({ name: post.author, handle: post.handle })}
-                  className="flex items-center gap-1.5 text-emerald-400 font-extrabold hover:text-emerald-300 transition-all bg-emerald-500/10 hover:bg-emerald-500/20 px-3 py-1 rounded-full border border-emerald-500/20 shadow-sm"
+                  className="flex items-center gap-1.5 text-brand-sunriseCoral font-extrabold hover:text-emerald-300 transition-all bg-brand-sunriseCoral/10 hover:bg-brand-sunriseCoral/20 px-3 py-1 rounded-full border border-brand-sunriseCoral/20 shadow-sm"
                 >
                   <Wallet className="w-3.5 h-3.5" />
                   <span>Tip SpotPay</span>
@@ -312,15 +312,15 @@ export default function FeedStream({ initialPosts }: FeedStreamProps) {
                   {/* List of Comments */}
                   <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
                     {(commentLists[post.id] || []).length === 0 ? (
-                      <p className="text-xs text-slate-500 italic py-1">No comments yet. Start the conversation!</p>
+                      <p className="text-xs text-brand-sandstone/40 italic py-1">No comments yet. Start the conversation!</p>
                     ) : (
                       (commentLists[post.id] || []).map((c, i) => (
-                        <div key={c.id || i} className="p-3 rounded-2xl bg-slate-950/70 border border-slate-800/60 space-y-1">
+                        <div key={c.id || i} className="p-3 rounded-2xl bg-brand-twilight/70 border border-slate-800/60 space-y-1">
                           <div className="flex items-center justify-between">
                             <span className="text-xs font-bold text-slate-200">
                               {c.profiles?.display_name || 'Caribbean Member'}
                             </span>
-                            <span className="text-[10px] text-slate-500">just now</span>
+                            <span className="text-[10px] text-brand-sandstone/40">just now</span>
                           </div>
                           <p className="text-xs text-slate-300">{c.content}</p>
                         </div>
@@ -335,12 +335,12 @@ export default function FeedStream({ initialPosts }: FeedStreamProps) {
                       value={commentInputs[post.id] || ''}
                       onChange={(e) => setCommentInputs({ ...commentInputs, [post.id]: e.target.value })}
                       placeholder="Write a supportive reply or feedback..."
-                      className="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-sky-500"
+                      className="flex-1 bg-brand-twilight border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-brand-sandstone placeholder-brand-sandstone/40 focus:outline-none focus:border-brand-caribbeanSea"
                     />
                     <button
                       type="submit"
                       disabled={isSubmittingComment === post.id || !commentInputs[post.id]?.trim()}
-                      className="bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold px-3.5 py-2 rounded-xl text-xs flex items-center gap-1 transition-all disabled:opacity-50"
+                      className="bg-brand-caribbeanSea hover:bg-brand-caribbeanSea text-slate-950 font-bold px-3.5 py-2 rounded-xl text-xs flex items-center gap-1 transition-all disabled:opacity-50"
                     >
                       {isSubmittingComment === post.id ? (
                         <Loader2 className="w-3.5 h-3.5 animate-spin" />

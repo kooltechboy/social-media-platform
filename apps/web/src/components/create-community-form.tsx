@@ -26,7 +26,7 @@ export default function CreateCommunityForm() {
     return (
       <button
         onClick={() => setOpen(true)}
-        className="bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold px-4 py-2 rounded-xl text-xs flex items-center gap-2 transition-colors"
+        className="bg-brand-caribbeanSea hover:bg-brand-caribbeanSea text-slate-950 font-bold px-4 py-2 rounded-xl text-xs flex items-center gap-2 transition-colors"
       >
         <Plus className="w-4 h-4" /> Create Community
       </button>
@@ -34,18 +34,18 @@ export default function CreateCommunityForm() {
   }
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
-      <div className="bg-slate-900 border border-slate-700 rounded-2xl p-6 w-full max-w-md space-y-4">
+    <div className="fixed inset-0 z-50 bg-brand-twilight/80 backdrop-blur-sm flex items-center justify-center p-4">
+      <div className="bg-brand-dusk border border-slate-700 rounded-2xl p-6 w-full max-w-md space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-base font-bold text-white">Create a Community</h2>
-          <button onClick={() => setOpen(false)} className="p-1 text-slate-400 hover:text-white">
+          <h2 className="text-base font-bold text-brand-sandstone">Create a Community</h2>
+          <button onClick={() => setOpen(false)} className="p-1 text-brand-sandstone/60 hover:text-brand-sandstone">
             <X className="w-5 h-5" />
           </button>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-3">
           <div>
-            <label htmlFor="comm-name" className="text-xs font-semibold text-slate-400 block mb-1">
+            <label htmlFor="comm-name" className="text-xs font-semibold text-brand-sandstone/60 block mb-1">
               Community Name *
             </label>
             <input
@@ -54,13 +54,13 @@ export default function CreateCommunityForm() {
               required
               minLength={3}
               maxLength={80}
-              className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-sky-500"
+              className="w-full bg-brand-twilight border border-slate-700 rounded-xl px-3 py-2 text-sm text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea"
               placeholder="e.g. Jamaicans in Toronto"
             />
           </div>
 
           <div>
-            <label htmlFor="comm-desc" className="text-xs font-semibold text-slate-400 block mb-1">
+            <label htmlFor="comm-desc" className="text-xs font-semibold text-brand-sandstone/60 block mb-1">
               Description
             </label>
             <textarea
@@ -68,19 +68,19 @@ export default function CreateCommunityForm() {
               name="description"
               maxLength={500}
               rows={3}
-              className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-sky-500 resize-none"
+              className="w-full bg-brand-twilight border border-slate-700 rounded-xl px-3 py-2 text-sm text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea resize-none"
               placeholder="What is this community about?"
             />
           </div>
 
           <div>
-            <label htmlFor="comm-policy" className="text-xs font-semibold text-slate-400 block mb-1">
+            <label htmlFor="comm-policy" className="text-xs font-semibold text-brand-sandstone/60 block mb-1">
               Membership
             </label>
             <select
               id="comm-policy"
               name="joinPolicy"
-              className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-sky-500"
+              className="w-full bg-brand-twilight border border-slate-700 rounded-xl px-3 py-2 text-sm text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea"
             >
               <option value="public">Public — anyone can join</option>
               <option value="private">Private — request required</option>
@@ -98,14 +98,14 @@ export default function CreateCommunityForm() {
             <button
               type="button"
               onClick={() => setOpen(false)}
-              className="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold py-2 rounded-xl text-xs transition-colors"
+              className="flex-1 bg-brand-dusk hover:bg-slate-700 text-slate-300 font-bold py-2 rounded-xl text-xs transition-colors"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={pending}
-              className="flex-1 bg-sky-500 hover:bg-sky-400 disabled:opacity-50 text-slate-950 font-bold py-2 rounded-xl text-xs transition-colors"
+              className="flex-1 bg-brand-caribbeanSea hover:bg-brand-caribbeanSea disabled:opacity-50 text-slate-950 font-bold py-2 rounded-xl text-xs transition-colors"
             >
               {pending ? 'Creating…' : 'Create Community'}
             </button>

@@ -36,11 +36,11 @@ export default function AdminFlagToggle({ flagKey, enabled: initialEnabled, desc
   };
 
   return (
-    <div className="bg-slate-900/70 border border-slate-800 hover:border-slate-700 rounded-2xl px-5 py-3 flex items-center justify-between gap-4 transition-colors">
+    <div className="bg-brand-dusk/70 border border-slate-800 hover:border-slate-700 rounded-2xl px-5 py-3 flex items-center justify-between gap-4 transition-colors">
       <div className="flex-1 min-w-0">
         <code className="text-sm text-slate-200">{flagKey}</code>
         {description && (
-          <p className="text-[11px] text-slate-500 mt-0.5 truncate">{description}</p>
+          <p className="text-[11px] text-brand-sandstone/40 mt-0.5 truncate">{description}</p>
         )}
         {error && <p className="text-[11px] text-rose-400 mt-0.5">{error}</p>}
       </div>
@@ -50,7 +50,7 @@ export default function AdminFlagToggle({ flagKey, enabled: initialEnabled, desc
         aria-pressed={enabled}
         aria-label={`Toggle ${flagKey}`}
         className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none disabled:opacity-50 flex-shrink-0 ${
-          enabled ? 'bg-emerald-500' : 'bg-slate-700'
+          enabled ? 'bg-brand-sunriseCoral' : 'bg-slate-700'
         }`}
       >
         <span

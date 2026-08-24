@@ -29,7 +29,7 @@ export default function EventCreateForm({ cities }: { cities: CityOption[] }) {
     return (
       <button
         onClick={() => setOpen(true)}
-        className="bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold px-4 py-2 rounded-xl text-xs transition-colors"
+        className="bg-brand-caribbeanSea hover:bg-brand-caribbeanSea text-slate-950 font-bold px-4 py-2 rounded-xl text-xs transition-colors"
       >
         Host an Event
       </button>
@@ -37,18 +37,18 @@ export default function EventCreateForm({ cities }: { cities: CityOption[] }) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 space-y-3">
-      <h3 className="text-sm font-bold text-white">Host a Caribbean Event</h3>
+    <form onSubmit={handleSubmit} className="bg-brand-dusk/80 border border-slate-800 rounded-2xl p-5 space-y-3">
+      <h3 className="text-sm font-bold text-brand-sandstone">Host a Caribbean Event</h3>
       <input
         name="title"
         required
         placeholder="Event title (e.g. Soca Night Brooklyn)"
-        className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-sky-500 transition-colors"
+        className="w-full bg-brand-twilight border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-brand-sandstone placeholder-brand-sandstone/40 focus:outline-none focus:border-brand-caribbeanSea transition-colors"
       />
       <div className="grid grid-cols-2 gap-3">
         <select
           name="eventKind"
-          className="bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-sm text-slate-200 focus:outline-none focus:border-sky-500"
+          className="bg-brand-twilight border border-slate-800 rounded-xl px-3 py-2.5 text-sm text-slate-200 focus:outline-none focus:border-brand-caribbeanSea"
         >
           <option value="in_person">In person</option>
           <option value="livestream">Livestream</option>
@@ -56,7 +56,7 @@ export default function EventCreateForm({ cities }: { cities: CityOption[] }) {
         </select>
         <select
           name="cityId"
-          className="bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-sm text-slate-200 focus:outline-none focus:border-sky-500"
+          className="bg-brand-twilight border border-slate-800 rounded-xl px-3 py-2.5 text-sm text-slate-200 focus:outline-none focus:border-brand-caribbeanSea"
         >
           <option value="">Select a city…</option>
           {cities.map((city) => (
@@ -71,20 +71,20 @@ export default function EventCreateForm({ cities }: { cities: CityOption[] }) {
           name="startsAt"
           type="datetime-local"
           required
-          className="bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-sm text-slate-200 focus:outline-none focus:border-sky-500"
+          className="bg-brand-twilight border border-slate-800 rounded-xl px-3 py-2.5 text-sm text-slate-200 focus:outline-none focus:border-brand-caribbeanSea"
         />
         <input
           name="capacity"
           type="number"
           min="1"
           placeholder="Capacity (optional)"
-          className="bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-sky-500"
+          className="bg-brand-twilight border border-slate-800 rounded-xl px-3 py-2.5 text-sm text-brand-sandstone placeholder-brand-sandstone/40 focus:outline-none focus:border-brand-caribbeanSea"
         />
       </div>
       <input
         name="venue"
         placeholder="Venue (optional)"
-        className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-sky-500 transition-colors"
+        className="w-full bg-brand-twilight border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-brand-sandstone placeholder-brand-sandstone/40 focus:outline-none focus:border-brand-caribbeanSea transition-colors"
       />
       {state.error && (
         <p role="alert" className="text-xs text-rose-400 bg-rose-500/10 border border-rose-500/30 rounded-xl px-3 py-2">{state.error}</p>
@@ -93,14 +93,14 @@ export default function EventCreateForm({ cities }: { cities: CityOption[] }) {
         <button
           type="button"
           onClick={() => setOpen(false)}
-          className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-400 hover:text-white transition-colors"
+          className="px-4 py-2 rounded-xl text-xs font-semibold text-brand-sandstone/60 hover:text-brand-sandstone transition-colors"
         >
           Cancel
         </button>
         <button
           type="submit"
           disabled={pending}
-          className="bg-sky-500 hover:bg-sky-400 disabled:opacity-60 text-slate-950 font-bold px-4 py-2 rounded-xl text-xs transition-colors"
+          className="bg-brand-caribbeanSea hover:bg-brand-caribbeanSea disabled:opacity-60 text-slate-950 font-bold px-4 py-2 rounded-xl text-xs transition-colors"
         >
           {pending ? 'Publishing…' : 'Publish Event'}
         </button>

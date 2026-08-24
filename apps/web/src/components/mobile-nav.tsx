@@ -48,12 +48,12 @@ export default function MobileNav() {
                   isCreate
                     ? 'text-slate-950'
                     : isActive
-                    ? 'text-sky-400 font-bold'
-                    : 'text-slate-400 hover:text-slate-200'
+                    ? 'text-brand-caribbeanSea font-bold'
+                    : 'text-brand-sandstone/60 hover:text-slate-200'
                 }`}
               >
                 {isCreate ? (
-                  <span className="w-11 h-11 rounded-full bg-gradient-to-tr from-sky-500 to-emerald-500 flex items-center justify-center -mt-5 shadow-lg shadow-sky-500/40 border-2 border-slate-950">
+                  <span className="w-11 h-11 rounded-full bg-gradient-to-tr from-brand-caribbeanSea to-brand-sunriseCoral flex items-center justify-center -mt-5 shadow-lg shadow-brand-caribbeanSea/40 border-2 border-slate-950">
                     <Icon className="w-6 h-6 text-slate-950" />
                   </span>
                 ) : (
@@ -61,7 +61,7 @@ export default function MobileNav() {
                 )}
                 <span
                   className={`text-[10px] font-bold ${
-                    isCreate ? 'text-sky-400 font-black' : ''
+                    isCreate ? 'text-brand-caribbeanSea font-black' : ''
                   }`}
                 >
                   {tab.label}

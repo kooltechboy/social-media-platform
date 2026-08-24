@@ -29,7 +29,7 @@ export default function NotificationMarkRead(props: Props | AllProps) {
     <button
       onClick={handleClick}
       disabled={pending}
-      className="text-[10px] font-semibold text-slate-500 hover:text-sky-400 transition-colors disabled:opacity-50"
+      className="text-[10px] font-semibold text-brand-sandstone/40 hover:text-brand-caribbeanSea transition-colors disabled:opacity-50"
       aria-label={props.mode === 'all' ? 'Mark all as read' : 'Mark as read'}
     >
       {pending ? '…' : props.mode === 'all' ? 'Mark all read' : 'Mark read'}

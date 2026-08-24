@@ -8,9 +8,9 @@ export const dynamic = 'force-dynamic';
 
 const PRIORITY_COLORS: Record<string, { text: string; bg: string }> = {
   critical: { text: 'text-rose-400', bg: 'bg-rose-500/10' },
-  high: { text: 'text-amber-400', bg: 'bg-amber-500/10' },
-  medium: { text: 'text-sky-400', bg: 'bg-sky-500/10' },
-  low: { text: 'text-slate-400', bg: 'bg-slate-700/30' },
+  high: { text: 'text-brand-goldenHour', bg: 'bg-brand-goldenHour/10' },
+  medium: { text: 'text-brand-caribbeanSea', bg: 'bg-brand-caribbeanSea/10' },
+  low: { text: 'text-brand-sandstone/60', bg: 'bg-slate-700/30' },
 };
 
 interface AppealCase {
@@ -58,36 +58,36 @@ export default async function AppealsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#090D16] text-slate-100 flex">
+    <div className="min-h-screen bg-[#090D16] text-brand-sandstone flex">
       {/* Sidebar */}
       <aside className="hidden lg:flex flex-col w-56 bg-[#0F172A] border-r border-slate-800 p-4 space-y-1 sticky top-0 min-h-screen">
         <div className="px-2 py-4 mb-2">
-          <h1 className="text-sm font-extrabold text-white">ANTILIA</h1>
+          <h1 className="text-sm font-extrabold text-brand-sandstone">ANTILIA</h1>
           <p className="text-[11px] text-amber-300 font-semibold mt-0.5">Moderation Center</p>
         </div>
         <Link
           href="/"
-          className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:bg-slate-800/60 hover:text-white transition-colors"
+          className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-brand-sandstone/60 hover:bg-brand-dusk/60 hover:text-brand-sandstone transition-colors"
         >
           <ShieldAlert className="w-4 h-4 flex-shrink-0" />
           Queue
         </Link>
         <Link
           href="/cases"
-          className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:bg-slate-800/60 hover:text-white transition-colors"
+          className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-brand-sandstone/60 hover:bg-brand-dusk/60 hover:text-brand-sandstone transition-colors"
         >
           <Flag className="w-4 h-4 flex-shrink-0" />
           All Cases
         </Link>
         <Link
           href="/analytics"
-          className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:bg-slate-800/60 hover:text-white transition-colors"
+          className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-brand-sandstone/60 hover:bg-brand-dusk/60 hover:text-brand-sandstone transition-colors"
         >
           <BarChart3 className="w-4 h-4 flex-shrink-0" />
           Analytics
         </Link>
         <span
-          className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium bg-slate-800/60 text-white"
+          className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium bg-brand-dusk/60 text-brand-sandstone"
           aria-current="page"
         >
           <Eye className="w-4 h-4 flex-shrink-0" />
@@ -95,17 +95,17 @@ export default async function AppealsPage() {
         </span>
         <div className="mt-auto pt-4 border-t border-slate-800">
           <p className="text-[10px] text-slate-600 px-2">Moderator</p>
-          <p className="text-[11px] text-slate-400 px-2 truncate">{moderator.displayName}</p>
+          <p className="text-[11px] text-brand-sandstone/60 px-2 truncate">{moderator.displayName}</p>
         </div>
       </aside>
 
       <div className="flex-1 flex flex-col">
         <header className="sticky top-0 z-40 bg-[#0F172A]/95 backdrop-blur border-b border-slate-800 px-6 py-3 flex items-center justify-between">
-          <h2 className="text-base font-bold text-white flex items-center gap-2">
+          <h2 className="text-base font-bold text-brand-sandstone flex items-center gap-2">
             <Eye className="w-5 h-5 text-violet-400" aria-hidden="true" />
             Appeals
           </h2>
-          <span className="text-[11px] text-slate-400">
+          <span className="text-[11px] text-brand-sandstone/60">
             {appeals.length} pending
           </span>
         </header>
@@ -120,7 +120,7 @@ export default async function AppealsPage() {
           {!error && appeals.length === 0 ? (
             <div className="py-20 text-center">
               <Inbox className="w-12 h-12 text-slate-700 mx-auto mb-4" aria-hidden="true" />
-              <p className="text-sm font-semibold text-slate-500">No appeals pending review.</p>
+              <p className="text-sm font-semibold text-brand-sandstone/40">No appeals pending review.</p>
               <p className="text-xs text-slate-600 mt-1">
                 Appealed cases will appear here when users contest moderation decisions.
               </p>
@@ -132,18 +132,18 @@ export default async function AppealsPage() {
                 return (
                   <article
                     key={appeal.id}
-                    className="bg-slate-900/70 border border-slate-800 rounded-2xl p-5 space-y-4"
+                    className="bg-brand-dusk/70 border border-slate-800 rounded-2xl p-5 space-y-4"
                   >
                     {/* Appeal header */}
                     <div className="flex items-start justify-between gap-4">
                       <div className="space-y-1">
                         <div className="flex items-center gap-3">
-                          <p className="text-xs text-slate-400">Case ID</p>
+                          <p className="text-xs text-brand-sandstone/60">Case ID</p>
                           <code className="text-sm font-mono text-slate-200">
                             {appeal.id.slice(0, 16)}...
                           </code>
                         </div>
-                        <p className="text-xs text-slate-500">
+                        <p className="text-xs text-brand-sandstone/40">
                           Filed {formatDate(appeal.created_at)}
                         </p>
                       </div>
@@ -156,30 +156,30 @@ export default async function AppealsPage() {
 
                     {/* Appeal detail grid */}
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
-                      <div className="bg-slate-950 rounded-xl p-3 border border-slate-800">
-                        <p className="text-slate-400">Content Type</p>
-                        <p className="text-white font-semibold capitalize mt-0.5">
+                      <div className="bg-brand-twilight rounded-xl p-3 border border-slate-800">
+                        <p className="text-brand-sandstone/60">Content Type</p>
+                        <p className="text-brand-sandstone font-semibold capitalize mt-0.5">
                           {appeal.target_type}
                         </p>
                       </div>
-                      <div className="bg-slate-950 rounded-xl p-3 border border-slate-800">
-                        <p className="text-slate-400">Original Decision</p>
+                      <div className="bg-brand-twilight rounded-xl p-3 border border-slate-800">
+                        <p className="text-brand-sandstone/60">Original Decision</p>
                         <p className="text-amber-300 font-semibold uppercase mt-0.5">
                           {appeal.decided_action ?? 'unknown'}
                         </p>
                       </div>
-                      <div className="bg-slate-950 rounded-xl p-3 border border-slate-800">
-                        <p className="text-slate-400">AI Recommendation</p>
+                      <div className="bg-brand-twilight rounded-xl p-3 border border-slate-800">
+                        <p className="text-brand-sandstone/60">AI Recommendation</p>
                         <p
                           className={`font-semibold uppercase mt-0.5 ${
-                            appeal.ai_recommendation ? 'text-sky-300' : 'text-slate-600'
+                            appeal.ai_recommendation ? 'text-brand-caribbeanSea' : 'text-slate-600'
                           }`}
                         >
                           {appeal.ai_recommendation ?? 'none'}
                         </p>
                       </div>
-                      <div className="bg-slate-950 rounded-xl p-3 border border-slate-800">
-                        <p className="text-slate-400">Status</p>
+                      <div className="bg-brand-twilight rounded-xl p-3 border border-slate-800">
+                        <p className="text-brand-sandstone/60">Status</p>
                         <p className="text-violet-400 font-semibold capitalize mt-0.5">
                           {appeal.status}
                         </p>
@@ -188,8 +188,8 @@ export default async function AppealsPage() {
 
                     {/* Decision rationale if available */}
                     {appeal.decision_rationale && (
-                      <div className="bg-slate-950 border border-slate-800 rounded-xl p-4">
-                        <p className="text-[11px] text-slate-400 mb-1 font-semibold">
+                      <div className="bg-brand-twilight border border-slate-800 rounded-xl p-4">
+                        <p className="text-[11px] text-brand-sandstone/60 mb-1 font-semibold">
                           Original Decision Rationale
                         </p>
                         <p className="text-sm text-slate-300 leading-relaxed">
@@ -200,8 +200,8 @@ export default async function AppealsPage() {
 
                     {/* Target reference */}
                     <div className="flex items-center justify-between text-xs pt-1 border-t border-slate-800/60">
-                      <span className="text-slate-500">
-                        Target: <code className="font-mono text-slate-400">{appeal.target_id.slice(0, 12)}...</code>
+                      <span className="text-brand-sandstone/40">
+                        Target: <code className="font-mono text-brand-sandstone/60">{appeal.target_id.slice(0, 12)}...</code>
                       </span>
                       {appeal.updated_at && (
                         <span className="text-slate-600">

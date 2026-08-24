@@ -12,9 +12,9 @@ const INITIAL: ModerationActionState = { error: null, success: null };
 
 const ACTION_STYLES: Record<ModerationAction, string> = {
   remove: 'bg-rose-500 hover:bg-rose-400 text-slate-950',
-  restrict: 'bg-amber-500 hover:bg-amber-400 text-slate-950',
-  allow: 'bg-emerald-500 hover:bg-emerald-400 text-slate-950',
-  escalate: 'bg-slate-800 hover:bg-slate-700 text-slate-200',
+  restrict: 'bg-brand-goldenHour hover:bg-brand-goldenHour text-slate-950',
+  allow: 'bg-brand-sunriseCoral hover:bg-brand-sunriseCoral text-slate-950',
+  escalate: 'bg-brand-dusk hover:bg-slate-700 text-slate-200',
 };
 
 const ACTION_LABELS: Record<ModerationAction, string> = {
@@ -31,7 +31,7 @@ export default function ModerationActionButton({ caseId, action }: Props) {
 
   if (done) {
     return (
-      <span className="text-[11px] text-emerald-400 font-semibold px-3 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
+      <span className="text-[11px] text-brand-sunriseCoral font-semibold px-3 py-1.5 rounded-xl bg-brand-sunriseCoral/10 border border-brand-sunriseCoral/20">
         {ACTION_LABELS[action]} recorded
       </span>
     );

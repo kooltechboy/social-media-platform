@@ -62,15 +62,15 @@ function getPasswordStrength(pwd: string): { score: number; label: string; color
   const map: Record<number, { label: string; color: string }> = {
     0: { label: '', color: '' },
     1: { label: 'Weak', color: 'bg-rose-500' },
-    2: { label: 'Fair', color: 'bg-amber-400' },
-    3: { label: 'Good', color: 'bg-sky-400' },
-    4: { label: 'Strong', color: 'bg-emerald-400' },
+    2: { label: 'Fair', color: 'bg-brand-goldenHour' },
+    3: { label: 'Good', color: 'bg-brand-caribbeanSea' },
+    4: { label: 'Strong', color: 'bg-brand-sunriseCoral' },
   };
   return { score: s, ...map[s] };
 }
 
 const INPUT_BASE =
-  'w-full bg-slate-950 border border-slate-800 rounded-xl py-3 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500/40 transition-all';
+  'w-full bg-brand-twilight border border-slate-800 rounded-xl py-3 text-sm text-brand-sandstone placeholder-brand-sandstone/40 focus:outline-none focus:border-brand-caribbeanSea focus:ring-1 focus:ring-brand-caribbeanSea/40 transition-all';
 
 export default function LoginPage() {
   const [mode, setMode] = useState<'signin' | 'signup'>('signin');
@@ -116,23 +116,23 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#090D16] text-slate-100 flex items-center justify-center p-6">
+    <div className="min-h-screen bg-[#090D16] text-brand-sandstone flex items-center justify-center p-6">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <h1 className="text-2xl font-black bg-gradient-to-r from-sky-400 via-amber-400 to-emerald-400 bg-clip-text text-transparent tracking-tight">
+          <h1 className="text-2xl font-black bg-gradient-to-r from-brand-caribbeanSea via-brand-goldenHour to-brand-sunriseCoral bg-clip-text text-transparent tracking-tight">
             ANTILIA
           </h1>
-          <p className="text-sm text-slate-400 mt-2">
+          <p className="text-sm text-brand-sandstone/60 mt-2">
             The digital home of the Caribbean and its global diaspora.
           </p>
         </div>
 
-        <div className="bg-slate-900/70 border border-slate-800 rounded-2xl p-6 space-y-5 backdrop-blur-xl shadow-2xl">
+        <div className="bg-brand-dusk/70 border border-slate-800 rounded-2xl p-6 space-y-5 backdrop-blur-xl shadow-2xl">
           {/* Mode Tabs */}
           <div
             role="tablist"
             aria-label="Authentication mode"
-            className="grid grid-cols-2 gap-2 bg-slate-950 border border-slate-800 rounded-xl p-1"
+            className="grid grid-cols-2 gap-2 bg-brand-twilight border border-slate-800 rounded-xl p-1"
           >
             {(['signin', 'signup'] as const).map((m) => (
               <button
@@ -142,7 +142,7 @@ export default function LoginPage() {
                 aria-selected={mode === m}
                 onClick={() => switchMode(m)}
                 className={`py-2 rounded-lg text-xs font-bold transition-colors ${
-                  mode === m ? 'bg-sky-500 text-slate-950' : 'text-slate-400 hover:text-white'
+                  mode === m ? 'bg-brand-caribbeanSea text-slate-950' : 'text-brand-sandstone/60 hover:text-brand-sandstone'
                 }`}
               >
                 {m === 'signin' ? 'Sign In' : 'Create Account'}
@@ -156,7 +156,7 @@ export default function LoginPage() {
               <>
                 {/* Full Name */}
                 <div className="relative flex items-center">
-                  <User className="absolute left-3.5 w-4 h-4 text-slate-500 pointer-events-none" />
+                  <User className="absolute left-3.5 w-4 h-4 text-brand-sandstone/40 pointer-events-none" />
                   <input
                     name="displayName"
                     type="text"
@@ -170,7 +170,7 @@ export default function LoginPage() {
                 {/* @Username */}
                 <div className="space-y-1">
                   <div className="relative flex items-center">
-                    <AtSign className="absolute left-3.5 w-4 h-4 text-slate-500 pointer-events-none" />
+                    <AtSign className="absolute left-3.5 w-4 h-4 text-brand-sandstone/40 pointer-events-none" />
                     <input
                       name="username"
                       type="text"
@@ -184,7 +184,7 @@ export default function LoginPage() {
                       className={`${INPUT_BASE} pl-10 pr-10 ${
                         username.length > 0
                           ? usernameValid
-                            ? 'border-emerald-500/60 focus:border-emerald-500'
+                            ? 'border-brand-sunriseCoral/60 focus:border-brand-sunriseCoral'
                             : 'border-rose-500/60 focus:border-rose-500'
                           : ''
                       }`}
@@ -192,7 +192,7 @@ export default function LoginPage() {
                     {username.length > 0 && (
                       <span className="absolute right-3 pointer-events-none">
                         {usernameValid ? (
-                          <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                          <CheckCircle2 className="w-4 h-4 text-brand-sunriseCoral" />
                         ) : (
                           <XCircle className="w-4 h-4 text-rose-400" />
                         )}
@@ -208,12 +208,12 @@ export default function LoginPage() {
 
                 {/* Nationality */}
                 <div className="relative">
-                  <Globe className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none z-10" />
-                  <ChevronDown className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none z-10" />
+                  <Globe className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-sandstone/40 pointer-events-none z-10" />
+                  <ChevronDown className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-sandstone/40 pointer-events-none z-10" />
                   <select
                     name="nationality"
                     defaultValue=""
-                    className="w-full appearance-none bg-slate-950 border border-slate-800 rounded-xl pl-10 pr-9 py-3 text-sm text-slate-100 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500/40 transition-all"
+                    className="w-full appearance-none bg-brand-twilight border border-slate-800 rounded-xl pl-10 pr-9 py-3 text-sm text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea focus:ring-1 focus:ring-brand-caribbeanSea/40 transition-all"
                   >
                     <option value="" disabled>
                       Nationality (optional)
@@ -240,7 +240,7 @@ export default function LoginPage() {
             {/* ── Shared Fields ──────────────────────────────── */}
             {/* Email */}
             <div className="relative flex items-center">
-              <Mail className="absolute left-3.5 w-4 h-4 text-slate-500 pointer-events-none" />
+              <Mail className="absolute left-3.5 w-4 h-4 text-brand-sandstone/40 pointer-events-none" />
               <input
                 name="email"
                 type="email"
@@ -254,7 +254,7 @@ export default function LoginPage() {
             {/* Password */}
             <div className="space-y-1.5">
               <div className="relative flex items-center">
-                <Lock className="absolute left-3.5 w-4 h-4 text-slate-500 pointer-events-none" />
+                <Lock className="absolute left-3.5 w-4 h-4 text-brand-sandstone/40 pointer-events-none" />
                 <input
                   name="password"
                   type={showPassword ? 'text' : 'password'}
@@ -269,7 +269,7 @@ export default function LoginPage() {
                   type="button"
                   onClick={() => setShowPassword((v) => !v)}
                   aria-label={showPassword ? 'Hide password' : 'Show password'}
-                  className="absolute right-3.5 text-slate-500 hover:text-slate-300 transition-colors"
+                  className="absolute right-3.5 text-brand-sandstone/40 hover:text-slate-300 transition-colors"
                 >
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
@@ -283,20 +283,20 @@ export default function LoginPage() {
                       <div
                         key={seg}
                         className={`h-1 flex-1 rounded-full transition-all ${
-                          seg <= strength.score ? strength.color : 'bg-slate-800'
+                          seg <= strength.score ? strength.color : 'bg-brand-dusk'
                         }`}
                       />
                     ))}
                   </div>
                   {strength.label && (
-                    <p className="text-[11px] text-slate-400">
+                    <p className="text-[11px] text-brand-sandstone/60">
                       Strength:{' '}
                       <span
                         className={
                           strength.score >= 3
-                            ? 'text-emerald-400'
+                            ? 'text-brand-sunriseCoral'
                             : strength.score === 2
-                            ? 'text-amber-400'
+                            ? 'text-brand-goldenHour'
                             : 'text-rose-400'
                         }
                       >
@@ -311,7 +311,7 @@ export default function LoginPage() {
             {/* Confirm Password */}
             {mode === 'signup' && (
               <div className="relative flex items-center">
-                <Lock className="absolute left-3.5 w-4 h-4 text-slate-500 pointer-events-none" />
+                <Lock className="absolute left-3.5 w-4 h-4 text-brand-sandstone/40 pointer-events-none" />
                 <input
                   name="confirmPassword"
                   type={showConfirm ? 'text' : 'password'}
@@ -323,7 +323,7 @@ export default function LoginPage() {
                   className={`${INPUT_BASE} pl-10 pr-20 ${
                     confirmPassword.length > 0
                       ? passwordsMatch
-                        ? 'border-emerald-500/60'
+                        ? 'border-brand-sunriseCoral/60'
                         : 'border-rose-500/60'
                       : ''
                   }`}
@@ -331,7 +331,7 @@ export default function LoginPage() {
                 {confirmPassword.length > 0 && (
                   <span className="absolute right-11 pointer-events-none">
                     {passwordsMatch ? (
-                      <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                      <CheckCircle2 className="w-4 h-4 text-brand-sunriseCoral" />
                     ) : (
                       <XCircle className="w-4 h-4 text-rose-400" />
                     )}
@@ -341,7 +341,7 @@ export default function LoginPage() {
                   type="button"
                   onClick={() => setShowConfirm((v) => !v)}
                   aria-label={showConfirm ? 'Hide' : 'Show'}
-                  className="absolute right-3.5 text-slate-500 hover:text-slate-300 transition-colors"
+                  className="absolute right-3.5 text-brand-sandstone/40 hover:text-slate-300 transition-colors"
                 >
                   {showConfirm ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
@@ -355,15 +355,15 @@ export default function LoginPage() {
                   type="checkbox"
                   checked={termsAccepted}
                   onChange={(e) => setTermsAccepted(e.target.checked)}
-                  className="mt-0.5 w-4 h-4 accent-sky-500 flex-shrink-0"
+                  className="mt-0.5 w-4 h-4 accent-brand-caribbeanSea flex-shrink-0"
                 />
-                <span className="text-[11px] text-slate-400 leading-relaxed group-hover:text-slate-300 transition-colors">
+                <span className="text-[11px] text-brand-sandstone/60 leading-relaxed group-hover:text-slate-300 transition-colors">
                   I agree to the{' '}
-                  <a href="/terms" className="text-sky-400 hover:text-sky-300 underline underline-offset-2">
+                  <a href="/terms" className="text-brand-caribbeanSea hover:text-brand-caribbeanSea underline underline-offset-2">
                     Terms of Service
                   </a>{' '}
                   and{' '}
-                  <a href="/privacy" className="text-sky-400 hover:text-sky-300 underline underline-offset-2">
+                  <a href="/privacy" className="text-brand-caribbeanSea hover:text-brand-caribbeanSea underline underline-offset-2">
                     Privacy Policy
                   </a>
                   . Caribbean identity is optional and private by default.
@@ -376,7 +376,7 @@ export default function LoginPage() {
               <div className="text-right">
                 <a
                   href="/auth/forgot-password"
-                  className="text-[11px] text-slate-500 hover:text-sky-400 transition-colors"
+                  className="text-[11px] text-brand-sandstone/40 hover:text-brand-caribbeanSea transition-colors"
                 >
                   Forgot password?
                 </a>
@@ -396,7 +396,7 @@ export default function LoginPage() {
             {state.info && (
               <p
                 role="status"
-                className="text-xs text-emerald-300 bg-emerald-500/10 border border-emerald-500/30 rounded-xl px-3 py-2.5 flex items-center gap-2"
+                className="text-xs text-emerald-300 bg-brand-sunriseCoral/10 border border-brand-sunriseCoral/30 rounded-xl px-3 py-2.5 flex items-center gap-2"
               >
                 <CheckCircle2 className="w-3.5 h-3.5 flex-shrink-0" />
                 {state.info}
@@ -407,7 +407,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={pending || (mode === 'signup' && (!passwordsMatch || !usernameValid))}
-              className="w-full bg-sky-500 hover:bg-sky-400 disabled:opacity-50 disabled:cursor-not-allowed text-slate-950 font-black py-3 rounded-xl text-sm transition-all shadow-lg shadow-sky-500/20 flex items-center justify-center gap-2"
+              className="w-full bg-brand-caribbeanSea hover:bg-brand-caribbeanSea disabled:opacity-50 disabled:cursor-not-allowed text-slate-950 font-black py-3 rounded-xl text-sm transition-all shadow-lg shadow-brand-caribbeanSea/20 flex items-center justify-center gap-2"
             >
               {pending ? (
                 <>
@@ -429,7 +429,7 @@ export default function LoginPage() {
             </button>
           </form>
 
-          <p className="text-[11px] text-slate-500 text-center pt-1">
+          <p className="text-[11px] text-brand-sandstone/40 text-center pt-1">
             Caribbean identity is optional and private by default. You control what is visible.
           </p>
         </div>

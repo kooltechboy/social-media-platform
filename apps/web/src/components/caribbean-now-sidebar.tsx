@@ -28,11 +28,11 @@ export default function CaribbeanNowSidebar() {
       <OnlineFriendsWidget />
 
       {/* Caribbean Now Live Ticker */}
-      <div className="bg-slate-950/85 backdrop-blur-2xl border border-slate-800/80 rounded-3xl p-5 shadow-2xl space-y-4">
+      <div className="bg-brand-twilight/85 backdrop-blur-2xl border border-slate-800/80 rounded-3xl p-5 shadow-2xl space-y-4">
         <div className="flex items-center justify-between">
-          <h3 className="font-extrabold text-sm text-white flex items-center gap-2">
+          <h3 className="font-extrabold text-sm text-brand-sandstone flex items-center gap-2">
             <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-ping" />
-            <span className="bg-gradient-to-r from-red-400 via-amber-300 to-sky-400 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-red-400 via-amber-300 to-brand-caribbeanSea bg-clip-text text-transparent">
               CARIBBEAN NOW
             </span>
           </h3>
@@ -46,48 +46,48 @@ export default function CaribbeanNowSidebar() {
             <Link
               key={pulse.city}
               href={`/explore?q=${encodeURIComponent(pulse.city)}`}
-              className="flex items-center justify-between p-2.5 rounded-2xl bg-slate-900/60 hover:bg-slate-800/80 border border-slate-800/60 hover:border-sky-500/40 transition-all group"
+              className="flex items-center justify-between p-2.5 rounded-2xl bg-brand-dusk/60 hover:bg-brand-dusk/80 border border-slate-800/60 hover:border-brand-caribbeanSea/40 transition-all group"
             >
               <div className="flex items-center gap-2.5">
                 <span className="text-xl">{pulse.flag}</span>
                 <div>
                   <div className="flex items-center gap-1.5">
-                    <h4 className="font-extrabold text-xs text-slate-200 group-hover:text-sky-400 transition-colors">
+                    <h4 className="font-extrabold text-xs text-slate-200 group-hover:text-brand-caribbeanSea transition-colors">
                       {pulse.city}
                     </h4>
-                    <span className="text-[10px] text-slate-500">• {pulse.country}</span>
+                    <span className="text-[10px] text-brand-sandstone/40">• {pulse.country}</span>
                   </div>
-                  <p className="text-[11px] text-slate-400 font-medium">{pulse.status}</p>
+                  <p className="text-[11px] text-brand-sandstone/60 font-medium">{pulse.status}</p>
                 </div>
               </div>
-              <ArrowUpRight className="w-3.5 h-3.5 text-slate-500 group-hover:text-sky-400 transition-colors" />
+              <ArrowUpRight className="w-3.5 h-3.5 text-brand-sandstone/40 group-hover:text-brand-caribbeanSea transition-colors" />
             </Link>
           ))}
         </div>
       </div>
 
       {/* SpotPay Instant Wallet Quick Card */}
-      <div className="bg-gradient-to-br from-slate-950/90 via-slate-900/90 to-emerald-950/40 backdrop-blur-2xl border border-emerald-500/30 rounded-3xl p-5 space-y-3 shadow-2xl">
+      <div className="bg-gradient-to-br from-slate-950/90 via-slate-900/90 to-emerald-950/40 backdrop-blur-2xl border border-brand-sunriseCoral/30 rounded-3xl p-5 space-y-3 shadow-2xl">
         <div className="flex items-center justify-between">
-          <span className="text-[10px] font-black text-emerald-400 uppercase tracking-wider flex items-center gap-1.5">
+          <span className="text-[10px] font-black text-brand-sunriseCoral uppercase tracking-wider flex items-center gap-1.5">
             <Wallet className="w-3.5 h-3.5" /> SpotPay Ledger
           </span>
-          <span className="text-[10px] font-bold text-slate-400">FDIC Partnered</span>
+          <span className="text-[10px] font-bold text-brand-sandstone/60">FDIC Partnered</span>
         </div>
         <div>
-          <p className="text-xs text-slate-400">Personal Balance</p>
-          <p className="text-2xl font-black text-white">$240.50 <span className="text-xs font-normal text-slate-400">USD</span></p>
+          <p className="text-xs text-brand-sandstone/60">Personal Balance</p>
+          <p className="text-2xl font-black text-brand-sandstone">$240.50 <span className="text-xs font-normal text-brand-sandstone/60">USD</span></p>
         </div>
         <div className="grid grid-cols-2 gap-2 pt-1">
           <Link
             href="/spotpay"
-            className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold py-2 px-3 rounded-xl text-xs text-center transition-colors shadow-sm shadow-emerald-500/20"
+            className="bg-brand-sunriseCoral hover:bg-brand-sunriseCoral text-slate-950 font-extrabold py-2 px-3 rounded-xl text-xs text-center transition-colors shadow-sm shadow-brand-sunriseCoral/20"
           >
             Send Money
           </Link>
           <Link
             href="/spotpay"
-            className="bg-transparent hover:bg-slate-800 text-slate-300 font-bold py-2 px-3 rounded-xl text-xs text-center border border-slate-600 transition-colors"
+            className="bg-transparent hover:bg-brand-dusk text-slate-300 font-bold py-2 px-3 rounded-xl text-xs text-center border border-slate-600 transition-colors"
           >
             Add Funds
           </Link>
@@ -95,12 +95,12 @@ export default function CaribbeanNowSidebar() {
       </div>
 
       {/* Upcoming Cultural Fetes & Events */}
-      <div className="bg-slate-950/85 backdrop-blur-2xl border border-slate-800/80 rounded-3xl p-5 shadow-2xl space-y-3">
+      <div className="bg-brand-twilight/85 backdrop-blur-2xl border border-slate-800/80 rounded-3xl p-5 shadow-2xl space-y-3">
         <div className="flex items-center justify-between">
-          <h3 className="font-extrabold text-sm text-white flex items-center gap-2">
-            <Calendar className="w-4 h-4 text-amber-400" /> Featured Cultural Fetes
+          <h3 className="font-extrabold text-sm text-brand-sandstone flex items-center gap-2">
+            <Calendar className="w-4 h-4 text-brand-goldenHour" /> Featured Cultural Fetes
           </h3>
-          <Link href="/events" className="text-[11px] font-bold text-sky-400 hover:underline">
+          <Link href="/events" className="text-[11px] font-bold text-brand-caribbeanSea hover:underline">
             View all
           </Link>
         </div>
@@ -111,11 +111,11 @@ export default function CaribbeanNowSidebar() {
             { title: 'Caribana Toronto Grand Parade', date: 'Aug 1 • Lakeshore Toronto', tickets: 'Free RSVP' },
             { title: 'Dominican Food & Merengue Festival', date: 'Sunday • Washington Heights, NY', tickets: 'SpotPay $15' },
           ].map((event, idx) => (
-            <div key={idx} className="p-3 rounded-2xl bg-slate-900/60 border border-slate-800/60 space-y-1">
+            <div key={idx} className="p-3 rounded-2xl bg-brand-dusk/60 border border-slate-800/60 space-y-1">
               <h4 className="font-bold text-xs text-slate-200 leading-snug">{event.title}</h4>
               <div className="flex items-center justify-between text-[11px]">
-                <span className="text-slate-400">{event.date}</span>
-                <span className="font-extrabold text-amber-400">{event.tickets}</span>
+                <span className="text-brand-sandstone/60">{event.date}</span>
+                <span className="font-extrabold text-brand-goldenHour">{event.tickets}</span>
               </div>
             </div>
           ))}

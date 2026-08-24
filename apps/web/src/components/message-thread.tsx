@@ -145,20 +145,20 @@ export default function MessageThread({
   }
 
   return (
-    <section className="md:col-span-2 bg-slate-900/80 backdrop-blur-xl border border-sky-500/20 rounded-3xl flex flex-col min-h-[75vh] shadow-2xl relative overflow-hidden">
+    <section className="md:col-span-2 bg-brand-dusk/80 backdrop-blur-xl border border-brand-caribbeanSea/20 rounded-3xl flex flex-col min-h-[75vh] shadow-2xl relative overflow-hidden">
       {/* Conversation Active Header */}
-      <div className="p-4 border-b border-slate-800/80 flex items-center justify-between bg-slate-950/60">
+      <div className="p-4 border-b border-slate-800/80 flex items-center justify-between bg-brand-twilight/60">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-sky-500 to-emerald-500 text-slate-950 font-black flex items-center justify-center text-xs shadow-md">
+          <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-brand-caribbeanSea to-brand-sunriseCoral text-slate-950 font-black flex items-center justify-center text-xs shadow-md">
             {peerName.slice(0, 2).toUpperCase()}
           </div>
           <div>
-            <h3 className="font-black text-sm text-white flex items-center gap-1.5">
+            <h3 className="font-black text-sm text-brand-sandstone flex items-center gap-1.5">
               {peerName}
-              <CheckCircle className="w-3.5 h-3.5 text-sky-400" />
+              <CheckCircle className="w-3.5 h-3.5 text-brand-caribbeanSea" />
             </h3>
-            <span className="text-[10px] text-emerald-400 font-extrabold flex items-center gap-1">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" /> Active on Antilia
+            <span className="text-[10px] text-brand-sunriseCoral font-extrabold flex items-center gap-1">
+              <span className="w-2 h-2 rounded-full bg-brand-sunriseCoral animate-pulse" /> Active on Antilia
             </span>
           </div>
         </div>
@@ -168,7 +168,7 @@ export default function MessageThread({
           <button
             type="button"
             onClick={() => setIsVoiceCallActive(true)}
-            className="p-2.5 rounded-2xl bg-slate-800/80 hover:bg-emerald-500/20 text-slate-300 hover:text-emerald-400 border border-slate-700 hover:border-emerald-500/40 transition-all shadow-md"
+            className="p-2.5 rounded-2xl bg-brand-dusk/80 hover:bg-brand-sunriseCoral/20 text-slate-300 hover:text-brand-sunriseCoral border border-slate-700 hover:border-brand-sunriseCoral/40 transition-all shadow-md"
             title="Start Voice Call"
           >
             <Phone className="w-4 h-4" />
@@ -176,7 +176,7 @@ export default function MessageThread({
           <button
             type="button"
             onClick={() => setIsVideoCallActive(true)}
-            className="p-2.5 rounded-2xl bg-slate-800/80 hover:bg-sky-500/20 text-slate-300 hover:text-sky-400 border border-slate-700 hover:border-sky-500/40 transition-all shadow-md"
+            className="p-2.5 rounded-2xl bg-brand-dusk/80 hover:bg-brand-caribbeanSea/20 text-slate-300 hover:text-brand-caribbeanSea border border-slate-700 hover:border-brand-caribbeanSea/40 transition-all shadow-md"
             title="Start Video Call"
           >
             <Video className="w-4 h-4" />
@@ -188,9 +188,9 @@ export default function MessageThread({
       <div ref={scrollRef} className="flex-1 p-5 space-y-3.5 overflow-y-auto">
         {messages.length === 0 && (
           <div className="text-center py-12 space-y-2">
-            <Sparkles className="w-8 h-8 text-sky-400 mx-auto" />
-            <p className="text-xs text-slate-400 font-bold">Encrypted Caribbean Direct Message</p>
-            <p className="text-[11px] text-slate-500">Say hello or initiate a voice/video call with {peerName}.</p>
+            <Sparkles className="w-8 h-8 text-brand-caribbeanSea mx-auto" />
+            <p className="text-xs text-brand-sandstone/60 font-bold">Encrypted Caribbean Direct Message</p>
+            <p className="text-[11px] text-brand-sandstone/40">Say hello or initiate a voice/video call with {peerName}.</p>
           </div>
         )}
         {messages.map((message) => {
@@ -200,17 +200,17 @@ export default function MessageThread({
               key={message.id}
               className={`max-w-[80%] rounded-2xl p-3.5 shadow-md ${
                 own
-                  ? 'ml-auto bg-gradient-to-r from-sky-600 via-sky-500 to-emerald-600 text-white rounded-br-none'
-                  : 'bg-slate-800/90 text-slate-100 border border-slate-700/80 rounded-bl-none'
+                  ? 'ml-auto bg-gradient-to-r from-sky-600 via-brand-caribbeanSea to-emerald-600 text-brand-sandstone rounded-br-none'
+                  : 'bg-brand-dusk/90 text-brand-sandstone border border-slate-700/80 rounded-bl-none'
               }`}
             >
               {!own && (
-                <p className="text-[10px] font-black text-sky-300 mb-1">
+                <p className="text-[10px] font-black text-brand-caribbeanSea mb-1">
                   {message.profiles?.display_name ?? peerName}
                 </p>
               )}
               <p className="text-xs leading-relaxed font-medium whitespace-pre-wrap">{message.body}</p>
-              <span className={`text-[9px] block mt-1.5 ${own ? 'text-sky-100 text-right' : 'text-slate-400'}`}>
+              <span className={`text-[9px] block mt-1.5 ${own ? 'text-sky-100 text-right' : 'text-brand-sandstone/60'}`}>
                 {new Date(message.created_at).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
               </span>
             </div>
@@ -235,14 +235,14 @@ export default function MessageThread({
             <button
               type="button"
               onClick={() => setIsRecordingAudio(false)}
-              className="text-xs text-slate-400 hover:text-white px-2 py-1"
+              className="text-xs text-brand-sandstone/60 hover:text-brand-sandstone px-2 py-1"
             >
               Cancel
             </button>
             <button
               type="button"
               onClick={handleSendVoiceNote}
-              className="bg-rose-500 hover:bg-rose-400 text-white font-black px-3 py-1 rounded-xl text-xs"
+              className="bg-rose-500 hover:bg-rose-400 text-brand-sandstone font-black px-3 py-1 rounded-xl text-xs"
             >
               Send Voice Note
             </button>
@@ -251,14 +251,14 @@ export default function MessageThread({
       )}
 
       {/* Message Input Toolbar */}
-      <form onSubmit={handleSubmit} className="p-4 border-t border-slate-800/80 bg-slate-950/60 flex items-center gap-2">
+      <form onSubmit={handleSubmit} className="p-4 border-t border-slate-800/80 bg-brand-twilight/60 flex items-center gap-2">
         <input type="hidden" name="conversationId" value={conversationId} />
 
         <button
           type="button"
           onClick={() => setIsRecordingAudio(!isRecordingAudio)}
           className={`p-2.5 rounded-full transition-all ${
-            isRecordingAudio ? 'bg-rose-500 text-white animate-pulse' : 'text-slate-400 hover:text-white hover:bg-slate-800'
+            isRecordingAudio ? 'bg-rose-500 text-brand-sandstone animate-pulse' : 'text-brand-sandstone/60 hover:text-brand-sandstone hover:bg-brand-dusk'
           }`}
           title="Record Audio Voice Note"
         >
@@ -275,7 +275,7 @@ export default function MessageThread({
             input.accept = 'image/*,video/*,.pdf,.doc,.docx';
             input.click();
           }}
-          className="p-2.5 rounded-full text-slate-400 hover:text-white hover:bg-slate-800 transition-all"
+          className="p-2.5 rounded-full text-brand-sandstone/60 hover:text-brand-sandstone hover:bg-brand-dusk transition-all"
           title="Attach Media or File"
         >
           <Paperclip className="w-4 h-4" />
@@ -286,14 +286,14 @@ export default function MessageThread({
           type="text"
           required={!isRecordingAudio}
           placeholder={`Message ${peerName}...`}
-          className="flex-1 bg-slate-900 border border-slate-800/90 rounded-2xl px-4 py-2.5 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-sky-500 transition-colors"
+          className="flex-1 bg-brand-dusk border border-slate-800/90 rounded-2xl px-4 py-2.5 text-xs text-brand-sandstone placeholder-brand-sandstone/40 focus:outline-none focus:border-brand-caribbeanSea transition-colors"
         />
 
         <button
           type="submit"
           aria-label="Send message"
           disabled={pending}
-          className="w-10 h-10 rounded-2xl bg-gradient-to-r from-sky-400 to-emerald-400 hover:from-sky-300 hover:to-emerald-300 disabled:opacity-60 text-slate-950 flex items-center justify-center shadow-md transition-all flex-shrink-0"
+          className="w-10 h-10 rounded-2xl bg-gradient-to-r from-brand-caribbeanSea to-brand-sunriseCoral hover:from-brand-caribbeanSea hover:to-emerald-300 disabled:opacity-60 text-slate-950 flex items-center justify-center shadow-md transition-all flex-shrink-0"
         >
           <Send className="w-4 h-4" />
         </button>
@@ -303,19 +303,19 @@ export default function MessageThread({
       {/* VOICE CALL OVERLAY MODAL                                   */}
       {/* ────────────────────────────────────────────────────────── */}
       {isVoiceCallActive && (
-        <div className="absolute inset-0 z-50 bg-slate-950/95 backdrop-blur-2xl flex flex-col items-center justify-between p-8 text-center animate-fadeIn">
+        <div className="absolute inset-0 z-50 bg-brand-twilight/95 backdrop-blur-2xl flex flex-col items-center justify-between p-8 text-center animate-fadeIn">
           <div className="space-y-2 pt-6">
-            <span className="text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+            <span className="text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full bg-brand-sunriseCoral/20 text-emerald-300 border border-brand-sunriseCoral/30">
               WebRTC Voice Call • Encrypted
             </span>
-            <h3 className="text-xl font-black text-white">{peerName}</h3>
-            <p className="text-xs text-slate-400 font-mono">{formatTime(callDuration)}</p>
+            <h3 className="text-xl font-black text-brand-sandstone">{peerName}</h3>
+            <p className="text-xs text-brand-sandstone/60 font-mono">{formatTime(callDuration)}</p>
           </div>
 
           {/* Animated Voice Equalizer */}
-          <div className="w-32 h-32 rounded-full bg-gradient-to-tr from-sky-500 via-emerald-500 to-amber-500 p-1 shadow-2xl flex items-center justify-center animate-pulse-glow">
-            <div className="w-full h-full rounded-full bg-slate-950 flex items-center justify-center">
-              <Volume2 className="w-12 h-12 text-emerald-400 animate-bounce" />
+          <div className="w-32 h-32 rounded-full bg-gradient-to-tr from-brand-caribbeanSea via-brand-sunriseCoral to-brand-goldenHour p-1 shadow-2xl flex items-center justify-center animate-pulse-glow">
+            <div className="w-full h-full rounded-full bg-brand-twilight flex items-center justify-center">
+              <Volume2 className="w-12 h-12 text-brand-sunriseCoral animate-bounce" />
             </div>
           </div>
 
@@ -325,7 +325,7 @@ export default function MessageThread({
               type="button"
               onClick={() => setIsMuted(!isMuted)}
               className={`p-4 rounded-full transition-all shadow-lg ${
-                isMuted ? 'bg-rose-500 text-white' : 'bg-slate-800 text-slate-200 hover:bg-slate-700'
+                isMuted ? 'bg-rose-500 text-brand-sandstone' : 'bg-brand-dusk text-slate-200 hover:bg-slate-700'
               }`}
             >
               {isMuted ? <MicOff className="w-6 h-6" /> : <Mic className="w-6 h-6" />}
@@ -334,7 +334,7 @@ export default function MessageThread({
             <button
               type="button"
               onClick={() => setIsVoiceCallActive(false)}
-              className="p-5 rounded-full bg-rose-600 hover:bg-rose-500 text-white shadow-xl shadow-rose-600/30 transition-all hover:scale-105"
+              className="p-5 rounded-full bg-rose-600 hover:bg-rose-500 text-brand-sandstone shadow-xl shadow-rose-600/30 transition-all hover:scale-105"
               title="End Voice Call"
             >
               <PhoneOff className="w-7 h-7" />
@@ -347,26 +347,26 @@ export default function MessageThread({
       {/* VIDEO CALL OVERLAY MODAL                                   */}
       {/* ────────────────────────────────────────────────────────── */}
       {isVideoCallActive && (
-        <div className="absolute inset-0 z-50 bg-slate-950 flex flex-col justify-between p-4 animate-fadeIn">
+        <div className="absolute inset-0 z-50 bg-brand-twilight flex flex-col justify-between p-4 animate-fadeIn">
           {/* Main Remote Video Stream Canvas */}
-          <div className="relative flex-1 bg-slate-900 rounded-3xl overflow-hidden border border-slate-800 shadow-2xl flex items-center justify-center">
+          <div className="relative flex-1 bg-brand-dusk rounded-3xl overflow-hidden border border-slate-800 shadow-2xl flex items-center justify-center">
             {isVideoOff ? (
               <div className="text-center space-y-2">
                 <VideoOff className="w-12 h-12 text-slate-600 mx-auto" />
-                <p className="text-xs text-slate-400">{peerName}&apos;s camera is off</p>
+                <p className="text-xs text-brand-sandstone/60">{peerName}&apos;s camera is off</p>
               </div>
             ) : (
               <div className="w-full h-full bg-gradient-to-tr from-slate-950 via-slate-900 to-sky-950 flex flex-col items-center justify-center space-y-3 relative">
-                <span className="text-xs font-black text-sky-400 bg-slate-950/80 px-3 py-1 rounded-full border border-sky-500/30 backdrop-blur-md">
+                <span className="text-xs font-black text-brand-caribbeanSea bg-brand-twilight/80 px-3 py-1 rounded-full border border-brand-caribbeanSea/30 backdrop-blur-md">
                   HD WebRTC Video • {formatTime(callDuration)}
                 </span>
-                <h4 className="text-lg font-black text-white">{peerName}</h4>
+                <h4 className="text-lg font-black text-brand-sandstone">{peerName}</h4>
               </div>
             )}
 
             {/* Self PIP View */}
-            <div className="absolute bottom-4 right-4 w-32 h-44 bg-slate-950 rounded-2xl border border-sky-500/40 shadow-2xl overflow-hidden flex flex-col items-center justify-center text-center p-2">
-              <span className="text-[9px] font-bold text-slate-400">Your Camera</span>
+            <div className="absolute bottom-4 right-4 w-32 h-44 bg-brand-twilight rounded-2xl border border-brand-caribbeanSea/40 shadow-2xl overflow-hidden flex flex-col items-center justify-center text-center p-2">
+              <span className="text-[9px] font-bold text-brand-sandstone/60">Your Camera</span>
             </div>
           </div>
 
@@ -376,7 +376,7 @@ export default function MessageThread({
               type="button"
               onClick={() => setIsMuted(!isMuted)}
               className={`p-3.5 rounded-2xl transition-all shadow-md ${
-                isMuted ? 'bg-rose-500 text-white' : 'bg-slate-800 text-slate-200 hover:bg-slate-700'
+                isMuted ? 'bg-rose-500 text-brand-sandstone' : 'bg-brand-dusk text-slate-200 hover:bg-slate-700'
               }`}
             >
               {isMuted ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
@@ -386,7 +386,7 @@ export default function MessageThread({
               type="button"
               onClick={() => setIsVideoOff(!isVideoOff)}
               className={`p-3.5 rounded-2xl transition-all shadow-md ${
-                isVideoOff ? 'bg-rose-500 text-white' : 'bg-slate-800 text-slate-200 hover:bg-slate-700'
+                isVideoOff ? 'bg-rose-500 text-brand-sandstone' : 'bg-brand-dusk text-slate-200 hover:bg-slate-700'
               }`}
             >
               {isVideoOff ? <VideoOff className="w-5 h-5" /> : <Video className="w-5 h-5" />}
@@ -396,7 +396,7 @@ export default function MessageThread({
               type="button"
               onClick={() => setIsScreenSharing(!isScreenSharing)}
               className={`p-3.5 rounded-2xl transition-all shadow-md ${
-                isScreenSharing ? 'bg-sky-500 text-slate-950 font-bold' : 'bg-slate-800 text-slate-200 hover:bg-slate-700'
+                isScreenSharing ? 'bg-brand-caribbeanSea text-slate-950 font-bold' : 'bg-brand-dusk text-slate-200 hover:bg-slate-700'
               }`}
               title="Share Screen"
             >
@@ -406,7 +406,7 @@ export default function MessageThread({
             <button
               type="button"
               onClick={() => setIsVideoCallActive(false)}
-              className="p-4 rounded-2xl bg-rose-600 hover:bg-rose-500 text-white shadow-xl shadow-rose-600/30 transition-all hover:scale-105"
+              className="p-4 rounded-2xl bg-rose-600 hover:bg-rose-500 text-brand-sandstone shadow-xl shadow-rose-600/30 transition-all hover:scale-105"
               title="End Video Call"
             >
               <PhoneOff className="w-6 h-6" />

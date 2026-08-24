@@ -98,10 +98,10 @@ export default function LiveChatClient({ livestreamId, initialMessages, isLive, 
   };
 
   return (
-    <div className="col-span-1 bg-slate-900/80 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between h-[480px]">
-      <h3 className="text-sm font-bold text-white flex items-center gap-2 border-b border-slate-800 pb-3">
-        <MessageSquare className="w-4 h-4 text-sky-400" /> Live Chat
-        {isLive && <span className="ml-auto text-[10px] text-emerald-400 font-semibold">LIVE</span>}
+    <div className="col-span-1 bg-brand-dusk/80 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between h-[480px]">
+      <h3 className="text-sm font-bold text-brand-sandstone flex items-center gap-2 border-b border-slate-800 pb-3">
+        <MessageSquare className="w-4 h-4 text-brand-caribbeanSea" /> Live Chat
+        {isLive && <span className="ml-auto text-[10px] text-brand-sunriseCoral font-semibold">LIVE</span>}
       </h3>
 
       <div className="flex-1 overflow-y-auto space-y-2 py-3 text-xs" aria-live="polite" aria-label="Live chat messages">
@@ -109,8 +109,8 @@ export default function LiveChatClient({ livestreamId, initialMessages, isLive, 
           <p className="text-center text-slate-600 text-xs py-6">Chat is quiet. Be the first to say something.</p>
         )}
         {messages.map((msg) => (
-          <div key={msg.id} className="p-2 rounded-xl bg-slate-950 border border-slate-800">
-            <span className="font-bold text-sky-400">{msg.display_name}:</span>{' '}
+          <div key={msg.id} className="p-2 rounded-xl bg-brand-twilight border border-slate-800">
+            <span className="font-bold text-brand-caribbeanSea">{msg.display_name}:</span>{' '}
             <span className="text-slate-200">{msg.body}</span>
           </div>
         ))}
@@ -131,13 +131,13 @@ export default function LiveChatClient({ livestreamId, initialMessages, isLive, 
             disabled={!isLive || pending}
             maxLength={500}
             aria-label="Chat message"
-            className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-sky-500 transition-colors disabled:opacity-50"
+            className="w-full bg-brand-twilight border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-200 placeholder-brand-sandstone/40 focus:outline-none focus:border-brand-caribbeanSea transition-colors disabled:opacity-50"
           />
           <button
             type="submit"
             disabled={!isLive || pending || !input.trim()}
             aria-label="Send message"
-            className="bg-sky-500 hover:bg-sky-400 disabled:opacity-50 text-slate-950 font-bold px-3 py-2 rounded-xl text-xs transition-colors"
+            className="bg-brand-caribbeanSea hover:bg-brand-caribbeanSea disabled:opacity-50 text-slate-950 font-bold px-3 py-2 rounded-xl text-xs transition-colors"
           >
             <Send className="w-4 h-4" />
           </button>
@@ -146,7 +146,7 @@ export default function LiveChatClient({ livestreamId, initialMessages, isLive, 
         <div className="pt-2 border-t border-slate-800">
           <Link
             href="/login"
-            className="w-full block text-center text-xs text-sky-400 hover:underline py-2"
+            className="w-full block text-center text-xs text-brand-caribbeanSea hover:underline py-2"
           >
             Sign in to chat
           </Link>

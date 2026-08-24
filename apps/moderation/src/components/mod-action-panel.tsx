@@ -24,13 +24,13 @@ const ACTIONS: Array<{
   {
     action: 'restrict',
     label: 'Restrict',
-    style: 'bg-amber-500 hover:bg-amber-400 text-slate-950',
+    style: 'bg-brand-goldenHour hover:bg-brand-goldenHour text-slate-950',
     icon: <AlertTriangle className="w-4 h-4" />,
   },
   {
     action: 'allow',
     label: 'Allow',
-    style: 'bg-emerald-500 hover:bg-emerald-400 text-slate-950',
+    style: 'bg-brand-sunriseCoral hover:bg-brand-sunriseCoral text-slate-950',
     icon: <CheckCircle className="w-4 h-4" />,
   },
   {
@@ -70,12 +70,12 @@ export default function ModActionPanel({ caseId }: Props) {
 
   if (done) {
     return (
-      <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-2xl p-5 text-center space-y-1">
-        <CheckCircle className="w-8 h-8 text-emerald-400 mx-auto" />
-        <p className="text-sm font-bold text-emerald-400 capitalize">
+      <div className="bg-brand-sunriseCoral/10 border border-brand-sunriseCoral/30 rounded-2xl p-5 text-center space-y-1">
+        <CheckCircle className="w-8 h-8 text-brand-sunriseCoral mx-auto" />
+        <p className="text-sm font-bold text-brand-sunriseCoral capitalize">
           Action &ldquo;{done}&rdquo; recorded.
         </p>
-        <p className="text-xs text-slate-500">Next case will load on refresh.</p>
+        <p className="text-xs text-brand-sandstone/40">Next case will load on refresh.</p>
       </div>
     );
   }
@@ -83,7 +83,7 @@ export default function ModActionPanel({ caseId }: Props) {
   return (
     <div className="space-y-3 pt-2 border-t border-slate-800">
       <div>
-        <label htmlFor="rationale" className="text-[11px] font-semibold text-slate-400 block mb-1">
+        <label htmlFor="rationale" className="text-[11px] font-semibold text-brand-sandstone/60 block mb-1">
           Rationale (optional but recommended)
         </label>
         <textarea
@@ -93,7 +93,7 @@ export default function ModActionPanel({ caseId }: Props) {
           maxLength={500}
           rows={2}
           placeholder="Explain your decision for the audit log…"
-          className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-200 placeholder-slate-600 focus:outline-none focus:border-sky-500 resize-none transition-colors"
+          className="w-full bg-brand-twilight border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-200 placeholder-slate-600 focus:outline-none focus:border-brand-caribbeanSea resize-none transition-colors"
         />
       </div>
 

@@ -58,32 +58,32 @@ export default async function AdminPaymentsPage({
   }
 
   return (
-    <div className="min-h-screen bg-[#090D16] text-slate-100 p-6 max-w-6xl mx-auto space-y-6">
+    <div className="min-h-screen bg-[#090D16] text-brand-sandstone p-6 max-w-6xl mx-auto space-y-6">
       <div className="flex items-center justify-between border-b border-slate-800 pb-4">
-        <h1 className="text-xl font-extrabold text-white flex items-center gap-2">
-          <Wallet className="w-6 h-6 text-emerald-400" /> Payments
+        <h1 className="text-xl font-extrabold text-brand-sandstone flex items-center gap-2">
+          <Wallet className="w-6 h-6 text-brand-sunriseCoral" /> Payments
         </h1>
-        <Link href="/" className="text-xs text-slate-400 hover:text-white">← Dashboard</Link>
+        <Link href="/" className="text-xs text-brand-sandstone/60 hover:text-brand-sandstone">← Dashboard</Link>
       </div>
 
       {/* Revenue summary */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-gradient-to-br from-slate-900 to-emerald-950/30 border border-emerald-500/30 rounded-2xl p-5">
-          <p className="text-xs font-bold text-emerald-400 uppercase tracking-wider">Total Succeeded Revenue</p>
-          <p className="text-3xl font-black text-white mt-2">{formatMinor(totalRevenue, 'USD')}</p>
-          <p className="text-[11px] text-slate-400 mt-1 flex items-center gap-1">
-            <ShieldCheck className="w-3 h-3 text-emerald-400" /> All-time platform payments
+        <div className="bg-gradient-to-br from-slate-900 to-emerald-950/30 border border-brand-sunriseCoral/30 rounded-2xl p-5">
+          <p className="text-xs font-bold text-brand-sunriseCoral uppercase tracking-wider">Total Succeeded Revenue</p>
+          <p className="text-3xl font-black text-brand-sandstone mt-2">{formatMinor(totalRevenue, 'USD')}</p>
+          <p className="text-[11px] text-brand-sandstone/60 mt-1 flex items-center gap-1">
+            <ShieldCheck className="w-3 h-3 text-brand-sunriseCoral" /> All-time platform payments
           </p>
         </div>
-        <div className="bg-slate-900/70 border border-slate-800 rounded-2xl p-5">
-          <p className="text-xs font-bold text-sky-400 uppercase tracking-wider">Total Intents ({status})</p>
-          <p className="text-3xl font-black text-white mt-2">{(intentsResult.count ?? 0).toLocaleString()}</p>
-          <p className="text-[11px] text-slate-400 mt-1">Page {page} of {totalPages || 1}</p>
+        <div className="bg-brand-dusk/70 border border-slate-800 rounded-2xl p-5">
+          <p className="text-xs font-bold text-brand-caribbeanSea uppercase tracking-wider">Total Intents ({status})</p>
+          <p className="text-3xl font-black text-brand-sandstone mt-2">{(intentsResult.count ?? 0).toLocaleString()}</p>
+          <p className="text-[11px] text-brand-sandstone/60 mt-1">Page {page} of {totalPages || 1}</p>
         </div>
-        <div className="bg-slate-900/70 border border-slate-800 rounded-2xl p-5">
-          <p className="text-xs font-bold text-amber-400 uppercase tracking-wider">Ledger Architecture</p>
+        <div className="bg-brand-dusk/70 border border-slate-800 rounded-2xl p-5">
+          <p className="text-xs font-bold text-brand-goldenHour uppercase tracking-wider">Ledger Architecture</p>
           <p className="text-sm text-slate-300 mt-2">Double-entry ledger</p>
-          <p className="text-[11px] text-slate-400 mt-1">Idempotency enforced · No mutable balances</p>
+          <p className="text-[11px] text-brand-sandstone/60 mt-1">Idempotency enforced · No mutable balances</p>
         </div>
       </div>
 
@@ -95,8 +95,8 @@ export default async function AdminPaymentsPage({
             href={`?status=${s}`}
             className={`px-3 py-1.5 rounded-full text-xs font-semibold capitalize transition-colors ${
               s === status
-                ? 'bg-sky-500/20 text-sky-400 border border-sky-500/40'
-                : 'bg-slate-900 text-slate-400 hover:text-white border border-slate-800'
+                ? 'bg-brand-caribbeanSea/20 text-brand-caribbeanSea border border-brand-caribbeanSea/40'
+                : 'bg-brand-dusk text-brand-sandstone/60 hover:text-brand-sandstone border border-slate-800'
             }`}
           >
             {s}
@@ -104,9 +104,9 @@ export default async function AdminPaymentsPage({
         ))}
       </div>
 
-      <div className="bg-slate-900/70 border border-slate-800 rounded-2xl overflow-x-auto">
+      <div className="bg-brand-dusk/70 border border-slate-800 rounded-2xl overflow-x-auto">
         <table className="w-full text-sm text-slate-300">
-          <thead className="bg-slate-950 text-[11px] text-slate-400 uppercase tracking-wider border-b border-slate-800">
+          <thead className="bg-brand-twilight text-[11px] text-brand-sandstone/60 uppercase tracking-wider border-b border-slate-800">
             <tr>
               <th className="p-3 text-left">Intent ID</th>
               <th className="p-3 text-left">Payer</th>
@@ -119,31 +119,31 @@ export default async function AdminPaymentsPage({
           <tbody className="divide-y divide-slate-800/60">
             {intents.length === 0 ? (
               <tr>
-                <td colSpan={6} className="p-8 text-center text-slate-500 text-xs">No {status} payments.</td>
+                <td colSpan={6} className="p-8 text-center text-brand-sandstone/40 text-xs">No {status} payments.</td>
               </tr>
             ) : (
               intents.map((intent) => (
-                <tr key={intent.id} className="hover:bg-slate-800/30 transition-colors">
-                  <td className="p-3 font-mono text-[11px] text-slate-500">{intent.id.slice(0, 8)}…</td>
+                <tr key={intent.id} className="hover:bg-brand-dusk/30 transition-colors">
+                  <td className="p-3 font-mono text-[11px] text-brand-sandstone/40">{intent.id.slice(0, 8)}…</td>
                   <td className="p-3 text-slate-300">
                     {intent.payer
                       ? `${(intent.payer as { display_name: string }).display_name}`
                       : '—'}
                   </td>
                   <td className="p-3 capitalize text-slate-300">{intent.product_type}</td>
-                  <td className="p-3 font-bold text-emerald-400">
+                  <td className="p-3 font-bold text-brand-sunriseCoral">
                     {formatMinor(intent.amount_minor, intent.currency)}
                   </td>
                   <td className="p-3">
                     <span className={`text-[10px] font-bold px-2 py-0.5 rounded border capitalize ${
-                      intent.status === 'succeeded' ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30' :
+                      intent.status === 'succeeded' ? 'bg-brand-sunriseCoral/20 text-emerald-300 border-brand-sunriseCoral/30' :
                       intent.status === 'failed' ? 'bg-rose-500/20 text-rose-300 border-rose-500/30' :
-                      'bg-slate-800 text-slate-400 border-slate-700'
+                      'bg-brand-dusk text-brand-sandstone/60 border-slate-700'
                     }`}>
                       {intent.status}
                     </span>
                   </td>
-                  <td className="p-3 text-slate-500 text-xs">
+                  <td className="p-3 text-brand-sandstone/40 text-xs">
                     {new Date(intent.created_at).toLocaleString()}
                   </td>
                 </tr>
@@ -156,11 +156,11 @@ export default async function AdminPaymentsPage({
       {totalPages > 1 && (
         <div className="flex items-center justify-center gap-2 text-xs">
           {page > 1 && (
-            <a href={`?status=${status}&page=${page - 1}`} className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg">← Prev</a>
+            <a href={`?status=${status}&page=${page - 1}`} className="px-3 py-1.5 bg-brand-dusk hover:bg-slate-700 text-slate-200 rounded-lg">← Prev</a>
           )}
-          <span className="text-slate-400">Page {page} of {totalPages}</span>
+          <span className="text-brand-sandstone/60">Page {page} of {totalPages}</span>
           {page < totalPages && (
-            <a href={`?status=${status}&page=${page + 1}`} className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg">Next →</a>
+            <a href={`?status=${status}&page=${page + 1}`} className="px-3 py-1.5 bg-brand-dusk hover:bg-slate-700 text-slate-200 rounded-lg">Next →</a>
           )}
         </div>
       )}

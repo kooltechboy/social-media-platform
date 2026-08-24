@@ -19,7 +19,7 @@ export default function FollowPodcastButton({ podcastId, isFollowing: initialFol
     return (
       <Link
         href="/login"
-        className="bg-amber-500/20 text-amber-300 hover:bg-amber-500/30 px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors border border-amber-500/30"
+        className="bg-brand-goldenHour/20 text-amber-300 hover:bg-brand-goldenHour/30 px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors border border-brand-goldenHour/30"
       >
         <Play className="w-3.5 h-3.5" /> Follow
       </Link>
@@ -40,8 +40,8 @@ export default function FollowPodcastButton({ podcastId, isFollowing: initialFol
       disabled={pending || following}
       className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors border disabled:opacity-60 ${
         following
-          ? 'bg-amber-500/10 text-amber-400 border-amber-500/20 cursor-default'
-          : 'bg-amber-500/20 text-amber-300 hover:bg-amber-500/30 border-amber-500/30'
+          ? 'bg-brand-goldenHour/10 text-brand-goldenHour border-brand-goldenHour/20 cursor-default'
+          : 'bg-brand-goldenHour/20 text-amber-300 hover:bg-brand-goldenHour/30 border-brand-goldenHour/30'
       }`}
     >
       <Play className="w-3.5 h-3.5" />

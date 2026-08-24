@@ -36,8 +36,8 @@ export function PayoutRequestButton({
       )}
 
       {state.success && (
-        <div className="flex items-center gap-2 text-xs text-emerald-300 bg-emerald-500/10 border border-emerald-500/30 rounded-xl px-3 py-2 font-bold">
-          <CheckCircle className="w-4 h-4 flex-shrink-0 text-emerald-400" />
+        <div className="flex items-center gap-2 text-xs text-emerald-300 bg-brand-sunriseCoral/10 border border-brand-sunriseCoral/30 rounded-xl px-3 py-2 font-bold">
+          <CheckCircle className="w-4 h-4 flex-shrink-0 text-brand-sunriseCoral" />
           <span>{state.message}</span>
         </div>
       )}
@@ -47,7 +47,7 @@ export function PayoutRequestButton({
           <button
             type="submit"
             disabled={!eligible || pending}
-            className="bg-emerald-500 hover:bg-emerald-400 disabled:opacity-40 text-slate-950 font-extrabold px-5 py-2 rounded-xl text-xs flex items-center gap-1.5 transition-colors shadow-lg shadow-emerald-500/20"
+            className="bg-brand-sunriseCoral hover:bg-brand-sunriseCoral disabled:opacity-40 text-slate-950 font-extrabold px-5 py-2 rounded-xl text-xs flex items-center gap-1.5 transition-colors shadow-lg shadow-brand-sunriseCoral/20"
           >
             {pending ? (
               <>
@@ -61,7 +61,7 @@ export function PayoutRequestButton({
             )}
           </button>
           {!eligible && (
-            <span className="text-[11px] text-slate-400">
+            <span className="text-[11px] text-brand-sandstone/60">
               {ineligibleReason || 'Minimum $50.00 balance & verified KYC required'}
             </span>
           )}

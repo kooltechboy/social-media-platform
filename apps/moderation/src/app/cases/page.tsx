@@ -10,15 +10,15 @@ const PAGE_SIZE = 50;
 
 const PRIORITY_COLORS: Record<string, { text: string; bg: string }> = {
   critical: { text: 'text-rose-400', bg: 'bg-rose-500/10' },
-  high: { text: 'text-amber-400', bg: 'bg-amber-500/10' },
-  medium: { text: 'text-sky-400', bg: 'bg-sky-500/10' },
-  low: { text: 'text-slate-400', bg: 'bg-slate-700/30' },
+  high: { text: 'text-brand-goldenHour', bg: 'bg-brand-goldenHour/10' },
+  medium: { text: 'text-brand-caribbeanSea', bg: 'bg-brand-caribbeanSea/10' },
+  low: { text: 'text-brand-sandstone/60', bg: 'bg-slate-700/30' },
 };
 
 const STATUS_COLORS: Record<string, string> = {
   queued: 'text-amber-300',
-  assigned: 'text-sky-300',
-  decided: 'text-emerald-400',
+  assigned: 'text-brand-caribbeanSea',
+  decided: 'text-brand-sunriseCoral',
   escalated: 'text-rose-400',
   appealed: 'text-violet-400',
 };
@@ -85,22 +85,22 @@ export default async function AllCasesPage({
   }
 
   return (
-    <div className="min-h-screen bg-[#090D16] text-slate-100 flex">
+    <div className="min-h-screen bg-[#090D16] text-brand-sandstone flex">
       {/* Sidebar */}
       <aside className="hidden lg:flex flex-col w-56 bg-[#0F172A] border-r border-slate-800 p-4 space-y-1 sticky top-0 min-h-screen">
         <div className="px-2 py-4 mb-2">
-          <h1 className="text-sm font-extrabold text-white">ANTILIA</h1>
+          <h1 className="text-sm font-extrabold text-brand-sandstone">ANTILIA</h1>
           <p className="text-[11px] text-amber-300 font-semibold mt-0.5">Moderation Center</p>
         </div>
         <Link
           href="/"
-          className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:bg-slate-800/60 hover:text-white transition-colors"
+          className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-brand-sandstone/60 hover:bg-brand-dusk/60 hover:text-brand-sandstone transition-colors"
         >
           <ShieldAlert className="w-4 h-4 flex-shrink-0" />
           Queue
         </Link>
         <span
-          className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium bg-slate-800/60 text-white"
+          className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium bg-brand-dusk/60 text-brand-sandstone"
           aria-current="page"
         >
           <Flag className="w-4 h-4 flex-shrink-0" />
@@ -108,17 +108,17 @@ export default async function AllCasesPage({
         </span>
         <div className="mt-auto pt-4 border-t border-slate-800">
           <p className="text-[10px] text-slate-600 px-2">Moderator</p>
-          <p className="text-[11px] text-slate-400 px-2 truncate">{moderator.displayName}</p>
+          <p className="text-[11px] text-brand-sandstone/60 px-2 truncate">{moderator.displayName}</p>
         </div>
       </aside>
 
       <div className="flex-1 flex flex-col">
         <header className="sticky top-0 z-40 bg-[#0F172A]/95 backdrop-blur border-b border-slate-800 px-6 py-3 flex items-center justify-between">
-          <h2 className="text-base font-bold text-white flex items-center gap-2">
-            <Flag className="w-5 h-5 text-sky-400" aria-hidden="true" />
+          <h2 className="text-base font-bold text-brand-sandstone flex items-center gap-2">
+            <Flag className="w-5 h-5 text-brand-caribbeanSea" aria-hidden="true" />
             All Cases
           </h2>
-          <span className="text-[11px] text-slate-400">
+          <span className="text-[11px] text-brand-sandstone/60">
             {totalCount} total {statusFilter !== 'all' ? `(${statusFilter})` : ''}
           </span>
         </header>
@@ -132,10 +132,10 @@ export default async function AllCasesPage({
                 <Link
                   key={s}
                   href={`/cases${s === 'all' ? '' : `?status=${s}`}`}
-                  className={`px-4 py-1.5 rounded-full text-xs font-semibold capitalize transition-colors focus:outline-none focus:ring-2 focus:ring-sky-500 ${
+                  className={`px-4 py-1.5 rounded-full text-xs font-semibold capitalize transition-colors focus:outline-none focus:ring-2 focus:ring-brand-caribbeanSea ${
                     isActive
-                      ? 'bg-sky-600 text-white'
-                      : 'bg-slate-900 text-slate-400 border border-slate-800 hover:bg-slate-800 hover:text-white'
+                      ? 'bg-sky-600 text-brand-sandstone'
+                      : 'bg-brand-dusk text-brand-sandstone/60 border border-slate-800 hover:bg-brand-dusk hover:text-brand-sandstone'
                   }`}
                   aria-current={isActive ? 'true' : undefined}
                 >
@@ -154,7 +154,7 @@ export default async function AllCasesPage({
           {!error && cases.length === 0 ? (
             <div className="py-16 text-center">
               <Flag className="w-10 h-10 text-slate-700 mx-auto mb-3" aria-hidden="true" />
-              <p className="text-sm font-semibold text-slate-500">No cases found.</p>
+              <p className="text-sm font-semibold text-brand-sandstone/40">No cases found.</p>
               <p className="text-xs text-slate-600 mt-1">
                 {statusFilter !== 'all'
                   ? `No cases with status "${statusFilter}".`
@@ -167,23 +167,23 @@ export default async function AllCasesPage({
               <div className="overflow-x-auto rounded-2xl border border-slate-800">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="bg-slate-900/80 border-b border-slate-800">
-                      <th scope="col" className="text-left px-4 py-3 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                    <tr className="bg-brand-dusk/80 border-b border-slate-800">
+                      <th scope="col" className="text-left px-4 py-3 text-[11px] font-bold text-brand-sandstone/60 uppercase tracking-wider">
                         Case ID
                       </th>
-                      <th scope="col" className="text-left px-4 py-3 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                      <th scope="col" className="text-left px-4 py-3 text-[11px] font-bold text-brand-sandstone/60 uppercase tracking-wider">
                         Target Type
                       </th>
-                      <th scope="col" className="text-left px-4 py-3 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                      <th scope="col" className="text-left px-4 py-3 text-[11px] font-bold text-brand-sandstone/60 uppercase tracking-wider">
                         Priority
                       </th>
-                      <th scope="col" className="text-left px-4 py-3 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                      <th scope="col" className="text-left px-4 py-3 text-[11px] font-bold text-brand-sandstone/60 uppercase tracking-wider">
                         Status
                       </th>
-                      <th scope="col" className="text-left px-4 py-3 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                      <th scope="col" className="text-left px-4 py-3 text-[11px] font-bold text-brand-sandstone/60 uppercase tracking-wider">
                         AI Recommendation
                       </th>
-                      <th scope="col" className="text-left px-4 py-3 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                      <th scope="col" className="text-left px-4 py-3 text-[11px] font-bold text-brand-sandstone/60 uppercase tracking-wider">
                         Created At
                       </th>
                     </tr>
@@ -191,11 +191,11 @@ export default async function AllCasesPage({
                   <tbody className="divide-y divide-slate-800/60">
                     {cases.map((c) => {
                       const prioColors = PRIORITY_COLORS[c.priority] ?? PRIORITY_COLORS.low;
-                      const statusColor = STATUS_COLORS[c.status] ?? 'text-slate-400';
+                      const statusColor = STATUS_COLORS[c.status] ?? 'text-brand-sandstone/60';
                       return (
                         <tr
                           key={c.id}
-                          className="hover:bg-slate-900/50 transition-colors"
+                          className="hover:bg-brand-dusk/50 transition-colors"
                         >
                           <td className="px-4 py-3">
                             <code className="text-xs font-mono text-slate-300">
@@ -226,7 +226,7 @@ export default async function AllCasesPage({
                               {c.ai_recommendation ?? 'none'}
                             </span>
                           </td>
-                          <td className="px-4 py-3 text-xs text-slate-500">
+                          <td className="px-4 py-3 text-xs text-brand-sandstone/40">
                             {formatDate(c.created_at)}
                           </td>
                         </tr>
@@ -239,7 +239,7 @@ export default async function AllCasesPage({
               {/* Pagination */}
               {totalPages > 1 && (
                 <nav aria-label="Pagination" className="flex items-center justify-between pt-2">
-                  <p className="text-xs text-slate-500">
+                  <p className="text-xs text-brand-sandstone/40">
                     Page {currentPage} of {totalPages}
                   </p>
                   <div className="flex gap-2">
@@ -249,13 +249,13 @@ export default async function AllCasesPage({
                           ...(statusFilter !== 'all' ? { status: statusFilter } : {}),
                           page: String(currentPage - 1),
                         }).toString()}`}
-                        className="flex items-center gap-1 px-3 py-1.5 bg-slate-900 border border-slate-800 rounded-lg text-xs text-slate-300 hover:bg-slate-800 transition-colors focus:outline-none focus:ring-2 focus:ring-sky-500"
+                        className="flex items-center gap-1 px-3 py-1.5 bg-brand-dusk border border-slate-800 rounded-lg text-xs text-slate-300 hover:bg-brand-dusk transition-colors focus:outline-none focus:ring-2 focus:ring-brand-caribbeanSea"
                       >
                         <ChevronLeft className="w-3 h-3" aria-hidden="true" />
                         Previous
                       </Link>
                     ) : (
-                      <span className="flex items-center gap-1 px-3 py-1.5 bg-slate-950 border border-slate-800/50 rounded-lg text-xs text-slate-700 cursor-not-allowed">
+                      <span className="flex items-center gap-1 px-3 py-1.5 bg-brand-twilight border border-brand-dusk rounded-lg text-xs text-slate-700 cursor-not-allowed">
                         <ChevronLeft className="w-3 h-3" aria-hidden="true" />
                         Previous
                       </span>
@@ -266,13 +266,13 @@ export default async function AllCasesPage({
                           ...(statusFilter !== 'all' ? { status: statusFilter } : {}),
                           page: String(currentPage + 1),
                         }).toString()}`}
-                        className="flex items-center gap-1 px-3 py-1.5 bg-slate-900 border border-slate-800 rounded-lg text-xs text-slate-300 hover:bg-slate-800 transition-colors focus:outline-none focus:ring-2 focus:ring-sky-500"
+                        className="flex items-center gap-1 px-3 py-1.5 bg-brand-dusk border border-slate-800 rounded-lg text-xs text-slate-300 hover:bg-brand-dusk transition-colors focus:outline-none focus:ring-2 focus:ring-brand-caribbeanSea"
                       >
                         Next
                         <ChevronRight className="w-3 h-3" aria-hidden="true" />
                       </Link>
                     ) : (
-                      <span className="flex items-center gap-1 px-3 py-1.5 bg-slate-950 border border-slate-800/50 rounded-lg text-xs text-slate-700 cursor-not-allowed">
+                      <span className="flex items-center gap-1 px-3 py-1.5 bg-brand-twilight border border-brand-dusk rounded-lg text-xs text-slate-700 cursor-not-allowed">
                         Next
                         <ChevronRight className="w-3 h-3" aria-hidden="true" />
                       </span>

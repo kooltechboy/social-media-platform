@@ -105,18 +105,18 @@ const SHOWCASE_COMMUNITIES: Community[] = [
 function JoinPolicyBadge({ policy }: { policy: string }) {
   if (policy === 'public')
     return (
-      <span className="flex items-center gap-1 text-[10px] font-black px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+      <span className="flex items-center gap-1 text-[10px] font-black px-2 py-0.5 rounded-full bg-brand-sunriseCoral/10 text-brand-sunriseCoral border border-brand-sunriseCoral/20">
         <Globe className="w-3 h-3" /> Public Hub
       </span>
     );
   if (policy === 'private')
     return (
-      <span className="flex items-center gap-1 text-[10px] font-black px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20">
+      <span className="flex items-center gap-1 text-[10px] font-black px-2 py-0.5 rounded-full bg-brand-goldenHour/10 text-brand-goldenHour border border-brand-goldenHour/20">
         <Lock className="w-3 h-3" /> Private Hub
       </span>
     );
   return (
-    <span className="flex items-center gap-1 text-[10px] font-black px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 border border-slate-700">
+    <span className="flex items-center gap-1 text-[10px] font-black px-2 py-0.5 rounded-full bg-brand-dusk text-brand-sandstone/60 border border-slate-700">
       <Lock className="w-3 h-3" /> Invite Only
     </span>
   );
@@ -144,17 +144,17 @@ export default async function CommunitiesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#090D16] text-slate-100 p-4 md:p-6 max-w-7xl mx-auto space-y-8">
+    <div className="min-h-screen bg-[#090D16] text-brand-sandstone p-4 md:p-6 max-w-7xl mx-auto space-y-8">
       {/* Top Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-6">
         <div>
           <div className="flex items-center gap-2.5">
-            <span className="w-3 h-3 rounded-full bg-emerald-500 animate-ping" />
-            <h1 className="text-2xl md:text-3xl font-black text-white flex items-center gap-3">
-              <Users className="w-8 h-8 text-emerald-400" /> Caribbean Communities
+            <span className="w-3 h-3 rounded-full bg-brand-sunriseCoral animate-ping" />
+            <h1 className="text-2xl md:text-3xl font-black text-brand-sandstone flex items-center gap-3">
+              <Users className="w-8 h-8 text-brand-sunriseCoral" /> Caribbean Communities
             </h1>
           </div>
-          <p className="text-xs md:text-sm text-slate-400 mt-1">
+          <p className="text-xs md:text-sm text-brand-sandstone/60 mt-1">
             Find your people across diaspora city hubs, professional guilds, cultural organizations, and alumni circles.
           </p>
         </div>
@@ -164,7 +164,7 @@ export default async function CommunitiesPage() {
           {!user && (
             <Link
               href="/login"
-              className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black px-5 py-2.5 rounded-2xl text-xs flex items-center gap-2 transition-all shadow-md shadow-emerald-500/20"
+              className="bg-brand-sunriseCoral hover:bg-brand-sunriseCoral text-slate-950 font-black px-5 py-2.5 rounded-2xl text-xs flex items-center gap-2 transition-all shadow-md shadow-brand-sunriseCoral/20"
             >
               <Plus className="w-4 h-4" /> Create Diaspora Hub
             </Link>
@@ -177,7 +177,7 @@ export default async function CommunitiesPage() {
         {communities.map((community) => (
           <article
             key={community.id}
-            className="bg-slate-900/80 border border-slate-800/90 hover:border-emerald-500/50 rounded-3xl p-6 space-y-4 flex flex-col justify-between transition-all shadow-xl group"
+            className="bg-brand-dusk/80 border border-slate-800/90 hover:border-brand-sunriseCoral/50 rounded-3xl p-6 space-y-4 flex flex-col justify-between transition-all shadow-xl group"
           >
             <div className="space-y-3">
               <div className="flex items-center justify-between">
@@ -186,10 +186,10 @@ export default async function CommunitiesPage() {
               </div>
 
               <div>
-                <h3 className="font-extrabold text-base text-white group-hover:text-emerald-300 transition-colors leading-snug">
+                <h3 className="font-extrabold text-base text-brand-sandstone group-hover:text-emerald-300 transition-colors leading-snug">
                   {community.name}
                 </h3>
-                <p className="text-xs text-emerald-400 font-semibold mt-0.5">
+                <p className="text-xs text-brand-sunriseCoral font-semibold mt-0.5">
                   {community.locationTag ?? community.countries?.name ?? 'Diaspora Wide'}
                 </p>
               </div>
@@ -202,11 +202,11 @@ export default async function CommunitiesPage() {
             </div>
 
             <div className="pt-3 border-t border-slate-800/80 space-y-3">
-              <div className="flex items-center justify-between text-xs text-slate-400 font-medium">
+              <div className="flex items-center justify-between text-xs text-brand-sandstone/60 font-medium">
                 <span>{community.member_count.toLocaleString()} members</span>
                 {community.activeNow && (
-                  <span className="text-emerald-400 font-bold flex items-center gap-1">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" /> {community.activeNow} active now
+                  <span className="text-brand-sunriseCoral font-bold flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-brand-sunriseCoral" /> {community.activeNow} active now
                   </span>
                 )}
               </div>

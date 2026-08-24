@@ -22,7 +22,7 @@ export default function CommunityJoinButton({ communityId, joinPolicy, isMember,
     return (
       <Link
         href="/login"
-        className="w-full text-center bg-slate-800 hover:bg-slate-700 text-sky-400 font-bold py-2 rounded-xl text-xs border border-sky-500/30 transition-colors"
+        className="w-full text-center bg-brand-dusk hover:bg-slate-700 text-brand-caribbeanSea font-bold py-2 rounded-xl text-xs border border-brand-caribbeanSea/30 transition-colors"
       >
         Sign in to Join
       </Link>
@@ -57,7 +57,7 @@ export default function CommunityJoinButton({ communityId, joinPolicy, isMember,
         <button
           onClick={handleLeave}
           disabled={pending}
-          className="w-full bg-slate-800 hover:bg-rose-500/20 hover:text-rose-400 hover:border-rose-500/40 text-slate-300 font-bold py-2 rounded-xl text-xs border border-slate-700 transition-colors disabled:opacity-50"
+          className="w-full bg-brand-dusk hover:bg-rose-500/20 hover:text-rose-400 hover:border-rose-500/40 text-slate-300 font-bold py-2 rounded-xl text-xs border border-slate-700 transition-colors disabled:opacity-50"
         >
           {pending ? 'Leaving…' : 'Leave Community'}
         </button>
@@ -65,7 +65,7 @@ export default function CommunityJoinButton({ communityId, joinPolicy, isMember,
         <button
           onClick={handleJoin}
           disabled={pending}
-          className="w-full bg-sky-500/20 hover:bg-sky-500/30 text-sky-300 font-bold py-2 rounded-xl text-xs border border-sky-500/40 transition-colors disabled:opacity-50"
+          className="w-full bg-brand-caribbeanSea/20 hover:bg-brand-caribbeanSea/30 text-brand-caribbeanSea font-bold py-2 rounded-xl text-xs border border-brand-caribbeanSea/40 transition-colors disabled:opacity-50"
         >
           {pending
             ? 'Joining…'
@@ -80,7 +80,7 @@ export default function CommunityJoinButton({ communityId, joinPolicy, isMember,
         <p role="alert" className="text-[11px] text-rose-400 text-center">{state.error}</p>
       )}
       {state.success && (
-        <p className="text-[11px] text-emerald-400 text-center">{state.success}</p>
+        <p className="text-[11px] text-brand-sunriseCoral text-center">{state.success}</p>
       )}
     </div>
   );
