@@ -209,7 +209,7 @@ export default function AppHeader() {
 
         <Link
           href="/messages"
-          className="p-2 text-slate-300 hover:text-white rounded-full hover:bg-slate-800/80 transition-colors"
+          className="hidden md:flex p-2 text-slate-300 hover:text-white rounded-full hover:bg-slate-800/80 transition-colors"
           aria-label="Messages"
         >
           <MessageSquare className="w-5 h-5" aria-hidden="true" />

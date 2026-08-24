@@ -526,6 +526,7 @@ export default function UniversalComposer({
                   {item.type === 'video' ? (
                     <video src={item.previewUrl} className="w-full h-full object-cover" />
                   ) : (
+                    /* eslint-disable-next-line @next/next/no-img-element */
                     <img src={item.previewUrl} alt="Upload preview" className="w-full h-full object-cover" />
                   )}
                   <button

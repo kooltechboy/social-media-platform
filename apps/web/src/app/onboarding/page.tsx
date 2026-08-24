@@ -48,7 +48,7 @@ export default function OnboardingPage() {
       <div className="bg-[#0B132B]/80 backdrop-blur-md border border-slate-800/80 rounded-2xl p-8 shadow-2xl">
         <h1 className="text-3xl font-bold text-white mb-2">Welcome to CARIBBEAN ONE</h1>
         <p className="text-slate-400 mb-8">
-          To personalize your experience and connect you with your community, let's establish your Caribbean roots.
+          To personalize your experience and connect you with your community, let&apos;s establish your Caribbean roots.
         </p>
 
         <form onSubmit={handleSubmit} className="space-y-8">

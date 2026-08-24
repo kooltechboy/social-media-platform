@@ -247,6 +247,7 @@ export default function FeedStream({ initialPosts }: FeedStreamProps) {
                       {url.endsWith('.mp4') || url.includes('video') ? (
                         <video src={url} controls className="w-full h-full object-cover" />
                       ) : (
+                        /* eslint-disable-next-line @next/next/no-img-element */
                         <img
                           src={url}
                           alt="Post media"

@@ -56,8 +56,9 @@ export class SpotPayOrchestrator {
       return req.platform === 'ios' ? ['apple_iap'] : ['google_play'];
     }
 
-    // 2. Physical Goods, P2P Transfers & Event Tickets can route through SpotPay Wallet, Stripe, PayPal
-    return ['spotpay_wallet', 'stripe_cards', 'paypal', 'apple_pay_web', 'google_pay_web'];
+    // 2. Physical Goods, P2P Transfers & Event Tickets prioritize SpotPay ecosystem
+    // with PayPal/Stripe as configured fallbacks
+    return ['spotpay_wallet', 'spotpay_ai_gateway', 'paypal', 'stripe_cards', 'apple_pay_web', 'google_pay_web'];
   }
 }
 

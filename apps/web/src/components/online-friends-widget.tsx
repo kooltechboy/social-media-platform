@@ -89,7 +89,7 @@ export default function OnlineFriendsWidget() {
           ))
         ) : (
           <div className="text-center py-6 text-xs text-slate-500">
-            No friends found matching "{search}"
+            No friends found matching &quot;{search}&quot;
           </div>
         )}
       </div>

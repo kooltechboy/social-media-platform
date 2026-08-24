@@ -7,7 +7,7 @@ setup('authenticate', async ({ page }) => {
   // We need a unique email and password for each run if the database clears or doesn't allow duplicates.
   // Using a random UUID ensures a fresh user every time.
   const randomSuffix = crypto.randomUUID().substring(0, 8);
-  const email = `testuser_${randomSuffix}@example.com`;
+  const email = `testuser_${randomSuffix}@test-domain.com`;
   const password = `TestPassword!123_${randomSuffix}`;
   const username = `test_${randomSuffix}`;
 
@@ -31,17 +31,17 @@ setup('authenticate', async ({ page }) => {
 
   // Wait briefly to see if an error message appears
   await page.waitForTimeout(2000);
-  const errorLocator = page.locator('[role="alert"]');
-  if (await errorLocator.isVisible()) {
-    const errorText = await errorLocator.innerText();
+  const errorLocator = page.locator('[role="alert"]:not(#__next-route-announcer__)');
+  if (await errorLocator.count() > 0 && await errorLocator.first().isVisible()) {
+    const errorText = await errorLocator.first().innerText();
     console.error(`Signup failed with error: ${errorText}`);
     throw new Error(`Signup failed with error: ${errorText}`);
   }
 
   // Also check info messages
-  const infoLocator = page.locator('[role="status"]');
-  if (await infoLocator.isVisible()) {
-    const infoText = await infoLocator.innerText();
+  const infoLocator = page.locator('[role="status"]:not(#__next-route-announcer__)');
+  if (await infoLocator.count() > 0 && await infoLocator.first().isVisible()) {
+    const infoText = await infoLocator.first().innerText();
     console.log(`Signup info: ${infoText}`);
   }
 

@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import AppHeader from '../components/app-header';
 import AppSidebar from '../components/app-sidebar';
@@ -9,6 +9,14 @@ export const metadata: Metadata = {
   title: 'CARIBBEAN ONE — Caribbean Digital Ecosystem & Diaspora Platform',
   description:
     "The world's premier digital platform for Caribbean people, culture, businesses, creators, and the global diaspora.",
+};
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  themeColor: '#0B132B',
 };
 
 export default function RootLayout({
