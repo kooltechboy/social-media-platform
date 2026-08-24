@@ -4,9 +4,9 @@ _Authoritative reference. Agents may NOT invent UI patterns outside `@caribbean/
 
 ## 1. Design Language
 
-**Caribbean Futurism: premium, editorial, modern, and technology-forward. The palette relies on deep ocean, volcanic stone, and limestone to evoke the region without cliché.**
+**Caribbean Futurism: premium, editorial, modern, and technology-forward. The palette embraces a beautiful, vibrant Caribbean Sunrise and Sunset aesthetic—featuring twilight purples, golden hour warmth, coral pinks, and tropical sea blues.**
 
-Explicitly prohibited: flag spam, palm-tree graphics, cheap turquoise gradients, tourist-brochure imagery, stereotypical tropical styling.
+Embrace beautiful Caribbean scenes, vibrant twilight/sunrise gradients, and tropical warmth, while avoiding cheap tourist-brochure clichés.
 
 ## 2. Token Architecture (`packages/design-system`)
 
@@ -53,3 +53,4 @@ Required pattern library: buttons, forms, cards, navigation, modals/sheets, tabl
 - Native-feel navigation: Home, Explore, Create (+), Communities, Messages.
 - Design for mid-range Android first (performance budget applies to design choices: image placeholders, lightweight motion).
 - Offline/poor-connectivity states are designed states, not error pages.
+

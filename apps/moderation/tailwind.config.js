@@ -5,12 +5,12 @@ module.exports = {
     extend: {
       colors: {
         brand: {
-          volcanic: "#0F172A",
-          limestone: "#F8FAFC",
-          ocean: "#031525",
-          azure: "#0284C7",
-          abyss: "#070B12",
-          raised: "#1E293B"
+          twilight: "#110D17",
+          sandstone: "#FDF2E9",
+          sunriseCoral: "#FF7A59",
+          goldenHour: "#FFB347",
+          caribbeanSea: "#00B4D8",
+          sunsetPurple: "#8B5CF6"
         }
       }
     },

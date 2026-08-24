@@ -25,8 +25,8 @@ Every line of code, migration, and configuration must adhere to NASA-grade softw
 
 5. **Design System Adherence (ANTILIA)**
    - All UI elements must use predefined tokens from `@caribbean/design-system`.
-   - Enforce the Antilia "Caribbean Futurism" aesthetic (deep ocean blues, volcanic charcoal, limestone whites).
-   - Avoid tropical clichés (no flag spamming, zero cheap turquoise gradients, no tropical tree graphics). Maintain a premium, editorial, technologically forward visual language.
+   - Enforce the Antilia "Caribbean Futurism" aesthetic (vibrant sunset corals, twilight purples, golden hour oranges, and tropical sea blues).
+   - Embrace the warmth and beauty of a Caribbean sunrise/sunset vibe while keeping the UI modern, premium, and technologically forward.
 
 6. **Definition of Done**
    - A feature is only complete when TypeScript typechecks with zero errors, versioned migration SQL is added, unit/RLS tests pass, and mobile/web UI behavior is verified.
@@ -80,3 +80,4 @@ Every reviewed change must state: WHAT CHANGED / WHY / FILES CHANGED / TESTS RUN
 
 ## Priority Order
 Security → Correctness → Reliability → Scalability → Performance → Maintainability → Accessibility → UX → Observability → Business viability → Speed of development.
+

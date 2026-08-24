@@ -17,10 +17,10 @@ export const Button: React.FC<ButtonProps> = ({
   const baseStyle = "font-bold rounded-xl transition-colors inline-flex items-center justify-center gap-2";
   
   const variantStyles: Record<'primary' | 'secondary' | 'danger' | 'ghost', string> = {
-    primary: "bg-brand-azure hover:bg-sky-500 text-brand-limestone",
-    secondary: "bg-brand-volcanic hover:bg-brand-raised text-brand-limestone border border-slate-700",
-    danger: "bg-rose-600 hover:bg-rose-500 text-brand-limestone",
-    ghost: "bg-transparent hover:bg-brand-volcanic text-slate-300",
+    primary: "bg-brand-sunriseCoral hover:opacity-90 text-brand-twilight shadow-[0_0_15px_rgba(255,122,89,0.4)]",
+    secondary: "bg-brand-dusk hover:bg-brand-sunsetPurple text-brand-sandstone border border-brand-sunsetPurple/50",
+    danger: "bg-rose-600 hover:bg-rose-500 text-brand-sandstone",
+    ghost: "bg-transparent hover:bg-brand-dusk text-brand-goldenHour",
   };
 
   const sizeStyles: Record<'sm' | 'md' | 'lg', string> = {
@@ -46,7 +46,7 @@ export interface CardProps {
 
 export const Card: React.FC<CardProps> = ({ children, className = '' }: CardProps) => {
   return (
-    <div className={`bg-brand-abyss/80 border border-brand-volcanic rounded-2xl p-5 ${className}`}>
+    <div className={`bg-brand-twilight/90 border border-brand-dusk backdrop-blur-sm rounded-2xl p-5 ${className}`}>
       {children}
     </div>
   );
@@ -54,15 +54,15 @@ export const Card: React.FC<CardProps> = ({ children, className = '' }: CardProp
 
 export interface BadgeProps {
   children: React.ReactNode;
-  color?: 'azure' | 'emerald' | 'rose' | 'volcanic';
+  color?: 'sunrise' | 'sea' | 'rose' | 'dusk';
 }
 
-export const Badge: React.FC<BadgeProps> = ({ children, color = 'azure' }: BadgeProps) => {
-  const colorStyles: Record<'azure' | 'emerald' | 'rose' | 'volcanic', string> = {
-    azure: 'bg-brand-azure/20 text-sky-400 border-brand-azure/30',
-    emerald: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',
+export const Badge: React.FC<BadgeProps> = ({ children, color = 'sunrise' }: BadgeProps) => {
+  const colorStyles: Record<'sunrise' | 'sea' | 'rose' | 'dusk', string> = {
+    sunrise: 'bg-brand-sunriseCoral/20 text-brand-sunriseCoral border-brand-sunriseCoral/30',
+    sea: 'bg-brand-caribbeanSea/20 text-brand-caribbeanSea border-brand-caribbeanSea/30',
     rose: 'bg-rose-500/20 text-rose-300 border-rose-500/30',
-    volcanic: 'bg-brand-volcanic text-slate-300 border-slate-700',
+    dusk: 'bg-brand-dusk text-brand-sandstone border-brand-sunsetPurple/50',
   };
 
   return (
@@ -90,14 +90,14 @@ export const Avatar: React.FC<AvatarProps> = ({ src, fallback, size = 'md' }: Av
       <img
         src={src}
         alt={fallback}
-        className={`${sizeStyles[size]} rounded-full object-cover border border-brand-volcanic`}
+        className={`${sizeStyles[size]} rounded-full object-cover border-2 border-brand-goldenHour`}
       />
     );
   }
 
   return (
-    <div className={`${sizeStyles[size]} rounded-full bg-gradient-to-br from-brand-ocean to-brand-azure p-0.5 flex-shrink-0`}>
-      <div className="w-full h-full bg-brand-abyss rounded-full flex items-center justify-center font-extrabold text-brand-limestone">
+    <div className={`${sizeStyles[size]} rounded-full bg-gradient-to-br from-brand-sunriseCoral to-brand-sunsetPurple p-0.5 flex-shrink-0`}>
+      <div className="w-full h-full bg-brand-twilight rounded-full flex items-center justify-center font-extrabold text-brand-sandstone">
         {fallback.slice(0, 2).toUpperCase()}
       </div>
     </div>
@@ -112,9 +112,9 @@ export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> 
 export const Input: React.FC<InputProps> = ({ label, error, className = '', ...props }: InputProps) => {
   return (
     <div className="space-y-1.5 w-full">
-      {label && <label className="block text-xs font-bold text-slate-300">{label}</label>}
+      {label && <label className="block text-xs font-bold text-brand-sandstone/70">{label}</label>}
       <input
-        className={`w-full bg-brand-abyss border ${error ? 'border-rose-500' : 'border-brand-volcanic'} rounded-xl px-4 py-2.5 text-sm text-brand-limestone placeholder-slate-500 focus:outline-none focus:border-brand-azure transition-colors ${className}`}
+        className={`w-full bg-brand-twilight border ${error ? 'border-rose-500' : 'border-brand-dusk'} rounded-xl px-4 py-2.5 text-sm text-brand-sandstone placeholder-brand-sandstone/40 focus:outline-none focus:border-brand-sunriseCoral transition-colors ${className}`}
         {...props}
       />
       {error && <p className="text-xs text-rose-400 font-medium">{error}</p>}
@@ -130,9 +130,9 @@ export interface TextareaProps extends React.TextareaHTMLAttributes<HTMLTextArea
 export const Textarea: React.FC<TextareaProps> = ({ label, error, className = '', ...props }: TextareaProps) => {
   return (
     <div className="space-y-1.5 w-full">
-      {label && <label className="block text-xs font-bold text-slate-300">{label}</label>}
+      {label && <label className="block text-xs font-bold text-brand-sandstone/70">{label}</label>}
       <textarea
-        className={`w-full bg-brand-abyss border ${error ? 'border-rose-500' : 'border-brand-volcanic'} rounded-xl px-4 py-2.5 text-sm text-brand-limestone placeholder-slate-500 focus:outline-none focus:border-brand-azure transition-colors resize-none ${className}`}
+        className={`w-full bg-brand-twilight border ${error ? 'border-rose-500' : 'border-brand-dusk'} rounded-xl px-4 py-2.5 text-sm text-brand-sandstone placeholder-brand-sandstone/40 focus:outline-none focus:border-brand-sunriseCoral transition-colors resize-none ${className}`}
         {...props}
       />
       {error && <p className="text-xs text-rose-400 font-medium">{error}</p>}
@@ -145,7 +145,7 @@ export interface SkeletonProps {
 }
 
 export const Skeleton: React.FC<SkeletonProps> = ({ className = '' }: SkeletonProps) => {
-  return <div className={`animate-pulse bg-brand-volcanic/60 rounded-xl ${className}`} />;
+  return <div className={`animate-pulse bg-brand-dusk rounded-xl ${className}`} />;
 };
 
 export interface EmptyStateProps {
@@ -162,10 +162,10 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
   action,
 }: EmptyStateProps) => {
   return (
-    <div className="bg-brand-ocean/40 border border-dashed border-brand-volcanic rounded-3xl p-10 text-center space-y-3">
-      {icon && <div className="mx-auto text-brand-azure flex justify-center">{icon}</div>}
-      <h3 className="text-base font-bold text-brand-limestone">{title}</h3>
-      <p className="text-xs text-slate-400 max-w-sm mx-auto leading-relaxed">{description}</p>
+    <div className="bg-brand-twilight border border-dashed border-brand-sunsetPurple/40 rounded-3xl p-10 text-center space-y-3">
+      {icon && <div className="mx-auto text-brand-goldenHour flex justify-center">{icon}</div>}
+      <h3 className="text-base font-bold text-brand-sandstone">{title}</h3>
+      <p className="text-xs text-brand-sandstone/60 max-w-sm mx-auto leading-relaxed">{description}</p>
       {action && <div className="pt-2">{action}</div>}
     </div>
   );

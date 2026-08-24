@@ -1,4 +1,7 @@
-// Design Tokens for ANTILIA Visual Language (Caribbean Sunrise & Sunset)
+const fs = require('fs');
+
+const designTokensPath = 'packages/design-system/src/index.ts';
+let tokens = // Design Tokens for ANTILIA Visual Language (Caribbean Sunrise & Sunset)
 
 export const colors = {
   brand: {
@@ -65,3 +68,24 @@ export const elevations = {
   glowGold: '0 0 25px -5px rgba(255, 179, 71, 0.4)',
   glowSea: '0 0 25px -5px rgba(0, 180, 216, 0.4)',
 };
+\;
+
+fs.writeFileSync(designTokensPath, tokens, 'utf8');
+
+const tailwindConfigPaths = [
+  'apps/web/tailwind.config.js',
+  'apps/admin/tailwind.config.js',
+  'apps/moderation/tailwind.config.js'
+];
+
+for (const p of tailwindConfigPaths) {
+  let content = fs.readFileSync(p, 'utf8');
+  content = content.replace(/volcanic: "[^"]+",/g, 'twilight: "#110D17",');
+  content = content.replace(/limestone: "[^"]+",/g, 'sandstone: "#FDF2E9",');
+  content = content.replace(/ocean: "[^"]+",/g, 'sunriseCoral: "#FF7A59",');
+  content = content.replace(/azure: "[^"]+",/g, 'goldenHour: "#FFB347",');
+  content = content.replace(/abyss: "[^"]+",/g, 'caribbeanSea: "#00B4D8",');
+  content = content.replace(/raised: "[^"]+"/g, 'sunsetPurple: "#8B5CF6"');
+  fs.writeFileSync(p, content, 'utf8');
+}
+console.log('Tokens updated');
