@@ -1,4 +1,4 @@
-# Walkthrough — Caribbean One Digital Ecosystem & Platform Expansion
+# Walkthrough — Antilia Digital Ecosystem & Platform Expansion
 
 ## Accomplishments & Highlights
 

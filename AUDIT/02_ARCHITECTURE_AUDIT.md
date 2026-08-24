@@ -8,7 +8,7 @@
 
 ## 1. Architectural Philosophy & Topological Review
 
-CARIBBEAN ONE is engineered as a **Modular Monolith** managed via **Turborepo** and **pnpm workspaces**. This approach isolates domain logic into discrete TypeScript packages while maintaining a unified type system and single deployment boundary.
+ANTILIA is engineered as a **Modular Monolith** managed via **Turborepo** and **pnpm workspaces**. This approach isolates domain logic into discrete TypeScript packages while maintaining a unified type system and single deployment boundary.
 
 ```mermaid
 graph TD

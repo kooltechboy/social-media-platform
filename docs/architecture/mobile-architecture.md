@@ -1,4 +1,4 @@
-# Mobile Architecture — CARIBBEAN ONE
+# Mobile Architecture — ANTILIA
 
 ## 1. Positioning
 Mobile is a **first-class product**, not a responsive website. The Caribbean audience is overwhelmingly mobile; the app must excel on **mid-range Android devices** on intermittent connectivity.

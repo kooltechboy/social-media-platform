@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "CARIBBEAN ONE",
+    "name": "ANTILIA",
     "slug": "caribbean-one",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -16,8 +16,8 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.caribbeanone.app",
       "infoPlist": {
-        "NSCameraUsageDescription": "CARIBBEAN ONE requires camera access to record stories, reels, and host live streams.",
-        "NSMicrophoneUsageDescription": "CARIBBEAN ONE requires microphone access for live streams, podcasts, and audio messages."
+        "NSCameraUsageDescription": "ANTILIA requires camera access to record stories, reels, and host live streams.",
+        "NSMicrophoneUsageDescription": "ANTILIA requires microphone access for live streams, podcasts, and audio messages."
       }
     },
     "android": {

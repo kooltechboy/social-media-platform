@@ -158,7 +158,7 @@ export default function MessageThread({
               <CheckCircle className="w-3.5 h-3.5 text-sky-400" />
             </h3>
             <span className="text-[10px] text-emerald-400 font-extrabold flex items-center gap-1">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" /> Active on Caribbean One
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" /> Active on Antilia
             </span>
           </div>
         </div>

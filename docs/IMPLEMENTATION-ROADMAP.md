@@ -1,4 +1,4 @@
-# Implementation Roadmap — CARIBBEAN ONE
+# Implementation Roadmap — ANTILIA
 
 _Strategy: architect for 100M users, build for 10,000. Each phase exits only through the Definition of Done in `AGENTS.md`._
 

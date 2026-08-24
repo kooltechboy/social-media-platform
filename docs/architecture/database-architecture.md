@@ -1,4 +1,4 @@
-# Database Architecture — CARIBBEAN ONE
+# Database Architecture — ANTILIA
 
 ## 1. Platform
 Supabase PostgreSQL (ADR-002). RLS is the security boundary (ADR-013 companion: THREAT-MODEL.md).

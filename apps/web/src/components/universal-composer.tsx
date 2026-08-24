@@ -290,7 +290,7 @@ export default function UniversalComposer({
         // Ignore
       }
 
-      setSuccessMessage('Successfully published to the Caribbean One feed!');
+      setSuccessMessage('Successfully published to the Antilia feed!');
       setTimeout(() => setSuccessMessage(null), 4000);
       if (onPostCreated) onPostCreated();
     } catch (err) {
@@ -335,7 +335,7 @@ export default function UniversalComposer({
         <div className="absolute inset-0 z-30 rounded-3xl bg-slate-950/90 backdrop-blur-md flex flex-col items-center justify-center border-2 border-dashed border-sky-400 p-6 text-center space-y-2 pointer-events-none">
           <UploadCloud className="w-12 h-12 text-sky-400 animate-bounce" />
           <h3 className="text-base font-black text-white">Drop Photos or Videos Here</h3>
-          <p className="text-xs text-sky-300">Attach directly to your Caribbean One post</p>
+          <p className="text-xs text-sky-300">Attach directly to your Antilia post</p>
         </div>
       )}
 

@@ -1,4 +1,4 @@
-# Intelligence Architecture: CaribAI, Search & Feed — CARIBBEAN ONE
+# Intelligence Architecture: CaribAI, Search & Feed — ANTILIA
 
 ## 1. CaribAI (AI OS)
 

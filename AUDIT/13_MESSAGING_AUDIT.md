@@ -17,7 +17,7 @@
 ## 2. Invariant & Security Checks
 
 - **RLS Policy:** Users can only view messages for conversations where they are active members (`left_at IS NULL`).
-- **System Welcome Automation:** New profiles receive an initial onboarding message from the verified Caribbean One platform bot via migration `00015_realtime_welcome.sql`.
+- **System Welcome Automation:** New profiles receive an initial onboarding message from the verified Antilia platform bot via migration `00015_realtime_welcome.sql`.
 
 ---
 

@@ -61,7 +61,7 @@ const SAMPLE_PAGE_DATA: Record<string, PageDetails> = {
     location: 'Kingston, Jamaica 🇯🇲',
     followers: '284.5K',
     description:
-      'Official verified civic entity on Caribbean One. Providing public notices, consular assistance for the diaspora in North America and Europe, investment programs, and national development updates.',
+      'Official verified civic entity on Antilia. Providing public notices, consular assistance for the diaspora in North America and Europe, investment programs, and national development updates.',
     website: 'https://gov.jm',
     contactEmail: 'consular@gov.jm',
     avatar: '🇯🇲',
@@ -86,7 +86,7 @@ const SAMPLE_PAGE_DATA: Record<string, PageDetails> = {
     location: 'Portland, Jamaica 🇯🇲',
     followers: '42.1K',
     description:
-      'Certified Grade-1 Jamaican Blue Mountain single-origin whole bean coffee. We roast weekly and dispatch globally via Caribbean One logistics with guaranteed freshness and escrow protection.',
+      'Certified Grade-1 Jamaican Blue Mountain single-origin whole bean coffee. We roast weekly and dispatch globally via Antilia logistics with guaranteed freshness and escrow protection.',
     website: 'https://portlandcoffee.jm',
     contactEmail: 'orders@portlandcoffee.jm',
     avatar: '☕',
@@ -120,7 +120,7 @@ export default async function ModularPageView({ params }: { params: Promise<{ sl
     location: 'Caribbean & Diaspora 🌍',
     followers: '12.4K',
     description:
-      'A verified digital storefront and community organization operating within the Caribbean One ecosystem.',
+      'A verified digital storefront and community organization operating within the Antilia ecosystem.',
     website: 'https://caribbeanone.com',
     contactEmail: 'contact@caribbeanone.com',
     avatar: '🌴',
@@ -131,7 +131,7 @@ export default async function ModularPageView({ params }: { params: Promise<{ sl
     posts: [
       {
         id: 'sample-post-1',
-        title: 'Welcome to our verified Caribbean One Page',
+        title: 'Welcome to our verified Antilia Page',
         time: 'Just now',
         content:
           'Connect with us, shop our products, RSVP for upcoming events, or send us a direct message right here on the network.',

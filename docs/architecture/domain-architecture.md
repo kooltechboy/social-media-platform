@@ -1,4 +1,4 @@
-# Domain Architecture — CARIBBEAN ONE
+# Domain Architecture — ANTILIA
 
 ## 1. Modular Monolith with Extraction Boundaries (ADR-003)
 

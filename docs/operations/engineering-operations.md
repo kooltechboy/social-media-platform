@@ -1,4 +1,4 @@
-# Engineering Operations: CI/CD & Testing Strategy — CARIBBEAN ONE
+# Engineering Operations: CI/CD & Testing Strategy — ANTILIA
 
 ## 1. CI/CD Pipeline (Phase 1 deliverable)
 

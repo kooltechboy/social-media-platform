@@ -1,4 +1,4 @@
-# Disaster Recovery Plan — CARIBBEAN ONE
+# Disaster Recovery Plan — ANTILIA
 
 ## 1. Objectives
 | Metric | Target |

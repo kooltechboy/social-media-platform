@@ -6,7 +6,7 @@
 
 ---
 
-## 1. Top 10 Architectural Principles for Scaling CARIBBEAN ONE
+## 1. Top 10 Architectural Principles for Scaling ANTILIA
 
 1. **Maintain Strict Double-Entry Ledger Invariants:** Never bypass SpotPay ledger tables with direct mutable updates. Every financial event must remain auditable, immutable, and paired.
 2. **Uphold Identity Sovereignty:** Never force public exposure of island origin or location; privacy builds community trust.

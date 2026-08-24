@@ -1,4 +1,4 @@
--- Migration 00001: Comprehensive Geographic Reference Data Model for CARIBBEAN ONE
+-- Migration 00001: Comprehensive Geographic Reference Data Model for ANTILIA
 -- Description: Creates sovereign states, CARICOM members, territories/dependencies, currencies, locales, flag emojis
 
 CREATE TYPE public.country_type AS ENUM (

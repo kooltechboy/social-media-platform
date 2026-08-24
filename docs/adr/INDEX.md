@@ -1,4 +1,4 @@
-# ADR Index — CARIBBEAN ONE
+# ADR Index — ANTILIA
 
 Architectural Decision Records. Format: Status / Context / Decision / Consequences. New ADRs are appended; superseded ADRs are marked, never deleted.
 

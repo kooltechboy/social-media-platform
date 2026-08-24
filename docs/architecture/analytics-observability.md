@@ -1,4 +1,4 @@
-# Analytics & Observability Architecture — CARIBBEAN ONE
+# Analytics & Observability Architecture — ANTILIA
 
 ## 1. Analytics (Privacy-Aware)
 

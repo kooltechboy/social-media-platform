@@ -56,7 +56,7 @@ Text: "${text}"`;
       headers: {
         "Authorization": `Bearer ${this.apiKey}`,
         "HTTP-Referer": "https://caribbeanone.app",
-        "X-Title": "CARIBBEAN ONE",
+        "X-Title": "ANTILIA",
         "Content-Type": "application/json"
       },
       body: JSON.stringify({

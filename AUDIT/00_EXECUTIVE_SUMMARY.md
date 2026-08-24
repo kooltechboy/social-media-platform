@@ -1,6 +1,6 @@
 # 00 — EXECUTIVE SUMMARY & AUDIT BASELINE
 
-**Project:** CARIBBEAN ONE (`@caribbean/platform`)  
+**Project:** ANTILIA (`@caribbean/platform`)  
 **Positioning:** "The Digital Home of the Caribbean and Its Global Diaspora"  
 **Audit Date:** August 22, 2026  
 **Engineering Governance:** `AGENTS.md` NASA-grade / Fortune-100 Standard  
@@ -10,7 +10,7 @@
 
 ## 1. Executive Summary
 
-CARIBBEAN ONE is an ambitious, unified digital ecosystem bridging social networking, creator monetization, live media streaming, podcast distribution, community coordination, commerce marketplace, regional business directories, AI-driven discovery, and financial transaction orchestration via **SpotPay**.
+ANTILIA is an ambitious, unified digital ecosystem bridging social networking, creator monetization, live media streaming, podcast distribution, community coordination, commerce marketplace, regional business directories, AI-driven discovery, and financial transaction orchestration via **SpotPay**.
 
 This forensic audit evaluated the entire codebase against world-class enterprise criteria:
 1. **Financial Ledger Safety & Idempotency**

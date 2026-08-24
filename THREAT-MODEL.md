@@ -1,4 +1,4 @@
-# Threat Model — CARIBBEAN ONE
+# Threat Model — ANTILIA
 
 _Stride-based model. Maintained by the AppSec & Compliance Agent; reviewed per release._
 

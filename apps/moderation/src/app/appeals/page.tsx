@@ -62,7 +62,7 @@ export default async function AppealsPage() {
       {/* Sidebar */}
       <aside className="hidden lg:flex flex-col w-56 bg-[#0F172A] border-r border-slate-800 p-4 space-y-1 sticky top-0 min-h-screen">
         <div className="px-2 py-4 mb-2">
-          <h1 className="text-sm font-extrabold text-white">CARIBBEAN ONE</h1>
+          <h1 className="text-sm font-extrabold text-white">ANTILIA</h1>
           <p className="text-[11px] text-amber-300 font-semibold mt-0.5">Moderation Center</p>
         </div>
         <Link

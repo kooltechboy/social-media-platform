@@ -19,7 +19,7 @@ interface Conversation {
 const INITIAL_CONVERSATIONS: Conversation[] = [
   { id: 'c1', name: 'Jamaicans in Toronto', preview: 'Kofi: Caribana tickets are live!', unread: 3 },
   { id: 'c2', name: 'Ana Rodríguez (Santo Domingo)', preview: 'The new menu photos are uploaded', unread: 0 },
-  { id: 'c3', name: 'Caribbean One Support', preview: 'Welcome to the digital home of the Caribbean!', unread: 0 },
+  { id: 'c3', name: 'Antilia Support', preview: 'Welcome to the digital home of the Caribbean!', unread: 0 },
 ];
 
 export function MessagesScreen() {

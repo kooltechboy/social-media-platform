@@ -1,4 +1,4 @@
-# Trust & Safety Architecture — CARIBBEAN ONE
+# Trust & Safety Architecture — ANTILIA
 
 ## 1. Philosophy
 

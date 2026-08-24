@@ -61,7 +61,7 @@ export default function LoginPage() {
             <ShieldAlert className="w-8 h-8 text-amber-400" aria-hidden="true" />
           </div>
           <h1 className="text-lg font-extrabold text-white tracking-tight">
-            CARIBBEAN ONE
+            ANTILIA
           </h1>
           <p className="text-sm font-semibold text-amber-300">
             Moderation Center

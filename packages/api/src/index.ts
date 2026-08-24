@@ -1,4 +1,4 @@
-// Typed API Client Contracts & Services for CARIBBEAN ONE
+// Typed API Client Contracts & Services for ANTILIA
 
 export interface PostInput {
   authorId: string;

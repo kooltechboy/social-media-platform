@@ -29,7 +29,7 @@ const CURATED_CARIBBEAN_POSTS: FeedPostData[] = [
     location: 'Kingston, Jamaica 🇯🇲',
     time: '12m ago',
     content:
-      'The energy in Kingston tonight is unmatched! Sound system culture alive and vibrant. Big up to everyone streaming in from London, Brooklyn, and Toronto on Caribbean One! 🇯🇲🔊✨\n\n#KingstonVibes #SoundSystemCulture',
+      'The energy in Kingston tonight is unmatched! Sound system culture alive and vibrant. Big up to everyone streaming in from London, Brooklyn, and Toronto on Antilia! 🇯🇲🔊✨\n\n#KingstonVibes #SoundSystemCulture',
     likes: 428,
     reposts: 89,
     comments: 34,
@@ -44,7 +44,7 @@ const CURATED_CARIBBEAN_POSTS: FeedPostData[] = [
     location: 'Santo Domingo, Dominican Rep. 🇩🇴',
     time: '45m ago',
     content:
-      'Excited to launch our Caribbean Tech Founders Circle right here on Caribbean One. If you are building software, fintech, or media across the islands or the diaspora, let’s connect! 🇩🇴🚀\n\n#CaribTech #Founders',
+      'Excited to launch our Caribbean Tech Founders Circle right here on Antilia. If you are building software, fintech, or media across the islands or the diaspora, let’s connect! 🇩🇴🚀\n\n#CaribTech #Founders',
     likes: 312,
     reposts: 64,
     comments: 28,
@@ -111,7 +111,7 @@ export default async function HomePage() {
         author: p.profiles?.display_name || 'Caribbean Member',
         handle: p.profiles?.username || 'member',
         verified: true,
-        location: 'Caribbean One Network 🌴',
+        location: 'Antilia Network 🌴',
         time: relativeTime(p.created_at),
         content: p.content || '',
         mediaUrls: p.media_urls || [],
@@ -192,7 +192,7 @@ export default async function HomePage() {
             <div className="bg-gradient-to-r from-sky-950/90 via-slate-900/90 to-emerald-950/80 rounded-3xl p-4 sm:p-5 border border-sky-500/30 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-xl backdrop-blur-xl">
               <div>
                 <h3 className="text-xs font-black text-white flex items-center gap-2">
-                  <Globe className="w-4 h-4 text-sky-400" /> Caribbean One Community Access
+                  <Globe className="w-4 h-4 text-sky-400" /> Antilia Community Access
                 </h3>
                 <p className="text-[11px] text-slate-300 mt-0.5">
                   Sign in or create your profile to access SpotPay wallet, direct messaging, and verified business pages.

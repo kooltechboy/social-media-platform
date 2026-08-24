@@ -120,7 +120,7 @@ export default function LoginPage() {
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <h1 className="text-2xl font-black bg-gradient-to-r from-sky-400 via-amber-400 to-emerald-400 bg-clip-text text-transparent tracking-tight">
-            CARIBBEAN ONE
+            ANTILIA
           </h1>
           <p className="text-sm text-slate-400 mt-2">
             The digital home of the Caribbean and its global diaspora.

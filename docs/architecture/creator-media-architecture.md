@@ -1,4 +1,4 @@
-# Creator, Live & Podcast Architecture — CARIBBEAN ONE
+# Creator, Live & Podcast Architecture — ANTILIA
 
 ## 1. Creator OS
 

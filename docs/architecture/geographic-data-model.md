@@ -1,4 +1,4 @@
-# Geographic / Country Data Model — CARIBBEAN ONE
+# Geographic / Country Data Model — ANTILIA
 
 ## 1. Principles
 

@@ -15,7 +15,7 @@
 │   ├── admin/             # Internal Administration & Feature Flag Control (Next.js App Router)
 │   ├── mobile/            # Universal Mobile App (Expo / React Native)
 │   ├── moderation/        # Trust & Safety / Moderation Portal (Next.js App Router)
-│   └── web/               # Core Caribbean One Consumer & Creator Web App (Next.js 15 App Router)
+│   └── web/               # Core Antilia Consumer & Creator Web App (Next.js 15 App Router)
 ├── packages/
 │   ├── advertising/       # Ad Sets, Campaigns, Impression & Click Tracking
 │   ├── ai/                # CaribAI OpenRouter integration & Ask Caribbean Query Planner

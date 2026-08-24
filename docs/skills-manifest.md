@@ -1,4 +1,4 @@
-# Skills Manifest — CARIBBEAN ONE
+# Skills Manifest — ANTILIA
 
 _Curated engineering skillset. Do not install skills blindly; evaluate maintenance status and overlap first. Record every addition here._
 

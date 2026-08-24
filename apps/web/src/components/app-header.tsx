@@ -88,10 +88,10 @@ export default function AppHeader() {
         <Link
           href="/"
           className="flex items-center gap-2 text-xl font-extrabold tracking-tight text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 rounded-md"
-          aria-label="CARIBBEAN ONE — Home"
+          aria-label="ANTILIA — Home"
         >
           <span className="bg-gradient-to-r from-sky-400 via-amber-400 to-emerald-400 bg-clip-text text-transparent">
-            CARIBBEAN ONE
+            ANTILIA
           </span>
           <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-sky-500/20 text-sky-300 border border-sky-500/30">
             ECOSYSTEM

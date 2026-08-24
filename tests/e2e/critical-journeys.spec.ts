@@ -3,7 +3,7 @@ import { test, expect } from '@playwright/test';
 test.describe('Critical journeys', () => {
   test('home page loads with navigation and feed modes', async ({ page }) => {
     await page.goto('/');
-    await expect(page.getByRole('link', { name: /CARIBBEAN ONE/ })).toBeVisible();
+    await expect(page.getByRole('link', { name: /ANTILIA/ })).toBeVisible();
     await expect(page.getByText('Following')).toBeVisible();
     await expect(page.getByText('Latest')).toBeVisible();
   });

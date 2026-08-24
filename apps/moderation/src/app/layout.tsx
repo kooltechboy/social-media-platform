@@ -2,8 +2,8 @@ import type { Metadata } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'Caribbean One — Moderation Center',
-  description: 'Human-in-the-loop content moderation console for Caribbean One platform trust & safety.',
+  title: 'Antilia — Moderation Center',
+  description: 'Human-in-the-loop content moderation console for Antilia platform trust & safety.',
 };
 
 export default function ModerationRootLayout({ children }: { children: React.ReactNode }) {

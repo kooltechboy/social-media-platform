@@ -1,4 +1,4 @@
-# API & Event Architecture — CARIBBEAN ONE
+# API & Event Architecture — ANTILIA
 
 ## 1. API Layer
 

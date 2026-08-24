@@ -148,7 +148,7 @@ export default async function CreateHubPage() {
         <div className="flex items-center gap-2">
           <Sparkles className="w-7 h-7 text-sky-400" />
           <h1 className="text-2xl md:text-3xl font-black text-white tracking-tight">
-            Caribbean One Creation Hub
+            Antilia Creation Hub
           </h1>
         </div>
         <p className="text-xs md:text-sm text-slate-400 max-w-2xl">

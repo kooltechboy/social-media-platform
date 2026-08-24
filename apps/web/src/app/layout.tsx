@@ -6,7 +6,7 @@ import MobileNav from '../components/mobile-nav';
 import CaribbeanSunsetBackground from '../components/caribbean-sunset-background';
 
 export const metadata: Metadata = {
-  title: 'CARIBBEAN ONE — Caribbean Digital Ecosystem & Diaspora Platform',
+  title: 'ANTILIA — Caribbean Digital Ecosystem & Diaspora Platform',
   description:
     "The world's premier digital platform for Caribbean people, culture, businesses, creators, and the global diaspora.",
 };

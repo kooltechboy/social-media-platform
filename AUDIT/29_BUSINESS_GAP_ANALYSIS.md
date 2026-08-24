@@ -8,7 +8,7 @@
 
 ## 1. Multi-Sided Monetization Model
 
-CARIBBEAN ONE does not depend solely on advertising arbitrage. It deploys a diversified, multi-engine revenue strategy:
+ANTILIA does not depend solely on advertising arbitrage. It deploys a diversified, multi-engine revenue strategy:
 
 ```
 1. Creator Subscriptions: 15% Platform Take Rate
@@ -23,7 +23,7 @@ CARIBBEAN ONE does not depend solely on advertising arbitrage. It deploys a dive
 
 ## 2. Competitive Defensibility & Moat
 
-| Dimension | Generic Big Tech (Meta, TikTok, X) | CARIBBEAN ONE |
+| Dimension | Generic Big Tech (Meta, TikTok, X) | ANTILIA |
 | :--- | :--- | :--- |
 | **Cultural Relevance** | Algorithmic homogeny; local dialects suppressed | First-class Caribbean dialects (Patois, Kreyòl, Papiamento) |
 | **Creator Payouts** | Strict US/EU banking requirements; Caribbean creators locked out | SpotPay regional settlement & local wallet disbursements |

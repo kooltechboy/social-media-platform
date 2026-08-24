@@ -131,7 +131,7 @@ export default async function MessagesPage({ searchParams }: { searchParams: Pro
         <aside className="md:col-span-1 space-y-2">
           {summaries.length === 0 && (
             <div className="bg-slate-900/40 border border-dashed border-slate-800 rounded-2xl p-6 text-center">
-              <p className="text-xs text-slate-500">No conversations yet. New members receive a welcome message from Caribbean One.</p>
+              <p className="text-xs text-slate-500">No conversations yet. New members receive a welcome message from Antilia.</p>
             </div>
           )}
           {summaries.map((summary) => (

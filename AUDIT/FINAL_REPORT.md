@@ -1,6 +1,6 @@
 # FINAL PLATFORM AUDIT REPORT & SCORECARD
 
-**Platform:** CARIBBEAN ONE (`@caribbean/platform`)  
+**Platform:** ANTILIA (`@caribbean/platform`)  
 **Tagline:** "The Digital Home of the Caribbean and Its Global Diaspora"  
 **Audit Completion Date:** August 22, 2026  
 **Governance Framework:** NASA-Grade Software Engineering & Fortune-100 Standard (`AGENTS.md`)
@@ -9,7 +9,7 @@
 
 ## 1. Executive Summary
 
-A comprehensive, forensic engineering audit was conducted across all applications, packages, database migrations, security policies, financial ledgers, UX/UI implementations, and automated test suites of CARIBBEAN ONE.
+A comprehensive, forensic engineering audit was conducted across all applications, packages, database migrations, security policies, financial ledgers, UX/UI implementations, and automated test suites of ANTILIA.
 
 The codebase represents a **substantially mature and thoughtfully architected modular monolith** featuring strict domain separation across 23 workspace packages, 16 comprehensive database migrations with full Row Level Security (RLS), and an immutable double-entry financial ledger engine (**SpotPay**).
 

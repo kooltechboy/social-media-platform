@@ -2,8 +2,8 @@
   "name": "caribbean-one",
   "version": "1.0.0",
   "private": true,
-  "description": "CARIBBEAN ONE — Caribbean Digital Ecosystem & Global Diaspora Platform",
-  "author": "Caribbean One Engineering",
+  "description": "ANTILIA — Caribbean Digital Ecosystem & Global Diaspora Platform",
+  "author": "Antilia Engineering",
   "license": "UNLICENSED",
   "packageManager": "pnpm@9.0.0",
   "scripts": {

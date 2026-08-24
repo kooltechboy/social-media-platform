@@ -1,7 +1,7 @@
-# SpotPay Payment Architecture & Double-Entry Ledger — CARIBBEAN ONE
+# SpotPay Payment Architecture & Double-Entry Ledger — ANTILIA
 
 ## Overview
-SpotPay serves two critical financial functions within CARIBBEAN ONE:
+SpotPay serves two critical financial functions within ANTILIA:
 1. **Native Stored-Value Digital Wallet:** Enables users and creators to hold balances, execute instant peer-to-peer transfers, tip creators, purchase live stream gifts, and buy marketplace products (operating as a native digital payment method like PayPal).
 2. **Unified Payment Gateway Orchestration:** Interfaces with external payment service providers (Stripe, PayPal, Apple Pay, Google Pay) to accept credit/debit cards and manage creator payouts.
 

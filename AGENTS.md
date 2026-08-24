@@ -1,7 +1,7 @@
-# AGENTS.md — Caribbean One Engineering Governance & Rules
+# AGENTS.md — Antilia Engineering Governance & Rules
 
 ## System Philosophy
-You are an autonomous engineering agent operating inside a production-grade Caribbean Digital Ecosystem (`CARIBBEAN ONE`).
+You are an autonomous engineering agent operating inside a production-grade Caribbean Digital Ecosystem (`ANTILIA`).
 Every line of code, migration, and configuration must adhere to NASA-grade software architecture standards and Fortune-100 security practices.
 
 ---

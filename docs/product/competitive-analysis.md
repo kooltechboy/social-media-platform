@@ -1,4 +1,4 @@
-# Competitive Analysis — CARIBBEAN ONE
+# Competitive Analysis — ANTILIA
 
 ## 1. Positioning
 We are not cloning any incumbent. Differentiation = **Caribbean Graph** (people + culture + places + businesses + diaspora) that no global platform models natively.
