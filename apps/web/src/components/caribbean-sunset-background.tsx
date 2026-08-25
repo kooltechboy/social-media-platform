@@ -5,21 +5,21 @@ import React, { useState } from 'react';
 const PHOTOREALISTIC_CARIBBEAN_WALLPAPERS = [
   {
     id: 'caribbean-sunrise',
-    name: 'Island Sunrise',
-    url: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=2400&q=80',
-    description: 'Vibrant sunrise over the Caribbean sea',
+    name: 'Palm Beach',
+    url: 'https://images.unsplash.com/photo-1590523277543-a94d2e4eb00b?auto=format&fit=crop&w=2400&q=80',
+    description: 'Coconut palms and tropical beach vibes',
   },
   {
     id: 'golden-hour',
-    name: 'Golden Hour',
-    url: 'https://images.unsplash.com/photo-1519046904884-53103b34b206?auto=format&fit=crop&w=2400&q=80',
-    description: 'Warm golden hues illuminating the tropical coast',
+    name: 'Island Gathering',
+    url: 'https://images.unsplash.com/photo-1533050487297-09b450131914?auto=format&fit=crop&w=2400&q=80',
+    description: 'Tropical gathering, BBQ, and Caribbean culture',
   },
   {
     id: 'twilight-dusk',
-    name: 'Twilight Dusk',
+    name: 'Carnival Energy',
     url: 'https://images.unsplash.com/photo-1473445763261-2679c65651ab?auto=format&fit=crop&w=2400&q=80',
-    description: 'Deep purple and coral twilight skies',
+    description: 'Vibrant sunset and festive energy',
   },
 ];
 
@@ -101,3 +101,4 @@ export default function CaribbeanSunsetBackground() {
     </>
   );
 }
+

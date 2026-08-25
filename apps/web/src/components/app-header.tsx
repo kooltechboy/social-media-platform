@@ -81,7 +81,7 @@ export default function AppHeader() {
 
   return (
     <header
-      className="sticky top-0 z-50 bg-brand-dusk/90 backdrop-blur-xl border-b border-brand-caribbeanSea/20 px-4 py-3 flex items-center justify-between"
+      className="sticky top-0 z-50 bg-transparent border-b border-white/10 px-6 sm:px-10 py-5 flex items-center justify-between"
       role="banner"
     >
       <div className="flex items-center gap-6">
@@ -220,4 +220,5 @@ export default function AppHeader() {
     </header>
   );
 }
+
 
