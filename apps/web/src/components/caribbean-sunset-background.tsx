@@ -6,19 +6,19 @@ const PHOTOREALISTIC_CARIBBEAN_WALLPAPERS = [
   {
     id: 'caribbean-sunrise',
     name: 'Island Sunrise',
-    url: 'https://images.unsplash.com/photo-1548810793-7eecc7ce27b0?auto=format&fit=crop&w=2400&q=95',
+    url: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=2400&q=80',
     description: 'Vibrant sunrise over the Caribbean sea',
   },
   {
     id: 'golden-hour',
     name: 'Golden Hour',
-    url: 'https://images.unsplash.com/photo-1510414842594-a61c69b5ae57?auto=format&fit=crop&w=2400&q=95',
+    url: 'https://images.unsplash.com/photo-1519046904884-53103b34b206?auto=format&fit=crop&w=2400&q=80',
     description: 'Warm golden hues illuminating the tropical coast',
   },
   {
     id: 'twilight-dusk',
     name: 'Twilight Dusk',
-    url: 'https://images.unsplash.com/photo-1473445763261-2679c65651ab?auto=format&fit=crop&w=2400&q=95',
+    url: 'https://images.unsplash.com/photo-1473445763261-2679c65651ab?auto=format&fit=crop&w=2400&q=80',
     description: 'Deep purple and coral twilight skies',
   },
 ];
@@ -30,32 +30,30 @@ export default function CaribbeanSunsetBackground() {
   const current = PHOTOREALISTIC_CARIBBEAN_WALLPAPERS[activeWallpaperIndex];
 
   const opacityMap = {
-    vivid: 0.85,
-    bright: 0.5,
-    soft: 0.25,
+    vivid: 0.9,
+    bright: 0.6,
+    soft: 0.3,
   };
 
   return (
     <>
       <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden bg-brand-twilight">
-        {/* Beautiful Vibrant Background Layer */}
+        {/* Beautiful Vibrant Background Layer (No aggressive blend modes so the image actually shows!) */}
         <div
-          className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-all duration-700 transform scale-100 mix-blend-screen"
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-opacity duration-1000"
           style={{
             backgroundImage: `url('${current.url}')`,
             opacity: opacityMap[brightness],
           }}
         />
 
-        {/* Twilight Tint for Readability */}
-        <div className="absolute inset-0 bg-gradient-to-b from-brand-twilight/50 via-brand-twilight/70 to-brand-twilight/95 mix-blend-multiply" />
+        {/* Gentle Dark Gradient from bottom for Text Readability - NOT multiply! */}
+        <div className="absolute inset-0 bg-gradient-to-t from-brand-twilight via-brand-twilight/60 to-transparent opacity-90" />
+        <div className="absolute inset-0 bg-gradient-to-b from-brand-twilight/40 to-transparent" />
 
         {/* Vibrant Glowing Accents (Coral & Gold) */}
-        <div className="absolute -top-10 right-1/4 w-[750px] h-[750px] rounded-full bg-gradient-to-br from-brand-sunriseCoral/20 via-brand-goldenHour/10 to-transparent blur-[110px] pointer-events-none" />
-        <div className="absolute bottom-0 left-10 w-[700px] h-[700px] rounded-full bg-gradient-to-tr from-brand-caribbeanSea/20 via-brand-sunsetPurple/10 to-transparent blur-[120px] pointer-events-none" />
-
-        {/* Minimal Noise/Texture Overlay */}
-        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.05]" />
+        <div className="absolute -top-10 right-1/4 w-[750px] h-[750px] rounded-full bg-brand-sunriseCoral/20 blur-[120px] pointer-events-none mix-blend-screen" />
+        <div className="absolute bottom-0 left-10 w-[700px] h-[700px] rounded-full bg-brand-caribbeanSea/20 blur-[120px] pointer-events-none mix-blend-screen" />
       </div>
 
       {/* Photorealistic Wallpaper & Brightness Switcher Widget */}
