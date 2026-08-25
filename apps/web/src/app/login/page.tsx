@@ -1,16 +1,12 @@
 import type { Metadata } from 'next';
-import { GatewayShell } from '../../components/gateway/GatewayShell';
-import { SignInForm } from '../../components/gateway/SignInForm';
+import { AntiliaMasterGateway } from '../../components/gateway/AntiliaMasterGateway';
 
 export const metadata: Metadata = {
-  title: 'Sign In | ANTILIA Gateway',
-  description: 'Sign in to your ANTILIA account — The digital home of the Caribbean and its global diaspora.',
+  title: 'ANTILIA — One Caribbean. One Community. One Digital Home.',
+  description:
+    'Sign in to ANTILIA — The premier digital platform connecting 59M+ Caribbean people, businesses, creators, music, and the global diaspora.',
 };
 
 export default function LoginPage() {
-  return (
-    <GatewayShell>
-      <SignInForm />
-    </GatewayShell>
-  );
+  return <AntiliaMasterGateway />;
 }
