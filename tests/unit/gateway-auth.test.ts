@@ -92,4 +92,27 @@ describe('Antilia Gateway — Caribbean & Diaspora Constants', () => {
       expect(regex.test(invalid)).toBe(false);
     }
   });
+
+  it('validates open redirect protection logic', () => {
+    const ALLOWED_REDIRECT_PREFIXES = ['/', '/explore', '/profile', '/settings', '/live', '/podcasts', '/marketplace', '/creator-studio', '/spotpay', '/communities', '/map', '/events'];
+
+    function sanitizeRedirectUrl(target: string | null): string {
+      if (!target) return '/';
+      const trimmed = target.trim();
+      if (!trimmed.startsWith('/') || trimmed.startsWith('//') || trimmed.includes('://')) {
+        return '/';
+      }
+      const isAllowed = ALLOWED_REDIRECT_PREFIXES.some((prefix) => trimmed === prefix || trimmed.startsWith(`${prefix}/`));
+      return isAllowed ? trimmed : '/';
+    }
+
+    expect(sanitizeRedirectUrl(null)).toBe('/');
+    expect(sanitizeRedirectUrl('/explore')).toBe('/explore');
+    expect(sanitizeRedirectUrl('/profile/daniel')).toBe('/profile/daniel');
+    // Block open redirect attempts
+    expect(sanitizeRedirectUrl('https://malicious-site.com')).toBe('/');
+    expect(sanitizeRedirectUrl('//malicious-site.com')).toBe('/');
+    expect(sanitizeRedirectUrl('javascript:alert(1)')).toBe('/');
+    expect(sanitizeRedirectUrl('/unauthorized-admin-path')).toBe('/');
+  });
 });

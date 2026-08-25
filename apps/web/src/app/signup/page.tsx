@@ -3,10 +3,10 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { User, Palette, Store, Building2, Mic, Users, ShoppingBag, ArrowRight } from 'lucide-react';
+import { User, Palette, Store, Building2, Mic, Users, ShoppingBag, ArrowRight, RotateCcw, Sparkles } from 'lucide-react';
 import { GatewayShell } from '../../components/gateway/GatewayShell';
 import { StepProgress } from '../../components/gateway/signup/StepProgress';
-import { getSignupSession, saveSignupSession, type AccountIntent } from '../../lib/auth/signup-session';
+import { getSignupSession, saveSignupSession, clearSignupSession, type AccountIntent, type SignupState } from '../../lib/auth/signup-session';
 
 interface IntentOption {
   id: AccountIntent;
@@ -66,11 +66,15 @@ const INTENTS: IntentOption[] = [
 export default function SignupIntentPage() {
   const router = useRouter();
   const [selectedIntent, setSelectedIntent] = useState<AccountIntent>('personal');
+  const [draftSession, setDraftSession] = useState<SignupState | null>(null);
 
   useEffect(() => {
     const session = getSignupSession();
     if (session.intent) {
       setSelectedIntent(session.intent);
+    }
+    if (session.username || session.email || session.originCountryIso) {
+      setDraftSession(session);
     }
   }, []);
 
@@ -79,12 +83,57 @@ export default function SignupIntentPage() {
     router.push('/signup/caribbean');
   };
 
+  const handleStartOver = () => {
+    clearSignupSession();
+    setDraftSession(null);
+    setSelectedIntent('personal');
+  };
+
   return (
     <GatewayShell>
       <div className="bg-[#0C1322]/90 backdrop-blur-2xl border border-white/10 rounded-3xl p-6 sm:p-8 shadow-2xl shadow-black/60 relative overflow-hidden">
         <div className="absolute top-0 left-10 right-10 h-[1px] bg-gradient-to-r from-transparent via-brand-caribbeanSea/40 to-transparent" />
 
         <StepProgress currentStep={1} totalSteps={5} />
+
+        {/* Draft Resume Banner */}
+        {draftSession && (
+          <div className="mb-4 p-3 rounded-2xl bg-brand-caribbeanSea/10 border border-brand-caribbeanSea/30 flex items-center justify-between gap-2 text-xs text-brand-sandstone animate-fadeIn">
+            <div className="flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-brand-goldenHour flex-shrink-0" />
+              <span>
+                Draft in progress for{' '}
+                <strong className="text-white">
+                  {draftSession.displayName || draftSession.username || 'your profile'}
+                </strong>
+              </span>
+            </div>
+            <div className="flex items-center gap-1.5 flex-shrink-0">
+              <Link
+                href={
+                  draftSession.interests && draftSession.interests.length > 0
+                    ? '/signup/complete'
+                    : draftSession.username
+                    ? '/signup/interests'
+                    : draftSession.originCountryIso
+                    ? '/signup/account'
+                    : '/signup/caribbean'
+                }
+                className="px-2.5 py-1 rounded-lg bg-brand-caribbeanSea text-[#060A12] font-bold text-[11px] hover:opacity-90"
+              >
+                Resume
+              </Link>
+              <button
+                type="button"
+                onClick={handleStartOver}
+                title="Start over from Step 1"
+                className="p-1 rounded-lg hover:bg-white/10 text-brand-sandstone/60 hover:text-white"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </div>
+        )}
 
         <div className="mb-6">
           <h2 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
@@ -96,17 +145,23 @@ export default function SignupIntentPage() {
         </div>
 
         {/* Intent Cards Grid */}
-        <div className="space-y-2.5 max-h-[380px] overflow-y-auto pr-1 select-none custom-scrollbar">
+        <div className="space-y-2.5 max-h-[380px] overflow-y-auto pr-1 select-none custom-scrollbar" role="radiogroup" aria-label="Account intent">
           {INTENTS.map((item) => {
             const isSelected = selectedIntent === item.id;
             return (
               <div
                 key={item.id}
-                role="button"
+                role="radio"
+                aria-checked={isSelected}
                 tabIndex={0}
                 onClick={() => setSelectedIntent(item.id)}
-                onKeyDown={(e) => e.key === 'Enter' && setSelectedIntent(item.id)}
-                className={`flex items-center gap-3.5 p-3.5 rounded-2xl border transition-all cursor-pointer text-left ${
+                onKeyDown={(e) => {
+                  if (e.key === ' ' || e.key === 'Enter') {
+                    e.preventDefault();
+                    setSelectedIntent(item.id);
+                  }
+                }}
+                className={`flex items-center gap-3.5 p-3.5 rounded-2xl border transition-all cursor-pointer text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-caribbeanSea ${
                   isSelected
                     ? 'bg-brand-caribbeanSea/15 border-brand-caribbeanSea shadow-md shadow-brand-caribbeanSea/10'
                     : 'bg-[#080D18] border-white/5 hover:border-white/20 hover:bg-[#0A111F]'
@@ -153,7 +208,7 @@ export default function SignupIntentPage() {
           <button
             type="button"
             onClick={handleContinue}
-            className="w-full py-3.5 px-4 rounded-xl font-black text-sm tracking-wide bg-gradient-to-r from-brand-caribbeanSea via-brand-goldenHour to-brand-sunriseCoral text-[#060A12] hover:opacity-95 active:scale-[0.99] transition-all shadow-lg shadow-brand-caribbeanSea/25 flex items-center justify-center gap-2"
+            className="w-full py-3.5 px-4 rounded-xl font-black text-sm tracking-wide bg-gradient-to-r from-brand-caribbeanSea via-brand-goldenHour to-brand-sunriseCoral text-[#060A12] hover:opacity-95 active:scale-[0.99] transition-all shadow-lg shadow-brand-caribbeanSea/25 flex items-center justify-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
           >
             <span>CONTINUE</span>
             <ArrowRight className="w-4 h-4" />
@@ -161,7 +216,7 @@ export default function SignupIntentPage() {
 
           <p className="text-center text-xs text-brand-sandstone/60">
             Already have an account?{' '}
-            <Link href="/login" className="text-brand-caribbeanSea font-bold hover:underline">
+            <Link href="/login" className="text-brand-caribbeanSea font-bold hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-caribbeanSea rounded-md px-1">
               Sign In
             </Link>
           </p>

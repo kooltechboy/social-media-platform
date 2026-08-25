@@ -188,18 +188,28 @@ export async function completeFullRegistrationAction(payload: CompleteRegistrati
     return { error: 'Email, password, and username are required.' };
   }
 
-  const supabase = await createSupabaseServerClient();
-  if (!supabase) {
-    return { error: 'Database service unavailable. Please try again.' };
+  const cleanUsername = username.toLowerCase().trim().replace(/[^a-zA-Z0-9_.]/g, '').slice(0, 30);
+  if (cleanUsername.length < 3) {
+    return { error: 'Username must be at least 3 characters long.' };
   }
 
+  const supabase = await createSupabaseServerClient();
+  if (!supabase) {
+    return { error: 'Authentication service temporarily unavailable. Please try again in a few moments.' };
+  }
+
+  // Normalize DB account_type enum ('personal' | 'creator' | 'business' | 'organization')
+  const validDbAccountType = ['personal', 'creator', 'business', 'organization'].includes(accountType)
+    ? accountType
+    : 'personal';
+
   const { data, error } = await supabase.auth.signUp({
-    email,
+    email: email.trim().toLowerCase(),
     password,
     options: {
       data: {
-        username: username.toLowerCase().trim(),
-        display_name: displayName.trim(),
+        username: cleanUsername,
+        display_name: (displayName || cleanUsername).trim(),
         account_type: accountType,
         origin_country_iso: originCountryIso || 'JAM',
         is_diaspora: isDiaspora || false,
@@ -210,6 +220,13 @@ export async function completeFullRegistrationAction(payload: CompleteRegistrati
   });
 
   if (error) {
+    const msg = error.message.toLowerCase();
+    if (msg.includes('already registered') || msg.includes('already exists')) {
+      return { error: 'An account with this email address already exists. Please sign in or use password recovery.' };
+    }
+    if (msg.includes('weak password') || msg.includes('password should be')) {
+      return { error: 'Please choose a stronger password with at least 8 characters including letters and numbers.' };
+    }
     return { error: error.message };
   }
 
@@ -218,9 +235,9 @@ export async function completeFullRegistrationAction(payload: CompleteRegistrati
     try {
       await supabase.from('profiles').upsert({
         id: data.user.id,
-        username: username.toLowerCase().trim(),
-        display_name: displayName.trim(),
-        account_type: accountType,
+        username: cleanUsername,
+        display_name: (displayName || cleanUsername).trim(),
+        account_type: validDbAccountType as any,
         cultural_interests: interests,
         updated_at: new Date().toISOString(),
       });
