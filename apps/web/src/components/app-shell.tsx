@@ -20,7 +20,11 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const isGateway = GATEWAY_ROUTES.some((route) => pathname === route || pathname?.startsWith(`${route}/`));
 
   if (isGateway) {
-    return <main className="min-h-screen w-full">{children}</main>;
+    return (
+      <div className="fixed inset-0 z-20 overflow-y-auto bg-[#060A13]">
+        {children}
+      </div>
+    );
   }
 
   return (

@@ -34,7 +34,7 @@ const INTEREST_TOPICS: InterestItem[] = [
   { id: 'diaspora', name: 'Global Connections 🌎', emoji: '🌎', subtitle: 'UK, US, Canada, EU, African linkages' },
 ];
 
-export function AudioWaveform() {
+function AudioWaveform() {
   return (
     <div className="flex items-center gap-[2px] h-3">
       <span className="w-[2px] h-2 bg-brand-sunriseCoral rounded-full animate-pulse" />
