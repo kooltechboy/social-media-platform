@@ -13,9 +13,21 @@ interface GatewayShellProps {
 
 export function GatewayShell({ children, activeIslandIso }: GatewayShellProps) {
   return (
-    <div className="min-h-screen w-full flex flex-col lg:flex-row bg-[#060A12] text-brand-sandstone relative overflow-hidden">
+    <div
+      className="min-h-screen w-full flex flex-col lg:flex-row bg-[#081020] text-brand-sandstone relative overflow-hidden selection:bg-[#FF7A59]/30"
+      style={{
+        backgroundImage:
+          'radial-gradient(circle at 50% 0%, rgba(0, 180, 216, 0.12) 0%, transparent 60%), radial-gradient(circle, rgba(0, 180, 216, 0.08) 1px, transparent 1px)',
+        backgroundSize: '100% 100%, 32px 32px',
+      }}
+    >
+      {/* ── Top Atmospheric Horizon Glow ── */}
+      <div className="fixed top-0 left-0 right-0 h-[320px] bg-gradient-to-b from-[#00B4D8]/18 via-[#FFB347]/10 to-transparent pointer-events-none z-0" />
+      <div className="fixed -top-20 -left-20 w-[800px] h-[550px] rounded-full bg-[#00B4D8]/20 blur-[180px] pointer-events-none z-0" />
+      <div className="fixed -bottom-20 -right-20 w-[700px] h-[550px] rounded-full bg-[#FF7A59]/15 blur-[180px] pointer-events-none z-0" />
+
       {/* ── LEFT PANEL: Desktop Brand, Story & Glowing Caribbean Map ── */}
-      <div className="hidden lg:flex lg:flex-1 relative flex-col justify-between p-10 xl:p-14 overflow-hidden border-r border-white/5 select-none">
+      <div className="hidden lg:flex lg:flex-1 relative flex-col justify-between p-10 xl:p-14 overflow-hidden border-r border-white/10 select-none z-10">
         {/* Full Interactive Background Map */}
         <CaribbeanMapCanvas highlightIso={activeIslandIso} />
 
