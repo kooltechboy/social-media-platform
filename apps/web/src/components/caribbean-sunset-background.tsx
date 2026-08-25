@@ -2,103 +2,93 @@
 
 import React, { useState } from 'react';
 
-const PHOTOREALISTIC_CARIBBEAN_WALLPAPERS = [
+// Each theme uses a HIGH-QUALITY, FULL-RES Unsplash image that fills the screen.
+const THEMES = [
   {
-    id: 'caribbean-sunrise',
-    name: 'Palm Beach',
-    url: 'https://images.unsplash.com/photo-1590523277543-a94d2e4eb00b?auto=format&fit=crop&w=2400&q=80',
-    description: 'Coconut palms and tropical beach vibes',
+    id: 'palm-beach',
+    name: '🌴 Palm Beach',
+    // Stunning Caribbean beach — turquoise water, white sand, palm trees
+    url: 'https://images.unsplash.com/photo-1559494007-9f5847c49d94?auto=format&fit=crop&w=2400&q=90',
+    // Overlay tint colors that complement this image
+    overlayFrom: 'rgba(0,60,80,0.55)',
+    overlayTo: 'rgba(5,20,35,0.80)',
   },
   {
-    id: 'golden-hour',
-    name: 'Island Gathering',
-    url: 'https://images.unsplash.com/photo-1533050487297-09b450131914?auto=format&fit=crop&w=2400&q=80',
-    description: 'Tropical gathering, BBQ, and Caribbean culture',
+    id: 'sunset-shore',
+    name: '🌅 Sunset Shore',
+    // Vivid Caribbean sunset with warm coral + gold tones
+    url: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=2400&q=90',
+    overlayFrom: 'rgba(80,20,10,0.50)',
+    overlayTo: 'rgba(20,8,2,0.78)',
   },
   {
-    id: 'twilight-dusk',
-    name: 'Carnival Energy',
-    url: 'https://images.unsplash.com/photo-1473445763261-2679c65651ab?auto=format&fit=crop&w=2400&q=80',
-    description: 'Vibrant sunset and festive energy',
+    id: 'island-vibes',
+    name: '🎉 Island Vibes',
+    // People enjoying a tropical beach gathering, coconut palms, festive energy
+    url: 'https://images.unsplash.com/photo-1531761535209-180857e963b9?auto=format&fit=crop&w=2400&q=90',
+    overlayFrom: 'rgba(40,10,60,0.50)',
+    overlayTo: 'rgba(10,5,20,0.78)',
+  },
+  {
+    id: 'reef-dusk',
+    name: '🌊 Reef Dusk',
+    // Dramatic turquoise waters, bioluminescent blue vibes
+    url: 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=2400&q=90',
+    overlayFrom: 'rgba(0,30,60,0.55)',
+    overlayTo: 'rgba(0,10,25,0.80)',
   },
 ];
 
 export default function CaribbeanSunsetBackground() {
-  const [activeWallpaperIndex, setActiveWallpaperIndex] = useState(0);
-  const [brightness, setBrightness] = useState<'vivid' | 'bright' | 'soft'>('vivid');
+  const [active, setActive] = useState(0);
 
-  const current = PHOTOREALISTIC_CARIBBEAN_WALLPAPERS[activeWallpaperIndex];
-
-  const opacityMap = {
-    vivid: 0.9,
-    bright: 0.6,
-    soft: 0.3,
-  };
+  const theme = THEMES[active];
 
   return (
     <>
-      <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden bg-brand-twilight">
-        {/* Beautiful Vibrant Background Layer (No aggressive blend modes so the image actually shows!) */}
+      {/* ─── Full-screen fixed background ─── */}
+      <div className="fixed inset-0 z-0 overflow-hidden">
+        {/* The photo — no blend modes that destroy the image */}
         <div
-          className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-opacity duration-1000"
-          style={{
-            backgroundImage: `url('${current.url}')`,
-            opacity: opacityMap[brightness],
-          }}
+          key={theme.id}
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-opacity duration-700"
+          style={{ backgroundImage: `url('${theme.url}')` }}
         />
 
-        {/* Gentle Dark Gradient from bottom for Text Readability - NOT multiply! */}
-        <div className="absolute inset-0 bg-gradient-to-t from-brand-twilight via-brand-twilight/60 to-transparent opacity-90" />
-        <div className="absolute inset-0 bg-gradient-to-b from-brand-twilight/40 to-transparent" />
-
-        {/* Vibrant Glowing Accents (Coral & Gold) */}
-        <div className="absolute -top-10 right-1/4 w-[750px] h-[750px] rounded-full bg-brand-sunriseCoral/20 blur-[120px] pointer-events-none mix-blend-screen" />
-        <div className="absolute bottom-0 left-10 w-[700px] h-[700px] rounded-full bg-brand-caribbeanSea/20 blur-[120px] pointer-events-none mix-blend-screen" />
+        {/* Clean dark gradient overlay for legibility — gradient from top and bottom only */}
+        <div
+          className="absolute inset-0"
+          style={{
+            background: `
+              linear-gradient(to bottom,
+                ${theme.overlayFrom} 0%,
+                rgba(0,0,0,0.15) 40%,
+                rgba(0,0,0,0.15) 60%,
+                ${theme.overlayTo} 100%
+              )
+            `,
+          }}
+        />
       </div>
 
-      {/* Photorealistic Wallpaper & Brightness Switcher Widget */}
-      <div className="fixed bottom-4 right-4 z-40 hidden md:flex items-center gap-2 bg-brand-twilight/90 backdrop-blur-2xl border border-brand-sunriseCoral/40 px-3 py-1.5 rounded-full shadow-2xl">
-        <span className="text-[10px] font-black text-brand-goldenHour uppercase tracking-widest flex items-center gap-1">
-          🌅 Caribbean Theme:
-        </span>
-        <div className="flex items-center gap-1">
-          {PHOTOREALISTIC_CARIBBEAN_WALLPAPERS.map((wp, idx) => (
-            <button
-              key={wp.id}
-              type="button"
-              onClick={() => setActiveWallpaperIndex(idx)}
-              className={`text-[10px] font-black px-2.5 py-1 rounded-full transition-all ${
-                activeWallpaperIndex === idx
-                  ? 'bg-gradient-to-r from-brand-goldenHour via-brand-sunriseCoral to-brand-caribbeanSea text-brand-twilight shadow-md scale-105'
-                  : 'text-brand-sandstone/60 hover:text-brand-sandstone hover:bg-brand-dusk/80'
-              }`}
-              title={wp.description}
-            >
-              {wp.name}
-            </button>
-          ))}
-        </div>
-
-        <div className="h-3 w-px bg-brand-sunsetPurple/40 mx-1" />
-
-        <div className="flex items-center gap-1">
-          {(['vivid', 'bright', 'soft'] as const).map((level) => (
-            <button
-              key={level}
-              type="button"
-              onClick={() => setBrightness(level)}
-              className={`text-[9px] font-extrabold px-2 py-0.5 rounded-full capitalize transition-all ${
-                brightness === level
-                  ? 'bg-brand-caribbeanSea text-brand-twilight shadow'
-                  : 'text-brand-sandstone/60 hover:text-brand-sandstone'
-              }`}
-            >
-              {level}
-            </button>
-          ))}
-        </div>
+      {/* ─── Theme Switcher — bottom right, minimal ─── */}
+      <div className="fixed bottom-6 right-6 z-50 hidden md:flex items-center gap-1.5 bg-black/40 backdrop-blur-xl border border-white/10 px-3 py-1.5 rounded-full">
+        {THEMES.map((t, idx) => (
+          <button
+            key={t.id}
+            type="button"
+            onClick={() => setActive(idx)}
+            title={t.name}
+            className={`text-[11px] font-semibold px-3 py-1 rounded-full transition-all duration-200 ${
+              active === idx
+                ? 'bg-white/20 text-white border border-white/30'
+                : 'text-white/50 hover:text-white/80 hover:bg-white/10'
+            }`}
+          >
+            {t.name}
+          </button>
+        ))}
       </div>
     </>
   );
 }
-

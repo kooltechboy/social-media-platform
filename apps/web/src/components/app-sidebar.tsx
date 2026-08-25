@@ -105,7 +105,7 @@ export default function AppSidebar({ currentPath = '/' }: AppSidebarProps) {
 
   return (
     <aside className="hidden md:block col-span-1 space-y-5" aria-label="Primary navigation">
-      <div className="bg-brand-twilight/85 backdrop-blur-2xl border border-slate-800/80 rounded-3xl p-3 shadow-2xl space-y-4">
+      <div className="glass rounded-2xl p-3 space-y-4">
         {renderNavGroup(PRIMARY_NAV, 'Ecosystem')}
         <div className="h-px bg-brand-dusk/60 my-2" />
         
@@ -154,7 +154,7 @@ export default function AppSidebar({ currentPath = '/' }: AppSidebarProps) {
       </div>
 
       {/* Creator Studio Action Card */}
-      <div className="bg-gradient-to-br from-slate-950/90 via-slate-900/90 to-sky-950/90 backdrop-blur-2xl border border-brand-caribbeanSea/30 rounded-3xl p-4 text-center shadow-lg space-y-2.5">
+      <div className="glass rounded-2xl p-4 text-center space-y-2.5">
         <div className="flex items-center justify-center gap-1.5 text-xs font-black text-brand-caribbeanSea uppercase tracking-wide">
           <Sparkles className="w-3.5 h-3.5" /> Caribbean Creator Hub
         </div>
@@ -171,3 +171,4 @@ export default function AppSidebar({ currentPath = '/' }: AppSidebarProps) {
     </aside>
   );
 }
+

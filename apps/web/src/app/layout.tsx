@@ -16,7 +16,7 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
-  themeColor: '#110D17',
+  themeColor: '#0a0612',
 };
 
 export default function RootLayout({
@@ -26,23 +26,23 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className="dark" suppressHydrationWarning>
-      <body className="bg-[#0a070f] text-brand-sandstone antialiased min-h-screen relative overflow-x-hidden selection:bg-brand-sunriseCoral/30" suppressHydrationWarning>
-        {/* High Definition Caribbean Atmosphere */}
+      <body
+        className="min-h-screen relative overflow-x-hidden antialiased text-white selection:bg-[#FF7A59]/30 selection:text-white"
+        suppressHydrationWarning
+      >
+        {/* Full-screen Caribbean background — always fills the entire viewport */}
         <CaribbeanSunsetBackground />
 
-        {/* Main Application Shell - Premium Spatial UI */}
-        <div className="relative z-10 flex flex-col min-h-screen pt-0 sm:pt-4 md:pt-6 pb-24 md:pb-6 px-0 sm:px-4 md:px-8 lg:px-12 max-w-[1920px] mx-auto w-full">
-          {/* Glassmorphism Container */}
-          <div className="flex flex-col flex-1 bg-brand-twilight/65 backdrop-blur-[50px] border-x border-b sm:border border-white/10 shadow-[0_30px_100px_-15px_rgba(0,0,0,0.8)] rounded-none sm:rounded-[2.5rem] overflow-hidden">
-            <AppHeader />
-            <div className="flex-1 max-w-[1600px] w-full mx-auto grid grid-cols-1 md:grid-cols-12 gap-8 p-4 sm:p-6 lg:p-10">
-              <div className="md:col-span-3 xl:col-span-3 hidden md:block">
-                <AppSidebar />
-              </div>
-              <main className="md:col-span-9 xl:col-span-9 min-h-[75vh]">
-                {children}
-              </main>
-            </div>
+        {/* App shell sits on top — full width, no box, no border */}
+        <div className="relative z-10 flex flex-col min-h-screen">
+          <AppHeader />
+          <div className="flex-1 w-full max-w-screen-2xl mx-auto grid grid-cols-1 md:grid-cols-12 gap-0 md:gap-6 px-3 sm:px-6 lg:px-10 py-6 pb-24 md:pb-6">
+            <aside className="hidden md:block md:col-span-3 xl:col-span-2">
+              <AppSidebar />
+            </aside>
+            <main className="col-span-1 md:col-span-9 xl:col-span-10 min-h-[80vh]">
+              {children}
+            </main>
           </div>
           <MobileNav />
         </div>

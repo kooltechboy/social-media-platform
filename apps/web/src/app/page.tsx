@@ -162,7 +162,7 @@ export default async function HomePage() {
             ].map((story, i) => (
               <div
                 key={i}
-                className="snap-start flex-shrink-0 w-28 h-44 rounded-3xl bg-brand-dusk border border-slate-800/80 overflow-hidden relative group cursor-pointer hover:border-brand-caribbeanSea/50 transition-all shadow-md"
+                className="snap-start flex-shrink-0 w-28 h-44 rounded-3xl glass overflow-hidden relative group cursor-pointer hover:border-white/20 transition-all"
               >
                 <div className={`absolute inset-0 bg-gradient-to-t ${story.grad}`} />
                 <div className="absolute top-2.5 left-2.5">
@@ -189,7 +189,7 @@ export default async function HomePage() {
           />
 
           {!user && (
-            <div className="bg-gradient-to-r from-sky-950/90 via-slate-900/90 to-emerald-950/80 rounded-3xl p-4 sm:p-5 border border-brand-caribbeanSea/30 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-xl backdrop-blur-xl">
+            <div className="glass rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-center justify-between gap-3">
               <div>
                 <h3 className="text-xs font-black text-brand-sandstone flex items-center gap-2">
                   <Globe className="w-4 h-4 text-brand-caribbeanSea" /> Antilia Community Access
@@ -247,4 +247,5 @@ export default async function HomePage() {
     </div>
   );
 }
+
 

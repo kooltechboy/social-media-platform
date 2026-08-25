@@ -2,43 +2,42 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ─── Root tokens ─── */
 :root {
-  --background: #110D17;
-  --foreground: #FDF2E9;
-  --caribbean-azure: #00B4D8;
-  --caribbean-emerald: #059669;
-  --caribbean-gold: #FFB347;
-  --caribbean-coral: #FF7A59;
-  --caribbean-turquoise: #06B6D4;
+  --brand-twilight:     #0a0612;
+  --brand-sandstone:    #f5ede0;
+  --brand-sunrise:      #FF7A59;
+  --brand-gold:         #FFB347;
+  --brand-sea:          #00B4D8;
+  --brand-purple:       #8B5CF6;
 }
 
+/* Body baseline — transparent so the full-screen bg shows */
 body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  background: var(--brand-twilight);
+  color: var(--brand-sandstone);
+  font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
+  -webkit-font-smoothing: antialiased;
 }
 
-/* Caribbean Radiant Background Utilities */
-.caribbean-gradient-bg {
-  background: radial-gradient(circle at 15% 15%, rgba(255, 122, 89, 0.22) 0%, transparent 45%),
-              radial-gradient(circle at 85% 25%, rgba(0, 180, 216, 0.18) 0%, transparent 45%),
-              radial-gradient(circle at 50% 80%, rgba(255, 179, 71, 0.12) 0%, transparent 50%),
-              linear-gradient(180deg, #110D17 0%, #1D1429 50%, #110D17 100%);
+/* ─── Utility: glass card — used by all surface components ─── */
+.glass {
+  background: rgba(10, 6, 18, 0.60);
+  backdrop-filter: blur(24px) saturate(160%);
+  -webkit-backdrop-filter: blur(24px) saturate(160%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-.caribbean-glass-card {
-  background: rgba(29, 20, 41, 0.82);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 179, 71, 0.2);
-  box-shadow: 0 10px 35px -10px rgba(0, 0, 0, 0.5), 0 0 20px -5px rgba(255, 122, 89, 0.15);
+.glass-light {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(16px) saturate(140%);
+  -webkit-backdrop-filter: blur(16px) saturate(140%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-@keyframes pulseGlow {
-  0%, 100% { opacity: 0.6; transform: scale(1); }
-  50% { opacity: 0.9; transform: scale(1.05); }
+/* ─── Smooth fade-in ─── */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0);   }
 }
-
-.animate-pulse-glow {
-  animation: pulseGlow 6s ease-in-out infinite;
-}
+.animate-fadeIn { animation: fadeIn 0.2s ease-out; }
