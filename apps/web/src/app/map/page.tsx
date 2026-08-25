@@ -2,6 +2,8 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import { CARIBBEAN_TERRITORIES } from '../../lib/constants/caribbean-territories';
+import { DIASPORA_COUNTRIES } from '../../lib/constants/diaspora-hubs';
 import {
   Compass,
   MapPin,
@@ -32,149 +34,57 @@ interface IslandNode {
 }
 
 const CARIBBEAN_MAP_DATA: IslandNode[] = [
-  {
-    code: 'JAM',
-    name: 'Jamaica',
-    flag: '🇯🇲',
-    region: 'Greater Antilles',
-    creators: '14.2K',
-    businesses: '2,400',
-    events: '45 Fetes',
-    activeLive: 12,
-    trendingTag: '#KingstonVibes',
-    summary: 'Heart of reggae, dancehall, sound system culture, Blue Mountain coffee, and track athletics.',
-    coordinates: { x: 30, y: 35 },
-  },
-  {
-    code: 'TTO',
-    name: 'Trinidad & Tobago',
-    flag: '🇹🇹',
-    region: 'Southern Caribbean',
-    creators: '11.8K',
-    businesses: '1,950',
-    events: '62 Fetes',
-    activeLive: 18,
-    trendingTag: '#CarnivalTT',
-    summary: 'Birthplace of Steelpan, Soca, Calypso, and the greatest carnival spectacle on earth.',
-    coordinates: { x: 75, y: 80 },
-  },
-  {
-    code: 'DOM',
-    name: 'Dominican Republic',
-    flag: '🇩🇴',
-    region: 'Greater Antilles',
-    creators: '18.5K',
-    businesses: '3,100',
-    events: '38 Events',
-    activeLive: 15,
-    trendingTag: '#RDTechSummit',
-    summary: 'Bachata, Merengue, artisanal cacao, tech innovation hubs, and baseball legends.',
-    coordinates: { x: 45, y: 30 },
-  },
-  {
-    code: 'BRB',
-    name: 'Barbados',
-    flag: '🇧🇧',
-    region: 'Lesser Antilles',
-    creators: '5.4K',
-    businesses: '890',
-    events: '24 Events',
-    activeLive: 6,
-    trendingTag: '#CropOver2026',
-    summary: 'Culinary capital, aged rum heritage, Crop Over Grand Kadooment, and tech fintech pioneers.',
-    coordinates: { x: 80, y: 65 },
-  },
-  {
-    code: 'HTI',
-    name: 'Haiti',
-    flag: '🇭🇹',
-    region: 'Greater Antilles',
-    creators: '9.2K',
-    businesses: '1,200',
-    events: '19 Events',
-    activeLive: 8,
-    trendingTag: '#AyitiArt',
-    summary: 'Pioneering art, metal sculpture, Kompa rhythms, coffee, and rich diaspora history.',
-    coordinates: { x: 38, y: 32 },
-  },
-  {
-    code: 'PRI',
-    name: 'Puerto Rico',
-    flag: '🇵🇷',
-    region: 'Greater Antilles',
-    creators: '16.0K',
-    businesses: '2,800',
-    events: '41 Events',
-    activeLive: 14,
-    trendingTag: '#SanJuanNights',
-    summary: 'Boricua pride, Salsa, Reggaeton roots, Old San Juan arts, and diaspora bridges.',
-    coordinates: { x: 55, y: 32 },
-  },
-  {
-    code: 'BHS',
-    name: 'Bahamas',
-    flag: '🇧🇸',
-    region: 'Greater Antilles',
-    creators: '4.8K',
-    businesses: '740',
-    events: '16 Events',
-    activeLive: 4,
-    trendingTag: '#JunkanooFest',
-    summary: 'Junkanoo celebration, crystal archipelagos, maritime commerce, and tourism leadership.',
-    coordinates: { x: 25, y: 15 },
-  },
-  {
-    code: 'GUY',
-    name: 'Guyana',
-    flag: '🇬🇾',
-    region: 'Southern Caribbean',
-    creators: '4.2K',
-    businesses: '680',
-    events: '14 Events',
-    activeLive: 5,
-    trendingTag: '#GuyanaMash',
-    summary: 'Land of Many Waters, Mashramani, emerging energy innovation, and rainforest biodiversity.',
-    coordinates: { x: 85, y: 90 },
-  },
-  {
-    code: 'MIA',
-    name: 'Miami Diaspora Hub',
-    flag: '🗽',
-    region: 'Diaspora Hub',
-    creators: '22.0K',
-    businesses: '4,500',
-    events: '85 Fetes',
-    activeLive: 24,
-    trendingTag: '#MiamiCarnival',
-    summary: 'Gateway to the Caribbean. Wynwood cultural fusions, Little Haiti, Little Havana, and tech.',
-    coordinates: { x: 15, y: 10 },
-  },
-  {
-    code: 'TOR',
-    name: 'Toronto Diaspora Hub',
-    flag: '🇨🇦',
-    region: 'Diaspora Hub',
-    creators: '19.4K',
-    businesses: '3,800',
-    events: '52 Fetes',
-    activeLive: 16,
-    trendingTag: '#Caribana2026',
-    summary: 'Home of North America’s largest Carnival celebration, culinary markets, and diaspora guilds.',
-    coordinates: { x: 20, y: 5 },
-  },
-  {
-    code: 'LON',
-    name: 'London Diaspora Hub',
-    flag: '🇬🇧',
-    region: 'Diaspora Hub',
-    creators: '17.8K',
-    businesses: '3,200',
-    events: '48 Fetes',
-    activeLive: 14,
-    trendingTag: '#NottingHillCarnival',
-    summary: 'Windrush legacy, Notting Hill Carnival, sound system culture, and European diaspora bridge.',
-    coordinates: { x: 85, y: 5 },
-  },
+  ...CARIBBEAN_TERRITORIES.map((t, i) => {
+    // Deterministic pseudo-random stats based on char code
+    const seed = t.iso.charCodeAt(0) + t.iso.charCodeAt(1) + t.iso.charCodeAt(2);
+    const region = ['Greater Antilles', 'Lesser Antilles', 'Southern Caribbean'][seed % 3] as any;
+    
+    // Explicit overrides for major ones
+    if (t.iso === 'JAM') return { code: 'JAM', name: 'Jamaica', flag: '🇯🇲', region: 'Greater Antilles', creators: '14.2K', businesses: '2,400', events: '45 Fetes', activeLive: 12, trendingTag: '#KingstonVibes', summary: 'Heart of reggae, dancehall, sound system culture, Blue Mountain coffee, and track athletics.', coordinates: { x: 30, y: 35 } };
+    if (t.iso === 'TTO') return { code: 'TTO', name: 'Trinidad & Tobago', flag: '🇹🇹', region: 'Southern Caribbean', creators: '11.8K', businesses: '1,950', events: '62 Fetes', activeLive: 18, trendingTag: '#CarnivalTT', summary: 'Birthplace of Steelpan, Soca, Calypso, and the greatest carnival spectacle on earth.', coordinates: { x: 75, y: 80 } };
+    if (t.iso === 'DOM') return { code: 'DOM', name: 'Dominican Republic', flag: '🇩🇴', region: 'Greater Antilles', creators: '18.5K', businesses: '3,100', events: '38 Events', activeLive: 15, trendingTag: '#RDTechSummit', summary: 'Bachata, Merengue, artisanal cacao, tech innovation hubs, and baseball legends.', coordinates: { x: 45, y: 30 } };
+    if (t.iso === 'BRB') return { code: 'BRB', name: 'Barbados', flag: '🇧🇧', region: 'Lesser Antilles', creators: '5.4K', businesses: '890', events: '24 Events', activeLive: 6, trendingTag: '#CropOver2026', summary: 'Culinary capital, aged rum heritage, Crop Over Grand Kadooment, and tech fintech pioneers.', coordinates: { x: 80, y: 65 } };
+    if (t.iso === 'HTI') return { code: 'HTI', name: 'Haiti', flag: '🇭🇹', region: 'Greater Antilles', creators: '9.2K', businesses: '1,200', events: '19 Events', activeLive: 8, trendingTag: '#AyitiArt', summary: 'Pioneering art, metal sculpture, Kompa rhythms, coffee, and rich diaspora history.', coordinates: { x: 38, y: 32 } };
+    if (t.iso === 'PRI') return { code: 'PRI', name: 'Puerto Rico', flag: '🇵🇷', region: 'Greater Antilles', creators: '16.0K', businesses: '2,800', events: '41 Events', activeLive: 14, trendingTag: '#SanJuanNights', summary: 'Boricua pride, Salsa, Reggaeton roots, Old San Juan arts, and diaspora bridges.', coordinates: { x: 55, y: 32 } };
+    if (t.iso === 'BHS') return { code: 'BHS', name: 'Bahamas', flag: '🇧🇸', region: 'Greater Antilles', creators: '4.8K', businesses: '740', events: '16 Events', activeLive: 4, trendingTag: '#JunkanooFest', summary: 'Junkanoo celebration, crystal archipelagos, maritime commerce, and tourism leadership.', coordinates: { x: 25, y: 15 } };
+    if (t.iso === 'GUY') return { code: 'GUY', name: 'Guyana', flag: '🇬🇾', region: 'Southern Caribbean', creators: '4.2K', businesses: '680', events: '14 Events', activeLive: 5, trendingTag: '#GuyanaMash', summary: 'Land of Many Waters, Mashramani, emerging energy innovation, and rainforest biodiversity.', coordinates: { x: 85, y: 90 } };
+    
+    return {
+      code: t.iso,
+      name: t.name,
+      flag: t.flag,
+      region: region,
+      creators: (seed * 12.3 / 1000).toFixed(1) + 'K',
+      businesses: (seed * 8 + 150).toString(),
+      events: (seed % 30 + 5) + ' Events',
+      activeLive: seed % 10 + 1,
+      trendingTag: '#' + t.name.replace(/[^a-zA-Z0-9]/g, '') + 'Vibes',
+      summary: 'A vibrant part of the Caribbean ecosystem rich in culture, heritage, and tropical beauty.',
+      coordinates: { x: (seed * 7) % 90 + 5, y: (seed * 13) % 90 + 5 }
+    };
+  }),
+  ...DIASPORA_COUNTRIES.map((d, i) => {
+    const seed = d.iso.charCodeAt(0) + d.iso.charCodeAt(1) + d.iso.charCodeAt(2);
+    
+    // Explicit overrides
+    if (d.iso === 'USA') return { code: 'MIA', name: 'Miami Diaspora Hub', flag: '🗽', region: 'Diaspora Hub', creators: '22.0K', businesses: '4,500', events: '85 Fetes', activeLive: 24, trendingTag: '#MiamiCarnival', summary: 'Gateway to the Caribbean. Wynwood cultural fusions, Little Haiti, Little Havana, and tech.', coordinates: { x: 15, y: 10 } };
+    if (d.iso === 'CAN') return { code: 'TOR', name: 'Toronto Diaspora Hub', flag: '🇨🇦', region: 'Diaspora Hub', creators: '19.4K', businesses: '3,800', events: '52 Fetes', activeLive: 16, trendingTag: '#Caribana2026', summary: 'Home of North America’s largest Carnival celebration, culinary markets, and diaspora guilds.', coordinates: { x: 20, y: 5 } };
+    if (d.iso === 'GBR') return { code: 'LON', name: 'London Diaspora Hub', flag: '🇬🇧', region: 'Diaspora Hub', creators: '17.8K', businesses: '3,200', events: '48 Fetes', activeLive: 14, trendingTag: '#NottingHillCarnival', summary: 'Windrush legacy, Notting Hill Carnival, sound system culture, and European diaspora bridge.', coordinates: { x: 85, y: 5 } };
+    
+    return {
+      code: d.iso,
+      name: d.name + ' Hub',
+      flag: d.flag,
+      region: 'Diaspora Hub' as any,
+      creators: (seed * 18.5 / 1000).toFixed(1) + 'K',
+      businesses: (seed * 15 + 200).toString(),
+      events: (seed % 40 + 10) + ' Events',
+      activeLive: seed % 15 + 2,
+      trendingTag: '#' + d.name.replace(/[^a-zA-Z0-9]/g, '') + 'Diaspora',
+      summary: 'Connecting the global Caribbean diaspora community through culture, commerce, and digital networking.',
+      coordinates: { x: (seed * 11) % 90 + 5, y: (seed * 17) % 90 + 5 }
+    };
+  })
 ];
 
 export default function CaribbeanMapDiscoveryPage() {
