@@ -1,37 +1,30 @@
 'use client';
 
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { Search, Globe, ShieldCheck, ArrowRight, Check } from 'lucide-react';
+import { GatewayShell } from '../../components/gateway/GatewayShell';
+import { CARIBBEAN_TERRITORIES } from '../../lib/constants/caribbean-territories';
+import { DIASPORA_COUNTRIES, DIASPORA_CITY_HUBS } from '../../lib/constants/diaspora-hubs';
 import { updateOnboardingIdentity } from '../../lib/social/onboarding-actions';
-
-// Extracted from database schema
-const CARIBBEAN_COUNTRIES = [
-  { iso: 'JAM', name: 'Jamaica', flag: '🇯🇲' },
-  { iso: 'DOM', name: 'Dominican Republic', flag: '🇩🇴' },
-  { iso: 'TTO', name: 'Trinidad & Tobago', flag: '🇹🇹' },
-  { iso: 'BRB', name: 'Barbados', flag: '🇧🇧' },
-  { iso: 'BHS', name: 'Bahamas', flag: '🇧🇸' },
-  { iso: 'HTI', name: 'Haiti', flag: '🇭🇹' },
-];
-
-const DIASPORA_HUBS = [
-  { id: '2c5a0899-7ab0-4966-96b5-0c6a5a3a0e0f', name: 'Miami, USA', flag: '🇺🇸' },
-  { id: '375a3f12-0cf7-4f6c-84ea-9d8a3a2ebf5f', name: 'New York, USA', flag: '🇺🇸' },
-  { id: '417b3f9b-6b2c-47fc-8f7d-0d6eb3eb3fc8', name: 'Toronto, Canada', flag: '🇨🇦' },
-  { id: '5f9b48c7-4f4d-495a-b9c2-7b1c3e3f0e0d', name: 'London, UK', flag: '🇬🇧' },
-];
 
 export default function OnboardingPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [search, setSearch] = useState('');
   const [originIso, setOriginIso] = useState<string>('');
   const [diasporaId, setDiasporaId] = useState<string>('');
   const [isDiaspora, setIsDiaspora] = useState<boolean>(false);
 
+  const filteredTerritories = CARIBBEAN_TERRITORIES.filter((t) =>
+    t.name.toLowerCase().includes(search.toLowerCase()) ||
+    t.iso.toLowerCase().includes(search.toLowerCase())
+  );
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!originIso) return;
-    
+
     setLoading(true);
     try {
       await updateOnboardingIdentity(originIso, isDiaspora ? diasporaId : null);
@@ -44,80 +37,125 @@ export default function OnboardingPage() {
   };
 
   return (
-    <div className="max-w-2xl mx-auto pt-16 px-4">
-      <div className="bg-brand-twilight/80 backdrop-blur-md border border-slate-800/80 rounded-2xl p-8 shadow-2xl">
-        <h1 className="text-3xl font-bold text-brand-sandstone mb-2">Welcome to ANTILIA</h1>
-        <p className="text-brand-sandstone/60 mb-8">
-          To personalize your experience and connect you with your community, let&apos;s establish your Caribbean roots.
-        </p>
+    <GatewayShell>
+      <div className="bg-[#0C1322]/90 backdrop-blur-2xl border border-white/10 rounded-3xl p-6 sm:p-8 shadow-2xl shadow-black/60 relative overflow-hidden">
+        <div className="absolute top-0 left-10 right-10 h-[1px] bg-gradient-to-r from-transparent via-brand-caribbeanSea/40 to-transparent" />
 
-        <form onSubmit={handleSubmit} className="space-y-8">
-          {/* Origin Country */}
-          <div className="space-y-4">
-            <label className="block text-sm font-semibold text-brand-caribbeanSea">Where are your Caribbean roots?</label>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-              {CARIBBEAN_COUNTRIES.map((c) => (
+        <div className="mb-5">
+          <span className="px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-widest bg-brand-caribbeanSea/15 text-brand-caribbeanSea border border-brand-caribbeanSea/30 inline-block mb-2">
+            Identity Setup
+          </span>
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+            Welcome to ANTILIA
+          </h2>
+          <p className="text-xs sm:text-sm text-brand-sandstone/60 mt-1">
+            To personalize your cultural feeds and connect with your diaspora, select your Caribbean roots.
+          </p>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-4" noValidate>
+          {/* Island Search */}
+          <div className="relative flex items-center">
+            <Search className="absolute left-3.5 w-4 h-4 text-brand-sandstone/40 pointer-events-none" />
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search all 30+ islands and territories…"
+              className="w-full bg-[#080D18] border border-white/10 rounded-xl pl-10 pr-4 py-2.5 text-xs text-white placeholder-brand-sandstone/40 focus:outline-none focus:border-brand-caribbeanSea transition-all"
+            />
+          </div>
+
+          {/* Territory Grid */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-[240px] overflow-y-auto pr-1 select-none custom-scrollbar">
+            {filteredTerritories.map((c) => {
+              const isSelected = originIso === c.iso;
+              return (
                 <button
                   key={c.iso}
                   type="button"
                   onClick={() => setOriginIso(c.iso)}
-                  className={`flex flex-col items-center p-4 rounded-xl border transition-all ${
-                    originIso === c.iso
-                      ? 'bg-brand-caribbeanSea/20 border-brand-caribbeanSea/50 text-brand-sandstone'
-                      : 'bg-brand-dusk border-slate-800 text-brand-sandstone/60 hover:bg-brand-dusk'
+                  className={`flex items-center gap-2 p-2.5 rounded-xl border text-left transition-all ${
+                    isSelected
+                      ? 'bg-brand-caribbeanSea/20 border-brand-caribbeanSea shadow-sm'
+                      : 'bg-[#080D18] border-white/5 hover:border-white/20 hover:bg-[#0A111F]'
                   }`}
                 >
-                  <span className="text-3xl mb-2">{c.flag}</span>
-                  <span className="text-xs font-bold text-center">{c.name}</span>
+                  <span className="text-2xl flex-shrink-0">{c.flag}</span>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs font-bold text-white truncate leading-tight">{c.name}</p>
+                    <p className="text-[10px] text-brand-sandstone/50 uppercase font-semibold">{c.iso}</p>
+                  </div>
+                  {isSelected && <Check className="w-3.5 h-3.5 text-brand-caribbeanSea flex-shrink-0" />}
                 </button>
-              ))}
-            </div>
+              );
+            })}
           </div>
 
           {/* Diaspora Toggle */}
-          <div className="space-y-4">
-            <label className="flex items-center gap-3 cursor-pointer">
+          <div className="space-y-3 pt-3 border-t border-white/10">
+            <label className="flex items-center gap-2.5 cursor-pointer select-none group">
               <input
                 type="checkbox"
                 checked={isDiaspora}
                 onChange={(e) => setIsDiaspora(e.target.checked)}
-                className="w-5 h-5 rounded border-slate-700 bg-brand-dusk text-brand-caribbeanSea focus:ring-brand-caribbeanSea focus:ring-offset-slate-950"
+                className="w-4 h-4 rounded border-slate-700 bg-[#080D18] text-brand-caribbeanSea focus:ring-brand-caribbeanSea"
               />
-              <span className="text-sm font-semibold text-slate-200">I currently live in the Global Diaspora</span>
+              <span className="text-xs font-bold text-brand-sandstone group-hover:text-white transition-colors flex items-center gap-1.5">
+                <Globe className="w-3.5 h-3.5 text-brand-goldenHour" />
+                I currently live in the Global Diaspora
+              </span>
             </label>
-            
+
             {isDiaspora && (
-              <div className="grid grid-cols-2 gap-3 mt-4">
-                {DIASPORA_HUBS.map((hub) => (
-                  <button
-                    key={hub.id}
-                    type="button"
-                    onClick={() => setDiasporaId(hub.id)}
-                    className={`flex items-center gap-2 p-3 rounded-xl border transition-all ${
-                      diasporaId === hub.id
-                        ? 'bg-brand-caribbeanSea/20 border-brand-caribbeanSea/50 text-brand-sandstone'
-                        : 'bg-brand-dusk border-slate-800 text-brand-sandstone/60 hover:bg-brand-dusk'
-                    }`}
-                  >
-                    <span className="text-xl">{hub.flag}</span>
-                    <span className="text-xs font-bold">{hub.name}</span>
-                  </button>
-                ))}
+              <div className="grid grid-cols-2 gap-2 p-3 rounded-2xl bg-[#080D18] border border-white/10 max-h-[140px] overflow-y-auto custom-scrollbar animate-fadeIn">
+                {DIASPORA_CITY_HUBS.map((hub) => {
+                  const isHubSelected = diasporaId === hub.id;
+                  return (
+                    <button
+                      key={hub.id}
+                      type="button"
+                      onClick={() => setDiasporaId(hub.id)}
+                      className={`flex items-center gap-2 p-2 rounded-xl border text-left text-xs transition-all ${
+                        isHubSelected
+                          ? 'bg-brand-goldenHour/20 border-brand-goldenHour text-white font-bold'
+                          : 'bg-white/5 border-white/5 text-brand-sandstone/70 hover:text-white'
+                      }`}
+                    >
+                      <span className="text-base">{hub.flag}</span>
+                      <span className="truncate">{hub.city}</span>
+                    </button>
+                  );
+                })}
               </div>
             )}
           </div>
 
-          <div className="pt-6 border-t border-slate-800/80">
+          {/* Privacy Note */}
+          <div className="flex items-center gap-2 text-[11px] text-brand-sandstone/50 bg-white/5 px-3 py-2 rounded-xl">
+            <ShieldCheck className="w-4 h-4 text-brand-caribbeanSea flex-shrink-0" />
+            <span>Caribbean identity is optional and private by default.</span>
+          </div>
+
+          {/* Submit */}
+          <div className="pt-2 border-t border-white/10">
             <button
               type="submit"
               disabled={!originIso || loading}
-              className="w-full bg-sky-600 hover:bg-brand-caribbeanSea disabled:opacity-50 disabled:hover:bg-sky-600 text-brand-sandstone font-bold py-3 px-4 rounded-xl transition-colors"
+              className="w-full py-3.5 px-4 rounded-xl font-black text-sm tracking-wide bg-gradient-to-r from-brand-caribbeanSea via-brand-goldenHour to-brand-sunriseCoral text-[#060A12] hover:opacity-95 active:scale-[0.99] transition-all shadow-lg shadow-brand-caribbeanSea/25 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? 'Saving...' : 'Enter the Platform'}
+              {loading ? (
+                <span className="w-4 h-4 border-2 border-slate-950 border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <>
+                  <span>ENTER THE PLATFORM</span>
+                  <ArrowRight className="w-4 h-4" />
+                </>
+              )}
             </button>
           </div>
         </form>
       </div>
-    </div>
+    </GatewayShell>
   );
 }

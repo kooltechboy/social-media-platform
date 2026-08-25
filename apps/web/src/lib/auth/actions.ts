@@ -1,4 +1,4 @@
-'use server'
+'use server';
 
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
@@ -22,7 +22,7 @@ export async function initiateMfaLogin(email: string) {
 
   // Look up user from auth schema
   const { data: { users }, error: userError } = await supabase.auth.admin.listUsers();
-  const authUser = users?.find(u => u.email === email);
+  const authUser = users?.find((u) => u.email === email);
 
   if (userError || !authUser) {
     throw new Error('Invalid credentials');
@@ -40,7 +40,7 @@ export async function initiateMfaLogin(email: string) {
   const challengeCode = crypto.randomInt(100000, 999999).toString();
   const challengeExpiry = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
 
-  // Store challenge in auth.users user_metadata (no separate table needed)
+  // Store challenge in auth.users user_metadata
   await supabase.auth.admin.updateUserById(authUser.id, {
     user_metadata: {
       ...authUser.user_metadata,
@@ -56,7 +56,7 @@ export async function initiateMfaLogin(email: string) {
     success: true,
     requiresMfa: true,
     userId: authUser.id,
-    challengeExpiry: challengeExpiry.toISOString()
+    challengeExpiry: challengeExpiry.toISOString(),
   };
 }
 
@@ -64,13 +64,11 @@ export async function verifyMfaChallenge(userId: string, code: string) {
   const supabase = await createSupabaseServerClient();
   if (!supabase) throw new Error('Supabase not configured');
 
-  // Validate input
   const validation = mfaChallengeSchema.safeParse({ userId, code });
   if (!validation.success) {
     throw new Error('Invalid MFA challenge format');
   }
 
-  // Get user and verify challenge
   const { data: { user }, error: userError } = await supabase.auth.admin.getUserById(userId);
   if (userError || !user) {
     throw new Error('User not found');
@@ -85,14 +83,12 @@ export async function verifyMfaChallenge(userId: string, code: string) {
   }
 
   if (expiresAt && new Date(expiresAt) < new Date()) {
-    // Clear expired challenge
     await supabase.auth.admin.updateUserById(userId, {
       user_metadata: { ...meta, mfa_challenge: null, mfa_challenge_expires_at: null },
     });
     throw new Error('MFA code expired');
   }
 
-  // Clear challenge after successful verification
   await supabase.auth.admin.updateUserById(userId, {
     user_metadata: { ...meta, mfa_challenge: null, mfa_challenge_expires_at: null },
   });
@@ -113,9 +109,8 @@ export async function setupMfa(userId: string, method: 'authenticator_app' | 'sm
   const existingMeta = user?.user_metadata || {};
 
   if (method === 'authenticator_app') {
-    // Generate TOTP secret
     const secret = crypto.randomBytes(32).toString('base64');
-    const otpauth = `otpauth://totp/CaribbeanOne:${userId}?secret=${secret}&issuer=CaribbeanOne`;
+    const otpauth = `otpauth://totp/Antilia:${userId}?secret=${secret}&issuer=Antilia`;
 
     await supabase.auth.admin.updateUserById(userId, {
       user_metadata: {
@@ -128,7 +123,6 @@ export async function setupMfa(userId: string, method: 'authenticator_app' | 'sm
 
     return { success: true, method, secret, otpauth };
   } else {
-    // SMS or email MFA: add method to existing list
     const existingMethods = (existingMeta.mfa_methods as string[]) || [];
     const updatedMethods = existingMethods.includes(method) ? existingMethods : [...existingMethods, method];
 
@@ -146,7 +140,6 @@ export async function setupMfa(userId: string, method: 'authenticator_app' | 'sm
 
 async function sendMfaChallenge(userId: string, code: string, methods: string[]) {
   console.log(`MFA challenge for user ${userId}: Code ${code}, Methods: ${methods}`);
-
   if (methods.includes('email')) {
     await sendEmailMfaCode(userId, code);
   }
@@ -167,16 +160,86 @@ export async function validateMfaSession(userId: string, sessionToken: string) {
   const supabase = await createSupabaseServerClient();
   if (!supabase) return false;
 
-  // Validate against user_metadata
   const { data: { user } } = await supabase.auth.admin.getUserById(userId);
   if (!user) return false;
 
-  // Check if session token matches stored token (set during verify)
   const meta = user.user_metadata || {};
   return meta.mfa_session_token === sessionToken;
 }
 
 export type AuthFormState = { error: string | null; info: string | null };
+
+export interface CompleteRegistrationPayload {
+  email: string;
+  password: string;
+  username: string;
+  displayName: string;
+  accountType?: 'personal' | 'creator' | 'business' | 'organization';
+  originCountryIso?: string;
+  isDiaspora?: boolean;
+  diasporaCountryIso?: string;
+  interests?: string[];
+}
+
+export async function completeFullRegistrationAction(payload: CompleteRegistrationPayload) {
+  const { email, password, username, displayName, accountType = 'personal', originCountryIso, isDiaspora, diasporaCountryIso, interests = [] } = payload;
+
+  if (!email || !password || !username) {
+    return { error: 'Email, password, and username are required.' };
+  }
+
+  const supabase = await createSupabaseServerClient();
+  if (!supabase) {
+    return { error: 'Database service unavailable. Please try again.' };
+  }
+
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: {
+      data: {
+        username: username.toLowerCase().trim(),
+        display_name: displayName.trim(),
+        account_type: accountType,
+        origin_country_iso: originCountryIso || 'JAM',
+        is_diaspora: isDiaspora || false,
+        diaspora_country_iso: diasporaCountryIso || null,
+        cultural_interests: interests,
+      },
+    },
+  });
+
+  if (error) {
+    return { error: error.message };
+  }
+
+  // If user profile record can be created or updated right away
+  if (data.user) {
+    try {
+      await supabase.from('profiles').upsert({
+        id: data.user.id,
+        username: username.toLowerCase().trim(),
+        display_name: displayName.trim(),
+        account_type: accountType,
+        cultural_interests: interests,
+        updated_at: new Date().toISOString(),
+      });
+
+      if (originCountryIso) {
+        await supabase.from('profile_identity').upsert({
+          profile_id: data.user.id,
+          origin_country_iso: originCountryIso,
+          visibility: 'private',
+          updated_at: new Date().toISOString(),
+        });
+      }
+    } catch (dbErr) {
+      console.warn('Profile identity post-signup write deferred to trigger:', dbErr);
+    }
+  }
+
+  return { success: true, user: data.user };
+}
 
 export async function signUpAction(prevState: AuthFormState, formData: FormData): Promise<AuthFormState> {
   const email = formData.get('email') as string;
@@ -196,8 +259,8 @@ export async function signUpAction(prevState: AuthFormState, formData: FormData)
       data: {
         username: username || email.split('@')[0],
         display_name: displayName || username || email.split('@')[0],
-      }
-    }
+      },
+    },
   });
 
   if (error) return { error: error.message, info: null };

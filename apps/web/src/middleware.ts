@@ -1,6 +1,17 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 
+const PUBLIC_ROUTES = [
+  '/login',
+  '/signup',
+  '/forgot-password',
+  '/reset-password',
+  '/explore',
+  '/terms',
+  '/privacy',
+  '/auth/callback',
+];
+
 export async function middleware(request: NextRequest) {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -22,18 +33,20 @@ export async function middleware(request: NextRequest) {
 
   const { data: { user } } = await supabase.auth.getUser();
 
-  const isAuthPage = request.nextUrl.pathname.startsWith('/login');
-  const isOnboardingPage = request.nextUrl.pathname.startsWith('/onboarding');
-  
-  if (user && !isAuthPage && !isOnboardingPage) {
+  const pathname = request.nextUrl.pathname;
+  const isPublicRoute = PUBLIC_ROUTES.some((route) => pathname === route || pathname.startsWith(`${route}/`));
+  const isOnboardingPage = pathname.startsWith('/onboarding') || pathname.startsWith('/signup');
+
+  // Gated user check: if user is logged in, not on public/onboarding route, verify identity setup
+  if (user && !isPublicRoute && !isOnboardingPage) {
     const { data: identity } = await supabase
       .from('profile_identity')
       .select('origin_country_iso')
       .eq('profile_id', user.id)
-      .single();
+      .maybeSingle();
 
     if (!identity?.origin_country_iso) {
-      return NextResponse.redirect(new URL('/onboarding', request.url));
+      return NextResponse.redirect(new URL('/signup/caribbean', request.url));
     }
   }
 
