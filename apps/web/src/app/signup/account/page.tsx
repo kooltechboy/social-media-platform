@@ -18,7 +18,8 @@ import {
 } from 'lucide-react';
 import { GatewayShell } from '../../../components/gateway/GatewayShell';
 import { StepProgress } from '../../../components/gateway/signup/StepProgress';
-import { getSignupSession, saveSignupSession } from '../../../lib/auth/signup-session';
+import { AntiliaCulturalPassport } from '../../../components/gateway/AntiliaCulturalPassport';
+import { getSignupSession, saveSignupSession, type SignupState } from '../../../lib/auth/signup-session';
 
 function calculatePasswordStrength(pass: string): { score: number; label: string; color: string } {
   if (!pass) return { score: 0, label: '', color: '' };
@@ -40,6 +41,7 @@ function calculatePasswordStrength(pass: string): { score: number; label: string
 
 export default function SignupAccountPage() {
   const router = useRouter();
+  const [session, setSession] = useState<SignupState>({});
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [username, setUsername] = useState('');
@@ -57,12 +59,13 @@ export default function SignupAccountPage() {
   const [usernameSuggestions, setUsernameSuggestions] = useState<string[]>([]);
 
   useEffect(() => {
-    const session = getSignupSession();
-    if (session.firstName) setFirstName(session.firstName);
-    if (session.lastName) setLastName(session.lastName);
-    if (session.username) setUsername(session.username);
-    if (session.email) setEmail(session.email);
-    if (session.phone) setPhone(session.phone);
+    const s = getSignupSession();
+    setSession(s);
+    if (s.firstName) setFirstName(s.firstName);
+    if (s.lastName) setLastName(s.lastName);
+    if (s.username) setUsername(s.username);
+    if (s.email) setEmail(s.email);
+    if (s.phone) setPhone(s.phone);
   }, []);
 
   // Debounced username check
@@ -128,18 +131,18 @@ export default function SignupAccountPage() {
   };
 
   return (
-    <GatewayShell>
+    <GatewayShell activeIslandIso={session.originCountryIso}>
       <div className="bg-[#0C1322]/90 backdrop-blur-2xl border border-white/10 rounded-3xl p-6 sm:p-8 shadow-2xl shadow-black/60 relative overflow-hidden">
         <div className="absolute top-0 left-10 right-10 h-[1px] bg-gradient-to-r from-transparent via-brand-caribbeanSea/40 to-transparent" />
 
         <StepProgress currentStep={3} totalSteps={5} backHref="/signup/caribbean" />
 
-        <div className="mb-5">
+        <div className="mb-4">
           <h2 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
             Create Your Identity
           </h2>
           <p className="text-xs sm:text-sm text-brand-sandstone/60 mt-1">
-            Choose your official Antilia handle and secure credentials.
+            Your credentials generate your official Antilia Cultural Passport.
           </p>
         </div>
 
@@ -347,6 +350,26 @@ export default function SignupAccountPage() {
             </div>
           )}
 
+          {/* Live Passport Card Preview */}
+          {(firstName || username) && (
+            <div className="pt-2 animate-fadeIn">
+              <p className="text-[10px] font-bold text-brand-goldenHour uppercase tracking-wider mb-2 flex items-center gap-1">
+                <Sparkles className="w-3 h-3 text-brand-sunriseCoral" />
+                Live Antilia Passport Preview
+              </p>
+              <AntiliaCulturalPassport
+                displayName={firstName || lastName ? `${firstName} ${lastName}`.trim() : 'Daniel Williams'}
+                username={username || 'username'}
+                originCountryName={session.originCountryName || 'Caribbean'}
+                originCountryIso={session.originCountryIso || 'ANT'}
+                originFlag={session.originFlag || '🌴'}
+                diasporaCountryName={session.diasporaCountryName || (session.isDiaspora ? 'Global Diaspora' : 'Caribbean Basin')}
+                diasporaFlag={session.diasporaFlag || '🌎'}
+                accountType={session.intent ? `${session.intent.toUpperCase()} MEMBER` : 'MEMBER'}
+              />
+            </div>
+          )}
+
           {/* Terms Agreement */}
           <div className="pt-2">
             <label className="flex items-start gap-2.5 cursor-pointer group">
@@ -377,7 +400,7 @@ export default function SignupAccountPage() {
               disabled={!isFormValid}
               className="w-full py-3.5 px-4 rounded-xl font-black text-sm tracking-wide bg-gradient-to-r from-brand-caribbeanSea via-brand-goldenHour to-brand-sunriseCoral text-[#060A12] hover:opacity-95 active:scale-[0.99] transition-all shadow-lg shadow-brand-caribbeanSea/25 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <span>NEXT: CHOOSE INTERESTS</span>
+              <span>NEXT: CHOOSE CULTURAL VIBES</span>
               <ArrowRight className="w-4 h-4" />
             </button>
           </div>

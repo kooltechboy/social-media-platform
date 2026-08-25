@@ -8,49 +8,50 @@ import { Sparkles, Globe, Compass, ShieldCheck } from 'lucide-react';
 
 interface GatewayShellProps {
   children: React.ReactNode;
+  activeIslandIso?: string;
 }
 
-export function GatewayShell({ children }: GatewayShellProps) {
+export function GatewayShell({ children, activeIslandIso }: GatewayShellProps) {
   return (
     <div className="min-h-screen w-full flex flex-col lg:flex-row bg-[#060A12] text-brand-sandstone relative overflow-hidden">
       {/* ── LEFT PANEL: Desktop Brand, Story & Glowing Caribbean Map ── */}
       <div className="hidden lg:flex lg:flex-1 relative flex-col justify-between p-10 xl:p-14 overflow-hidden border-r border-white/5 select-none">
         {/* Full Interactive Background Map */}
-        <CaribbeanMapCanvas />
+        <CaribbeanMapCanvas highlightIso={activeIslandIso} />
 
         {/* Top Header Wordmark & Trust Badge */}
         <div className="relative z-10 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-brand-caribbeanSea via-brand-goldenHour to-brand-sunriseCoral p-[1.5px] shadow-lg shadow-brand-caribbeanSea/20">
+          <div className="flex items-center gap-3.5">
+            <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-brand-caribbeanSea via-brand-goldenHour to-brand-sunriseCoral p-[1.5px] shadow-xl shadow-brand-caribbeanSea/25">
               <div className="w-full h-full bg-[#090D16] rounded-2xl flex items-center justify-center">
-                <span className="font-black text-transparent bg-clip-text bg-gradient-to-tr from-brand-caribbeanSea to-brand-goldenHour text-xl">
+                <span className="font-black text-transparent bg-clip-text bg-gradient-to-tr from-brand-caribbeanSea to-brand-goldenHour text-2xl tracking-tighter">
                   A
                 </span>
               </div>
             </div>
             <div>
-              <span className="text-2xl font-black tracking-tight text-white">ANTILIA</span>
-              <span className="block text-[10px] uppercase font-bold tracking-[0.25em] text-brand-caribbeanSea">
+              <span className="text-2xl font-black tracking-tight text-white font-serif">ANTILIA</span>
+              <span className="block text-[10px] uppercase font-extrabold tracking-[0.3em] text-brand-caribbeanSea">
                 Global Caribbean Network
               </span>
             </div>
           </div>
 
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 backdrop-blur-md text-xs font-semibold text-brand-sandstone/80">
-            <ShieldCheck className="w-3.5 h-3.5 text-brand-caribbeanSea" />
-            <span>Bank-Grade Encryption</span>
+          <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/5 border border-white/10 backdrop-blur-xl text-xs font-semibold text-brand-sandstone/90 shadow-lg">
+            <ShieldCheck className="w-4 h-4 text-brand-caribbeanSea" />
+            <span>NASA-Grade Infrastructure</span>
           </div>
         </div>
 
         {/* Bottom Hero Pitch & Tagline */}
-        <div className="relative z-10 max-w-xl space-y-6">
+        <div className="relative z-10 max-w-xl space-y-5">
           <div className="space-y-3">
             <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-brand-caribbeanSea/10 border border-brand-caribbeanSea/30 text-brand-caribbeanSea text-xs font-bold uppercase tracking-wider">
-              <Sparkles className="w-3.5 h-3.5" />
-              <span>The Premier Caribbean Ecosystem</span>
+              <Sparkles className="w-3.5 h-3.5 text-brand-goldenHour" />
+              <span>Caribbean Futurism Digital Ecosystem</span>
             </div>
 
-            <h2 className="text-4xl xl:text-5xl font-black text-white tracking-tight leading-[1.15]">
+            <h2 className="text-4xl xl:text-5xl font-black text-white tracking-tight leading-[1.12]">
               One Caribbean.{' '}
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-caribbeanSea via-brand-goldenHour to-brand-sunriseCoral">
                 One Community.
@@ -58,7 +59,7 @@ export function GatewayShell({ children }: GatewayShellProps) {
               One Digital Home.
             </h2>
 
-            <p className="text-base text-brand-sandstone/80 font-normal leading-relaxed">
+            <p className="text-sm xl:text-base text-brand-sandstone/80 font-normal leading-relaxed">
               Connect with your people, culture, creators, businesses, music, and opportunities—wherever you are in the world.
             </p>
           </div>
@@ -69,10 +70,10 @@ export function GatewayShell({ children }: GatewayShellProps) {
           {/* Diaspora Global Hubs Ticker */}
           <div className="pt-4 border-t border-white/10">
             <p className="text-[11px] font-bold text-brand-goldenHour/90 uppercase tracking-widest mb-2 flex items-center gap-1.5">
-              <Globe className="w-3 h-3" />
-              Live Diaspora Signals
+              <Globe className="w-3 h-3 text-brand-caribbeanSea" />
+              Live Cultural Signals & Diaspora Network
             </p>
-            <div className="overflow-hidden whitespace-nowrap mask-radial-edges">
+            <div className="overflow-hidden whitespace-nowrap">
               <p className="text-xs text-brand-sandstone/60 font-medium tracking-widest uppercase animate-pulse">
                 KINGSTON • SANTO DOMINGO • PORT OF SPAIN • BRIDGETOWN • HAVANA • SAN JUAN • NASSAU • MIAMI • TORONTO • LONDON • AMSTERDAM • NEW YORK • PARIS • ROTTERDAM • PANAMA
               </p>
@@ -82,7 +83,7 @@ export function GatewayShell({ children }: GatewayShellProps) {
       </div>
 
       {/* ── RIGHT PANEL: Auth Card Surface ── */}
-      <div className="flex-1 lg:max-w-[540px] xl:max-w-[600px] flex items-center justify-center p-4 sm:p-8 lg:p-12 relative z-10">
+      <div className="flex-1 lg:max-w-[560px] xl:max-w-[620px] flex items-center justify-center p-4 sm:p-8 lg:p-12 relative z-10">
         {/* Subtle mobile background styling */}
         <div className="absolute inset-0 lg:hidden pointer-events-none">
           <div className="absolute inset-0 bg-gradient-to-b from-[#060A12] via-[#090F1C] to-[#060A12]" />
@@ -106,7 +107,7 @@ export function GatewayShell({ children }: GatewayShellProps) {
             </p>
           </div>
 
-          {/* Children: Auth Card (SignIn, SignUp, ForgotPassword, etc.) */}
+          {/* Children: Auth Card */}
           {children}
 
           {/* Footer Privacy & Terms Guarantee */}

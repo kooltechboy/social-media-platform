@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Search, Globe, ArrowRight, ShieldCheck, MapPin, Check } from 'lucide-react';
+import { Search, Globe, ArrowRight, ShieldCheck, MapPin, Check, Sparkles } from 'lucide-react';
 import { GatewayShell } from '../../../components/gateway/GatewayShell';
 import { StepProgress } from '../../../components/gateway/signup/StepProgress';
 import { CARIBBEAN_TERRITORIES, type CaribbeanTerritory } from '../../../lib/constants/caribbean-territories';
@@ -22,7 +22,12 @@ export default function SignupCaribbeanPage() {
     if (session.originCountryIso) {
       const found = CARIBBEAN_TERRITORIES.find((t) => t.iso === session.originCountryIso);
       if (found) setSelectedTerritory(found);
+    } else {
+      // Default initial focus to Jamaica
+      const defaultIsland = CARIBBEAN_TERRITORIES.find((t) => t.iso === 'JAM');
+      if (defaultIsland) setSelectedTerritory(defaultIsland);
     }
+
     if (session.isDiaspora) {
       setIsDiaspora(true);
       if (session.diasporaCountryIso) {
@@ -59,18 +64,23 @@ export default function SignupCaribbeanPage() {
   };
 
   return (
-    <GatewayShell>
+    <GatewayShell activeIslandIso={selectedTerritory?.iso}>
       <div className="bg-[#0C1322]/90 backdrop-blur-2xl border border-white/10 rounded-3xl p-6 sm:p-8 shadow-2xl shadow-black/60 relative overflow-hidden">
         <div className="absolute top-0 left-10 right-10 h-[1px] bg-gradient-to-r from-transparent via-brand-caribbeanSea/40 to-transparent" />
 
         <StepProgress currentStep={2} totalSteps={5} backHref="/signup" />
 
         <div className="mb-4">
+          <div className="flex items-center gap-2 mb-1">
+            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-widest bg-brand-caribbeanSea/15 text-brand-caribbeanSea border border-brand-caribbeanSea/30">
+              Interactive Island Graph
+            </span>
+          </div>
           <h2 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
             Your Caribbean Roots
           </h2>
-          <p className="text-xs sm:text-sm text-brand-sandstone/60 mt-1">
-            Where is your island connection, heritage, or affinity?
+          <p className="text-xs sm:text-sm text-brand-sandstone/60 mt-0.5">
+            Select your island connection. The desktop map illuminates your choice in real-time.
           </p>
         </div>
 
@@ -97,7 +107,7 @@ export default function SignupCaribbeanPage() {
                 onClick={() => setSelectedTerritory(t)}
                 className={`flex items-center gap-2 p-2.5 rounded-xl border text-left transition-all ${
                   isSelected
-                    ? 'bg-brand-caribbeanSea/20 border-brand-caribbeanSea shadow-sm'
+                    ? 'bg-gradient-to-r from-brand-caribbeanSea/25 to-brand-goldenHour/15 border-brand-caribbeanSea shadow-md shadow-brand-caribbeanSea/20 ring-1 ring-brand-caribbeanSea/50'
                     : 'bg-[#080D18] border-white/5 hover:border-white/20 hover:bg-[#0A111F]'
                 }`}
               >
