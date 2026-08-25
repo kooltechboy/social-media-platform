@@ -142,7 +142,7 @@ export default async function HomePage() {
 
           <div className="flex gap-3.5 overflow-x-auto pb-2 scrollbar-none snap-x px-1">
             {/* Add Story Button */}
-            <div className="snap-start flex-shrink-0 w-28 h-44 rounded-3xl bg-brand-dusk/90 border border-slate-800 flex flex-col items-center justify-center relative cursor-pointer group hover:border-brand-caribbeanSea/50 transition-all shadow-md">
+            <div className="snap-start flex-shrink-0 w-28 h-44 rounded-3xl glass flex flex-col items-center justify-center relative cursor-pointer group hover:border-white/20 transition-all">
               <div className="w-12 h-12 rounded-full bg-brand-dusk text-brand-caribbeanSea flex items-center justify-center mb-2 group-hover:scale-110 transition-transform shadow-inner">
                 <Plus className="w-6 h-6" />
               </div>
@@ -211,7 +211,7 @@ export default async function HomePage() {
         </section>
 
         {/* Live Audio / Video Quick Ingest Banner */}
-        <section className="bg-gradient-to-r from-red-950/40 via-slate-900 to-amber-950/30 border border-red-500/30 rounded-3xl p-4 flex items-center justify-between shadow-lg">
+        <section className="glass rounded-2xl p-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <span className="w-3 h-3 rounded-full bg-red-500 animate-ping" />
             <div>
@@ -247,5 +247,6 @@ export default async function HomePage() {
     </div>
   );
 }
+
 
 

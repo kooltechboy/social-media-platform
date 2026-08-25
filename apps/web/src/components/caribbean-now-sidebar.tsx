@@ -28,7 +28,7 @@ export default function CaribbeanNowSidebar() {
       <OnlineFriendsWidget />
 
       {/* Caribbean Now Live Ticker */}
-      <div className="bg-brand-twilight/85 backdrop-blur-2xl border border-slate-800/80 rounded-3xl p-5 shadow-2xl space-y-4">
+      <div className="glass rounded-2xl p-5 space-y-4">
         <div className="flex items-center justify-between">
           <h3 className="font-extrabold text-sm text-brand-sandstone flex items-center gap-2">
             <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-ping" />
@@ -46,7 +46,7 @@ export default function CaribbeanNowSidebar() {
             <Link
               key={pulse.city}
               href={`/explore?q=${encodeURIComponent(pulse.city)}`}
-              className="flex items-center justify-between p-2.5 rounded-2xl bg-brand-dusk/60 hover:bg-brand-dusk/80 border border-slate-800/60 hover:border-brand-caribbeanSea/40 transition-all group"
+              className="flex items-center justify-between p-2.5 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/8 hover:border-white/20 transition-all group"
             >
               <div className="flex items-center gap-2.5">
                 <span className="text-xl">{pulse.flag}</span>
@@ -67,7 +67,7 @@ export default function CaribbeanNowSidebar() {
       </div>
 
       {/* SpotPay Instant Wallet Quick Card */}
-      <div className="bg-gradient-to-br from-slate-950/90 via-slate-900/90 to-emerald-950/40 backdrop-blur-2xl border border-brand-sunriseCoral/30 rounded-3xl p-5 space-y-3 shadow-2xl">
+      <div className="glass rounded-2xl p-5 space-y-3">
         <div className="flex items-center justify-between">
           <span className="text-[10px] font-black text-brand-sunriseCoral uppercase tracking-wider flex items-center gap-1.5">
             <Wallet className="w-3.5 h-3.5" /> SpotPay Ledger
@@ -95,7 +95,7 @@ export default function CaribbeanNowSidebar() {
       </div>
 
       {/* Upcoming Cultural Fetes & Events */}
-      <div className="bg-brand-twilight/85 backdrop-blur-2xl border border-slate-800/80 rounded-3xl p-5 shadow-2xl space-y-3">
+      <div className="glass rounded-2xl p-5 space-y-3">
         <div className="flex items-center justify-between">
           <h3 className="font-extrabold text-sm text-brand-sandstone flex items-center gap-2">
             <Calendar className="w-4 h-4 text-brand-goldenHour" /> Featured Cultural Fetes
@@ -111,7 +111,7 @@ export default function CaribbeanNowSidebar() {
             { title: 'Caribana Toronto Grand Parade', date: 'Aug 1 • Lakeshore Toronto', tickets: 'Free RSVP' },
             { title: 'Dominican Food & Merengue Festival', date: 'Sunday • Washington Heights, NY', tickets: 'SpotPay $15' },
           ].map((event, idx) => (
-            <div key={idx} className="p-3 rounded-2xl bg-brand-dusk/60 border border-slate-800/60 space-y-1">
+            <div key={idx} className="p-3 rounded-2xl bg-white/5 border border-white/8 space-y-1">
               <h4 className="font-bold text-xs text-slate-200 leading-snug">{event.title}</h4>
               <div className="flex items-center justify-between text-[11px]">
                 <span className="text-brand-sandstone/60">{event.date}</span>
@@ -124,3 +124,4 @@ export default function CaribbeanNowSidebar() {
     </aside>
   );
 }
+

@@ -184,7 +184,7 @@ export default function FeedStream({ initialPosts }: FeedStreamProps) {
       {/* Feed Stream */}
       <div className="space-y-4">
         {displayedPosts.length === 0 ? (
-          <div className="p-8 text-center bg-brand-dusk/60 border border-slate-800 rounded-3xl space-y-2">
+          <div className="p-8 text-center glass rounded-2xl space-y-2">
             <Globe className="w-8 h-8 text-slate-600 mx-auto" />
             <h4 className="text-sm font-black text-slate-300">No posts in this channel yet</h4>
             <p className="text-xs text-brand-sandstone/40">Be the first to share an update to the Caribbean diaspora!</p>
@@ -194,7 +194,7 @@ export default function FeedStream({ initialPosts }: FeedStreamProps) {
             <article
               key={post.id}
               id={post.id}
-              className="bg-brand-dusk/80 backdrop-blur-xl border border-slate-800/90 rounded-3xl p-5 shadow-xl space-y-4 hover:border-slate-700/90 transition-all"
+              className="glass rounded-2xl p-5 space-y-4 hover:border-white/15 transition-all"
             >
               {/* Post Author Header */}
               <div className="flex items-center justify-between">
@@ -315,7 +315,7 @@ export default function FeedStream({ initialPosts }: FeedStreamProps) {
                       <p className="text-xs text-brand-sandstone/40 italic py-1">No comments yet. Start the conversation!</p>
                     ) : (
                       (commentLists[post.id] || []).map((c, i) => (
-                        <div key={c.id || i} className="p-3 rounded-2xl bg-brand-twilight/70 border border-slate-800/60 space-y-1">
+                        <div key={c.id || i} className="p-3 rounded-2xl bg-black/30 border border-white/8 space-y-1">
                           <div className="flex items-center justify-between">
                             <span className="text-xs font-bold text-slate-200">
                               {c.profiles?.display_name || 'Caribbean Member'}
@@ -335,7 +335,7 @@ export default function FeedStream({ initialPosts }: FeedStreamProps) {
                       value={commentInputs[post.id] || ''}
                       onChange={(e) => setCommentInputs({ ...commentInputs, [post.id]: e.target.value })}
                       placeholder="Write a supportive reply or feedback..."
-                      className="flex-1 bg-brand-twilight border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-brand-sandstone placeholder-brand-sandstone/40 focus:outline-none focus:border-brand-caribbeanSea"
+                      className="flex-1 bg-white/8 border border-white/10 rounded-xl px-3.5 py-2 text-xs text-white placeholder-white/40 focus:outline-none focus:border-white/30"
                     />
                     <button
                       type="submit"
@@ -368,3 +368,4 @@ export default function FeedStream({ initialPosts }: FeedStreamProps) {
     </div>
   );
 }
+

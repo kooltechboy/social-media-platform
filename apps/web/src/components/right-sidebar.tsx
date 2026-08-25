@@ -9,7 +9,7 @@ export default function RightSidebar({ className = '' }: RightSidebarProps) {
   return (
     <aside className={`space-y-6 ${className}`} aria-label="Trending and events">
       {/* Trending in the Diaspora */}
-      <div className="bg-brand-dusk/60 border border-slate-800 rounded-2xl p-4 space-y-3">
+      <div className="glass rounded-2xl p-4 space-y-3">
         <h3 className="text-sm font-bold text-brand-sandstone flex items-center gap-2">
           <Flame className="w-4 h-4 text-brand-goldenHour" aria-hidden="true" />
           Trending in the Diaspora
@@ -43,13 +43,13 @@ export default function RightSidebar({ className = '' }: RightSidebarProps) {
       </div>
 
       {/* Featured Cultural Events */}
-      <div className="bg-brand-dusk/60 border border-slate-800 rounded-2xl p-4 space-y-3">
+      <div className="glass rounded-2xl p-4 space-y-3">
         <h3 className="text-sm font-bold text-brand-sandstone flex items-center gap-2">
           <Globe className="w-4 h-4 text-brand-caribbeanSea" aria-hidden="true" />
           Featured Cultural Events
         </h3>
         <div className="space-y-2.5 text-xs">
-          <div className="bg-brand-twilight border border-slate-800 rounded-xl p-3">
+          <div className="bg-white/5 border border-white/10 rounded-xl p-3">
             <span className="text-[10px] font-bold text-brand-goldenHour uppercase">THIS SATURDAY</span>
             <h5 className="font-bold text-brand-sandstone text-xs mt-0.5">Trinidad Carnival Preview</h5>
             <p className="text-[11px] text-brand-sandstone/60">Port of Spain &amp; Livestream</p>
@@ -65,3 +65,4 @@ export default function RightSidebar({ className = '' }: RightSidebarProps) {
     </aside>
   );
 }
+
