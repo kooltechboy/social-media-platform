@@ -1,24 +1,40 @@
 import React from 'react';
 import Link from 'next/link';
-import { ShieldCheck, ShieldAlert, Lock, ArrowRight } from 'lucide-react';
+import { ShieldCheck, ShieldAlert, Lock, ArrowRight, AlertTriangle } from 'lucide-react';
 import { createServiceSupabaseClient, createSupabaseServerClient } from '../../../lib/supabase/server';
 import BootstrapForm from '../../../components/admin/bootstrap-form';
 
 export const dynamic = 'force-dynamic';
 
 export default async function SuperAdminBootstrapPage() {
-  const serviceSupabase = await createServiceSupabaseClient();
-  const anonSupabase = await createSupabaseServerClient();
-  const supabase = serviceSupabase || anonSupabase;
   let isAlreadyInitialized = false;
+  let hasServiceKey = true;
+  let errorMessage: string | null = null;
 
-  if (supabase) {
-    const { count } = await supabase
-      .from('accounts')
-      .select('id', { count: 'exact', head: true })
-      .in('role', ['super_admin', 'superadmin', 'management']);
+  try {
+    const serviceSupabase = await createServiceSupabaseClient();
+    const anonSupabase = await createSupabaseServerClient();
+    const supabase = serviceSupabase || anonSupabase;
 
-    isAlreadyInitialized = (count ?? 0) > 0;
+    if (!process.env.SUPABASE_SERVICE_ROLE_KEY && !process.env.SUPABASE_SERVICE_KEY) {
+      hasServiceKey = false;
+    }
+
+    if (supabase) {
+      const { count, error } = await supabase
+        .from('accounts')
+        .select('id', { count: 'exact', head: true })
+        .in('role', ['super_admin', 'superadmin', 'management']);
+
+      if (error) {
+        console.warn('Bootstrap check notice:', error.message);
+      } else {
+        isAlreadyInitialized = (count ?? 0) > 0;
+      }
+    }
+  } catch (err) {
+    console.error('SuperAdminBootstrapPage error:', err);
+    errorMessage = err instanceof Error ? err.message : 'Unable to connect to database.';
   }
 
   return (
@@ -36,6 +52,18 @@ export default async function SuperAdminBootstrapPage() {
             Role-Based Access Control (RBAC) & Root Authority Initialization
           </p>
         </div>
+
+        {!hasServiceKey && (
+          <div className="bg-amber-500/10 border border-amber-500/30 rounded-2xl p-4 flex items-start gap-3 text-amber-300 text-xs">
+            <AlertTriangle className="w-5 h-5 flex-shrink-0 mt-0.5" />
+            <div>
+              <p className="font-bold">Missing Service Role Key</p>
+              <p className="mt-0.5 text-amber-300/80">
+                Please ensure <code className="bg-amber-500/20 px-1.5 py-0.5 rounded font-mono">SUPABASE_SERVICE_ROLE_KEY</code> is configured in your Vercel Project Environment Variables to enable administrative provisioning.
+              </p>
+            </div>
+          </div>
+        )}
 
         {isAlreadyInitialized ? (
           <div className="bg-brand-dusk/70 border border-slate-800 rounded-3xl p-8 text-center space-y-6 shadow-2xl">
@@ -70,6 +98,12 @@ export default async function SuperAdminBootstrapPage() {
                 No Super Admin exists. Configure the root authority account below.
               </p>
             </div>
+
+            {errorMessage && (
+              <div className="p-3 bg-rose-500/10 border border-rose-500/30 rounded-xl text-rose-300 text-xs">
+                {errorMessage}
+              </div>
+            )}
 
             <BootstrapForm />
           </div>
