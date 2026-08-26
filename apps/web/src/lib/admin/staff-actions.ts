@@ -1,7 +1,14 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { createServiceSupabaseClient, getCurrentUser, getAuthorizedUser, getSuperAdminUser, PlatformRole } from '../supabase/server';
+import {
+  createServiceSupabaseClient,
+  createSupabaseServerClient,
+  getCurrentUser,
+  getAuthorizedUser,
+  getSuperAdminUser,
+  PlatformRole,
+} from '../supabase/server';
 
 export interface ActionResponse {
   error: string | null;
@@ -447,8 +454,10 @@ export async function bootstrapSuperAdminAction(
     return { error: 'Super Admin password must be at least 10 characters long.', success: null };
   }
 
-  const supabase = await createServiceSupabaseClient();
-  if (!supabase) return { error: 'Database service unavailable.', success: null };
+  const serviceSupabase = await createServiceSupabaseClient();
+  const anonSupabase = await createSupabaseServerClient();
+  const supabase = serviceSupabase || anonSupabase;
+  if (!supabase) return { error: 'Database service unavailable. Please verify connection URL.', success: null };
 
   // 1. Double check in database that 0 super admins exist
   const { count: superAdminCount } = await supabase
@@ -463,34 +472,57 @@ export async function bootstrapSuperAdminAction(
     };
   }
 
-  // 2. Create user in Supabase Auth via Admin API
-  const { data: authData, error: authError } = await supabase.auth.admin.createUser({
-    email,
-    password,
-    email_confirm: true,
-    user_metadata: {
-      username,
-      display_name: displayName,
-    },
-  });
-
+  // 2. Create user in Supabase Auth (via Admin API if service role key available, else via standard signup)
   let userId: string;
-  if (authError) {
-    if (authError.message.toLowerCase().includes('already registered')) {
-      const { data: existingProfile } = await supabase.from('profiles').select('id').eq('username', username).maybeSingle();
-      if (existingProfile) {
-        userId = existingProfile.id;
+
+  if (serviceSupabase) {
+    const { data: authData, error: authError } = await serviceSupabase.auth.admin.createUser({
+      email,
+      password,
+      email_confirm: true,
+      user_metadata: {
+        username,
+        display_name: displayName,
+      },
+    });
+
+    if (authError) {
+      if (authError.message.toLowerCase().includes('already registered')) {
+        const { data: existingProfile } = await serviceSupabase.from('profiles').select('id').eq('username', username).maybeSingle();
+        if (existingProfile) {
+          userId = existingProfile.id;
+        } else {
+          return { error: `Auth user with email ${email} already exists. Please log in or use a different email.`, success: null };
+        }
       } else {
-        return { error: `Auth user with email ${email} already exists. Please log in or use a different email.`, success: null };
+        return { error: `Failed to create auth user: ${authError.message}`, success: null };
       }
     } else {
-      return { error: `Failed to create auth user: ${authError.message}`, success: null };
+      userId = authData.user.id;
     }
   } else {
-    userId = authData.user.id;
+    // Fallback: Use standard Auth Sign Up
+    const { data: signData, error: signError } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          username,
+          display_name: displayName,
+        },
+      },
+    });
+
+    if (signError) {
+      return { error: `Failed to create auth account: ${signError.message}`, success: null };
+    }
+    if (!signData.user) {
+      return { error: 'Failed to create user session.', success: null };
+    }
+    userId = signData.user.id;
   }
 
-  // 3. Call database bootstrap procedure
+  // 3. Call database bootstrap procedure (atomic & idempotent)
   const { data: rpcData, error: rpcError } = await supabase.rpc('bootstrap_super_admin', {
     p_user_id: userId,
     p_username: username,
