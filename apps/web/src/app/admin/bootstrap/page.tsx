@@ -1,13 +1,15 @@
 import React from 'react';
 import Link from 'next/link';
 import { ShieldCheck, ShieldAlert, Lock, ArrowRight } from 'lucide-react';
-import { createServiceSupabaseClient } from '../../../lib/supabase/server';
+import { createServiceSupabaseClient, createSupabaseServerClient } from '../../../lib/supabase/server';
 import BootstrapForm from '../../../components/admin/bootstrap-form';
 
 export const dynamic = 'force-dynamic';
 
 export default async function SuperAdminBootstrapPage() {
-  const supabase = await createServiceSupabaseClient();
+  const serviceSupabase = await createServiceSupabaseClient();
+  const anonSupabase = await createSupabaseServerClient();
+  const supabase = serviceSupabase || anonSupabase;
   let isAlreadyInitialized = false;
 
   if (supabase) {

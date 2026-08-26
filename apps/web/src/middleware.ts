@@ -53,9 +53,11 @@ export async function middleware(request: NextRequest) {
   }
 
   // 2. Protected routes require active authentication — if not signed in, redirect to /login with return URL
-  const isProtectedRoute = PROTECTED_ROUTES.some(
-    (route) => pathname === route || pathname.startsWith(`${route}/`)
-  );
+  // Note: /admin/bootstrap is explicitly exempt to allow one-time root authority setup when 0 super admins exist
+  const isProtectedRoute =
+    PROTECTED_ROUTES.some(
+      (route) => pathname === route || pathname.startsWith(`${route}/`)
+    ) && pathname !== '/admin/bootstrap';
 
   if (!user && isProtectedRoute) {
     const loginUrl = new URL('/login', request.url);
