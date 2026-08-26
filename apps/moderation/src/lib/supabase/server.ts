@@ -41,22 +41,44 @@ export interface ModeratorUser {
   id: string;
   email: string;
   displayName: string;
+  role: string;
 }
 
 export async function getModeratorSession(): Promise<ModeratorUser | null> {
-  const supabase = await createAnonSupabaseClient();
-  if (!supabase) return null;
-  const { data, error } = await supabase.auth.getUser();
+  const anonClient = await createAnonSupabaseClient();
+  if (!anonClient) return null;
+  const { data, error } = await anonClient.auth.getUser();
   if (error || !data.user) return null;
-  const profileResult = await supabase
+
+  // Verify moderator or admin role via service client
+  const modClient = await createModerationSupabaseClient();
+  let role = 'moderator';
+  if (modClient) {
+    const { data: account } = await modClient
+      .from('accounts')
+      .select('role')
+      .or(`profile_id.eq.${data.user.id},id.eq.${data.user.id}`)
+      .maybeSingle();
+
+    if (account) {
+      if (!['moderator', 'admin', 'management', 'superadmin'].includes(account.role)) {
+        return null; // Not authorized as moderator
+      }
+      role = account.role;
+    }
+  }
+
+  const profileResult = await anonClient
     .from('profiles')
     .select('display_name')
     .eq('id', data.user.id)
     .maybeSingle();
   const profile = profileResult.data as { display_name: string } | null;
+
   return {
     id: data.user.id,
     email: data.user.email ?? '',
     displayName: profile?.display_name ?? data.user.email ?? 'Moderator',
+    role,
   };
 }

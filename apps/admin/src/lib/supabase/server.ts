@@ -40,12 +40,32 @@ export async function createAnonSupabaseClient(): Promise<SupabaseClient | null>
 export interface AdminUser {
   id: string;
   email: string;
+  role: string;
 }
 
 export async function getAdminSession(): Promise<AdminUser | null> {
-  const supabase = await createAnonSupabaseClient();
-  if (!supabase) return null;
-  const { data, error } = await supabase.auth.getUser();
+  const anonClient = await createAnonSupabaseClient();
+  if (!anonClient) return null;
+  const { data, error } = await anonClient.auth.getUser();
   if (error || !data.user) return null;
-  return { id: data.user.id, email: data.user.email ?? '' };
+
+  // Verify staff role via service client
+  const adminClient = await createAdminSupabaseClient();
+  let role = 'admin';
+  if (adminClient) {
+    const { data: account } = await adminClient
+      .from('accounts')
+      .select('role')
+      .or(`profile_id.eq.${data.user.id},id.eq.${data.user.id}`)
+      .maybeSingle();
+
+    if (account) {
+      if (!['admin', 'management', 'superadmin'].includes(account.role)) {
+        return null; // Not authorized as admin
+      }
+      role = account.role;
+    }
+  }
+
+  return { id: data.user.id, email: data.user.email ?? '', role };
 }

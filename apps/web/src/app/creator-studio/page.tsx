@@ -7,6 +7,7 @@ import { PayoutRequestButton } from '../../components/payout-request-button';
 import { applyFees, evaluatePayout, isSubscriptionActive } from '@caribbean/creator';
 import { Money } from '@caribbean/spotpay';
 import BecomeCreatorClientButton from '../../components/become-creator-button';
+import CreatorStudioActions from '../../components/creator-studio-actions';
 
 export const dynamic = 'force-dynamic';
 
@@ -143,7 +144,8 @@ export default async function CreatorStudioPage() {
             {account.category && ` · ${account.category}`}
           </p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
+          <CreatorStudioActions displayName={user.displayName} />
           <Link
             href="/podcasts"
             className="bg-brand-goldenHour hover:bg-brand-goldenHour text-slate-950 font-bold px-4 py-2 rounded-xl text-xs flex items-center gap-2 transition-colors"

@@ -5,7 +5,7 @@ import {
   CheckCircle, XCircle, AlertTriangle, Clock
 } from 'lucide-react';
 import Link from 'next/link';
-import { createSupabaseServerClient, getCurrentUser } from '../../lib/supabase/server';
+import { createServiceSupabaseClient, getStaffUser } from '../../lib/supabase/server';
 import ModerationActionButton from '../../components/moderation-action-button';
 
 export const dynamic = 'force-dynamic';
@@ -35,10 +35,10 @@ const PRIORITY_COLORS: Record<string, { text: string; border: string; bg: string
 };
 
 export default async function ModerationPage() {
-  const user = await getCurrentUser();
+  const user = await getStaffUser('moderator');
   if (!user) redirect('/login');
 
-  const supabase = await createSupabaseServerClient();
+  const supabase = await createServiceSupabaseClient();
   if (!supabase) redirect('/login');
 
   const [queueResult, casesResult, recentResult] = await Promise.all([
@@ -91,6 +91,12 @@ export default async function ModerationPage() {
         <h1 className="text-lg font-extrabold text-brand-sandstone flex items-center gap-2">
           <ShieldAlert className="w-5 h-5 text-brand-goldenHour" /> Moderation Center
         </h1>
+        <div className="hidden sm:flex items-center gap-2 ml-4">
+          <Link href="/moderation" className="bg-brand-dusk text-brand-sandstone px-3 py-1 rounded-lg text-xs font-semibold">Queue</Link>
+          <Link href="/moderation/cases" className="text-brand-sandstone/60 hover:text-brand-sandstone px-3 py-1 rounded-lg text-xs font-semibold">Cases</Link>
+          <Link href="/moderation/appeals" className="text-brand-sandstone/60 hover:text-brand-sandstone px-3 py-1 rounded-lg text-xs font-semibold">Appeals</Link>
+          <Link href="/moderation/analytics" className="text-brand-sandstone/60 hover:text-brand-sandstone px-3 py-1 rounded-lg text-xs font-semibold">Analytics</Link>
+        </div>
         <span className="ml-auto text-[11px] text-brand-sandstone/60 hidden md:block">
           Human-in-the-loop · every action is logged
         </span>

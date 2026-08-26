@@ -5,7 +5,7 @@ import {
   Globe, Database, Bell, Settings
 } from 'lucide-react';
 import Link from 'next/link';
-import { createSupabaseServerClient, getCurrentUser } from '../../lib/supabase/server';
+import { createServiceSupabaseClient, getStaffUser } from '../../lib/supabase/server';
 import FeatureFlagToggle from '../../components/feature-flag-toggle';
 
 export const dynamic = 'force-dynamic';
@@ -24,10 +24,10 @@ interface StatRow {
 }
 
 export default async function AdminPage() {
-  const user = await getCurrentUser();
+  const user = await getStaffUser('admin');
   if (!user) redirect('/login');
 
-  const supabase = await createSupabaseServerClient();
+  const supabase = await createServiceSupabaseClient();
   if (!supabase) redirect('/login');
 
   // Load feature flags and analytics in parallel

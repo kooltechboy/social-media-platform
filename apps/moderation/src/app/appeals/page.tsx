@@ -4,6 +4,8 @@ import Link from 'next/link';
 import { Eye, ShieldAlert, Flag, BarChart3, Inbox } from 'lucide-react';
 import { createModerationSupabaseClient, getModeratorSession } from '../../lib/supabase/server';
 
+import ModAppealPanel from '../../components/mod-appeal-panel';
+
 export const dynamic = 'force-dynamic';
 
 const PRIORITY_COLORS: Record<string, { text: string; bg: string }> = {
@@ -197,6 +199,9 @@ export default async function AppealsPage() {
                         </p>
                       </div>
                     )}
+
+                    {/* Interactive resolution panel */}
+                    <ModAppealPanel caseId={appeal.id} />
 
                     {/* Target reference */}
                     <div className="flex items-center justify-between text-xs pt-1 border-t border-slate-800/60">

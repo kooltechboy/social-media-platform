@@ -26,6 +26,8 @@ type SupabaseClientLike = {
 
 // ---------------------------------------------------------------------------
 
+export type SystemRole = 'user' | 'moderator' | 'admin' | 'superadmin' | 'management';
+
 export interface AuthSession {
   userId: string;
   email: string;
@@ -34,6 +36,7 @@ export interface AuthSession {
   /** Optional — only populated when the profile includes a country code. */
   originCountryIso?: string;
   accountType: 'personal' | 'creator' | 'business' | 'organization';
+  systemRole: SystemRole;
   mfaEnabled: boolean;
 }
 
@@ -51,6 +54,7 @@ export class AuthManager {
       displayName: 'Caribbean Pioneer',
       originCountryIso: 'JAM',
       accountType: 'creator',
+      systemRole: 'user',
       mfaEnabled: true,
     };
   }
@@ -60,7 +64,8 @@ export class AuthManager {
    *
    * 1. Calls `supabase.auth.getUser()` to retrieve the authenticated user.
    * 2. Queries the `profiles` table for username, display_name, and account_type.
-   * 3. Returns a fully-populated `AuthSession`, or `null` when no valid session
+   * 3. Queries the `accounts` table for staff system role.
+   * 4. Returns a fully-populated `AuthSession`, or `null` when no valid session
    *    exists (e.g. expired JWT, missing profile row).
    */
   public static async createSessionFromSupabase(
@@ -76,16 +81,28 @@ export class AuthManager {
 
     const user = authData.user;
 
-    // Step 2 — Fetch the profile row
-    const { data: profile, error: profileError } = await supabaseClient
-      .from('profiles')
-      .select('username, display_name, account_type, origin_country_iso')
-      .eq('id', user.id)
-      .maybeSingle();
+    // Step 2 — Fetch the profile row and account role
+    const [profileRes, accountRes] = await Promise.all([
+      supabaseClient
+        .from('profiles')
+        .select('username, display_name, account_type, origin_country_iso')
+        .eq('id', user.id)
+        .maybeSingle(),
+      supabaseClient
+        .from('accounts')
+        .select('role')
+        .eq('profile_id', user.id)
+        .maybeSingle()
+        .catch(() => ({ data: null })),
+    ]);
 
-    if (profileError || !profile) {
+    const profile = profileRes.data;
+    if (profileRes.error || !profile) {
       return null;
     }
+
+    const account = (accountRes as { data: Record<string, unknown> | null })?.data;
+    const systemRole = (account?.role as SystemRole) ?? 'user';
 
     // Step 3 — Build the session
     const session: AuthSession = {
@@ -95,6 +112,7 @@ export class AuthManager {
       displayName: (profile.display_name as string) ?? '',
       accountType:
         (profile.account_type as AuthSession['accountType']) ?? 'personal',
+      systemRole,
       mfaEnabled: false, // determined by Supabase MFA factor list; default safe
     };
 

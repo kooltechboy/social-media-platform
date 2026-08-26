@@ -1,9 +1,10 @@
 import React from 'react';
 import { redirect } from 'next/navigation';
-import { Wallet, ArrowUpRight, ArrowDownLeft, ShieldCheck, Send, CreditCard } from 'lucide-react';
 import Link from 'next/link';
+import { Wallet, ArrowUpRight, ArrowDownLeft, ShieldCheck, Send, CreditCard } from 'lucide-react';
 import { createSupabaseServerClient, getCurrentUser } from '../../lib/supabase/server';
 import { Money } from '@caribbean/spotpay';
+import SpotPayHubActions from '../../components/spotpay-hub-actions';
 
 export const dynamic = 'force-dynamic';
 
@@ -158,22 +159,7 @@ export default async function SpotPayPage() {
             Double-entry ledger wallet, payment methods, and transaction history.
           </p>
         </div>
-        <div className="flex items-center gap-3">
-          <button
-            disabled
-            title="Coming soon — payment processor integration in progress"
-            className="bg-brand-sunriseCoral/20 text-emerald-300 border border-brand-sunriseCoral/40 font-bold px-4 py-2 rounded-xl text-xs flex items-center gap-2 opacity-60 cursor-not-allowed"
-          >
-            <ArrowDownLeft className="w-4 h-4" /> Add Money
-          </button>
-          <button
-            disabled
-            title="Coming soon"
-            className="bg-brand-caribbeanSea/20 text-brand-caribbeanSea border border-brand-caribbeanSea/40 font-bold px-4 py-2 rounded-xl text-xs flex items-center gap-2 opacity-60 cursor-not-allowed"
-          >
-            <Send className="w-4 h-4" /> Send SpotPay P2P
-          </button>
-        </div>
+        <SpotPayHubActions walletBalanceFormatted={walletMoney.format()} />
       </div>
 
       {/* Balance Cards */}

@@ -1,7 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { createSupabaseServerClient, getCurrentUser } from '../supabase/server';
+import { createServiceSupabaseClient, getStaffUser } from '../supabase/server';
 
 export interface FeatureFlagUpdateState {
   error: string | null;
@@ -17,10 +17,10 @@ export async function toggleFeatureFlagAction(
 
   if (!flagKey) return { error: 'Missing flag key.', success: null };
 
-  const user = await getCurrentUser();
-  if (!user) return { error: 'Authentication required.', success: null };
+  const user = await getStaffUser('admin');
+  if (!user) return { error: 'Admin authorization required.', success: null };
 
-  const supabase = await createSupabaseServerClient();
+  const supabase = await createServiceSupabaseClient();
   if (!supabase) return { error: 'Service unavailable.', success: null };
 
   const { error } = await supabase
@@ -33,3 +33,4 @@ export async function toggleFeatureFlagAction(
   revalidatePath('/admin');
   return { error: null, success: `Flag '${flagKey}' set to ${enabled ? 'ON' : 'OFF'}.` };
 }
+

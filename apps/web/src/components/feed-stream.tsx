@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { toggleLikeAction, createCommentAction, fetchPostCommentsAction } from '../lib/social/actions';
 import SpotPayTipModal from './spotpay-tip-modal';
+import ShoppablePostWidget, { type TaggedProduct } from './shoppable-post-widget';
 
 export interface FeedPostData {
   id: string;
@@ -36,6 +37,7 @@ export interface FeedPostData {
   culturalTags?: string[];
   isUserLiked?: boolean;
   category?: 'caribbean' | 'foryou' | 'diaspora' | 'creator';
+  taggedProduct?: TaggedProduct;
 }
 
 interface FeedStreamProps {
@@ -257,6 +259,11 @@ export default function FeedStream({ initialPosts }: FeedStreamProps) {
                     </div>
                   ))}
                 </div>
+              )}
+
+              {/* Shoppable Tagged Product (Social Commerce) */}
+              {post.taggedProduct && (
+                <ShoppablePostWidget product={post.taggedProduct} />
               )}
 
               {/* Interaction Bar */}
