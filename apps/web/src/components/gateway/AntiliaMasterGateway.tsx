@@ -1,7 +1,9 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '../auth-provider';
 import {
   Sparkles,
   Globe,
@@ -92,8 +94,16 @@ export const CARNIVAL_SCENES: CarnivalScene[] = [
 ];
 
 export function AntiliaMasterGateway() {
+  const { isAuthenticated, loading } = useAuth();
+  const router = useRouter();
   const [activeSceneIndex, setActiveSceneIndex] = useState(0);
   const activeScene = CARNIVAL_SCENES[activeSceneIndex];
+
+  useEffect(() => {
+    if (!loading && isAuthenticated) {
+      router.replace('/');
+    }
+  }, [isAuthenticated, loading, router]);
 
   return (
     <div className="min-h-screen w-full bg-[#081020] text-brand-sandstone relative overflow-x-hidden select-none">

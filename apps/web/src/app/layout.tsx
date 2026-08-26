@@ -2,6 +2,8 @@ import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import AppShell from '../components/app-shell';
 import CaribbeanSunsetBackground from '../components/caribbean-sunset-background';
+import { AuthProvider } from '../components/auth-provider';
+import { getCurrentUser } from '../lib/supabase/server';
 
 export const metadata: Metadata = {
   title: 'ANTILIA - Caribbean Digital Ecosystem & Diaspora Platform',
@@ -17,11 +19,13 @@ export const viewport: Viewport = {
   themeColor: '#0a0612',
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const user = await getCurrentUser();
+
   return (
     <html lang="en" className="dark" suppressHydrationWarning>
       <body
@@ -31,8 +35,11 @@ export default function RootLayout({
         {/* Full-screen Caribbean background — always fills the entire viewport */}
         <CaribbeanSunsetBackground />
 
-        {/* App shell with gateway page isolation */}
-        <AppShell>{children}</AppShell>
+        {/* Global Auth Provider seeded with server-side authenticated user */}
+        <AuthProvider initialUser={user}>
+          {/* App shell with gateway page isolation */}
+          <AppShell>{children}</AppShell>
+        </AuthProvider>
       </body>
     </html>
   );

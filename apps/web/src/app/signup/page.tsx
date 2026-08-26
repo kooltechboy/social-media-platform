@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { useAuth } from '../../components/auth-provider';
 import { User, Palette, Store, Building2, Mic, Users, ShoppingBag, ArrowRight, RotateCcw, Sparkles } from 'lucide-react';
 import { GatewayShell } from '../../components/gateway/GatewayShell';
 import { StepProgress } from '../../components/gateway/signup/StepProgress';
@@ -65,10 +66,16 @@ const INTENTS: IntentOption[] = [
 
 export default function SignupIntentPage() {
   const router = useRouter();
+  const { isAuthenticated, loading } = useAuth();
   const [selectedIntent, setSelectedIntent] = useState<AccountIntent>('personal');
   const [draftSession, setDraftSession] = useState<SignupState | null>(null);
 
   useEffect(() => {
+    if (!loading && isAuthenticated) {
+      router.replace('/');
+      return;
+    }
+
     const session = getSignupSession();
     if (session.intent) {
       setSelectedIntent(session.intent);
@@ -76,7 +83,7 @@ export default function SignupIntentPage() {
     if (session.username || session.email || session.originCountryIso) {
       setDraftSession(session);
     }
-  }, []);
+  }, [isAuthenticated, loading, router]);
 
   const handleContinue = () => {
     saveSignupSession({ intent: selectedIntent });

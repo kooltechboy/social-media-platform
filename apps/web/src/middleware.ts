@@ -1,15 +1,11 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 
-const PUBLIC_ROUTES = [
+const AUTH_GATEWAY_ROUTES = [
   '/login',
   '/signup',
   '/forgot-password',
   '/reset-password',
-  '/explore',
-  '/terms',
-  '/privacy',
-  '/auth/callback',
 ];
 
 export async function middleware(request: NextRequest) {
@@ -32,22 +28,15 @@ export async function middleware(request: NextRequest) {
   });
 
   const { data: { user } } = await supabase.auth.getUser();
-
   const pathname = request.nextUrl.pathname;
-  const isPublicRoute = PUBLIC_ROUTES.some((route) => pathname === route || pathname.startsWith(`${route}/`));
-  const isOnboardingPage = pathname.startsWith('/onboarding') || pathname.startsWith('/signup');
 
-  // Gated user check: if user is logged in, not on public/onboarding route, verify identity setup
-  if (user && !isPublicRoute && !isOnboardingPage) {
-    const { data: identity } = await supabase
-      .from('profile_identity')
-      .select('origin_country_iso')
-      .eq('profile_id', user.id)
-      .maybeSingle();
+  // Once authenticated, users should NEVER be prompted to sign in or access login/signup gateway pages
+  const isAuthGatewayRoute = AUTH_GATEWAY_ROUTES.some(
+    (route) => pathname === route || pathname.startsWith(`${route}/`)
+  );
 
-    if (!identity?.origin_country_iso) {
-      return NextResponse.redirect(new URL('/signup/caribbean', request.url));
-    }
+  if (user && isAuthGatewayRoute) {
+    return NextResponse.redirect(new URL('/', request.url));
   }
 
   return response;

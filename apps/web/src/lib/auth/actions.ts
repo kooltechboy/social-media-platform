@@ -309,4 +309,5 @@ export async function signOutAction() {
   if (supabase) {
     await supabase.auth.signOut();
   }
+  redirect('/login');
 }
