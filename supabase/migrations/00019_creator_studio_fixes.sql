@@ -2,7 +2,7 @@
 -- Description: Adds running balance to ledger_accounts and lifecycle triggers
 
 -- 1. Add running balance to ledger accounts
-ALTER TABLE public.ledger_accounts ADD COLUMN balance NUMERIC(18, 4) DEFAULT 0 NOT NULL;
+ALTER TABLE public.ledger_accounts ADD COLUMN IF NOT EXISTS balance NUMERIC(18, 4) DEFAULT 0 NOT NULL;
 
 -- 2. Trigger to update running balance on new ledger entries
 CREATE OR REPLACE FUNCTION public.update_ledger_account_balance()
@@ -18,6 +18,7 @@ BEGIN
 END;
 $$;
 
+DROP TRIGGER IF EXISTS trg_update_ledger_balance ON public.ledger_entries;
 CREATE TRIGGER trg_update_ledger_balance
 AFTER INSERT ON public.ledger_entries
 FOR EACH ROW EXECUTE FUNCTION public.update_ledger_account_balance();
@@ -35,6 +36,7 @@ BEGIN
 END;
 $$;
 
+DROP TRIGGER IF EXISTS trg_auto_create_creator_ledger ON public.creator_accounts;
 CREATE TRIGGER trg_auto_create_creator_ledger
 AFTER INSERT ON public.creator_accounts
 FOR EACH ROW EXECUTE FUNCTION public.auto_create_creator_pending_ledger();
