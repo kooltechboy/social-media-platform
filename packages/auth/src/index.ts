@@ -26,7 +26,29 @@ type SupabaseClientLike = {
 
 // ---------------------------------------------------------------------------
 
-export type SystemRole = 'user' | 'moderator' | 'admin' | 'superadmin' | 'management';
+export type SystemRole =
+  | 'super_admin'
+  | 'superadmin'
+  | 'admin'
+  | 'management'
+  | 'moderator'
+  | 'support'
+  | 'content_manager'
+  | 'analyst'
+  | 'creator'
+  | 'business'
+  | 'user';
+
+export const STAFF_ROLES: SystemRole[] = [
+  'super_admin',
+  'superadmin',
+  'admin',
+  'management',
+  'moderator',
+  'support',
+  'content_manager',
+  'analyst',
+];
 
 export interface AuthSession {
   userId: string;

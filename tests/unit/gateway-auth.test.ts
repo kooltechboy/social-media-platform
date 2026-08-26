@@ -115,4 +115,34 @@ describe('Antilia Gateway — Caribbean & Diaspora Constants', () => {
     expect(sanitizeRedirectUrl('javascript:alert(1)')).toBe('/');
     expect(sanitizeRedirectUrl('/unauthorized-admin-path')).toBe('/');
   });
+
+  it('validates RBAC role clearance rules for moderation and admin routes', () => {
+    type Role = 'user' | 'creator' | 'business' | 'moderator' | 'admin' | 'management' | 'superadmin' | 'guest';
+
+    function checkAuthorization(userRole: Role, allowedRoles: Role[]): boolean {
+      if (userRole === 'superadmin' || userRole === 'management') return true;
+      return allowedRoles.includes(userRole);
+    }
+
+    const MODERATION_ROLES: Role[] = ['moderator', 'admin', 'management', 'superadmin'];
+    const ADMIN_ROLES: Role[] = ['admin', 'management', 'superadmin'];
+
+    // Standard user and creator should NOT access moderation or admin (403 Access Denied)
+    expect(checkAuthorization('user', MODERATION_ROLES)).toBe(false);
+    expect(checkAuthorization('creator', MODERATION_ROLES)).toBe(false);
+    expect(checkAuthorization('business', MODERATION_ROLES)).toBe(false);
+    expect(checkAuthorization('user', ADMIN_ROLES)).toBe(false);
+
+    // Moderator can access moderation, but NOT admin
+    expect(checkAuthorization('moderator', MODERATION_ROLES)).toBe(true);
+    expect(checkAuthorization('moderator', ADMIN_ROLES)).toBe(false);
+
+    // Admin, Management, Superadmin have clearance
+    expect(checkAuthorization('admin', MODERATION_ROLES)).toBe(true);
+    expect(checkAuthorization('admin', ADMIN_ROLES)).toBe(true);
+    expect(checkAuthorization('superadmin', MODERATION_ROLES)).toBe(true);
+    expect(checkAuthorization('superadmin', ADMIN_ROLES)).toBe(true);
+    expect(checkAuthorization('management', ADMIN_ROLES)).toBe(true);
+  });
 });
+

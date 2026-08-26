@@ -2,8 +2,9 @@ import React from 'react';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { Eye, ArrowLeft, Inbox } from 'lucide-react';
-import { createServiceSupabaseClient, getStaffUser } from '../../../lib/supabase/server';
+import { createServiceSupabaseClient, getAuthorizedUser } from '../../../lib/supabase/server';
 import AppealActionForm from '../../../components/appeal-action-form';
+import AccessDenied from '../../../components/access-denied';
 
 export const dynamic = 'force-dynamic';
 
@@ -27,11 +28,29 @@ interface AppealCase {
 }
 
 export default async function WebModerationAppealsPage() {
-  const user = await getStaffUser('moderator');
-  if (!user) redirect('/login');
+  const auth = await getAuthorizedUser(['moderator', 'admin', 'management', 'superadmin']);
+  if (!auth.isLoggedIn) {
+    redirect('/login?next=/moderation/appeals');
+  }
+  if (!auth.isAuthorized) {
+    return (
+      <AccessDenied
+        user={auth.user}
+        requiredRole="moderator"
+        currentRole={auth.role}
+        resourceName="the Appeals Desk"
+      />
+    );
+  }
 
   const supabase = await createServiceSupabaseClient();
-  if (!supabase) redirect('/login');
+  if (!supabase) {
+    return (
+      <div className="min-h-screen bg-[#090D16] text-brand-sandstone flex items-center justify-center p-4">
+        <p className="text-sm text-brand-sandstone/60">Service temporarily unavailable. Please try again.</p>
+      </div>
+    );
+  }
 
   const { data } = await supabase
     .from('moderation_cases')

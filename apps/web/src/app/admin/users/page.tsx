@@ -2,7 +2,8 @@ import React from 'react';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { Users, Search, BadgeCheck } from 'lucide-react';
-import { createServiceSupabaseClient, getStaffUser } from '../../../lib/supabase/server';
+import { createServiceSupabaseClient, getAuthorizedUser } from '../../../lib/supabase/server';
+import AccessDenied from '../../../components/access-denied';
 
 export const dynamic = 'force-dynamic';
 
@@ -19,11 +20,29 @@ export default async function WebAdminUsersPage({
 }: {
   searchParams: Promise<{ q?: string; page?: string }>;
 }) {
-  const user = await getStaffUser('admin');
-  if (!user) redirect('/login');
+  const auth = await getAuthorizedUser(['admin', 'management', 'superadmin']);
+  if (!auth.isLoggedIn) {
+    redirect('/login?next=/admin/users');
+  }
+  if (!auth.isAuthorized) {
+    return (
+      <AccessDenied
+        user={auth.user}
+        requiredRole="admin"
+        currentRole={auth.role}
+        resourceName="Admin Users Management"
+      />
+    );
+  }
 
   const supabase = await createServiceSupabaseClient();
-  if (!supabase) redirect('/login');
+  if (!supabase) {
+    return (
+      <div className="min-h-screen bg-[#090D16] text-brand-sandstone flex items-center justify-center p-4">
+        <p className="text-sm text-brand-sandstone/60">Service temporarily unavailable. Please try again.</p>
+      </div>
+    );
+  }
 
   const params = await searchParams;
   const query = params.q?.trim() ?? '';

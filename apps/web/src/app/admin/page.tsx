@@ -1,12 +1,13 @@
 import React from 'react';
 import { redirect } from 'next/navigation';
 import {
-  LayoutDashboard, Users, Wallet, ShieldCheck, Flag, BarChart3, ToggleLeft,
+  LayoutDashboard, Users, Wallet, Shield, ShieldCheck, Flag, BarChart3, ToggleLeft,
   Globe, Database, Bell, Settings
 } from 'lucide-react';
 import Link from 'next/link';
-import { createServiceSupabaseClient, getStaffUser } from '../../lib/supabase/server';
+import { createServiceSupabaseClient, getAuthorizedUser } from '../../lib/supabase/server';
 import FeatureFlagToggle from '../../components/feature-flag-toggle';
+import AccessDenied from '../../components/access-denied';
 
 export const dynamic = 'force-dynamic';
 
@@ -24,14 +25,32 @@ interface StatRow {
 }
 
 export default async function AdminPage() {
-  const user = await getStaffUser('admin');
-  if (!user) redirect('/login');
+  const auth = await getAuthorizedUser(['admin', 'management', 'superadmin']);
+  if (!auth.isLoggedIn) {
+    redirect('/login?next=/admin');
+  }
+  if (!auth.isAuthorized) {
+    return (
+      <AccessDenied
+        user={auth.user}
+        requiredRole="admin"
+        currentRole={auth.role}
+        resourceName="the Antilia Admin Console"
+      />
+    );
+  }
 
   const supabase = await createServiceSupabaseClient();
-  if (!supabase) redirect('/login');
+  if (!supabase) {
+    return (
+      <div className="min-h-screen bg-[#090D16] text-brand-sandstone flex items-center justify-center p-4">
+        <p className="text-sm text-brand-sandstone/60">Service temporarily unavailable. Please try again.</p>
+      </div>
+    );
+  }
 
-  // Load feature flags and analytics in parallel
-  const [flagsResult, dauResult, newUsersResult, reportsResult] = await Promise.all([
+  // Load feature flags, analytics, and staff counts in parallel
+  const [flagsResult, dauResult, newUsersResult, reportsResult, staffResult] = await Promise.all([
     supabase
       .from('feature_flags')
       .select('key, enabled, description')
@@ -48,11 +67,16 @@ export default async function AdminPage() {
       .from('reports')
       .select('id', { count: 'exact', head: true })
       .eq('status', 'open'),
+    supabase
+      .from('accounts')
+      .select('id', { count: 'exact', head: true })
+      .in('role', ['super_admin', 'superadmin', 'management', 'admin', 'moderator', 'support', 'content_manager', 'analyst']),
   ]);
 
   const flags = (flagsResult.data ?? []) as FeatureFlag[];
 
   const stats: StatRow[] = [
+    { label: 'Staff & Admins', value: (staffResult.count ?? 0).toString(), delta: 'RBAC Active', positive: true },
     { label: 'Events today', value: (dauResult.count ?? 0).toLocaleString(), delta: 'Last 24h', positive: true },
     { label: 'New users (7d)', value: (newUsersResult.count ?? 0).toLocaleString(), delta: 'Last 7 days', positive: true },
     { label: 'Reports open', value: (reportsResult.count ?? 0).toLocaleString(), delta: 'Pending review', positive: false },
@@ -61,6 +85,8 @@ export default async function AdminPage() {
 
   const SECTIONS = [
     { label: 'Dashboard', icon: LayoutDashboard, href: '/admin' },
+    { label: 'Administrators', icon: Shield, href: '/admin/administrators' },
+    { label: 'Audit Logs', icon: ShieldCheck, href: '/admin/audit-logs' },
     { label: 'Users', icon: Users, href: '/admin/users' },
     { label: 'Payments', icon: Wallet, href: '/admin/payments' },
     { label: 'Trust & Safety', icon: ShieldCheck, href: '/admin/trust-safety' },

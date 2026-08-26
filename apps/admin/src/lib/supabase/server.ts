@@ -55,12 +55,15 @@ export async function getAdminSession(): Promise<AdminUser | null> {
   if (adminClient) {
     const { data: account } = await adminClient
       .from('accounts')
-      .select('role')
+      .select('role, status')
       .or(`profile_id.eq.${data.user.id},id.eq.${data.user.id}`)
       .maybeSingle();
 
     if (account) {
-      if (!['admin', 'management', 'superadmin'].includes(account.role)) {
+      if (account.status && account.status !== 'active') {
+        return null; // Account suspended or deactivated
+      }
+      if (!['admin', 'management', 'superadmin', 'super_admin'].includes(account.role)) {
         return null; // Not authorized as admin
       }
       role = account.role;

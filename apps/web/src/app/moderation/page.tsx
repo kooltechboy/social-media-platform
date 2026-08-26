@@ -5,8 +5,9 @@ import {
   CheckCircle, XCircle, AlertTriangle, Clock
 } from 'lucide-react';
 import Link from 'next/link';
-import { createServiceSupabaseClient, getStaffUser } from '../../lib/supabase/server';
+import { createServiceSupabaseClient, getAuthorizedUser } from '../../lib/supabase/server';
 import ModerationActionButton from '../../components/moderation-action-button';
+import AccessDenied from '../../components/access-denied';
 
 export const dynamic = 'force-dynamic';
 
@@ -35,11 +36,30 @@ const PRIORITY_COLORS: Record<string, { text: string; border: string; bg: string
 };
 
 export default async function ModerationPage() {
-  const user = await getStaffUser('moderator');
-  if (!user) redirect('/login');
+  const auth = await getAuthorizedUser(['moderator', 'admin', 'management', 'superadmin']);
+  if (!auth.isLoggedIn) {
+    redirect('/login?next=/moderation');
+  }
+  if (!auth.isAuthorized) {
+    return (
+      <AccessDenied
+        user={auth.user}
+        requiredRole="moderator"
+        currentRole={auth.role}
+        resourceName="the Moderation Command Center"
+      />
+    );
+  }
 
+  const user = auth.user;
   const supabase = await createServiceSupabaseClient();
-  if (!supabase) redirect('/login');
+  if (!supabase) {
+    return (
+      <div className="min-h-screen bg-[#090D16] text-brand-sandstone flex items-center justify-center p-4">
+        <p className="text-sm text-brand-sandstone/60">Service temporarily unavailable. Please try again.</p>
+      </div>
+    );
+  }
 
   const [queueResult, casesResult, recentResult] = await Promise.all([
     supabase
