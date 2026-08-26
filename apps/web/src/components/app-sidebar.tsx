@@ -1,5 +1,9 @@
+'use client';
+
 import React from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { useAuth } from './auth-provider';
 import {
   Home,
   Compass,
@@ -46,18 +50,25 @@ const COMMERCE_NAV: NavItem[] = [
   { href: '/creator-studio', label: 'Creator Studio', icon: <Sparkles className="w-4 h-4 text-brand-caribbeanSea" /> },
 ];
 
-const PERSONAL_NAV: NavItem[] = [
-  { href: '/messages', label: 'Messages', icon: <MessageSquare className="w-4 h-4 text-slate-300" /> },
-  { href: '/notifications', label: 'Notifications', icon: <Bell className="w-4 h-4 text-slate-300" /> },
-  { href: '/profile', label: 'My Identity', icon: <User className="w-4 h-4 text-slate-300" /> },
-  { href: '/settings', label: 'Settings', icon: <Settings className="w-4 h-4 text-slate-300" /> },
-];
-
 interface AppSidebarProps {
   currentPath?: string;
 }
 
-export default function AppSidebar({ currentPath = '/' }: AppSidebarProps) {
+export default function AppSidebar({ currentPath }: AppSidebarProps) {
+  const pathname = usePathname();
+  const { user } = useAuth();
+  const activePath = currentPath || pathname || '/';
+
+  const personalNav: NavItem[] = [
+    { href: '/messages', label: 'Messages', icon: <MessageSquare className="w-4 h-4 text-slate-300" /> },
+    { href: '/notifications', label: 'Notifications', icon: <Bell className="w-4 h-4 text-slate-300" /> },
+    {
+      href: user ? '/profile' : '/login',
+      label: user ? `@${user.username}` : 'Sign In',
+      icon: <User className="w-4 h-4 text-slate-300" />,
+    },
+    { href: '/settings', label: 'Settings', icon: <Settings className="w-4 h-4 text-slate-300" /> },
+  ];
   const renderNavGroup = (items: NavItem[], title?: string) => (
     <div className="space-y-1">
       {title && (
@@ -68,8 +79,8 @@ export default function AppSidebar({ currentPath = '/' }: AppSidebarProps) {
       {items.map((item) => {
         const isActive =
           item.href === '/'
-            ? currentPath === '/'
-            : currentPath.startsWith(item.href);
+            ? activePath === '/'
+            : activePath.startsWith(item.href);
 
         return (
           <Link
@@ -119,7 +130,7 @@ export default function AppSidebar({ currentPath = '/' }: AppSidebarProps) {
           </summary>
           <div className="mt-2 space-y-1">
             {COMMERCE_NAV.map((item) => {
-              const isActive = currentPath.startsWith(item.href);
+              const isActive = activePath.startsWith(item.href);
               return (
                 <Link
                   key={item.href}
@@ -150,7 +161,7 @@ export default function AppSidebar({ currentPath = '/' }: AppSidebarProps) {
         </details>
 
         <div className="h-px bg-brand-dusk/60 my-2" />
-        {renderNavGroup(PERSONAL_NAV, 'Account')}
+        {renderNavGroup(personalNav, 'Account')}
       </div>
 
       {/* Creator Studio Action Card */}

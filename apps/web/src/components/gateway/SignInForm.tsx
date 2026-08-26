@@ -38,6 +38,7 @@ export function SignInForm() {
     formData.set('email', email.trim());
     formData.set('password', password);
     formData.set('rememberMe', rememberMe ? 'true' : 'false');
+    formData.set('redirectTo', searchParams.get('next') || '/');
 
     startTransition(async () => {
       try {

@@ -288,6 +288,7 @@ export async function signUpAction(prevState: AuthFormState, formData: FormData)
 export async function signInAction(prevState: AuthFormState, formData: FormData): Promise<AuthFormState> {
   const email = formData.get('email') as string;
   const password = formData.get('password') as string;
+  const rawRedirect = (formData.get('redirectTo') as string) || '/';
 
   if (!email || !password) return { error: 'Email and password are required', info: null };
 
@@ -301,7 +302,11 @@ export async function signInAction(prevState: AuthFormState, formData: FormData)
 
   if (error) return { error: error.message, info: null };
 
-  redirect('/');
+  // Sanitize redirect URL
+  const trimmed = rawRedirect.trim();
+  const safeRedirect = trimmed.startsWith('/') && !trimmed.startsWith('//') && !trimmed.includes('://') ? trimmed : '/';
+
+  redirect(safeRedirect);
 }
 
 export async function signOutAction() {

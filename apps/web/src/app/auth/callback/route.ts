@@ -60,19 +60,7 @@ export async function GET(request: NextRequest) {
           }
         }
 
-        // Check if user has completed cultural identity setup
-        const { data: identity } = await supabase
-          .from('profile_identity')
-          .select('origin_country_iso')
-          .eq('profile_id', data.user.id)
-          .maybeSingle();
-
-        if (!identity?.origin_country_iso) {
-          // Send new OAuth users into progressive onboarding roots step
-          return NextResponse.redirect(new URL('/signup/caribbean', request.url));
-        }
-
-        // Return user to sanitized destination URL
+        // Return user to sanitized destination URL (home '/' by default)
         return NextResponse.redirect(new URL(next, request.url));
       }
     }

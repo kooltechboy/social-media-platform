@@ -9,10 +9,18 @@ export const metadata: Metadata = {
     'Sign in to ANTILIA — The premier digital platform connecting 59M+ Caribbean people, businesses, creators, music, and the global diaspora.',
 };
 
-export default async function LoginPage() {
+export default async function LoginPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ next?: string; error?: string }>;
+}) {
   const user = await getCurrentUser();
+  const params = await searchParams;
+
   if (user) {
-    redirect('/');
+    const rawNext = params?.next;
+    const safeNext = rawNext && rawNext.startsWith('/') && !rawNext.startsWith('//') ? rawNext : '/';
+    redirect(safeNext);
   }
 
   return <AntiliaMasterGateway />;

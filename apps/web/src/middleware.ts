@@ -8,6 +8,17 @@ const AUTH_GATEWAY_ROUTES = [
   '/reset-password',
 ];
 
+const PROTECTED_ROUTES = [
+  '/settings',
+  '/creator-studio',
+  '/spotpay',
+  '/messages',
+  '/notifications',
+  '/create',
+  '/admin',
+  '/moderation',
+];
+
 export async function middleware(request: NextRequest) {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -30,13 +41,27 @@ export async function middleware(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser();
   const pathname = request.nextUrl.pathname;
 
-  // Once authenticated, users should NEVER be prompted to sign in or access login/signup gateway pages
+  // 1. Once authenticated, users should NEVER see login/signup forms again — direct to home
   const isAuthGatewayRoute = AUTH_GATEWAY_ROUTES.some(
     (route) => pathname === route || pathname.startsWith(`${route}/`)
   );
 
   if (user && isAuthGatewayRoute) {
-    return NextResponse.redirect(new URL('/', request.url));
+    const rawNext = request.nextUrl.searchParams.get('next');
+    const safeNext = rawNext && rawNext.startsWith('/') && !rawNext.startsWith('//') ? rawNext : '/';
+    return NextResponse.redirect(new URL(safeNext, request.url));
+  }
+
+  // 2. Protected routes require active authentication — if not signed in, redirect to /login with return URL
+  const isProtectedRoute = PROTECTED_ROUTES.some(
+    (route) => pathname === route || pathname.startsWith(`${route}/`)
+  );
+
+  if (!user && isProtectedRoute) {
+    const loginUrl = new URL('/login', request.url);
+    const returnPath = pathname + (request.nextUrl.search || '');
+    loginUrl.searchParams.set('next', returnPath);
+    return NextResponse.redirect(loginUrl);
   }
 
   return response;
