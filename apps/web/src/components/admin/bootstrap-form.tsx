@@ -3,7 +3,8 @@
 import React, { useActionState } from 'react';
 import Link from 'next/link';
 import { ShieldAlert, ShieldCheck, Key, Mail, User, Check, AlertCircle, ArrowRight } from 'lucide-react';
-import { bootstrapSuperAdminAction, ActionResponse } from '../../lib/admin/staff-actions';
+import { bootstrapSuperAdminAction } from '../../lib/admin/staff-actions';
+import type { ActionResponse } from '../../lib/admin/types';
 
 const initialState: ActionResponse = { error: null, success: null };
 

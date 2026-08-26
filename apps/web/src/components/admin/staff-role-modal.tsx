@@ -6,8 +6,8 @@ import {
   updateStaffRoleAction,
   toggleAccountStatusAction,
   revokeStaffAccessAction,
-  ActionResponse,
 } from '../../lib/admin/staff-actions';
+import type { ActionResponse } from '../../lib/admin/types';
 
 interface StaffMember {
   id: string; // account id

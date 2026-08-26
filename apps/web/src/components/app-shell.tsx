@@ -13,6 +13,7 @@ const GATEWAY_ROUTES = [
   '/forgot-password',
   '/reset-password',
   '/onboarding',
+  '/admin/bootstrap',
 ];
 
 export default function AppShell({ children }: { children: React.ReactNode }) {

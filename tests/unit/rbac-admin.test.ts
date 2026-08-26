@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { STAFF_ROLES, SystemRole } from '../../packages/auth/src';
-import { STAFF_ROLE_TITLES } from '../../apps/web/src/lib/admin/staff-actions';
+import { STAFF_ROLE_TITLES } from '../../apps/web/src/lib/admin/types';
 
 describe('RBAC & Super Admin / Staff System Architecture', () => {
   it('defines all canonical staff roles in packages/auth', () => {

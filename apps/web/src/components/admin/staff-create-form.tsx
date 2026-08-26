@@ -3,7 +3,8 @@
 import React, { useActionState, useState } from 'react';
 import Link from 'next/link';
 import { UserPlus, Shield, Key, Mail, User, Info, Check, AlertCircle, ArrowLeft } from 'lucide-react';
-import { createStaffAccountAction, ActionResponse } from '../../lib/admin/staff-actions';
+import { createStaffAccountAction } from '../../lib/admin/staff-actions';
+import type { ActionResponse } from '../../lib/admin/types';
 
 const initialState: ActionResponse = {
   error: null,
