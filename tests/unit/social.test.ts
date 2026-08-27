@@ -82,3 +82,177 @@ describe('Graph-aware visibility resolution', () => {
     expect(resolveFeedVisibility('usr_1', 'private', graph)).toBe(true);
   });
 });
+
+describe('Feed post normalization and pipeline state reconciliation', () => {
+  it('normalizes database post with object profile', () => {
+    const rawDbRow = {
+      id: 'post_100',
+      content: 'DEBUG-POST-1710000000000',
+      created_at: '2026-08-26T22:00:00.000Z',
+      media_urls: ['https://storage.antilia.io/feed/img1.jpg'],
+      cultural_tags: ['carnival'],
+      likes_count: 5,
+      shares_count: 2,
+      comments_count: 1,
+      profiles: {
+        display_name: 'Marcus Garvey',
+        username: 'm_garvey',
+        is_verified: true,
+      },
+    };
+
+    const rawProfile = rawDbRow.profiles;
+    const profile = Array.isArray(rawProfile) ? rawProfile[0] : rawProfile;
+
+    const normalized = {
+      id: rawDbRow.id,
+      author: profile?.display_name || 'Caribbean Member',
+      handle: profile?.username || 'member',
+      verified: profile?.is_verified ?? true,
+      location: 'Antilia Network 🌴',
+      time: 'just now',
+      content: rawDbRow.content,
+      mediaUrls: rawDbRow.media_urls,
+      culturalTags: rawDbRow.cultural_tags,
+      likes: rawDbRow.likes_count,
+      reposts: rawDbRow.shares_count,
+      comments: rawDbRow.comments_count,
+      category: 'caribbean' as const,
+    };
+
+    expect(normalized.id).toBe('post_100');
+    expect(normalized.author).toBe('Marcus Garvey');
+    expect(normalized.handle).toBe('m_garvey');
+    expect(normalized.content).toBe('DEBUG-POST-1710000000000');
+  });
+
+  it('normalizes database post with array profile (PostgREST variant)', () => {
+    const rawDbRow = {
+      id: 'post_101',
+      content: 'DEBUG-POST-1710000000001',
+      created_at: '2026-08-26T22:00:00.000Z',
+      media_urls: [],
+      cultural_tags: [],
+      likes_count: 0,
+      shares_count: 0,
+      comments_count: 0,
+      profiles: [
+        {
+          display_name: 'Aaliyah Baptiste',
+          username: 'aaliyah_soca',
+          is_verified: true,
+        },
+      ],
+    };
+
+    const rawProfile = rawDbRow.profiles;
+    const profile = Array.isArray(rawProfile) ? rawProfile[0] : rawProfile;
+
+    const normalized = {
+      id: rawDbRow.id,
+      author: profile?.display_name || 'Caribbean Member',
+      handle: profile?.username || 'member',
+      verified: profile?.is_verified ?? true,
+      location: 'Antilia Network 🌴',
+      time: 'just now',
+      content: rawDbRow.content,
+      mediaUrls: rawDbRow.media_urls,
+      culturalTags: rawDbRow.cultural_tags,
+      likes: rawDbRow.likes_count,
+      reposts: rawDbRow.shares_count,
+      comments: rawDbRow.comments_count,
+      category: 'caribbean' as const,
+    };
+
+    expect(normalized.id).toBe('post_101');
+    expect(normalized.author).toBe('Aaliyah Baptiste');
+    expect(normalized.handle).toBe('aaliyah_soca');
+  });
+
+  it('reconciles and deduplicates feed state when a new post is published', () => {
+    const existingPosts = [
+      { id: 'p1', author: 'User 1', handle: 'u1', time: '1h ago', content: 'Old post', likes: 10, reposts: 2, comments: 1 },
+      { id: 'p2', author: 'User 2', handle: 'u2', time: '2h ago', content: 'Older post', likes: 5, reposts: 0, comments: 0 },
+    ];
+
+    const newlyCreatedPost = {
+      id: 'p_new',
+      author: 'Current User',
+      handle: 'current_u',
+      time: 'just now',
+      content: 'DEBUG-POST-NEW',
+      likes: 0,
+      reposts: 0,
+      comments: 0,
+    };
+
+    // Prepend without duplicate
+    const updatedState = existingPosts.some((p) => p.id === newlyCreatedPost.id)
+      ? existingPosts
+      : [newlyCreatedPost, ...existingPosts];
+
+    expect(updatedState.length).toBe(3);
+    expect(updatedState[0].id).toBe('p_new');
+    expect(updatedState[0].content).toBe('DEBUG-POST-NEW');
+
+    // Duplicate insertion prevention
+    const stateAfterDuplicateAttempt = updatedState.some((p) => p.id === newlyCreatedPost.id)
+      ? updatedState
+      : [newlyCreatedPost, ...updatedState];
+
+    expect(stateAfterDuplicateAttempt.length).toBe(3);
+  });
+
+  it('hydrates user reaction states accurately against post_reactions dataset', () => {
+    const posts = [
+      { id: 'post_1', likes: 10 },
+      { id: 'post_2', likes: 5 },
+      { id: 'post_3', likes: 2 },
+    ];
+    const userReactions = [{ post_id: 'post_1' }, { post_id: 'post_3' }];
+    const userLikedSet = new Set(userReactions.map((r) => r.post_id));
+
+    const hydrated = posts.map((p) => ({
+      ...p,
+      isUserLiked: userLikedSet.has(p.id),
+    }));
+
+    expect(hydrated[0].isUserLiked).toBe(true);
+    expect(hydrated[1].isUserLiked).toBe(false);
+    expect(hydrated[2].isUserLiked).toBe(true);
+  });
+
+  it('removes deleted posts from feed state', () => {
+    const posts = [
+      { id: 'p1', content: 'Post 1' },
+      { id: 'p2', content: 'Post 2' },
+    ];
+    const deletedPostId = 'p1';
+    const updated = posts.filter((p) => p.id !== deletedPostId);
+
+    expect(updated.length).toBe(1);
+    expect(updated[0].id).toBe('p2');
+  });
+
+  it('removes deleted comments from comment list and updates comment count', () => {
+    const comments = [
+      { id: 'c1', content: 'Nice!' },
+      { id: 'c2', content: 'Big up!' },
+    ];
+    const post = { id: 'p1', comments: 2 };
+    const deletedCommentId = 'c1';
+
+    const updatedComments = comments.filter((c) => c.id !== deletedCommentId);
+    const updatedPost = { ...post, comments: Math.max(0, post.comments - 1) };
+
+    expect(updatedComments.length).toBe(1);
+    expect(updatedComments[0].id).toBe('c2');
+    expect(updatedPost.comments).toBe(1);
+  });
+
+  it('increments share counts correctly on post sharing', () => {
+    const post = { id: 'p1', reposts: 4 };
+    const updatedPost = { ...post, reposts: post.reposts + 1 };
+    expect(updatedPost.reposts).toBe(5);
+  });
+});

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import {
   Heart,
@@ -16,13 +16,30 @@ import {
   Film,
   MapPin,
   Globe,
+  MoreHorizontal,
+  Trash2,
+  Flag,
+  Bookmark,
+  Link2,
+  X,
+  AlertCircle,
 } from 'lucide-react';
-import { toggleLikeAction, createCommentAction, fetchPostCommentsAction } from '../lib/social/actions';
+import {
+  toggleLikeAction,
+  createCommentAction,
+  fetchPostCommentsAction,
+  deletePostAction,
+  deleteCommentAction,
+  incrementPostShareAction,
+  reportPostAction,
+} from '../lib/social/actions';
+import { createSupabaseBrowserClient } from '../lib/supabase/browser';
 import SpotPayTipModal from './spotpay-tip-modal';
 import ShoppablePostWidget, { type TaggedProduct } from './shoppable-post-widget';
 
 export interface FeedPostData {
   id: string;
+  authorId?: string;
   author: string;
   handle: string;
   verified?: boolean;
@@ -45,7 +62,7 @@ interface FeedStreamProps {
   currentUserId?: string;
 }
 
-export default function FeedStream({ initialPosts }: FeedStreamProps) {
+export default function FeedStream({ initialPosts, currentUserId }: FeedStreamProps) {
   const [activeTab, setActiveTab] = useState<'caribbean' | 'foryou' | 'diaspora' | 'creator'>('caribbean');
   const [posts, setPosts] = useState<FeedPostData[]>(initialPosts);
   const [expandedCommentsPostId, setExpandedCommentsPostId] = useState<string | null>(null);
@@ -53,9 +70,115 @@ export default function FeedStream({ initialPosts }: FeedStreamProps) {
   const [commentLists, setCommentLists] = useState<Record<string, any[]>>({});
   const [isSubmittingComment, setIsSubmittingComment] = useState<string | null>(null);
   const [shareToast, setShareToast] = useState<string | null>(null);
+  const [activeMenuPostId, setActiveMenuPostId] = useState<string | null>(null);
+  const [reportModalPostId, setReportModalPostId] = useState<string | null>(null);
+  const [reportReason, setReportReason] = useState<string>('spam');
+  const [isSubmittingReport, setIsSubmittingReport] = useState(false);
+  const [savedPostIds, setSavedPostIds] = useState<Set<string>>(new Set());
 
   // SpotPay Tip state
   const [tipTarget, setTipTarget] = useState<{ name: string; handle: string } | null>(null);
+
+  // 1. Listen for immediate post-creation events from UniversalComposer
+  useEffect(() => {
+    function handleNewPost(event: Event) {
+      const customEvent = event as CustomEvent<{ post: FeedPostData }>;
+      if (customEvent.detail?.post) {
+        const newPost = customEvent.detail.post;
+        setPosts((prev) => {
+          if (prev.some((p) => p.id === newPost.id)) {
+            return prev;
+          }
+          return [newPost, ...prev];
+        });
+      }
+    }
+
+    window.addEventListener('antilia:new-post', handleNewPost);
+    return () => {
+      window.removeEventListener('antilia:new-post', handleNewPost);
+    };
+  }, []);
+
+  // 2. Reconcile server-refreshed initialPosts with local state
+  useEffect(() => {
+    if (initialPosts && initialPosts.length > 0) {
+      setPosts((prev) => {
+        const existingIds = new Set(initialPosts.map((p) => p.id));
+        const newlyAddedLocal = prev.filter((p) => !existingIds.has(p.id) && !p.id.startsWith('curated-'));
+        return [...newlyAddedLocal, ...initialPosts];
+      });
+    }
+  }, [initialPosts]);
+
+  // 3. Supabase Realtime subscription for cross-tab / live streaming posts & deletions
+  useEffect(() => {
+    const supabase = createSupabaseBrowserClient();
+    if (!supabase) return;
+
+    const channel = supabase
+      .channel('feed_realtime_posts')
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'posts' },
+        async (payload) => {
+          const newRow = payload.new as any;
+          if (!newRow || !newRow.id) return;
+
+          try {
+            const { data: postWithProfile } = await supabase
+              .from('posts')
+              .select('id, author_id, content, created_at, media_urls, cultural_tags, likes_count, comments_count, shares_count, profiles(display_name, username, avatar_url, is_verified)')
+              .eq('id', newRow.id)
+              .maybeSingle();
+
+            if (postWithProfile) {
+              const rawProfile = postWithProfile.profiles;
+              const profile = Array.isArray(rawProfile) ? rawProfile[0] : rawProfile;
+
+              const livePost: FeedPostData = {
+                id: postWithProfile.id,
+                authorId: postWithProfile.author_id,
+                author: profile?.display_name || 'Caribbean Member',
+                handle: profile?.username || 'member',
+                verified: profile?.is_verified ?? true,
+                location: 'Antilia Network 🌴',
+                time: 'just now',
+                content: postWithProfile.content || '',
+                mediaUrls: postWithProfile.media_urls || [],
+                culturalTags: postWithProfile.cultural_tags || [],
+                likes: postWithProfile.likes_count || 0,
+                reposts: postWithProfile.shares_count || 0,
+                comments: postWithProfile.comments_count || 0,
+                category: 'caribbean',
+              };
+
+              setPosts((prev) => {
+                if (prev.some((p) => p.id === livePost.id)) return prev;
+                return [livePost, ...prev];
+              });
+            }
+          } catch {
+            // Ignore realtime fetch errors
+          }
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: 'DELETE', schema: 'public', table: 'posts' },
+        (payload) => {
+          const oldRow = payload.old as any;
+          if (oldRow?.id) {
+            setPosts((prev) => prev.filter((p) => p.id !== oldRow.id));
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
 
   async function handleToggleLike(postId: string) {
     // Optimistic UI update
@@ -127,21 +250,132 @@ export default function FeedStream({ initialPosts }: FeedStreamProps) {
     }
   }
 
-  function handleShare(post: FeedPostData) {
+  async function handleDeleteComment(commentId: string, postId: string) {
+    setCommentLists((prev) => ({
+      ...prev,
+      [postId]: (prev[postId] || []).filter((c) => c.id !== commentId),
+    }));
+    setPosts((prev) =>
+      prev.map((p) => (p.id === postId ? { ...p, comments: Math.max(0, p.comments - 1) } : p))
+    );
+
+    try {
+      await deleteCommentAction(commentId, postId);
+    } catch {
+      // Revert if fetch fails
+      const res = await fetchPostCommentsAction(postId);
+      if (res.comments) {
+        setCommentLists((prev) => ({ ...prev, [postId]: res.comments }));
+      }
+    }
+  }
+
+  async function handleDeletePost(postId: string) {
+    if (!confirm('Are you sure you want to delete this post? This action cannot be undone.')) return;
+    setActiveMenuPostId(null);
+
+    // Optimistically remove from state
+    setPosts((prev) => prev.filter((p) => p.id !== postId));
+    setShareToast('Post deleted successfully.');
+    setTimeout(() => setShareToast(null), 3000);
+
+    try {
+      const res = await deletePostAction(postId);
+      if (!res.success) {
+        setShareToast(res.error || 'Failed to delete post.');
+        setTimeout(() => setShareToast(null), 4000);
+      }
+    } catch {
+      setShareToast('Error deleting post.');
+      setTimeout(() => setShareToast(null), 4000);
+    }
+  }
+
+  async function handleShare(post: FeedPostData) {
     const shareUrl = typeof window !== 'undefined' ? `${window.location.origin}/#${post.id}` : '';
     if (navigator.clipboard) {
       navigator.clipboard.writeText(shareUrl);
       setShareToast(`Post link copied to clipboard!`);
       setTimeout(() => setShareToast(null), 3000);
     }
+
+    // Increment share counter in database & UI
+    setPosts((prev) =>
+      prev.map((p) => (p.id === post.id ? { ...p, reposts: p.reposts + 1 } : p))
+    );
+
+    if (!post.id.startsWith('curated-')) {
+      try {
+        await incrementPostShareAction(post.id);
+      } catch {
+        // Ignore
+      }
+    }
+  }
+
+  function handleToggleSave(postId: string) {
+    setSavedPostIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(postId)) {
+        next.delete(postId);
+        setShareToast('Post removed from saved bookmarks.');
+      } else {
+        next.add(postId);
+        setShareToast('Post saved to bookmarks!');
+      }
+      return next;
+    });
+    setActiveMenuPostId(null);
+    setTimeout(() => setShareToast(null), 3000);
+  }
+
+  async function handleReportSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!reportModalPostId) return;
+
+    setIsSubmittingReport(true);
+    try {
+      const res = await reportPostAction(reportModalPostId, reportReason);
+      if (res.success) {
+        setShareToast('Report submitted for safety review.');
+        setReportModalPostId(null);
+      } else {
+        setShareToast(res.error || 'Failed to submit report.');
+      }
+    } catch {
+      setShareToast('Report submission failed.');
+    } finally {
+      setIsSubmittingReport(false);
+      setTimeout(() => setShareToast(null), 4000);
+    }
   }
 
   // Filter posts based on active tab
   const displayedPosts = posts.filter((p) => {
     if (activeTab === 'caribbean') return true;
-    if (activeTab === 'foryou') return p.likes > 200 || p.verified;
-    if (activeTab === 'diaspora') return p.location?.includes('US') || p.location?.includes('CA') || p.location?.includes('UK') || p.location?.includes('Diaspora');
-    if (activeTab === 'creator') return p.tag?.includes('Vibes') || p.tag?.includes('Soca') || p.tag?.includes('Sound');
+    if (activeTab === 'foryou') {
+      return p.likes > 200 || p.verified || (currentUserId && p.authorId === currentUserId);
+    }
+    if (activeTab === 'diaspora') {
+      return (
+        p.location?.includes('US') ||
+        p.location?.includes('CA') ||
+        p.location?.includes('UK') ||
+        p.location?.includes('Diaspora') ||
+        p.category === 'diaspora' ||
+        p.culturalTags?.includes('diaspora')
+      );
+    }
+    if (activeTab === 'creator') {
+      return (
+        p.tag?.includes('Vibes') ||
+        p.tag?.includes('Soca') ||
+        p.tag?.includes('Sound') ||
+        p.category === 'creator' ||
+        p.culturalTags?.includes('creator') ||
+        p.culturalTags?.includes('music')
+      );
+    }
     return true;
   });
 
@@ -225,11 +459,72 @@ export default function FeedStream({ initialPosts }: FeedStreamProps) {
                   </div>
                 </div>
 
-                {post.tag && (
-                  <span className="text-[10px] font-black px-2.5 py-1 rounded-full bg-brand-caribbeanSea/10 text-brand-caribbeanSea border border-brand-caribbeanSea/20">
-                    {post.tag}
-                  </span>
-                )}
+                <div className="flex items-center gap-2 relative">
+                  {post.tag && (
+                    <span className="text-[10px] font-black px-2.5 py-1 rounded-full bg-brand-caribbeanSea/10 text-brand-caribbeanSea border border-brand-caribbeanSea/20">
+                      {post.tag}
+                    </span>
+                  )}
+
+                  {/* Post Options Menu Button */}
+                  <button
+                    type="button"
+                    aria-label="Post options"
+                    onClick={() => setActiveMenuPostId(activeMenuPostId === post.id ? null : post.id)}
+                    className="p-1.5 rounded-full text-brand-sandstone/60 hover:text-brand-sandstone hover:bg-white/10 transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand-caribbeanSea"
+                  >
+                    <MoreHorizontal className="w-4 h-4" />
+                  </button>
+
+                  {/* Dropdown Menu */}
+                  {activeMenuPostId === post.id && (
+                    <div className="absolute right-0 top-8 z-30 w-44 rounded-2xl bg-brand-dusk border border-slate-700 shadow-2xl p-1.5 space-y-1 animate-fadeIn text-xs">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          handleShare(post);
+                          setActiveMenuPostId(null);
+                        }}
+                        className="w-full text-left px-3 py-2 rounded-xl text-slate-200 hover:bg-white/10 flex items-center gap-2 font-semibold transition-colors"
+                      >
+                        <Link2 className="w-3.5 h-3.5 text-brand-caribbeanSea" />
+                        <span>Copy Link</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => handleToggleSave(post.id)}
+                        className="w-full text-left px-3 py-2 rounded-xl text-slate-200 hover:bg-white/10 flex items-center gap-2 font-semibold transition-colors"
+                      >
+                        <Bookmark className={`w-3.5 h-3.5 ${savedPostIds.has(post.id) ? 'fill-brand-goldenHour text-brand-goldenHour' : 'text-slate-400'}`} />
+                        <span>{savedPostIds.has(post.id) ? 'Saved' : 'Save Post'}</span>
+                      </button>
+
+                      {currentUserId && post.authorId === currentUserId ? (
+                        <button
+                          type="button"
+                          onClick={() => handleDeletePost(post.id)}
+                          className="w-full text-left px-3 py-2 rounded-xl text-rose-400 hover:bg-rose-950/50 flex items-center gap-2 font-bold transition-colors"
+                        >
+                          <Trash2 className="w-3.5 h-3.5 text-rose-400" />
+                          <span>Delete Post</span>
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setReportModalPostId(post.id);
+                            setActiveMenuPostId(null);
+                          }}
+                          className="w-full text-left px-3 py-2 rounded-xl text-amber-400 hover:bg-amber-950/50 flex items-center gap-2 font-semibold transition-colors"
+                        >
+                          <Flag className="w-3.5 h-3.5 text-amber-400" />
+                          <span>Report Content</span>
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* Content Body */}
@@ -271,8 +566,9 @@ export default function FeedStream({ initialPosts }: FeedStreamProps) {
                 {/* Like Button */}
                 <button
                   type="button"
+                  aria-label={post.isUserLiked ? 'Unlike post' : 'Like post'}
                   onClick={() => handleToggleLike(post.id)}
-                  className={`flex items-center gap-1.5 transition-colors ${
+                  className={`flex items-center gap-1.5 transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-rose-400 rounded-lg px-1 ${
                     post.isUserLiked ? 'text-rose-400 font-bold' : 'hover:text-rose-400'
                   }`}
                 >
@@ -283,8 +579,9 @@ export default function FeedStream({ initialPosts }: FeedStreamProps) {
                 {/* Comments Toggle */}
                 <button
                   type="button"
+                  aria-label="View or add comments"
                   onClick={() => handleToggleComments(post.id)}
-                  className={`flex items-center gap-1.5 hover:text-brand-caribbeanSea transition-colors ${
+                  className={`flex items-center gap-1.5 hover:text-brand-caribbeanSea transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand-caribbeanSea rounded-lg px-1 ${
                     expandedCommentsPostId === post.id ? 'text-brand-caribbeanSea font-bold' : ''
                   }`}
                 >
@@ -295,16 +592,18 @@ export default function FeedStream({ initialPosts }: FeedStreamProps) {
                 {/* Share Button */}
                 <button
                   type="button"
+                  aria-label="Share post"
                   onClick={() => handleShare(post)}
-                  className="flex items-center gap-1.5 hover:text-brand-sunriseCoral transition-colors"
+                  className="flex items-center gap-1.5 hover:text-brand-sunriseCoral transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand-sunriseCoral rounded-lg px-1"
                 >
                   <Share2 className="w-4 h-4" />
-                  <span className="hidden sm:inline">Share</span>
+                  <span>{post.reposts > 0 ? post.reposts : 'Share'}</span>
                 </button>
 
                 {/* SpotPay Tip Trigger */}
                 <button
                   type="button"
+                  aria-label={`Send SpotPay Tip to ${post.author}`}
                   onClick={() => setTipTarget({ name: post.author, handle: post.handle })}
                   className="flex items-center gap-1.5 text-brand-sunriseCoral font-extrabold hover:text-emerald-300 transition-all bg-brand-sunriseCoral/10 hover:bg-brand-sunriseCoral/20 px-3 py-1 rounded-full border border-brand-sunriseCoral/20 shadow-sm"
                 >
@@ -321,17 +620,33 @@ export default function FeedStream({ initialPosts }: FeedStreamProps) {
                     {(commentLists[post.id] || []).length === 0 ? (
                       <p className="text-xs text-brand-sandstone/40 italic py-1">No comments yet. Start the conversation!</p>
                     ) : (
-                      (commentLists[post.id] || []).map((c, i) => (
-                        <div key={c.id || i} className="p-3 rounded-2xl bg-black/30 border border-white/8 space-y-1">
-                          <div className="flex items-center justify-between">
-                            <span className="text-xs font-bold text-slate-200">
-                              {c.profiles?.display_name || 'Caribbean Member'}
-                            </span>
-                            <span className="text-[10px] text-brand-sandstone/40">just now</span>
+                      (commentLists[post.id] || []).map((c, i) => {
+                        const isCommentAuthor = currentUserId && c.author_id === currentUserId;
+                        return (
+                          <div key={c.id || i} className="p-3 rounded-2xl bg-black/30 border border-white/8 space-y-1 group">
+                            <div className="flex items-center justify-between">
+                              <span className="text-xs font-bold text-slate-200">
+                                {c.profiles?.display_name || 'Caribbean Member'}
+                              </span>
+                              <div className="flex items-center gap-2">
+                                <span className="text-[10px] text-brand-sandstone/40">just now</span>
+                                {isCommentAuthor && (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleDeleteComment(c.id, post.id)}
+                                    className="opacity-0 group-hover:opacity-100 text-rose-400 hover:text-rose-300 transition-opacity p-0.5"
+                                    title="Delete comment"
+                                    aria-label="Delete comment"
+                                  >
+                                    <Trash2 className="w-3 h-3" />
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                            <p className="text-xs text-slate-300">{c.content}</p>
                           </div>
-                          <p className="text-xs text-slate-300">{c.content}</p>
-                        </div>
-                      ))
+                        );
+                      })
                     )}
                   </div>
 
@@ -346,6 +661,7 @@ export default function FeedStream({ initialPosts }: FeedStreamProps) {
                     />
                     <button
                       type="submit"
+                      aria-label="Submit comment"
                       disabled={isSubmittingComment === post.id || !commentInputs[post.id]?.trim()}
                       className="bg-brand-caribbeanSea hover:bg-brand-caribbeanSea text-slate-950 font-bold px-3.5 py-2 rounded-xl text-xs flex items-center gap-1 transition-all disabled:opacity-50"
                     >
@@ -371,6 +687,77 @@ export default function FeedStream({ initialPosts }: FeedStreamProps) {
           creatorName={tipTarget.name}
           creatorHandle={tipTarget.handle}
         />
+      )}
+
+      {/* Report Modal */}
+      {reportModalPostId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fadeIn">
+          <div className="bg-brand-dusk border border-slate-800 rounded-3xl p-6 max-w-md w-full shadow-2xl space-y-4 relative">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+              <h3 className="font-black text-sm text-brand-sandstone flex items-center gap-2">
+                <Flag className="w-4 h-4 text-amber-400" /> Report Content
+              </h3>
+              <button
+                type="button"
+                onClick={() => setReportModalPostId(null)}
+                className="p-1.5 rounded-full text-brand-sandstone/60 hover:text-brand-sandstone hover:bg-slate-800"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleReportSubmit} className="space-y-4">
+              <p className="text-xs text-slate-300 leading-relaxed">
+                Why are you reporting this post? Our CaribAI &amp; Trust &amp; Safety team will review the case promptly.
+              </p>
+
+              <div className="space-y-2">
+                {[
+                  { id: 'spam', label: 'Spam, scam, or misleading information' },
+                  { id: 'harassment', label: 'Harassment, hate speech, or abuse' },
+                  { id: 'inappropriate', label: 'Inappropriate or harmful media' },
+                  { id: 'copyright', label: 'Copyright or intellectual property violation' },
+                ].map((item) => (
+                  <label
+                    key={item.id}
+                    className={`flex items-center gap-2.5 p-3 rounded-xl border text-xs cursor-pointer transition-colors ${
+                      reportReason === item.id
+                        ? 'bg-brand-caribbeanSea/10 border-brand-caribbeanSea text-brand-caribbeanSea font-bold'
+                        : 'bg-brand-twilight/50 border-slate-800 text-slate-300 hover:bg-brand-twilight'
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="reportReason"
+                      value={item.id}
+                      checked={reportReason === item.id}
+                      onChange={(e) => setReportReason(e.target.value)}
+                      className="accent-brand-caribbeanSea"
+                    />
+                    <span>{item.label}</span>
+                  </label>
+                ))}
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setReportModalPostId(null)}
+                  className="px-4 py-2 rounded-xl text-xs font-bold text-slate-400 hover:text-white"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSubmittingReport}
+                  className="bg-gradient-to-r from-brand-caribbeanSea to-brand-sunriseCoral text-slate-950 font-black px-5 py-2 rounded-xl text-xs flex items-center gap-1.5 transition-all shadow-md disabled:opacity-50"
+                >
+                  {isSubmittingReport ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : 'Submit Report'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
       )}
     </div>
   );

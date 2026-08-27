@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   Image as ImageIcon,
   Video,
@@ -37,7 +38,7 @@ export interface UniversalComposerProps {
   displayName?: string;
   avatarInitials?: string;
   accountType?: 'personal' | 'creator' | 'business' | 'government' | 'institution';
-  onPostCreated?: () => void;
+  onPostCreated?: (post?: any) => void;
   defaultExpanded?: boolean;
 }
 
@@ -60,6 +61,7 @@ export default function UniversalComposer({
   onPostCreated,
   defaultExpanded = false,
 }: UniversalComposerProps) {
+  const router = useRouter();
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
   const [mode, setMode] = useState<ComposerMode>('text');
   const [content, setContent] = useState('');
@@ -292,7 +294,18 @@ export default function UniversalComposer({
 
       setSuccessMessage('Successfully published to the Antilia feed!');
       setTimeout(() => setSuccessMessage(null), 4000);
-      if (onPostCreated) onPostCreated();
+
+      // Dispatch global window event with newly created post for instant FeedStream update
+      if (typeof window !== 'undefined' && result.post) {
+        window.dispatchEvent(
+          new CustomEvent('antilia:new-post', {
+            detail: { post: result.post },
+          })
+        );
+      }
+
+      if (onPostCreated) onPostCreated(result.post);
+      router.refresh();
     } catch (err) {
       setErrorMessage(err instanceof Error ? err.message : 'An unexpected error occurred while posting.');
     } finally {

@@ -132,26 +132,46 @@ export default async function HomePage() {
   if (supabase) {
     const { data } = await supabase
       .from('posts')
-      .select('id, content, created_at, media_urls, cultural_tags, likes_count, comments_count, shares_count, profiles(display_name, username)')
+      .select('id, author_id, content, created_at, media_urls, cultural_tags, likes_count, comments_count, shares_count, profiles(display_name, username, is_verified)')
       .order('created_at', { ascending: false })
       .limit(30);
 
+    let userLikedPostIds = new Set<string>();
+    if (user && data && data.length > 0) {
+      const postIds = data.map((p: any) => p.id);
+      const { data: reactions } = await supabase
+        .from('post_reactions')
+        .select('post_id')
+        .eq('user_id', user.id)
+        .in('post_id', postIds);
+
+      if (reactions) {
+        userLikedPostIds = new Set(reactions.map((r: any) => r.post_id));
+      }
+    }
+
     if (data && data.length > 0) {
-      livePosts = data.map((p: any) => ({
-        id: p.id,
-        author: p.profiles?.display_name || 'Caribbean Member',
-        handle: p.profiles?.username || 'member',
-        verified: true,
-        location: 'Antilia Network 🌴',
-        time: relativeTime(p.created_at),
-        content: p.content || '',
-        mediaUrls: p.media_urls || [],
-        culturalTags: p.cultural_tags || [],
-        likes: p.likes_count || 0,
-        reposts: p.shares_count || 0,
-        comments: p.comments_count || 0,
-        category: 'caribbean',
-      }));
+      livePosts = data.map((p: any) => {
+        const rawProfile = p.profiles;
+        const profile = Array.isArray(rawProfile) ? rawProfile[0] : rawProfile;
+        return {
+          id: p.id,
+          authorId: p.author_id,
+          author: profile?.display_name || 'Caribbean Member',
+          handle: profile?.username || 'member',
+          verified: profile?.is_verified ?? true,
+          location: 'Antilia Network 🌴',
+          time: relativeTime(p.created_at),
+          content: p.content || '',
+          mediaUrls: p.media_urls || [],
+          culturalTags: p.cultural_tags || [],
+          likes: p.likes_count || 0,
+          reposts: p.shares_count || 0,
+          comments: p.comments_count || 0,
+          isUserLiked: userLikedPostIds.has(p.id),
+          category: 'caribbean',
+        };
+      });
     }
   }
 

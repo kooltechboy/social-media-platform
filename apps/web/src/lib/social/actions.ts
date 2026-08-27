@@ -9,6 +9,21 @@ import { ensureUserProfile } from '../auth/user-sync';
 export interface PostActionState {
   error: string | null;
   postId?: string;
+  post?: {
+    id: string;
+    author: string;
+    handle: string;
+    verified?: boolean;
+    location?: string;
+    time: string;
+    content: string;
+    mediaUrls?: string[];
+    culturalTags?: string[];
+    likes: number;
+    reposts: number;
+    comments: number;
+    category?: 'caribbean' | 'foryou' | 'diaspora' | 'creator';
+  };
 }
 
 export interface StoryData {
@@ -106,7 +121,7 @@ export async function createPostAction(_prev: PostActionState, formData: FormDat
       media_urls: mediaUrls,
       cultural_tags: culturalTags,
     })
-    .select('id')
+    .select('id, content, created_at, media_urls, cultural_tags, likes_count, comments_count, shares_count, visibility, profiles(display_name, username, avatar_url, is_verified)')
     .single();
 
   if (error) {
@@ -117,9 +132,28 @@ export async function createPostAction(_prev: PostActionState, formData: FormDat
     return { error: "We couldn't publish your post right now. Please try again." };
   }
 
+  const rawProfile = data?.profiles;
+  const profile = Array.isArray(rawProfile) ? rawProfile[0] : rawProfile;
+
+  const normalizedPost = {
+    id: data.id,
+    author: profile?.display_name || user.displayName || 'Caribbean Member',
+    handle: profile?.username || user.username || 'member',
+    verified: profile?.is_verified ?? true,
+    location: 'Antilia Network 🌴',
+    time: 'just now',
+    content: data.content || '',
+    mediaUrls: data.media_urls || [],
+    culturalTags: data.cultural_tags || [],
+    likes: data.likes_count || 0,
+    reposts: data.shares_count || 0,
+    comments: data.comments_count || 0,
+    category: 'caribbean' as const,
+  };
+
   revalidatePath('/');
   revalidatePath('/create');
-  return { error: null, postId: data?.id };
+  return { error: null, postId: data.id, post: normalizedPost };
 }
 
 /**
@@ -381,11 +415,139 @@ export async function fetchPostCommentsAction(postId: string): Promise<{ comment
 
   const { data, error } = await supabase
     .from('comments')
-    .select('id, content, created_at, profiles(display_name, username, avatar_url)')
+    .select('id, author_id, content, created_at, profiles(display_name, username, avatar_url)')
     .eq('post_id', postId)
     .order('created_at', { ascending: true })
     .limit(50);
 
   if (error) return { comments: [], error: error.message };
   return { comments: data ?? [], error: null };
+}
+
+/**
+ * Deletes a post owned by the authenticated user.
+ */
+export async function deletePostAction(postId: string): Promise<{ success: boolean; error: string | null }> {
+  const user = await getCurrentUser();
+  if (!user) return { success: false, error: 'Please sign in to delete this post.' };
+
+  const supabase = await createSupabaseServerClient();
+  if (!supabase) return { success: false, error: 'Database is not configured.' };
+
+  const { error } = await supabase
+    .from('posts')
+    .delete()
+    .eq('id', postId)
+    .eq('author_id', user.id);
+
+  if (error) {
+    console.error('[deletePostAction] Error deleting post:', error);
+    return { success: false, error: error.message };
+  }
+
+  revalidatePath('/');
+  revalidatePath('/create');
+  return { success: true, error: null };
+}
+
+/**
+ * Deletes a comment owned by the authenticated user.
+ */
+export async function deleteCommentAction(commentId: string, postId?: string): Promise<{ success: boolean; error: string | null }> {
+  const user = await getCurrentUser();
+  if (!user) return { success: false, error: 'Please sign in to delete this comment.' };
+
+  const supabase = await createSupabaseServerClient();
+  if (!supabase) return { success: false, error: 'Database is not configured.' };
+
+  const { error } = await supabase
+    .from('comments')
+    .delete()
+    .eq('id', commentId)
+    .eq('author_id', user.id);
+
+  if (error) {
+    console.error('[deleteCommentAction] Error deleting comment:', error);
+    return { success: false, error: error.message };
+  }
+
+  revalidatePath('/');
+  return { success: true, error: null };
+}
+
+/**
+ * Increments the shares count on a post when shared by a user.
+ */
+export async function incrementPostShareAction(postId: string): Promise<{ success: boolean; sharesCount: number; error: string | null }> {
+  const supabase = await createSupabaseServerClient();
+  if (!supabase) return { success: false, sharesCount: 0, error: 'Database is not configured.' };
+
+  // Fetch current shares count
+  const { data: post } = await supabase
+    .from('posts')
+    .select('shares_count')
+    .eq('id', postId)
+    .maybeSingle();
+
+  const newCount = (post?.shares_count ?? 0) + 1;
+
+  const { error } = await supabase
+    .from('posts')
+    .update({ shares_count: newCount })
+    .eq('id', postId);
+
+  if (error) {
+    return { success: false, sharesCount: post?.shares_count ?? 0, error: error.message };
+  }
+
+  revalidatePath('/');
+  return { success: true, sharesCount: newCount, error: null };
+}
+
+/**
+ * Files a moderation report against a post or content item.
+ */
+export async function reportPostAction(postId: string, reason: string, details?: string): Promise<{ success: boolean; error: string | null }> {
+  const user = await getCurrentUser();
+  if (!user) return { success: false, error: 'Please sign in to submit a report.' };
+
+  const supabase = await createSupabaseServerClient();
+  if (!supabase) return { success: false, error: 'Database is not configured.' };
+
+  await ensureUserProfile(supabase, {
+    id: user.id,
+    email: user.email,
+    user_metadata: { username: user.username, display_name: user.displayName, avatar_url: user.avatarUrl },
+  });
+
+  const { data: report, error: reportErr } = await supabase
+    .from('reports')
+    .insert({
+      reporter_id: user.id,
+      target_type: 'post',
+      target_id: postId,
+      reason,
+      details: details || null,
+      status: 'open',
+    })
+    .select('id')
+    .single();
+
+  if (reportErr) {
+    console.error('[reportPostAction] Error creating report:', reportErr);
+    return { success: false, error: 'Failed to submit report. Please try again.' };
+  }
+
+  // Queue in moderation_cases for review
+  if (report) {
+    await supabase.from('moderation_cases').insert({
+      target_type: 'post',
+      target_id: postId,
+      report_id: report.id,
+      priority: reason === 'illegal' || reason === 'harassment' ? 'high' : 'medium',
+      status: 'queued',
+    });
+  }
+
+  return { success: true, error: null };
 }
