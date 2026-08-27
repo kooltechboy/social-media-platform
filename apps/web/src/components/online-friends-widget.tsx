@@ -57,8 +57,11 @@ export default function OnlineFriendsWidget() {
         {filteredFriends.length > 0 ? (
           filteredFriends.map((friend) => (
             <div key={friend.id} className="flex items-center justify-between p-2 rounded-2xl hover:bg-brand-dusk/50 transition-colors group cursor-pointer">
-              <div className="flex items-center gap-3">
-                <div className="relative">
+              <Link
+                href={`/profile/${friend.username}`}
+                className="flex items-center gap-3 flex-1 min-w-0"
+              >
+                <div className="relative flex-shrink-0">
                   <div className="w-10 h-10 rounded-full bg-brand-dusk flex items-center justify-center text-xs font-bold text-slate-300">
                     {friend.avatar}
                   </div>
@@ -66,9 +69,9 @@ export default function OnlineFriendsWidget() {
                     <span className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-brand-sunriseCoral border-2 border-slate-900"></span>
                   )}
                 </div>
-                <div>
-                  <p className="text-xs font-bold text-slate-200 group-hover:text-brand-sandstone transition-colors">{friend.name}</p>
-                  <p className="text-[10px] text-brand-sandstone/40">
+                <div className="min-w-0">
+                  <p className="text-xs font-bold text-slate-200 group-hover:text-brand-sandstone transition-colors truncate">{friend.name}</p>
+                  <p className="text-[10px] text-brand-sandstone/40 truncate">
                     {friend.isOnline ? (
                       <span className="text-brand-sunriseCoral font-medium">Online</span>
                     ) : (
@@ -76,7 +79,7 @@ export default function OnlineFriendsWidget() {
                     )}
                   </p>
                 </div>
-              </div>
+              </Link>
               
               <Link
                 href={`/messages/${friend.username}`}

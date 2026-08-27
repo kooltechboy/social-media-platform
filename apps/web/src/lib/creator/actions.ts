@@ -168,35 +168,53 @@ export async function sendTipAction(
 
   if (!creatorProfile) return { error: 'Creator not found.' };
 
-  // Find the creator's pending ledger account
-  const { data: creatorLedger } = await supabase
+  // Use service role for ledger operations
+  const { createClient } = await import('@supabase/supabase-js');
+  const supabaseAdmin = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  );
+
+  // Find or initialize the creator's pending ledger account
+  let { data: creatorLedger } = await supabaseAdmin
     .from('ledger_accounts')
     .select('id, owner_id')
     .eq('owner_id', creatorProfile.id)
     .eq('account_type', 'creator_pending')
     .maybeSingle();
 
-  if (!creatorLedger) return { error: 'Creator has no payment account.' };
+  if (!creatorLedger) {
+    const { data: newCreatorLedger } = await supabaseAdmin
+      .from('ledger_accounts')
+      .insert({ owner_id: creatorProfile.id, account_type: 'creator_pending', currency: 'USD' })
+      .select('id, owner_id')
+      .single();
+    creatorLedger = newCreatorLedger;
+  }
 
-  // Find sender's spotpay wallet
-  const { data: senderWallet } = await supabase
+  if (!creatorLedger) return { error: 'Failed to initialize creator payment account.' };
+
+  // Find or initialize sender's spotpay wallet
+  let { data: senderWallet } = await supabaseAdmin
     .from('ledger_accounts')
-    .select('id')
+    .select('id, owner_id')
     .eq('owner_id', user.id)
     .eq('account_type', 'spotpay_wallet')
     .maybeSingle();
 
-  if (!senderWallet) return { error: 'You need a SpotPay wallet. Top up first.' };
+  if (!senderWallet) {
+    const { data: newSenderWallet } = await supabaseAdmin
+      .from('ledger_accounts')
+      .insert({ owner_id: user.id, account_type: 'spotpay_wallet', currency: 'USD' })
+      .select('id, owner_id')
+      .single();
+    senderWallet = newSenderWallet;
+  }
+
+  if (!senderWallet) return { error: 'Failed to initialize SpotPay wallet.' };
 
   const transactionId = crypto.randomUUID();
   const amountMajor = (amountMinor / 100).toFixed(4);
-
-  // Use service role for ledger inserts
-  const { createClient } = await import('@supabase/supabase-js');
-  const supabaseAdmin = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  );
 
   const { error: insertErr } = await supabaseAdmin.from('ledger_entries').insert([
     {

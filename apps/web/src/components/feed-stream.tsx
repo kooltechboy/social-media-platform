@@ -435,16 +435,30 @@ export default function FeedStream({ initialPosts, currentUserId }: FeedStreamPr
               {/* Post Author Header */}
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-brand-goldenHour via-rose-500 to-brand-caribbeanSea p-0.5 shadow-md flex-shrink-0">
+                  <Link
+                    href={`/profile/${post.handle}`}
+                    className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-brand-goldenHour via-rose-500 to-brand-caribbeanSea p-0.5 shadow-md flex-shrink-0 hover:scale-105 transition-transform"
+                    aria-label={`View profile for ${post.author}`}
+                  >
                     <div className="w-full h-full bg-brand-twilight rounded-2xl flex items-center justify-center font-black text-xs text-brand-sandstone">
                       {post.author.slice(0, 2).toUpperCase()}
                     </div>
-                  </div>
+                  </Link>
                   <div>
                     <div className="flex items-center gap-1.5">
-                      <h4 className="font-extrabold text-sm text-brand-sandstone">{post.author}</h4>
+                      <Link
+                        href={`/profile/${post.handle}`}
+                        className="font-extrabold text-sm text-brand-sandstone hover:text-brand-caribbeanSea transition-colors"
+                      >
+                        {post.author}
+                      </Link>
                       {post.verified && <CheckCircle className="w-3.5 h-3.5 text-brand-caribbeanSea fill-brand-caribbeanSea/20" />}
-                      <span className="text-xs text-brand-sandstone/40">@{post.handle}</span>
+                      <Link
+                        href={`/profile/${post.handle}`}
+                        className="text-xs text-brand-sandstone/40 hover:text-brand-sandstone/70 transition-colors"
+                      >
+                        @{post.handle}
+                      </Link>
                     </div>
                     <div className="flex items-center gap-2 text-[11px] text-brand-sandstone/60 mt-0.5">
                       {post.location && (
@@ -461,9 +475,12 @@ export default function FeedStream({ initialPosts, currentUserId }: FeedStreamPr
 
                 <div className="flex items-center gap-2 relative">
                   {post.tag && (
-                    <span className="text-[10px] font-black px-2.5 py-1 rounded-full bg-brand-caribbeanSea/10 text-brand-caribbeanSea border border-brand-caribbeanSea/20">
+                    <Link
+                      href={`/explore?q=${encodeURIComponent(post.tag.replace('#', ''))}`}
+                      className="text-[10px] font-black px-2.5 py-1 rounded-full bg-brand-caribbeanSea/10 hover:bg-brand-caribbeanSea/20 text-brand-caribbeanSea border border-brand-caribbeanSea/20 transition-colors"
+                    >
                       {post.tag}
-                    </span>
+                    </Link>
                   )}
 
                   {/* Post Options Menu Button */}
@@ -625,9 +642,18 @@ export default function FeedStream({ initialPosts, currentUserId }: FeedStreamPr
                         return (
                           <div key={c.id || i} className="p-3 rounded-2xl bg-black/30 border border-white/8 space-y-1 group">
                             <div className="flex items-center justify-between">
-                              <span className="text-xs font-bold text-slate-200">
-                                {c.profiles?.display_name || 'Caribbean Member'}
-                              </span>
+                              {c.profiles?.username ? (
+                                <Link
+                                  href={`/profile/${c.profiles.username}`}
+                                  className="text-xs font-bold text-slate-200 hover:text-brand-caribbeanSea transition-colors"
+                                >
+                                  {c.profiles?.display_name || 'Caribbean Member'}
+                                </Link>
+                              ) : (
+                                <span className="text-xs font-bold text-slate-200">
+                                  {c.profiles?.display_name || 'Caribbean Member'}
+                                </span>
+                              )}
                               <div className="flex items-center gap-2">
                                 <span className="text-[10px] text-brand-sandstone/40">just now</span>
                                 {isCommentAuthor && (
