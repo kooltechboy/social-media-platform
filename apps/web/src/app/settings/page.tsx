@@ -36,7 +36,7 @@ export default async function SettingsPage() {
     <div className="min-h-screen bg-[#090D16] text-brand-sandstone">
       <header className="sticky top-0 z-50 bg-[#0F172A]/90 backdrop-blur-md border-b border-slate-800 px-4 py-3 flex items-center gap-4">
         <Link
-          href={`/profile/${user.username}`}
+          href={`/profile/${profileRow.username}`}
           className="flex items-center gap-2 text-slate-300 hover:text-brand-sandstone text-sm font-semibold"
         >
           <ArrowLeft className="w-4 h-4" /> Back to Profile
@@ -74,14 +74,14 @@ export default async function SettingsPage() {
         <section className="bg-brand-dusk/70 border border-rose-900/40 rounded-2xl p-6 space-y-3">
           <h2 className="text-sm font-bold text-rose-400">Danger Zone</h2>
           <p className="text-xs text-brand-sandstone/60">
-            Account deletion permanently removes your profile, posts, and all associated data. This action cannot be undone.
+            Account deletion permanently removes your profile, posts, and all associated data. Contact Trust &amp; Safety to request immediate account closure.
           </p>
-          <button
-            disabled
-            className="bg-rose-500/10 border border-rose-500/40 text-rose-400 font-bold text-xs px-4 py-2 rounded-xl opacity-60 cursor-not-allowed"
+          <Link
+            href="mailto:safety@caribbeanone.com?subject=Account%20Deletion%20Request"
+            className="inline-block bg-rose-500/10 border border-rose-500/40 hover:bg-rose-500/20 text-rose-400 font-bold text-xs px-4 py-2 rounded-xl transition-colors"
           >
-            Delete Account (coming soon)
-          </button>
+            Request Account Deletion
+          </Link>
         </section>
       </main>
     </div>

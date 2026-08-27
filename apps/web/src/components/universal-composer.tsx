@@ -754,6 +754,7 @@ export default function UniversalComposer({
             <div className="flex items-center gap-1.5 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0 scrollbar-none">
               <button
                 type="button"
+                data-mode="photo"
                 onClick={() => fileInputRef.current?.click()}
                 title="Add Photos or Videos"
                 className={`p-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all ${
@@ -766,6 +767,7 @@ export default function UniversalComposer({
 
               <button
                 type="button"
+                data-mode="poll"
                 onClick={() => setMode(mode === 'poll' ? 'text' : 'poll')}
                 title="Create Poll"
                 className={`p-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all ${
@@ -778,6 +780,7 @@ export default function UniversalComposer({
 
               <button
                 type="button"
+                data-mode="product"
                 onClick={() => setMode(mode === 'product' ? 'text' : 'product')}
                 title="Attach Product"
                 className={`p-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all ${
@@ -790,6 +793,7 @@ export default function UniversalComposer({
 
               <button
                 type="button"
+                data-mode="event"
                 onClick={() => setMode(mode === 'event' ? 'text' : 'event')}
                 title="Attach Event"
                 className={`p-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all ${
@@ -802,6 +806,7 @@ export default function UniversalComposer({
 
               <button
                 type="button"
+                data-mode="fundraiser"
                 onClick={() => setMode(mode === 'fundraiser' ? 'text' : 'fundraiser')}
                 title="Launch Fundraiser"
                 className={`p-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all ${

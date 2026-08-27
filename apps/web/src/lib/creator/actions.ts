@@ -65,20 +65,31 @@ export async function requestPayoutAction(
   // Fetch the creator_pending and spotpay_wallet ledger accounts
   const { data: accounts } = await supabase
     .from('ledger_accounts')
-    .select('id, account_type, balance')
+    .select('id, account_type')
     .eq('owner_id', user.id)
     .in('account_type', ['creator_pending', 'spotpay_wallet']);
 
-  const creatorLedger = accounts?.find(a => a.account_type === 'creator_pending');
-  let spotpayLedger = accounts?.find(a => a.account_type === 'spotpay_wallet');
+  const creatorLedger = accounts?.find((a) => a.account_type === 'creator_pending');
+  let spotpayLedger = accounts?.find((a) => a.account_type === 'spotpay_wallet');
 
   if (!creatorLedger) {
     return { error: 'No creator pending ledger account found.' };
   }
 
-  // Use the actual materialized balance from the ledger
-  const pendingBalanceMajor = Number(creatorLedger.balance);
-  const pendingBalanceMinor = Math.round(pendingBalanceMajor * 100);
+  // Compute pending balance from ledger entries
+  const { data: entries } = await supabase
+    .from('ledger_entries')
+    .select('amount, entry_type')
+    .eq('account_id', creatorLedger.id);
+
+  let pendingBalanceMinor = 0;
+  if (entries && entries.length > 0) {
+    const total = entries.reduce((sum, e) => {
+      const amt = Number(e.amount);
+      return e.entry_type === 'DEBIT' ? sum - amt : sum + amt;
+    }, 0);
+    pendingBalanceMinor = Math.max(0, Math.round(total * 100));
+  }
 
   const context: PayoutContext = {
     availableBalanceMinor: pendingBalanceMinor,
@@ -102,7 +113,7 @@ export async function requestPayoutAction(
       .select('id')
       .single();
     if (createWalletErr || !newWallet) return { error: 'Failed to initialize SpotPay wallet.' };
-    spotpayLedger = { id: newWallet.id, account_type: 'spotpay_wallet', balance: 0 };
+    spotpayLedger = { id: newWallet.id, account_type: 'spotpay_wallet' };
   }
 
   // Double-entry: Debit creator_pending and Credit spotpay_wallet

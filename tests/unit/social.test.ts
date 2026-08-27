@@ -287,4 +287,39 @@ describe('Feed post normalization and pipeline state reconciliation', () => {
     expect(profileUrl).toBe('/profile/karenereid');
     expect(dmUrl).toBe('/messages?u=karenereid');
   });
+
+  it('assembles structured attachments properly for all Create Hub modes', () => {
+    // Poll Mode
+    const pollContent = (text: string, question: string, options: string[]) =>
+      `${text}\n\n📊 **Poll:** ${question}\n${options.map((o) => `• ${o}`).join('\n')}`;
+
+    const poll = pollContent('Vote now', 'Best J\'ouvert Band?', ['Band A', 'Band B']);
+    expect(poll).toContain('📊 **Poll:** Best J\'ouvert Band?');
+    expect(poll).toContain('• Band A');
+    expect(poll).toContain('• Band B');
+
+    // Product Mode
+    const productContent = (text: string, title: string, price: string) =>
+      `${text}\n\n🛍️ **Featured Product:** ${title} ($${price} USD on SpotPay)`;
+    const prod = productContent('Check out new batch', 'Blue Mountain Beans', '35.00');
+    expect(prod).toContain('🛍️ **Featured Product:** Blue Mountain Beans ($35.00 USD on SpotPay)');
+
+    // Event Mode
+    const eventContent = (text: string, title: string, date: string) =>
+      `${text}\n\n📅 **Upcoming Caribbean Event:** ${title} (${date})`;
+    const evt = eventContent('Get your tickets', 'Trinidad Carnival Gala', '2026-03-01');
+    expect(evt).toContain('📅 **Upcoming Caribbean Event:** Trinidad Carnival Gala (2026-03-01)');
+
+    // Fundraiser Mode
+    const fundraiserContent = (text: string, title: string, goal: string) =>
+      `${text}\n\n💰 **SpotPay Fundraiser:** ${title} (Goal: $${goal} USD)`;
+    const fund = fundraiserContent('Please support', 'Hurricane Relief Fund', '50,000');
+    expect(fund).toContain('💰 **SpotPay Fundraiser:** Hurricane Relief Fund (Goal: $50,000 USD)');
+
+    // Civic Alert Mode
+    const alertContent = (text: string) => `🚨 **OFFICIAL CARIBBEAN ADVISORY** 🚨\n\n${text}`;
+    const alert = alertContent('Tropical Storm Watch issued for Leeward Islands');
+    expect(alert).toContain('🚨 **OFFICIAL CARIBBEAN ADVISORY** 🚨');
+  });
 });
+

@@ -52,7 +52,6 @@ interface LedgerAccount {
   id: string;
   account_type: string;
   currency: string;
-  balance: number;
 }
 
 export default async function CreatorStudioPage() {
@@ -94,7 +93,7 @@ export default async function CreatorStudioPage() {
       .eq('creator_id', user.id),
     supabase
       .from('ledger_accounts')
-      .select('id, account_type, currency, balance')
+      .select('id, account_type, currency')
       .eq('owner_id', user.id)
       .eq('account_type', 'creator_pending')
       .maybeSingle(),
@@ -112,10 +111,21 @@ export default async function CreatorStudioPage() {
   const grossMonthlyMinor = activeSubscriptions.reduce((sum, s) => sum + s.price_minor, 0);
   const feeResult = grossMonthlyMinor > 0 ? applyFees(grossMonthlyMinor) : null;
 
-  // Compute creator pending balance using materialized balance
+  // Compute pending balance from ledger entries
   let pendingBalanceMinor = 0;
-  if (ledgerAccount && ledgerAccount.balance) {
-    pendingBalanceMinor = Math.round(Number(ledgerAccount.balance) * 100);
+  if (ledgerAccount) {
+    const { data: entries } = await supabase
+      .from('ledger_entries')
+      .select('amount, entry_type')
+      .eq('account_id', ledgerAccount.id);
+
+    if (entries && entries.length > 0) {
+      const total = entries.reduce((sum, e) => {
+        const amt = Number(e.amount);
+        return e.entry_type === 'DEBIT' ? sum - amt : sum + amt;
+      }, 0);
+      pendingBalanceMinor = Math.round(total * 100);
+    }
   }
 
   // Payout eligibility

@@ -113,7 +113,47 @@ export default async function ModularPageView({ params }: { params: Promise<{ sl
   const { slug } = await params;
   const user = await getCurrentUser();
 
-  const page = SAMPLE_PAGE_DATA[slug] ?? {
+  // Try to load live business page from database
+  let dbPage: PageDetails | null = null;
+  try {
+    const { fetchBusinessPageAction } = await import('../../../lib/business/actions');
+    const { business, products } = await fetchBusinessPageAction(slug);
+    if (business) {
+      dbPage = {
+        slug: business.slug,
+        name: business.name,
+        category: business.category || 'Verified Caribbean Business',
+        verification: 'business_verified' as VerificationLevel,
+        location: `${business.country_iso || 'Caribbean'} 🌴`,
+        followers: '1.2K',
+        description: business.description || 'Verified Caribbean Business page on the Antilia ecosystem.',
+        website: business.website || 'https://caribbeanone.com',
+        contactEmail: 'contact@caribbeanone.com',
+        avatar: '🏪',
+        coverGradient: 'from-amber-900/50 via-slate-900 to-[#090D16]',
+        products: (products || []).map((p: any) => ({
+          id: p.id,
+          title: p.title,
+          price: `$${(p.price_minor / 100).toFixed(2)} USD`,
+          kind: p.product_kind || 'physical',
+          rating: 5.0,
+        })),
+        posts: [
+          {
+            id: `post-${business.id}`,
+            title: `Welcome to ${business.name}`,
+            time: 'Recently published',
+            content: business.description || 'Welcome to our verified Antilia storefront.',
+            likes: 24,
+          },
+        ],
+      };
+    }
+  } catch {
+    // Fallback to sample data
+  }
+
+  const page = dbPage || SAMPLE_PAGE_DATA[slug] || {
     slug,
     name: slug.replace(/-/g, ' ').toUpperCase(),
     category: 'Caribbean Organization & Storefront',
