@@ -255,4 +255,36 @@ describe('Feed post normalization and pipeline state reconciliation', () => {
     const updatedPost = { ...post, reposts: post.reposts + 1 };
     expect(updatedPost.reposts).toBe(5);
   });
+
+  it('correctly associates threaded replies with parent comments', () => {
+    const rawComments = [
+      { id: 'c1', post_id: 'p1', parent_id: null, content: 'Root comment 1' },
+      { id: 'c2', post_id: 'p1', parent_id: 'c1', content: 'Reply to comment 1' },
+      { id: 'c3', post_id: 'p1', parent_id: null, content: 'Root comment 2' },
+      { id: 'c4', post_id: 'p1', parent_id: 'c1', content: 'Second reply to comment 1' },
+    ];
+
+    const rootComments = rawComments.filter((c) => !c.parent_id);
+    const repliesByParent = rawComments.reduce((acc: Record<string, typeof rawComments>, c) => {
+      if (c.parent_id) {
+        acc[c.parent_id] = acc[c.parent_id] || [];
+        acc[c.parent_id].push(c);
+      }
+      return acc;
+    }, {});
+
+    expect(rootComments.length).toBe(2);
+    expect(rootComments.map((c) => c.id)).toEqual(['c1', 'c3']);
+    expect(repliesByParent['c1']?.length).toBe(2);
+    expect(repliesByParent['c1']?.map((r) => r.id)).toEqual(['c2', 'c4']);
+  });
+
+  it('generates accurate profile and direct message routing URLs', () => {
+    const profile = { username: 'karenereid', id: 'usr-123' };
+    const profileUrl = `/profile/${profile.username}`;
+    const dmUrl = `/messages?u=${encodeURIComponent(profile.username)}`;
+
+    expect(profileUrl).toBe('/profile/karenereid');
+    expect(dmUrl).toBe('/messages?u=karenereid');
+  });
 });

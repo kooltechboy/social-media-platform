@@ -153,10 +153,11 @@ export async function askCaribbean(query: string): Promise<AskResponse> {
   if (plan.entities.includes('creators') || plan.entities.includes('profiles')) {
     searches.push(
       (async () => {
+        const pattern = `${buildOrPattern(keywords, 'display_name')},${buildOrPattern(keywords, 'username')}`;
         const { data } = await supabase
           .from('profiles')
           .select('id, display_name, username, bio')
-          .or(buildOrPattern(keywords, 'display_name'))
+          .or(pattern)
           .limit(10);
         for (const profile of (data ?? []) as Array<{ id: string; display_name: string; username: string; bio: string | null }>) {
           results.push({
@@ -164,7 +165,7 @@ export async function askCaribbean(query: string): Promise<AskResponse> {
             entityId: profile.id,
             title: profile.display_name,
             snippet: profile.bio ?? `@${profile.username}`,
-            href: '/profile',
+            href: `/profile/${profile.username}`,
           });
         }
       })(),

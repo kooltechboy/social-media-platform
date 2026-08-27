@@ -15,7 +15,7 @@ interface ConversationSummary {
   preview: string;
 }
 
-export default async function MessagesPage({ searchParams }: { searchParams: Promise<{ c?: string }> }) {
+export default async function MessagesPage({ searchParams }: { searchParams: Promise<{ c?: string; u?: string }> }) {
   const user = await getCurrentUser();
   const supabase = await createSupabaseServerClient();
   const params = await searchParams;
@@ -33,6 +33,56 @@ export default async function MessagesPage({ searchParams }: { searchParams: Pro
         </div>
       </div>
     );
+  }
+
+  let targetConversationId: string | null = null;
+  if (params.u) {
+    const { data: targetProfile } = await supabase
+      .from('profiles')
+      .select('id, display_name, username')
+      .ilike('username', params.u)
+      .maybeSingle();
+
+    if (targetProfile && targetProfile.id !== user.id) {
+      const { data: sharedConversations } = await supabase
+        .from('conversation_members')
+        .select('conversation_id, conversations(id, kind)')
+        .eq('profile_id', user.id);
+
+      const candidateIds = (sharedConversations ?? [])
+        .map((r: any) => r.conversations)
+        .filter((c: any) => c && c.kind === 'direct')
+        .map((c: any) => c.id);
+
+      if (candidateIds.length > 0) {
+        const { data: partnerMatch } = await supabase
+          .from('conversation_members')
+          .select('conversation_id')
+          .eq('profile_id', targetProfile.id)
+          .in('conversation_id', candidateIds)
+          .maybeSingle();
+
+        if (partnerMatch) {
+          targetConversationId = partnerMatch.conversation_id;
+        }
+      }
+
+      if (!targetConversationId) {
+        const { data: newConv } = await supabase
+          .from('conversations')
+          .insert({ kind: 'direct', created_by: user.id })
+          .select('id')
+          .single();
+
+        if (newConv) {
+          await supabase.from('conversation_members').insert([
+            { conversation_id: newConv.id, profile_id: user.id, role: 'member' },
+            { conversation_id: newConv.id, profile_id: targetProfile.id, role: 'member' },
+          ]);
+          targetConversationId = newConv.id;
+        }
+      }
+    }
   }
 
   const membershipsResult = await supabase
@@ -103,7 +153,7 @@ export default async function MessagesPage({ searchParams }: { searchParams: Pro
     };
   });
 
-  const selectedId = params.c && conversationIds.includes(params.c) ? params.c : conversationIds[0] ?? null;
+  const selectedId = targetConversationId || (params.c && conversationIds.includes(params.c) ? params.c : conversationIds[0] ?? null);
 
   let threadMessages: ThreadMessage[] = [];
   if (selectedId) {

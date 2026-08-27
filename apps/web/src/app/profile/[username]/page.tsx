@@ -43,19 +43,65 @@ export default async function ProfilePage({
   params: Promise<{ username: string }>;
 }) {
   const { username } = await params;
+  const decodedParam = decodeURIComponent(username || '').trim();
   const [currentUser, supabase] = await Promise.all([getCurrentUser(), createSupabaseServerClient()]);
 
-  if (!supabase) notFound();
+  if (!supabase) {
+    return (
+      <div className="min-h-screen bg-[#090D16] text-brand-sandstone flex items-center justify-center p-6">
+        <div className="bg-brand-dusk/70 border border-slate-800 rounded-3xl p-8 text-center max-w-sm">
+          <p className="text-sm text-brand-sandstone/60">Database service currently unavailable.</p>
+        </div>
+      </div>
+    );
+  }
 
-  const { data: profile } = await supabase
+  // 1. Look up by case-insensitive username first
+  let { data: profile } = await supabase
     .from('profiles')
-    .select(
-      'id, username, display_name, bio, website, is_verified, avatar_path, cover_path, follower_count, following_count, post_count',
-    )
-    .eq('username', username)
+    .select('id, username, display_name, bio, website, is_verified, avatar_path, cover_path, follower_count, following_count, post_count')
+    .ilike('username', decodedParam)
     .maybeSingle();
 
-  if (!profile) notFound();
+  // 2. Fallback lookup by ID if param is a valid UUID
+  if (!profile && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(decodedParam)) {
+    const { data: profileById } = await supabase
+      .from('profiles')
+      .select('id, username, display_name, bio, website, is_verified, avatar_path, cover_path, follower_count, following_count, post_count')
+      .eq('id', decodedParam)
+      .maybeSingle();
+    profile = profileById;
+  }
+
+  if (!profile) {
+    return (
+      <div className="min-h-screen bg-[#090D16] text-brand-sandstone flex items-center justify-center p-6">
+        <div className="bg-brand-dusk/80 border border-slate-800 rounded-3xl p-8 text-center max-w-md space-y-4">
+          <div className="w-16 h-16 rounded-full bg-brand-sunriseCoral/20 text-brand-sunriseCoral border border-brand-sunriseCoral/30 flex items-center justify-center mx-auto text-2xl font-black">
+            🌴
+          </div>
+          <h2 className="text-lg font-black text-brand-sandstone">Member Profile Not Found</h2>
+          <p className="text-xs text-brand-sandstone/60 leading-relaxed">
+            The profile &quot;@{decodedParam}&quot; could not be located on the Antilia Network. The username may have changed or the profile may be private.
+          </p>
+          <div className="pt-2 flex items-center justify-center gap-3">
+            <Link
+              href="/"
+              className="bg-brand-dusk hover:bg-brand-dusk text-slate-300 text-xs font-bold px-4 py-2 rounded-xl border border-slate-700 transition-colors"
+            >
+              Return Home
+            </Link>
+            <Link
+              href="/search"
+              className="bg-brand-caribbeanSea hover:bg-brand-caribbeanSea text-slate-950 text-xs font-black px-4 py-2 rounded-xl transition-colors"
+            >
+              Search Ecosystem
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const profileRow = profile as unknown as ProfileRow;
   const isOwnProfile = currentUser?.id === profileRow.id;

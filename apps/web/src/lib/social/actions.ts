@@ -374,7 +374,11 @@ export async function toggleLikeAction(postId: string): Promise<{ liked: boolean
   }
 }
 
-export async function createCommentAction(postId: string, content: string): Promise<{ success: boolean; comment?: any; error: string | null }> {
+export async function createCommentAction(
+  postId: string,
+  content: string,
+  parentId?: string
+): Promise<{ success: boolean; comment?: any; error: string | null }> {
   const user = await getCurrentUser();
   if (!user) return { success: false, error: 'Sign in to comment.' };
 
@@ -390,19 +394,38 @@ export async function createCommentAction(postId: string, content: string): Prom
     user_metadata: { username: user.username, display_name: user.displayName, avatar_url: user.avatarUrl },
   });
 
+  const insertPayload: any = {
+    post_id: postId,
+    author_id: user.id,
+    content: cleanContent,
+  };
+  if (parentId) {
+    insertPayload.parent_id = parentId;
+  }
+
   const { data, error } = await supabase
     .from('comments')
-    .insert({
-      post_id: postId,
-      author_id: user.id,
-      content: cleanContent,
-    })
-    .select('id, content, created_at, profiles(display_name, username, avatar_url)')
+    .insert(insertPayload)
+    .select('id, post_id, author_id, parent_id, content, created_at, profiles(display_name, username, avatar_url)')
     .single();
 
   if (error) {
     console.error('[createCommentAction] Database error creating comment:', error);
     return { success: false, error: "Couldn't publish comment right now. Please try again." };
+  }
+
+  // Increment comments_count on posts
+  const { data: currentPost } = await supabase
+    .from('posts')
+    .select('comments_count')
+    .eq('id', postId)
+    .maybeSingle();
+
+  if (currentPost) {
+    await supabase
+      .from('posts')
+      .update({ comments_count: (currentPost.comments_count || 0) + 1 })
+      .eq('id', postId);
   }
 
   revalidatePath('/');
@@ -415,10 +438,10 @@ export async function fetchPostCommentsAction(postId: string): Promise<{ comment
 
   const { data, error } = await supabase
     .from('comments')
-    .select('id, author_id, content, created_at, profiles(display_name, username, avatar_url)')
+    .select('id, post_id, author_id, parent_id, content, created_at, profiles(display_name, username, avatar_url)')
     .eq('post_id', postId)
     .order('created_at', { ascending: true })
-    .limit(50);
+    .limit(100);
 
   if (error) return { comments: [], error: error.message };
   return { comments: data ?? [], error: null };
@@ -471,18 +494,48 @@ export async function deleteCommentAction(commentId: string, postId?: string): P
     return { success: false, error: error.message };
   }
 
+  // Decrement comments_count on post if postId is available
+  if (postId) {
+    const { data: currentPost } = await supabase
+      .from('posts')
+      .select('comments_count')
+      .eq('id', postId)
+      .maybeSingle();
+
+    if (currentPost && currentPost.comments_count > 0) {
+      await supabase
+        .from('posts')
+        .update({ comments_count: Math.max(0, currentPost.comments_count - 1) })
+        .eq('id', postId);
+    }
+  }
+
   revalidatePath('/');
   return { success: true, error: null };
 }
 
 /**
- * Increments the shares count on a post when shared by a user.
+ * Increments the shares count on a post when shared by a user and records post_shares entry.
  */
-export async function incrementPostShareAction(postId: string): Promise<{ success: boolean; sharesCount: number; error: string | null }> {
+export async function incrementPostShareAction(
+  postId: string,
+  shareType: 'internal' | 'external' | 'copy_link' = 'copy_link'
+): Promise<{ success: boolean; sharesCount: number; error: string | null }> {
   const supabase = await createSupabaseServerClient();
   if (!supabase) return { success: false, sharesCount: 0, error: 'Database is not configured.' };
 
-  // Fetch current shares count
+  const user = await getCurrentUser();
+
+  // If user is authenticated, record in post_shares table
+  if (user) {
+    await supabase.from('post_shares').insert({
+      post_id: postId,
+      user_id: user.id,
+      share_type: shareType,
+    });
+  }
+
+  // Fetch and increment current shares count
   const { data: post } = await supabase
     .from('posts')
     .select('shares_count')

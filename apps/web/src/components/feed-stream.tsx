@@ -227,20 +227,26 @@ export default function FeedStream({ initialPosts, currentUserId }: FeedStreamPr
     }
   }
 
+  const [replyingTo, setReplyingTo] = useState<{ [postId: string]: { commentId: string; authorName: string } | null }>({});
+  const [shareModalPost, setShareModalPost] = useState<FeedPostData | null>(null);
+
   async function handleSubmitComment(e: React.FormEvent, postId: string) {
     e.preventDefault();
     const commentText = (commentInputs[postId] || '').trim();
     if (!commentText) return;
 
+    const parentId = replyingTo[postId]?.commentId;
+
     setIsSubmittingComment(postId);
     try {
-      const res = await createCommentAction(postId, commentText);
+      const res = await createCommentAction(postId, commentText, parentId);
       if (res.success && res.comment) {
         setCommentLists((prev) => ({
           ...prev,
           [postId]: [...(prev[postId] || []), res.comment],
         }));
         setCommentInputs((prev) => ({ ...prev, [postId]: '' }));
+        setReplyingTo((prev) => ({ ...prev, [postId]: null }));
         setPosts((prev) =>
           prev.map((p) => (p.id === postId ? { ...p, comments: p.comments + 1 } : p))
         );
@@ -291,13 +297,47 @@ export default function FeedStream({ initialPosts, currentUserId }: FeedStreamPr
     }
   }
 
-  async function handleShare(post: FeedPostData) {
-    const shareUrl = typeof window !== 'undefined' ? `${window.location.origin}/#${post.id}` : '';
-    if (navigator.clipboard) {
-      navigator.clipboard.writeText(shareUrl);
-      setShareToast(`Post link copied to clipboard!`);
+  function handleShare(post: FeedPostData) {
+    setShareModalPost(post);
+  }
+
+  async function handleExecuteShare(
+    post: FeedPostData,
+    shareType: 'copy_link' | 'native' | 'whatsapp' | 'twitter' | 'facebook' | 'repost'
+  ) {
+    const postUrl = typeof window !== 'undefined' ? `${window.location.origin}/#${post.id}` : '';
+    const shareText = `Check out this post by ${post.author} on Antilia: "${post.content.slice(0, 100)}..."`;
+
+    if (shareType === 'copy_link') {
+      if (navigator.clipboard) {
+        await navigator.clipboard.writeText(postUrl);
+        setShareToast('Post link copied to clipboard!');
+        setTimeout(() => setShareToast(null), 3000);
+      }
+    } else if (shareType === 'native') {
+      if (navigator.share) {
+        try {
+          await navigator.share({
+            title: `Antilia — ${post.author}'s post`,
+            text: shareText,
+            url: postUrl,
+          });
+        } catch (err: any) {
+          if (err.name !== 'AbortError') console.error('Error sharing:', err);
+        }
+      }
+    } else if (shareType === 'whatsapp') {
+      window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(`${shareText} ${postUrl}`)}`, '_blank');
+    } else if (shareType === 'twitter') {
+      window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(postUrl)}`, '_blank');
+    } else if (shareType === 'facebook') {
+      window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(postUrl)}`, '_blank');
+    } else if (shareType === 'repost') {
+      setShareToast('Post shared to your Antilia network!');
       setTimeout(() => setShareToast(null), 3000);
     }
+
+    setShareModalPost(null);
 
     // Increment share counter in database & UI
     setPosts((prev) =>
@@ -306,7 +346,8 @@ export default function FeedStream({ initialPosts, currentUserId }: FeedStreamPr
 
     if (!post.id.startsWith('curated-')) {
       try {
-        await incrementPostShareAction(post.id);
+        const dbType = shareType === 'repost' ? 'internal' : shareType === 'copy_link' ? 'copy_link' : 'external';
+        await incrementPostShareAction(post.id, dbType);
       } catch {
         // Ignore
       }
@@ -632,49 +673,130 @@ export default function FeedStream({ initialPosts, currentUserId }: FeedStreamPr
               {/* Inline Comments Section */}
               {expandedCommentsPostId === post.id && (
                 <div className="pt-3 border-t border-slate-800/80 space-y-3 animate-fadeIn">
-                  {/* List of Comments */}
-                  <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
+                  {/* List of Comments & Threaded Replies */}
+                  <div className="space-y-3 max-h-72 overflow-y-auto pr-1">
                     {(commentLists[post.id] || []).length === 0 ? (
                       <p className="text-xs text-brand-sandstone/40 italic py-1">No comments yet. Start the conversation!</p>
                     ) : (
-                      (commentLists[post.id] || []).map((c, i) => {
-                        const isCommentAuthor = currentUserId && c.author_id === currentUserId;
-                        return (
-                          <div key={c.id || i} className="p-3 rounded-2xl bg-black/30 border border-white/8 space-y-1 group">
-                            <div className="flex items-center justify-between">
-                              {c.profiles?.username ? (
-                                <Link
-                                  href={`/profile/${c.profiles.username}`}
-                                  className="text-xs font-bold text-slate-200 hover:text-brand-caribbeanSea transition-colors"
-                                >
-                                  {c.profiles?.display_name || 'Caribbean Member'}
-                                </Link>
-                              ) : (
-                                <span className="text-xs font-bold text-slate-200">
-                                  {c.profiles?.display_name || 'Caribbean Member'}
-                                </span>
-                              )}
-                              <div className="flex items-center gap-2">
-                                <span className="text-[10px] text-brand-sandstone/40">just now</span>
-                                {isCommentAuthor && (
-                                  <button
-                                    type="button"
-                                    onClick={() => handleDeleteComment(c.id, post.id)}
-                                    className="opacity-0 group-hover:opacity-100 text-rose-400 hover:text-rose-300 transition-opacity p-0.5"
-                                    title="Delete comment"
-                                    aria-label="Delete comment"
-                                  >
-                                    <Trash2 className="w-3 h-3" />
-                                  </button>
-                                )}
+                      // Render root comments
+                      (commentLists[post.id] || [])
+                        .filter((c) => !c.parent_id)
+                        .map((c, i) => {
+                          const isCommentAuthor = currentUserId && c.author_id === currentUserId;
+                          const replies = (commentLists[post.id] || []).filter((r) => r.parent_id === c.id);
+
+                          return (
+                            <div key={c.id || i} className="space-y-2">
+                              {/* Parent Comment */}
+                              <div className="p-3 rounded-2xl bg-black/30 border border-white/8 space-y-1.5 group hover:border-white/15 transition-colors">
+                                <div className="flex items-center justify-between">
+                                  {c.profiles?.username ? (
+                                    <Link
+                                      href={`/profile/${c.profiles.username}`}
+                                      className="text-xs font-bold text-slate-200 hover:text-brand-caribbeanSea transition-colors"
+                                    >
+                                      {c.profiles?.display_name || 'Caribbean Member'}
+                                    </Link>
+                                  ) : (
+                                    <span className="text-xs font-bold text-slate-200">
+                                      {c.profiles?.display_name || 'Caribbean Member'}
+                                    </span>
+                                  )}
+                                  <div className="flex items-center gap-2">
+                                    <button
+                                      type="button"
+                                      onClick={() =>
+                                        setReplyingTo((prev) => ({
+                                          ...prev,
+                                          [post.id]: { commentId: c.id, authorName: c.profiles?.display_name || 'Member' },
+                                        }))
+                                      }
+                                      className="text-[10px] text-brand-caribbeanSea hover:underline font-semibold"
+                                    >
+                                      Reply
+                                    </button>
+                                    <span className="text-[10px] text-brand-sandstone/40">just now</span>
+                                    {isCommentAuthor && (
+                                      <button
+                                        type="button"
+                                        onClick={() => handleDeleteComment(c.id, post.id)}
+                                        className="opacity-0 group-hover:opacity-100 text-rose-400 hover:text-rose-300 transition-opacity p-0.5"
+                                        title="Delete comment"
+                                        aria-label="Delete comment"
+                                      >
+                                        <Trash2 className="w-3 h-3" />
+                                      </button>
+                                    )}
+                                  </div>
+                                </div>
+                                <p className="text-xs text-slate-300 leading-relaxed">{c.content}</p>
                               </div>
+
+                              {/* Nested Replies */}
+                              {replies.length > 0 && (
+                                <div className="ml-5 pl-3 border-l-2 border-brand-caribbeanSea/20 space-y-2">
+                                  {replies.map((r, ri) => {
+                                    const isReplyAuthor = currentUserId && r.author_id === currentUserId;
+                                    return (
+                                      <div
+                                        key={r.id || ri}
+                                        className="p-2.5 rounded-xl bg-black/20 border border-white/5 space-y-1 group"
+                                      >
+                                        <div className="flex items-center justify-between">
+                                          {r.profiles?.username ? (
+                                            <Link
+                                              href={`/profile/${r.profiles.username}`}
+                                              className="text-[11px] font-bold text-brand-sandstone hover:text-brand-caribbeanSea transition-colors"
+                                            >
+                                              {r.profiles?.display_name || 'Caribbean Member'}
+                                            </Link>
+                                          ) : (
+                                            <span className="text-[11px] font-bold text-brand-sandstone">
+                                              {r.profiles?.display_name || 'Caribbean Member'}
+                                            </span>
+                                          )}
+                                          <div className="flex items-center gap-2">
+                                            <span className="text-[9px] text-brand-sandstone/40">reply</span>
+                                            {isReplyAuthor && (
+                                              <button
+                                                type="button"
+                                                onClick={() => handleDeleteComment(r.id, post.id)}
+                                                className="opacity-0 group-hover:opacity-100 text-rose-400 hover:text-rose-300 transition-opacity p-0.5"
+                                                title="Delete reply"
+                                                aria-label="Delete reply"
+                                              >
+                                                <Trash2 className="w-2.5 h-2.5" />
+                                              </button>
+                                            )}
+                                          </div>
+                                        </div>
+                                        <p className="text-xs text-slate-300">{r.content}</p>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              )}
                             </div>
-                            <p className="text-xs text-slate-300">{c.content}</p>
-                          </div>
-                        );
-                      })
+                          );
+                        })
                     )}
                   </div>
+
+                  {/* Reply Target Indicator */}
+                  {replyingTo[post.id] && (
+                    <div className="flex items-center justify-between px-3 py-1.5 rounded-xl bg-brand-caribbeanSea/10 border border-brand-caribbeanSea/20 text-[11px]">
+                      <span className="text-brand-caribbeanSea font-medium">
+                        Replying to <strong>@{replyingTo[post.id]?.authorName}</strong>
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setReplyingTo((prev) => ({ ...prev, [post.id]: null }))}
+                        className="text-brand-sandstone/60 hover:text-brand-sandstone"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
+                  )}
 
                   {/* Comment Input */}
                   <form onSubmit={(e) => handleSubmitComment(e, post.id)} className="flex items-center gap-2">
@@ -682,8 +804,12 @@ export default function FeedStream({ initialPosts, currentUserId }: FeedStreamPr
                       type="text"
                       value={commentInputs[post.id] || ''}
                       onChange={(e) => setCommentInputs({ ...commentInputs, [post.id]: e.target.value })}
-                      placeholder="Write a supportive reply or feedback..."
-                      className="flex-1 bg-white/8 border border-white/10 rounded-xl px-3.5 py-2 text-xs text-white placeholder-white/40 focus:outline-none focus:border-white/30"
+                      placeholder={
+                        replyingTo[post.id]
+                          ? `Write a reply to @${replyingTo[post.id]?.authorName}...`
+                          : 'Write a supportive reply or feedback...'
+                      }
+                      className="flex-1 bg-white/8 border border-white/10 rounded-xl px-3.5 py-2 text-xs text-white placeholder-white/40 focus:outline-none focus:border-brand-caribbeanSea"
                     />
                     <button
                       type="submit"
@@ -782,6 +908,105 @@ export default function FeedStream({ initialPosts, currentUserId }: FeedStreamPr
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Share Modal */}
+      {shareModalPost && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fadeIn">
+          <div className="bg-brand-dusk border border-slate-800 rounded-3xl p-6 max-w-md w-full shadow-2xl space-y-4 relative">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+              <h3 className="font-black text-sm text-brand-sandstone flex items-center gap-2">
+                <Share2 className="w-4 h-4 text-brand-sunriseCoral" /> Share Post
+              </h3>
+              <button
+                type="button"
+                onClick={() => setShareModalPost(null)}
+                className="p-1.5 rounded-full text-brand-sandstone/60 hover:text-brand-sandstone hover:bg-slate-800"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="space-y-3 py-1">
+              {/* Copy Link Option */}
+              <button
+                type="button"
+                onClick={() => handleExecuteShare(shareModalPost, 'copy_link')}
+                className="w-full flex items-center justify-between p-3 rounded-2xl bg-brand-twilight/60 border border-slate-800 hover:border-brand-caribbeanSea/40 hover:bg-brand-twilight transition-colors text-left group"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-xl bg-brand-caribbeanSea/10 text-brand-caribbeanSea flex items-center justify-center">
+                    <Link2 className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold text-slate-200 group-hover:text-brand-sandstone">Copy Link to Post</p>
+                    <p className="text-[10px] text-brand-sandstone/40">Direct link to share anywhere</p>
+                  </div>
+                </div>
+                <span className="text-[10px] font-bold px-2 py-1 rounded bg-slate-800 text-slate-300">Copy</span>
+              </button>
+
+              {/* Native Mobile Share if available */}
+              {typeof navigator !== 'undefined' && 'share' in navigator && (
+                <button
+                  type="button"
+                  onClick={() => handleExecuteShare(shareModalPost, 'native')}
+                  className="w-full flex items-center justify-between p-3 rounded-2xl bg-brand-twilight/60 border border-slate-800 hover:border-brand-sunriseCoral/40 hover:bg-brand-twilight transition-colors text-left group"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-xl bg-brand-sunriseCoral/10 text-brand-sunriseCoral flex items-center justify-center">
+                      <Share2 className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <p className="text-xs font-bold text-slate-200 group-hover:text-brand-sandstone">Device Share Menu</p>
+                      <p className="text-[10px] text-brand-sandstone/40">AirDrop, SMS, Nearby Share &amp; apps</p>
+                    </div>
+                  </div>
+                  <span className="text-[10px] font-bold px-2 py-1 rounded bg-slate-800 text-slate-300">Open</span>
+                </button>
+              )}
+
+              {/* Social Channels Grid */}
+              <div className="grid grid-cols-3 gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => handleExecuteShare(shareModalPost, 'whatsapp')}
+                  className="p-3 rounded-2xl bg-emerald-950/30 border border-emerald-800/30 hover:border-emerald-500/50 hover:bg-emerald-900/40 text-center space-y-1 transition-all"
+                >
+                  <div className="text-lg">💬</div>
+                  <p className="text-[11px] font-bold text-emerald-300">WhatsApp</p>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleExecuteShare(shareModalPost, 'twitter')}
+                  className="p-3 rounded-2xl bg-sky-950/30 border border-sky-800/30 hover:border-sky-500/50 hover:bg-sky-900/40 text-center space-y-1 transition-all"
+                >
+                  <div className="text-lg">𝕏</div>
+                  <p className="text-[11px] font-bold text-sky-300">X / Twitter</p>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleExecuteShare(shareModalPost, 'facebook')}
+                  className="p-3 rounded-2xl bg-blue-950/30 border border-blue-800/30 hover:border-blue-500/50 hover:bg-blue-900/40 text-center space-y-1 transition-all"
+                >
+                  <div className="text-lg">👥</div>
+                  <p className="text-[11px] font-bold text-blue-300">Facebook</p>
+                </button>
+              </div>
+
+              {/* Internal Repost */}
+              <button
+                type="button"
+                onClick={() => handleExecuteShare(shareModalPost, 'repost')}
+                className="w-full flex items-center justify-center gap-2 p-3 rounded-2xl bg-gradient-to-r from-brand-caribbeanSea/20 to-brand-sunriseCoral/20 border border-brand-caribbeanSea/30 hover:bg-brand-caribbeanSea/30 text-brand-sandstone font-extrabold text-xs transition-colors mt-2"
+              >
+                <Repeat className="w-4 h-4 text-brand-caribbeanSea" /> Repost to My Caribbean Feed
+              </button>
+            </div>
           </div>
         </div>
       )}
