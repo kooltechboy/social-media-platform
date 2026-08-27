@@ -344,6 +344,19 @@ export default function UniversalComposer({
       {/* ────────────────────────────────────────────────────────── */}
       {!isExpanded ? (
         <div className="p-4 sm:p-5 space-y-4">
+          {successMessage && (
+            <div className="p-3 rounded-2xl bg-brand-sunriseCoral/10 border border-brand-sunriseCoral/30 text-emerald-300 text-xs font-bold flex items-center gap-2 animate-fadeIn">
+              <CheckCircle className="w-4 h-4 text-brand-sunriseCoral flex-shrink-0" />
+              <span>{successMessage}</span>
+            </div>
+          )}
+          {errorMessage && (
+            <div className="p-3 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs font-bold flex items-center gap-2 animate-fadeIn">
+              <AlertCircle className="w-4 h-4 text-rose-400 flex-shrink-0" />
+              <span>{errorMessage}</span>
+            </div>
+          )}
+
           <div className="flex items-center gap-3">
             <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-brand-caribbeanSea via-brand-sunriseCoral to-brand-goldenHour p-0.5 shadow-md flex-shrink-0">
               <div className="w-full h-full bg-brand-twilight rounded-2xl flex items-center justify-center font-black text-xs text-brand-sandstone">

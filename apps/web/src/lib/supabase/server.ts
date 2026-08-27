@@ -64,13 +64,17 @@ export interface AuthCheckResult {
   role: PlatformRole;
 }
 
+import { ensureUserProfile } from '../auth/user-sync';
+
 export async function getCurrentUser(): Promise<SessionUser | null> {
   const supabase = await createSupabaseServerClient();
   if (!supabase) return null;
   const { data, error } = await supabase.auth.getUser();
   if (error || !data.user) return null;
-  const profileResult = await supabase.from('profiles').select('username, display_name, avatar_url').eq('id', data.user.id).maybeSingle();
-  const profile = profileResult.data;
+
+  // Resiliently resolve or create user profile to prevent foreign key errors
+  const profile = await ensureUserProfile(supabase, data.user);
+
   return {
     id: data.user.id,
     email: data.user.email ?? '',

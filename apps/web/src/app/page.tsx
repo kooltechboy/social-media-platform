@@ -120,9 +120,13 @@ function relativeTime(iso: string): string {
   return `${Math.floor(hours / 24)}d ago`;
 }
 
+import MomentsCinemaRail from '../components/moments/moments-cinema-rail';
+import { fetchActiveStoriesAction } from '../lib/social/actions';
+
 export default async function HomePage() {
   const user = await getCurrentUser();
   const supabase = await createSupabaseServerClient();
+  const { stories: liveStories } = await fetchActiveStoriesAction();
 
   let livePosts: FeedPostData[] = [];
   if (supabase) {
@@ -159,52 +163,12 @@ export default async function HomePage() {
       {/* Main Stream (Col 8) */}
       <div className="lg:col-span-8 space-y-6">
         {/* Caribbean Moments Cinema Rail */}
-        <section aria-label="Caribbean Moments" className="space-y-3">
-          <div className="flex items-center justify-between px-1">
-            <h2 className="text-xs font-black text-brand-sandstone/60 uppercase tracking-widest flex items-center gap-2">
-              <Sparkles className="w-3.5 h-3.5 text-brand-goldenHour" /> Moments &amp; Stories
-            </h2>
-            <span className="text-[11px] font-bold text-brand-caribbeanSea">Island &amp; Diaspora</span>
-          </div>
-
-          <div className="flex gap-3.5 overflow-x-auto pb-2 scrollbar-none snap-x px-1">
-            {/* Add Story Button */}
-            <div className="snap-start flex-shrink-0 w-28 h-44 rounded-3xl glass flex flex-col items-center justify-center relative cursor-pointer group hover:border-white/20 transition-all">
-              <div className="w-12 h-12 rounded-full bg-brand-dusk text-brand-caribbeanSea flex items-center justify-center mb-2 group-hover:scale-110 transition-transform shadow-inner">
-                <Plus className="w-6 h-6" />
-              </div>
-              <span className="text-xs font-bold text-slate-200">Your Moment</span>
-              <span className="text-[10px] text-brand-sandstone/40">Post update</span>
-            </div>
-
-            {/* Island Stories */}
-            {[
-              { name: 'Kingston Sound', loc: '🇯🇲 JA', tag: 'Live Dub', grad: 'from-amber-600/40 via-slate-900 to-slate-950' },
-              { name: 'Port of Spain', loc: '🇹🇹 TT', tag: 'Soca Band', grad: 'from-red-600/40 via-slate-900 to-slate-950' },
-              { name: 'Santo Domingo', loc: '🇩🇴 DR', tag: 'Bachata Night', grad: 'from-sky-600/40 via-slate-900 to-slate-950' },
-              { name: 'Bridgetown Fete', loc: '🇧🇧 BB', tag: 'Crop Over', grad: 'from-yellow-600/40 via-slate-900 to-slate-950' },
-              { name: 'Miami Carnival', loc: '🇺🇸 US', tag: 'Diaspora', grad: 'from-emerald-600/40 via-slate-900 to-slate-950' },
-              { name: 'Toronto Carib', loc: '🇨🇦 CA', tag: 'Community', grad: 'from-purple-600/40 via-slate-900 to-slate-950' },
-              { name: 'London Notting', loc: '🇬🇧 UK', tag: 'Diaspora', grad: 'from-rose-600/40 via-slate-900 to-slate-950' },
-            ].map((story, i) => (
-              <div
-                key={i}
-                className="snap-start flex-shrink-0 w-28 h-44 rounded-3xl glass overflow-hidden relative group cursor-pointer hover:border-white/20 transition-all"
-              >
-                <div className={`absolute inset-0 bg-gradient-to-t ${story.grad}`} />
-                <div className="absolute top-2.5 left-2.5">
-                  <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-brand-twilight/80 text-brand-sandstone backdrop-blur-md border border-slate-700/50">
-                    {story.loc}
-                  </span>
-                </div>
-                <div className="absolute bottom-3 left-3 right-3 space-y-0.5">
-                  <span className="text-[10px] font-bold text-brand-caribbeanSea block">{story.tag}</span>
-                  <p className="text-xs font-black text-brand-sandstone leading-tight block truncate">{story.name}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
+        <MomentsCinemaRail
+          initialStories={liveStories}
+          currentUserId={user?.id}
+          currentUserAvatar={user?.avatarUrl}
+          currentUserName={user?.displayName}
+        />
 
         {/* ────────────────────────────────────────────────────────── */}
         {/* P0: PRIMARY UNIVERSAL INLINE COMPOSER                      */}
