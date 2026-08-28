@@ -27,9 +27,9 @@ export default async function MessagesPage({ searchParams }: { searchParams: Pro
           <MessageSquare className="w-8 h-8 text-brand-caribbeanSea mx-auto mb-3" />
           <h1 className="text-lg font-bold text-brand-sandstone mb-2">Messages</h1>
           <p className="text-sm text-brand-sandstone/60 mb-4">Sign in to chat with your communities, friends and the diaspora.</p>
-          <a href="/login" className="inline-block bg-brand-caribbeanSea hover:bg-brand-caribbeanSea text-slate-950 font-bold px-5 py-2 rounded-full text-xs transition-colors">
+          <Link href="/login" className="inline-block bg-brand-caribbeanSea hover:bg-brand-caribbeanSea text-slate-950 font-bold px-5 py-2 rounded-full text-xs transition-colors">
             Sign In
-          </a>
+          </Link>
         </div>
       </div>
     );
