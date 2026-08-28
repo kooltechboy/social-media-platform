@@ -163,8 +163,8 @@ export default async function CreatorStudioPage() {
             <Mic className="w-4 h-4" /> Manage Podcasts
           </Link>
           <Link
-            href="/live"
-            className="bg-red-600 hover:bg-red-500 text-brand-sandstone font-bold px-4 py-2 rounded-xl text-xs flex items-center gap-2 transition-colors"
+            href="/live/broadcast"
+            className="bg-red-600 hover:bg-red-500 text-brand-sandstone font-bold px-4 py-2 rounded-xl text-xs flex items-center gap-2 transition-colors shadow-md shadow-red-600/20"
           >
             <Video className="w-4 h-4" /> Go Live
           </Link>
