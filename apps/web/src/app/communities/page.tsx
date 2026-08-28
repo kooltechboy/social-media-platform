@@ -213,9 +213,11 @@ export default async function CommunitiesPage({
               </div>
 
               <div>
-                <h3 className="font-extrabold text-base text-brand-sandstone group-hover:text-emerald-300 transition-colors leading-snug">
-                  {community.name}
-                </h3>
+                <Link href={`/communities/${community.slug}`}>
+                  <h3 className="font-extrabold text-base text-brand-sandstone group-hover:text-emerald-300 hover:underline transition-colors leading-snug cursor-pointer">
+                    {community.name}
+                  </h3>
+                </Link>
                 <p className="text-xs text-brand-sunriseCoral font-semibold mt-0.5">
                   {community.locationTag ?? community.countries?.name ?? 'Diaspora Wide'}
                 </p>

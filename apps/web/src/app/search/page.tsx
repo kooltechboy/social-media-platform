@@ -1,5 +1,5 @@
 import React from 'react';
-import { Search, Sparkles, Calendar, Users, Store, FileText, ArrowLeft } from 'lucide-react';
+import { Search, Sparkles, Calendar, Users, Store, FileText, ArrowLeft, Mic, Radio, ShoppingBag } from 'lucide-react';
 import Link from 'next/link';
 import { askCaribbean, type AskResult } from '../../lib/ai/ask-caribbean';
 
@@ -11,6 +11,9 @@ const ENTITY_META: Record<string, { label: string; icon: React.ReactNode; color:
   businesses: { label: 'Businesses', icon: <Store className="w-4 h-4" />, color: 'text-brand-sunriseCoral' },
   posts: { label: 'Posts', icon: <FileText className="w-4 h-4" />, color: 'text-slate-300' },
   profiles: { label: 'Profiles', icon: <FileText className="w-4 h-4" />, color: 'text-slate-300' },
+  podcasts: { label: 'Podcasts', icon: <Mic className="w-4 h-4" />, color: 'text-purple-400' },
+  videos: { label: 'Live & Videos', icon: <Radio className="w-4 h-4" />, color: 'text-rose-400' },
+  products: { label: 'Marketplace', icon: <ShoppingBag className="w-4 h-4" />, color: 'text-emerald-400' },
 };
 
 export default async function SearchPage({ searchParams }: { searchParams: Promise<{ q?: string }> }) {

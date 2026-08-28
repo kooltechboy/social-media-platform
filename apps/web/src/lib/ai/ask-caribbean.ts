@@ -172,6 +172,69 @@ export async function askCaribbean(query: string): Promise<AskResponse> {
     );
   }
 
+  if (plan.entities.includes('podcasts')) {
+    searches.push(
+      (async () => {
+        const { data } = await supabase
+          .from('podcasts')
+          .select('id, title, slug, description')
+          .or(buildOrPattern(keywords, 'title'))
+          .limit(10);
+        for (const podcast of (data ?? []) as Array<{ id: string; title: string; slug: string; description: string | null }>) {
+          results.push({
+            entityType: 'podcasts',
+            entityId: podcast.id,
+            title: podcast.title,
+            snippet: podcast.description ?? 'Caribbean Podcast Show',
+            href: `/podcasts/${podcast.slug}`,
+          });
+        }
+      })(),
+    );
+  }
+
+  if (plan.entities.includes('videos')) {
+    searches.push(
+      (async () => {
+        const { data } = await supabase
+          .from('livestreams')
+          .select('id, title, state, profiles(display_name)')
+          .or(buildOrPattern(keywords, 'title'))
+          .limit(10);
+        for (const stream of (data ?? []) as unknown as Array<{ id: string; title: string; state: string; profiles: { display_name: string } | null }>) {
+          results.push({
+            entityType: 'videos',
+            entityId: stream.id,
+            title: stream.title,
+            snippet: `${stream.state === 'live' ? '🔴 Live Now' : 'Broadcast'} • ${stream.profiles?.display_name ?? 'Creator'}`,
+            href: `/live?id=${stream.id}`,
+          });
+        }
+      })(),
+    );
+  }
+
+  if (plan.entities.includes('products')) {
+    searches.push(
+      (async () => {
+        const { data } = await supabase
+          .from('products')
+          .select('id, title, description, price_minor, currency')
+          .or(buildOrPattern(keywords, 'title'))
+          .limit(10);
+        for (const product of (data ?? []) as Array<{ id: string; title: string; description: string | null; price_minor: number; currency: string }>) {
+          results.push({
+            entityType: 'products',
+            entityId: product.id,
+            title: product.title,
+            snippet: `${(product.price_minor / 100).toFixed(2)} ${product.currency} — ${product.description ?? 'SpotPay Verified Product'}`,
+            href: '/marketplace',
+          });
+        }
+      })(),
+    );
+  }
+
   await Promise.all(searches);
 
   return { query, plan, results: results.slice(0, 25), grounded: results.length > 0 };
