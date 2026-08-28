@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useTransition } from 'react';
-import { Wallet, ShoppingBag } from 'lucide-react';
+import { Wallet, CheckCircle } from 'lucide-react';
 import Link from 'next/link';
 import { createOrderAction, type MarketplaceActionState } from '../lib/marketplace/actions';
 
@@ -21,8 +21,8 @@ export default function OrderButton({ productId, disabled, isAuthenticated, isSe
   if (!isAuthenticated) {
     return (
       <Link
-        href="/login"
-        className="w-full text-center bg-brand-sunriseCoral/20 text-emerald-300 hover:bg-brand-sunriseCoral/30 border border-brand-sunriseCoral/40 font-bold py-2 rounded-xl text-xs flex items-center justify-center gap-2 transition-colors"
+        href="/login?redirect=/marketplace"
+        className="w-full text-center bg-orange-500/20 text-orange-300 hover:bg-orange-500/30 border border-orange-500/40 font-bold py-2 rounded-xl text-xs flex items-center justify-center gap-2 transition-colors"
       >
         <Wallet className="w-4 h-4" /> Sign in to Buy
       </Link>
@@ -31,7 +31,7 @@ export default function OrderButton({ productId, disabled, isAuthenticated, isSe
 
   if (isSeller) {
     return (
-      <div className="w-full text-center text-[11px] text-brand-sandstone/40 py-2">Your product</div>
+      <div className="w-full text-center text-[11px] text-brand-sandstone/40 py-2">Your product listing</div>
     );
   }
 
@@ -48,9 +48,16 @@ export default function OrderButton({ productId, disabled, isAuthenticated, isSe
 
   if (state.orderId) {
     return (
-      <div className="space-y-1">
-        <p className="text-xs text-brand-sunriseCoral text-center font-semibold">Order created — proceed to payment.</p>
-        <p className="text-[10px] text-brand-sandstone/40 text-center font-mono">{state.orderId}</p>
+      <div className="p-2.5 rounded-xl bg-orange-500/10 border border-orange-500/30 space-y-1.5 text-center">
+        <p className="text-xs text-orange-400 font-bold flex items-center justify-center gap-1">
+          <CheckCircle className="w-3.5 h-3.5 text-emerald-400" /> Order #{state.orderId.slice(0, 8)} Created!
+        </p>
+        <Link
+          href="/spotpay"
+          className="inline-block text-[11px] font-bold text-slate-950 bg-orange-500 hover:bg-orange-400 px-3 py-1 rounded-lg transition-all"
+        >
+          View SpotPay Escrow →
+        </Link>
       </div>
     );
   }
@@ -60,13 +67,13 @@ export default function OrderButton({ productId, disabled, isAuthenticated, isSe
       <button
         onClick={handle}
         disabled={disabled || pending}
-        className="w-full bg-brand-sunriseCoral/20 text-emerald-300 hover:bg-brand-sunriseCoral/30 border border-brand-sunriseCoral/40 font-bold py-2 rounded-xl text-xs flex items-center justify-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        className="w-full bg-orange-500 hover:bg-orange-400 text-slate-950 font-black py-2 rounded-xl text-xs flex items-center justify-center gap-2 transition-colors shadow-md shadow-orange-500/20 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
       >
         <Wallet className="w-4 h-4" />
-        {pending ? 'Processing…' : disabled ? 'Unavailable' : 'Buy with SpotPay'}
+        {pending ? 'Processing Escrow…' : disabled ? 'Unavailable' : 'Buy with SpotPay'}
       </button>
       {state.error && (
-        <p role="alert" className="text-[11px] text-rose-400 text-center">{state.error}</p>
+        <p role="alert" className="text-[11px] text-rose-400 text-center font-medium">{state.error}</p>
       )}
     </div>
   );
