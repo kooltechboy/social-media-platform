@@ -8,7 +8,14 @@ import {
   validateStreamCreation,
   formatLiveDuration,
 } from '../../packages/live/src/index';
-import { validateEpisode, validateChapters, buildRssFeed, slugifyPodcast } from '../../packages/podcasts/src/index';
+import {
+  validateEpisode,
+  validateChapters,
+  buildRssFeed,
+  slugifyPodcast,
+  formatTimestamp,
+  parseTimestampToSeconds,
+} from '../../packages/podcasts/src/index';
 
 describe('Live stream state machine', () => {
   const machine = new StreamStateMachine();
@@ -129,10 +136,17 @@ describe('Podcast episodes and chapters', () => {
     expect(validateChapters([{ startSeconds: 600, title: 'A' }, { startSeconds: 0, title: 'B' }], 2520).valid).toBe(false);
     expect(validateChapters([{ startSeconds: 9999, title: 'Out of range' }], 2520).valid).toBe(false);
   });
+
+  it('formats and parses timestamps correctly', () => {
+    expect(formatTimestamp(125)).toBe('2:05');
+    expect(formatTimestamp(3725)).toBe('1:02:05');
+    expect(parseTimestampToSeconds('2:05')).toBe(125);
+    expect(parseTimestampToSeconds('1:02:05')).toBe(3725);
+  });
 });
 
-describe('Podcast RSS feed generation', () => {
-  it('produces a standards-compliant, escaped RSS document', () => {
+describe('Podcasting 2.0 & iTunes RSS feed generation', () => {
+  it('produces a standards-compliant Podcasting 2.0 & iTunes RSS document', () => {
     const xml = buildRssFeed({
       podcastTitle: 'Caribbean Creators "Network"',
       podcastDescription: 'Stories & sounds of the diaspora',
@@ -140,6 +154,8 @@ describe('Podcast RSS feed generation', () => {
       siteUrl: 'https://caribbeanone.app/podcasts/creators',
       feedUrl: 'https://caribbeanone.app/podcasts/creators/rss',
       coverUrl: 'https://cdn.caribbeanone.app/cover.jpg',
+      authorName: 'Antilia Studio',
+      category: 'Society & Culture',
       episodes: [
         {
           guid: 'ep-14',
@@ -148,12 +164,18 @@ describe('Podcast RSS feed generation', () => {
           audioUrl: 'https://cdn.caribbeanone.app/ep14.mp3',
           durationSeconds: 2520,
           publishedAt: '2026-08-01T10:00:00Z',
+          seasonNumber: 1,
+          episodeNumber: 14,
         },
       ],
     });
     expect(xml).toContain('<?xml version="1.0" encoding="UTF-8"?>');
     expect(xml).toContain('<rss version="2.0"');
+    expect(xml).toContain('xmlns:podcast="https://podcastindex.org/namespace/1.0"');
+    expect(xml).toContain('xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd"');
     expect(xml).toContain('Caribbean Creators &quot;Network&quot;');
+    expect(xml).toContain('<itunes:season>1</itunes:season>');
+    expect(xml).toContain('<itunes:episode>14</itunes:episode>');
     expect(xml).toContain('<enclosure url="https://cdn.caribbeanone.app/ep14.mp3"');
     expect(xml).toContain('<itunes:duration>42:00</itunes:duration>');
   });
