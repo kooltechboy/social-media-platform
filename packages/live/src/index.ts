@@ -63,13 +63,14 @@ export interface GiftCatalogItem {
   label: string;
   priceMinor: number;
   currency: string;
+  emoji: string;
 }
 
 export const GIFT_CATALOG: GiftCatalogItem[] = [
-  { key: 'island_rose', label: 'Island Rose', priceMinor: 99, currency: 'USD' },
-  { key: 'steel_pan', label: 'Steel Pan', priceMinor: 499, currency: 'USD' },
-  { key: 'carnival_crown', label: 'Carnival Crown', priceMinor: 999, currency: 'USD' },
-  { key: 'sunrise_fete', label: 'Sunrise Fete', priceMinor: 4999, currency: 'USD' },
+  { key: 'island_rose', label: 'Island Rose', priceMinor: 99, currency: 'USD', emoji: '🌹' },
+  { key: 'steel_pan', label: 'Steel Pan', priceMinor: 499, currency: 'USD', emoji: '🪘' },
+  { key: 'carnival_crown', label: 'Carnival Crown', priceMinor: 999, currency: 'USD', emoji: '👑' },
+  { key: 'sunrise_fete', label: 'Sunrise Fete', priceMinor: 4999, currency: 'USD', emoji: '🎉' },
 ];
 
 export function findGift(key: string): GiftCatalogItem | undefined {
@@ -92,4 +93,46 @@ export function validateGiftPurchase(purchase: GiftPurchase): { valid: boolean; 
     errors.push('Idempotency key of at least 8 characters is required');
   }
   return { valid: errors.length === 0, errors };
+}
+
+export const LIVE_CATEGORIES = [
+  'All Broadcasts',
+  'Carnival & Mas',
+  'Sound Systems & Dub',
+  'Acoustic & Bachata',
+  'DJ Sets & Riddims',
+  'Culture & Talk',
+  'Diaspora Live',
+] as const;
+
+export type LiveCategory = typeof LIVE_CATEGORIES[number];
+
+export interface StreamCreationParams {
+  creatorId: string;
+  title: string;
+  accessLevel?: StreamAccess;
+  category?: string;
+  scheduledFor?: string | null;
+}
+
+export function validateStreamCreation(params: StreamCreationParams): { valid: boolean; errors: string[] } {
+  const errors: string[] = [];
+  if (!params.creatorId) errors.push('Creator ID is required');
+  if (!params.title || params.title.trim().length < 3) {
+    errors.push('Stream title must be at least 3 characters');
+  }
+  if (params.title && params.title.length > 150) {
+    errors.push('Stream title cannot exceed 150 characters');
+  }
+  return { valid: errors.length === 0, errors };
+}
+
+export function formatLiveDuration(seconds: number): string {
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  const secs = seconds % 60;
+  if (hours > 0) {
+    return `${hours}:${minutes < 10 ? '0' : ''}${minutes}:${secs < 10 ? '0' : ''}${secs}`;
+  }
+  return `${minutes}:${secs < 10 ? '0' : ''}${secs}`;
 }

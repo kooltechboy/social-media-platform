@@ -2,8 +2,11 @@ import { describe, it, expect } from 'vitest';
 import {
   StreamStateMachine,
   GIFT_CATALOG,
+  LIVE_CATEGORIES,
   findGift,
   validateGiftPurchase,
+  validateStreamCreation,
+  formatLiveDuration,
 } from '../../packages/live/src/index';
 import { validateEpisode, validateChapters, buildRssFeed, slugifyPodcast } from '../../packages/podcasts/src/index';
 
@@ -42,10 +45,50 @@ describe('Live stream state machine', () => {
   });
 });
 
+describe('Live broadcast creation, formatting & categories', () => {
+  it('validates stream creation rules and boundaries', () => {
+    const valid = validateStreamCreation({
+      creatorId: 'creator-uuid',
+      title: 'Carnival 2026 Band Launch Live',
+      accessLevel: 'public',
+    });
+    expect(valid.valid).toBe(true);
+    expect(valid.errors).toHaveLength(0);
+
+    const emptyTitle = validateStreamCreation({
+      creatorId: 'creator-uuid',
+      title: '  ',
+    });
+    expect(emptyTitle.valid).toBe(false);
+    expect(emptyTitle.errors[0]).toContain('at least 3 characters');
+
+    const missingCreator = validateStreamCreation({
+      creatorId: '',
+      title: 'Valid Stream Title',
+    });
+    expect(missingCreator.valid).toBe(false);
+    expect(missingCreator.errors[0]).toContain('Creator ID is required');
+  });
+
+  it('formats broadcast elapsed durations accurately', () => {
+    expect(formatLiveDuration(45)).toBe('0:45');
+    expect(formatLiveDuration(135)).toBe('2:15');
+    expect(formatLiveDuration(3672)).toBe('1:01:12');
+  });
+
+  it('includes core Caribbean live broadcast categories', () => {
+    expect(LIVE_CATEGORIES.length).toBeGreaterThanOrEqual(5);
+    expect(LIVE_CATEGORIES).toContain('Carnival & Mas');
+    expect(LIVE_CATEGORIES).toContain('Sound Systems & Dub');
+    expect(LIVE_CATEGORIES).toContain('Acoustic & Bachata');
+  });
+});
+
 describe('Live gifts (ledger-backed)', () => {
-  it('resolves gift catalog items by key with minor-unit prices', () => {
+  it('resolves gift catalog items by key with minor-unit prices and emojis', () => {
     const crown = findGift('carnival_crown');
     expect(crown?.priceMinor).toBe(999);
+    expect(crown?.emoji).toBe('👑');
     expect(findGift('nonexistent')).toBeUndefined();
     expect(GIFT_CATALOG.length).toBeGreaterThan(3);
   });

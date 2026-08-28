@@ -1,28 +1,17 @@
-import React from 'react';
-import { Tv, Flame, Gift, MessageSquare, Send, Plus, Users, Radio, Sparkles, Volume2, Shield } from 'lucide-react';
+import React, { Suspense } from 'react';
+import { Tv, Radio, Users, Sparkles } from 'lucide-react';
 import Link from 'next/link';
 import { createSupabaseServerClient, getCurrentUser } from '../../lib/supabase/server';
-import LiveChatClient from '../../components/live-chat-client';
-import { LiveGiftModal } from '../../components/live-gift-modal';
+import LiveViewerPlayer, { type LivestreamViewItem } from '../../components/live/live-viewer-player';
+import { LIVE_CATEGORIES } from '@caribbean/live';
 
 export const dynamic = 'force-dynamic';
 
-interface Livestream {
-  id: string;
-  title: string;
-  state: 'scheduled' | 'live' | 'ended' | 'cancelled';
-  access_level: string;
-  peak_viewers: number;
-  started_at: string | null;
-  creator_id: string;
-  profiles: { display_name: string; username: string } | null;
-}
-
-const SHOWCASE_LIVE_STREAMS = [
+const SHOWCASE_LIVE_STREAMS: LivestreamViewItem[] = [
   {
     id: 'live-showcase-1',
     title: 'Kingston Sound System Session • Vinyl Dubplates & Live MC',
-    state: 'live' as const,
+    state: 'live',
     access_level: 'public',
     peak_viewers: 1420,
     started_at: new Date(Date.now() - 35 * 60000).toISOString(),
@@ -30,11 +19,12 @@ const SHOWCASE_LIVE_STREAMS = [
     category: 'Sound Systems & Dub',
     location: 'Kingston, Jamaica 🇯🇲',
     profiles: { display_name: 'Zion Sound Kingston', username: 'zionsound' },
+    videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-caribbean-tropical-beach-with-turquoise-water-41221-large.mp4',
   },
   {
     id: 'live-showcase-2',
     title: 'Trinidad Carnival 2026 Band Launch: Live Avenue Broadcast',
-    state: 'live' as const,
+    state: 'live',
     access_level: 'public',
     peak_viewers: 2890,
     started_at: new Date(Date.now() - 15 * 60000).toISOString(),
@@ -42,11 +32,12 @@ const SHOWCASE_LIVE_STREAMS = [
     category: 'Carnival & Mas',
     location: 'Port of Spain, Trinidad 🇹🇹',
     profiles: { display_name: 'Carnival Nation TT', username: 'carnivalnation' },
+    videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-top-aerial-shot-of-seashore-with-rocks-and-turquoise-water-41487-large.mp4',
   },
   {
     id: 'live-showcase-3',
     title: 'Santo Domingo Sunset Acoustic & Bachata Classics',
-    state: 'scheduled' as const,
+    state: 'scheduled',
     access_level: 'public',
     peak_viewers: 450,
     started_at: null,
@@ -54,26 +45,27 @@ const SHOWCASE_LIVE_STREAMS = [
     category: 'Acoustic & Bachata',
     location: 'Santo Domingo, DR 🇩🇴',
     profiles: { display_name: 'Quisqueya Live', username: 'quisqueyalive' },
+    videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-tree-branches-in-the-breeze-with-sun-rays-41617-large.mp4',
   },
 ];
 
 export default async function LivePage({
   searchParams,
 }: {
-  searchParams?: Promise<{ id?: string; state?: string; q?: string }>;
+  searchParams?: Promise<{ id?: string; state?: string; category?: string; q?: string }>;
 }) {
   const resolvedParams = searchParams ? await searchParams : {};
-  const { id: activeId, state: streamState, q } = resolvedParams;
+  const { id: activeId, state: streamState, category: selectedCategory, q } = resolvedParams;
 
   const [user, supabase] = await Promise.all([getCurrentUser(), createSupabaseServerClient()]);
 
-  let liveStreams: Livestream[] = [];
+  let dbStreams: LivestreamViewItem[] = [];
   if (supabase) {
     let query = supabase
       .from('livestreams')
       .select('id, title, state, access_level, peak_viewers, started_at, creator_id, profiles(display_name, username)')
       .order('started_at', { ascending: false })
-      .limit(12);
+      .limit(15);
 
     if (streamState) {
       query = query.eq('state', streamState);
@@ -87,21 +79,31 @@ export default async function LivePage({
 
     const { data } = await query;
     if (data && data.length > 0) {
-      liveStreams = data as unknown as Livestream[];
+      dbStreams = data.map((d: any) => ({
+        id: d.id,
+        title: d.title,
+        state: d.state,
+        access_level: d.access_level,
+        peak_viewers: d.peak_viewers || 1,
+        started_at: d.started_at,
+        creator_id: d.creator_id,
+        category: 'Live Broadcast',
+        location: 'Caribbean & Diaspora 🌴',
+        profiles: d.profiles,
+        videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-caribbean-tropical-beach-with-turquoise-water-41221-large.mp4',
+      }));
     }
   }
 
-  if (liveStreams.length === 0) {
-    if (streamState) {
-      liveStreams = (SHOWCASE_LIVE_STREAMS as unknown as Livestream[]).filter((s) => s.state === streamState);
-    } else {
-      liveStreams = SHOWCASE_LIVE_STREAMS as unknown as Livestream[];
-    }
-  }
+  const liveStreams = dbStreams.length > 0 ? [...dbStreams, ...SHOWCASE_LIVE_STREAMS] : SHOWCASE_LIVE_STREAMS;
+
+  const filteredStreams = selectedCategory && selectedCategory !== 'All Broadcasts'
+    ? liveStreams.filter((s) => s.category === selectedCategory || s.title.toLowerCase().includes(selectedCategory.toLowerCase()))
+    : liveStreams;
 
   const featuredStream =
     (activeId ? liveStreams.find((s) => s.id === activeId) : null) ??
-    liveStreams.find((s) => s.state === 'live') ??
+    filteredStreams.find((s) => s.state === 'live') ??
     liveStreams[0];
 
   return (
@@ -116,20 +118,20 @@ export default async function LivePage({
             </h1>
           </div>
           <p className="text-xs md:text-sm text-brand-sandstone/60 mt-1">
-            Real-time Caribbean broadcasts, fete streams, podcasts, and SpotPay virtual gifts.
+            Real-time Caribbean broadcasts, fete streams, sound systems, and SpotPay virtual gifts.
           </p>
         </div>
 
         {user ? (
           <Link
-            href="/creator-studio"
-            className="bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-brand-sandstone font-extrabold px-6 py-2.5 rounded-2xl text-xs flex items-center gap-2 shadow-lg shadow-red-600/20 transition-all self-start md:self-auto"
+            href="/live/broadcast"
+            className="bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white font-extrabold px-6 py-2.5 rounded-2xl text-xs flex items-center gap-2 shadow-lg shadow-red-600/20 transition-all self-start md:self-auto"
           >
-            🔴 Broadcast Live
+            🔴 Go Live / Broadcast
           </Link>
         ) : (
           <Link
-            href="/login"
+            href="/login?redirect=/live/broadcast"
             className="bg-red-600/20 text-red-300 border border-red-500/40 font-extrabold px-5 py-2.5 rounded-2xl text-xs flex items-center gap-2 hover:bg-red-600/30 transition-all self-start md:self-auto"
           >
             Sign in to Stream
@@ -137,84 +139,61 @@ export default async function LivePage({
         )}
       </div>
 
-      {/* Main Broadcast Container & Live Chat Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        {/* Stream Ingest Video Container (Col 8) */}
-        <div className="lg:col-span-8 space-y-4">
-          <div className="bg-brand-dusk border border-slate-800 rounded-3xl overflow-hidden shadow-2xl flex flex-col">
-            <div className="aspect-video bg-brand-twilight flex flex-col items-center justify-center relative p-6 overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-tr from-red-950/40 via-slate-950 to-slate-900" />
-
-              {/* Status Pill */}
-              <div className="absolute top-4 left-4 z-10 flex items-center gap-2">
-                <span className="bg-red-600 text-brand-sandstone text-xs font-black px-3 py-1 rounded-full flex items-center gap-1.5 shadow-md animate-pulse">
-                  <span className="w-2 h-2 rounded-full bg-white animate-ping" /> LIVE
-                </span>
-                <span className="bg-brand-twilight/80 backdrop-blur-md text-slate-200 text-xs font-bold px-3 py-1 rounded-full border border-slate-800 flex items-center gap-1.5">
-                  <Users className="w-3.5 h-3.5 text-brand-caribbeanSea" /> {featuredStream.peak_viewers.toLocaleString()} watching
-                </span>
-              </div>
-
-              {/* Center Broadcast Graphics */}
-              <div className="text-center space-y-3 z-10 max-w-md px-4">
-                <div className="w-20 h-20 rounded-3xl bg-red-600/20 border border-red-500/40 flex items-center justify-center mx-auto text-red-400 shadow-2xl shadow-red-500/20">
-                  <Tv className="w-10 h-10" />
-                </div>
-                <h3 className="text-lg md:text-xl font-extrabold text-brand-sandstone leading-snug">
-                  {featuredStream.title}
-                </h3>
-                <p className="text-xs text-brand-sandstone/60 flex items-center justify-center gap-2">
-                  <span>WebRTC / Ultra-low Latency Ingest</span>
-                  <span>•</span>
-                  <span>1080p 60fps</span>
-                </p>
-              </div>
-            </div>
-
-            {/* Streamer Info Bar & SpotPay Gifts CTA */}
-            <div className="p-5 flex flex-col sm:flex-row items-center justify-between gap-4 bg-brand-dusk/90 border-t border-slate-800">
-              <div className="flex items-center gap-3.5">
-                <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-red-500 to-brand-goldenHour text-slate-950 font-black flex items-center justify-center text-sm shadow-md">
-                  {(featuredStream.profiles?.display_name ?? 'CO').slice(0, 2).toUpperCase()}
-                </div>
-                <div>
-                  <h4 className="text-sm font-extrabold text-brand-sandstone">{featuredStream.profiles?.display_name ?? 'Caribbean Host'}</h4>
-                  <p className="text-xs text-brand-sandstone/60">
-                    @{featuredStream.profiles?.username ?? 'creator'} • Verified Caribbean Broadcaster
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-3 w-full sm:w-auto justify-end">
-                <LiveGiftModal livestreamId={featuredStream.id} isAuthenticated={!!user} />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Live Chat Column (Col 4) */}
-        <div className="lg:col-span-4">
-          <LiveChatClient
-            livestreamId={featuredStream.id}
-            initialMessages={[
-              { id: '1', body: 'Big up from London! Loving the vibes 🔥', sender_id: null, display_name: 'Marcus_UK', created_at: new Date().toISOString() },
-              { id: '2', body: 'Sound system heavy tonight! 🇯🇲🔊', sender_id: null, display_name: 'Kingston_Dub', created_at: new Date().toISOString() },
-              { id: '3', body: 'Sent 1x Carnival Crown via SpotPay! 👑', sender_id: null, display_name: 'SocaLover99', created_at: new Date().toISOString() },
-            ]}
-            isLive={featuredStream.state === 'live'}
-            isAuthenticated={!!user}
-          />
-        </div>
+      {/* Category Filter Chips */}
+      <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
+        {LIVE_CATEGORIES.map((cat) => {
+          const isSelected = (selectedCategory || 'All Broadcasts') === cat;
+          return (
+            <Link
+              key={cat}
+              href={cat === 'All Broadcasts' ? '/live' : `/live?category=${encodeURIComponent(cat)}`}
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
+                isSelected
+                  ? 'bg-red-600 text-white shadow-md shadow-red-600/20'
+                  : 'bg-brand-dusk border border-slate-800 text-brand-sandstone/60 hover:text-slate-200'
+              }`}
+            >
+              {cat}
+            </Link>
+          );
+        })}
       </div>
 
+      {/* Featured Stream Video Player & Live Chat Grid */}
+      <Suspense
+        fallback={
+          <div className="w-full flex items-center justify-center p-20">
+            <div className="w-8 h-8 border-2 border-red-500 border-t-transparent rounded-full animate-spin" />
+          </div>
+        }
+      >
+        <LiveViewerPlayer
+          stream={featuredStream}
+          user={
+            user
+              ? {
+                  id: user.id,
+                  displayName: user.displayName,
+                  username: user.username,
+                }
+              : null
+          }
+        />
+      </Suspense>
+
       {/* More Caribbean Broadcasts Grid */}
-      <div className="space-y-4 pt-4 border-t border-slate-800">
-        <h3 className="font-extrabold text-sm text-brand-sandstone uppercase tracking-wider flex items-center gap-2">
-          <Radio className="w-4 h-4 text-brand-caribbeanSea" /> Active Island &amp; Diaspora Broadcasts
-        </h3>
+      <div className="space-y-4 pt-6 border-t border-slate-800">
+        <div className="flex items-center justify-between">
+          <h3 className="font-extrabold text-sm text-brand-sandstone uppercase tracking-wider flex items-center gap-2">
+            <Radio className="w-4 h-4 text-brand-caribbeanSea" /> Active Island &amp; Diaspora Broadcasts
+          </h3>
+          <span className="text-xs text-brand-sandstone/40 font-bold">
+            {filteredStreams.length} Broadcasts Available
+          </span>
+        </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {liveStreams.map((stream) => {
+          {filteredStreams.map((stream) => {
             const isFeatured = stream.id === featuredStream.id;
             return (
               <Link

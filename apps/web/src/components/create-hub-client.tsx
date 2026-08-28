@@ -75,7 +75,7 @@ const CREATE_TOOLS: CreateTool[] = [
     category: 'media',
     icon: <Tv className="w-6 h-6 text-red-500" />,
     mode: 'live',
-    directHref: '/live',
+    directHref: '/live/broadcast',
     badge: 'LIVE INGEST',
     color: 'from-red-500/20 to-red-950/40 border-red-500/30',
   },

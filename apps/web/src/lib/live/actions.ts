@@ -2,7 +2,12 @@
 
 import { revalidatePath } from 'next/cache';
 import { createSupabaseServerClient, getCurrentUser } from '../supabase/server';
-import { findGift, validateGiftPurchase } from '@caribbean/live';
+import {
+  findGift,
+  validateGiftPurchase,
+  validateStreamCreation,
+  type StreamAccess,
+} from '@caribbean/live';
 import { Money } from '@caribbean/spotpay';
 
 export interface SendGiftState {
@@ -60,14 +65,24 @@ export async function sendGiftAction(
     return { error: 'Gifts can only be sent during live streams.' };
   }
 
+  // Record gift in live_gifts
+  const { error: giftErr } = await supabase.from('live_gifts').insert({
+    livestream_id: livestreamId,
+    sender_id: user.id,
+    gift_key: giftKey,
+    price_minor: gift.priceMinor,
+    currency: gift.currency,
+    idempotency_key: idempotencyKey,
+  });
+
   // Insert broadcast message into live_messages
   const { error: msgErr } = await supabase.from('live_messages').insert({
     livestream_id: livestreamId,
     sender_id: user.id,
-    body: `Sent a ${gift.label} (${new Money(gift.priceMinor, 'USD').format('en-US')}) 🎁`,
+    body: `Sent a ${gift.label} (${new Money(gift.priceMinor, 'USD').format('en-US')}) ${gift.emoji || '🎁'}`,
   });
 
-  if (msgErr) {
+  if (msgErr && giftErr) {
     return { error: 'Failed to broadcast gift message.' };
   }
 
@@ -112,4 +127,113 @@ export async function sendLiveMessageAction(
   }
 
   return { error: null, success: true };
+}
+
+export async function deleteLiveMessageAction(
+  messageId: string,
+  livestreamId: string,
+): Promise<{ success: boolean; error?: string }> {
+  const user = await getCurrentUser();
+  if (!user) {
+    return { success: false, error: 'Unauthorized.' };
+  }
+
+  const supabase = await createSupabaseServerClient();
+  if (!supabase) {
+    return { success: false, error: 'Database unavailable.' };
+  }
+
+  const { error } = await supabase
+    .from('live_messages')
+    .update({ removed_at: new Date().toISOString() })
+    .eq('id', messageId)
+    .eq('livestream_id', livestreamId);
+
+  if (error) {
+    return { success: false, error: error.message };
+  }
+
+  return { success: true };
+}
+
+export interface CreateStreamParams {
+  title: string;
+  accessLevel?: StreamAccess;
+  scheduledFor?: string | null;
+}
+
+export async function createLivestreamAction(
+  params: CreateStreamParams,
+): Promise<{ streamId?: string; error?: string }> {
+  const user = await getCurrentUser();
+  if (!user) {
+    return { error: 'You must be signed in to broadcast.' };
+  }
+
+  const validation = validateStreamCreation({
+    creatorId: user.id,
+    title: params.title,
+    accessLevel: params.accessLevel || 'public',
+  });
+
+  if (!validation.valid) {
+    return { error: validation.errors.join(', ') };
+  }
+
+  const supabase = await createSupabaseServerClient();
+  if (!supabase) {
+    return { error: 'Database service unavailable.' };
+  }
+
+  const { data, error } = await supabase
+    .from('livestreams')
+    .insert({
+      creator_id: user.id,
+      title: params.title.trim(),
+      access_level: params.accessLevel || 'public',
+      state: 'live',
+      started_at: new Date().toISOString(),
+      peak_viewers: 1,
+    })
+    .select('id')
+    .single();
+
+  if (error || !data) {
+    return { error: error?.message || 'Failed to create broadcast session.' };
+  }
+
+  revalidatePath('/live');
+  return { streamId: data.id };
+}
+
+export async function endLivestreamAction(
+  livestreamId: string,
+  peakViewers: number = 1,
+): Promise<{ success: boolean; error?: string }> {
+  const user = await getCurrentUser();
+  if (!user) {
+    return { success: false, error: 'Unauthorized.' };
+  }
+
+  const supabase = await createSupabaseServerClient();
+  if (!supabase) {
+    return { success: false, error: 'Database unavailable.' };
+  }
+
+  const { error } = await supabase
+    .from('livestreams')
+    .update({
+      state: 'ended',
+      ended_at: new Date().toISOString(),
+      peak_viewers: Math.max(1, peakViewers),
+    })
+    .eq('id', livestreamId)
+    .eq('creator_id', user.id);
+
+  if (error) {
+    return { success: false, error: error.message };
+  }
+
+  revalidatePath('/live');
+  return { success: true };
 }
