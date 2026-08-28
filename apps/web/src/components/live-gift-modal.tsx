@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useTransition } from 'react';
+import Link from 'next/link';
 import { Gift, Sparkles, X, Loader2 } from 'lucide-react';
 import { GIFT_CATALOG } from '@caribbean/live';
 import { sendGiftAction, type SendGiftState } from '../lib/live/actions';
@@ -37,12 +38,12 @@ export function LiveGiftModal({ livestreamId, isAuthenticated }: LiveGiftModalPr
 
   if (!isAuthenticated) {
     return (
-      <a
-        href="/login"
+      <Link
+        href="/login?redirect=/live"
         className="bg-brand-sunriseCoral/20 text-emerald-300 hover:bg-brand-sunriseCoral/30 border border-brand-sunriseCoral/30 px-4 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors"
       >
         <Gift className="w-4 h-4" /> Send Gift
-      </a>
+      </Link>
     );
   }
 

@@ -166,6 +166,7 @@ describe('Podcasting 2.0 & iTunes RSS feed generation', () => {
           publishedAt: '2026-08-01T10:00:00Z',
           seasonNumber: 1,
           episodeNumber: 14,
+          transcriptUrl: 'https://cdn.caribbeanone.app/podcasts/ep14-transcript.txt',
         },
       ],
     });
@@ -178,6 +179,7 @@ describe('Podcasting 2.0 & iTunes RSS feed generation', () => {
     expect(xml).toContain('<itunes:episode>14</itunes:episode>');
     expect(xml).toContain('<enclosure url="https://cdn.caribbeanone.app/ep14.mp3"');
     expect(xml).toContain('<itunes:duration>42:00</itunes:duration>');
+    expect(xml).toContain('<podcast:transcript url="https://cdn.caribbeanone.app/podcasts/ep14-transcript.txt"');
   });
 
   it('slugifies podcast titles', () => {

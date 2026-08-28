@@ -205,6 +205,20 @@ export default function CreatePodcastModal({
         </div>
 
         {/* Alerts */}
+        {!user && (
+          <div className="p-4 rounded-2xl bg-brand-twilight border border-slate-700 text-center space-y-3">
+            <p className="text-xs text-brand-sandstone/80">
+              You must be signed in to create podcast shows or publish episodes.
+            </p>
+            <a
+              href="/login?redirect=/podcasts"
+              className="inline-block bg-purple-600 hover:bg-purple-500 text-white font-bold px-5 py-2 rounded-xl text-xs transition-colors shadow-md"
+            >
+              Sign In to Continue
+            </a>
+          </div>
+        )}
+
         {errorMessage && (
           <div className="p-3.5 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs flex items-center gap-2">
             <AlertCircle className="w-4 h-4 flex-shrink-0" />
@@ -220,7 +234,7 @@ export default function CreatePodcastModal({
         )}
 
         {/* Form: Publish Episode */}
-        {tab === 'publish_episode' && (
+        {user && tab === 'publish_episode' && (
           <form onSubmit={handlePublishEpisode} className="space-y-4">
             <div className="space-y-1.5">
               <label className="text-xs font-bold text-brand-sandstone/80">Select Podcast Show</label>
@@ -401,7 +415,7 @@ export default function CreatePodcastModal({
         )}
 
         {/* Form: Create New Show */}
-        {tab === 'create_show' && (
+        {user && tab === 'create_show' && (
           <form onSubmit={handleCreateShow} className="space-y-4">
             <div className="space-y-1.5">
               <label className="text-xs font-bold text-brand-sandstone/80">Show Title</label>
