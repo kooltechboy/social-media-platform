@@ -235,12 +235,20 @@ export default async function HomePage() {
               <p className="text-[11px] text-brand-sandstone/60">Broadcasting live from Trenchtown • Hosted by Zion Sound</p>
             </div>
           </div>
-          <Link
-            href="/live"
-            className="bg-red-500 hover:bg-red-400 text-brand-sandstone font-extrabold px-4 py-2 rounded-2xl text-xs flex items-center gap-1.5 transition-all shadow-md shadow-red-500/20"
-          >
-            <Play className="w-3.5 h-3.5 fill-current" /> Watch Live
-          </Link>
+          <div className="flex items-center gap-2">
+            <Link
+              href="/live/broadcast"
+              className="hidden sm:inline-flex bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white font-extrabold px-3.5 py-2 rounded-2xl text-xs items-center gap-1.5 transition-all shadow-md shadow-red-600/20"
+            >
+              🔴 Go Live
+            </Link>
+            <Link
+              href="/live"
+              className="bg-red-500/20 hover:bg-red-500 text-red-300 hover:text-white border border-red-500/30 font-extrabold px-4 py-2 rounded-2xl text-xs flex items-center gap-1.5 transition-all shadow-md"
+            >
+              <Play className="w-3.5 h-3.5 fill-current" /> Watch Live
+            </Link>
+          </div>
         </section>
 
         {/* ────────────────────────────────────────────────────────── */}

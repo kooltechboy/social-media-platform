@@ -16,6 +16,14 @@ export default function CreatorStudioActions({ displayName = 'Creator' }: Creato
   return (
     <>
       <div className="flex flex-wrap items-center gap-3">
+        <a
+          href="/live/broadcast"
+          className="bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white font-bold px-4 py-2 rounded-xl text-xs flex items-center gap-2 shadow-md shadow-red-600/20 transition-all hover:scale-105"
+        >
+          <span className="w-2 h-2 rounded-full bg-white animate-ping" />
+          <span>🔴 Go Live</span>
+        </a>
+
         <button
           type="button"
           onClick={() => setIsTierModalOpen(true)}

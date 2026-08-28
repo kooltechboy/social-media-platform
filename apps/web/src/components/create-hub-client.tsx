@@ -63,7 +63,6 @@ const CREATE_TOOLS: CreateTool[] = [
     description: 'Upload short-form vertical video tagged with trending Caribbean Sounds and rhythm stems.',
     category: 'media',
     icon: <Film className="w-6 h-6 text-rose-400" />,
-    mode: 'reel',
     directHref: '/reels',
     badge: 'POPULAR',
     color: 'from-rose-500/20 to-rose-950/40 border-rose-500/30',
@@ -74,7 +73,6 @@ const CREATE_TOOLS: CreateTool[] = [
     description: 'Stream live concerts, talks, carnival fetes, and panel sessions with SpotPay virtual gifting.',
     category: 'media',
     icon: <Tv className="w-6 h-6 text-red-500" />,
-    mode: 'live',
     directHref: '/live/broadcast',
     badge: 'LIVE INGEST',
     color: 'from-red-500/20 to-red-950/40 border-red-500/30',
@@ -104,7 +102,6 @@ const CREATE_TOOLS: CreateTool[] = [
     description: 'Publish carnival, concert, conference, or festival ticketed events with SpotPay escrow.',
     category: 'commerce',
     icon: <Calendar className="w-6 h-6 text-yellow-400" />,
-    mode: 'event',
     directHref: '/events',
     badge: 'TICKETING',
     color: 'from-yellow-500/20 to-yellow-950/40 border-yellow-500/30',
@@ -115,7 +112,6 @@ const CREATE_TOOLS: CreateTool[] = [
     description: 'List coffee, artisan craft, apparel, rum, or digital audio stems on Caribbean Marketplace.',
     category: 'commerce',
     icon: <ShoppingBag className="w-6 h-6 text-orange-400" />,
-    mode: 'product',
     directHref: '/marketplace',
     color: 'from-orange-500/20 to-orange-950/40 border-orange-500/30',
   },
@@ -358,7 +354,7 @@ export default function CreateHubClient({ user }: CreateHubClientProps) {
         {/* Tools Cards Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredTools.map((tool) => {
-            const isDirectLink = !tool.mode && tool.directHref;
+            const isDirectLink = Boolean(tool.directHref);
 
             if (isDirectLink && tool.directHref) {
               return (

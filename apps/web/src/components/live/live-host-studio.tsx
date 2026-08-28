@@ -482,7 +482,7 @@ export default function LiveHostStudio({ user }: LiveHostStudioProps) {
           ) : (
             <button
               onClick={handleStartBroadcast}
-              disabled={isStarting || hasCameraPermission === false}
+              disabled={isStarting}
               className="bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white font-black px-6 py-2.5 rounded-2xl text-xs flex items-center gap-2 shadow-lg shadow-red-600/30 transition-all disabled:opacity-50 cursor-pointer"
             >
               <Radio className="w-4 h-4" />
