@@ -148,7 +148,22 @@ export default async function NotificationsPage() {
                   )}{' '}
                   {notificationActionText(notification)}
                 </p>
-                <span className="text-[11px] text-brand-sandstone/40 mt-0.5 block">
+                {notification.payload?.post_id && (
+                  <Link href={`/?post=${notification.payload.post_id}`} className="text-[11px] font-bold text-brand-caribbeanSea hover:underline block mt-1">
+                    View Post →
+                  </Link>
+                )}
+                {notification.payload?.event_id && (
+                  <Link href="/events" className="text-[11px] font-bold text-yellow-400 hover:underline block mt-1">
+                    View Event Details →
+                  </Link>
+                )}
+                {notification.payload?.stream_id && (
+                  <Link href={`/live?id=${notification.payload.stream_id}`} className="text-[11px] font-bold text-rose-400 hover:underline block mt-1">
+                    Join Live Stream →
+                  </Link>
+                )}
+                <span className="text-[11px] text-brand-sandstone/40 mt-1 block">
                   {relativeTime(notification.created_at)}
                 </span>
               </div>

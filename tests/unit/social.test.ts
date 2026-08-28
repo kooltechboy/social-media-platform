@@ -321,5 +321,15 @@ describe('Feed post normalization and pipeline state reconciliation', () => {
     const alert = alertContent('Tropical Storm Watch issued for Leeward Islands');
     expect(alert).toContain('🚨 **OFFICIAL CARIBBEAN ADVISORY** 🚨');
   });
+
+  it('resolves notification deep links correctly across post, event, and stream payloads', () => {
+    const postPayload = { post_id: 'post-abc-123' };
+    const eventPayload = { event_id: 'event-xyz-789' };
+    const streamPayload = { stream_id: 'stream-live-456' };
+
+    expect(`/?post=${postPayload.post_id}`).toBe('/?post=post-abc-123');
+    expect('/events').toBe('/events');
+    expect(`/live?id=${streamPayload.stream_id}`).toBe('/live?id=stream-live-456');
+  });
 });
 

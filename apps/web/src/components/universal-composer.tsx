@@ -317,7 +317,7 @@ export default function UniversalComposer({
   function openWithMode(targetMode: ComposerMode) {
     setMode(targetMode);
     setIsExpanded(true);
-    if (targetMode === 'photo' || targetMode === 'video') {
+    if (targetMode === 'photo' || targetMode === 'video' || targetMode === 'reel') {
       setTimeout(() => fileInputRef.current?.click(), 100);
     }
   }
