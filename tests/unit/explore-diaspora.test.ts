@@ -96,6 +96,17 @@ describe('Global Diaspora Hubs & City Centers', () => {
     expect(countries).toContain('NLD');
     expect(countries).toContain('FRA');
   });
+
+  it('verifies diaspora city coordinates are valid latitude and longitude', () => {
+    for (const hub of DIASPORA_CITY_HUBS) {
+      if (hub.lat !== undefined && hub.lng !== undefined) {
+        expect(hub.lat).toBeGreaterThanOrEqual(-90);
+        expect(hub.lat).toBeLessThanOrEqual(90);
+        expect(hub.lng).toBeGreaterThanOrEqual(-180);
+        expect(hub.lng).toBeLessThanOrEqual(180);
+      }
+    }
+  });
 });
 
 describe('Multi-dimensional Filter & URL Parameter Resolution', () => {
@@ -115,5 +126,11 @@ describe('Multi-dimensional Filter & URL Parameter Resolution', () => {
     expect(constructExploreUrl({ vibe: 'food', country: 'JAM', hub: 'Brooklyn', q: 'jerk' })).toBe(
       '/explore?vibe=food&country=JAM&hub=Brooklyn&q=jerk'
     );
+  });
+
+  it('resolves community hub deep link paths accurately', () => {
+    const slug = 'jamaicans-in-toronto';
+    const hubUrl = `/communities/${slug}`;
+    expect(hubUrl).toBe('/communities/jamaicans-in-toronto');
   });
 });

@@ -653,8 +653,8 @@ export default function ExploreDiscoveryClient({
 
                   <div className="pt-3 border-t border-slate-800">
                     <Link
-                      href="/communities"
-                      className="block w-full text-center bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-black py-2 rounded-2xl text-xs transition-all shadow-md shadow-cyan-500/20"
+                      href={`/communities/${comm.slug || comm.id}`}
+                      className="block w-full text-center bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-black py-2 rounded-2xl text-xs transition-all shadow-md shadow-cyan-500/20 cursor-pointer"
                     >
                       Join Community Guild →
                     </Link>
