@@ -122,7 +122,7 @@ export default function SoundsDirectoryClient({
   }
 
   function handleShareSound(sound: CaribbeanSound) {
-    const url = typeof window !== 'undefined' ? `${window.location.origin}/sounds?id=${sound.id}` : '';
+    const url = typeof window !== 'undefined' ? `${window.location.origin}/sounds/${sound.id}` : '';
     if (navigator.clipboard) {
       void navigator.clipboard.writeText(url);
       setCopiedSoundId(sound.id);
