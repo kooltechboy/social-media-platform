@@ -20,7 +20,10 @@ export async function updateProfileAction(
 
   const displayName = String(formData.get('displayName') ?? '').trim();
   const bio = String(formData.get('bio') ?? '').trim();
-  const website = String(formData.get('website') ?? '').trim();
+  let website = String(formData.get('website') ?? '').trim();
+  if (website && !/^https?:\/\//i.test(website)) {
+    website = `https://${website}`;
+  }
 
   if (!displayName || displayName.length < 1)
     return { error: 'Display name is required.', success: null };
@@ -28,8 +31,8 @@ export async function updateProfileAction(
     return { error: 'Display name must be 100 characters or fewer.', success: null };
   if (bio.length > 500)
     return { error: 'Bio must be 500 characters or fewer.', success: null };
-  if (website && !/^https?:\/\/.+/.test(website))
-    return { error: 'Website must be a valid URL starting with https://.', success: null };
+  if (website && !/^https?:\/\/[a-z0-9.-]+\.[a-z]{2,}/i.test(website))
+    return { error: 'Website must be a valid URL.', success: null };
 
   const { error } = await supabase
     .from('profiles')

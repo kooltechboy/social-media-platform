@@ -61,9 +61,17 @@ const SHOWCASE_REELS: VideoRow[] = [
   },
 ];
 
-export default async function ReelsPage() {
+export default async function ReelsPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ id?: string }>;
+}) {
+  const resolvedParams = searchParams ? await searchParams : {};
+  const activeId = resolvedParams.id;
+
   const user = await getCurrentUser();
-  const featured = SHOWCASE_REELS[0];
+  const featured = SHOWCASE_REELS.find((r) => r.id === activeId) ?? SHOWCASE_REELS[0];
+  const otherReels = SHOWCASE_REELS.filter((r) => r.id !== featured.id);
 
   return (
     <div className="min-h-screen bg-[#090D16] text-brand-sandstone flex flex-col items-center justify-start p-4 gap-6 max-w-5xl mx-auto">
@@ -153,9 +161,12 @@ export default async function ReelsPage() {
             <div className="z-10 relative space-y-2 max-w-[78%]">
               <div className="flex items-center gap-2">
                 <span className="text-sm font-extrabold text-brand-sandstone">@{featured.handle}</span>
-                <button className="text-[10px] font-black text-slate-950 bg-white hover:bg-slate-200 px-2.5 py-0.5 rounded-full transition-all">
-                  Follow
-                </button>
+                <Link
+                  href={`/profile/${featured.handle}`}
+                  className="text-[10px] font-black text-slate-950 bg-white hover:bg-slate-200 px-2.5 py-0.5 rounded-full transition-all"
+                >
+                  Profile
+                </Link>
               </div>
               <p className="text-xs text-slate-200 leading-snug font-medium line-clamp-2">
                 {featured.title}
@@ -177,23 +188,24 @@ export default async function ReelsPage() {
             </h3>
 
             <div className="space-y-3">
-              {SHOWCASE_REELS.slice(1).map((reel) => (
-                <div
+              {otherReels.map((reel) => (
+                <Link
                   key={reel.id}
-                  className="flex items-center gap-3.5 p-3 rounded-2xl bg-brand-twilight/60 hover:bg-brand-dusk/60 border border-slate-800/60 transition-all cursor-pointer group"
+                  href={`/reels?id=${reel.id}`}
+                  className="flex items-center gap-3.5 p-3 rounded-2xl bg-brand-twilight/60 hover:bg-brand-dusk/90 border border-slate-800/60 hover:border-rose-500/40 transition-all cursor-pointer group"
                 >
                   <div className="w-16 h-20 rounded-xl bg-brand-dusk border border-slate-700 flex items-center justify-center flex-shrink-0 relative overflow-hidden">
                     <div className={`absolute inset-0 bg-gradient-to-t ${reel.gradient}`} />
-                    <Play className="w-5 h-5 text-brand-sandstone z-10 fill-current" />
+                    <Play className="w-5 h-5 text-brand-sandstone z-10 fill-current group-hover:scale-110 transition-transform" />
                   </div>
                   <div className="flex-1 min-w-0 space-y-1">
                     <span className="text-[10px] font-bold text-brand-caribbeanSea">{reel.location}</span>
-                    <h4 className="text-xs font-bold text-slate-200 group-hover:text-brand-caribbeanSea transition-colors line-clamp-1">
+                    <h4 className="text-xs font-bold text-slate-200 group-hover:text-rose-400 transition-colors line-clamp-1">
                       {reel.title}
                     </h4>
                     <p className="text-[11px] text-brand-sandstone/40 truncate">@{reel.handle} • {reel.views} views</p>
                   </div>
-                </div>
+                </Link>
               ))}
             </div>
           </div>

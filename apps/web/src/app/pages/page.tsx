@@ -13,7 +13,7 @@ import {
   MapPin,
 } from 'lucide-react';
 import VerificationBadge, { type VerificationLevel } from '../../components/verification-badge';
-import { getCurrentUser } from '../../lib/supabase/server';
+import { createSupabaseServerClient, getCurrentUser } from '../../lib/supabase/server';
 
 export const dynamic = 'force-dynamic';
 
@@ -99,8 +99,63 @@ const SHOWCASE_PAGES: PageEntry[] = [
   },
 ];
 
-export default async function PagesDirectoryPage() {
-  const user = await getCurrentUser();
+export default async function PagesDirectoryPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ category?: string; q?: string }>;
+}) {
+  const resolvedParams = searchParams ? await searchParams : {};
+  const { category: activeCategory, q: searchQuery } = resolvedParams;
+
+  const [user, supabase] = await Promise.all([getCurrentUser(), createSupabaseServerClient()]);
+
+  let dynamicPages: PageEntry[] = [];
+  if (supabase) {
+    let query = supabase
+      .from('businesses')
+      .select('id, name, slug, category, description, is_verified, country_iso, created_at')
+      .order('created_at', { ascending: false })
+      .limit(30);
+
+    if (activeCategory && activeCategory !== 'all') {
+      query = query.ilike('category', `%${activeCategory}%`);
+    }
+    if (searchQuery) {
+      query = query.or(`name.ilike.%${searchQuery}%,description.ilike.%${searchQuery}%`);
+    }
+
+    const { data: dbBusinesses } = await query;
+    if (dbBusinesses && dbBusinesses.length > 0) {
+      dynamicPages = dbBusinesses.map((b: any) => ({
+        id: b.id,
+        slug: b.slug,
+        name: b.name,
+        category: b.category || 'Caribbean Organization & Storefront',
+        type: 'business' as const,
+        verification: 'business_verified' as VerificationLevel,
+        location: `${b.country_iso || 'Caribbean'} 🌴`,
+        followers: '1.2K',
+        description: b.description || 'Verified Caribbean business and storefront on Antilia.',
+        hasStore: true,
+        avatar: '🏪',
+      }));
+    }
+  }
+
+  // Filter showcase pages if search or category is active
+  let filteredShowcase = SHOWCASE_PAGES;
+  if (activeCategory && activeCategory !== 'all') {
+    filteredShowcase = filteredShowcase.filter(
+      (p) => p.type.toLowerCase().includes(activeCategory.toLowerCase()) || p.category.toLowerCase().includes(activeCategory.toLowerCase())
+    );
+  }
+  if (searchQuery) {
+    filteredShowcase = filteredShowcase.filter(
+      (p) => p.name.toLowerCase().includes(searchQuery.toLowerCase()) || p.description.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }
+
+  const allPages = [...dynamicPages, ...filteredShowcase];
 
   return (
     <div className="min-h-screen bg-[#090D16] text-brand-sandstone p-4 md:p-6 max-w-7xl mx-auto space-y-8">
@@ -125,7 +180,7 @@ export default async function PagesDirectoryPage() {
 
       {/* Pages Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {SHOWCASE_PAGES.map((page) => (
+        {allPages.map((page) => (
           <article
             key={page.id}
             className="bg-brand-dusk/80 border border-slate-800 hover:border-brand-sunriseCoral/50 rounded-3xl p-6 flex flex-col justify-between transition-all shadow-xl group space-y-4"

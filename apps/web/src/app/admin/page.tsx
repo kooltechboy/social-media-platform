@@ -86,17 +86,15 @@ export default async function AdminPage() {
   const SECTIONS = [
     { label: 'Dashboard', icon: LayoutDashboard, href: '/admin' },
     { label: 'Administrators', icon: Shield, href: '/admin/administrators' },
-    { label: 'Audit Logs', icon: ShieldCheck, href: '/admin/audit-logs' },
+    { label: 'Roles & RBAC', icon: ShieldCheck, href: '/admin/administrators/roles' },
+    { label: 'Audit Logs', icon: Database, href: '/admin/audit-logs' },
     { label: 'Users', icon: Users, href: '/admin/users' },
     { label: 'Payments', icon: Wallet, href: '/admin/payments' },
     { label: 'Trust & Safety', icon: ShieldCheck, href: '/admin/trust-safety' },
     { label: 'Reports', icon: Flag, href: '/admin/reports' },
     { label: 'Analytics', icon: BarChart3, href: '/admin/analytics' },
-    { label: 'Feature Flags', icon: ToggleLeft, href: '/admin' },
-    { label: 'Geography', icon: Globe, href: '/admin/geography' },
-    { label: 'Database', icon: Database, href: '/admin/database' },
-    { label: 'Notifications', icon: Bell, href: '/admin/notifications' },
-    { label: 'Settings', icon: Settings, href: '/admin/settings' },
+    { label: 'Feature Flags', icon: ToggleLeft, href: '/admin#flags' },
+    { label: 'Bootstrap Roles', icon: Settings, href: '/admin/bootstrap' },
   ];
 
   return (

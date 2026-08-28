@@ -122,20 +122,47 @@ function JoinPolicyBadge({ policy }: { policy: string }) {
   );
 }
 
-export default async function CommunitiesPage() {
+export default async function CommunitiesPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ hub?: string; country?: string; q?: string }>;
+}) {
+  const resolvedParams = searchParams ? await searchParams : {};
+  const { hub, country, q } = resolvedParams;
+
   const [user, supabase] = await Promise.all([getCurrentUser(), createSupabaseServerClient()]);
 
   let communities: Community[] = [];
   let membershipSet = new Set<string>();
 
   if (supabase) {
-    const { data } = await supabase
+    let query = supabase
       .from('communities')
       .select('id, name, slug, description, join_policy, member_count, country_iso, created_by, countries(name, flag_emoji)')
       .order('member_count', { ascending: false })
       .limit(30);
-    if (data && data.length > 0) {
-      communities = data as unknown as Community[];
+
+    if (country) {
+      query = query.eq('country_iso', country.toUpperCase());
+    } else if (hub) {
+      query = query.ilike('name', `%${hub}%`);
+    } else if (q) {
+      query = query.or(`name.ilike.%${q}%,description.ilike.%${q}%`);
+    }
+
+    const [communitiesRes, membershipsRes] = await Promise.all([
+      query,
+      user
+        ? supabase.from('community_members').select('community_id').eq('user_id', user.id)
+        : Promise.resolve({ data: [] }),
+    ]);
+
+    if (communitiesRes.data && communitiesRes.data.length > 0) {
+      communities = communitiesRes.data as unknown as Community[];
+    }
+
+    if (membershipsRes.data && membershipsRes.data.length > 0) {
+      membershipSet = new Set(membershipsRes.data.map((m: any) => m.community_id));
     }
   }
 

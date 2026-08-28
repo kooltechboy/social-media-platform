@@ -126,24 +126,62 @@ const MARKETPLACE_TABS = [
   'Digital & Sounds',
 ];
 
-export default async function MarketplacePage() {
+export default async function MarketplacePage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ category?: string; q?: string }>;
+}) {
+  const resolvedParams = searchParams ? await searchParams : {};
+  const activeCategory = resolvedParams.category || 'All Products';
+  const queryText = resolvedParams.q || '';
+
   const [user, supabase] = await Promise.all([getCurrentUser(), createSupabaseServerClient()]);
 
   let products: Product[] = [];
   if (supabase) {
-    const { data } = await supabase
+    let query = supabase
       .from('products')
       .select('id, title, description, product_kind, price_minor, currency, inventory_count, is_active, seller_id, profiles(display_name, username), businesses(name)')
       .eq('is_active', true)
       .order('created_at', { ascending: false })
       .limit(24);
+
+    if (queryText) {
+      query = query.or(`title.ilike.%${queryText}%,description.ilike.%${queryText}%`);
+    } else if (activeCategory === 'Digital & Sounds') {
+      query = query.eq('product_kind', 'digital');
+    } else if (activeCategory === 'Food & Spices') {
+      query = query.ilike('title', '%coffee%').or('title.ilike.%sauce%,title.ilike.%cacao%,title.ilike.%rum%');
+    } else if (activeCategory === 'Carnival & Mas') {
+      query = query.or('title.ilike.%carnival%,title.ilike.%mas%,title.ilike.%headdress%');
+    } else if (activeCategory === 'Art & Decor') {
+      query = query.or('title.ilike.%art%,title.ilike.%sculpture%,title.ilike.%relief%');
+    }
+
+    const { data } = await query;
     if (data && data.length > 0) {
       products = data as unknown as Product[];
     }
   }
 
   if (products.length === 0) {
-    products = SHOWCASE_PRODUCTS;
+    if (activeCategory === 'All Products') {
+      products = SHOWCASE_PRODUCTS;
+    } else if (activeCategory === 'Digital & Sounds') {
+      products = SHOWCASE_PRODUCTS.filter((p) => p.product_kind === 'digital');
+    } else if (activeCategory === 'Food & Spices') {
+      products = SHOWCASE_PRODUCTS.filter((p) => /coffee|sauce|cacao|rum/i.test(p.title));
+    } else if (activeCategory === 'Carnival & Mas') {
+      products = SHOWCASE_PRODUCTS.filter((p) => /carnival|mas|headdress/i.test(p.title));
+    } else if (activeCategory === 'Art & Decor') {
+      products = SHOWCASE_PRODUCTS.filter((p) => /art|sculpture|drum/i.test(p.title));
+    } else if (activeCategory === 'From the Islands') {
+      products = SHOWCASE_PRODUCTS.filter((p) => !p.origin?.includes('Diaspora'));
+    } else if (activeCategory === 'From the Diaspora') {
+      products = SHOWCASE_PRODUCTS.filter((p) => p.origin?.includes('Diaspora') || p.origin?.includes('USA') || p.origin?.includes('UK'));
+    } else {
+      products = SHOWCASE_PRODUCTS;
+    }
   }
 
   return (
@@ -181,18 +219,22 @@ export default async function MarketplacePage() {
 
       {/* Categories Tab Rail */}
       <div className="flex gap-2.5 overflow-x-auto pb-2 scrollbar-none">
-        {MARKETPLACE_TABS.map((tab, idx) => (
-          <button
-            key={tab}
-            className={`px-4 py-1.5 rounded-2xl text-xs font-black whitespace-nowrap transition-all ${
-              idx === 0
-                ? 'bg-orange-500 text-slate-950 shadow-md shadow-orange-500/20'
-                : 'bg-brand-dusk text-brand-sandstone/60 hover:text-brand-sandstone border border-slate-800'
-            }`}
-          >
-            {tab}
-          </button>
-        ))}
+        {MARKETPLACE_TABS.map((tab) => {
+          const isActive = tab === activeCategory;
+          return (
+            <Link
+              key={tab}
+              href={tab === 'All Products' ? '/marketplace' : `/marketplace?category=${encodeURIComponent(tab)}`}
+              className={`px-4 py-1.5 rounded-2xl text-xs font-black whitespace-nowrap transition-all ${
+                isActive
+                  ? 'bg-orange-500 text-slate-950 shadow-md shadow-orange-500/20'
+                  : 'bg-brand-dusk text-brand-sandstone/60 hover:text-brand-sandstone border border-slate-800'
+              }`}
+            >
+              {tab}
+            </Link>
+          );
+        })}
       </div>
 
       {/* Trust & Guarantee Banner */}

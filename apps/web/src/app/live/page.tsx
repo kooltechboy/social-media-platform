@@ -57,24 +57,46 @@ const SHOWCASE_LIVE_STREAMS = [
   },
 ];
 
-export default async function LivePage() {
+export default async function LivePage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ state?: string; q?: string }>;
+}) {
+  const resolvedParams = searchParams ? await searchParams : {};
+  const { state: streamState, q } = resolvedParams;
+
   const [user, supabase] = await Promise.all([getCurrentUser(), createSupabaseServerClient()]);
 
   let liveStreams: Livestream[] = [];
   if (supabase) {
-    const { data } = await supabase
+    let query = supabase
       .from('livestreams')
       .select('id, title, state, access_level, peak_viewers, started_at, creator_id, profiles(display_name, username)')
-      .in('state', ['live', 'scheduled'])
       .order('started_at', { ascending: false })
       .limit(12);
+
+    if (streamState) {
+      query = query.eq('state', streamState);
+    } else {
+      query = query.in('state', ['live', 'scheduled']);
+    }
+
+    if (q) {
+      query = query.ilike('title', `%${q}%`);
+    }
+
+    const { data } = await query;
     if (data && data.length > 0) {
       liveStreams = data as unknown as Livestream[];
     }
   }
 
   if (liveStreams.length === 0) {
-    liveStreams = SHOWCASE_LIVE_STREAMS as unknown as Livestream[];
+    if (streamState) {
+      liveStreams = (SHOWCASE_LIVE_STREAMS as unknown as Livestream[]).filter((s) => s.state === streamState);
+    } else {
+      liveStreams = SHOWCASE_LIVE_STREAMS as unknown as Livestream[];
+    }
   }
 
   const featuredStream = liveStreams.find((s) => s.state === 'live') ?? liveStreams[0];

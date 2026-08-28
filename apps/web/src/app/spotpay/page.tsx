@@ -89,14 +89,17 @@ export default async function SpotPayPage() {
 
   // Compute running balances per account from ledger entries
   const accountIds = accounts.map((a) => a.id);
-  let entries: LedgerEntry[] = [];
   let recentEntries: LedgerEntry[] = [];
+  const balanceByAccountId = new Map<string, number>();
+  for (const account of accounts) {
+    balanceByAccountId.set(account.id, 0);
+  }
 
   if (accountIds.length > 0) {
     const [allResult, recentResult] = await Promise.all([
       supabase
         .from('ledger_entries')
-        .select('id, transaction_id, amount, entry_type, description, created_at, ledger_accounts(account_type, currency)')
+        .select('account_id, amount, entry_type')
         .in('account_id', accountIds),
       supabase
         .from('ledger_entries')
@@ -105,35 +108,15 @@ export default async function SpotPayPage() {
         .order('created_at', { ascending: false })
         .limit(20),
     ]);
-    entries = (allResult.data ?? []) as unknown as LedgerEntry[];
-    recentEntries = (recentResult.data ?? []) as unknown as LedgerEntry[];
-  }
 
-  // Compute per-account running balance
-  const balanceByAccountId = new Map<string, number>();
-  for (const account of accounts) {
-    balanceByAccountId.set(account.id, 0);
-  }
-  if (accountIds.length > 0) {
-    for (const entry of entries) {
-      // We need account_id from the join — re-fetch with it
+    const balanceEntries = (allResult.data ?? []) as Array<{ account_id: string; amount: number; entry_type: string }>;
+    for (const entry of balanceEntries) {
+      const current = balanceByAccountId.get(entry.account_id) ?? 0;
+      const delta = entry.entry_type === 'CREDIT' ? Number(entry.amount) : -Number(entry.amount);
+      balanceByAccountId.set(entry.account_id, current + delta);
     }
-  }
 
-  // Re-fetch with account_id explicitly for balance calculation
-  let balanceEntries: Array<{ account_id: string; amount: number; entry_type: string }> = [];
-  if (accountIds.length > 0) {
-    const { data: balData } = await supabase
-      .from('ledger_entries')
-      .select('account_id, amount, entry_type')
-      .in('account_id', accountIds);
-    balanceEntries = (balData ?? []) as Array<{ account_id: string; amount: number; entry_type: string }>;
-  }
-
-  for (const entry of balanceEntries) {
-    const current = balanceByAccountId.get(entry.account_id) ?? 0;
-    const delta = entry.entry_type === 'CREDIT' ? Number(entry.amount) : -Number(entry.amount);
-    balanceByAccountId.set(entry.account_id, current + delta);
+    recentEntries = (recentResult.data ?? []) as unknown as LedgerEntry[];
   }
 
   const walletAccount = accounts.find((a) => a.account_type === 'spotpay_wallet');

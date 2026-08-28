@@ -94,25 +94,59 @@ const PODCAST_CATEGORIES = [
   'Diaspora Life',
 ];
 
-export default async function PodcastsPage() {
+export default async function PodcastsPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ category?: string; q?: string }>;
+}) {
+  const resolvedParams = searchParams ? await searchParams : {};
+  const activeCategory = resolvedParams.category || 'All Shows';
+  const queryText = resolvedParams.q || '';
+
   const [user, supabase] = await Promise.all([getCurrentUser(), createSupabaseServerClient()]);
 
   let podcasts: Podcast[] = [];
   let followingSet = new Set<string>();
 
   if (supabase) {
-    const { data } = await supabase
+    let query = supabase
       .from('podcasts')
       .select('id, title, slug, description, is_paid, follower_count, language, cover_path, creator_id, profiles(display_name, username), podcast_episodes(id)')
       .order('follower_count', { ascending: false })
       .limit(24);
+
+    if (queryText) {
+      query = query.or(`title.ilike.%${queryText}%,description.ilike.%${queryText}%`);
+    } else if (activeCategory === 'Music & Sound Systems') {
+      query = query.or('title.ilike.%music%,title.ilike.%reggae%,title.ilike.%sound%,title.ilike.%soca%');
+    } else if (activeCategory === 'Business & Tech') {
+      query = query.or('title.ilike.%tech%,title.ilike.%business%,title.ilike.%startup%');
+    } else if (activeCategory === 'Food & Culinary') {
+      query = query.or('title.ilike.%food%,title.ilike.%culinary%,title.ilike.%recipe%');
+    } else if (activeCategory === 'Culture & History') {
+      query = query.or('title.ilike.%culture%,title.ilike.%history%,title.ilike.%roots%');
+    }
+
+    const { data } = await query;
     if (data && data.length > 0) {
       podcasts = data as unknown as Podcast[];
     }
   }
 
   if (podcasts.length === 0) {
-    podcasts = SHOWCASE_PODCASTS;
+    if (activeCategory === 'All Shows') {
+      podcasts = SHOWCASE_PODCASTS;
+    } else if (activeCategory === 'Culture & History') {
+      podcasts = SHOWCASE_PODCASTS.filter((p) => p.category?.includes('Culture') || p.category?.includes('History'));
+    } else if (activeCategory === 'Music & Sound Systems') {
+      podcasts = SHOWCASE_PODCASTS.filter((p) => p.category?.includes('Music') || p.category?.includes('Carnival'));
+    } else if (activeCategory === 'Business & Tech') {
+      podcasts = SHOWCASE_PODCASTS.filter((p) => p.category?.includes('Tech') || p.category?.includes('Business'));
+    } else if (activeCategory === 'Food & Culinary') {
+      podcasts = SHOWCASE_PODCASTS.filter((p) => p.category?.includes('Food') || p.category?.includes('Heritage'));
+    } else {
+      podcasts = SHOWCASE_PODCASTS;
+    }
   }
 
   return (
@@ -150,18 +184,22 @@ export default async function PodcastsPage() {
 
       {/* Categories Filter Rail */}
       <div className="flex gap-2.5 overflow-x-auto pb-2 scrollbar-none">
-        {PODCAST_CATEGORIES.map((cat, idx) => (
-          <button
-            key={cat}
-            className={`px-4 py-1.5 rounded-2xl text-xs font-black whitespace-nowrap transition-all ${
-              idx === 0
-                ? 'bg-purple-600 text-brand-sandstone shadow-md shadow-purple-600/20'
-                : 'bg-brand-dusk text-brand-sandstone/60 hover:text-brand-sandstone border border-slate-800'
-            }`}
-          >
-            {cat}
-          </button>
-        ))}
+        {PODCAST_CATEGORIES.map((cat) => {
+          const isActive = cat === activeCategory;
+          return (
+            <Link
+              key={cat}
+              href={cat === 'All Shows' ? '/podcasts' : `/podcasts?category=${encodeURIComponent(cat)}`}
+              className={`px-4 py-1.5 rounded-2xl text-xs font-black whitespace-nowrap transition-all ${
+                isActive
+                  ? 'bg-purple-600 text-brand-sandstone shadow-md shadow-purple-600/20'
+                  : 'bg-brand-dusk text-brand-sandstone/60 hover:text-brand-sandstone border border-slate-800'
+              }`}
+            >
+              {cat}
+            </Link>
+          );
+        })}
       </div>
 
       {/* Podcasts Grid */}

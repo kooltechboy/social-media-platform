@@ -106,7 +106,14 @@ function formatEventDate(iso: string): string {
   });
 }
 
-export default async function EventsPage() {
+export default async function EventsPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ kind?: string; city?: string; q?: string }>;
+}) {
+  const resolvedParams = searchParams ? await searchParams : {};
+  const { kind, city, q } = resolvedParams;
+
   const user = await getCurrentUser();
   const supabase = await createSupabaseServerClient();
 
@@ -114,13 +121,22 @@ export default async function EventsPage() {
   let cities: CityOption[] = [];
 
   if (supabase) {
+    let query = supabase
+      .from('events')
+      .select('id, title, description, event_kind, venue, starts_at, capacity, cities(name, country_iso), event_attendees(profile_id, rsvp_status)')
+      .gte('starts_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
+      .order('starts_at', { ascending: true })
+      .limit(30);
+
+    if (kind) {
+      query = query.eq('event_kind', kind);
+    }
+    if (q) {
+      query = query.or(`title.ilike.%${q}%,description.ilike.%${q}%`);
+    }
+
     const [eventsResult, citiesResult] = await Promise.all([
-      supabase
-        .from('events')
-        .select('id, title, description, event_kind, venue, starts_at, capacity, cities(name, country_iso), event_attendees(profile_id, rsvp_status)')
-        .gte('starts_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
-        .order('starts_at', { ascending: true })
-        .limit(30),
+      query,
       supabase.from('cities').select('id, name, country_iso').order('name'),
     ]);
     if (eventsResult.data && eventsResult.data.length > 0) {
@@ -130,7 +146,15 @@ export default async function EventsPage() {
   }
 
   if (events.length === 0) {
-    events = SHOWCASE_EVENTS;
+    if (kind) {
+      events = SHOWCASE_EVENTS.filter((e) => e.event_kind === kind);
+    } else if (city) {
+      events = SHOWCASE_EVENTS.filter((e) => e.cities?.name.toLowerCase().includes(city.toLowerCase()));
+    } else if (q) {
+      events = SHOWCASE_EVENTS.filter((e) => e.title.toLowerCase().includes(q.toLowerCase()));
+    } else {
+      events = SHOWCASE_EVENTS;
+    }
   }
 
   return (

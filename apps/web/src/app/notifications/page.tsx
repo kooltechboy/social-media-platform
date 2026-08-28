@@ -36,32 +36,31 @@ function NotificationIcon({ kind }: { kind: string }) {
   return <Bell className={`${cls} text-brand-sandstone/60`} />;
 }
 
-function notificationText(n: DBNotification): string {
-  const actor = n.actor?.display_name ?? 'Someone';
+function notificationActionText(n: DBNotification): string {
   switch (n.kind) {
     case 'reaction':
     case 'post_reaction':
-      return `${actor} reacted to your post`;
+      return 'reacted to your post';
     case 'comment':
-      return `${actor} commented on your post`;
+      return 'commented on your post';
     case 'follow':
-      return `${actor} started following you`;
+      return 'started following you';
     case 'creator_tip':
-      return `${actor} sent you a tip${n.payload?.amount ? ` of ${n.payload.amount}` : ''}`;
+      return `sent you a tip${n.payload?.amount ? ` of ${n.payload.amount}` : ''}`;
     case 'live_gift':
-      return `${actor} sent a gift during your stream`;
+      return 'sent a gift during your stream';
     case 'payment':
-      return n.payload?.message ?? `Payment notification`;
+      return n.payload?.message ?? 'processed a payment';
     case 'event_reminder':
-      return n.payload?.event_title ? `Upcoming: ${n.payload.event_title}` : `You have an upcoming event`;
+      return n.payload?.event_title ? `Upcoming event: ${n.payload.event_title}` : 'You have an upcoming event';
     case 'moderation_resolved':
-      return `Your moderation appeal has been resolved`;
+      return 'Your moderation appeal has been resolved';
     case 'appeal_outcome':
       return n.payload?.outcome === 'upheld'
-        ? `Your appeal was reviewed and upheld in your favor`
-        : `Your appeal has been reviewed`;
+        ? 'Your appeal was reviewed and upheld in your favor'
+        : 'Your appeal has been reviewed';
     default:
-      return n.payload?.message ?? `New notification`;
+      return n.payload?.message ?? 'sent you a notification';
   }
 }
 
@@ -140,12 +139,14 @@ export default async function NotificationsPage() {
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm text-slate-200 leading-snug">
-                  {notification.actor && (
+                  {notification.actor ? (
                     <Link href={`/profile/${notification.actor.username}`} className="font-bold text-brand-sandstone hover:underline">
                       {notification.actor.display_name}
                     </Link>
+                  ) : (
+                    <span className="font-bold text-brand-sandstone">System</span>
                   )}{' '}
-                  {notificationText(notification)}
+                  {notificationActionText(notification)}
                 </p>
                 <span className="text-[11px] text-brand-sandstone/40 mt-0.5 block">
                   {relativeTime(notification.created_at)}

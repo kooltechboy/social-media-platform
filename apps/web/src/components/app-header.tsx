@@ -6,6 +6,8 @@ import { Search, Wallet, Bell, MessageSquare, User, CheckCircle, Users, Calendar
 import SessionWidget from './session-widget';
 import { createSupabaseBrowserClient } from '../lib/supabase/browser';
 
+import { followAction, unfollowAction } from '../lib/social/profile-actions';
+
 interface SearchResultUser {
   id: string;
   display_name: string;
@@ -27,6 +29,7 @@ export default function AppHeader() {
   const [isOpen, setIsOpen] = useState(false);
   const [livePeople, setLivePeople] = useState<SearchResultUser[]>([]);
   const [followingMap, setFollowingMap] = useState<Record<string, boolean>>({});
+  const [pendingFollowId, setPendingFollowId] = useState<string | null>(null);
   const searchRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -75,8 +78,28 @@ export default function AppHeader() {
     setLivePeople(filtered);
   }
 
-  function toggleFollow(userId: string) {
-    setFollowingMap((prev) => ({ ...prev, [userId]: !prev[userId] }));
+  async function toggleFollow(userId: string) {
+    const currentlyFollowing = !!followingMap[userId];
+    setFollowingMap((prev) => ({ ...prev, [userId]: !currentlyFollowing }));
+    setPendingFollowId(userId);
+
+    try {
+      if (currentlyFollowing) {
+        const res = await unfollowAction(userId);
+        if (res.error) {
+          setFollowingMap((prev) => ({ ...prev, [userId]: currentlyFollowing }));
+        }
+      } else {
+        const res = await followAction(userId);
+        if (res.error) {
+          setFollowingMap((prev) => ({ ...prev, [userId]: currentlyFollowing }));
+        }
+      }
+    } catch {
+      setFollowingMap((prev) => ({ ...prev, [userId]: currentlyFollowing }));
+    } finally {
+      setPendingFollowId(null);
+    }
   }
 
   return (
@@ -170,14 +193,15 @@ export default function AppHeader() {
 
                       <button
                         type="button"
+                        disabled={pendingFollowId === person.id}
                         onClick={() => toggleFollow(person.id)}
-                        className={`text-[10px] font-bold px-3 py-1 rounded-xl transition-all ${
+                        className={`text-[10px] font-bold px-3 py-1 rounded-xl transition-all disabled:opacity-50 ${
                           followingMap[person.id]
-                            ? 'bg-brand-dusk text-slate-300 border border-slate-700'
+                            ? 'bg-brand-dusk text-slate-300 border border-slate-700 hover:bg-rose-500/20 hover:text-rose-400 hover:border-rose-500/40'
                             : 'bg-brand-sunriseCoral hover:bg-brand-sunriseCoral text-slate-950 shadow-md shadow-brand-sunriseCoral/20'
                         }`}
                       >
-                        {followingMap[person.id] ? 'Following' : '+ Follow'}
+                        {pendingFollowId === person.id ? '…' : followingMap[person.id] ? 'Following' : '+ Follow'}
                       </button>
                     </div>
                   ))

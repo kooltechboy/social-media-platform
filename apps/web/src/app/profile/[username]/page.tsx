@@ -4,6 +4,7 @@ import { MapPin, Globe, BadgeCheck, Lock, Settings, Share2, UserPlus, UserCheck 
 import Link from 'next/link';
 import { createSupabaseServerClient, getCurrentUser } from '../../../lib/supabase/server';
 import FollowButton from '../../../components/follow-button';
+import ProfileHeaderActions from '../../../components/profile-header-actions';
 
 export const dynamic = 'force-dynamic';
 
@@ -139,9 +140,11 @@ export default async function ProfilePage({
         </Link>
         <h1 className="text-lg font-extrabold text-brand-sandstone truncate">{profileRow.display_name}</h1>
         <div className="ml-auto flex items-center gap-2">
-          <button aria-label="Share profile" className="p-2 text-slate-300 hover:text-brand-sandstone rounded-full hover:bg-brand-dusk transition-colors">
-            <Share2 className="w-4 h-4" />
-          </button>
+          <ProfileHeaderActions
+            username={profileRow.username}
+            isOwnProfile={isOwnProfile}
+            isAuthenticated={!!currentUser}
+          />
           {isOwnProfile && (
             <Link href="/settings" aria-label="Profile settings" className="p-2 text-slate-300 hover:text-brand-sandstone rounded-full hover:bg-brand-dusk transition-colors">
               <Settings className="w-4 h-4" />

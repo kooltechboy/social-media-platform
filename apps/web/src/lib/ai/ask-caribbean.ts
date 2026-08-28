@@ -134,16 +134,16 @@ export async function askCaribbean(query: string): Promise<AskResponse> {
       (async () => {
         const { data } = await supabase
           .from('businesses')
-          .select('id, name, category, description')
+          .select('id, name, slug, category, description')
           .or(buildOrPattern(keywords, 'name'))
           .limit(10);
-        for (const business of (data ?? []) as Array<{ id: string; name: string; category: string; description: string | null }>) {
+        for (const business of (data ?? []) as Array<{ id: string; name: string; slug?: string; category: string; description: string | null }>) {
           results.push({
             entityType: 'businesses',
             entityId: business.id,
             title: business.name,
             snippet: `${business.category}${business.description ? ` — ${business.description.slice(0, 100)}` : ''}`,
-            href: '/marketplace',
+            href: business.slug ? `/pages/${business.slug}` : '/marketplace',
           });
         }
       })(),
