@@ -55,16 +55,15 @@ export async function createBusinessPageAction(
 
   // 2. Provision SpotPay Ledger Account for the new Page Entity
   try {
-    const { createClient } = await import('@supabase/supabase-js');
-    const supabaseAdmin = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    );
-    await supabaseAdmin.from('ledger_accounts').insert({
-      owner_id: user.id,
-      account_type: 'creator_pending',
-      currency: 'USD',
-    });
+    const { createServiceSupabaseClient } = await import('../supabase/server');
+    const supabaseAdmin = await createServiceSupabaseClient();
+    if (supabaseAdmin) {
+      await supabaseAdmin.from('ledger_accounts').insert({
+        owner_id: user.id,
+        account_type: 'creator_pending',
+        currency: 'USD',
+      });
+    }
   } catch {
     // Non-blocking if ledger account already exists
   }
