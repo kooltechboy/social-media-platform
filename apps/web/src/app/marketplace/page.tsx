@@ -201,15 +201,23 @@ export default async function MarketplacePage({
         </div>
 
         {user ? (
-          <Link
-            href="/creator-studio"
-            className="bg-orange-500 hover:bg-orange-400 text-slate-950 font-extrabold px-5 py-2.5 rounded-2xl text-xs flex items-center gap-2 transition-all shadow-md shadow-orange-500/20 self-start md:self-auto"
-          >
-            <Plus className="w-4 h-4" /> Open Shop / Sell
-          </Link>
+          <div className="flex items-center gap-2 self-start md:self-auto">
+            <Link
+              href="/marketplace/orders"
+              className="bg-brand-dusk hover:bg-slate-800 border border-slate-700 text-brand-sandstone font-bold px-4 py-2.5 rounded-2xl text-xs flex items-center gap-2 transition-all"
+            >
+              <ShoppingBag className="w-4 h-4 text-orange-400" /> My Purchases
+            </Link>
+            <Link
+              href="/creator-studio"
+              className="bg-orange-500 hover:bg-orange-400 text-slate-950 font-extrabold px-4 py-2.5 rounded-2xl text-xs flex items-center gap-2 transition-all shadow-md shadow-orange-500/20"
+            >
+              <Plus className="w-4 h-4" /> Open Shop / Sell
+            </Link>
+          </div>
         ) : (
           <Link
-            href="/login"
+            href="/login?redirect=/marketplace"
             className="bg-orange-500/20 text-orange-300 border border-orange-500/40 font-extrabold px-5 py-2.5 rounded-2xl text-xs flex items-center gap-2 hover:bg-orange-500/30 transition-all self-start md:self-auto"
           >
             Sign in to Sell
@@ -263,14 +271,17 @@ export default async function MarketplacePage({
               className="bg-brand-dusk/80 border border-slate-800/90 hover:border-orange-500/50 rounded-3xl p-6 space-y-4 flex flex-col justify-between transition-all shadow-xl group"
             >
               <div className="space-y-3.5">
-                <div className="aspect-video bg-gradient-to-br from-slate-950 to-slate-900 rounded-2xl flex flex-col items-center justify-center border border-slate-800 relative overflow-hidden group-hover:border-slate-700 transition-colors">
+                <Link
+                  href={`/marketplace/${product.id}`}
+                  className="aspect-video bg-gradient-to-br from-slate-950 to-slate-900 rounded-2xl flex flex-col items-center justify-center border border-slate-800 relative overflow-hidden group-hover:border-slate-700 transition-colors block cursor-pointer"
+                >
                   <div className="text-4xl mb-1">📦</div>
                   {product.origin && (
                     <span className="absolute top-3 left-3 text-[10px] font-black px-2.5 py-0.5 rounded-full bg-brand-twilight/80 text-orange-400 border border-orange-500/30 backdrop-blur-md">
                       {product.origin}
                     </span>
                   )}
-                </div>
+                </Link>
 
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-extrabold text-brand-sandstone/60 truncate">{sellerName}</span>
@@ -285,9 +296,11 @@ export default async function MarketplacePage({
                   </span>
                 </div>
 
-                <h3 className="font-extrabold text-sm text-brand-sandstone group-hover:text-orange-300 transition-colors leading-snug">
-                  {product.title}
-                </h3>
+                <Link href={`/marketplace/${product.id}`}>
+                  <h3 className="font-extrabold text-sm text-brand-sandstone group-hover:text-orange-300 transition-colors leading-snug cursor-pointer">
+                    {product.title}
+                  </h3>
+                </Link>
 
                 {product.description && (
                   <p className="text-xs text-slate-300 line-clamp-2 leading-relaxed font-medium">

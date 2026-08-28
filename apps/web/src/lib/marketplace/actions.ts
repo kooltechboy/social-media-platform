@@ -2,12 +2,13 @@
 
 import { revalidatePath } from 'next/cache';
 import { createSupabaseServerClient, getCurrentUser } from '../supabase/server';
-import { computeOrderTotals } from '@caribbean/marketplace';
+import { computeOrderTotals, transitionOrder } from '@caribbean/marketplace';
 
 export interface MarketplaceActionState {
   error: string | null;
   success: string | null;
   orderId?: string;
+  productId?: string;
 }
 
 export async function createOrderAction(
@@ -76,5 +77,82 @@ export async function createOrderAction(
   if (itemErr) return { error: itemErr.message, success: null };
 
   revalidatePath('/marketplace');
+  revalidatePath('/marketplace/orders');
   return { error: null, success: 'Order created. Proceed to payment.', orderId: order.id };
+}
+
+export async function createProductAction(
+  _prev: MarketplaceActionState,
+  formData: FormData,
+): Promise<MarketplaceActionState> {
+  const user = await getCurrentUser();
+  if (!user) return { error: 'Sign in to list products.', success: null };
+
+  const title = String(formData.get('title') ?? '').trim();
+  const description = String(formData.get('description') ?? '').trim();
+  const priceMinor = Math.round(parseFloat(String(formData.get('price') ?? '0')) * 100);
+  const currency = String(formData.get('currency') ?? 'USD').toUpperCase();
+  const productKind = String(formData.get('productKind') ?? 'physical');
+  const inventoryRaw = formData.get('inventoryCount');
+  const inventoryCount = inventoryRaw ? parseInt(String(inventoryRaw), 10) : null;
+
+  if (!title) return { error: 'Product title is required.', success: null };
+  if (isNaN(priceMinor) || priceMinor <= 0) return { error: 'Price must be greater than 0.', success: null };
+  if (!['physical', 'digital', 'service'].includes(productKind)) {
+    return { error: 'Invalid product kind.', success: null };
+  }
+
+  const supabase = await createSupabaseServerClient();
+  if (!supabase) return { error: 'Service unavailable.', success: null };
+
+  const { data: product, error } = await supabase
+    .from('products')
+    .insert({
+      seller_id: user.id,
+      title,
+      description: description || null,
+      price_minor: priceMinor,
+      currency,
+      product_kind: productKind,
+      inventory_count: inventoryCount,
+      is_active: true,
+    })
+    .select('id')
+    .single();
+
+  if (error) return { error: error.message, success: null };
+
+  revalidatePath('/marketplace');
+  return { error: null, success: 'Product listed successfully!', productId: product.id };
+}
+
+export async function cancelOrderAction(orderId: string): Promise<{ error: string | null; success: boolean }> {
+  const user = await getCurrentUser();
+  if (!user) return { error: 'Sign in required.', success: false };
+
+  const supabase = await createSupabaseServerClient();
+  if (!supabase) return { error: 'Service unavailable.', success: false };
+
+  const { data: order, error: fetchErr } = await supabase
+    .from('orders')
+    .select('id, buyer_id, status')
+    .eq('id', orderId)
+    .maybeSingle();
+
+  if (fetchErr || !order) return { error: 'Order not found.', success: false };
+  if (order.buyer_id !== user.id) return { error: 'Unauthorized.', success: false };
+  if (order.status !== 'pending_payment') {
+    return { error: `Cannot cancel order in status ${order.status}.`, success: false };
+  }
+
+  const nextStatus = transitionOrder('pending_payment', 'cancelled');
+  const { error: updateErr } = await supabase
+    .from('orders')
+    .update({ status: nextStatus })
+    .eq('id', orderId);
+
+  if (updateErr) return { error: updateErr.message, success: false };
+
+  revalidatePath('/marketplace/orders');
+  return { error: null, success: true };
 }

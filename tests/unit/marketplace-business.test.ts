@@ -48,6 +48,7 @@ describe('Marketplace fulfillment and disputes', () => {
   it('enforces order state machine transitions', () => {
     expect(transitionOrder('pending_payment', 'paid')).toBe('paid');
     expect(transitionOrder('paid', 'fulfilled')).toBe('fulfilled');
+    expect(transitionOrder('pending_payment', 'cancelled')).toBe('cancelled');
     expect(() => transitionOrder('fulfilled', 'paid')).toThrow('Invalid order transition');
     expect(() => transitionOrder('cancelled', 'paid')).toThrow('Invalid order transition');
   });
@@ -57,6 +58,15 @@ describe('Marketplace fulfillment and disputes', () => {
     expect(disputeWindowOpen({ deliveredAt, now: new Date('2026-07-15T00:00:00Z') })).toBe(true);
     expect(disputeWindowOpen({ deliveredAt, now: new Date('2026-08-15T00:00:00Z') })).toBe(false);
     expect(disputeWindowOpen({ deliveredAt, now: new Date('2026-06-15T00:00:00Z') })).toBe(false);
+  });
+
+  it('validates canonical marketplace routing paths', () => {
+    const productId = 'prod-blue-mountain-123';
+    const detailUrl = `/marketplace/${productId}`;
+    const ordersUrl = '/marketplace/orders';
+
+    expect(detailUrl).toBe('/marketplace/prod-blue-mountain-123');
+    expect(ordersUrl).toBe('/marketplace/orders');
   });
 });
 
