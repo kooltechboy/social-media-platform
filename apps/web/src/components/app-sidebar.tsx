@@ -22,6 +22,7 @@ import {
   Building2,
   MapPin,
   PlusCircle,
+  Music,
 } from 'lucide-react';
 
 interface NavItem {
@@ -36,7 +37,8 @@ const PRIMARY_NAV: NavItem[] = [
   { href: '/create', label: 'Create Hub', icon: <PlusCircle className="w-4 h-4 text-brand-sunriseCoral" />, badge: 'NEW' },
   { href: '/explore', label: 'Explore & Diaspora', icon: <Compass className="w-4 h-4 text-brand-goldenHour" /> },
   { href: '/map', label: 'Caribbean Map', icon: <MapPin className="w-4 h-4 text-rose-400" /> },
-  { href: '/reels', label: 'Reels & Sounds', icon: <Video className="w-4 h-4 text-pink-400" /> },
+  { href: '/reels', label: 'Reels & Shorts', icon: <Video className="w-4 h-4 text-pink-400" /> },
+  { href: '/sounds', label: 'Caribbean Sounds', icon: <Music className="w-4 h-4 text-rose-400" />, badge: 'NEW' },
   { href: '/live', label: 'Live Streams', icon: <Tv className="w-4 h-4 text-red-400" />, badge: 'LIVE' },
   { href: '/podcasts', label: 'Podcasts Network', icon: <Mic className="w-4 h-4 text-purple-400" /> },
   { href: '/communities', label: 'Diaspora Hubs', icon: <Users className="w-4 h-4 text-cyan-400" /> },

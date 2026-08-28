@@ -1,8 +1,8 @@
 import React from 'react';
-import { Mic, Play, Radio, Rss, ArrowLeft, Volume2, Sparkles, Headphones, CheckCircle, Clock } from 'lucide-react';
+import { Mic, Radio } from 'lucide-react';
 import Link from 'next/link';
 import { createSupabaseServerClient, getCurrentUser } from '../../lib/supabase/server';
-import FollowPodcastButton from '../../components/follow-podcast-button';
+import PodcastNetworkFeed from '../../components/podcasts/podcast-network-feed';
 
 export const dynamic = 'force-dynamic';
 
@@ -202,79 +202,19 @@ export default async function PodcastsPage({
         })}
       </div>
 
-      {/* Podcasts Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
-        {podcasts.map((podcast) => {
-          const epCount = podcast.episodesCount ?? podcast.podcast_episodes?.length ?? 12;
-          return (
-            <article
-              key={podcast.id}
-              className="bg-brand-dusk/80 border border-slate-800/90 hover:border-purple-500/50 rounded-3xl p-6 space-y-4 flex flex-col justify-between transition-all shadow-xl group"
-            >
-              <div className="space-y-3.5">
-                <div className="flex items-center justify-between">
-                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-purple-600 to-indigo-700 flex items-center justify-center text-2xl shadow-lg shadow-purple-500/20">
-                    🎙️
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {podcast.is_paid && (
-                      <span className="text-[10px] font-black px-2.5 py-0.5 rounded-full bg-brand-goldenHour/20 text-amber-300 border border-brand-goldenHour/30">
-                        SpotPay Member Only
-                      </span>
-                    )}
-                    <a
-                      href={`/api/v1/podcasts/${podcast.id}/rss`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      title="iTunes RSS 2.0 Feed"
-                      className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-brand-dusk text-purple-300 border border-purple-500/30 flex items-center gap-1 hover:bg-purple-500/20 transition-colors"
-                    >
-                      <Rss className="w-3 h-3" /> iTunes RSS
-                    </a>
-                  </div>
-                </div>
-
-                <div>
-                  <span className="text-[10px] font-black uppercase tracking-wider text-purple-400 block mb-1">
-                    {podcast.category ?? 'Culture & Society'}
-                  </span>
-                  <h3 className="font-extrabold text-base text-brand-sandstone group-hover:text-purple-300 transition-colors leading-snug">
-                    {podcast.title}
-                  </h3>
-                  <p className="text-xs text-brand-sandstone/60 mt-1">
-                    Hosted by <strong className="text-slate-200">{podcast.profiles?.display_name ?? 'Creator'}</strong> • {epCount} Episodes
-                  </p>
-                </div>
-
-                {podcast.description && (
-                  <p className="text-xs text-slate-300 leading-relaxed line-clamp-2">
-                    {podcast.description}
-                  </p>
-                )}
-              </div>
-
-              {/* Audio Wave Preview Bar & Follow Button */}
-              <div className="pt-3 border-t border-slate-800/80 flex items-center justify-between gap-3">
-                <div className="flex items-center gap-2 text-xs font-bold text-brand-sandstone/60">
-                  <Headphones className="w-4 h-4 text-purple-400" />
-                  <span>{podcast.follower_count.toLocaleString()} Subscribers</span>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <button className="p-2 rounded-xl bg-purple-600/20 hover:bg-purple-600 text-purple-300 hover:text-brand-sandstone border border-purple-500/30 transition-all flex items-center gap-1 text-xs font-bold">
-                    <Play className="w-3.5 h-3.5 fill-current" /> Play Latest
-                  </button>
-                  <FollowPodcastButton
-                    podcastId={podcast.id}
-                    isFollowing={followingSet.has(podcast.id)}
-                    isAuthenticated={!!user}
-                  />
-                </div>
-              </div>
-            </article>
-          );
-        })}
-      </div>
+      {/* Podcasts Grid with Live Audio Player */}
+      <PodcastNetworkFeed
+        podcasts={podcasts as any}
+        user={
+          user
+            ? {
+                id: user.id,
+                displayName: user.displayName,
+                username: user.username,
+              }
+            : null
+        }
+      />
     </div>
   );
 }

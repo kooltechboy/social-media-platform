@@ -60,10 +60,10 @@ const SHOWCASE_LIVE_STREAMS = [
 export default async function LivePage({
   searchParams,
 }: {
-  searchParams?: Promise<{ state?: string; q?: string }>;
+  searchParams?: Promise<{ id?: string; state?: string; q?: string }>;
 }) {
   const resolvedParams = searchParams ? await searchParams : {};
-  const { state: streamState, q } = resolvedParams;
+  const { id: activeId, state: streamState, q } = resolvedParams;
 
   const [user, supabase] = await Promise.all([getCurrentUser(), createSupabaseServerClient()]);
 
@@ -99,7 +99,10 @@ export default async function LivePage({
     }
   }
 
-  const featuredStream = liveStreams.find((s) => s.state === 'live') ?? liveStreams[0];
+  const featuredStream =
+    (activeId ? liveStreams.find((s) => s.id === activeId) : null) ??
+    liveStreams.find((s) => s.state === 'live') ??
+    liveStreams[0];
 
   return (
     <div className="min-h-screen bg-[#090D16] text-brand-sandstone p-4 md:p-6 max-w-7xl mx-auto space-y-8">
@@ -211,30 +214,38 @@ export default async function LivePage({
         </h3>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {liveStreams.map((stream) => (
-            <div
-              key={stream.id}
-              className="bg-brand-dusk/80 border border-slate-800 hover:border-red-500/50 rounded-3xl p-5 transition-all cursor-pointer group shadow-lg space-y-3"
-            >
-              <div className="flex items-center justify-between">
-                <span className={`text-[10px] font-black px-2.5 py-0.5 rounded-full border ${
-                  stream.state === 'live'
-                    ? 'bg-red-500/20 text-red-300 border-red-500/30 animate-pulse'
-                    : 'bg-brand-goldenHour/20 text-amber-300 border-brand-goldenHour/30'
-                }`}>
-                  {stream.state === 'live' ? '🔴 LIVE NOW' : '📅 UPCOMING'}
-                </span>
-                <span className="text-[11px] font-bold text-brand-sandstone/60">{stream.peak_viewers} viewers</span>
-              </div>
-              <h4 className="font-extrabold text-sm text-brand-sandstone leading-snug group-hover:text-brand-caribbeanSea transition-colors line-clamp-2">
-                {stream.title}
-              </h4>
-              <div className="flex items-center justify-between text-xs text-brand-sandstone/60 pt-1 border-t border-slate-800/60">
-                <span>{stream.profiles?.display_name ?? 'Broadcaster'}</span>
-                <span className="text-brand-caribbeanSea font-bold">Watch Stream →</span>
-              </div>
-            </div>
-          ))}
+          {liveStreams.map((stream) => {
+            const isFeatured = stream.id === featuredStream.id;
+            return (
+              <Link
+                key={stream.id}
+                href={`/live?id=${stream.id}`}
+                className={`border rounded-3xl p-5 transition-all cursor-pointer group shadow-lg space-y-3 block ${
+                  isFeatured
+                    ? 'bg-brand-dusk border-red-500/60 ring-2 ring-red-500/20'
+                    : 'bg-brand-dusk/80 border-slate-800 hover:border-red-500/50'
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <span className={`text-[10px] font-black px-2.5 py-0.5 rounded-full border ${
+                    stream.state === 'live'
+                      ? 'bg-red-500/20 text-red-300 border-red-500/30 animate-pulse'
+                      : 'bg-brand-goldenHour/20 text-amber-300 border-brand-goldenHour/30'
+                  }`}>
+                    {stream.state === 'live' ? '🔴 LIVE NOW' : '📅 UPCOMING'}
+                  </span>
+                  <span className="text-[11px] font-bold text-brand-sandstone/60">{stream.peak_viewers.toLocaleString()} viewers</span>
+                </div>
+                <h4 className="font-extrabold text-sm text-brand-sandstone leading-snug group-hover:text-brand-caribbeanSea transition-colors line-clamp-2">
+                  {stream.title}
+                </h4>
+                <div className="flex items-center justify-between text-xs text-brand-sandstone/60 pt-1 border-t border-slate-800/60">
+                  <span>{stream.profiles?.display_name ?? 'Broadcaster'}</span>
+                  <span className="text-brand-caribbeanSea font-bold">{isFeatured ? 'Watching Now ✓' : 'Watch Stream →'}</span>
+                </div>
+              </Link>
+            );
+          })}
         </div>
       </div>
     </div>

@@ -22,6 +22,7 @@ import {
   CheckCircle2,
   Clock,
   Layers,
+  Music,
 } from 'lucide-react';
 import UniversalComposer, { type ComposerMode } from './universal-composer';
 
@@ -86,6 +87,16 @@ const CREATE_TOOLS: CreateTool[] = [
     icon: <Mic className="w-6 h-6 text-purple-400" />,
     directHref: '/podcasts',
     color: 'from-purple-500/20 to-purple-950/40 border-purple-500/30',
+  },
+  {
+    id: 'sound',
+    title: 'Caribbean Sound / Rhythm Stem',
+    description: 'Explore official soca riddims, dancehall stems, and publish original Caribbean audio tracks.',
+    category: 'media',
+    icon: <Music className="w-6 h-6 text-rose-400" />,
+    directHref: '/sounds',
+    badge: 'NEW',
+    color: 'from-rose-500/20 to-amber-950/40 border-rose-500/30',
   },
   {
     id: 'event',
