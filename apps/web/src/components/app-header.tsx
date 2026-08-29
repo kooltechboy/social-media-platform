@@ -99,10 +99,10 @@ export default function AppHeader() {
         <Link
           href="/"
           className="flex items-center gap-2 text-xl font-extrabold tracking-tight text-brand-sandstone focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-caribbeanSea rounded-md"
-          aria-label="ANTILIA — Home"
+          aria-label="TUKUBI — Home"
         >
-          <span className="bg-gradient-to-r from-brand-caribbeanSea via-brand-goldenHour to-brand-sunriseCoral bg-clip-text text-transparent">
-            ANTILIA
+          <span className="bg-gradient-to-r from-brand-caribbeanSea via-brand-goldenHour to-brand-sunriseCoral bg-clip-text text-transparent tracking-wider">
+            TUKUBI
           </span>
           <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-brand-caribbeanSea/20 text-brand-caribbeanSea border border-brand-caribbeanSea/30">
             ECOSYSTEM

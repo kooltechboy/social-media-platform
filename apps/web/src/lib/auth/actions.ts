@@ -110,7 +110,7 @@ export async function setupMfa(userId: string, method: 'authenticator_app' | 'sm
 
   if (method === 'authenticator_app') {
     const secret = crypto.randomBytes(32).toString('base64');
-    const otpauth = `otpauth://totp/Antilia:${userId}?secret=${secret}&issuer=Antilia`;
+    const otpauth = `otpauth://totp/Tukubi:${userId}?secret=${secret}&issuer=Tukubi`;
 
     await supabase.auth.admin.updateUserById(userId, {
       user_metadata: {

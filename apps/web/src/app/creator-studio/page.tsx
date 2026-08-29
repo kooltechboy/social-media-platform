@@ -56,10 +56,10 @@ interface LedgerAccount {
 
 export default async function CreatorStudioPage() {
   const user = await getCurrentUser();
-  if (!user) redirect('/login');
+  if (!user) redirect('/login?next=/creator-studio');
 
   const supabase = await createSupabaseServerClient();
-  if (!supabase) redirect('/login');
+  if (!supabase) redirect('/login?next=/creator-studio');
 
   // Load creator account
   const { data: creatorAccount } = await supabase

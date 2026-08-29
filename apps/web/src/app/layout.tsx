@@ -6,7 +6,7 @@ import { AuthProvider } from '../components/auth-provider';
 import { getCurrentUser } from '../lib/supabase/server';
 
 export const metadata: Metadata = {
-  title: 'ANTILIA - Caribbean Digital Ecosystem & Diaspora Platform',
+  title: 'TUKUBI — Caribbean Digital Ecosystem & Global Diaspora Platform',
   description:
     "The world's premier digital platform for Caribbean people, culture, businesses, creators, and the global diaspora.",
 };

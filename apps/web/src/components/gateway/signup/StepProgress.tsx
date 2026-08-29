@@ -31,7 +31,7 @@ export function StepProgress({ currentStep, totalSteps = 5, backHref }: StepProg
             <span>Back</span>
           </Link>
         ) : (
-          <span className="text-xs text-brand-sandstone/40 font-medium">Join ANTILIA</span>
+          <span className="text-xs text-brand-sandstone/40 font-medium">Join TUKUBI</span>
         )}
 
         <span className="text-[11px] font-bold text-brand-caribbeanSea uppercase tracking-wider">

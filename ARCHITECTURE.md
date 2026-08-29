@@ -1,40 +1,66 @@
 # System Architecture — ANTILIA
 
-## Overview
+## 1. Overview & Ecosystem Topology
+
 ANTILIA is engineered as a modular monorepo combining Next.js 15 (Web), Expo React Native (iOS/Android Mobile), Supabase PostgreSQL with RLS, SpotPay Financial Orchestration, Cloudflare R2/Stream, Redis, and Antilia AI via OpenRouter.
 
 ```
-                               ┌────────────────────────────────────────┐
-                               │            ANTILIA GRAPH               │
-                               │  People • Culture • Geography • Commerce│
-                               └───────────────────┬────────────────────┘
-                                                   │
-         ┌───────────────────┬─────────────────────┼─────────────────────┬───────────────────┐
-         │                   │                     │                     │                   │
-    ┌────┴────┐         ┌────┴────┐           ┌────┴────┐           ┌────┴────┐         ┌────┴────┐
-    │ ANTILIA │         │ ANTILIA │           │ SPOTPAY │           │ BUSINESS│         │ ANTILIA │
-    │ SOCIAL  │         │ STUDIO  │           │ WALLET  │           │   OS    │         │   AI    │
-    └─────────┘         └─────────┘           └─────────┘           └─────────┘         └─────────┘
+                         ANTILIA
+              (Social • Culture • Commerce)
+                            │
+          ┌─────────────────┼─────────────────┐
+          │                 │                 │
+        SOCIAL           COMMERCE          CREATORS
+    (Discovery/Feed)   (Marketplace/Store)  (Tipping/Audio)
+          │                 │                 │
+          └─────────────────┼─────────────────┘
+                            │
+                     ANTILIA CHECKOUT
+                            │
+             ┌──────────────┼──────────────┐
+             │              │              │
+       🟣 SPOTPAY       APPLE PAY      GOOGLE PAY
+     (Fastest/Rec.)         │              │
+             │              ├──────── PAYPAL
+             │              │              │
+             └──── CREDIT / DEBIT (Stripe) ┘
+                            │
+                    PAYMENT LAYER (PSP)
+                            │
+                     MERCHANT / SELLER
 ```
 
-## Runtime Topology
+### The Separation of Roles:
+- **ANTILIA**: The destination where Caribbean people and the diaspora discover, socialize, create, sell, and buy.
+- **SpotPay**: The financial-services platform providing digital wallets, money movement, cross-border transfers, Calypso Card, and card economics.
+- **Brand Tagline:** *ANTILIA: Social • Culture • Commerce — Powered by SpotPay: Money • Payments • Wallet*.
+
+---
+
+## 2. Runtime Topology
 
 ```
 INTERNET → CLOUDFLARE (CDN / WAF / DDoS / Bot) → VERCEL (Next.js web + API routes)
   → Supabase (Postgres + RLS, Auth, Storage, Realtime, Edge Functions)
   → Redis (cache, sessions, rate limits, presence)
   → Cloudflare R2/Stream (media object storage, video, CDN)
-  → PSPs (Stripe / PayPal / Apple IAP / Google Play Billing) via SpotPay
+  → PSPs (Stripe / PayPal / Apple IAP / Google Play Billing / SpotPay Wallet)
   → OpenRouter (CaribAI multi-model routing)
 ```
 
-## Monorepo Layout (`pnpm` + Turborepo) — Actual vs. Planned
+---
 
-**Existing today:**
+## 3. Monorepo Layout (`pnpm` + Turborepo)
+
+**Applications:**
 * `apps/web`: Next.js 15 App Router web application (home feed, explore, reels, live, podcasts, communities, messages, notifications, profile, moderation, admin, creator-studio, events, marketplace, spotpay).
-* `apps/mobile`: Universal Expo React Native application (iOS & Android) — tabbed Home/Explore/Communities/Messages + create.
-* `packages/ui`: Shared React components.
-* `packages/design-system`: Color, typography, spacing, and animation tokens.
+* `apps/mobile`: Universal Expo React Native application (iOS & Android).
+* `apps/admin`: Superadmin and financial operations management.
+* `apps/moderation`: Trust & Safety moderation console.
+
+**Domain Packages:**
+* `packages/ui`: Shared UI components.
+* `packages/design-system`: Caribbean Futurism design tokens.
 * `packages/auth`: Authentication abstraction.
 * `packages/api`: API client layer.
 * `packages/database`: Typed table registry, cursor codec, RLS test harness.
@@ -46,40 +72,29 @@ INTERNET → CLOUDFLARE (CDN / WAF / DDoS / Bot) → VERCEL (Next.js web + API r
 * `packages/trust-safety`: Content risk engine, appeals, report priority.
 * `packages/messaging`: Conversation policy, drafts, receipts.
 * `packages/media`: Surface limits, processing state machine, signed URLs.
-* `packages/creator`: Subscription tiers, revenue waterfall, payout gates.
+* `packages/creator`: Subscription tiers, fee waterfall, affiliate referrals.
 * `packages/live`: Stream state machine, access policy, gift catalog.
 * `packages/podcasts`: Episode validation, RSS builder.
-* `packages/spotpay`: Money, capability-matrix Payment Policy Engine, intents, provider registry, webhooks, double-entry ledger.
-* `packages/business`: Profiles, reviews, bookings, capacity.
-* `packages/marketplace`: Pricing, disputes, order state machine.
+* `packages/spotpay`: Money minor units, MonetizationEngine, SELLER_PLANS, double-entry ledger, capability matrix.
+* `packages/business`: Profiles, reviews, bookings, capacity, seller tier upgrades.
+* `packages/marketplace`: Pricing, disputes, order state machine, affiliate splits.
 * `packages/advertising`: Campaigns, metrics, pacing, privacy-aware targeting.
 * `packages/analytics`: Event taxonomy + pipeline.
 * `packages/notifications`: Templates + batched fan-out.
-* `packages/ai`: OpenRouter abstraction (CaribAI), Ask Caribbean planner.
+* `packages/ai`: CaribAIEngine, BusinessAIAssistant (grounding engine), Creator AI assist.
 
-**Planned (per-phase; see `docs/IMPLEMENTATION-ROADMAP.md`):**
-* `apps/business-studio` (Phase 7 production hardening), `apps/marketing` (deferred).
+---
 
-## Domain Architecture
-Each domain owns its business rules; see `docs/architecture/domain-architecture.md` for the domain map and extraction boundaries.
+## 4. Key Architecture Documents
 
-## Database & RLS Protocol
-* Database: Supabase PostgreSQL.
-* Security: Every table enforces Row Level Security (RLS) — verified by tests, not assumption.
-* Migrations: Managed via versioned SQL files under `supabase/migrations/`. Direct DDL is forbidden.
-* Schema inventory and evolution plan: `docs/architecture/database-architecture.md`.
-
-## Key Architecture Documents
 | Topic | Document |
 | :--- | :--- |
-| Payments & ledger | `PAYMENT-ARCHITECTURE.md` |
-| Threat model | `THREAT-MODEL.md` |
+| Payments & Ledger | `PAYMENT-ARCHITECTURE.md` |
+| Product Requirements | `PRODUCT-REQUIREMENTS.md` |
+| Threat Model | `THREAT-MODEL.md` |
 | Trust & Safety | `TRUST-SAFETY.md` |
-| Design system | `DESIGN-SYSTEM.md` |
-| Product requirements | `PRODUCT-REQUIREMENTS.md` |
-| Geographic model | `docs/architecture/geographic-data-model.md` |
-| Mobile / creator / media | `docs/architecture/mobile-architecture.md`, `docs/architecture/creator-media-architecture.md` |
-| AI / search / feed | `docs/architecture/intelligence-architecture.md` |
-| API & events | `docs/architecture/api-event-architecture.md` |
-| Analytics & observability | `docs/architecture/analytics-observability.md` |
-| ADRs | `docs/adr/INDEX.md` |
+| Design System | `DESIGN-SYSTEM.md` |
+| Geographic Model | `docs/architecture/geographic-data-model.md` |
+| Mobile & Creator Media | `docs/architecture/mobile-architecture.md` |
+| AI & Intelligence | `docs/architecture/intelligence-architecture.md` |
+| Implementation Roadmap | `docs/IMPLEMENTATION-ROADMAP.md` |

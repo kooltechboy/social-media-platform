@@ -67,6 +67,8 @@ export async function getAdminSession(): Promise<AdminUser | null> {
         return null; // Not authorized as admin
       }
       role = account.role;
+    } else {
+      return null; // No account record — user has no admin privileges
     }
   }
 

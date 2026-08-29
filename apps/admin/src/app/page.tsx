@@ -68,7 +68,7 @@ export default async function AdminDashboardPage() {
       {/* Sidebar */}
       <aside className="hidden lg:flex flex-col w-60 bg-[#0F172A] border-r border-slate-800 p-4 space-y-1 min-h-screen sticky top-0">
         <div className="px-2 py-4 mb-2">
-          <h1 className="text-sm font-extrabold text-brand-sandstone">ANTILIA</h1>
+          <h1 className="text-sm font-extrabold text-brand-sandstone tracking-wider">TUKUBI</h1>
           <p className="text-[11px] text-rose-300 font-semibold mt-0.5">Admin Console</p>
         </div>
         {NAV.map((item) => (

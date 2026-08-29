@@ -27,7 +27,7 @@ export default function AccessDenied({
           href="/"
           className="flex items-center gap-2 text-slate-400 hover:text-brand-sandstone text-sm font-semibold transition-colors"
         >
-          <ArrowLeft className="w-4 h-4" /> Return to Antilia
+          <ArrowLeft className="w-4 h-4" /> Return to Tukubi
         </Link>
         <span className="text-xs font-mono font-semibold px-2.5 py-1 rounded-full border border-rose-500/30 bg-rose-500/10 text-rose-300">
           HTTP 403 · FORBIDDEN
@@ -99,7 +99,7 @@ export default function AccessDenied({
             href="/explore"
             className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-xs font-semibold text-brand-sandstone bg-brand-dusk border border-slate-700 hover:border-slate-600 transition-colors"
           >
-            <Compass className="w-4 h-4" /> Explore Antilia
+            <Compass className="w-4 h-4" /> Explore Tukubi
           </Link>
           <Link
             href="/login"
@@ -112,7 +112,7 @@ export default function AccessDenied({
 
       {/* Footer Note */}
       <footer className="border-t border-slate-800/80 px-6 py-4 text-center text-xs text-brand-sandstone/40">
-        Antilia Trust &amp; Safety · Every access attempt and administrative action is audited.
+        TUKUBI Trust &amp; Safety · Every access attempt and administrative action is audited.
       </footer>
     </div>
   );

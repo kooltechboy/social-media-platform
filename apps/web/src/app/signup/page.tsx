@@ -144,7 +144,7 @@ export default function SignupIntentPage() {
 
         <div className="mb-6">
           <h2 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
-            What brings you to Antilia?
+            What brings you to Tukubi?
           </h2>
           <p className="text-xs sm:text-sm text-brand-sandstone/60 mt-1">
             Choose your primary experience. You can unlock all features anytime.

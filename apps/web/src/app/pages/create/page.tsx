@@ -149,7 +149,7 @@ export default function CreatePageWizard() {
             {pageName} is Officially Published!
           </h2>
           <p className="text-xs md:text-sm text-brand-sandstone/60 max-w-md">
-            Your verified Caribbean Page is live on the Antilia network with instant SpotPay storefront and community reach.
+            Your verified Caribbean Page is live on the Tukubi network with instant SpotPay storefront and community reach.
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -193,7 +193,7 @@ export default function CreatePageWizard() {
       {step === 1 && (
         <div className="space-y-4">
           <p className="text-xs text-brand-sandstone/60">
-            Choose the entity class that best represents your organization or brand on Antilia:
+            Choose the entity class that best represents your organization or brand on Tukubi:
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
             {PAGE_TYPE_OPTIONS.map((opt) => (
@@ -343,7 +343,7 @@ export default function CreatePageWizard() {
             </h3>
             <div className="flex items-center justify-between p-3.5 rounded-2xl bg-brand-twilight border border-slate-800">
               <div>
-                <p className="text-xs font-bold text-brand-sandstone">Enable Antilia Storefront</p>
+                <p className="text-xs font-bold text-brand-sandstone">Enable Tukubi Storefront</p>
                 <p className="text-[11px] text-brand-sandstone/60">
                   Allows selling physical goods, digital assets, tickets, and services directly on your Page.
                 </p>

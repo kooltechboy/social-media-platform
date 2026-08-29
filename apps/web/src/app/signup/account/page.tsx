@@ -142,7 +142,7 @@ export default function SignupAccountPage() {
             Create Your Identity
           </h2>
           <p className="text-xs sm:text-sm text-brand-sandstone/60 mt-1">
-            Your credentials generate your official Antilia Cultural Passport.
+            Your credentials generate your official Tukubi Cultural Passport.
           </p>
         </div>
 
@@ -190,7 +190,7 @@ export default function SignupAccountPage() {
           <div className="space-y-1">
             <div className="flex items-center justify-between">
               <label htmlFor="username" className="block text-[11px] font-semibold text-brand-sandstone/80">
-                Antilia Handle (@username)
+                Tukubi Handle (@username)
               </label>
               {usernameChecking && (
                 <span className="text-[10px] text-brand-sandstone/50 animate-pulse">Checking…</span>
@@ -355,13 +355,13 @@ export default function SignupAccountPage() {
             <div className="pt-2 animate-fadeIn">
               <p className="text-[10px] font-bold text-brand-goldenHour uppercase tracking-wider mb-2 flex items-center gap-1">
                 <Sparkles className="w-3 h-3 text-brand-sunriseCoral" />
-                Live Antilia Passport Preview
+                Live Tukubi Passport Preview
               </p>
               <AntiliaCulturalPassport
                 displayName={firstName || lastName ? `${firstName} ${lastName}`.trim() : 'Daniel Williams'}
                 username={username || 'username'}
                 originCountryName={session.originCountryName || 'Caribbean'}
-                originCountryIso={session.originCountryIso || 'ANT'}
+                originCountryIso={session.originCountryIso || 'TKB'}
                 originFlag={session.originFlag || '🌴'}
                 diasporaCountryName={session.diasporaCountryName || (session.isDiaspora ? 'Global Diaspora' : 'Caribbean Basin')}
                 diasporaFlag={session.diasporaFlag || '🌎'}

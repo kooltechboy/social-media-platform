@@ -74,7 +74,7 @@ export default async function NotificationsPage() {
           <Bell className="w-8 h-8 text-brand-caribbeanSea mx-auto mb-3" />
           <h1 className="text-lg font-bold text-brand-sandstone mb-2">Notifications</h1>
           <p className="text-sm text-brand-sandstone/60 mb-4">Sign in to see your notifications.</p>
-          <Link href="/login" className="inline-block bg-brand-caribbeanSea hover:bg-brand-caribbeanSea text-slate-950 font-bold px-5 py-2 rounded-full text-xs transition-colors">
+          <Link href="/login?next=/notifications" className="inline-block bg-brand-caribbeanSea hover:bg-brand-caribbeanSea text-slate-950 font-bold px-5 py-2 rounded-full text-xs transition-colors">
             Sign In
           </Link>
         </div>

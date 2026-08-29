@@ -17,10 +17,10 @@ interface ProfileRow {
 
 export default async function SettingsPage() {
   const user = await getCurrentUser();
-  if (!user) redirect('/login');
+  if (!user) redirect('/login?next=/settings');
 
   const supabase = await createSupabaseServerClient();
-  if (!supabase) redirect('/login');
+  if (!supabase) redirect('/login?next=/settings');
 
   const { data: profile } = await supabase
     .from('profiles')
@@ -28,7 +28,7 @@ export default async function SettingsPage() {
     .eq('id', user.id)
     .maybeSingle();
 
-  if (!profile) redirect('/login');
+  if (!profile) redirect('/login?next=/settings');
 
   const profileRow = profile as unknown as ProfileRow;
 

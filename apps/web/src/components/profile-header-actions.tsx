@@ -18,12 +18,12 @@ export default function ProfileHeaderActions({
   const [copied, setCopied] = useState(false);
 
   const handleShare = async () => {
-    const url = typeof window !== 'undefined' ? window.location.href : `https://caribbeanone.com/profile/${username}`;
+    const url = typeof window !== 'undefined' ? window.location.href : `https://tukubi.com/profile/${username}`;
     if (navigator.share) {
       try {
         await navigator.share({
-          title: `@${username} on Antilia`,
-          text: `Check out @${username}'s Caribbean profile on Antilia`,
+          title: `@${username} on Tukubi`,
+          text: `Check out @${username}'s Caribbean profile on Tukubi`,
           url,
         });
         return;

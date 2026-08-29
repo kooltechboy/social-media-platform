@@ -83,7 +83,7 @@ export default async function ProfilePage({
           </div>
           <h2 className="text-lg font-black text-brand-sandstone">Member Profile Not Found</h2>
           <p className="text-xs text-brand-sandstone/60 leading-relaxed">
-            The profile &quot;@{decodedParam}&quot; could not be located on the Antilia Network. The username may have changed or the profile may be private.
+            The profile &quot;@{decodedParam}&quot; could not be located on the Tukubi Network. The username may have changed or the profile may be private.
           </p>
           <div className="pt-2 flex items-center justify-center gap-3">
             <Link

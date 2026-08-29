@@ -67,7 +67,7 @@ export function SignInForm() {
           Welcome back
         </h2>
         <p className="text-xs sm:text-sm text-brand-sandstone/70 mt-1">
-          Sign in to your Antilia account
+          Sign in to your Tukubi account
         </p>
       </div>
 
@@ -213,7 +213,7 @@ export function SignInForm() {
       {/* ── Create Account & Explore First Links ── */}
       <div className="mt-6 pt-5 border-t border-white/10 space-y-3 text-center">
         <p className="text-xs text-brand-sandstone/80">
-          New to Antilia?{' '}
+          New to Tukubi?{' '}
           <Link
             href="/signup"
             className="font-bold text-transparent bg-clip-text bg-gradient-to-r from-brand-caribbeanSea to-brand-sunriseCoral hover:underline underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-caribbeanSea rounded-md px-1"
@@ -228,7 +228,7 @@ export function SignInForm() {
             className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold text-brand-sandstone/90 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 transition-all hover:border-brand-goldenHour/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-caribbeanSea"
           >
             <Compass className="w-3.5 h-3.5 text-brand-goldenHour" />
-            <span>Explore Antilia First →</span>
+            <span>Explore Tukubi First →</span>
           </Link>
         </div>
       </div>

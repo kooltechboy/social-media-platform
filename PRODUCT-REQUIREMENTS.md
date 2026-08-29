@@ -1,7 +1,11 @@
 # Product Requirements — ANTILIA
 
 > **North Star:** The digital home of the Caribbean and its global diaspora.
-> Not "Facebook for the Caribbean" — a five-system ecosystem: Antilia Social, Antilia Graph, Antilia Studio, Business OS, Antilia AI, unified by SpotPay by Antilia.
+> **ANTILIA** = Where people discover, socialize, create, sell, and buy.
+> **SpotPay** = How people move and spend money (financial-services platform, digital wallet, send/receive, cross-border transfers, Calypso Card, cards with Apple Pay & Google Pay).
+> Visual Brand Identity: **ANTILIA (Social • Culture • Commerce) — Powered by SpotPay (Money • Payments • Wallet)**.
+
+---
 
 ## 1. Problem Statement
 
@@ -9,75 +13,124 @@ Caribbean people and the diaspora (est. 40M+ globally incl. 10M+ in the US, Cana
 - have no model of Caribbean identity, culture, or diaspora relationships;
 - bury Caribbean content under global engagement algorithms;
 - fragment discovery of Caribbean businesses, events, creators, and music;
-- offer creators and businesses no economically coherent regional ecosystem.
+- impose high cross-border friction on commerce and payments.
 
-## 2. Target Users (Personas)
+---
 
-| Persona | Location | Needs |
-| :--- | :--- | :--- |
-| **Maria** (diaspora anchor) | Born Kingston, lives Brooklyn | Jamaican creators, Brooklyn Caribbean events, Kingston news, nearby Caribbean restaurants, family content. |
-| **Dwayne** (creator) | Port of Spain | Monetize soca content; subscriptions, tips, live gifts; analytics; payouts to TT. |
-| **Ana** (business owner) | Santo Domingo | Business profile, menu/photos, bookings, messaging, ads targeting DR + diaspora in NY. |
-| **Kofi** (community builder) | Toronto | "Jamaicans in Toronto" community: posts, events, moderation, eventually paid membership. |
-| **Leah** (student) | Bridgetown | Free, fast, mobile-first social + discovery; Carnival, events, music. |
+## 2. Strategic Ecosystem Architecture: ANTILIA × SpotPay
 
-## 3. Product Pillars (Priority Order for MVP)
+```
+                         ANTILIA
+               (Social • Culture • Commerce)
+                            │
+          ┌─────────────────┼─────────────────┐
+          │                 │                 │
+        SOCIAL           COMMERCE          CREATORS
+          │                 │                 │
+          └─────────────────┼─────────────────┘
+                            │
+                     ANTILIA CHECKOUT
+                            │
+             ┌──────────────┼──────────────┐
+             │              │              │
+       🟣 SPOTPAY       APPLE PAY      GOOGLE PAY
+     (Fastest/Rec.)         │              │
+             │              ├──────── PAYPAL
+             │              │              │
+             └──── CREDIT / DEBIT (Stripe) ┘
+                            │
+                    PAYMENT LAYER (PSP)
+                            │
+                     MERCHANT / SELLER
+```
 
-1. **Identity & Caribbean Graph** — profiles with optional country/island/city/parish/language/diaspora connections; privacy-controlled.
-2. **Social** — posts, photos, comments, reactions, follows/friends, feed (multi-mode), search, notifications.
-3. **Communities** — public/private/invite-only groups with moderation.
-4. **Messaging** — DMs, group chats, media (Phase 3).
-5. **Creator OS** — creator profiles, reels, stories, live, podcasts, subscriptions, tips, payouts (phased).
-6. **Business OS** — business profiles, reviews, offers, bookings, advertising (phased).
-7. **SpotPay** — wallet, payment orchestration, capability matrix, compliant store routing.
-8. **CaribAI** — Ask Caribbean search, translation (en/es/fr/ht/nl/pap), recommendations, moderation assist.
+### Three Distinct, Synergistic Businesses:
+1. **Business #1 — ANTILIA (Social & Commerce Platform):**
+   - Monetization: Subscriptions (Business Free $0, Seller Pro $14.99/mo, Business+ $39.99/mo, Enterprise), Advertising, Featured Listings, Creator AI Tools.
+   - Proposition: *"ANTILIA doesn't take a percentage of your product sales on eligible Seller plans."*
+2. **Business #2 — SpotPay (Financial Infrastructure):**
+   - Financial services platform (not a bank) providing digital wallet, send/receive, international transfers, Calypso Card, and card economics with Apple Pay/Google Pay.
+   - Revenue: Payment processing, card interchange, FX, cross-border transfers, merchant/payout services.
+3. **Business #3 — The ANTILIA × SpotPay Network:**
+   - Closed-loop economic network: ANTILIA acquires users/merchants; SpotPay powers frictionless, instant within-ecosystem money movement (peer transfers, creator tips, shopping, event tickets, withdrawals).
 
-## 4. MVP Scope (Phase 2 Exit Criteria)
+---
 
-- Registration/login (email + OAuth), MFA-ready, sessions.
-- Profiles: avatar, bio, location (private by default), Caribbean connection, interests.
-- Follow/friend, block, mute.
-- Posts: text + images; comments; reactions.
-- Feed modes: Following, Latest, Caribbean (curated by graph signals).
-- Basic search (profiles, posts, communities).
-- Communities: create/join/post/moderate.
-- Notifications: in-app first.
-- Basic moderation: report, queue, admin actions.
-- i18n scaffold: en/es/fr/ht/nl/pap translation keys, no hard-coded strings.
+## 3. Product Pillars
 
-**Explicitly out of MVP:** marketplace, advertising platform, live streaming, podcasts, payouts, AI search.
+1. **Identity & Caribbean Graph** — profiles with country/island/parish/diaspora connections; privacy-controlled by default.
+2. **Social & Moments** — posts, photos, video reels, comments, reactions, multi-mode feed, search, notifications.
+3. **Communities** — public/private diaspora groups with community moderation.
+4. **Messaging** — end-to-end encrypted DMs and group chats.
+5. **Creator OS** — reels, podcasts, live streaming, creator subscriptions, tipping, and instant SpotPay wallet liquidity.
+6. **Business OS & Digital Storefronts** — verified merchant profiles, catalog ordering, bookings, reviews, and AI Business Concierge.
+7. **SpotPay Unified Checkout** — multimodal checkout with `🟣 Pay with SpotPay` as the preferred/fastest rail alongside Apple Pay, Google Pay, PayPal, and Cards.
+8. **CaribAI** — Grounded "Ask This Business" AI assistant, dialect translation (Patois/Creole/Spanish/Kreyòl), and content planning.
 
-## 5. Key Non-Functional Requirements
+---
+
+## 4. Checkout Experience & Payment Method Abstraction
+
+At ANTILIA checkout, users experience frictionless payment choice:
+
+```
+Choose how you want to pay
+
+🟣 Pay with SpotPay                       [ FASTEST • RECOMMENDED ]
+   Pay instantly from your SpotPay balance ($850.00). Zero FX markups.
+   Funds stay liquid to send to friends, tip creators, or buy next!
+
+Or choose another supported payment method:
+ Apple Pay            G Pay Google Pay
+💳 Card (Visa/MC)      P PayPal
+```
+
+- **Runtime Capability Discovery:** Payment methods are resolved at runtime via `psp_capabilities` rather than hardcoding regional banking integrations.
+- **Transparent Processing Costs:** ANTILIA charges zero percentage commission on Seller Pro; payment processing pass-through fees (e.g. 2.9% + 30¢ on card rails) are transparently disclosed.
+
+---
+
+## 5. Creator & Merchant Liquidity Lifecycle
+
+```
+Creator/Merchant Earns:
+      │
+      ▼
+$1,000 in SpotPay Account
+      │
+      ├── Send $100 to Family in Jamaica (Instant P2P)
+      ├── Tip $25 to a Collaborating Creator
+      ├── Buy $200 of Artisanal Caribbean Goods from a Dominican Merchant
+      ├── Pay $50 Utility / Mobile Bill
+      └── Withdraw $625 to Bank Account / Spend via Calypso Card
+```
+
+---
+
+## 6. Onboarding & Account Linking
+
+- **Connect SpotPay Step:** Optional, high-value connection flow:
+  *"Connect your SpotPay wallet to unlock faster payments, creator tips, marketplace purchases and instant cross-border transfers. [Connect] [Skip for now]"*
+- **No Merchant Friction:** Merchants are never forced to use a single wallet; ANTILIA enables them to accept whatever payment methods their customers prefer.
+
+---
+
+## 7. Key Non-Functional Requirements
 
 | Area | Requirement |
 | :--- | :--- |
-| Security | RLS on every client-accessible table; OWASP; MFA/passkeys; secrets management. |
-| Privacy | Caribbean identity fields optional & private by default; inferred attributes never exposed as facts; GDPR-class data export/deletion. |
-| Performance | Core Web Vitals "good" on mid-range Android; feed TTI < 3s on 3G-class connections. |
-| Accessibility | WCAG 2.2 AA part of Definition of Done. |
-| Availability | 99.9% app tier; zero tolerance for ledger inconsistency (see PAYMENT-ARCHITECTURE.md). |
-| Scale | Architect for 100M; build/deploy for 10K initial. |
+| **Security** | RLS on every table; double-entry ledger invariant ($\sum \text{Debit} = \sum \text{Credit}$); OWASP compliance; secrets isolation. |
+| **Store Policy** | Zero bypass of Apple §3.1.1 or Google Play Billing; digital subscriptions on mobile route via IAP/Play Billing. |
+| **Privacy** | Cultural and geographic identity private by default; user-controlled visibility. |
+| **Performance** | Sub-3s TTI on mobile web; responsive UI across iOS, Android, and Desktop. |
+| **Availability** | 99.9% uptime with idempotent transaction processing. |
 
-## 6. Success Metrics (Launch → 12 months)
+---
 
-- Activation: % registrations completing profile with Caribbean connection ≥ 60%.
-- Retention: D30 ≥ 25% in launch geographies.
-- Density: ≥ 3 communities joined per active WAU.
-- Creation: ≥ 15% WAU creating content weekly.
-- Creator: 100 paid creators by month 9 (Phase 6+).
+## 8. Detailed References
 
-## 7. Launch Strategy (Geographic Density First)
-
-1. **Stage 1:** Dominican Republic + DR diaspora (NY/NJ/Miami).
-2. **Stage 2:** Jamaica, Trinidad & Tobago, Barbados, Bahamas, Haiti.
-3. **Stage 3:** US/Canada/UK diaspora hubs at scale.
-4. **Stage 4:** Global Caribbean network.
-
-Recruit before acquiring: creators, musicians, restaurants, businesses, athletes, community leaders, universities, event organizers.
-
-## 8. Detailed requirements
-
-- Geographic model: see `docs/architecture/geographic-data-model.md`.
-- Monetization: see `docs/architecture/monetization-model.md`.
-- Payment flows: see `PAYMENT-ARCHITECTURE.md`.
-- Roadmap phasing: see `docs/IMPLEMENTATION-ROADMAP.md`.
+- Geographic Data Model: `docs/architecture/geographic-data-model.md`
+- Monetization Engine: `supabase/migrations/00028_monetization_seller_plans_affiliates.sql`
+- SpotPay Architecture: `PAYMENT-ARCHITECTURE.md`
+- System Architecture: `ARCHITECTURE.md`
+- Implementation Roadmap: `docs/IMPLEMENTATION-ROADMAP.md`

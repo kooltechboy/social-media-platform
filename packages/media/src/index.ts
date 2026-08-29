@@ -41,7 +41,55 @@ export function storyExpiry(from: Date = new Date()): Date {
   return new Date(from.getTime() + STORY_TTL_MS);
 }
 
+export interface MagicByteSignature {
+  mime: string;
+  bytes: number[];
+  offset?: number;
+  mask?: number[];
+}
+
+export const KNOWN_SIGNATURES: MagicByteSignature[] = [
+  // JPEG: FF D8 FF
+  { mime: 'image/jpeg', bytes: [0xff, 0xd8, 0xff] },
+  // PNG: 89 50 4E 47 0D 0A 1A 0A
+  { mime: 'image/png', bytes: [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a] },
+  // GIF: 47 49 46 38
+  { mime: 'image/gif', bytes: [0x47, 0x49, 0x46, 0x38] },
+  // WEBP: RIFF....WEBP (offset 0: 'RIFF', offset 8: 'WEBP')
+  { mime: 'image/webp', bytes: [0x52, 0x49, 0x46, 0x46] },
+  // MP4 / MOV / ISO base media: offset 4 'ftyp'
+  { mime: 'video/mp4', bytes: [0x66, 0x74, 0x79, 0x70], offset: 4 },
+  // MP3: ID3
+  { mime: 'audio/mp3', bytes: [0x49, 0x44, 0x33] },
+  // WAV: RIFF....WAVE
+  { mime: 'audio/wav', bytes: [0x52, 0x49, 0x46, 0x46] },
+];
+
 export class MediaPipeline {
+  /**
+   * Validates file header magic bytes against expected MIME type.
+   * Prevents malicious file extension spoofing (e.g. .exe disguised as .jpg).
+   */
+  public validateMagicBytes(header: Uint8Array | number[]): { valid: boolean; detectedMime?: string } {
+    const bytes = Array.from(header);
+    for (const sig of KNOWN_SIGNATURES) {
+      const offset = sig.offset ?? 0;
+      if (bytes.length < offset + sig.bytes.length) continue;
+      
+      let matches = true;
+      for (let i = 0; i < sig.bytes.length; i++) {
+        if (bytes[offset + i] !== sig.bytes[i]) {
+          matches = false;
+          break;
+        }
+      }
+      if (matches) {
+        return { valid: true, detectedMime: sig.mime };
+      }
+    }
+    return { valid: false };
+  }
+
   public validateUpload(kind: MediaKind, surface: MediaSurface, sizeBytes: number): { valid: boolean; errors: string[] } {
     const errors: string[] = [];
     const limits = SURFACE_LIMITS[surface];

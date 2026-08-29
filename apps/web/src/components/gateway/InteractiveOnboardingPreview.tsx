@@ -33,7 +33,7 @@ export function InteractiveOnboardingPreview() {
             Progressive Onboarding Architecture
           </span>
           <h3 className="text-xl sm:text-2xl font-black text-white tracking-tight">
-            How You Enter Antilia
+            How You Enter Tukubi
           </h3>
           <p className="text-xs text-brand-sandstone/60">
             A 5-step identity onboarding system designed to calibrate your personal cultural network.
@@ -89,8 +89,8 @@ export function InteractiveOnboardingPreview() {
               <span className="text-[10px] font-bold text-brand-caribbeanSea uppercase tracking-wider">Step 1</span>
               <div className="w-2 h-2 rounded-full bg-brand-caribbeanSea" />
             </div>
-            <h4 className="font-extrabold text-sm text-white leading-tight mb-1">
-              What brings you to Antilia?
+            <h4 className="text-base font-extrabold text-white">
+              What brings you to Tukubi?
             </h4>
             <p className="text-[10px] text-brand-sandstone/60 mb-3">
               Calibrate your platform account type.
@@ -280,7 +280,7 @@ export function InteractiveOnboardingPreview() {
               Your Caribbean is Ready!
             </h4>
             <p className="text-[10px] text-brand-sandstone/60 mb-2">
-              Antilia Cultural Passport Issued.
+              Tukubi Cultural Passport Issued.
             </p>
 
             <div className="p-3 rounded-2xl bg-gradient-to-br from-emerald-500/20 to-teal-700/20 border border-emerald-500/40 text-center space-y-1 my-2">
@@ -294,7 +294,7 @@ export function InteractiveOnboardingPreview() {
             href="/signup"
             className="w-full py-2 rounded-xl text-center font-bold text-[11px] bg-gradient-to-r from-emerald-400 to-brand-caribbeanSea text-slate-950 mt-3 block"
           >
-            Join Antilia Now →
+            Join Tukubi Now →
           </Link>
         </div>
       </div>

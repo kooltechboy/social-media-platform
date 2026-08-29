@@ -104,7 +104,7 @@ export default function LiveHostStudio({ user }: LiveHostStudioProps) {
 
   // Chat & Reactions
   const [chatMessages, setChatMessages] = useState<HostChatMessage[]>([
-    { id: '1', sender_name: 'Antilia System', body: 'Studio ready. Click "Go Live Now" to broadcast.', isHost: false, time: 'Just now' },
+    { id: '1', sender_name: 'Tukubi System', body: 'Studio ready. Click "Go Live Now" to broadcast.', isHost: false, time: 'Just now' },
   ]);
   const [chatInput, setChatInput] = useState('');
   const [reactions, setReactions] = useState<FloatingReaction[]>([]);
@@ -360,7 +360,7 @@ export default function LiveHostStudio({ user }: LiveHostStudioProps) {
       setChatMessages([
         {
           id: 'welcome',
-          sender_name: 'Antilia Broadcaster',
+          sender_name: 'Tukubi Broadcaster',
           body: `🔴 BROADCAST LIVE: "${title}" is now streaming across the Caribbean & Diaspora!`,
           isHost: true,
           time: 'Just now',

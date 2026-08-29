@@ -519,7 +519,7 @@ test.describe('Feed Stream — Unauthenticated Access Banner', () => {
     await page.waitForLoadState('networkidle');
 
     // The "Antilia Community Access" heading should be visible
-    await expect(page.getByText('Antilia Community Access')).toBeVisible();
+    await expect(page.getByText(/(Tukubi|Antilia) Community Access/)).toBeVisible();
 
     // The Sign In / Register link should point to /login
     const signInLink = page.getByRole('link', { name: 'Sign In / Register' });

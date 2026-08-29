@@ -35,7 +35,7 @@ export default async function AdminPage() {
         user={auth.user}
         requiredRole="admin"
         currentRole={auth.role}
-        resourceName="the Antilia Admin Console"
+        resourceName="the Tukubi Admin Console"
       />
     );
   }

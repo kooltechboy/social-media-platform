@@ -67,10 +67,10 @@ function methodLabel(method: PaymentMethod): string {
 
 export default async function SpotPayPage() {
   const user = await getCurrentUser();
-  if (!user) redirect('/login');
+  if (!user) redirect('/login?next=/spotpay');
 
   const supabase = await createSupabaseServerClient();
-  if (!supabase) redirect('/login');
+  if (!supabase) redirect('/login?next=/spotpay');
 
   const [accountsResult, methodsResult] = await Promise.all([
     supabase
@@ -137,9 +137,13 @@ export default async function SpotPayPage() {
         <div>
           <h1 className="text-2xl md:text-3xl font-black text-brand-sandstone flex items-center gap-3">
             <Wallet className="w-8 h-8 text-brand-sunriseCoral" /> SpotPay Financial Hub
+            <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30 uppercase tracking-wider">Early Access</span>
           </h1>
           <p className="text-sm text-brand-sandstone/60 mt-1">
             Double-entry ledger wallet, payment methods, and transaction history.
+          </p>
+          <p className="text-[11px] text-amber-400/70 mt-1 flex items-center gap-1">
+            <ShieldCheck className="w-3 h-3" /> SpotPay is in Early Access. Features are evolving and not yet a licensed financial service.
           </p>
         </div>
         <SpotPayHubActions walletBalanceFormatted={walletMoney.format()} />

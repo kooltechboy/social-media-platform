@@ -73,7 +73,7 @@ export default function CreateMomentModal({
 
   async function uploadMedia(): Promise<string> {
     if (!file) throw new Error('No media selected');
-    setProgressText('Uploading to Antilia Moment Cloud...');
+    setProgressText('Uploading to Tukubi Moment Cloud...');
 
     const supabase = createSupabaseBrowserClient();
     const ext = file.name.split('.').pop() || (mediaKind === 'video' ? 'mp4' : 'jpg');

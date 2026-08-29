@@ -1,7 +1,7 @@
 /**
  * Diaspora Hubs & Countries Constants
  *
- * ANTILIA platform — Caribbean Futurism design system
+ * TUKUBI platform — Caribbean Futurism design system
  * Global Caribbean diaspora population centers.
  */
 

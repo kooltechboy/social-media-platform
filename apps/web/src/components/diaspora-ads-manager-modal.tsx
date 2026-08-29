@@ -37,7 +37,7 @@ const INTERESTS = [
 export default function DiasporaAdsManagerModal({
   isOpen,
   onClose,
-  advertiserName = 'Antilia Business',
+  advertiserName = 'Tukubi Business',
 }: DiasporaAdsManagerModalProps) {
   const [selectedOrigin, setSelectedOrigin] = useState(ISLAND_ORIGINS[0].code);
   const [selectedMetro, setSelectedMetro] = useState(DIASPORA_METROS[0].id);
@@ -90,7 +90,7 @@ export default function DiasporaAdsManagerModal({
             <Target className="w-5 h-5" />
           </div>
           <div>
-            <h3 className="font-black text-base text-white">Antilia Diaspora Ads Manager</h3>
+            <h3 className="font-black text-base text-white">Tukubi Diaspora Ads Manager</h3>
             <p className="text-xs text-slate-400">Target Caribbean audiences across North America, UK & Homeland</p>
           </div>
         </div>

@@ -167,13 +167,13 @@ export function AntiliaMasterGateway() {
           <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-brand-caribbeanSea via-brand-goldenHour to-brand-sunriseCoral p-[1.5px] shadow-xl shadow-brand-caribbeanSea/35">
             <div className="w-full h-full bg-[#0A1428] rounded-2xl flex items-center justify-center">
               <span className="font-black text-transparent bg-clip-text bg-gradient-to-tr from-brand-caribbeanSea to-brand-goldenHour text-xl">
-                A
+                T
               </span>
             </div>
           </div>
           <div>
             <span className="text-xl sm:text-2xl font-black tracking-tight text-white font-serif">
-              ANTILIA
+              TUKUBI
             </span>
             <span className="block text-[9px] uppercase font-extrabold tracking-[0.25em] text-brand-caribbeanSea">
               Global Caribbean Network
@@ -209,7 +209,7 @@ export function AntiliaMasterGateway() {
             className="hidden sm:inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-black bg-gradient-to-r from-brand-caribbeanSea to-brand-sunriseCoral text-[#060A12] hover:opacity-95 transition-all shadow-lg shadow-brand-caribbeanSea/30 active:scale-95"
           >
             <UserPlus className="w-3.5 h-3.5" />
-            <span>Join Antilia</span>
+            <span>Join Tukubi</span>
           </Link>
         </div>
       </header>
@@ -342,9 +342,9 @@ export function AntiliaMasterGateway() {
       {/* ── 8. Master Footer ── */}
       <footer className="relative z-20 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 border-t border-white/15 bg-[#081020]/95 backdrop-blur-2xl flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-brand-sandstone/70">
         <div className="flex items-center gap-3">
-          <span className="font-bold text-white font-serif">ANTILIA</span>
+          <span className="font-bold text-white font-serif">TUKUBI</span>
           <span>•</span>
-          <span>&copy; {new Date().getFullYear()} Antilia Global Ecosystem. All rights reserved.</span>
+          <span>&copy; {new Date().getFullYear()} TUKUBI Caribbean Digital Ecosystem. All rights reserved.</span>
         </div>
 
         <div className="flex flex-wrap items-center justify-center gap-4 text-[11px]">

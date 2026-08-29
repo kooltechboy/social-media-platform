@@ -37,12 +37,12 @@ export function GatewayShell({ children, activeIslandIso }: GatewayShellProps) {
             <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-brand-caribbeanSea via-brand-goldenHour to-brand-sunriseCoral p-[1.5px] shadow-xl shadow-brand-caribbeanSea/25">
               <div className="w-full h-full bg-[#090D16] rounded-2xl flex items-center justify-center">
                 <span className="font-black text-transparent bg-clip-text bg-gradient-to-tr from-brand-caribbeanSea to-brand-goldenHour text-2xl tracking-tighter">
-                  A
+                  T
                 </span>
               </div>
             </div>
             <div>
-              <span className="text-2xl font-black tracking-tight text-white font-serif">ANTILIA</span>
+              <span className="text-2xl font-black tracking-tight text-white font-serif">TUKUBI</span>
               <span className="block text-[10px] uppercase font-extrabold tracking-[0.3em] text-brand-caribbeanSea">
                 Global Caribbean Network
               </span>
@@ -109,11 +109,11 @@ export function GatewayShell({ children, activeIslandIso }: GatewayShellProps) {
             <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-gradient-to-br from-brand-caribbeanSea to-brand-sunriseCoral p-[1.5px] mb-3 shadow-xl">
               <div className="w-full h-full bg-[#090D16] rounded-2xl flex items-center justify-center">
                 <span className="font-black text-transparent bg-clip-text bg-gradient-to-tr from-brand-caribbeanSea to-brand-goldenHour text-2xl">
-                  A
+                  T
                 </span>
               </div>
             </div>
-            <h1 className="text-3xl font-black tracking-tight text-white">ANTILIA</h1>
+            <h1 className="text-3xl font-black tracking-tight text-white">TUKUBI</h1>
             <p className="text-xs text-brand-sandstone/70 font-medium tracking-wide mt-1">
               One Caribbean. One Community. One Digital Home.
             </p>

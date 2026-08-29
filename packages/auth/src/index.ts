@@ -1,4 +1,4 @@
-// Identity & Authentication Abstraction for ANTILIA
+// Identity & Authentication Abstraction for TUKUBI
 
 // ---------------------------------------------------------------------------
 // The caller passes in a Supabase client; we avoid a direct dependency on
@@ -142,7 +142,7 @@ export class AuthManager {
   public static createPasskeyChallenge(userId: string) {
     return {
       challenge: `chk_${Date.now()}_${userId}`,
-      rp: { name: 'ANTILIA', id: 'caribbeanone.app' },
+      rp: { name: 'TUKUBI', id: 'tukubi.com' },
       user: { id: userId, name: userId, displayName: 'Caribbean User' },
       pubKeyCredParams: [{ alg: -7, type: 'public-key' }],
       timeout: 60000,

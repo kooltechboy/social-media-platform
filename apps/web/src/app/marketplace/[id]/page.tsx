@@ -93,10 +93,10 @@ export default async function ProductDetailPage({
           <div className="bg-brand-dusk/60 border border-slate-800 rounded-2xl p-4 space-y-2 text-xs">
             <div className="flex items-center gap-2 text-brand-sunriseCoral font-bold">
               <ShieldCheck className="w-4 h-4" />
-              <span>SpotPay Buyer Protection Guaranteed</span>
+              <span>SpotPay Buyer Protection (Beta)</span>
             </div>
             <p className="text-slate-400 text-[11px] leading-relaxed">
-              Payments are held securely in double-entry escrow and released to the merchant upon delivery confirmation. 30-day dispute settlement backed by Antilia Trust &amp; Safety.
+              Payments are recorded via secure double-entry ledger and released to the merchant upon delivery confirmation. Dispute resolution backed by TUKUBI Trust &amp; Safety.
             </p>
           </div>
         </div>
@@ -155,6 +155,14 @@ export default async function ProductDetailPage({
               disabled={outOfStock || !user || user.id === product.seller_id}
               isAuthenticated={!!user}
               isSeller={user?.id === product.seller_id}
+              productDetails={{
+                title: product.title,
+                priceMinor: product.price_minor,
+                currency: product.currency,
+                sellerName,
+                productKind: product.product_kind,
+                origin: product.origin,
+              }}
             />
 
             <div className="flex items-center justify-between text-[11px] text-brand-sandstone/50 pt-2 border-t border-slate-800">

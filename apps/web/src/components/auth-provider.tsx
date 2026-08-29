@@ -92,6 +92,7 @@ export function AuthProvider({ children, initialUser = null }: AuthProviderProps
   }, [fetchCurrentProfile]);
 
   useEffect(() => {
+    let ignore = false;
     const supabase = createSupabaseBrowserClient();
     if (!supabase) {
       setLoading(false);
@@ -103,16 +104,20 @@ export function AuthProvider({ children, initialUser = null }: AuthProviderProps
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event: AuthChangeEvent, session: Session | null) => {
       if (event === 'SIGNED_OUT' || !session?.user) {
-        setUser(null);
-        setLoading(false);
+        if (!ignore) {
+          setUser(null);
+          setLoading(false);
+        }
       } else if (session?.user) {
         const sessionUser = await fetchCurrentProfile(
           session.user.id,
           session.user.email,
           session.user.user_metadata
         );
-        setUser(sessionUser);
-        setLoading(false);
+        if (!ignore) {
+          setUser(sessionUser);
+          setLoading(false);
+        }
       }
     });
 
@@ -124,6 +129,7 @@ export function AuthProvider({ children, initialUser = null }: AuthProviderProps
     }
 
     return () => {
+      ignore = true;
       subscription.unsubscribe();
     };
   }, [initialUser, fetchCurrentProfile, refresh]);

@@ -70,7 +70,7 @@ export default async function HomePage() {
           author: profile?.display_name || 'Caribbean Member',
           handle: profile?.username || 'member',
           verified: profile?.is_verified ?? true,
-          location: 'Antilia Network 🌴',
+          location: 'Tukubi Network 🌴',
           time: relativeTime(p.created_at),
           content: p.content || '',
           mediaUrls: p.media_urls || [],
@@ -112,7 +112,7 @@ export default async function HomePage() {
             <div className="glass rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-center justify-between gap-3">
               <div>
                 <h3 className="text-xs font-black text-brand-sandstone flex items-center gap-2">
-                  <Globe className="w-4 h-4 text-brand-caribbeanSea" /> Antilia Community Access
+                  <Globe className="w-4 h-4 text-brand-caribbeanSea" /> Tukubi Community Access
                 </h3>
                 <p className="text-[11px] text-slate-300 mt-0.5">
                   Sign in or create your profile to access SpotPay wallet, direct messaging, and verified business pages.

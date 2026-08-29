@@ -43,7 +43,7 @@ export interface StoryData {
 }
 
 /**
- * Creates a new post on the Antilia social feed with guaranteed identity resolution
+ * Creates a new post on the Tukubi social feed with guaranteed identity resolution
  * and user-safe error masking.
  */
 export async function createPostAction(_prev: PostActionState, formData: FormData): Promise<PostActionState> {
@@ -140,7 +140,7 @@ export async function createPostAction(_prev: PostActionState, formData: FormDat
     author: profile?.display_name || user.displayName || 'Caribbean Member',
     handle: profile?.username || user.username || 'member',
     verified: profile?.is_verified ?? true,
-    location: 'Antilia Network 🌴',
+    location: 'Tukubi Network 🌴',
     time: 'just now',
     content: data.content || '',
     mediaUrls: data.media_urls || [],

@@ -65,6 +65,8 @@ export async function getModeratorSession(): Promise<ModeratorUser | null> {
         return null; // Not authorized as moderator
       }
       role = account.role;
+    } else {
+      return null; // No account record — user has no moderator privileges
     }
   }
 

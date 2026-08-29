@@ -278,7 +278,7 @@ export default function CreateReelModal({
             <textarea
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="Describe your Caribbean short... #Carnival #Soca #Jamaica #Antilia"
+              placeholder="Describe your Caribbean short... #Carnival #Soca #Jamaica #Tukubi"
               rows={3}
               maxLength={300}
               className="w-full bg-brand-twilight border border-slate-700 rounded-xl p-3 text-xs text-slate-200 focus:outline-none focus:border-rose-500 resize-none"

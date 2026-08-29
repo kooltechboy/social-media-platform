@@ -94,8 +94,10 @@ export default function FeedStream({ initialPosts, currentUserId }: FeedStreamPr
       }
     }
 
+    window.addEventListener('tukubi:new-post', handleNewPost);
     window.addEventListener('antilia:new-post', handleNewPost);
     return () => {
+      window.removeEventListener('tukubi:new-post', handleNewPost);
       window.removeEventListener('antilia:new-post', handleNewPost);
     };
   }, []);
@@ -142,7 +144,7 @@ export default function FeedStream({ initialPosts, currentUserId }: FeedStreamPr
                 author: profile?.display_name || 'Caribbean Member',
                 handle: profile?.username || 'member',
                 verified: profile?.is_verified ?? true,
-                location: 'Antilia Network 🌴',
+                location: 'Tukubi Network 🌴',
                 time: 'just now',
                 content: postWithProfile.content || '',
                 mediaUrls: postWithProfile.media_urls || [],
@@ -306,7 +308,7 @@ export default function FeedStream({ initialPosts, currentUserId }: FeedStreamPr
     shareType: 'copy_link' | 'native' | 'whatsapp' | 'twitter' | 'facebook' | 'repost'
   ) {
     const postUrl = typeof window !== 'undefined' ? `${window.location.origin}/#${post.id}` : '';
-    const shareText = `Check out this post by ${post.author} on Antilia: "${post.content.slice(0, 100)}..."`;
+    const shareText = `Check out this post by ${post.author} on Tukubi: "${post.content.slice(0, 100)}..."`;
 
     if (shareType === 'copy_link') {
       if (navigator.clipboard) {
@@ -318,7 +320,7 @@ export default function FeedStream({ initialPosts, currentUserId }: FeedStreamPr
       if (navigator.share) {
         try {
           await navigator.share({
-            title: `Antilia — ${post.author}'s post`,
+            title: `Tukubi — ${post.author}'s post`,
             text: shareText,
             url: postUrl,
           });
@@ -333,7 +335,7 @@ export default function FeedStream({ initialPosts, currentUserId }: FeedStreamPr
     } else if (shareType === 'facebook') {
       window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(postUrl)}`, '_blank');
     } else if (shareType === 'repost') {
-      setShareToast('Post shared to your Antilia network!');
+      setShareToast('Post shared to your Tukubi network!');
       setTimeout(() => setShareToast(null), 3000);
     }
 

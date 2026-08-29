@@ -46,7 +46,7 @@ export default function OnboardingPage() {
             Identity Setup
           </span>
           <h2 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
-            Welcome to ANTILIA
+            Welcome to TUKUBI
           </h2>
           <p className="text-xs sm:text-sm text-brand-sandstone/60 mt-1">
             To personalize your cultural feeds and connect with your diaspora, select your Caribbean roots.

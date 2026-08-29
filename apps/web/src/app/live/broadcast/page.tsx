@@ -9,7 +9,7 @@ export default async function LiveBroadcastPage() {
   const user = await getCurrentUser();
 
   if (!user) {
-    redirect('/login?redirect=/live/broadcast');
+    redirect('/login?next=/live/broadcast');
   }
 
   return (

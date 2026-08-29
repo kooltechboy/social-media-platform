@@ -26,10 +26,10 @@ function relativeTime(iso: string): string {
 
 export default async function CreatorStudioVideosPage() {
   const user = await getCurrentUser();
-  if (!user) redirect('/login');
+  if (!user) redirect('/login?next=/creator-studio/videos');
 
   const supabase = await createSupabaseServerClient();
-  if (!supabase) redirect('/login');
+  if (!supabase) redirect('/login?next=/creator-studio/videos');
 
   const { data } = await supabase
     .from('videos')

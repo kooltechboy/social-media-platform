@@ -55,7 +55,7 @@ export default function CreatorTierModal({ isOpen, onClose, creatorName }: Creat
           </div>
           <div>
             <h3 className="font-black text-base text-white">Creator Membership Tier</h3>
-            <p className="text-xs text-slate-400">Configure monthly patronage for your fans on Antilia</p>
+            <p className="text-xs text-slate-400">Configure monthly patronage for your fans on Tukubi</p>
           </div>
         </div>
 
@@ -133,7 +133,7 @@ export default function CreatorTierModal({ isOpen, onClose, creatorName }: Creat
                   <span className="font-bold text-white">${gross} USD</span>
                 </div>
                 <div className="flex justify-between text-slate-400">
-                  <span>Antilia Platform Fee (15.0%):</span>
+                  <span>Tukubi Platform Fee (15.0%):</span>
                   <span className="text-slate-400">-${platformFee} USD</span>
                 </div>
                 <div className="flex justify-between text-slate-400">

@@ -75,7 +75,7 @@ export function NewDeviceAlert() {
                 New Sign-In Detected
               </h4>
               <p className="text-[11px] text-brand-sandstone/60">
-                Antilia Account Security
+                Tukubi Account Security
               </p>
             </div>
           </div>

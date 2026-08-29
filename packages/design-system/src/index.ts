@@ -1,4 +1,4 @@
-// Design Tokens for ANTILIA Visual Language (Caribbean Sunrise & Sunset)
+// Design Tokens for TUKUBI Visual Language (Caribbean Sunrise & Sunset)
 
 export const colors = {
   brand: {
@@ -11,6 +11,7 @@ export const colors = {
     sunsetPurple: '#8B5CF6',    // Deep Sunset Purple
   },
   gradients: {
+    tukubiAmbient: 'linear-gradient(135deg, #110D17 0%, #1D1429 50%, #2A1B38 100%)',
     antiliaAmbient: 'linear-gradient(135deg, #110D17 0%, #1D1429 50%, #2A1B38 100%)',
     sunriseGlow: 'radial-gradient(circle at 80% 20%, rgba(255, 122, 89, 0.2), transparent 40%)',
     goldenGlow: 'radial-gradient(circle at 20% 80%, rgba(255, 179, 71, 0.15), transparent 40%)',

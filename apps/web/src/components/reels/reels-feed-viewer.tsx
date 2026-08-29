@@ -263,7 +263,7 @@ export default function ReelsFeedViewer({ initialReels, user }: ReelsFeedViewerP
       navigator
         .share({
           title: activeReel.title,
-          text: `Check out this Caribbean reel from @${activeReel.handle} on Antilia!`,
+          text: `Check out this Caribbean reel from @${activeReel.handle} on Tukubi!`,
           url,
         })
         .then(() => recordReelShareAction(activeReel.id, 'native_share'))

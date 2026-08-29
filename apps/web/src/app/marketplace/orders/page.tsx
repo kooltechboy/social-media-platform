@@ -27,7 +27,7 @@ export default async function MarketplaceOrdersPage() {
           <h1 className="text-lg font-bold text-brand-sandstone">Marketplace Orders</h1>
           <p className="text-xs text-brand-sandstone/60">Sign in to view your orders and SpotPay purchase history.</p>
           <Link
-            href="/login?redirect=/marketplace/orders"
+            href="/login?next=/marketplace/orders"
             className="inline-block bg-orange-500 hover:bg-orange-400 text-slate-950 font-black px-5 py-2 rounded-2xl text-xs transition-all shadow-md shadow-orange-500/20"
           >
             Sign In

@@ -254,7 +254,7 @@ function ActiveLivePlayer({
     const url = typeof window !== 'undefined' ? `${window.location.origin}/live?id=${stream.id}` : '';
     if (navigator.share) {
       navigator.share({
-        title: `${stream.title} on Antilia Live`,
+        title: `${stream.title} on Tukubi Live`,
         url,
       }).catch(() => {});
     } else if (navigator.clipboard) {

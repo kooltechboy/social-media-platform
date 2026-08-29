@@ -1,7 +1,7 @@
 /**
  * Canonical Caribbean Geospatial Data & Coordinates
  *
- * Single Source of Truth for the Antilia Geographic Discovery Map.
+ * Single Source of Truth for the Tukubi Geographic Discovery Map.
  * Provides accurate relative coordinates (0-1000 x 0-750 canvas space),
  * regional classifications, cultural descriptions, and deep-link mappings.
  */

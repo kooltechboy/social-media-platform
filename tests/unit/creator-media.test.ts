@@ -109,4 +109,22 @@ describe('Media pipeline (surface limits + stage machine)', () => {
     expect(storyExpiry(now).toISOString()).toBe('2026-08-21T12:00:00.000Z');
     expect(STAGE_ORDER[STAGE_ORDER.length - 2]).toBe('ready');
   });
+
+  it('validates file magic bytes against known media signatures', () => {
+    // JPEG magic bytes: FF D8 FF
+    const jpegHeader = new Uint8Array([0xff, 0xd8, 0xff, 0xe0, 0x00, 0x10]);
+    expect(pipeline.validateMagicBytes(jpegHeader)).toEqual({ valid: true, detectedMime: 'image/jpeg' });
+
+    // PNG magic bytes: 89 50 4E 47 0D 0A 1A 0A
+    const pngHeader = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
+    expect(pipeline.validateMagicBytes(pngHeader)).toEqual({ valid: true, detectedMime: 'image/png' });
+
+    // MP4 ftyp box: offset 4 'ftyp'
+    const mp4Header = new Uint8Array([0x00, 0x00, 0x00, 0x20, 0x66, 0x74, 0x79, 0x70]);
+    expect(pipeline.validateMagicBytes(mp4Header)).toEqual({ valid: true, detectedMime: 'video/mp4' });
+
+    // Malicious executable disguised with empty or wrong bytes
+    const badHeader = new Uint8Array([0x4d, 0x5a, 0x90, 0x00]); // DOS / PE binary
+    expect(pipeline.validateMagicBytes(badHeader)).toEqual({ valid: false });
+  });
 });

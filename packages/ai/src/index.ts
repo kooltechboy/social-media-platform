@@ -55,8 +55,8 @@ Text: "${text}"`;
       method: "POST",
       headers: {
         "Authorization": `Bearer ${this.apiKey}`,
-        "HTTP-Referer": "https://caribbeanone.app",
-        "X-Title": "ANTILIA",
+        "HTTP-Referer": "https://tukubi.com",
+        "X-Title": "TUKUBI",
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
@@ -273,7 +273,7 @@ export interface CreatorAssistResult {
 }
 
 export function generateCreatorContentPlan(input: CreatorAssistInput): CreatorAssistResult {
-  const hashtags = ['#Antilia', '#CaribbeanCreators', '#CaribbeanEcosystem'];
+  const hashtags = ['#Tukubi', '#CaribbeanCreators', '#CaribbeanEcosystem'];
   if (input.category === 'carnival') hashtags.push('#CarnivalVibes', '#SocaMusic', '#MasLife');
   if (input.category === 'food') hashtags.push('#CaribbeanFood', '#IslandFlavors', '#IslandEats');
   if (input.category === 'music') hashtags.push('#SoundSystemCulture', '#Dubplate', '#ReggaeVibes');
@@ -302,13 +302,13 @@ export function generateCreatorContentPlan(input: CreatorAssistInput): CreatorAs
     case 'dominican_spanish':
       captions = [
         `¡De lo mío! Descubre ${topicCapitalized} con sabor auténtico del Caribe. 🇩🇴✨`,
-        `Orgullo caribeño siempre en alto con ${topicCapitalized}. ¡Actívate en Antilia! 🌴🚀`,
+        `Orgullo caribeño siempre en alto con ${topicCapitalized}. ¡Actívate en Tukubi! 🌴🚀`,
       ];
       hookIdea = `¡No te pierdas lo que trajimos con ${topicCapitalized}! 🇩🇴`;
       break;
     case 'haitian_kreyol':
       captions = [
-        `Bèl vibrasyon pou kominote nou an! Dekouvri ${topicCapitalized} kounye a sou Antilia. 🇭🇹✨`,
+        `Bèl vibrasyon pou kominote nou an! Dekouvri ${topicCapitalized} kounye a sou Tukubi. 🇭🇹✨`,
         `Nou fò ansanm! Gade ${topicCapitalized} epi pataje avèk dyaspora a. 🌴`,
       ];
       hookIdea = `Gade kòman nou selebre ${topicCapitalized}! 🇭🇹`;

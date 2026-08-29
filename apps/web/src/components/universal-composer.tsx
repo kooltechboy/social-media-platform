@@ -292,11 +292,16 @@ export default function UniversalComposer({
         // Ignore
       }
 
-      setSuccessMessage('Successfully published to the Antilia feed!');
+      setSuccessMessage('Successfully published to the Tukubi feed!');
       setTimeout(() => setSuccessMessage(null), 4000);
 
       // Dispatch global window event with newly created post for instant FeedStream update
       if (typeof window !== 'undefined' && result.post) {
+        window.dispatchEvent(
+          new CustomEvent('tukubi:new-post', {
+            detail: { post: result.post },
+          })
+        );
         window.dispatchEvent(
           new CustomEvent('antilia:new-post', {
             detail: { post: result.post },
@@ -348,7 +353,7 @@ export default function UniversalComposer({
         <div className="absolute inset-0 z-30 rounded-3xl bg-brand-twilight/90 backdrop-blur-md flex flex-col items-center justify-center border-2 border-dashed border-brand-caribbeanSea p-6 text-center space-y-2 pointer-events-none">
           <UploadCloud className="w-12 h-12 text-brand-caribbeanSea animate-bounce" />
           <h3 className="text-base font-black text-brand-sandstone">Drop Photos or Videos Here</h3>
-          <p className="text-xs text-brand-caribbeanSea">Attach directly to your Antilia post</p>
+          <p className="text-xs text-brand-caribbeanSea">Attach directly to your Tukubi post</p>
         </div>
       )}
 

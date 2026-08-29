@@ -349,7 +349,7 @@ export default function MomentViewerModal({
           )}
 
           <div className="flex items-center justify-between text-[11px] text-white/70">
-            <span className="font-bold text-brand-goldenHour">🌴 Antilia 24h Moment</span>
+            <span className="font-bold text-brand-goldenHour">🌴 Tukubi 24h Moment</span>
             {isPaused && (
               <span className="px-2 py-0.5 rounded-full bg-white/20 font-bold text-white flex items-center gap-1 backdrop-blur-sm">
                 <Pause className="w-3 h-3 fill-current" /> Paused

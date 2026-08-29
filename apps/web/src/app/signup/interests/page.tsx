@@ -163,7 +163,7 @@ export default function SignupInterestsPage() {
             onClick={handleContinue}
             className="w-full py-3.5 px-4 rounded-xl font-black text-sm tracking-wide bg-gradient-to-r from-brand-caribbeanSea via-brand-goldenHour to-brand-sunriseCoral text-[#060A12] hover:opacity-95 active:scale-[0.99] transition-all shadow-lg shadow-brand-caribbeanSea/25 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <span>GENERATE ANTILIA PASSPORT</span>
+            <span>GENERATE TUKUBI PASSPORT</span>
             <ArrowRight className="w-4 h-4" />
           </button>
         </div>

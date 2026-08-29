@@ -234,7 +234,7 @@ export default function CreateHubClient({ user }: CreateHubClientProps) {
         
         <div className="relative z-10 space-y-4 max-w-2xl">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-caribbeanSea/10 border border-brand-caribbeanSea/30 text-brand-caribbeanSea text-[11px] font-black tracking-wide uppercase">
-            <Sparkles className="w-3.5 h-3.5" /> Antilia Creator Engine
+            <Sparkles className="w-3.5 h-3.5" /> Tukubi Creator Engine
           </div>
 
           <h1 className="text-2xl md:text-4xl font-black text-brand-sandstone tracking-tight leading-tight">

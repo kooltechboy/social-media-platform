@@ -4,7 +4,7 @@ test.describe('Critical journeys', () => {
   test('home page loads with navigation and feed modes', async ({ page }) => {
     await page.goto('/');
     await page.waitForLoadState('networkidle');
-    await expect(page.getByRole('link', { name: /ANTILIA/i }).first()).toBeVisible();
+    await expect(page.getByRole('link', { name: /(TUKUBI|ANTILIA)/i }).first()).toBeVisible();
     await expect(page.getByRole('tab', { name: 'Caribbean Now' })).toBeVisible();
     await expect(page.getByRole('tab', { name: 'For You' })).toBeVisible();
     await expect(page.getByRole('tab', { name: 'Diaspora Hubs' })).toBeVisible();

@@ -67,7 +67,7 @@ export default async function PagesDirectoryPage({
         verification: 'business_verified' as VerificationLevel,
         location: `${b.country_iso || 'Caribbean'} 🌴`,
         followers: '0',
-        description: b.description || 'Verified Caribbean business and storefront on Antilia.',
+        description: b.description || 'Verified Caribbean business and storefront on Tukubi.',
         hasStore: true,
         avatar: '🏪',
       }));

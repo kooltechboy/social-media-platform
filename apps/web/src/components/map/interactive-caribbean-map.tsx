@@ -175,11 +175,11 @@ export default function InteractiveCaribbeanMap() {
   };
 
   const handleShareEntity = async () => {
-    const url = typeof window !== 'undefined' ? window.location.href : `https://caribbeanone.com/map?selected=${selectedEntity.iso}`;
+    const url = typeof window !== 'undefined' ? window.location.href : `https://tukubi.com/map?selected=${selectedEntity.iso}`;
     if (navigator.share) {
       try {
         await navigator.share({
-          title: `${selectedEntity.flag} ${selectedEntity.name} on Antilia Caribbean Map`,
+          title: `${selectedEntity.flag} ${selectedEntity.name} on Tukubi Caribbean Map`,
           text: `Explore ${selectedEntity.name} creators, culture, events and diaspora connections.`,
           url,
         });

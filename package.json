@@ -1,9 +1,9 @@
 {
-  "name": "caribbean-one",
+  "name": "tukubi",
   "version": "1.0.0",
   "private": true,
-  "description": "ANTILIA — Caribbean Digital Ecosystem & Global Diaspora Platform",
-  "author": "Antilia Engineering",
+  "description": "TUKUBI — Caribbean Digital Ecosystem & Global Diaspora Platform",
+  "author": "Tukubi Engineering",
   "license": "UNLICENSED",
   "packageManager": "pnpm@9.0.0",
   "scripts": {

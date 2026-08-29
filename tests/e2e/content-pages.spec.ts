@@ -9,7 +9,7 @@ test.describe('ANTILIA Content Pages', () => {
       await page.goto('/explore');
       await page.waitForLoadState('networkidle');
       
-      await expect(page.getByText(/Antilia Discovery Engine/i)).toBeVisible();
+      await expect(page.getByText(/(Tukubi|Antilia) Discovery Engine/i)).toBeVisible();
       await expect(page.getByText(/Global Diaspora Hubs/i)).toBeVisible();
     });
 

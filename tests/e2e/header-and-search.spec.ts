@@ -18,7 +18,7 @@ test.describe('App Header — Brand & Navigation Links', () => {
     await page.goto('/');
     await page.waitForLoadState('networkidle');
 
-    const brandLink = page.getByRole('link', { name: /ANTILIA/i }).first();
+    const brandLink = page.getByRole('link', { name: /(TUKUBI|ANTILIA)/i }).first();
     await expect(brandLink).toBeVisible();
     await expect(brandLink).toHaveAttribute('href', '/');
   });
@@ -139,7 +139,7 @@ test.describe('App Header — Cross-Page Consistency', () => {
       await page.goto(route);
       await page.waitForLoadState('networkidle');
 
-      const header = page.getByRole('link', { name: /ANTILIA/i }).first();
+      const header = page.getByRole('link', { name: /(TUKUBI|ANTILIA)/i }).first();
       await expect(header).toBeVisible();
     }
   });

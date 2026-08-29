@@ -24,7 +24,7 @@ const UI_PLANS = [
       'Community Discovery & Customer Reviews',
       'Direct Messaging with Customers',
       'Up to 5 Marketplace Listings',
-      '0% ANTILIA Sales Commission',
+      '0% TUKUBI Sales Commission',
     ],
     highlight: false,
     cta: 'Select Free Plan',
@@ -38,7 +38,7 @@ const UI_PLANS = [
     features: [
       'Unlimited Marketplace & Service Listings',
       'SpotPay Escrow & Multimodal Checkout',
-      '0% ANTILIA Percentage on Product Sales',
+      '0% TUKUBI Percentage on Product Sales',
       'AI Business Assistant ("Ask This Business") 🤖',
       'Real-Time Orders & Revenue Analytics',
       'Verified Caribbean Seller Badge 🏅',
@@ -114,11 +114,11 @@ export default function BusinessTierModal({ isOpen, onClose, businessName, busin
 
         <div className="text-center space-y-2">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-sunriseCoral/20 border border-brand-sunriseCoral/30 text-brand-sunriseCoral text-xs font-bold uppercase tracking-wider">
-            <Sparkles className="w-3.5 h-3.5" /> Antilia Seller Subscription Engine
+            <Sparkles className="w-3.5 h-3.5" /> Tukubi Seller Subscription Engine
           </div>
           <h3 className="text-2xl font-black text-white">Monetize &amp; Scale {businessName}</h3>
           <p className="text-xs text-slate-300 max-w-lg mx-auto leading-relaxed">
-            <strong className="text-brand-sunriseCoral">&quot;ANTILIA doesn&apos;t take a percentage of your sales on eligible Seller plans.&quot;</strong> Keep your revenue subject only to transparent payment processing.
+            <strong className="text-brand-sunriseCoral">&quot;TUKUBI doesn&apos;t take a percentage of your sales on eligible Seller plans.&quot;</strong> Keep your revenue subject only to transparent payment processing.
           </p>
         </div>
 

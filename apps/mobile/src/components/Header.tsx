@@ -5,7 +5,7 @@ import { TOKENS } from '../theme/tokens';
 export function Header({ onWalletPress }: { onWalletPress?: () => void }) {
   return (
     <View style={styles.header}>
-      <Text style={styles.headerTitle}>ANTILIA</Text>
+      <Text style={styles.headerTitle}>TUKUBI</Text>
       <TouchableOpacity
         accessibilityRole="button"
         accessibilityLabel="SpotPay Wallet Balance $240.50"

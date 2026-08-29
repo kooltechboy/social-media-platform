@@ -16,7 +16,7 @@ test.describe('Authentication Flows', () => {
       await expect(page.getByRole('link', { name: /live shows/i })).toHaveAttribute('href', '/live');
       await expect(page.getByRole('link', { name: /podcasts/i })).toHaveAttribute('href', '/podcasts');
       await expect(page.getByRole('link', { name: /spotpay/i })).toHaveAttribute('href', '/spotpay');
-      await expect(page.getByRole('link', { name: 'Join Antilia', exact: true })).toHaveAttribute('href', '/signup');
+      await expect(page.getByRole('link', { name: /join (tukubi|antilia)/i })).toHaveAttribute('href', '/signup');
     });
 
     test('has correct hero section elements', async ({ page }) => {

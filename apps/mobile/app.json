@@ -1,23 +1,23 @@
 {
   "expo": {
-    "name": "ANTILIA",
-    "slug": "caribbean-one",
+    "name": "TUKUBI",
+    "slug": "tukubi",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/splash-icon.png",
+      "image": "./assets/splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#090D16"
+      "backgroundColor": "#0A0515"
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.caribbeanone.app",
+      "bundleIdentifier": "com.tukubi.app",
       "infoPlist": {
-        "NSCameraUsageDescription": "ANTILIA requires camera access to record stories, reels, and host live streams.",
-        "NSMicrophoneUsageDescription": "ANTILIA requires microphone access for live streams, podcasts, and audio messages."
+        "NSCameraUsageDescription": "TUKUBI requires camera access to record stories, reels, and host live streams.",
+        "NSMicrophoneUsageDescription": "TUKUBI requires microphone access for live streams, podcasts, and audio messages."
       }
     },
     "android": {

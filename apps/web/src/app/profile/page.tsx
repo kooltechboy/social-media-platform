@@ -8,5 +8,5 @@ export default async function ProfileRedirectPage() {
   if (user) {
     redirect(`/profile/${user.username}`);
   }
-  redirect('/login');
+  redirect('/login?next=/profile');
 }

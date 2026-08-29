@@ -2,8 +2,8 @@ import type { Metadata } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'Antilia — Admin Console',
-  description: 'Internal administration console for Antilia platform operators.',
+  title: 'TUKUBI — Admin Console',
+  description: 'Internal administration console for TUKUBI platform operators.',
 };
 
 export default function AdminRootLayout({ children }: { children: React.ReactNode }) {

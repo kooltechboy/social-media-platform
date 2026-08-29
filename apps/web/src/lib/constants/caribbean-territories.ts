@@ -1,7 +1,7 @@
 /**
  * Caribbean Territory & Diaspora Constants — Single Source of Truth
  *
- * ANTILIA platform — Caribbean Futurism design system
+ * TUKUBI platform — Caribbean Futurism design system
  * All Caribbean sovereign states, territories, and dependencies.
  *
  * Privacy note (AGENTS.md Rule 8): Caribbean identity is optional

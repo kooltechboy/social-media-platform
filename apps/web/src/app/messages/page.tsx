@@ -27,7 +27,7 @@ export default async function MessagesPage({ searchParams }: { searchParams: Pro
           <MessageSquare className="w-8 h-8 text-brand-caribbeanSea mx-auto mb-3" />
           <h1 className="text-lg font-bold text-brand-sandstone mb-2">Messages</h1>
           <p className="text-sm text-brand-sandstone/60 mb-4">Sign in to chat with your communities, friends and the diaspora.</p>
-          <Link href="/login" className="inline-block bg-brand-caribbeanSea hover:bg-brand-caribbeanSea text-slate-950 font-bold px-5 py-2 rounded-full text-xs transition-colors">
+          <Link href="/login?next=/messages" className="inline-block bg-brand-caribbeanSea hover:bg-brand-caribbeanSea text-slate-950 font-bold px-5 py-2 rounded-full text-xs transition-colors">
             Sign In
           </Link>
         </div>
@@ -181,7 +181,7 @@ export default async function MessagesPage({ searchParams }: { searchParams: Pro
         <aside className="md:col-span-1 space-y-2">
           {summaries.length === 0 && (
             <div className="bg-brand-dusk/40 border border-dashed border-slate-800 rounded-2xl p-6 text-center">
-              <p className="text-xs text-brand-sandstone/40">No conversations yet. New members receive a welcome message from Antilia.</p>
+              <p className="text-xs text-brand-sandstone/40">No conversations yet. New members receive a welcome message from Tukubi.</p>
             </div>
           )}
           {summaries.map((summary) => (

@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { createSupabaseServerClient, getCurrentUser } from '../../lib/supabase/server';
 import { Money } from '@caribbean/spotpay';
 import OrderButton from '../../components/order-button';
+import ConnectSpotPayCard from '../../components/connect-spotpay-card';
 
 export const dynamic = 'force-dynamic';
 
@@ -132,6 +133,9 @@ export default async function MarketplacePage({
         })}
       </div>
 
+      {/* SpotPay Connect Onboarding Banner */}
+      <ConnectSpotPayCard />
+
       {/* Trust & Guarantee Banner */}
       <div className="bg-gradient-to-r from-slate-900 via-orange-950/20 to-slate-900 border border-orange-500/20 rounded-3xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-lg text-xs">
         <div className="flex items-center gap-3">
@@ -222,6 +226,14 @@ export default async function MarketplacePage({
                     disabled={outOfStock || !user || user.id === product.seller_id}
                     isAuthenticated={!!user}
                     isSeller={user?.id === product.seller_id}
+                    productDetails={{
+                      title: product.title,
+                      priceMinor: product.price_minor,
+                      currency: product.currency,
+                      sellerName,
+                      productKind: product.product_kind,
+                      origin: product.origin,
+                    }}
                   />
                 </div>
               </article>

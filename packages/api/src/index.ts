@@ -1,4 +1,4 @@
-// Typed API Client Contracts & Services for ANTILIA
+// Typed API Client Contracts & Services for TUKUBI
 
 export interface PostInput {
   authorId: string;

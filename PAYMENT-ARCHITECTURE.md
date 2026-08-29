@@ -1,15 +1,72 @@
 # SpotPay Payment Architecture & Double-Entry Ledger — ANTILIA
 
-## Overview
-SpotPay serves two critical financial functions within ANTILIA:
-1. **Native Stored-Value Digital Wallet:** Enables users and creators to hold balances, execute instant peer-to-peer transfers, tip creators, purchase live stream gifts, and buy marketplace products (operating as a native digital payment method like PayPal).
-2. **Unified Payment Gateway Orchestration:** Interfaces with external payment service providers (Stripe, PayPal, Apple Pay, Google Pay) to accept credit/debit cards and manage creator payouts.
+## 1. Product Relationship & Ecosystem Topology
 
-SpotPay is a **payment orchestration and financial-services layer** — not a checkout button.
+```
+                         ANTILIA
+               (Social • Culture • Commerce)
+                            │
+          ┌─────────────────┼─────────────────┐
+          │                 │                 │
+        SOCIAL           COMMERCE          CREATORS
+          │                 │                 │
+          └─────────────────┼─────────────────┘
+                            │
+                     ANTILIA CHECKOUT
+                            │
+             ┌──────────────┼──────────────┐
+             │              │              │
+       🟣 SPOTPAY       APPLE PAY      GOOGLE PAY
+     (Fastest/Rec.)         │              │
+             │              ├──────── PAYPAL
+             │              │              │
+             └──── CREDIT / DEBIT (Stripe) ┘
+                            │
+                    PAYMENT LAYER (PSP)
+                            │
+                     MERCHANT / SELLER
+```
+
+### The Clean Separation of Roles:
+- **ANTILIA**: Where people discover, socialize, create, sell, and buy.
+- **SpotPay**: How people move and spend money (financial-services platform, digital wallet, send/receive, cross-border transfers, Calypso Card, cards with Apple Pay & Google Pay).
+
+### Visual & Ecosystem Identity:
+- **ANTILIA**: *Social • Culture • Commerce*
+- **Powered by SpotPay**: *Money • Payments • Wallet*
 
 ---
 
-## Financial Ledger Principles
+## 2. Distinct Business Models
+
+```
+┌────────────────────────────────────────────────────────┐
+│                   ANTILIA BUSINESS MODEL               │
+│ • Seller Subscriptions (Seller Pro $14.99, Business+)  │
+│ • Business Subscriptions & Featured Listings           │
+│ • Platform Advertising & Premium Creator Tools         │
+│ • "ANTILIA doesn't take a percentage of your product   │
+│    sales on eligible Seller plans."                    │
+└────────────────────────────────────────────────────────┘
+                           ▲
+                           │ Closed-Loop Acquisition
+                           ▼
+┌────────────────────────────────────────────────────────┐
+│                   SPOTPAY BUSINESS MODEL               │
+│ • Financial Infrastructure & Money Movement            │
+│ • Payment Processing & Card Interchange Economics      │
+│ • FX & Cross-Border Transfers                          │
+│ • Merchant & Payout Financial Services                 │
+└────────────────────────────────────────────────────────┘
+```
+
+1. **Merchant Value Proposition:** Merchants pay ANTILIA a transparent monthly subscription ($14.99/mo on Seller Pro) to operate their full digital storefront. ANTILIA does not take a percentage cut of their product sales.
+2. **Transparent Payment Processing:** Transactions remain subject to transparent third-party payment processing pass-through costs (e.g., standard 2.9% + 30¢ on card rails) or 0% on internal SpotPay wallet promotional settlements.
+3. **SpotPay-to-SpotPay Velocity:** When a buyer pays via SpotPay to a SpotPay merchant or creator, the money settles instantly inside the SpotPay financial layer, allowing immediate downstream utility (peer transfers, tipping creators, purchasing goods, paying for event tickets, or withdrawing).
+
+---
+
+## 3. Financial Ledger Principles
 
 - **Double-Entry Accounting:** Monetary values are never mutated in single table columns (`UPDATE balance SET balance = balance + 10`). Every financial transaction generates paired Debit and Credit ledger entries.
 - **Sum Zero Identity:** For every transaction ID $T$, $\sum \text{Debit Amount} = \sum \text{Credit Amount}$.
@@ -18,64 +75,46 @@ SpotPay is a **payment orchestration and financial-services layer** — not a ch
 - **Integer Minor Units:** All amounts stored as integer minor units (cents) + ISO currency code. Floating point is forbidden in money paths.
 - **Reconciliation:** Scheduled jobs reconcile ledger state against provider reports; drift triggers alerts, never auto-"fixes".
 
-## Core Entities (existing migration `00004`; expansion in Phase 6)
-
-Existing: `ledger_accounts`, `ledger_entries`, `psp_capabilities`.
-Planned: `payment_intents`, `payment_methods` (tokenized only), `payment_attempts`, `idempotency_keys`, `refunds`, `disputes`, `chargebacks`, `payouts`, `payout_schedules`, `commissions`, `fees`, `taxes`, `creator_balances` (derived views over the ledger, never authoritative columns).
-
 ---
 
-## Payment Capability Matrix & Mobile Store Compliance
+## 4. Payment Capability Matrix & Mobile Store Compliance
 
-`psp_capabilities` (migration `00004`) is the **single source of truth** for method availability:
+`psp_capabilities` (migration `00004`) and `monetization_rules` (migration `00028`) are the **single source of truth** for method availability:
 
 ```
 country + currency + provider + method + transaction_type +
 availability + min_amount + max_amount + platform + product_type + status
 ```
 
-Never assume a payment method is available in every country. Checkout must query the matrix at runtime.
+**Never assume a payment method is available in every country.** Checkout must query the matrix at runtime. Payment methods are abstracted:
+- **🟣 Pay with SpotPay (Recommended):** Stored-value wallet settlement with buyer escrow protection.
+- **Apple Pay:** Biometric instant checkout (Dominican Republic, CIBC Caribbean markets, etc.).
+- **Google Pay:** Biometric instant checkout across supported Caribbean and diaspora banks.
+- **Credit / Debit Cards (Stripe):** Visa, Mastercard, Amex via PCI-compliant tokenization.
+- **PayPal:** International diaspora checkout.
 
 | Platform | Product Type | Recommended PSP / Method | Compliance Mechanism |
 | :--- | :--- | :--- | :--- |
-| **Mobile (iOS)** | Digital Subscriptions & Content | Apple In-App Purchase (IAP) | Store Policy Compliance |
+| **Mobile (iOS)** | Digital Subscriptions & Content | Apple In-App Purchase (IAP) | Store Policy Compliance (§3.1.1) |
 | **Mobile (Android)** | Digital Subscriptions & Content | Google Play Billing | Store Policy Compliance |
 | **Web & Mobile** | SpotPay Wallet P2P / Tipping | SpotPay Stored Balance | Native Ledger Transfer |
-| **Web & Mobile** | Physical Goods & Event Tickets | Stripe / PayPal / SpotPay Wallet | Web Checkout Flow |
+| **Web & Mobile** | Physical Goods & Event Tickets | SpotPay (Rec.) / Cards / Apple Pay / Google Pay / PayPal | Multimodal Web Checkout |
 
-## Payment Policy Engine (PAYMENT-POLICY-ENGINE)
+---
 
-A formal routing engine determines the permitted checkout route:
-
-```
-User Country + User Platform + Product Type (digital/physical) +
-Payment Method + Provider Availability (psp_capabilities) +
-App Store Rules + Play Store Rules + Local Regulations
-  → PERMITTED ROUTE
-```
-
-- Store policies (Apple §3.1.1, Google Payments policy) are **never bypassed**. Digital goods on mobile route through IAP / Play Billing; physical goods, services, and event tickets may route through web checkout per current policy.
-- The engine is **configurable** (rules are data, not hard-coded branches) so policies can evolve without re-architecture.
-- All routing decisions are logged for compliance audit.
-
-## Provider Integration Rules
-
-- **No raw card data.** Tokenized payment methods via PCI-compliant processors only.
-- **Webhooks:** signature-verified, replay-protected, idempotently processed; unknown events logged, never dropped.
-- **Provider abstraction:** Stripe/PayPal/Apple/Google behind one `PaymentProvider` interface — never call provider SDKs from UI components.
-- Research current provider docs and country availability **before** implementing; never invent provider capabilities.
-
-## Creator Payouts
+## 5. Creator & Merchant Ecosystem Flow
 
 ```
-Creator → Creator Account (KYC) → Revenue Ledger → Payout Engine
-  → Country/Provider Routing → Payout Provider
+Creator/Merchant Earns:
+      │
+      ▼
+$1,000 in SpotPay Account
+      │
+      ├── Send $100 to Family
+      ├── Tip $25 to Collaborating Creator
+      ├── Spend $200 with Caribbean Merchant
+      ├── Pay $50 Phone / Utility Bill
+      └── Withdraw $625 to Bank Account
 ```
 
-- No single hard-coded payout provider; routing is country/method dependent.
-- Payout gates: identity verification, minimum threshold, fraud review, chargeback reserve, payout holds.
-- Every payout is a ledger transaction; failure produces reversing entries, never deletions.
-
-## Payment Testing Requirements
-
-Sandbox tests mandatory for: success, decline, timeout, duplicate request (idempotency), webhook retry, refund, partial refund, chargeback, provider outage, currency mismatch, invalid method, payout failure. Never test financial flows against production credentials.
+The creator or merchant does not wait for traditional monthly batch delays; funds are immediately liquid within the SpotPay financial ecosystem.

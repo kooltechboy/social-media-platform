@@ -46,7 +46,7 @@ export default async function SuperAdminBootstrapPage() {
             <ShieldCheck className="w-6 h-6" />
           </div>
           <h1 className="text-2xl font-extrabold text-brand-sandstone tracking-tight">
-            ANTILIA Platform Security
+            TUKUBI Platform Security
           </h1>
           <p className="text-xs text-brand-sandstone/60">
             Role-Based Access Control (RBAC) & Root Authority Initialization

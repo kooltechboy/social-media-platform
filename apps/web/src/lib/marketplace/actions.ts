@@ -107,58 +107,83 @@ export async function createOrderAction(
   }
 
   // Provision SpotPay Double-Entry Escrow Ledger Entries
-  try {
+  // CRITICAL: This block must NOT silently fail — a ledger failure
+  // means funds were not properly escrowed, creating financial liability.
+  {
     const { createServiceSupabaseClient } = await import('../supabase/server');
     const adminClient = await createServiceSupabaseClient();
-    if (adminClient) {
-      // Create payment intent record
-      const { data: intent } = await adminClient
-        .from('payment_intents')
-        .insert({
-          payer_id: user.id,
-          product_type: 'physical_goods',
-          reference_type: 'order',
-          reference_id: order.id,
-          amount_minor: totals.totalMinor,
-          currency: product.currency,
-          idempotency_key: `pi_${idempotencyKey}`,
-          selected_provider: paymentProvider,
-          selected_method_kind: paymentProvider === 'spotpay' ? 'wallet' : 'card',
-          status: 'succeeded',
-        })
-        .select('id')
-        .single();
-
-      // Find buyer & seller ledger accounts
-      const [buyerAccRes, sellerAccRes] = await Promise.all([
-        adminClient.from('ledger_accounts').select('id').eq('owner_id', user.id).maybeSingle(),
-        adminClient.from('ledger_accounts').select('id').eq('owner_id', product.seller_id).maybeSingle(),
-      ]);
-
-      if (buyerAccRes.data && sellerAccRes.data) {
-        const txId = crypto.randomUUID();
-        await adminClient.from('ledger_entries').insert([
-          {
-            transaction_id: txId,
-            account_id: buyerAccRes.data.id,
-            amount: totals.totalMinor / 100,
-            entry_type: 'DEBIT',
-            idempotency_key: `${idempotencyKey}_debit`,
-            description: `Purchase: ${product.title}`,
-          },
-          {
-            transaction_id: txId,
-            account_id: sellerAccRes.data.id,
-            amount: totals.totalMinor / 100,
-            entry_type: 'CREDIT',
-            idempotency_key: `${idempotencyKey}_credit`,
-            description: `Escrow Hold: ${product.title}`,
-          },
-        ]);
-      }
+    if (!adminClient) {
+      // Rollback: delete the order since we can't provision ledger entries
+      await supabase.from('order_items').delete().eq('order_id', order.id);
+      await supabase.from('orders').delete().eq('id', order.id);
+      return { error: 'Payment service unavailable. Please try again.', success: null };
     }
-  } catch {
-    // Ledger orchestration fallback
+
+    // Create payment intent record
+    const { error: intentErr } = await adminClient
+      .from('payment_intents')
+      .insert({
+        payer_id: user.id,
+        product_type: 'physical_goods',
+        reference_type: 'order',
+        reference_id: order.id,
+        amount_minor: totals.totalMinor,
+        currency: product.currency,
+        idempotency_key: `pi_${idempotencyKey}`,
+        selected_provider: paymentProvider,
+        selected_method_kind: paymentProvider === 'spotpay' ? 'wallet' : 'card',
+        status: 'succeeded',
+      })
+      .select('id')
+      .single();
+
+    if (intentErr) {
+      console.error('[SpotPay] Payment intent creation failed:', intentErr.message);
+      await supabase.from('order_items').delete().eq('order_id', order.id);
+      await supabase.from('orders').delete().eq('id', order.id);
+      return { error: 'Payment processing failed. Please try again.', success: null };
+    }
+
+    // Find buyer & seller ledger accounts
+    const [buyerAccRes, sellerAccRes] = await Promise.all([
+      adminClient.from('ledger_accounts').select('id').eq('owner_id', user.id).maybeSingle(),
+      adminClient.from('ledger_accounts').select('id').eq('owner_id', product.seller_id).maybeSingle(),
+    ]);
+
+    if (!buyerAccRes.data || !sellerAccRes.data) {
+      console.error('[SpotPay] Ledger accounts not found for buyer or seller');
+      await supabase.from('order_items').delete().eq('order_id', order.id);
+      await supabase.from('orders').delete().eq('id', order.id);
+      return { error: 'Wallet accounts not configured. Please set up SpotPay first.', success: null };
+    }
+
+    const txId = crypto.randomUUID();
+    const amountMajor = totals.totalMinor / 100;
+    const { error: ledgerErr } = await adminClient.from('ledger_entries').insert([
+      {
+        transaction_id: txId,
+        account_id: buyerAccRes.data.id,
+        amount: -amountMajor, // DEBIT must be negative per double-entry accounting
+        entry_type: 'DEBIT',
+        idempotency_key: `${idempotencyKey}_debit`,
+        description: `Purchase: ${product.title}`,
+      },
+      {
+        transaction_id: txId,
+        account_id: sellerAccRes.data.id,
+        amount: amountMajor, // CREDIT is positive
+        entry_type: 'CREDIT',
+        idempotency_key: `${idempotencyKey}_credit`,
+        description: `Escrow Hold: ${product.title}`,
+      },
+    ]);
+
+    if (ledgerErr) {
+      console.error('[SpotPay] Ledger entry creation failed:', ledgerErr.message);
+      await supabase.from('order_items').delete().eq('order_id', order.id);
+      await supabase.from('orders').delete().eq('id', order.id);
+      return { error: 'Payment ledger recording failed. Please try again.', success: null };
+    }
   }
 
   revalidatePath('/marketplace');
@@ -237,6 +262,53 @@ export async function cancelOrderAction(orderId: string): Promise<{ error: strin
     .eq('id', orderId);
 
   if (updateErr) return { error: updateErr.message, success: false };
+
+  // Reverse escrowed funds in the double-entry ledger
+  try {
+    const { createServiceSupabaseClient } = await import('../supabase/server');
+    const adminClient = await createServiceSupabaseClient();
+    if (adminClient) {
+      // Find the original ledger entries for this order via idempotency_key pattern
+      const { data: originalEntries } = await adminClient
+        .from('ledger_entries')
+        .select('transaction_id, account_id, amount, entry_type, idempotency_key')
+        .like('idempotency_key', `order_${user.id}_%`)
+        .order('created_at', { ascending: false })
+        .limit(10);
+
+      if (originalEntries && originalEntries.length >= 2) {
+        // Find the debit/credit pair for this order
+        const debitEntry = originalEntries.find((e) => e.entry_type === 'DEBIT');
+        const creditEntry = originalEntries.find((e) => e.entry_type === 'CREDIT');
+
+        if (debitEntry && creditEntry) {
+          const reversalTxId = crypto.randomUUID();
+          const reversalKey = `reversal_${orderId}_${Date.now()}`;
+          await adminClient.from('ledger_entries').insert([
+            {
+              transaction_id: reversalTxId,
+              account_id: debitEntry.account_id,
+              amount: Math.abs(Number(debitEntry.amount)), // Reverse DEBIT → CREDIT (positive)
+              entry_type: 'CREDIT',
+              idempotency_key: `${reversalKey}_credit`,
+              description: `Refund: Order ${orderId} cancelled`,
+            },
+            {
+              transaction_id: reversalTxId,
+              account_id: creditEntry.account_id,
+              amount: -Math.abs(Number(creditEntry.amount)), // Reverse CREDIT → DEBIT (negative)
+              entry_type: 'DEBIT',
+              idempotency_key: `${reversalKey}_debit`,
+              description: `Escrow Release: Order ${orderId} cancelled`,
+            },
+          ]);
+        }
+      }
+    }
+  } catch (err) {
+    console.error('[SpotPay] Ledger reversal failed for cancelled order:', orderId, err);
+    // Non-blocking: order is still cancelled, but finance team must manually reconcile
+  }
 
   revalidatePath('/marketplace/orders');
   return { error: null, success: true };

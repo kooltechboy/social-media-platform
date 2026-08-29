@@ -44,13 +44,13 @@ export function AntiliaCulturalPassport({
             <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-brand-caribbeanSea to-brand-goldenHour p-[1px]">
               <div className="w-full h-full bg-[#080D18] rounded-lg flex items-center justify-center">
                 <span className="text-xs font-black text-transparent bg-clip-text bg-gradient-to-tr from-brand-caribbeanSea to-brand-goldenHour">
-                  A
+                  T
                 </span>
               </div>
             </div>
             <div>
               <p className="text-[10px] font-black tracking-widest text-brand-caribbeanSea uppercase">
-                ANTILIA CULTURAL PASSPORT
+                TUKUBI CULTURAL PASSPORT
               </p>
               <p className="text-[9px] text-brand-sandstone/50 font-medium tracking-wider">
                 DIGITAL IDENTITY & DIASPORA CITIZEN
@@ -134,7 +134,7 @@ export function AntiliaCulturalPassport({
         <div className="flex items-end justify-between border-t border-white/10 pt-3">
           <div className="space-y-0.5">
             <p className="text-[9px] text-brand-sandstone/40 font-mono tracking-wider uppercase">
-              PASSPORT NO: ANT-{originCountryIso}-{(username.length * 104729).toString().slice(0, 6)}
+              PASSPORT NO: TKB-{originCountryIso}-{(username.length * 104729).toString().slice(0, 6)}
             </p>
             <p className="text-[9px] text-emerald-400 font-semibold flex items-center gap-1">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />

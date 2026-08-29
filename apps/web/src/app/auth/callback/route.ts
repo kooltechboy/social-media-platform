@@ -1,18 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { createSupabaseServerClient } from '../../../lib/supabase/server';
-
-const ALLOWED_REDIRECT_PREFIXES = ['/', '/explore', '/profile', '/settings', '/live', '/podcasts', '/marketplace', '/creator-studio', '/spotpay', '/communities', '/map', '/events'];
-
-function sanitizeRedirectUrl(target: string | null): string {
-  if (!target) return '/';
-  const trimmed = target.trim();
-  // Prevent protocol-relative URLs (e.g. //evil.com) and explicit scheme redirects
-  if (!trimmed.startsWith('/') || trimmed.startsWith('//') || trimmed.includes('://')) {
-    return '/';
-  }
-  const isAllowed = ALLOWED_REDIRECT_PREFIXES.some((prefix) => trimmed === prefix || trimmed.startsWith(`${prefix}/`));
-  return isAllowed ? trimmed : '/';
-}
+import { sanitizeRedirectUrl } from '../../../lib/auth/redirect-utils';
 
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url);

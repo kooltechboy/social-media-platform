@@ -22,8 +22,8 @@ export default function SignupCompletePage() {
   const [isSuccess, setIsSuccess] = useState(false);
 
   const [setupTasks, setSetupTasks] = useState<TaskStatus[]>([
-    { label: 'Minting cryptographic Antilia Cultural Passport', status: 'in-progress' },
-    { label: 'Connecting origin roots to 59.4M global diaspora graph', status: 'pending' },
+    { label: 'Minting cryptographic Tukubi Cultural Passport', status: 'in-progress' },
+    { label: 'Connecting origin roots to global Caribbean diaspora graph', status: 'pending' },
     { label: 'Initializing SpotPay multi-currency ledger & zero-fee corridors', status: 'pending' },
     { label: 'Calibrating cultural Home Feed & CaribAI recommendation matrix', status: 'pending' },
   ]);
@@ -149,7 +149,7 @@ export default function SignupCompletePage() {
                   displayName={session?.displayName || `${session?.firstName} ${session?.lastName}`}
                   username={session?.username}
                   originCountryName={session?.originCountryName || 'Caribbean'}
-                  originCountryIso={session?.originCountryIso || 'ANT'}
+                  originCountryIso={session?.originCountryIso || 'TKB'}
                   originFlag={session?.originFlag || '🌴'}
                   diasporaCountryName={session?.diasporaCountryName || (session?.isDiaspora ? 'Global Diaspora' : 'Caribbean Basin')}
                   diasporaFlag={session?.diasporaFlag || '🌎'}
@@ -159,7 +159,7 @@ export default function SignupCompletePage() {
 
                 <div className="space-y-1 pt-2">
                   <h2 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
-                    Welcome to ANTILIA.
+                    Welcome to TUKUBI.
                   </h2>
                   <p className="text-xs text-brand-sandstone/70 max-w-sm mx-auto">
                     Your Caribbean is ready. One community, one culture, one digital home.
@@ -193,7 +193,7 @@ export default function SignupCompletePage() {
                     Fortune-100 Provisioning
                   </span>
                   <h2 className="text-2xl font-extrabold text-white tracking-tight">
-                    Personalizing your Antilia…
+                    Personalizing your Tukubi…
                   </h2>
                   <p className="text-xs text-brand-sandstone/70 max-w-sm mx-auto">
                     Establishing your cultural graph, SpotPay wallet, and curated recommendations.

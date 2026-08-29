@@ -60,8 +60,8 @@ export default function LoginPage() {
           <div className="flex items-center justify-center gap-2 mb-4">
             <ShieldAlert className="w-8 h-8 text-brand-goldenHour" aria-hidden="true" />
           </div>
-          <h1 className="text-lg font-extrabold text-brand-sandstone tracking-tight">
-            ANTILIA
+          <h1 className="text-lg font-extrabold text-brand-sandstone tracking-wider">
+            TUKUBI
           </h1>
           <p className="text-sm font-semibold text-amber-300">
             Moderation Center
