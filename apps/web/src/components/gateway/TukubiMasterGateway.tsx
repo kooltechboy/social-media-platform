@@ -1,29 +1,22 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../auth-provider';
 import {
   Sparkles,
   Globe,
-  Compass,
-  ShieldCheck,
   Users,
   Video,
   Store,
-  ArrowRight,
   Play,
   UserPlus,
-  Lock,
   Flame,
-  Camera,
 } from 'lucide-react';
 import { LanguageDropdown } from './LanguageDropdown';
 import { SignInForm } from './SignInForm';
 import { ShowcaseMoments } from './ShowcaseMoments';
-import { ShowcaseDiasporaCities } from './ShowcaseDiasporaCities';
-import { InteractiveOnboardingPreview } from './InteractiveOnboardingPreview';
 
 export interface CarnivalScene {
   id: string;
@@ -49,55 +42,12 @@ export const CARNIVAL_SCENES: CarnivalScene[] = [
       rgba(8, 16, 32, 0.90) 100%
     )`,
   },
-  {
-    id: 'st-georges-grenada',
-    name: '🌴 St. George’s Harbor, Grenada',
-    badge: 'Pure Grenada • Spice Isle Vista',
-    title: 'St. George’s Carenage & Grand Anse Shore',
-    // Crystal clear turquoise Caribbean waters and lush hillside
-    url: 'https://images.unsplash.com/photo-1559494007-9f5847c49d94?auto=format&fit=crop&w=2600&q=95',
-    overlayGradient: `linear-gradient(to bottom,
-      rgba(6, 24, 38, 0.50) 0%,
-      rgba(0, 0, 0, 0.10) 30%,
-      rgba(0, 0, 0, 0.20) 65%,
-      rgba(8, 16, 32, 0.90) 100%
-    )`,
-  },
-  {
-    id: 'trinidad-carnival',
-    name: '🇹🇹 Trinidad Carnival Mas',
-    badge: 'The Greatest Show on Earth',
-    title: 'Port of Spain • Soca Parade of the Bands',
-    // Confetti, dazzling feathers, and euphoria
-    url: 'https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?auto=format&fit=crop&w=2600&q=95',
-    overlayGradient: `linear-gradient(to bottom,
-      rgba(24, 10, 36, 0.55) 0%,
-      rgba(0, 0, 0, 0.15) 30%,
-      rgba(0, 0, 0, 0.20) 65%,
-      rgba(8, 16, 32, 0.90) 100%
-    )`,
-  },
-  {
-    id: 'barbados-cropover',
-    name: '🇧🇧 Barbados Crop Over',
-    badge: 'Grand Kadooment Day',
-    title: 'Bridgetown • Caribbean Summer Vibes',
-    // Sunset shore and tropical island warmth
-    url: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=2600&q=95',
-    overlayGradient: `linear-gradient(to bottom,
-      rgba(40, 16, 10, 0.50) 0%,
-      rgba(0, 0, 0, 0.10) 30%,
-      rgba(0, 0, 0, 0.20) 65%,
-      rgba(8, 16, 32, 0.90) 100%
-    )`,
-  },
 ];
 
 export function TukubiMasterGateway() {
   const { isAuthenticated, loading } = useAuth();
   const router = useRouter();
-  const [activeSceneIndex, setActiveSceneIndex] = useState(0);
-  const activeScene = CARNIVAL_SCENES[activeSceneIndex];
+  const activeScene = CARNIVAL_SCENES[0];
 
   useEffect(() => {
     if (!loading && isAuthenticated) {
@@ -136,32 +86,7 @@ export function TukubiMasterGateway() {
         />
       </div>
 
-      {/* ── 2. Floating Carnival Atmosphere Switcher (Bottom Right) ── */}
-      <div className="fixed bottom-6 right-6 z-40 hidden md:flex items-center gap-1.5 bg-[#081020]/80 backdrop-blur-2xl border border-white/15 px-3 py-1.5 rounded-full shadow-2xl">
-        <Camera className="w-3.5 h-3.5 text-brand-caribbeanSea mr-1 flex-shrink-0" />
-        <span className="text-[10px] font-bold text-brand-sandstone/50 uppercase tracking-wider mr-1">
-          Backdrop:
-        </span>
-        {CARNIVAL_SCENES.map((scene, idx) => {
-          const isCurrent = activeSceneIndex === idx;
-          return (
-            <button
-              key={scene.id}
-              type="button"
-              onClick={() => setActiveSceneIndex(idx)}
-              className={`text-[11px] font-bold px-3 py-1 rounded-full transition-all duration-200 ${
-                isCurrent
-                  ? 'bg-gradient-to-r from-brand-caribbeanSea to-brand-sunriseCoral text-[#060A12] shadow-md shadow-brand-caribbeanSea/30 font-black'
-                  : 'text-brand-sandstone/70 hover:text-white hover:bg-white/10'
-              }`}
-            >
-              {scene.name}
-            </button>
-          );
-        })}
-      </div>
-
-      {/* ── 3. Top Navigation Bar ── */}
+      {/* ── 2. Top Navigation Bar ── */}
       <header className="relative z-30 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 flex items-center justify-between border-b border-white/15 bg-[#081020]/75 backdrop-blur-2xl">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-brand-caribbeanSea via-brand-goldenHour to-brand-sunriseCoral p-[1.5px] shadow-xl shadow-brand-caribbeanSea/35">
@@ -214,7 +139,7 @@ export function TukubiMasterGateway() {
         </div>
       </header>
 
-      {/* ── 4. Master Hero Showcase ── */}
+      {/* ── 3. Master Hero Showcase ── */}
       <section className="relative z-20 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-16 lg:pt-14 lg:pb-24">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
           {/* Left Column: Brand & Value Proposition */}
@@ -324,22 +249,12 @@ export function TukubiMasterGateway() {
         </div>
       </section>
 
-      {/* ── 5. Section: The Caribbean in Every Moment ── */}
+      {/* ── 4. Section: The Caribbean in Every Moment ── */}
       <section className="relative z-20 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 border-t border-white/15 bg-[#081020]/80 backdrop-blur-2xl">
         <ShowcaseMoments />
       </section>
 
-      {/* ── 6. Section: A Community Without Borders (Diaspora Hubs) ── */}
-      <section className="relative z-20 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 border-t border-white/15 bg-[#081020]/80 backdrop-blur-2xl">
-        <ShowcaseDiasporaCities />
-      </section>
-
-      {/* ── 7. Section: Interactive 5-Step Onboarding Architecture Gallery ── */}
-      <section className="relative z-20 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 border-t border-white/15 bg-[#081020]/80 backdrop-blur-2xl">
-        <InteractiveOnboardingPreview />
-      </section>
-
-      {/* ── 8. Master Footer ── */}
+      {/* ── 5. Master Footer ── */}
       <footer className="relative z-20 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 border-t border-white/15 bg-[#081020]/95 backdrop-blur-2xl flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-brand-sandstone/70">
         <div className="flex items-center gap-3">
           <span className="font-bold text-white font-serif">TUKUBI</span>
