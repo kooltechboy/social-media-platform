@@ -92,29 +92,34 @@ export default function AppHeader() {
 
   return (
     <header
-      className="sticky top-0 z-50 glass border-b border-white/10 px-6 sm:px-6 py-4 flex items-center justify-between"
+      className="sticky top-0 z-50 glass border-b border-white/10 px-4 sm:px-8 py-3.5 flex items-center justify-between gap-4"
       role="banner"
     >
-      <div className="flex items-center gap-6">
+      {/* ────────────────────────────────────────────────────────── */}
+      {/* 1. LEFT: PROMINENT TUKUBI BRAND & OFFICIAL TAGLINE         */}
+      {/* ────────────────────────────────────────────────────────── */}
+      <div className="flex items-center shrink-0">
         <Link
           href="/"
           className="flex flex-col tracking-tight text-brand-sandstone focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-caribbeanSea rounded-md group"
           aria-label="TUKUBI — The Caribbean Connected."
         >
-          <span className="text-xl font-extrabold bg-gradient-to-r from-brand-caribbeanSea via-brand-goldenHour to-brand-sunriseCoral bg-clip-text text-transparent tracking-wider">
+          <span className="text-2xl sm:text-3xl font-black bg-gradient-to-r from-brand-caribbeanSea via-brand-goldenHour to-brand-sunriseCoral bg-clip-text text-transparent tracking-wider leading-none">
             TUKUBI
           </span>
-          <span className="text-[10px] font-bold text-brand-sandstone/70 tracking-tight group-hover:text-brand-caribbeanSea transition-colors">
+          <span className="text-xs sm:text-[11.5px] font-bold text-brand-sandstone/80 tracking-wide mt-1 group-hover:text-brand-caribbeanSea transition-colors">
             The Caribbean Connected.
           </span>
         </Link>
+      </div>
 
-        {/* ────────────────────────────────────────────────────────── */}
-        {/* INSTANT REAL-TIME USER & PEOPLE SEARCH BAR                 */}
-        {/* ────────────────────────────────────────────────────────── */}
-        <div ref={searchRef} className="relative hidden md:flex items-center w-88">
+      {/* ────────────────────────────────────────────────────────── */}
+      {/* 2. CENTER: PROMINENT, STRUCTURALLY CENTERED SEARCH BAR     */}
+      {/* ────────────────────────────────────────────────────────── */}
+      <div className="hidden md:flex flex-1 justify-center max-w-2xl mx-auto px-4">
+        <div ref={searchRef} className="relative w-full max-w-xl">
           <form action="/search" method="GET" className="w-full relative">
-            <Search className="absolute left-3.5 top-2.5 w-4 h-4 text-brand-caribbeanSea pointer-events-none" aria-hidden="true" />
+            <Search className="absolute left-4 top-3 w-4.5 h-4.5 text-brand-caribbeanSea pointer-events-none" aria-hidden="true" />
             <input
               type="text"
               name="q"
@@ -123,7 +128,7 @@ export default function AppHeader() {
               onFocus={() => query.trim() && setIsOpen(true)}
               placeholder="Search people, creators, events, culture..."
               aria-label="Search users and ecosystem"
-              className="w-full bg-brand-twilight/90 border border-slate-700/80 hover:border-brand-caribbeanSea/60 rounded-full pl-10 pr-9 py-2 text-xs text-brand-sandstone placeholder-brand-sandstone/60 focus:outline-none focus:border-brand-caribbeanSea focus:ring-2 focus:ring-brand-caribbeanSea/30 transition-all shadow-inner"
+              className="w-full bg-brand-twilight/90 border border-slate-700/80 hover:border-brand-caribbeanSea/60 rounded-full pl-11 pr-10 py-2.5 text-sm text-brand-sandstone placeholder-brand-sandstone/60 focus:outline-none focus:border-brand-caribbeanSea focus:ring-2 focus:ring-brand-caribbeanSea/30 transition-all shadow-inner"
             />
             {query && (
               <button
@@ -132,9 +137,9 @@ export default function AppHeader() {
                   setQuery('');
                   setIsOpen(false);
                 }}
-                className="absolute right-3 top-2.5 text-brand-sandstone/40 hover:text-brand-sandstone"
+                className="absolute right-3.5 top-3 text-brand-sandstone/40 hover:text-brand-sandstone"
               >
-                <X className="w-3.5 h-3.5" />
+                <X className="w-4 h-4" />
               </button>
             )}
           </form>

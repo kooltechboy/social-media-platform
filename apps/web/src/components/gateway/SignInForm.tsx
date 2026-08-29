@@ -67,7 +67,7 @@ export function SignInForm() {
           Welcome back
         </h2>
         <p className="text-xs sm:text-sm text-brand-sandstone/70 mt-1">
-          Sign in to your Tukubi account
+          Sign in to TUKUBI — The Caribbean Connected.
         </p>
       </div>
 
