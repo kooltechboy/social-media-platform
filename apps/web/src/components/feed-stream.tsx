@@ -425,7 +425,7 @@ export default function FeedStream({ initialPosts, currentUserId }: FeedStreamPr
       {/* Feed Filter Tab Bar */}
       <div className="flex gap-2 sm:gap-4 border-b border-slate-800 pb-2 overflow-x-auto scrollbar-none" role="tablist">
         {[
-          { id: 'caribbean', label: 'Caribbean Now' },
+          { id: 'caribbean', label: 'Caribbean' },
           { id: 'foryou', label: 'For You' },
           { id: 'diaspora', label: 'Diaspora Hubs' },
           { id: 'creator', label: 'Creators & Music' },

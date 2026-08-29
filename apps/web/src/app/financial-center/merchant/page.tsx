@@ -1,4 +1,5 @@
 import React from 'react';
+import Link from 'next/link';
 import { createSupabaseServerClient, getCurrentUser } from '../../../lib/supabase/server';
 import { Store, ShieldCheck, ExternalLink } from 'lucide-react';
 import { SELLER_PLANS, Money } from '@caribbean/payments';
@@ -37,12 +38,12 @@ export default async function MerchantFinancialPage() {
           <p className="text-xs text-slate-400 max-w-md mx-auto">
             Set up digital storefronts, accept payments in local Caribbean currencies, and manage multi-staff access.
           </p>
-          <a
+          <Link
             href="/pages/create"
             className="inline-block px-5 py-2.5 rounded-xl bg-brand-sunriseCoral text-slate-950 font-black text-xs hover:opacity-95"
           >
             Create Storefront →
-          </a>
+          </Link>
         </div>
       ) : (
         <div className="space-y-6">

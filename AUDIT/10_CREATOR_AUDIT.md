@@ -17,10 +17,10 @@ Managed via `@caribbean/creator`:
 - **Plus:** \$4.99 / month (499 minor units)
 - **Pro:** \$9.99 / month (999 minor units)
 
-### 2. Fee Calculation & Revenue Split
-- Platform Commission: 15.00% (1,500 bps)
-- Payment Processing Fee: 2.90% (290 bps)
-- Creator Net Take: 82.10% (8,210 bps)
+### 2. Tier Model & Settlement
+- Creator-Defined Tiers: Custom monthly pricing & member privileges
+- Service Fee: Transparent platform fee based on active creator tier
+- Settlement: Double-entry ledger settlement without generic hardcoded cuts
 
 ### 3. Payout Gate & Safety Rules (`evaluatePayout`)
 Payouts are evaluated dynamically based on:

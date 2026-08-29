@@ -22,7 +22,7 @@ function formatEventDate(iso: string): string {
   });
 }
 
-export default async function CaribbeanNowSidebar() {
+export default async function TukubiLiveSidebar() {
   const user = await getCurrentUser();
   const supabase = await createSupabaseServerClient();
 
@@ -144,17 +144,17 @@ export default async function CaribbeanNowSidebar() {
   }
 
   return (
-    <aside className="hidden lg:block col-span-1 space-y-5" aria-label="Caribbean Now Discovery">
+    <aside className="hidden lg:block col-span-1 space-y-5" aria-label="TUKUBI Live Discovery">
       {/* Online Friends Widget */}
       <OnlineFriendsWidget />
 
-      {/* Caribbean Now Live Ticker */}
+      {/* TUKUBI Live Ticker */}
       <div className="glass rounded-2xl p-5 space-y-4">
         <div className="flex items-center justify-between">
           <h3 className="font-extrabold text-sm text-brand-sandstone flex items-center gap-2">
             <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-ping" />
             <span className="bg-gradient-to-r from-red-400 via-amber-300 to-brand-caribbeanSea bg-clip-text text-transparent">
-              CARIBBEAN NOW
+              TUKUBI LIVE
             </span>
           </h3>
           <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-red-500/20 text-red-300 border border-red-500/30">

@@ -31,7 +31,7 @@ With the completion of **GATE 0 (Discovery)** and **GATE 1 (Forensic Audit Basel
 | **Database & Schema Integrity** | **88 / 100** | Excellent | 16 versioned migrations, composite indexes, 48 tables, RLS test harness. |
 | **API Endpoints & Contracts** | **84 / 100** | Good | Health checks, grounded Ask AI endpoint, standards-compliant RSS 2.0. |
 | **SpotPay & Payments Ledger** | **84 / 100** | Good | Double-entry debit/credit ledger, integer math; PSP adapter wiring next. |
-| **Creator Economy Engine** | **78 / 100** | Good | Robust fee splits (82.1% net to creator) and KYC payout evaluation. |
+| **Creator Economy Engine** | **84 / 100** | Good | Robust tier subscriptions (Basic/Plus/Pro/Custom) and KYC payout evaluation. |
 | **Media & Transcoding** | **76 / 100** | Good | Transcoding interfaces defined; needs external CDN edge ingestion. |
 | **Live Streaming System** | **76 / 100** | Good | State machine & gift catalog defined; live chat client functional. |
 | **Podcast Infrastructure** | **82 / 100** | Good | Chapter validation & iTunes XML feed generation working. |

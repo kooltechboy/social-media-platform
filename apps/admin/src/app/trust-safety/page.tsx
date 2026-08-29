@@ -87,7 +87,7 @@ export default async function AdminTrustSafetyPage({
       {/* Priority tabs */}
       <div className="flex flex-wrap gap-2">
         {PRIORITY_TABS.map((p) => (
-          <a
+          <Link
             key={p}
             href={`?priority=${p}`}
             className={`px-3 py-1.5 rounded-full text-xs font-semibold capitalize transition-colors ${
@@ -97,7 +97,7 @@ export default async function AdminTrustSafetyPage({
             }`}
           >
             {p}
-          </a>
+          </Link>
         ))}
       </div>
 
@@ -148,11 +148,11 @@ export default async function AdminTrustSafetyPage({
       {totalPages > 1 && (
         <div className="flex items-center justify-center gap-2 text-xs">
           {page > 1 && (
-            <a href={`?priority=${priority}&page=${page - 1}`} className="px-3 py-1.5 bg-brand-dusk hover:bg-slate-700 text-slate-200 rounded-lg">← Prev</a>
+            <Link href={`?priority=${priority}&page=${page - 1}`} className="px-3 py-1.5 bg-brand-dusk hover:bg-slate-700 text-slate-200 rounded-lg">← Prev</Link>
           )}
           <span className="text-brand-sandstone/60">Page {page} of {totalPages}</span>
           {page < totalPages && (
-            <a href={`?priority=${priority}&page=${page + 1}`} className="px-3 py-1.5 bg-brand-dusk hover:bg-slate-700 text-slate-200 rounded-lg">Next →</a>
+            <Link href={`?priority=${priority}&page=${page + 1}`} className="px-3 py-1.5 bg-brand-dusk hover:bg-slate-700 text-slate-200 rounded-lg">Next →</Link>
           )}
         </div>
       )}

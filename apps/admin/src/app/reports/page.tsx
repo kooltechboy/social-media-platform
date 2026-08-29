@@ -55,9 +55,9 @@ export default async function AdminReportsPage({
       </div>
 
       {/* Status tabs */}
-      <div className="flex gap-2">
+      <div className="flex flex-wrap gap-2">
         {STATUS_TABS.map((s) => (
-          <a
+          <Link
             key={s}
             href={`?status=${s}`}
             className={`px-3 py-1.5 rounded-full text-xs font-semibold capitalize transition-colors ${
@@ -67,7 +67,7 @@ export default async function AdminReportsPage({
             }`}
           >
             {s}
-          </a>
+          </Link>
         ))}
       </div>
 
@@ -119,11 +119,11 @@ export default async function AdminReportsPage({
       {totalPages > 1 && (
         <div className="flex items-center justify-center gap-2 text-xs">
           {page > 1 && (
-            <a href={`?status=${status}&page=${page - 1}`} className="px-3 py-1.5 bg-brand-dusk hover:bg-slate-700 text-slate-200 rounded-lg">← Prev</a>
+            <Link href={`?status=${status}&page=${page - 1}`} className="px-3 py-1.5 bg-brand-dusk hover:bg-slate-700 text-slate-200 rounded-lg">← Prev</Link>
           )}
           <span className="text-brand-sandstone/60">Page {page} of {totalPages}</span>
           {page < totalPages && (
-            <a href={`?status=${status}&page=${page + 1}`} className="px-3 py-1.5 bg-brand-dusk hover:bg-slate-700 text-slate-200 rounded-lg">Next →</a>
+            <Link href={`?status=${status}&page=${page + 1}`} className="px-3 py-1.5 bg-brand-dusk hover:bg-slate-700 text-slate-200 rounded-lg">Next →</Link>
           )}
         </div>
       )}

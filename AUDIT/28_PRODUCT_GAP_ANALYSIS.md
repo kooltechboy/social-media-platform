@@ -14,7 +14,7 @@
 
 ### 2. The Caribbean Creator (Musician, Podcaster, Visual Artist)
 - **Goal:** Monetize global diaspora audience directly in USD/CAD/GBP and receive seamless payouts without US bank account barriers.
-- **Experience:** SpotPay multi-currency ledger and tiered subscriptions provide higher take-home pay (82.1% net) than Patreon (typically ~70-80% after hidden fees).
+- **Experience:** SpotPay multi-currency ledger and tiered subscriptions provide direct creator-to-fan monetization with transparent platform service fees.
 
 ### 3. The Island Business (Restaurant, Festival Organizer, Artisan)
 - **Goal:** Reach both local customers and returning diaspora visitors with verified business profiles and event ticketing.

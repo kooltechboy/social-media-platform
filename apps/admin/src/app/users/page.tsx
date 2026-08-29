@@ -119,15 +119,15 @@ export default async function AdminUsersPage({
       {totalPages > 1 && (
         <div className="flex items-center justify-center gap-2 text-xs">
           {page > 1 && (
-            <a href={`?q=${query}&page=${page - 1}`} className="px-3 py-1.5 bg-brand-dusk hover:bg-slate-700 text-slate-200 rounded-lg transition-colors">
+            <Link href={`?q=${query}&page=${page - 1}`} className="px-3 py-1.5 bg-brand-dusk hover:bg-slate-700 text-slate-200 rounded-lg transition-colors">
               ← Prev
-            </a>
+            </Link>
           )}
           <span className="text-brand-sandstone/60">Page {page} of {totalPages}</span>
           {page < totalPages && (
-            <a href={`?q=${query}&page=${page + 1}`} className="px-3 py-1.5 bg-brand-dusk hover:bg-slate-700 text-slate-200 rounded-lg transition-colors">
+            <Link href={`?q=${query}&page=${page + 1}`} className="px-3 py-1.5 bg-brand-dusk hover:bg-slate-700 text-slate-200 rounded-lg transition-colors">
               Next →
-            </a>
+            </Link>
           )}
         </div>
       )}

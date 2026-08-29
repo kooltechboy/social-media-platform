@@ -17,7 +17,7 @@ import {
 import { createSupabaseServerClient, getCurrentUser } from '../lib/supabase/server';
 import UniversalComposer from '../components/universal-composer';
 import FeedStream, { type FeedPostData } from '../components/feed-stream';
-import CaribbeanNowSidebar from '../components/caribbean-now-sidebar';
+import TukubiLiveSidebar from '../components/caribbean-now-sidebar';
 
 export const dynamic = 'force-dynamic';
 
@@ -168,9 +168,9 @@ export default async function HomePage() {
         </section>
       </div>
 
-      {/* Right Column: Caribbean Now & Diaspora Pulse (Col 4) */}
+      {/* Right Column: TUKUBI Live & Diaspora Pulse (Col 4) */}
       <div className="lg:col-span-4">
-        <CaribbeanNowSidebar />
+        <TukubiLiveSidebar />
       </div>
     </div>
   );
