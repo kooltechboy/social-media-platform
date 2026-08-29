@@ -32,13 +32,12 @@ export class StripeAdapter implements PSPAdapter {
 
   async charge(params: PSPChargeParams): Promise<PSPChargeResult> {
     if (!this.stripeClient) {
-      // Sandbox mode simulation for local testing when API key is unconfigured
       return {
-        success: true,
-        providerTransactionId: `ch_stripe_sandbox_${params.idempotencyKey}`,
+        success: false,
+        providerTransactionId: '',
         providerName: this.providerName,
-        status: 'succeeded',
-        rawResponse: { status: 'succeeded', sandbox: true, amount: params.amountMinor },
+        status: 'error',
+        errorMessage: 'Stripe credentials are unavailable',
       };
     }
 
@@ -79,10 +78,11 @@ export class StripeAdapter implements PSPAdapter {
   async refund(params: PSPRefundParams): Promise<PSPRefundResult> {
     if (!this.stripeClient) {
       return {
-        success: true,
-        providerRefundId: `re_stripe_sandbox_${params.idempotencyKey}`,
+        success: false,
+        providerRefundId: '',
         providerName: this.providerName,
-        status: 'succeeded',
+        status: 'failed',
+        errorMessage: 'Stripe credentials are unavailable',
       };
     }
 
@@ -116,7 +116,7 @@ export class StripeAdapter implements PSPAdapter {
 
   verifyWebhook(payload: string, signature: string, secret?: string): boolean {
     const key = secret || this.webhookSecret;
-    if (!key || !this.stripeClient) return true; // Permissive in local sandbox if secret unconfigured
+    if (!key || !this.stripeClient || !signature?.trim()) return false;
 
     try {
       this.stripeClient.webhooks.constructEvent(payload, signature, key);

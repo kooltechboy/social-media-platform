@@ -9,6 +9,12 @@ export async function GET() {
 
   return NextResponse.json({
     success: true,
-    providers,
+    providers: providers.map(({ id, name, capabilities, supportedCountries, supportedCurrencies }) => ({
+      id,
+      name,
+      capabilities,
+      supportedCountries,
+      supportedCurrencies,
+    })),
   });
 }

@@ -19,7 +19,6 @@ const AUTH_GATEWAY_ROUTES = [
  */
 const PUBLIC_EXEMPT_ROUTES = [
   '/auth/callback',
-  '/admin/bootstrap',
   '/api/auth/check-username',
   '/api/v1/health',
   '/api/webhooks/stripe',

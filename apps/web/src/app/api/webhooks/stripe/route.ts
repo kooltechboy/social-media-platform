@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { StripeAdapter, WebhookProcessor } from '@caribbean/payments';
+import { StripeAdapter, WebhookProcessor, type WebhookEvent } from '@caribbean/payments';
+import { createServiceSupabaseClient } from '../../../../lib/supabase/server';
 
 export async function POST(req: NextRequest) {
   const payload = await req.text();
@@ -10,25 +11,44 @@ export async function POST(req: NextRequest) {
   }
 
   const adapter = new StripeAdapter();
-  const processor = new WebhookProcessor((p, s) => adapter.verifyWebhook(p, s));
-
-  let event: any;
+  let event: { id?: unknown; type?: unknown; data?: { object?: unknown } };
   try {
-    event = JSON.parse(payload);
+    const parsed = JSON.parse(payload) as typeof event;
+    event = parsed;
   } catch (err) {
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
   }
 
-  const outcome = processor.process({
-    id: event.id,
+  const eventId = typeof event.id === 'string' ? event.id : '';
+  const eventType = typeof event.type === 'string' ? event.type : 'payment.webhook';
+  const webhookEvent: WebhookEvent = {
+    id: eventId,
     providerId: 'stripe',
-    type: event.type,
+    type: eventType,
     payload,
     signature,
+  };
+  const processor = new WebhookProcessor((p, s) => adapter.verifyWebhook(p, s), {
+    claim: async (claimedEvent) => {
+      const supabase = await createServiceSupabaseClient();
+      if (!supabase) throw new Error('Webhook persistence unavailable');
+      const { error } = await supabase.from('payment_webhooks').insert({
+        provider_id: claimedEvent.providerId,
+        event_id: claimedEvent.id,
+        event_type: claimedEvent.type,
+        payload: JSON.parse(claimedEvent.payload),
+        signature_valid: true,
+        processing_status: 'received',
+      });
+      if (error?.code === '23505') return false;
+      if (error) throw error;
+      return true;
+    },
   });
+  const outcome = await processor.process(webhookEvent);
 
   if (!outcome.accepted) {
-    return NextResponse.json({ error: outcome.reason }, { status: 400 });
+    return NextResponse.json({ error: outcome.reason }, { status: outcome.reason === 'Webhook persistence unavailable' ? 503 : 400 });
   }
 
   if (outcome.duplicate) {
@@ -38,15 +58,15 @@ export async function POST(req: NextRequest) {
   // Handle specific Stripe events
   switch (event.type) {
     case 'payment_intent.succeeded':
-      const paymentIntent = event.data.object;
-      console.log(`PaymentIntent for ${paymentIntent.amount} was successful!`);
+       const paymentIntent = event.data?.object as { amount?: number } | undefined;
+       console.log(`PaymentIntent for ${paymentIntent?.amount ?? 'unknown'} was successful!`);
       // Here you would use PaymentIntentService to transition ledger state to 'succeeded'
       break;
     case 'payment_intent.payment_failed':
       console.log('Payment failed!');
       break;
     default:
-      console.log(`Unhandled event type ${event.type}`);
+       console.log(`Unhandled event type ${eventType}`);
   }
 
   return NextResponse.json({ received: true });

@@ -4,6 +4,15 @@ import { revalidatePath } from 'next/cache';
 import { createSupabaseServerClient, getCurrentUser } from '../supabase/server';
 import { computeOrderTotals, transitionOrder } from '@caribbean/marketplace';
 
+function revalidateMarketplacePaths() {
+  try {
+    revalidatePath('/marketplace');
+    revalidatePath('/marketplace/orders');
+  } catch {
+    // Cache invalidation must not turn a completed database write into a failed action.
+  }
+}
+
 export interface MarketplaceActionState {
   error: string | null;
   success: string | null;
@@ -16,10 +25,11 @@ export async function createOrderAction(
   formData: FormData,
 ): Promise<MarketplaceActionState> {
   const productId = String(formData.get('productId') ?? '').trim();
-  const quantity = parseInt(String(formData.get('quantity') ?? '1'), 10);
+  const quantityRaw = String(formData.get('quantity') ?? '1').trim();
+  const quantity = Number(quantityRaw);
 
   if (!productId) return { error: 'Missing product.', success: null };
-  if (isNaN(quantity) || quantity < 1) return { error: 'Invalid quantity.', success: null };
+  if (!Number.isInteger(quantity) || quantity < 1) return { error: 'Invalid quantity.', success: null };
 
   const user = await getCurrentUser();
   if (!user) return { error: 'Sign in to purchase.', success: null };
@@ -48,10 +58,16 @@ export async function createOrderAction(
   }];
   const totals = computeOrderTotals(items);
 
-  const paymentProvider = String(formData.get('paymentProvider') ?? 'card').trim();
   const creatorReferralCode = String(formData.get('creatorReferralCode') ?? '').trim();
   const shippingAddressRaw = formData.get('shippingAddress');
-  const shippingAddress = shippingAddressRaw ? JSON.parse(String(shippingAddressRaw)) : null;
+  let shippingAddress: unknown = null;
+  if (shippingAddressRaw) {
+    try {
+      shippingAddress = JSON.parse(String(shippingAddressRaw));
+    } catch {
+      return { error: 'Invalid shipping address.', success: null };
+    }
+  }
 
   const idempotencyKey = `order_${user.id}_${productId}_${Date.now()}`;
 
@@ -59,7 +75,7 @@ export async function createOrderAction(
     .from('orders')
     .insert({
       buyer_id: user.id,
-      status: 'paid', // Authorized via verified payment processor
+      status: 'pending_payment',
       subtotal_minor: totals.subtotalMinor,
       platform_fee_minor: totals.platformFeeMinor,
       total_minor: totals.totalMinor,
@@ -106,7 +122,7 @@ export async function createOrderAction(
     }
   }
 
-  // Provision Universal Double-Entry Escrow Ledger Entries
+  // Create a pending intent only. Settlement and ledger posting belong to the verified provider path.
   {
     const { createServiceSupabaseClient } = await import('../supabase/server');
     const adminClient = await createServiceSupabaseClient();
@@ -128,9 +144,9 @@ export async function createOrderAction(
         amount_minor: totals.totalMinor,
         currency: product.currency,
         idempotency_key: `pi_${idempotencyKey}`,
-        selected_provider: paymentProvider,
-        selected_method_kind: paymentProvider === 'paypal' ? 'paypal' : 'card',
-        status: 'succeeded',
+        selected_provider: null,
+        selected_method_kind: null,
+        status: 'requires_payment',
       })
       .select('id')
       .single();
@@ -142,71 +158,9 @@ export async function createOrderAction(
       return { error: 'Payment processing failed. Please try again.', success: null };
     }
 
-    // Find or auto-provision buyer & seller ledger accounts
-    let [buyerAccRes, sellerAccRes] = await Promise.all([
-      adminClient.from('ledger_accounts').select('id').eq('owner_id', user.id).maybeSingle(),
-      adminClient.from('ledger_accounts').select('id').eq('owner_id', product.seller_id).maybeSingle(),
-    ]);
-
-    let buyerAccountId = buyerAccRes.data?.id;
-    let sellerAccountId = sellerAccRes.data?.id;
-
-    if (!buyerAccountId) {
-      const { data: newBuyerAcc } = await adminClient
-        .from('ledger_accounts')
-        .insert({ owner_id: user.id, account_type: 'spotpay_wallet', currency: product.currency })
-        .select('id')
-        .single();
-      buyerAccountId = newBuyerAcc?.id;
-    }
-
-    if (!sellerAccountId) {
-      const { data: newSellerAcc } = await adminClient
-        .from('ledger_accounts')
-        .insert({ owner_id: product.seller_id, account_type: 'creator_pending', currency: product.currency })
-        .select('id')
-        .single();
-      sellerAccountId = newSellerAcc?.id;
-    }
-
-    if (!buyerAccountId || !sellerAccountId) {
-      console.error('[FinancialCenter] Ledger accounts provisioning failed');
-      await supabase.from('order_items').delete().eq('order_id', order.id);
-      await supabase.from('orders').delete().eq('id', order.id);
-      return { error: 'Financial account initialization failed. Please try again.', success: null };
-    }
-
-    const txId = crypto.randomUUID();
-    const amountMajor = totals.totalMinor / 100;
-    const { error: ledgerErr } = await adminClient.from('ledger_entries').insert([
-      {
-        transaction_id: txId,
-        account_id: buyerAccountId,
-        amount: -amountMajor, // DEBIT must be negative per double-entry accounting
-        entry_type: 'DEBIT',
-        idempotency_key: `${idempotencyKey}_debit`,
-        description: `Purchase: ${product.title}`,
-      },
-      {
-        transaction_id: txId,
-        account_id: sellerAccountId,
-        amount: amountMajor, // CREDIT is positive
-        entry_type: 'CREDIT',
-        idempotency_key: `${idempotencyKey}_credit`,
-        description: `Escrow Hold: ${product.title}`,
-      },
-    ]);
-
-    if (ledgerErr) {
-      console.error('[FinancialCenter] Ledger entry creation failed:', ledgerErr.message);
-      await supabase.from('order_items').delete().eq('order_id', order.id);
-      await supabase.from('orders').delete().eq('id', order.id);
-      return { error: 'Payment ledger recording failed. Please try again.', success: null };
-    }
   }
 
-  revalidatePath('/marketplace');
-  revalidatePath('/marketplace/orders');
+  revalidateMarketplacePaths();
   return { error: null, success: 'Order created with TUKUBI buyer protection.', orderId: order.id };
 }
 
@@ -282,53 +236,8 @@ export async function cancelOrderAction(orderId: string): Promise<{ error: strin
 
   if (updateErr) return { error: updateErr.message, success: false };
 
-  // Reverse escrowed funds in the double-entry ledger
-  try {
-    const { createServiceSupabaseClient } = await import('../supabase/server');
-    const adminClient = await createServiceSupabaseClient();
-    if (adminClient) {
-      // Find the original ledger entries for this order via idempotency_key pattern
-      const { data: originalEntries } = await adminClient
-        .from('ledger_entries')
-        .select('transaction_id, account_id, amount, entry_type, idempotency_key')
-        .like('idempotency_key', `order_${user.id}_%`)
-        .order('created_at', { ascending: false })
-        .limit(10);
+  // Pending orders have no verified settlement and therefore no ledger reversal.
 
-      if (originalEntries && originalEntries.length >= 2) {
-        // Find the debit/credit pair for this order
-        const debitEntry = originalEntries.find((e) => e.entry_type === 'DEBIT');
-        const creditEntry = originalEntries.find((e) => e.entry_type === 'CREDIT');
-
-        if (debitEntry && creditEntry) {
-          const reversalTxId = crypto.randomUUID();
-          const reversalKey = `reversal_${orderId}_${Date.now()}`;
-          await adminClient.from('ledger_entries').insert([
-            {
-              transaction_id: reversalTxId,
-              account_id: debitEntry.account_id,
-              amount: Math.abs(Number(debitEntry.amount)), // Reverse DEBIT → CREDIT (positive)
-              entry_type: 'CREDIT',
-              idempotency_key: `${reversalKey}_credit`,
-              description: `Refund: Order ${orderId} cancelled`,
-            },
-            {
-              transaction_id: reversalTxId,
-              account_id: creditEntry.account_id,
-              amount: -Math.abs(Number(creditEntry.amount)), // Reverse CREDIT → DEBIT (negative)
-              entry_type: 'DEBIT',
-              idempotency_key: `${reversalKey}_debit`,
-              description: `Escrow Release: Order ${orderId} cancelled`,
-            },
-          ]);
-        }
-      }
-    }
-  } catch (err) {
-    console.error('[FinancialCenter] Ledger reversal failed for cancelled order:', orderId, err);
-    // Non-blocking: order is still cancelled, but finance team must manually reconcile
-  }
-
-  revalidatePath('/marketplace/orders');
+  revalidateMarketplacePaths();
   return { error: null, success: true };
 }

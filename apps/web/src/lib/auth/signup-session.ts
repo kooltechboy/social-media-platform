@@ -30,12 +30,21 @@ export interface SignupState {
 }
 
 const STORAGE_KEY = 'tukubi_signup_state_v1';
+let transientPassword: string | undefined;
 
 export function getSignupSession(): SignupState {
   if (typeof window === 'undefined') return {};
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? JSON.parse(raw) : {};
+    if (!raw) return transientPassword ? { password: transientPassword } : {};
+
+    const parsed = JSON.parse(raw) as SignupState;
+    // Remove passwords written by older versions and never return persisted credentials.
+    if (Object.prototype.hasOwnProperty.call(parsed, 'password')) {
+      delete parsed.password;
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(parsed));
+    }
+    return transientPassword ? { ...parsed, password: transientPassword } : parsed;
   } catch (err) {
     console.error('Failed to read signup state:', err);
     return {};
@@ -47,7 +56,11 @@ export function saveSignupSession(patch: Partial<SignupState>): SignupState {
   try {
     const current = getSignupSession();
     const updated = { ...current, ...patch };
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+    if (Object.prototype.hasOwnProperty.call(patch, 'password')) {
+      transientPassword = patch.password;
+    }
+    const { password: _password, ...persisted } = updated;
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(persisted));
     return updated;
   } catch (err) {
     console.error('Failed to save signup state:', err);
@@ -58,6 +71,7 @@ export function saveSignupSession(patch: Partial<SignupState>): SignupState {
 export function clearSignupSession(): void {
   if (typeof window === 'undefined') return;
   try {
+    transientPassword = undefined;
     localStorage.removeItem(STORAGE_KEY);
   } catch (err) {
     console.error('Failed to clear signup state:', err);

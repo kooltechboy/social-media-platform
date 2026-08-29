@@ -22,6 +22,10 @@ export class SpotPayOrchestrator {
    * verifying that Total Debit = Total Credit and amount is strictly positive.
    */
   public createDoubleEntryPayload(input: LedgerEntryInput) {
+    if (!Number.isSafeInteger(input.amount)) {
+      throw new Error('Ledger amount must be an integer in minor units.');
+    }
+
     if (input.amount <= 0) {
       throw new Error("Financial transaction amount must be strictly greater than zero.");
     }
@@ -803,4 +807,3 @@ export class MonetizationEngine {
     };
   }
 }
-

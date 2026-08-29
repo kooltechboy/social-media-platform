@@ -2,170 +2,36 @@
 
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
-import crypto from 'crypto';
-import { z } from 'zod';
 import { sanitizeRedirectUrl } from './redirect-utils';
 
-// MFA (Multi-Factor Authentication) Schema
-const mfaChallengeSchema = z.object({
-  userId: z.string(),
-  code: z.string().length(6).regex(/^[0-9]+$/),
-});
+const MFA_UNSUPPORTED_ERROR =
+  'Custom MFA actions are unavailable. Use Supabase Auth MFA after signing in.';
 
-const mfaSetupSchema = z.object({
-  userId: z.string(),
-  method: z.enum(['authenticator_app', 'sms', 'email']),
-});
+function rejectUnsupportedMfa(): never {
+  throw new Error(MFA_UNSUPPORTED_ERROR);
+}
 
 export async function initiateMfaLogin(email: string) {
-  const supabase = await createSupabaseServerClient();
-  if (!supabase) throw new Error('Supabase not configured');
-
-  // Look up user from auth schema
-  const { data: { users }, error: userError } = await supabase.auth.admin.listUsers();
-  const authUser = users?.find((u) => u.email === email);
-
-  if (userError || !authUser) {
-    throw new Error('Invalid credentials');
-  }
-
-  // Read MFA status from user_metadata (set during setup)
-  const mfaEnabled = authUser.user_metadata?.mfa_enabled === true;
-  const mfaMethods = (authUser.user_metadata?.mfa_methods as string[]) || [];
-
-  if (!mfaEnabled) {
-    return { success: true, requiresMfa: false, userId: authUser.id };
-  }
-
-  // Generate MFA challenge
-  const challengeCode = crypto.randomInt(100000, 999999).toString();
-  const challengeExpiry = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
-
-  // Store challenge in auth.users user_metadata
-  await supabase.auth.admin.updateUserById(authUser.id, {
-    user_metadata: {
-      ...authUser.user_metadata,
-      mfa_challenge: challengeCode,
-      mfa_challenge_expires_at: challengeExpiry.toISOString(),
-    },
-  });
-
-  // Send challenge via configured methods
-  await sendMfaChallenge(authUser.id, challengeCode, mfaMethods);
-
-  return {
-    success: true,
-    requiresMfa: true,
-    userId: authUser.id,
-    challengeExpiry: challengeExpiry.toISOString(),
-  };
+  void email;
+  return rejectUnsupportedMfa();
 }
 
 export async function verifyMfaChallenge(userId: string, code: string) {
-  const supabase = await createSupabaseServerClient();
-  if (!supabase) throw new Error('Supabase not configured');
-
-  const validation = mfaChallengeSchema.safeParse({ userId, code });
-  if (!validation.success) {
-    throw new Error('Invalid MFA challenge format');
-  }
-
-  const { data: { user }, error: userError } = await supabase.auth.admin.getUserById(userId);
-  if (userError || !user) {
-    throw new Error('User not found');
-  }
-
-  const meta = user.user_metadata || {};
-  const storedCode = meta.mfa_challenge;
-  const expiresAt = meta.mfa_challenge_expires_at;
-
-  if (!storedCode || storedCode !== code) {
-    throw new Error('Invalid MFA code');
-  }
-
-  if (expiresAt && new Date(expiresAt) < new Date()) {
-    await supabase.auth.admin.updateUserById(userId, {
-      user_metadata: { ...meta, mfa_challenge: null, mfa_challenge_expires_at: null },
-    });
-    throw new Error('MFA code expired');
-  }
-
-  await supabase.auth.admin.updateUserById(userId, {
-    user_metadata: { ...meta, mfa_challenge: null, mfa_challenge_expires_at: null },
-  });
-
-  return { success: true, userId };
+  void userId;
+  void code;
+  return rejectUnsupportedMfa();
 }
 
 export async function setupMfa(userId: string, method: 'authenticator_app' | 'sms' | 'email') {
-  const supabase = await createSupabaseServerClient();
-  if (!supabase) throw new Error('Supabase not configured');
-
-  const validation = mfaSetupSchema.safeParse({ userId, method });
-  if (!validation.success) {
-    throw new Error('Invalid MFA setup parameters');
-  }
-
-  const { data: { user } } = await supabase.auth.admin.getUserById(userId);
-  const existingMeta = user?.user_metadata || {};
-
-  if (method === 'authenticator_app') {
-    const secret = crypto.randomBytes(32).toString('base64');
-    const otpauth = `otpauth://totp/Tukubi:${userId}?secret=${secret}&issuer=Tukubi`;
-
-    await supabase.auth.admin.updateUserById(userId, {
-      user_metadata: {
-        ...existingMeta,
-        mfa_secret: secret,
-        mfa_enabled: true,
-        mfa_methods: ['authenticator_app'],
-      },
-    });
-
-    return { success: true, method, secret, otpauth };
-  } else {
-    const existingMethods = (existingMeta.mfa_methods as string[]) || [];
-    const updatedMethods = existingMethods.includes(method) ? existingMethods : [...existingMethods, method];
-
-    await supabase.auth.admin.updateUserById(userId, {
-      user_metadata: {
-        ...existingMeta,
-        mfa_enabled: true,
-        mfa_methods: updatedMethods,
-      },
-    });
-
-    return { success: true, method };
-  }
-}
-
-async function sendMfaChallenge(userId: string, code: string, methods: string[]) {
-  console.log(`MFA challenge for user ${userId}: Code ${code}, Methods: ${methods}`);
-  if (methods.includes('email')) {
-    await sendEmailMfaCode(userId, code);
-  }
-  if (methods.includes('sms')) {
-    await sendSmsMfaCode(userId, code);
-  }
-}
-
-async function sendEmailMfaCode(userId: string, code: string) {
-  console.log(`Email MFA code for user ${userId}: ${code}`);
-}
-
-async function sendSmsMfaCode(userId: string, code: string) {
-  console.log(`SMS MFA code for user ${userId}: ${code}`);
+  void userId;
+  void method;
+  return rejectUnsupportedMfa();
 }
 
 export async function validateMfaSession(userId: string, sessionToken: string) {
-  const supabase = await createSupabaseServerClient();
-  if (!supabase) return false;
-
-  const { data: { user } } = await supabase.auth.admin.getUserById(userId);
-  if (!user) return false;
-
-  const meta = user.user_metadata || {};
-  return meta.mfa_session_token === sessionToken;
+  void userId;
+  void sessionToken;
+  return rejectUnsupportedMfa();
 }
 
 export type AuthFormState = { error: string | null; info: string | null };

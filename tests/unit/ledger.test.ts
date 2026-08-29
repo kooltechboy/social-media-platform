@@ -36,6 +36,18 @@ describe('SpotPay Double-Entry Ledger Engine', () => {
     }).toThrow("Financial transaction amount must be strictly greater than zero.");
   });
 
+  it('should reject fractional ledger amounts because storage uses integer minor units', () => {
+    expect(() => orchestrator.createDoubleEntryPayload({
+      transactionId: 'tx_fractional',
+      sourceAccountId: 'acc_1',
+      destinationAccountId: 'acc_2',
+      amount: 10.5,
+      currency: 'USD',
+      idempotencyKey: 'idemp_fractional',
+      description: 'Invalid fractional amount',
+    })).toThrow('integer in minor units');
+  });
+
   it('should enforce Native In-App Purchase compliance for iOS & Android digital subscriptions', () => {
     const iosRoute = orchestrator.resolvePaymentRoute({
       countryIso: 'USA',

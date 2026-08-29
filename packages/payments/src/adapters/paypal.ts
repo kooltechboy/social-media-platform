@@ -1,11 +1,12 @@
 // PayPal Payment Service Provider Adapter
 
-import type { PSPAdapter, PSPChargeParams, PSPChargeResult, PSPRefundParams, PSPRefundResult } from './types';
+import type { PSPAdapter, PSPChargeParams, PSPChargeResult, PSPRefundParams, PSPRefundResult, WebhookVerifier } from './types';
 
 export interface PayPalAdapterConfig {
   clientId?: string;
   clientSecret?: string;
   environment?: 'sandbox' | 'live';
+  webhookVerifier?: WebhookVerifier;
 }
 
 export class PayPalAdapter implements PSPAdapter {
@@ -13,11 +14,13 @@ export class PayPalAdapter implements PSPAdapter {
   private clientId: string;
   private clientSecret: string;
   private environment: 'sandbox' | 'live';
+  private webhookVerifier?: WebhookVerifier;
 
   constructor(config: PayPalAdapterConfig = {}) {
     this.clientId = config.clientId || (typeof process !== 'undefined' ? process.env?.PAYPAL_CLIENT_ID : '') || '';
     this.clientSecret = config.clientSecret || (typeof process !== 'undefined' ? process.env?.PAYPAL_CLIENT_SECRET : '') || '';
     this.environment = config.environment || (process.env?.NODE_ENV === 'production' ? 'live' : 'sandbox');
+    this.webhookVerifier = config.webhookVerifier;
   }
 
   get isConfigured(): boolean {
@@ -26,13 +29,12 @@ export class PayPalAdapter implements PSPAdapter {
 
   async charge(params: PSPChargeParams): Promise<PSPChargeResult> {
     if (!this.isConfigured) {
-      // Sandbox fallback for local dev
       return {
-        success: true,
-        providerTransactionId: `PAYPAL_ORDER_${params.idempotencyKey}`,
+        success: false,
+        providerTransactionId: '',
         providerName: this.providerName,
-        status: 'succeeded',
-        rawResponse: { status: 'COMPLETED', sandbox: true, amount: params.amountMinor },
+        status: 'error',
+        errorMessage: 'PayPal credentials are unavailable',
       };
     }
 
@@ -114,10 +116,11 @@ export class PayPalAdapter implements PSPAdapter {
   async refund(params: PSPRefundParams): Promise<PSPRefundResult> {
     if (!this.isConfigured) {
       return {
-        success: true,
-        providerRefundId: `PAYPAL_REFUND_${params.idempotencyKey}`,
+        success: false,
+        providerRefundId: '',
         providerName: this.providerName,
-        status: 'succeeded',
+        status: 'failed',
+        errorMessage: 'PayPal credentials are unavailable',
       };
     }
 
@@ -171,8 +174,7 @@ export class PayPalAdapter implements PSPAdapter {
     }
   }
 
-  verifyWebhook(_payload: string, _signature: string, _secret?: string): boolean {
-    // PayPal webhook signature verification uses PayPal webhook ID & certificate validation
-    return true;
+  verifyWebhook(payload: string, signature: string, secret?: string): boolean {
+    return Boolean(this.webhookVerifier && signature?.trim() && this.webhookVerifier(payload, signature, secret));
   }
 }

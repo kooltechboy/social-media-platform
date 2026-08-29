@@ -1,11 +1,12 @@
 // WiPay Caribbean Payment Processor Adapter
 
-import type { PSPAdapter, PSPChargeParams, PSPChargeResult, PSPRefundParams, PSPRefundResult } from './types';
+import type { PSPAdapter, PSPChargeParams, PSPChargeResult, PSPRefundParams, PSPRefundResult, WebhookVerifier } from './types';
 
 export interface WiPayAdapterConfig {
   accountNumber?: string;
   apiKey?: string;
   environment?: 'sandbox' | 'live';
+  webhookVerifier?: WebhookVerifier;
 }
 
 export class WiPayAdapter implements PSPAdapter {
@@ -13,11 +14,13 @@ export class WiPayAdapter implements PSPAdapter {
   private accountNumber: string;
   private apiKey: string;
   private environment: 'sandbox' | 'live';
+  private webhookVerifier?: WebhookVerifier;
 
   constructor(config: WiPayAdapterConfig = {}) {
     this.accountNumber = config.accountNumber || (typeof process !== 'undefined' ? process.env?.WIPAY_ACCOUNT_NUMBER : '') || '';
     this.apiKey = config.apiKey || (typeof process !== 'undefined' ? process.env?.WIPAY_API_KEY : '') || '';
     this.environment = config.environment || 'sandbox';
+    this.webhookVerifier = config.webhookVerifier;
   }
 
   get isConfigured(): boolean {
@@ -26,13 +29,12 @@ export class WiPayAdapter implements PSPAdapter {
 
   async charge(params: PSPChargeParams): Promise<PSPChargeResult> {
     if (!this.isConfigured) {
-      // Sandbox mode simulation for Trinidad, Jamaica, Barbados testing
       return {
-        success: true,
-        providerTransactionId: `wipay_sb_${params.idempotencyKey}`,
+        success: false,
+        providerTransactionId: '',
         providerName: this.providerName,
-        status: 'succeeded',
-        rawResponse: { status: 'success', sandbox: true, amount: params.amountMinor, currency: params.currency },
+        status: 'error',
+        errorMessage: 'WiPay credentials are unavailable',
       };
     }
 
@@ -76,6 +78,16 @@ export class WiPayAdapter implements PSPAdapter {
   }
 
   async refund(params: PSPRefundParams): Promise<PSPRefundResult> {
+    if (!this.isConfigured) {
+      return {
+        success: false,
+        providerRefundId: '',
+        providerName: this.providerName,
+        status: 'failed',
+        errorMessage: 'WiPay credentials are unavailable',
+      };
+    }
+
     return {
       success: true,
       providerRefundId: `wipay_refund_${params.idempotencyKey}`,
@@ -84,7 +96,7 @@ export class WiPayAdapter implements PSPAdapter {
     };
   }
 
-  verifyWebhook(_payload: string, _signature: string, _secret?: string): boolean {
-    return true;
+  verifyWebhook(payload: string, signature: string, secret?: string): boolean {
+    return Boolean(this.webhookVerifier && signature?.trim() && this.webhookVerifier(payload, signature, secret));
   }
 }

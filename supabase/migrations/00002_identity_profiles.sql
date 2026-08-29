@@ -39,17 +39,13 @@ CREATE TABLE public.profiles (
 CREATE INDEX idx_profiles_username ON public.profiles(username);
 CREATE INDEX idx_profiles_origin_country ON public.profiles(origin_country_id);
 CREATE INDEX idx_profiles_current_country ON public.profiles(current_country_id);
-CREATE INDEX idx_dialogue_idioms ON public.profiles(
-  jsonb_build_array(coastal_cultural_tags, hinterland_cultural_tags)
-);
-
 -- More granular RLS rules
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 
 -- Policy 1: Public access to non-private profiles
 CREATE POLICY "Public profiles accessible"
 ON public.profiles FOR SELECT
-WITH check (is_private = FALSE OR auth.uid() = id);
+USING (is_private = FALSE OR auth.uid() = id);
 
 -- Policy 2: User-owned inserts
 CREATE POLICY "User can create profile"
@@ -59,9 +55,5 @@ WITH check (auth.uid() = id);
 -- Policy 3: Ownership-based updates
 CREATE POLICY "User owned updates"
 ON public.profiles FOR UPDATE
-WITH check (auth.uid() = id);
-
--- Policy 4:-Management can view all
-CREATE POLICY "Management audit access"
-ON public.profiles FOR SELECT
-WITH check (auth.uid() IN (SELECT id FROM public.accounts WHERE role = 'management'));
+USING (auth.uid() = id)
+WITH CHECK (auth.uid() = id);

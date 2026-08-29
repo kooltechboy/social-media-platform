@@ -1,13 +1,19 @@
 // TUKUBI Universal Double-Entry Financial Ledger Orchestrator
 
-import type { LedgerEntryInput } from './types';
+import type { LedgerEntryInput } from "./types";
+
+export function sumLedgerMinorUnits(
+  entries: ReadonlyArray<{ amount: number | string | bigint }>,
+): number {
+  return entries.reduce((sum, entry) => sum + Number(entry.amount), 0);
+}
 
 export interface GeneratedLedgerPair {
   debitEntry: {
     transaction_id: string;
     account_id: string;
     amount: number; // Negative for Debit
-    entry_type: 'DEBIT';
+    entry_type: "DEBIT";
     idempotency_key: string;
     description: string;
   };
@@ -15,7 +21,7 @@ export interface GeneratedLedgerPair {
     transaction_id: string;
     account_id: string;
     amount: number; // Positive for Credit
-    entry_type: 'CREDIT';
+    entry_type: "CREDIT";
     idempotency_key: string;
     description: string;
   };
@@ -26,17 +32,27 @@ export class LedgerOrchestrator {
    * Generates a pair of double-entry debit and credit ledger inputs
    * verifying that Total Debit + Total Credit = 0 and amount is strictly positive.
    */
-  public createDoubleEntryPayload(input: LedgerEntryInput): GeneratedLedgerPair {
+  public createDoubleEntryPayload(
+    input: LedgerEntryInput,
+  ): GeneratedLedgerPair {
+    if (!Number.isSafeInteger(input.amount)) {
+      throw new Error('Ledger amount must be an integer in minor units.');
+    }
+
     if (input.amount <= 0) {
-      throw new Error('Financial transaction amount must be strictly greater than zero.');
+      throw new Error(
+        "Financial transaction amount must be strictly greater than zero.",
+      );
     }
 
     if (!input.sourceAccountId || !input.destinationAccountId) {
-      throw new Error('Source and destination accounts are required for double-entry ledger.');
+      throw new Error(
+        "Source and destination accounts are required for double-entry ledger.",
+      );
     }
 
     if (input.sourceAccountId === input.destinationAccountId) {
-      throw new Error('Source and destination accounts must be distinct.');
+      throw new Error("Source and destination accounts must be distinct.");
     }
 
     return {
@@ -44,7 +60,7 @@ export class LedgerOrchestrator {
         transaction_id: input.transactionId,
         account_id: input.sourceAccountId,
         amount: -Math.abs(input.amount), // Always negative for Debit
-        entry_type: 'DEBIT',
+        entry_type: "DEBIT",
         idempotency_key: `${input.idempotencyKey}_debit`,
         description: input.description,
       },
@@ -52,7 +68,7 @@ export class LedgerOrchestrator {
         transaction_id: input.transactionId,
         account_id: input.destinationAccountId,
         amount: Math.abs(input.amount), // Always positive for Credit
-        entry_type: 'CREDIT',
+        entry_type: "CREDIT",
         idempotency_key: `${input.idempotencyKey}_credit`,
         description: input.description,
       },
@@ -70,14 +86,14 @@ export class LedgerOrchestrator {
     destinationAccountId: string,
     amount: number,
     idempotencyKey: string,
-    reason: string
+    reason: string,
   ): GeneratedLedgerPair {
     return this.createDoubleEntryPayload({
       transactionId: reversalTransactionId,
       sourceAccountId: destinationAccountId, // Invert source & dest
       destinationAccountId: sourceAccountId,
       amount,
-      currency: 'USD',
+      currency: "USD",
       idempotencyKey: `rev_${idempotencyKey}`,
       description: `Reversal of tx ${originalTransactionId}: ${reason}`,
     });

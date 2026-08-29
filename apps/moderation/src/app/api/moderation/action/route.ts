@@ -1,14 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createServerClient } from '@supabase/ssr';
-import { cookies } from 'next/headers';
+import { createModerationSupabaseClient, createAnonSupabaseClient } from '../../../../lib/supabase/server';
 
 type ModerationAction = 'remove' | 'restrict' | 'allow' | 'escalate';
 
 export async function POST(req: NextRequest) {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  if (!url || !serviceKey || !anonKey) {
+  const anonClient = await createAnonSupabaseClient();
+  const serviceClient = await createModerationSupabaseClient();
+  if (!anonClient || !serviceClient) {
     return NextResponse.json({ error: 'Not configured.' }, { status: 503 });
   }
 
@@ -16,33 +14,26 @@ export async function POST(req: NextRequest) {
   if (
     !body ||
     typeof body.caseId !== 'string' ||
+    !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(body.caseId) ||
     !['remove', 'restrict', 'allow', 'escalate'].includes(body.action)
   ) {
     return NextResponse.json({ error: 'Invalid payload.' }, { status: 400 });
   }
 
-  const cookieStore = await cookies();
-
   // Authenticate the caller
-  const anonClient = createServerClient(url, anonKey, {
-    cookies: {
-      getAll() { return cookieStore.getAll(); },
-      setAll() {},
-    },
-  });
   const { data: { user }, error: authErr } = await anonClient.auth.getUser();
   if (authErr || !user) {
     return NextResponse.json({ error: 'Authentication required.' }, { status: 401 });
   }
 
-  // Use service role for writes
-  const serviceClient = createServerClient(url, serviceKey, {
-    cookies: {
-      getAll() { return cookieStore.getAll(); },
-      setAll() {},
-    },
-    auth: { persistSession: false },
-  });
+  const { data: account } = await serviceClient
+    .from('accounts')
+    .select('role, status')
+    .or(`profile_id.eq.${user.id},id.eq.${user.id}`)
+    .maybeSingle();
+  if (!account || account.status !== 'active' || !['moderator', 'admin', 'management', 'superadmin', 'super_admin'].includes(account.role)) {
+    return NextResponse.json({ error: 'Forbidden. Moderator privileges required.' }, { status: 403 });
+  }
 
   const action = body.action as ModerationAction;
   const rationale: string | null = typeof body.rationale === 'string' ? body.rationale.slice(0, 500) : null;
@@ -91,13 +82,14 @@ export async function POST(req: NextRequest) {
     }
 
     // 5. Append-only audit log
-    await serviceClient.from('audit_logs').insert({
+    const { error: auditError } = await serviceClient.from('audit_logs').insert({
       action: `moderation_${action}`,
-      target_table: caseRow.target_type === 'post' ? 'posts' : caseRow.target_type === 'comment' ? 'comments' : 'moderation_cases',
-      target_id: caseRow.target_id,
+      entity_type: caseRow.target_type === 'post' ? 'posts' : caseRow.target_type === 'comment' ? 'comments' : 'moderation_cases',
+      entity_id: caseRow.target_id,
       actor_id: user.id,
-      new_values: { case_id: body.caseId, action, rationale },
+      metadata: { case_id: body.caseId, action, rationale },
     });
+    if (auditError) return NextResponse.json({ error: auditError.message }, { status: 500 });
   }
 
   return NextResponse.json({ ok: true, action, status: newStatus });

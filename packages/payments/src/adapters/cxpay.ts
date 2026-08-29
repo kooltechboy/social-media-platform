@@ -1,12 +1,13 @@
 // CX Pay Caribbean Payment Gateway Adapter
 
-import type { PSPAdapter, PSPChargeParams, PSPChargeResult, PSPRefundParams, PSPRefundResult } from './types';
+import type { PSPAdapter, PSPChargeParams, PSPChargeResult, PSPRefundParams, PSPRefundResult, WebhookVerifier } from './types';
 
 export interface CXPayAdapterConfig {
   merchantId?: string;
   apiKey?: string;
   webhookSecret?: string;
   gatewayUrl?: string;
+  webhookVerifier?: WebhookVerifier;
 }
 
 export class CXPayAdapter implements PSPAdapter {
@@ -15,12 +16,14 @@ export class CXPayAdapter implements PSPAdapter {
   private apiKey: string;
   private webhookSecret: string;
   private gatewayUrl: string;
+  private webhookVerifier?: WebhookVerifier;
 
   constructor(config: CXPayAdapterConfig = {}) {
     this.merchantId = config.merchantId || (typeof process !== 'undefined' ? process.env?.CXPAY_MERCHANT_ID : '') || '';
     this.apiKey = config.apiKey || (typeof process !== 'undefined' ? process.env?.CXPAY_API_KEY : '') || '';
     this.webhookSecret = config.webhookSecret || (typeof process !== 'undefined' ? process.env?.CXPAY_WEBHOOK_SECRET : '') || '';
     this.gatewayUrl = config.gatewayUrl || 'https://gateway.cxpay.io/api/v1';
+    this.webhookVerifier = config.webhookVerifier;
   }
 
   get isConfigured(): boolean {
@@ -29,13 +32,12 @@ export class CXPayAdapter implements PSPAdapter {
 
   async charge(params: PSPChargeParams): Promise<PSPChargeResult> {
     if (!this.isConfigured) {
-      // Sandbox fallback for Caribbean testing
       return {
-        success: true,
-        providerTransactionId: `cxpay_sb_${params.idempotencyKey}`,
+        success: false,
+        providerTransactionId: '',
         providerName: this.providerName,
-        status: 'succeeded',
-        rawResponse: { status: 'approved', sandbox: true, amount: params.amountMinor, currency: params.currency },
+        status: 'error',
+        errorMessage: 'CX Pay credentials are unavailable',
       };
     }
 
@@ -82,10 +84,11 @@ export class CXPayAdapter implements PSPAdapter {
   async refund(params: PSPRefundParams): Promise<PSPRefundResult> {
     if (!this.isConfigured) {
       return {
-        success: true,
-        providerRefundId: `cxpay_ref_sb_${params.idempotencyKey}`,
+        success: false,
+        providerRefundId: '',
         providerName: this.providerName,
-        status: 'succeeded',
+        status: 'failed',
+        errorMessage: 'CX Pay credentials are unavailable',
       };
     }
 
@@ -124,7 +127,7 @@ export class CXPayAdapter implements PSPAdapter {
     }
   }
 
-  verifyWebhook(_payload: string, _signature: string, _secret?: string): boolean {
-    return true;
+  verifyWebhook(payload: string, signature: string, secret?: string): boolean {
+    return Boolean(this.webhookVerifier && signature?.trim() && this.webhookVerifier(payload, signature, secret));
   }
 }

@@ -6,10 +6,6 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '../auth-provider';
 import {
   Sparkles,
-  Globe,
-  Users,
-  Video,
-  Store,
   Play,
   UserPlus,
   Flame,
@@ -31,7 +27,7 @@ export const CARNIVAL_SCENES: CarnivalScene[] = [
   {
     id: 'grenada-spicemas',
     name: '🇬🇩 Grenada Spicemas',
-    badge: 'Grenada Spicemas Official Edition',
+  badge: 'Caribbean Carnival Spotlight',
     title: 'Spice Isle Carnival • St. George’s, Grenada',
     // Sunlit Caribbean carnival dancers in vibrant gold, scarlet, and turquoise feathered costume
     url: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=2600&q=95',
@@ -152,7 +148,7 @@ export function TukubiMasterGateway() {
 
               <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-brand-sunriseCoral/25 border border-brand-sunriseCoral/40 text-brand-sunriseCoral text-[11px] font-extrabold backdrop-blur-2xl shadow-md">
                 <Flame className="w-3.5 h-3.5 text-brand-goldenHour fill-current" />
-                <span>{activeScene.badge}</span>
+        <span>{activeScene.badge}</span>
               </div>
             </div>
 
@@ -191,49 +187,10 @@ export function TukubiMasterGateway() {
               </Link>
             </div>
 
-            {/* 4 Glass Metric Pills */}
             <div className="pt-6 border-t border-white/20">
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                <div className="p-3.5 rounded-2xl bg-[#081020]/80 border border-white/20 backdrop-blur-2xl border-t-brand-caribbeanSea shadow-2xl">
-                  <div className="flex items-center gap-1.5 text-brand-caribbeanSea mb-1">
-                    <Users className="w-4 h-4" />
-                    <span className="text-lg font-black text-white">59M+</span>
-                  </div>
-                  <p className="text-[11px] text-brand-sandstone/90 font-medium leading-tight">
-                    Caribbean People & Diaspora
-                  </p>
-                </div>
-
-                <div className="p-3.5 rounded-2xl bg-[#081020]/80 border border-white/20 backdrop-blur-2xl border-t-brand-goldenHour shadow-2xl">
-                  <div className="flex items-center gap-1.5 text-brand-goldenHour mb-1">
-                    <Globe className="w-4 h-4" />
-                    <span className="text-lg font-black text-white">200+</span>
-                  </div>
-                  <p className="text-[11px] text-brand-sandstone/90 font-medium leading-tight">
-                    Countries Connected
-                  </p>
-                </div>
-
-                <div className="p-3.5 rounded-2xl bg-[#081020]/80 border border-white/20 backdrop-blur-2xl border-t-brand-sunriseCoral shadow-2xl">
-                  <div className="flex items-center gap-1.5 text-brand-sunriseCoral mb-1">
-                    <Video className="w-4 h-4" />
-                    <span className="text-lg font-black text-white">10K+</span>
-                  </div>
-                  <p className="text-[11px] text-brand-sandstone/90 font-medium leading-tight">
-                    Live & On-Demand Shows
-                  </p>
-                </div>
-
-                <div className="p-3.5 rounded-2xl bg-[#081020]/80 border border-white/20 backdrop-blur-2xl border-t-emerald-400 shadow-2xl">
-                  <div className="flex items-center gap-1.5 text-emerald-400 mb-1">
-                    <Store className="w-4 h-4" />
-                    <span className="text-lg font-black text-white">50K+</span>
-                  </div>
-                  <p className="text-[11px] text-brand-sandstone/90 font-medium leading-tight">
-                    Businesses & Creators
-                  </p>
-                </div>
-              </div>
+              <p className="text-xs text-brand-sandstone/75 leading-relaxed max-w-xl">
+                Discover communities, creators, culture, and commerce as real members and businesses join the network.
+              </p>
             </div>
           </div>
 

@@ -11,13 +11,18 @@ import { MessagesScreen } from './src/screens/MessagesScreen';
 import { FinancialCenterScreen } from './src/screens/FinancialCenterScreen';
 
 const Tab = createBottomTabNavigator();
+// Expo 52 and the workspace web app currently resolve different React type majors.
+// Keep the navigation boundary typed at runtime while the workspace dependencies converge.
+const Navigation = NavigationContainer as React.ComponentType<any>;
+const Navigator = Tab.Navigator as React.ComponentType<any>;
+const Screen = Tab.Screen as React.ComponentType<any>;
 
 export default function App() {
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor={TOKENS.canvas} />
-      <NavigationContainer>
-        <Tab.Navigator
+      <Navigation>
+        <Navigator
           screenOptions={{
             header: () => <Header onWalletPress={() => {}} />,
             tabBarStyle: { backgroundColor: TOKENS.surface, borderTopColor: TOKENS.border },
@@ -25,13 +30,13 @@ export default function App() {
             tabBarInactiveTintColor: TOKENS.textMuted,
           }}
         >
-          <Tab.Screen name="Home" component={HomeScreen} />
-          <Tab.Screen name="Explore" component={ExploreScreen} />
-          <Tab.Screen name="Communities" component={CommunitiesScreen} />
-          <Tab.Screen name="Messages" component={MessagesScreen} />
-          <Tab.Screen name="Financial Center" component={FinancialCenterScreen} />
-        </Tab.Navigator>
-      </NavigationContainer>
+          <Screen name="Home" component={HomeScreen} />
+          <Screen name="Explore" component={ExploreScreen} />
+          <Screen name="Communities" component={CommunitiesScreen} />
+          <Screen name="Messages" component={MessagesScreen} />
+          <Screen name="Financial Center" component={FinancialCenterScreen} />
+        </Navigator>
+      </Navigation>
     </SafeAreaView>
   );
 }

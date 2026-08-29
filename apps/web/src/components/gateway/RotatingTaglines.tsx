@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 
 const TAGLINES = [
-  '59M+ Caribbean people and global diaspora.',
+  'Caribbean people and the global diaspora, connected.',
   'Connect. Create. Discover. Transact.',
   'Culture without borders.',
   'From Kingston to Toronto, Port of Spain to London.',
