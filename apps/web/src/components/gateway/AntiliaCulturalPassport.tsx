@@ -16,15 +16,15 @@ interface AntiliaCulturalPassportProps {
 }
 
 export function AntiliaCulturalPassport({
-  displayName = 'Daniel Williams',
-  username = 'danieljwilliams',
-  originCountryName = 'Jamaica',
-  originCountryIso = 'JAM',
-  originFlag = '🇯🇲',
-  diasporaCountryName = 'Toronto, Canada',
-  diasporaFlag = '🇨🇦',
-  accountType = 'Creator / Pioneer',
-  interestsCount = 5,
+  displayName = 'Caribbean Member',
+  username = 'member',
+  originCountryName = 'Caribbean',
+  originCountryIso = 'CAR',
+  originFlag = '🌴',
+  diasporaCountryName = 'Global Diaspora',
+  diasporaFlag = '🌎',
+  accountType = 'Member',
+  interestsCount = 0,
 }: AntiliaCulturalPassportProps) {
   return (
     <div className="relative w-full max-w-sm mx-auto select-none group perspective-1000">

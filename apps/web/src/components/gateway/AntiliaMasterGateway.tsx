@@ -344,7 +344,7 @@ export function AntiliaMasterGateway() {
         <div className="flex items-center gap-3">
           <span className="font-bold text-white font-serif">TUKUBI</span>
           <span>•</span>
-          <span>&copy; {new Date().getFullYear()} TUKUBI Caribbean Digital Ecosystem. All rights reserved.</span>
+          <span>&copy; {new Date().getFullYear()} TUKUBI. The Caribbean Connected. All rights reserved.</span>
         </div>
 
         <div className="flex flex-wrap items-center justify-center gap-4 text-[11px]">

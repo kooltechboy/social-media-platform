@@ -52,11 +52,11 @@ interface UploadedMediaItem {
   uploadedUrl?: string;
 }
 
-const DRAFT_KEY = 'caribbean_one_composer_draft_v1';
+const DRAFT_KEY = 'tukubi_composer_draft_v1';
 
 export default function UniversalComposer({
   displayName = 'Caribbean Member',
-  avatarInitials = 'CO',
+  avatarInitials = 'TK',
   accountType = 'personal',
   onPostCreated,
   defaultExpanded = false,

@@ -119,7 +119,7 @@ export default function AppSidebar({ currentPath }: AppSidebarProps) {
   return (
     <aside className="hidden md:block col-span-1 space-y-5" aria-label="Primary navigation">
       <div className="glass rounded-2xl p-3 space-y-4">
-        {renderNavGroup(PRIMARY_NAV, 'Ecosystem')}
+        {renderNavGroup(PRIMARY_NAV, 'Explore & Connect')}
         <div className="h-px bg-brand-dusk/60 my-2" />
         
         {/* Accordion for secondary features to reduce visual clutter */}

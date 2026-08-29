@@ -42,7 +42,7 @@ interface PageDetails {
     title: string;
     price: string;
     kind: string;
-    rating: number;
+    rating?: number;
   }>;
   posts: Array<{
     id: string;
@@ -71,8 +71,8 @@ export default async function ModularPageView({ params }: { params: Promise<{ sl
         category: business.category || 'Verified Caribbean Business',
         verification: 'business_verified' as VerificationLevel,
         location: `${business.country_iso || 'Caribbean'} 🌴`,
-        followers: '1.2K',
-        description: business.description || 'Verified Caribbean Business page on the Tukubi ecosystem.',
+        followers: '0',
+        description: business.description || 'Verified Caribbean Business page on TUKUBI. The Caribbean Connected.',
         website: business.website || 'https://tukubi.com',
         contactEmail: 'contact@tukubi.com',
         avatar: '🏪',
@@ -82,17 +82,8 @@ export default async function ModularPageView({ params }: { params: Promise<{ sl
           title: p.title,
           price: `$${(p.price_minor / 100).toFixed(2)} USD`,
           kind: p.product_kind || 'physical',
-          rating: 5.0,
         })),
-        posts: [
-          {
-            id: `post-${business.id}`,
-            title: `Welcome to ${business.name}`,
-            time: 'Recently published',
-            content: business.description || 'Welcome to our verified Tukubi storefront.',
-            likes: 24,
-          },
-        ],
+        posts: [],
       };
     }
   } catch {
@@ -196,9 +187,6 @@ export default async function ModularPageView({ params }: { params: Promise<{ sl
                         <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-brand-sunriseCoral/10 text-brand-sunriseCoral border border-brand-sunriseCoral/20 uppercase">
                           {prod.kind}
                         </span>
-                        <span className="text-xs font-bold text-brand-goldenHour flex items-center gap-1">
-                          <Star className="w-3.5 h-3.5 fill-brand-goldenHour" /> {prod.rating}
-                        </span>
                       </div>
                       <h4 className="font-extrabold text-sm text-brand-sandstone mt-2 leading-snug">{prod.title}</h4>
                       <p className="text-lg font-black text-brand-sunriseCoral mt-1">{prod.price}</p>
@@ -222,37 +210,43 @@ export default async function ModularPageView({ params }: { params: Promise<{ sl
               Official Updates &amp; Announcements
             </h3>
 
-            {page.posts.map((post) => (
-              <article
-                key={post.id}
-                className="bg-brand-dusk/80 border border-slate-800 rounded-3xl p-6 space-y-3 shadow-xl"
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2.5">
-                    <span className="text-2xl">{page.avatar}</span>
-                    <div>
-                      <h4 className="font-extrabold text-sm text-brand-sandstone">{page.name}</h4>
-                      <time className="text-[11px] text-brand-sandstone/40">{post.time}</time>
+            {page.posts.length === 0 ? (
+              <div className="bg-brand-dusk/50 border border-dashed border-slate-800 rounded-3xl p-8 text-center space-y-2">
+                <p className="text-xs text-brand-sandstone/60">No official announcements posted yet.</p>
+              </div>
+            ) : (
+              page.posts.map((post) => (
+                <article
+                  key={post.id}
+                  className="bg-brand-dusk/80 border border-slate-800 rounded-3xl p-6 space-y-3 shadow-xl"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2.5">
+                      <span className="text-2xl">{page.avatar}</span>
+                      <div>
+                        <h4 className="font-extrabold text-sm text-brand-sandstone">{page.name}</h4>
+                        <time className="text-[11px] text-brand-sandstone/40">{post.time}</time>
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                <h4 className="font-extrabold text-base text-brand-caribbeanSea leading-snug">{post.title}</h4>
-                <p className="text-sm text-slate-200 leading-relaxed font-medium">{post.content}</p>
+                  <h4 className="font-extrabold text-base text-brand-caribbeanSea leading-snug">{post.title}</h4>
+                  <p className="text-sm text-slate-200 leading-relaxed font-medium">{post.content}</p>
 
-                <div className="flex items-center gap-6 pt-3 border-t border-slate-800 text-brand-sandstone/60 text-xs">
-                  <button className="flex items-center gap-1.5 hover:text-rose-400 transition-colors">
-                    <Heart className="w-4 h-4" /> <span>{post.likes}</span>
-                  </button>
-                  <button className="flex items-center gap-1.5 hover:text-brand-caribbeanSea transition-colors">
-                    <MessageCircle className="w-4 h-4" /> <span>Discuss</span>
-                  </button>
-                  <button className="flex items-center gap-1.5 hover:text-brand-sunriseCoral transition-colors">
-                    <Share2 className="w-4 h-4" /> <span>Share</span>
-                  </button>
-                </div>
-              </article>
-            ))}
+                  <div className="flex items-center gap-6 pt-3 border-t border-slate-800 text-brand-sandstone/60 text-xs">
+                    <button className="flex items-center gap-1.5 hover:text-rose-400 transition-colors">
+                      <Heart className="w-4 h-4" /> <span>{post.likes}</span>
+                    </button>
+                    <button className="flex items-center gap-1.5 hover:text-brand-caribbeanSea transition-colors">
+                      <MessageCircle className="w-4 h-4" /> <span>Discuss</span>
+                    </button>
+                    <button className="flex items-center gap-1.5 hover:text-brand-sunriseCoral transition-colors">
+                      <Share2 className="w-4 h-4" /> <span>Share</span>
+                    </button>
+                  </div>
+                </article>
+              ))
+            )}
           </section>
         </div>
 

@@ -191,7 +191,7 @@ export default function CreateHubClient({ user }: CreateHubClientProps) {
   // Check for saved draft on mount
   useEffect(() => {
     try {
-      const draft = localStorage.getItem('caribbean_one_composer_draft_v1');
+      const draft = localStorage.getItem('tukubi_composer_draft_v1') || localStorage.getItem('caribbean_one_composer_draft_v1');
       if (draft) {
         const parsed = JSON.parse(draft);
         if (parsed.content || (parsed.media && parsed.media.length > 0)) {

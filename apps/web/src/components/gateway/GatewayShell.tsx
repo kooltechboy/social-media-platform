@@ -43,8 +43,8 @@ export function GatewayShell({ children, activeIslandIso }: GatewayShellProps) {
             </div>
             <div>
               <span className="text-2xl font-black tracking-tight text-white font-serif">TUKUBI</span>
-              <span className="block text-[10px] uppercase font-extrabold tracking-[0.3em] text-brand-caribbeanSea">
-                Global Caribbean Network
+              <span className="block text-[10px] font-bold tracking-wider text-brand-sandstone/80">
+                The Caribbean Connected.
               </span>
             </div>
           </div>
@@ -60,7 +60,7 @@ export function GatewayShell({ children, activeIslandIso }: GatewayShellProps) {
           <div className="space-y-3">
             <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-brand-caribbeanSea/10 border border-brand-caribbeanSea/30 text-brand-caribbeanSea text-xs font-bold uppercase tracking-wider">
               <Sparkles className="w-3.5 h-3.5 text-brand-goldenHour" />
-              <span>Caribbean Futurism Digital Ecosystem</span>
+              <span>The Caribbean Connected.</span>
             </div>
 
             <h2 className="text-4xl xl:text-5xl font-black text-white tracking-tight leading-[1.12]">

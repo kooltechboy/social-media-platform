@@ -79,7 +79,7 @@ export default function ConnectSpotPayCard({
           </div>
           <h3 className="text-sm font-black text-white">Connect Your SpotPay Wallet</h3>
           <p className="text-xs text-slate-300 leading-relaxed">
-            Link SpotPay to unlock instant 1-click purchases, zero-fee creator tipping, and cross-border money movement without leaving the TUKUBI ecosystem.
+            Link SpotPay to unlock instant 1-click purchases, zero-fee creator tipping, and cross-border money movement without leaving TUKUBI.
           </p>
         </div>
       </div>

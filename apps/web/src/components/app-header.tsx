@@ -98,14 +98,14 @@ export default function AppHeader() {
       <div className="flex items-center gap-6">
         <Link
           href="/"
-          className="flex items-center gap-2 text-xl font-extrabold tracking-tight text-brand-sandstone focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-caribbeanSea rounded-md"
-          aria-label="TUKUBI — Home"
+          className="flex flex-col tracking-tight text-brand-sandstone focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-caribbeanSea rounded-md group"
+          aria-label="TUKUBI — The Caribbean Connected."
         >
-          <span className="bg-gradient-to-r from-brand-caribbeanSea via-brand-goldenHour to-brand-sunriseCoral bg-clip-text text-transparent tracking-wider">
+          <span className="text-xl font-extrabold bg-gradient-to-r from-brand-caribbeanSea via-brand-goldenHour to-brand-sunriseCoral bg-clip-text text-transparent tracking-wider">
             TUKUBI
           </span>
-          <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-brand-caribbeanSea/20 text-brand-caribbeanSea border border-brand-caribbeanSea/30">
-            ECOSYSTEM
+          <span className="text-[10px] font-bold text-brand-sandstone/70 tracking-tight group-hover:text-brand-caribbeanSea transition-colors">
+            The Caribbean Connected.
           </span>
         </Link>
 
