@@ -6,7 +6,7 @@ export interface CartLine {
   productKind: 'physical' | 'digital' | 'service';
 }
 
-export const MARKETPLACE_COMMISSION_BPS = 800;
+export const MARKETPLACE_COMMISSION_BPS = 0; // 0 bps on Seller Pro / Business subscription plans
 export const DISPUTE_WINDOW_DAYS = 30;
 export const MAX_QUANTITY_PER_LINE = 20;
 
@@ -26,9 +26,9 @@ export function computeLineTotal(line: CartLine): number {
   return line.unitPriceMinor * line.quantity;
 }
 
-export function computeOrderTotals(lines: CartLine[]): OrderTotals {
+export function computeOrderTotals(lines: CartLine[], commissionBps: number = MARKETPLACE_COMMISSION_BPS): OrderTotals {
   const subtotalMinor = lines.reduce((sum, line) => sum + computeLineTotal(line), 0);
-  const platformFeeMinor = Math.round((subtotalMinor * MARKETPLACE_COMMISSION_BPS) / 10000);
+  const platformFeeMinor = Math.round((subtotalMinor * commissionBps) / 10000);
   return {
     subtotalMinor,
     platformFeeMinor,
