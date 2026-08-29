@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 
 /**
- * ANTILIA Feed Stream Interactions E2E Tests
+ * TUKUBI Feed Stream Interactions E2E Tests
  *
  * Tests all interactive elements within the FeedStream component:
  * - Feed filter tabs (Caribbean Now, For You, Diaspora Hubs, Creators & Music)
@@ -518,8 +518,8 @@ test.describe('Feed Stream — Unauthenticated Access Banner', () => {
     await page.goto('/');
     await page.waitForLoadState('networkidle');
 
-    // The "Antilia Community Access" heading should be visible
-    await expect(page.getByText(/(Tukubi|Antilia) Community Access/)).toBeVisible();
+    // The "Tukubi Community Access" heading should be visible
+    await expect(page.getByText(/(Tukubi|Tukubi) Community Access/)).toBeVisible();
 
     // The Sign In / Register link should point to /login
     const signInLink = page.getByRole('link', { name: 'Sign In / Register' });

@@ -1,4 +1,4 @@
-# Domain Architecture — ANTILIA
+# Domain Architecture — TUKUBI
 
 ## 1. Modular Monolith with Extraction Boundaries (ADR-003)
 

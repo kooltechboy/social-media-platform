@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Sparkles, CheckCircle2, ShieldCheck, ArrowRight, Globe, AlertCircle } from 'lucide-react';
 import { GatewayShell } from '../../../components/gateway/GatewayShell';
-import { AntiliaCulturalPassport } from '../../../components/gateway/AntiliaCulturalPassport';
+import { TukubiCulturalPassport } from '../../../components/gateway/TukubiCulturalPassport';
 import { getSignupSession, clearSignupSession, type SignupState } from '../../../lib/auth/signup-session';
 import { completeFullRegistrationAction } from '../../../lib/auth/actions';
 
@@ -145,7 +145,7 @@ export default function SignupCompletePage() {
                 </div>
 
                 {/* The Issued Cultural Passport */}
-                <AntiliaCulturalPassport
+                <TukubiCulturalPassport
                   displayName={session?.displayName || `${session?.firstName} ${session?.lastName}`}
                   username={session?.username}
                   originCountryName={session?.originCountryName || 'Caribbean'}

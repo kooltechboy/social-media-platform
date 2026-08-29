@@ -1,4 +1,4 @@
-# Design System — ANTILIA
+# Design System — TUKUBI
 
 _Authoritative reference. Agents may NOT invent UI patterns outside `@caribbean/design-system` tokens and `@caribbean/ui` components. See AGENTS.md Mandate 5._
 

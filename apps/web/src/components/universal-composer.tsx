@@ -303,7 +303,7 @@ export default function UniversalComposer({
           })
         );
         window.dispatchEvent(
-          new CustomEvent('antilia:new-post', {
+          new CustomEvent('tukubi:new-post', {
             detail: { post: result.post },
           })
         );

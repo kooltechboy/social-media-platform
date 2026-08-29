@@ -24,7 +24,7 @@ setup('authenticate', async ({ page }) => {
               id: 'usr_playwright_test_01',
               email: 'testuser@caribbeanone.app',
               username: 'caribbean_tester',
-              displayName: 'Antilia Tester',
+              displayName: 'Tukubi Tester',
               role: 'user',
             }),
           },

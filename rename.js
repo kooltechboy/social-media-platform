@@ -29,8 +29,8 @@ for (const file of allFiles) {
   let originalContent = content;
 
   // Case-sensitive replacements
-  content = content.replace(/ANTILIA/g, 'ANTILIA');
-  content = content.replace(/Antilia/g, 'Antilia');
+  content = content.replace(/TUKUBI/g, 'TUKUBI');
+  content = content.replace(/Tukubi/g, 'Tukubi');
   
   if (content !== originalContent) {
     fs.writeFileSync(file, content, 'utf8');

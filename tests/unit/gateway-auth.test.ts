@@ -10,7 +10,7 @@ import {
   DIASPORA_BY_REGION,
 } from '../../apps/web/src/lib/constants/diaspora-hubs';
 
-describe('Antilia Gateway — Caribbean & Diaspora Constants', () => {
+describe('Tukubi Gateway — Caribbean & Diaspora Constants', () => {
   it('contains all required sovereign Caribbean states and overseas territories', () => {
     expect(CARIBBEAN_TERRITORIES.length).toBeGreaterThanOrEqual(30);
 

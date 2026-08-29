@@ -669,7 +669,7 @@ export class SpotPayWalletAdapter implements PSPAdapter {
 
 // ---------------------------------------------------------------------------
 // Configurable Seller Plans & Monetization Engine
-// "ANTILIA doesn't take a percentage of your sales on eligible Seller plans"
+// "TUKUBI doesn't take a percentage of your sales on eligible Seller plans"
 // ---------------------------------------------------------------------------
 
 export interface SellerPlan {
@@ -696,7 +696,7 @@ export const SELLER_PLANS: Record<SellerPlan['id'], SellerPlan> = {
     currency: 'USD',
     billingPeriod: 'monthly',
     listingLimit: 5,
-    commissionRateBps: 0, // Zero ANTILIA percentage on free tier
+    commissionRateBps: 0, // Zero TUKUBI percentage on free tier
     aiToolsEnabled: false,
     crmEnabled: false,
     staffLimit: 1,
@@ -710,7 +710,7 @@ export const SELLER_PLANS: Record<SellerPlan['id'], SellerPlan> = {
     currency: 'USD',
     billingPeriod: 'monthly',
     listingLimit: null, // Unlimited
-    commissionRateBps: 0, // 0% ANTILIA cut
+    commissionRateBps: 0, // 0% TUKUBI cut
     aiToolsEnabled: true,
     crmEnabled: false,
     staffLimit: 2,

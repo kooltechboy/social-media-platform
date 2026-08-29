@@ -1,4 +1,4 @@
--- Seed: official ANTILIA account + launch content
+-- Seed: official TUKUBI account + launch content
 -- Run: supabase db query --linked -f supabase/seed/official_account.sql
 -- Idempotent: safe to re-run.
 
@@ -17,7 +17,7 @@ BEGIN
     ON CONFLICT (id) DO NOTHING;
 
     INSERT INTO public.profiles (id, username, display_name, bio)
-    VALUES (official_id, 'caribbean_one', 'ANTILIA',
+    VALUES (official_id, 'caribbean_one', 'TUKUBI',
             'The digital home of the Caribbean and its global diaspora. Social, creators, businesses, events and SpotPay — one ecosystem.')
     ON CONFLICT (id) DO NOTHING;
 
@@ -25,7 +25,7 @@ BEGIN
     IF NOT EXISTS (SELECT 1 FROM public.posts WHERE author_id = official_id) THEN
         INSERT INTO public.posts (author_id, content, visibility) VALUES
             (official_id,
-             'Welcome to ANTILIA 🌴 The digital home of the Caribbean and its global diaspora. Connect with your islands, your communities, and your culture — wherever you are.',
+             'Welcome to TUKUBI 🌴 The digital home of the Caribbean and its global diaspora. Connect with your islands, your communities, and your culture — wherever you are.',
              'public'),
             (official_id,
              'From Kingston to Brooklyn, Santo Domingo to Toronto, Port of Spain to London: one graph connects our people, our culture, and our businesses. Tell us where your Caribbean story begins.',
@@ -66,7 +66,7 @@ BEGIN
 
     -- Flagship community
     INSERT INTO public.communities (name, slug, description, join_policy, created_by)
-    VALUES ('Antilia Lounge', 'caribbean-one-lounge',
+    VALUES ('Tukubi Lounge', 'caribbean-one-lounge',
             'The official town square: announcements, feedback, and diaspora introductions.',
             'public', official_id)
     ON CONFLICT (slug) DO NOTHING

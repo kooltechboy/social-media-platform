@@ -3,7 +3,7 @@
 import React from 'react';
 import { ShieldCheck, Sparkles, Globe, QrCode } from 'lucide-react';
 
-interface AntiliaCulturalPassportProps {
+interface TukubiCulturalPassportProps {
   displayName?: string;
   username?: string;
   originCountryName?: string;
@@ -15,7 +15,7 @@ interface AntiliaCulturalPassportProps {
   interestsCount?: number;
 }
 
-export function AntiliaCulturalPassport({
+export function TukubiCulturalPassport({
   displayName = 'Caribbean Member',
   username = 'member',
   originCountryName = 'Caribbean',
@@ -25,7 +25,7 @@ export function AntiliaCulturalPassport({
   diasporaFlag = '🌎',
   accountType = 'Member',
   interestsCount = 0,
-}: AntiliaCulturalPassportProps) {
+}: TukubiCulturalPassportProps) {
   return (
     <div className="relative w-full max-w-sm mx-auto select-none group perspective-1000">
       {/* Outer ambient glow halo */}

@@ -1,4 +1,4 @@
-# Engineering Operations: CI/CD & Testing Strategy — ANTILIA
+# Engineering Operations: CI/CD & Testing Strategy — TUKUBI
 
 ## 1. CI/CD Pipeline (Phase 1 deliverable)
 

@@ -1,4 +1,4 @@
--- RLS Verification Suite — ANTILIA
+-- RLS Verification Suite — TUKUBI
 -- Run against a Supabase project with migrations 00001..00013 applied:
 --   psql "$SUPABASE_DB_URL" -f supabase/tests/rls_tests.sql
 -- Each test sets the active role + JWT claim, executes the guarded statement

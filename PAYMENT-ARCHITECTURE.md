@@ -1,9 +1,9 @@
-# SpotPay Payment Architecture & Double-Entry Ledger — ANTILIA
+# SpotPay Payment Architecture & Double-Entry Ledger — TUKUBI
 
 ## 1. Product Relationship & Ecosystem Topology
 
 ```
-                         ANTILIA
+                         TUKUBI
                (Social • Culture • Commerce)
                             │
           ┌─────────────────┼─────────────────┐
@@ -12,7 +12,7 @@
           │                 │                 │
           └─────────────────┼─────────────────┘
                             │
-                     ANTILIA CHECKOUT
+                     TUKUBI CHECKOUT
                             │
              ┌──────────────┼──────────────┐
              │              │              │
@@ -28,11 +28,11 @@
 ```
 
 ### The Clean Separation of Roles:
-- **ANTILIA**: Where people discover, socialize, create, sell, and buy.
+- **TUKUBI**: Where people discover, socialize, create, sell, and buy.
 - **SpotPay**: How people move and spend money (financial-services platform, digital wallet, send/receive, cross-border transfers, Calypso Card, cards with Apple Pay & Google Pay).
 
 ### Visual & Ecosystem Identity:
-- **ANTILIA**: *Social • Culture • Commerce*
+- **TUKUBI**: *Social • Culture • Commerce*
 - **Powered by SpotPay**: *Money • Payments • Wallet*
 
 ---
@@ -41,11 +41,11 @@
 
 ```
 ┌────────────────────────────────────────────────────────┐
-│                   ANTILIA BUSINESS MODEL               │
+│                   TUKUBI BUSINESS MODEL               │
 │ • Seller Subscriptions (Seller Pro $14.99, Business+)  │
 │ • Business Subscriptions & Featured Listings           │
 │ • Platform Advertising & Premium Creator Tools         │
-│ • "ANTILIA doesn't take a percentage of your product   │
+│ • "TUKUBI doesn't take a percentage of your product   │
 │    sales on eligible Seller plans."                    │
 └────────────────────────────────────────────────────────┘
                            ▲
@@ -60,7 +60,7 @@
 └────────────────────────────────────────────────────────┘
 ```
 
-1. **Merchant Value Proposition:** Merchants pay ANTILIA a transparent monthly subscription ($14.99/mo on Seller Pro) to operate their full digital storefront. ANTILIA does not take a percentage cut of their product sales.
+1. **Merchant Value Proposition:** Merchants pay TUKUBI a transparent monthly subscription ($14.99/mo on Seller Pro) to operate their full digital storefront. TUKUBI does not take a percentage cut of their product sales.
 2. **Transparent Payment Processing:** Transactions remain subject to transparent third-party payment processing pass-through costs (e.g., standard 2.9% + 30¢ on card rails) or 0% on internal SpotPay wallet promotional settlements.
 3. **SpotPay-to-SpotPay Velocity:** When a buyer pays via SpotPay to a SpotPay merchant or creator, the money settles instantly inside the SpotPay financial layer, allowing immediate downstream utility (peer transfers, tipping creators, purchasing goods, paying for event tickets, or withdrawing).
 

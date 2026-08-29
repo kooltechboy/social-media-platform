@@ -154,7 +154,7 @@ describe('Podcasting 2.0 & iTunes RSS feed generation', () => {
       siteUrl: 'https://caribbeanone.app/podcasts/creators',
       feedUrl: 'https://caribbeanone.app/podcasts/creators/rss',
       coverUrl: 'https://cdn.caribbeanone.app/cover.jpg',
-      authorName: 'Antilia Studio',
+      authorName: 'Tukubi Studio',
       category: 'Society & Culture',
       episodes: [
         {

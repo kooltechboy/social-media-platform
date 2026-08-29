@@ -1,11 +1,11 @@
-# System Architecture — ANTILIA
+# System Architecture — TUKUBI
 
 ## 1. Overview & Ecosystem Topology
 
-ANTILIA is engineered as a modular monorepo combining Next.js 15 (Web), Expo React Native (iOS/Android Mobile), Supabase PostgreSQL with RLS, SpotPay Financial Orchestration, Cloudflare R2/Stream, Redis, and Antilia AI via OpenRouter.
+TUKUBI is engineered as a modular monorepo combining Next.js 15 (Web), Expo React Native (iOS/Android Mobile), Supabase PostgreSQL with RLS, SpotPay Financial Orchestration, Cloudflare R2/Stream, Redis, and Tukubi AI via OpenRouter.
 
 ```
-                         ANTILIA
+                         TUKUBI
               (Social • Culture • Commerce)
                             │
           ┌─────────────────┼─────────────────┐
@@ -15,7 +15,7 @@ ANTILIA is engineered as a modular monorepo combining Next.js 15 (Web), Expo Rea
           │                 │                 │
           └─────────────────┼─────────────────┘
                             │
-                     ANTILIA CHECKOUT
+                     TUKUBI CHECKOUT
                             │
              ┌──────────────┼──────────────┐
              │              │              │
@@ -31,9 +31,9 @@ ANTILIA is engineered as a modular monorepo combining Next.js 15 (Web), Expo Rea
 ```
 
 ### The Separation of Roles:
-- **ANTILIA**: The destination where Caribbean people and the diaspora discover, socialize, create, sell, and buy.
+- **TUKUBI**: The destination where Caribbean people and the diaspora discover, socialize, create, sell, and buy.
 - **SpotPay**: The financial-services platform providing digital wallets, money movement, cross-border transfers, Calypso Card, and card economics.
-- **Brand Tagline:** *ANTILIA: Social • Culture • Commerce — Powered by SpotPay: Money • Payments • Wallet*.
+- **Brand Tagline:** *TUKUBI: Social • Culture • Commerce — Powered by SpotPay: Money • Payments • Wallet*.
 
 ---
 

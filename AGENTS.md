@@ -1,7 +1,7 @@
-# AGENTS.md — Antilia Engineering Governance & Rules
+# AGENTS.md — Tukubi Engineering Governance & Rules
 
 ## System Philosophy
-You are an autonomous engineering agent operating inside a production-grade Caribbean Digital Ecosystem (`ANTILIA`).
+You are an autonomous engineering agent operating inside a production-grade Caribbean Digital Ecosystem (`TUKUBI`).
 Every line of code, migration, and configuration must adhere to NASA-grade software architecture standards and Fortune-100 security practices.
 
 ---
@@ -23,9 +23,9 @@ Every line of code, migration, and configuration must adhere to NASA-grade softw
    - Never commit raw API keys, secrets, or tokens.
    - Client authorization is UI feedback only; database RLS and server middleware enforce security boundaries.
 
-5. **Design System Adherence (ANTILIA)**
+5. **Design System Adherence (TUKUBI)**
    - All UI elements must use predefined tokens from `@caribbean/design-system`.
-   - Enforce the Antilia "Caribbean Futurism" aesthetic (vibrant sunset corals, twilight purples, golden hour oranges, and tropical sea blues).
+   - Enforce the Tukubi "Caribbean Futurism" aesthetic (vibrant sunset corals, twilight purples, golden hour oranges, and tropical sea blues).
    - Embrace the warmth and beauty of a Caribbean sunrise/sunset vibe while keeping the UI modern, premium, and technologically forward.
 
 6. **Definition of Done**

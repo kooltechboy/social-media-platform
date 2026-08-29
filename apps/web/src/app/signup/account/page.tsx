@@ -18,7 +18,7 @@ import {
 } from 'lucide-react';
 import { GatewayShell } from '../../../components/gateway/GatewayShell';
 import { StepProgress } from '../../../components/gateway/signup/StepProgress';
-import { AntiliaCulturalPassport } from '../../../components/gateway/AntiliaCulturalPassport';
+import { TukubiCulturalPassport } from '../../../components/gateway/TukubiCulturalPassport';
 import { getSignupSession, saveSignupSession, type SignupState } from '../../../lib/auth/signup-session';
 
 function calculatePasswordStrength(pass: string): { score: number; label: string; color: string } {
@@ -357,7 +357,7 @@ export default function SignupAccountPage() {
                 <Sparkles className="w-3 h-3 text-brand-sunriseCoral" />
                 Live Tukubi Passport Preview
               </p>
-              <AntiliaCulturalPassport
+              <TukubiCulturalPassport
                 displayName={firstName || lastName ? `${firstName} ${lastName}`.trim() : 'Daniel Williams'}
                 username={username || 'username'}
                 originCountryName={session.originCountryName || 'Caribbean'}

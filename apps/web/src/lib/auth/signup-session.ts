@@ -29,7 +29,7 @@ export interface SignupState {
   interests?: string[];
 }
 
-const STORAGE_KEY = 'antilia_signup_state_v1';
+const STORAGE_KEY = 'tukubi_signup_state_v1';
 
 export function getSignupSession(): SignupState {
   if (typeof window === 'undefined') return {};

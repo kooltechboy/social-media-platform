@@ -1,4 +1,4 @@
-# Analytics & Observability Architecture — ANTILIA
+# Analytics & Observability Architecture — TUKUBI
 
 ## 1. Analytics (Privacy-Aware)
 

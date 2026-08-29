@@ -20,7 +20,7 @@ import {
   Mail,
 } from 'lucide-react';
 import { CARIBBEAN_TERRITORIES } from '../../lib/constants/caribbean-territories';
-import { AntiliaCulturalPassport } from './AntiliaCulturalPassport';
+import { TukubiCulturalPassport } from './TukubiCulturalPassport';
 
 export function InteractiveOnboardingPreview() {
   const [activePreviewStep, setActivePreviewStep] = useState(1);

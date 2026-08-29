@@ -163,7 +163,7 @@ test.describe('Navigation & Routing - Authenticated', () => {
   });
 
   test('Header navigation contains required links', async ({ page }) => {
-    const brandLink = page.getByRole('link', { name: /(TUKUBI|ANTILIA)/i }).first();
+    const brandLink = page.getByRole('link', { name: /(TUKUBI|TUKUBI)/i }).first();
     await expect(brandLink).toBeVisible();
     await expect(brandLink).toHaveAttribute('href', '/');
 

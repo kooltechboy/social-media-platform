@@ -1,4 +1,4 @@
--- Migration 00022: Antilia Gateway Security Devices & Auth Extensions
+-- Migration 00022: Tukubi Gateway Security Devices & Auth Extensions
 -- Description: Adds user_devices table for login security verification and device detection
 -- Row-level security strictly enforced per AGENTS.md Rule 2
 

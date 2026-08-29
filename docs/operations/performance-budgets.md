@@ -1,4 +1,4 @@
-# Performance Budgets — ANTILIA
+# Performance Budgets — TUKUBI
 
 Enforced in review (Performance Agent) and validated in CI/load tests where measurable. Regression beyond threshold blocks release unless explicitly waived with rationale.
 

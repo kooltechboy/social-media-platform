@@ -93,7 +93,7 @@ export const CARNIVAL_SCENES: CarnivalScene[] = [
   },
 ];
 
-export function AntiliaMasterGateway() {
+export function TukubiMasterGateway() {
   const { isAuthenticated, loading } = useAuth();
   const router = useRouter();
   const [activeSceneIndex, setActiveSceneIndex] = useState(0);

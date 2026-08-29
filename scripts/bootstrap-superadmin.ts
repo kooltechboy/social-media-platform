@@ -1,8 +1,8 @@
 /**
- * ANTILIA — Secure Super Admin Bootstrap Script
+ * TUKUBI — Secure Super Admin Bootstrap Script
  * 
  * Usage:
- *   SUPERADMIN_EMAIL="admin@antilia.io" \
+ *   SUPERADMIN_EMAIL="admin@tukubi.io" \
  *   SUPERADMIN_USERNAME="superadmin" \
  *   SUPERADMIN_NAME="Chief Administrator" \
  *   SUPERADMIN_PASSWORD="SecureMasterPassword123!" \

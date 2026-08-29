@@ -1,4 +1,4 @@
--- Migration 00001: Comprehensive Geographic Reference Data Model for ANTILIA
+-- Migration 00001: Comprehensive Geographic Reference Data Model for TUKUBI
 -- Description: Creates sovereign states, CARICOM members, territories/dependencies, currencies, locales, flag emojis
 
 CREATE TYPE public.country_type AS ENUM (

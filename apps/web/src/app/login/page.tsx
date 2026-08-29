@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { getCurrentUser } from '../../lib/supabase/server';
-import { AntiliaMasterGateway } from '../../components/gateway/AntiliaMasterGateway';
+import { TukubiMasterGateway } from '../../components/gateway/TukubiMasterGateway';
 import { sanitizeRedirectUrl } from '../../lib/auth/redirect-utils';
 
 export const metadata: Metadata = {
@@ -24,5 +24,5 @@ export default async function LoginPage({
     redirect(safeNext);
   }
 
-  return <AntiliaMasterGateway />;
+  return <TukubiMasterGateway />;
 }

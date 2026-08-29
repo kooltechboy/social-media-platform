@@ -1,4 +1,4 @@
-// k6 load profile for the feed hot path — ANTILIA Phase 9
+// k6 load profile for the feed hot path — TUKUBI Phase 9
 // Run: k6 run tests/performance/k6-feed.js
 // Targets come from docs/operations/performance-budgets.md
 

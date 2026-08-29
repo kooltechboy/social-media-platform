@@ -1,4 +1,4 @@
-# Monetization Model — ANTILIA
+# Monetization Model — TUKUBI
 
 ## 1. Principle
 Multiple revenue streams from day one of monetization (Phase 6+); never exclusively advertising. Creators must have a genuine economic reason to build here: transparent fees, multiple streams, Caribbean discovery advantage, direct fan relationships.

@@ -46,7 +46,7 @@ BEGIN
     VALUES (
         conv_id,
         official_id,
-        'Welcome to ANTILIA — the digital home of the Caribbean and its global diaspora. Explore communities, events and creators, and say hello in your local diaspora hub. 🌴',
+        'Welcome to TUKUBI — the digital home of the Caribbean and its global diaspora. Explore communities, events and creators, and say hello in your local diaspora hub. 🌴',
         'text'
     );
 

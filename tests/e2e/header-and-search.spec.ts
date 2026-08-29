@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 
 /**
- * ANTILIA App Header & Search E2E Tests
+ * TUKUBI App Header & Search E2E Tests
  *
  * Tests the global header component including:
  * - Brand logo link
@@ -14,11 +14,11 @@ import { test, expect } from '@playwright/test';
  */
 
 test.describe('App Header — Brand & Navigation Links', () => {
-  test('ANTILIA brand logo links to home page', async ({ page }) => {
+  test('TUKUBI brand logo links to home page', async ({ page }) => {
     await page.goto('/');
     await page.waitForLoadState('networkidle');
 
-    const brandLink = page.getByRole('link', { name: /(TUKUBI|ANTILIA)/i }).first();
+    const brandLink = page.getByRole('link', { name: /(TUKUBI|TUKUBI)/i }).first();
     await expect(brandLink).toBeVisible();
     await expect(brandLink).toHaveAttribute('href', '/');
   });
@@ -139,7 +139,7 @@ test.describe('App Header — Cross-Page Consistency', () => {
       await page.goto(route);
       await page.waitForLoadState('networkidle');
 
-      const header = page.getByRole('link', { name: /(TUKUBI|ANTILIA)/i }).first();
+      const header = page.getByRole('link', { name: /(TUKUBI|TUKUBI)/i }).first();
       await expect(header).toBeVisible();
     }
   });
@@ -149,7 +149,7 @@ test.describe('App Header — Cross-Page Consistency', () => {
     await page.waitForLoadState('networkidle');
 
     // Gateway pages isolate children without the AppShell header
-    // But the login page itself has an ANTILIA heading, so we check that the 
+    // But the login page itself has an TUKUBI heading, so we check that the 
     // standard AppHeader nav links (SpotPay, Notifications, Messages) are NOT present
     const spotpayLink = page.getByLabel('SpotPay Wallet balance');
     await expect(spotpayLink).not.toBeVisible();

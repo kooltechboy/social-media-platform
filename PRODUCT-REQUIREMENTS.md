@@ -1,9 +1,9 @@
-# Product Requirements — ANTILIA
+# Product Requirements — TUKUBI
 
 > **North Star:** The digital home of the Caribbean and its global diaspora.
-> **ANTILIA** = Where people discover, socialize, create, sell, and buy.
+> **TUKUBI** = Where people discover, socialize, create, sell, and buy.
 > **SpotPay** = How people move and spend money (financial-services platform, digital wallet, send/receive, cross-border transfers, Calypso Card, cards with Apple Pay & Google Pay).
-> Visual Brand Identity: **ANTILIA (Social • Culture • Commerce) — Powered by SpotPay (Money • Payments • Wallet)**.
+> Visual Brand Identity: **TUKUBI (Social • Culture • Commerce) — Powered by SpotPay (Money • Payments • Wallet)**.
 
 ---
 
@@ -17,10 +17,10 @@ Caribbean people and the diaspora (est. 40M+ globally incl. 10M+ in the US, Cana
 
 ---
 
-## 2. Strategic Ecosystem Architecture: ANTILIA × SpotPay
+## 2. Strategic Ecosystem Architecture: TUKUBI × SpotPay
 
 ```
-                         ANTILIA
+                         TUKUBI
                (Social • Culture • Commerce)
                             │
           ┌─────────────────┼─────────────────┐
@@ -29,7 +29,7 @@ Caribbean people and the diaspora (est. 40M+ globally incl. 10M+ in the US, Cana
           │                 │                 │
           └─────────────────┼─────────────────┘
                             │
-                     ANTILIA CHECKOUT
+                     TUKUBI CHECKOUT
                             │
              ┌──────────────┼──────────────┐
              │              │              │
@@ -45,14 +45,14 @@ Caribbean people and the diaspora (est. 40M+ globally incl. 10M+ in the US, Cana
 ```
 
 ### Three Distinct, Synergistic Businesses:
-1. **Business #1 — ANTILIA (Social & Commerce Platform):**
+1. **Business #1 — TUKUBI (Social & Commerce Platform):**
    - Monetization: Subscriptions (Business Free $0, Seller Pro $14.99/mo, Business+ $39.99/mo, Enterprise), Advertising, Featured Listings, Creator AI Tools.
-   - Proposition: *"ANTILIA doesn't take a percentage of your product sales on eligible Seller plans."*
+   - Proposition: *"TUKUBI doesn't take a percentage of your product sales on eligible Seller plans."*
 2. **Business #2 — SpotPay (Financial Infrastructure):**
    - Financial services platform (not a bank) providing digital wallet, send/receive, international transfers, Calypso Card, and card economics with Apple Pay/Google Pay.
    - Revenue: Payment processing, card interchange, FX, cross-border transfers, merchant/payout services.
-3. **Business #3 — The ANTILIA × SpotPay Network:**
-   - Closed-loop economic network: ANTILIA acquires users/merchants; SpotPay powers frictionless, instant within-ecosystem money movement (peer transfers, creator tips, shopping, event tickets, withdrawals).
+3. **Business #3 — The TUKUBI × SpotPay Network:**
+   - Closed-loop economic network: TUKUBI acquires users/merchants; SpotPay powers frictionless, instant within-ecosystem money movement (peer transfers, creator tips, shopping, event tickets, withdrawals).
 
 ---
 
@@ -71,7 +71,7 @@ Caribbean people and the diaspora (est. 40M+ globally incl. 10M+ in the US, Cana
 
 ## 4. Checkout Experience & Payment Method Abstraction
 
-At ANTILIA checkout, users experience frictionless payment choice:
+At TUKUBI checkout, users experience frictionless payment choice:
 
 ```
 Choose how you want to pay
@@ -86,7 +86,7 @@ Or choose another supported payment method:
 ```
 
 - **Runtime Capability Discovery:** Payment methods are resolved at runtime via `psp_capabilities` rather than hardcoding regional banking integrations.
-- **Transparent Processing Costs:** ANTILIA charges zero percentage commission on Seller Pro; payment processing pass-through fees (e.g. 2.9% + 30¢ on card rails) are transparently disclosed.
+- **Transparent Processing Costs:** TUKUBI charges zero percentage commission on Seller Pro; payment processing pass-through fees (e.g. 2.9% + 30¢ on card rails) are transparently disclosed.
 
 ---
 
@@ -111,7 +111,7 @@ $1,000 in SpotPay Account
 
 - **Connect SpotPay Step:** Optional, high-value connection flow:
   *"Connect your SpotPay wallet to unlock faster payments, creator tips, marketplace purchases and instant cross-border transfers. [Connect] [Skip for now]"*
-- **No Merchant Friction:** Merchants are never forced to use a single wallet; ANTILIA enables them to accept whatever payment methods their customers prefer.
+- **No Merchant Friction:** Merchants are never forced to use a single wallet; TUKUBI enables them to accept whatever payment methods their customers prefer.
 
 ---
 

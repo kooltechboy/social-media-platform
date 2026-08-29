@@ -89,7 +89,7 @@ describe('Feed post normalization and pipeline state reconciliation', () => {
       id: 'post_100',
       content: 'DEBUG-POST-1710000000000',
       created_at: '2026-08-26T22:00:00.000Z',
-      media_urls: ['https://storage.antilia.io/feed/img1.jpg'],
+      media_urls: ['https://storage.tukubi.io/feed/img1.jpg'],
       cultural_tags: ['carnival'],
       likes_count: 5,
       shares_count: 2,

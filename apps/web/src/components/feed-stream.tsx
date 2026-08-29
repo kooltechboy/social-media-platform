@@ -95,10 +95,10 @@ export default function FeedStream({ initialPosts, currentUserId }: FeedStreamPr
     }
 
     window.addEventListener('tukubi:new-post', handleNewPost);
-    window.addEventListener('antilia:new-post', handleNewPost);
+    window.addEventListener('tukubi:new-post', handleNewPost);
     return () => {
       window.removeEventListener('tukubi:new-post', handleNewPost);
-      window.removeEventListener('antilia:new-post', handleNewPost);
+      window.removeEventListener('tukubi:new-post', handleNewPost);
     };
   }, []);
 

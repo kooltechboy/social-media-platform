@@ -15,7 +15,7 @@ export function NewDeviceAlert() {
 
   useEffect(() => {
     // Check if security alert was dismissed in this session
-    const isDismissed = sessionStorage.getItem('antilia_device_alert_dismissed');
+    const isDismissed = sessionStorage.getItem('tukubi_device_alert_dismissed');
     if (isDismissed) return;
 
     // Detect browser/os from navigator
@@ -49,12 +49,12 @@ export function NewDeviceAlert() {
   }, []);
 
   const handleConfirm = () => {
-    sessionStorage.setItem('antilia_device_alert_dismissed', 'true');
+    sessionStorage.setItem('tukubi_device_alert_dismissed', 'true');
     setVisible(false);
   };
 
   const handleDismiss = () => {
-    sessionStorage.setItem('antilia_device_alert_dismissed', 'true');
+    sessionStorage.setItem('tukubi_device_alert_dismissed', 'true');
     setVisible(false);
   };
 

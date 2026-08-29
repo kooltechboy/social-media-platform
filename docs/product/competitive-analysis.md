@@ -1,4 +1,4 @@
-# Competitive Analysis — ANTILIA
+# Competitive Analysis — TUKUBI
 
 ## 1. Positioning
 We are not cloning any incumbent. Differentiation = **Caribbean Graph** (people + culture + places + businesses + diaspora) that no global platform models natively.

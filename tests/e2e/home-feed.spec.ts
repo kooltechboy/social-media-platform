@@ -10,7 +10,7 @@ test.describe('Home Feed Page - Unauthenticated', () => {
   });
 
   test('Page Load & Basic Structure', async ({ page }) => {
-    const brandLink = page.getByRole('link', { name: /(TUKUBI|ANTILIA)/i }).first();
+    const brandLink = page.getByRole('link', { name: /(TUKUBI|TUKUBI)/i }).first();
     await expect(brandLink).toBeVisible();
 
     // Main feed area renders (checking for main role or content section)
@@ -24,8 +24,8 @@ test.describe('Home Feed Page - Unauthenticated', () => {
   });
 
   test('Unauthenticated State - Banner and Composer', async ({ page }) => {
-    // "Antilia Community Access" banner appears with text about SpotPay wallet, direct messaging
-    await expect(page.getByText(/(Tukubi|Antilia) Community Access/)).toBeVisible();
+    // "Tukubi Community Access" banner appears with text about SpotPay wallet, direct messaging
+    await expect(page.getByText(/(Tukubi|Tukubi) Community Access/)).toBeVisible();
     await expect(page.getByText(/Sign in or create your profile to access SpotPay/i)).toBeVisible();
     await expect(page.getByText(/direct messaging/i).first()).toBeVisible();
 
