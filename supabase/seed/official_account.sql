@@ -35,35 +35,6 @@ BEGIN
              'public');
     END IF;
 
-    -- Launch events (dates roll forward so they stay upcoming)
-    IF NOT EXISTS (SELECT 1 FROM public.events WHERE host_id = official_id) THEN
-        INSERT INTO public.events (host_id, title, description, event_kind, venue, city_id, starts_at, capacity) VALUES
-            (official_id,
-             'Diaspora Meetup: Caribbean Food & Culture Night',
-             'An evening of food, music and community for the Caribbean diaspora and friends.',
-             'in_person',
-             'Community Hall',
-             (SELECT id FROM public.cities WHERE name = 'Toronto' AND country_iso = 'CAN' LIMIT 1),
-             now() + interval '14 days',
-             150),
-            (official_id,
-             'Ask Caribbean: Live AMA with the Builders',
-             'A livestreamed open Q&A about the platform roadmap, creator economy and SpotPay.',
-             'livestream',
-             NULL,
-             NULL,
-             now() + interval '7 days',
-             NULL),
-            (official_id,
-             'Caribbean Creators Summit',
-             'Monetization, storytelling and growth for Caribbean creators — hybrid attendance.',
-             'hybrid',
-             'Waterfront Venue',
-             (SELECT id FROM public.cities WHERE name = 'Miami' AND country_iso = 'USA' LIMIT 1),
-             now() + interval '30 days',
-             400);
-    END IF;
-
     -- Flagship community
     INSERT INTO public.communities (name, slug, description, join_policy, created_by)
     VALUES ('Tukubi Lounge', 'caribbean-one-lounge',

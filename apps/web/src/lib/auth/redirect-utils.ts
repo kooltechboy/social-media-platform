@@ -17,6 +17,7 @@ const ALLOWED_REDIRECT_PREFIXES = [
   '/communities',
   '/map',
   '/events',
+  '/pages',
   '/messages',
   '/notifications',
   '/create',
@@ -25,6 +26,8 @@ const ALLOWED_REDIRECT_PREFIXES = [
   '/diaspora',
   '/sounds',
   '/onboarding',
+  '/admin',
+  '/moderation',
 ] as const;
 
 /**
@@ -41,13 +44,23 @@ export function sanitizeRedirectUrl(target: string | null | undefined): string {
   if (!target) return '/';
   const trimmed = target.trim();
 
-  // Prevent protocol-relative URLs (e.g. //evil.com) and explicit scheme redirects
-  if (!trimmed.startsWith('/') || trimmed.startsWith('//') || trimmed.includes('://')) {
+  // Prevent protocol-relative URLs (//evil.com), explicit schemes, backslashes, path traversal, and control chars
+  if (
+    !trimmed.startsWith('/') ||
+    trimmed.startsWith('//') ||
+    trimmed.includes('://') ||
+    trimmed.includes('\\') ||
+    trimmed.includes('..') ||
+    /[\r\n\t\0]/.test(trimmed)
+  ) {
     return '/';
   }
 
+  // Extract path portion excluding query/hash for prefix validation
+  const pathOnly = trimmed.split('?')[0].split('#')[0];
+
   const isAllowed = ALLOWED_REDIRECT_PREFIXES.some(
-    (prefix) => trimmed === prefix || trimmed.startsWith(`${prefix}/`)
+    (prefix) => pathOnly === prefix || pathOnly.startsWith(`${prefix}/`)
   );
   return isAllowed ? trimmed : '/';
 }

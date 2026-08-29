@@ -14,7 +14,7 @@ _Stride-based model. Maintained by the AppSec & Compliance Agent; reviewed per r
 
 | Threat | Vector | Mitigation |
 | :--- | :--- | :--- |
-| **Spoofing** | Credential stuffing, session hijack, fake business/creator impersonation | Supabase Auth + MFA + passkeys; device/session management; login alerts; verification workflow for business/creator; bot detection at edge. |
+| **Spoofing** | Credential stuffing, session hijack, fake business/creator impersonation | Supabase Auth + MFA + passkeys; device/session management; server-side audit logging; verification workflow for business/creator; bot detection at edge. |
 | **Tampering** | Client-side feed/authorization bypass; SQL injection; forged webhook from PSP | RLS on every table; parameterized queries only; webhook signature verification + replay protection; idempotency keys on all money endpoints. |
 | **Repudiation** | Moderator/financial actions denied | Immutable `audit_logs`, `security_events`, append-only ledger; every moderation/financial action attributed to actor + timestamp. |
 | **Information disclosure** | Private Caribbean identity/location leakage; leaked rows via missing RLS; media URL scraping | RLS tests mandatory; signed/expiring storage URLs; location visibility controls; inferred attributes never returned to clients. |

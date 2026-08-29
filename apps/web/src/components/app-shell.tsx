@@ -5,8 +5,6 @@ import { usePathname } from 'next/navigation';
 import AppHeader from './app-header';
 import AppSidebar from './app-sidebar';
 import MobileNav from './mobile-nav';
-import { NewDeviceAlert } from './gateway/NewDeviceAlert';
-
 const GATEWAY_ROUTES = [
   '/login',
   '/signup',
@@ -40,7 +38,6 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         </main>
       </div>
       <MobileNav />
-      <NewDeviceAlert />
     </div>
   );
 }

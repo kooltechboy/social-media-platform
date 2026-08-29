@@ -1,5 +1,5 @@
 -- Migration 00022: Tukubi Gateway Security Devices & Auth Extensions
--- Description: Adds user_devices table for login security verification and device detection
+-- Description: Adds user_devices table for user device tracking and active session management
 -- Row-level security strictly enforced per AGENTS.md Rule 2
 
 CREATE TABLE IF NOT EXISTS public.user_devices (

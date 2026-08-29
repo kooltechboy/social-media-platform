@@ -4,6 +4,7 @@ import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import crypto from 'crypto';
 import { z } from 'zod';
+import { sanitizeRedirectUrl } from './redirect-utils';
 
 // MFA (Multi-Factor Authentication) Schema
 const mfaChallengeSchema = z.object({
@@ -302,9 +303,8 @@ export async function signInAction(prevState: AuthFormState, formData: FormData)
 
   if (error) return { error: error.message, info: null };
 
-  // Sanitize redirect URL
-  const trimmed = rawRedirect.trim();
-  const safeRedirect = trimmed.startsWith('/') && !trimmed.startsWith('//') && !trimmed.includes('://') ? trimmed : '/';
+  // Sanitize redirect URL against strict whitelist
+  const safeRedirect = sanitizeRedirectUrl(rawRedirect);
 
   redirect(safeRedirect);
 }

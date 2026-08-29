@@ -9,6 +9,7 @@ import {
   DIASPORA_CITY_HUBS,
   DIASPORA_BY_REGION,
 } from '../../apps/web/src/lib/constants/diaspora-hubs';
+import { sanitizeRedirectUrl } from '../../apps/web/src/lib/auth/redirect-utils';
 
 describe('Tukubi Gateway — Caribbean & Diaspora Constants', () => {
   it('contains all required sovereign Caribbean states and overseas territories', () => {
@@ -93,27 +94,19 @@ describe('Tukubi Gateway — Caribbean & Diaspora Constants', () => {
     }
   });
 
-  it('validates open redirect protection logic', () => {
-    const ALLOWED_REDIRECT_PREFIXES = ['/', '/explore', '/profile', '/settings', '/live', '/podcasts', '/marketplace', '/creator-studio', '/spotpay', '/communities', '/map', '/events'];
-
-    function sanitizeRedirectUrl(target: string | null): string {
-      if (!target) return '/';
-      const trimmed = target.trim();
-      if (!trimmed.startsWith('/') || trimmed.startsWith('//') || trimmed.includes('://')) {
-        return '/';
-      }
-      const isAllowed = ALLOWED_REDIRECT_PREFIXES.some((prefix) => trimmed === prefix || trimmed.startsWith(`${prefix}/`));
-      return isAllowed ? trimmed : '/';
-    }
-
+  it('validates open redirect protection logic using shared redirect-utils', () => {
     expect(sanitizeRedirectUrl(null)).toBe('/');
+    expect(sanitizeRedirectUrl('')).toBe('/');
     expect(sanitizeRedirectUrl('/explore')).toBe('/explore');
     expect(sanitizeRedirectUrl('/profile/daniel')).toBe('/profile/daniel');
+    expect(sanitizeRedirectUrl('/admin')).toBe('/admin');
+    expect(sanitizeRedirectUrl('/moderation')).toBe('/moderation');
+    expect(sanitizeRedirectUrl('/creator-studio')).toBe('/creator-studio');
     // Block open redirect attempts
     expect(sanitizeRedirectUrl('https://malicious-site.com')).toBe('/');
     expect(sanitizeRedirectUrl('//malicious-site.com')).toBe('/');
     expect(sanitizeRedirectUrl('javascript:alert(1)')).toBe('/');
-    expect(sanitizeRedirectUrl('/unauthorized-admin-path')).toBe('/');
+    expect(sanitizeRedirectUrl('/unauthorized-arbitrary-external-path')).toBe('/');
   });
 
   it('validates RBAC role clearance rules for moderation and admin routes', () => {
@@ -143,6 +136,63 @@ describe('Tukubi Gateway — Caribbean & Diaspora Constants', () => {
     expect(checkAuthorization('superadmin', MODERATION_ROLES)).toBe(true);
     expect(checkAuthorization('superadmin', ADMIN_ROLES)).toBe(true);
     expect(checkAuthorization('management', ADMIN_ROLES)).toBe(true);
+  });
+
+  it('enforces zero user-facing occurrences of prohibited security/login confirmation phrases across codebase', () => {
+    const fs = require('fs');
+    const path = require('path');
+
+    const PROHIBITED_PHRASES = [
+      'new sign-in detected',
+      'new sign in detected',
+      'yes it was me',
+      'yes, it was me',
+      'secure account',
+      'secure your account',
+      'was this you',
+      'was this sign-in you',
+      'was this login you',
+      'unrecognized sign-in',
+      'unrecognized login',
+      'new login detected',
+      'suspicious login',
+      'security alert',
+      'login alert',
+      'sign-in alert',
+    ];
+
+    const dirsToScan = [
+      path.resolve(__dirname, '../../apps/web/src'),
+      path.resolve(__dirname, '../../apps/mobile/src'),
+      path.resolve(__dirname, '../../apps/admin/src'),
+      path.resolve(__dirname, '../../apps/moderation/src'),
+    ];
+
+    function scanDirectory(dir: string): { file: string; match: string }[] {
+      if (!fs.existsSync(dir)) return [];
+      const violations: { file: string; match: string }[] = [];
+      const entries = fs.readdirSync(dir, { withFileTypes: true });
+
+      for (const entry of entries) {
+        const fullPath = path.join(dir, entry.name);
+        if (entry.isDirectory()) {
+          violations.push(...scanDirectory(fullPath));
+        } else if (/\.(tsx|ts|jsx|js)$/.test(entry.name)) {
+          const content = fs.readFileSync(fullPath, 'utf-8').toLowerCase();
+          for (const phrase of PROHIBITED_PHRASES) {
+            if (content.includes(phrase)) {
+              violations.push({ file: fullPath, match: phrase });
+            }
+          }
+        }
+      }
+      return violations;
+    }
+
+    for (const dir of dirsToScan) {
+      const violations = scanDirectory(dir);
+      expect(violations).toEqual([]);
+    }
   });
 });
 

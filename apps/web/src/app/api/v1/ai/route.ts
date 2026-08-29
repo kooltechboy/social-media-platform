@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { CaribAIEngine } from '@caribbean/ai';
+import { getCurrentUser } from '../../../../lib/supabase/server';
 
 export const dynamic = 'force-dynamic';
 
@@ -7,6 +8,14 @@ const TASKS = ['translate', 'classify'] as const;
 type Task = (typeof TASKS)[number];
 
 export async function POST(request: NextRequest) {
+  const user = await getCurrentUser();
+  if (!user) {
+    return NextResponse.json(
+      { error: 'Unauthorized', message: 'Authentication required' },
+      { status: 401 }
+    );
+  }
+
   let body: { task?: string; text?: string; targetLanguage?: string };
   try {
     body = await request.json();

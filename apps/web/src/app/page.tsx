@@ -1,5 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
+import { redirect } from 'next/navigation';
 import {
   Plus,
   Flame,
@@ -35,6 +36,10 @@ import { fetchActiveStoriesAction } from '../lib/social/actions';
 
 export default async function HomePage() {
   const user = await getCurrentUser();
+  if (!user) {
+    redirect('/login');
+  }
+
   const supabase = await createSupabaseServerClient();
   const { stories: liveStories } = await fetchActiveStoriesAction();
 
@@ -116,30 +121,9 @@ export default async function HomePage() {
         {/* ────────────────────────────────────────────────────────── */}
         <section aria-label="Create Post" className="space-y-4">
           <UniversalComposer
-            displayName={user ? `@${user.username}` : 'Caribbean Diaspora Member'}
-            avatarInitials={user?.username ? user.username.slice(0, 2).toUpperCase() : 'TK'}
+            displayName={`@${user.username}`}
+            avatarInitials={user.username.slice(0, 2).toUpperCase()}
           />
-
-          {!user && (
-            <div className="glass rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-center justify-between gap-3">
-              <div>
-                <h3 className="text-xs font-black text-brand-sandstone flex items-center gap-2">
-                  <Globe className="w-4 h-4 text-brand-caribbeanSea" /> Tukubi Community Access
-                </h3>
-                <p className="text-[11px] text-slate-300 mt-0.5">
-                  Sign in or create your profile to access SpotPay wallet, direct messaging, and verified business pages.
-                </p>
-              </div>
-              <div className="flex items-center gap-2">
-                <Link
-                  href="/login"
-                  className="bg-gradient-to-r from-brand-caribbeanSea to-brand-sunriseCoral hover:from-brand-caribbeanSea hover:to-emerald-300 text-slate-950 font-black px-4 py-2 rounded-xl text-xs transition-all shadow-md whitespace-nowrap"
-                >
-                  Sign In / Register
-                </Link>
-              </div>
-            </div>
-          )}
         </section>
 
         {/* Live Audio / Video Quick Ingest Banner */}
