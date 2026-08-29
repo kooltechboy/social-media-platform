@@ -3,6 +3,7 @@
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
+import { createBrowserClient } from '@supabase/ssr';
 import {
   Compass,
   MapPin,
@@ -113,6 +114,55 @@ export default function InteractiveCaribbeanMap() {
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
   }, []);
+
+  const [geoStats, setGeoStats] = useState<{
+    creators: number;
+    businesses: number;
+    communities: number;
+    live: number;
+    loading: boolean;
+  }>({ creators: 0, businesses: 0, communities: 0, live: 0, loading: true });
+
+  // Query real dynamic counts for selected territory from Supabase
+  useEffect(() => {
+    let isMounted = true;
+    const supabase = createBrowserClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL || '',
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+    );
+
+    async function loadTerritoryStats() {
+      setGeoStats((prev) => ({ ...prev, loading: true }));
+      try {
+        const iso = selectedEntity.iso;
+        const [creatorsRes, businessesRes, communitiesRes, liveRes] = await Promise.all([
+          supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('origin_country_iso', iso),
+          supabase.from('businesses').select('id', { count: 'exact', head: true }).eq('country_iso', iso),
+          supabase.from('communities').select('id', { count: 'exact', head: true }).eq('country_iso', iso),
+          supabase.from('livestreams').select('id', { count: 'exact', head: true }).eq('state', 'live'),
+        ]);
+
+        if (isMounted) {
+          setGeoStats({
+            creators: creatorsRes.count ?? 0,
+            businesses: businessesRes.count ?? 0,
+            communities: communitiesRes.count ?? 0,
+            live: liveRes.count ?? 0,
+            loading: false,
+          });
+        }
+      } catch {
+        if (isMounted) {
+          setGeoStats({ creators: 0, businesses: 0, communities: 0, live: 0, loading: false });
+        }
+      }
+    }
+
+    void loadTerritoryStats();
+    return () => {
+      isMounted = false;
+    };
+  }, [selectedEntity.iso]);
 
   // Filtered entities based on region and search query
   const filteredEntities = useMemo(() => {
@@ -644,30 +694,38 @@ export default function InteractiveCaribbeanMap() {
             <div className="grid grid-cols-2 gap-3 pt-1">
               <div className="p-3 rounded-2xl bg-brand-twilight border border-slate-800 space-y-0.5">
                 <span className="text-[10px] font-bold text-brand-sandstone/60 flex items-center gap-1">
-                  <Users className="w-3 h-3 text-brand-caribbeanSea" /> Creators
+                  <Users className="w-3 h-3 text-brand-caribbeanSea" /> Verified Members
                 </span>
-                <p className="text-base font-black text-brand-sandstone">{selectedEntity.creatorsCount}</p>
+                <p className="text-base font-black text-brand-sandstone">
+                  {geoStats.loading ? '…' : geoStats.creators.toLocaleString()}
+                </p>
               </div>
 
               <div className="p-3 rounded-2xl bg-brand-twilight border border-slate-800 space-y-0.5">
                 <span className="text-[10px] font-bold text-brand-sandstone/60 flex items-center gap-1">
                   <Building2 className="w-3 h-3 text-brand-sunriseCoral" /> Businesses
                 </span>
-                <p className="text-base font-black text-brand-sandstone">{selectedEntity.businessesCount}</p>
+                <p className="text-base font-black text-brand-sandstone">
+                  {geoStats.loading ? '…' : geoStats.businesses.toLocaleString()}
+                </p>
               </div>
 
               <div className="p-3 rounded-2xl bg-brand-twilight border border-slate-800 space-y-0.5">
                 <span className="text-[10px] font-bold text-brand-sandstone/60 flex items-center gap-1">
-                  <Calendar className="w-3 h-3 text-yellow-400" /> Upcoming
+                  <Calendar className="w-3 h-3 text-yellow-400" /> Guilds &amp; Hubs
                 </span>
-                <p className="text-base font-black text-brand-sandstone">{selectedEntity.eventsCount}</p>
+                <p className="text-base font-black text-brand-sandstone">
+                  {geoStats.loading ? '…' : geoStats.communities.toLocaleString()}
+                </p>
               </div>
 
               <div className="p-3 rounded-2xl bg-brand-twilight border border-slate-800 space-y-0.5">
                 <span className="text-[10px] font-bold text-brand-sandstone/60 flex items-center gap-1">
                   <Tv className="w-3 h-3 text-red-400" /> Live Ingest
                 </span>
-                <p className="text-base font-black text-red-400">{selectedEntity.activeLive} Live Now</p>
+                <p className="text-base font-black text-red-400">
+                  {geoStats.loading ? '…' : `${geoStats.live} Active`}
+                </p>
               </div>
             </div>
 

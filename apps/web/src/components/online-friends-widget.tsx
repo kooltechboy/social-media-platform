@@ -60,13 +60,13 @@ export default function OnlineFriendsWidget() {
             username: p.username || p.id.slice(0, 8),
             avatar: (p.display_name || p.username || 'CM').slice(0, 2).toUpperCase(),
             isVerified: !!p.is_verified,
-            isOnline: true,
+            isOnline: false,
           }));
           setFriends(mapped);
         }
 
         // 2. Track Realtime Presence
-        channel = supabase.channel('antilia:presence', {
+        channel = supabase.channel('tukubi:presence', {
           config: { presence: { key: user?.id || `anon-${Math.random().toString(36).slice(2, 7)}` } },
         });
 
@@ -132,7 +132,7 @@ export default function OnlineFriendsWidget() {
               username: p.username || p.id.slice(0, 8),
               avatar: (p.display_name || p.username || 'CM').slice(0, 2).toUpperCase(),
               isVerified: !!p.is_verified,
-              isOnline: onlineUserIds.has(p.id) || true,
+              isOnline: onlineUserIds.has(p.id),
             }));
             setFriends(searchMapped);
           }
@@ -145,7 +145,7 @@ export default function OnlineFriendsWidget() {
     return () => clearTimeout(timer);
   }, [search, onlineUserIds, supabase]);
 
-  const onlineCount = friends.filter((f) => onlineUserIds.has(f.id) || f.isOnline).length;
+  const onlineCount = onlineUserIds.size > 0 ? onlineUserIds.size : friends.filter((f) => onlineUserIds.has(f.id)).length;
 
   return (
     <div className="bg-brand-dusk/80 border border-slate-800/80 rounded-3xl p-5 shadow-xl space-y-4">

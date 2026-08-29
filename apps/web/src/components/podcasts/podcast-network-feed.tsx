@@ -45,6 +45,7 @@ export interface PodcastShowItem {
   creator_id: string;
   category?: string;
   episodesCount?: number;
+  podcast_episodes?: Array<{ id: string }>;
   audioUrl?: string;
   latestEpisodeTitle?: string;
   chapters?: Chapter[];
@@ -91,20 +92,10 @@ export default function PodcastNetworkFeed({ podcasts, user }: PodcastNetworkFee
   const sleepTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Active episode chapters
-  const activeChapters: Chapter[] = activePodcast?.chapters || [
-    { startSeconds: 0, title: 'Introduction & Welcome' },
-    { startSeconds: 300, title: 'Caribbean Innovation & Soundscapes' },
-    { startSeconds: 900, title: 'Diaspora Stories & Deep Dive' },
-    { startSeconds: 1500, title: 'Audience Q&A & Wrap Up' },
-  ];
+  const activeChapters: Chapter[] = activePodcast?.chapters || [];
 
   // Active episode transcript
-  const activeTranscript = activePodcast?.transcript || `
-[00:00] Welcome back to ${activePodcast?.title || 'the Caribbean Podcast Network'}. Today we are broadcasting live across Kingston, Port of Spain, Santo Domingo, London, and Miami.
-[05:00] Exploring the rhythm stems, sound system heritage, and the modern digital creative economy powering the diaspora.
-[15:00] SpotPay integrations now allow direct artist tipping, episode subscriptions, and decentralized creative funding.
-[25:00] Thank you for listening. Subscribe and leave a rating on iTunes RSS!
-  `.trim();
+  const activeTranscript = activePodcast?.transcript || 'No automated transcript has been generated for this episode yet.';
 
   // Setup MediaSession API (Lock Screen & Bluetooth Car Controls)
   useEffect(() => {
@@ -529,102 +520,120 @@ export default function PodcastNetworkFeed({ podcasts, user }: PodcastNetworkFee
       )}
 
       {/* Shows Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {podcasts.map((podcast) => {
-          const isCurrent = activePodcast?.id === podcast.id;
-          const isCurrentPlaying = isCurrent && isPlaying;
-          const epCount = podcast.episodesCount ?? 12;
+      {podcasts.length === 0 ? (
+        <div className="glass rounded-3xl p-12 text-center max-w-2xl mx-auto space-y-4 border border-purple-500/20 my-8">
+          <div className="w-16 h-16 rounded-2xl bg-purple-500/10 border border-purple-500/30 flex items-center justify-center mx-auto text-purple-400">
+            <Mic className="w-8 h-8" />
+          </div>
+          <h3 className="text-lg font-black text-white">No Podcasts Available</h3>
+          <p className="text-xs text-brand-sandstone/70 leading-relaxed max-w-md mx-auto">
+            There are currently no podcasts in this category. Be the first creator to launch a Caribbean show with automated transcripts and iTunes RSS feeds!
+          </p>
+          <button
+            onClick={() => setIsCreateModalOpen(true)}
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold text-xs hover:opacity-90 transition-opacity shadow-lg shadow-purple-600/20 cursor-pointer"
+          >
+            <Plus className="w-4 h-4" /> Host First Show
+          </button>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {podcasts.map((podcast) => {
+            const isCurrent = activePodcast?.id === podcast.id;
+            const isCurrentPlaying = isCurrent && isPlaying;
+            const epCount = podcast.episodesCount ?? podcast.podcast_episodes?.length ?? 0;
 
-          return (
-            <article
-              key={podcast.id}
-              className={`border rounded-3xl p-6 space-y-4 flex flex-col justify-between transition-all shadow-xl group ${
-                isCurrent
-                  ? 'bg-brand-dusk border-purple-500/60 ring-2 ring-purple-500/20'
-                  : 'bg-brand-dusk/80 border-slate-800/90 hover:border-purple-500/50'
-              }`}
-            >
-              <div className="space-y-3.5">
-                <div className="flex items-center justify-between">
-                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-purple-600 to-indigo-700 flex items-center justify-center text-2xl shadow-lg shadow-purple-500/20">
-                    🎙️
+            return (
+              <article
+                key={podcast.id}
+                className={`border rounded-3xl p-6 space-y-4 flex flex-col justify-between transition-all shadow-xl group ${
+                  isCurrent
+                    ? 'bg-brand-dusk border-purple-500/60 ring-2 ring-purple-500/20'
+                    : 'bg-brand-dusk/80 border-slate-800/90 hover:border-purple-500/50'
+                }`}
+              >
+                <div className="space-y-3.5">
+                  <div className="flex items-center justify-between">
+                    <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-purple-600 to-indigo-700 flex items-center justify-center text-2xl shadow-lg shadow-purple-500/20">
+                      🎙️
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {podcast.is_paid && (
+                        <span className="text-[10px] font-black px-2.5 py-0.5 rounded-full bg-brand-goldenHour/20 text-amber-300 border border-brand-goldenHour/30 flex items-center gap-1">
+                          <Lock className="w-3 h-3" /> Member Only
+                        </span>
+                      )}
+                      <a
+                        href={`/api/v1/podcasts/${podcast.id}/rss`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        title="iTunes RSS 2.0 Feed"
+                        className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-brand-dusk text-purple-300 border border-purple-500/30 flex items-center gap-1 hover:bg-purple-500/20 transition-colors"
+                      >
+                        <Rss className="w-3 h-3" /> iTunes RSS
+                      </a>
+                    </div>
                   </div>
+
+                  <div>
+                    <span className="text-[10px] font-black uppercase tracking-wider text-purple-400 block mb-1">
+                      {podcast.category ?? 'Culture & Society'}
+                    </span>
+                    <h3 className="font-extrabold text-base text-brand-sandstone group-hover:text-purple-300 transition-colors leading-snug">
+                      {podcast.title}
+                    </h3>
+                    <p className="text-xs text-brand-sandstone/60 mt-1">
+                      Hosted by <strong className="text-slate-200">{podcast.profiles?.display_name ?? 'Creator'}</strong> • {epCount} Episode{epCount === 1 ? '' : 's'}
+                    </p>
+                  </div>
+
+                  {podcast.description && (
+                    <p className="text-xs text-slate-300 leading-relaxed line-clamp-2">
+                      {podcast.description}
+                    </p>
+                  )}
+                </div>
+
+                {/* Audio Wave Preview Bar & Follow Button */}
+                <div className="pt-3 border-t border-slate-800/80 flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-2 text-xs font-bold text-brand-sandstone/60">
+                    <Headphones className="w-4 h-4 text-purple-400" />
+                    <span>{podcast.follower_count.toLocaleString()} Subscribers</span>
+                  </div>
+
                   <div className="flex items-center gap-2">
-                    {podcast.is_paid && (
-                      <span className="text-[10px] font-black px-2.5 py-0.5 rounded-full bg-brand-goldenHour/20 text-amber-300 border border-brand-goldenHour/30 flex items-center gap-1">
-                        <Lock className="w-3 h-3" /> Member Only
-                      </span>
-                    )}
-                    <a
-                      href={`/api/v1/podcasts/${podcast.id}/rss`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      title="iTunes RSS 2.0 Feed"
-                      className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-brand-dusk text-purple-300 border border-purple-500/30 flex items-center gap-1 hover:bg-purple-500/20 transition-colors"
+                    <button
+                      onClick={() => handleTogglePlay(podcast)}
+                      className={`p-2 rounded-xl border transition-all flex items-center gap-1.5 text-xs font-bold cursor-pointer ${
+                        isCurrentPlaying
+                          ? 'bg-purple-600 text-white border-purple-500 shadow-md'
+                          : 'bg-purple-600/20 hover:bg-purple-600 text-purple-300 hover:text-white border-purple-500/30'
+                      }`}
                     >
-                      <Rss className="w-3 h-3" /> iTunes RSS
-                    </a>
+                      {isCurrentPlaying ? <Pause className="w-3.5 h-3.5 fill-current" /> : <Play className="w-3.5 h-3.5 fill-current" />}
+                      <span>{isCurrentPlaying ? 'Pause' : 'Play Latest'}</span>
+                    </button>
+
+                    <FollowPodcastButton
+                      podcastId={podcast.id}
+                      isFollowing={false}
+                      isAuthenticated={Boolean(user)}
+                    />
+
+                    <button
+                      onClick={() => handleShare(podcast.id, podcast.slug)}
+                      className="p-2 rounded-xl bg-brand-twilight border border-slate-800 text-slate-300 hover:text-brand-sunriseCoral"
+                      title="Share Podcast"
+                    >
+                      {copiedShareId === podcast.id ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Share2 className="w-3.5 h-3.5" />}
+                    </button>
                   </div>
                 </div>
-
-                <div>
-                  <span className="text-[10px] font-black uppercase tracking-wider text-purple-400 block mb-1">
-                    {podcast.category ?? 'Culture & Society'}
-                  </span>
-                  <h3 className="font-extrabold text-base text-brand-sandstone group-hover:text-purple-300 transition-colors leading-snug">
-                    {podcast.title}
-                  </h3>
-                  <p className="text-xs text-brand-sandstone/60 mt-1">
-                    Hosted by <strong className="text-slate-200">{podcast.profiles?.display_name ?? 'Creator'}</strong> • {epCount} Episodes
-                  </p>
-                </div>
-
-                {podcast.description && (
-                  <p className="text-xs text-slate-300 leading-relaxed line-clamp-2">
-                    {podcast.description}
-                  </p>
-                )}
-              </div>
-
-              {/* Audio Wave Preview Bar & Follow Button */}
-              <div className="pt-3 border-t border-slate-800/80 flex items-center justify-between gap-3">
-                <div className="flex items-center gap-2 text-xs font-bold text-brand-sandstone/60">
-                  <Headphones className="w-4 h-4 text-purple-400" />
-                  <span>{podcast.follower_count.toLocaleString()} Subscribers</span>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => handleTogglePlay(podcast)}
-                    className={`p-2 rounded-xl border transition-all flex items-center gap-1.5 text-xs font-bold cursor-pointer ${
-                      isCurrentPlaying
-                        ? 'bg-purple-600 text-white border-purple-500 shadow-md'
-                        : 'bg-purple-600/20 hover:bg-purple-600 text-purple-300 hover:text-white border-purple-500/30'
-                    }`}
-                  >
-                    {isCurrentPlaying ? <Pause className="w-3.5 h-3.5 fill-current" /> : <Play className="w-3.5 h-3.5 fill-current" />}
-                    <span>{isCurrentPlaying ? 'Pause' : 'Play Latest'}</span>
-                  </button>
-
-                  <FollowPodcastButton
-                    podcastId={podcast.id}
-                    isFollowing={false}
-                    isAuthenticated={Boolean(user)}
-                  />
-
-                  <button
-                    onClick={() => handleShare(podcast.id, podcast.slug)}
-                    className="p-2 rounded-xl bg-brand-twilight border border-slate-800 text-slate-300 hover:text-brand-sunriseCoral"
-                    title="Share Podcast"
-                  >
-                    {copiedShareId === podcast.id ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Share2 className="w-3.5 h-3.5" />}
-                  </button>
-                </div>
-              </div>
-            </article>
-          );
-        })}
-      </div>
+              </article>
+            );
+          })}
+        </div>
+      )}
 
       {/* Creator Show Publisher Modal */}
       <CreatePodcastModal

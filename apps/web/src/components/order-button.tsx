@@ -34,7 +34,7 @@ export default function OrderButton({
   if (!isAuthenticated) {
     return (
       <Link
-        href="/login?redirect=/marketplace"
+        href="/login?next=/marketplace"
         className="w-full text-center bg-orange-500/20 text-orange-300 hover:bg-orange-500/30 border border-orange-500/40 font-bold py-2 rounded-xl text-xs flex items-center justify-center gap-2 transition-colors"
       >
         <Wallet className="w-4 h-4" /> Sign in to Buy
@@ -53,7 +53,7 @@ export default function OrderButton({
     title: 'Caribbean Verified Product',
     priceMinor: 2500,
     currency: 'USD',
-    sellerName: 'Antilia Merchant',
+    sellerName: 'Tukubi Merchant',
     productKind: 'physical' as const,
     origin: 'Caribbean 🌴',
   };

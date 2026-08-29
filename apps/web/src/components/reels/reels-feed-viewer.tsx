@@ -84,7 +84,7 @@ export default function ReelsFeedViewer({ initialReels, user }: ReelsFeedViewerP
   const [likesState, setLikesState] = useState<Record<string, { count: number; liked: boolean }>>(() => {
     const initial: Record<string, { count: number; liked: boolean }> = {};
     for (const r of initialReels) {
-      const numeric = parseInt(r.likes.replace(/[^0-9]/g, ''), 10) * (r.likes.includes('K') ? 1000 : 1) || 1200;
+      const numeric = parseInt(r.likes.replace(/[^0-9]/g, ''), 10) * (r.likes.includes('K') ? 1000 : 1) || 0;
       initial[r.id] = { count: numeric, liked: r.initialLiked ?? false };
     }
     return initial;
@@ -94,18 +94,7 @@ export default function ReelsFeedViewer({ initialReels, user }: ReelsFeedViewerP
 
   // Slide-over sheets & Modals
   const [isCommentsOpen, setIsCommentsOpen] = useState(false);
-  const [commentsByReel, setCommentsByReel] = useState<Record<string, CommentItem[]>>({
-    'reel-1': [
-      { id: 'c1', user: 'Marcus Garvey Jr', handle: 'marcusg', avatar: '🇯🇲', text: 'Pure vibes! That costume wirework is unmatched 🔥', time: '2h ago' },
-      { id: 'c2', user: 'Soca Queen', handle: 'trinisoca', avatar: '🇹🇹', text: 'Road March contender right here!! See you on the avenue! 🎭', time: '1h ago' },
-    ],
-    'reel-2': [
-      { id: 'c3', user: 'Tanya Foodie', handle: 'tanyaeats', avatar: '🇧🇧', text: 'You can smell the pimento wood through the screen! 🍗', time: '4h ago' },
-    ],
-    'reel-3': [
-      { id: 'c4', user: 'Carlos Perez', handle: 'carlitos', avatar: '🇩🇴', text: 'El Malecón siempre tiene la mejor vibra de bachata 🇩🇴', time: '3h ago' },
-    ],
-  });
+  const [commentsByReel, setCommentsByReel] = useState<Record<string, CommentItem[]>>({});
   const [newCommentText, setNewCommentText] = useState('');
   const [isPostingComment, setIsPostingComment] = useState(false);
 
@@ -340,7 +329,7 @@ export default function ReelsFeedViewer({ initialReels, user }: ReelsFeedViewerP
     );
   }
 
-  const currentLike = likesState[activeReel.id] || { count: 1200, liked: false };
+  const currentLike = likesState[activeReel.id] || { count: 0, liked: false };
   const currentComments = commentsByReel[activeReel.id] ?? [];
   const isFollowing = followingState[activeReel.handle] ?? false;
 

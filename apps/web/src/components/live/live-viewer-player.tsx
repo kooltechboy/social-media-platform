@@ -107,29 +107,7 @@ function ActiveLivePlayer({
   const [isFullscreen, setIsFullscreen] = useState(false);
 
   // Chat State
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    {
-      id: '1',
-      body: 'Big up from London! Loving the vibes 🔥',
-      sender_id: null,
-      display_name: 'Marcus_UK',
-      created_at: new Date(Date.now() - 120000).toISOString(),
-    },
-    {
-      id: '2',
-      body: 'Sound system heavy tonight! 🇯🇲🔊',
-      sender_id: null,
-      display_name: 'Kingston_Dub',
-      created_at: new Date(Date.now() - 60000).toISOString(),
-    },
-    {
-      id: '3',
-      body: 'Sent 1x Carnival Crown via SpotPay! 👑',
-      sender_id: null,
-      display_name: 'SocaLover99',
-      created_at: new Date(Date.now() - 30000).toISOString(),
-    },
-  ]);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [chatInput, setChatInput] = useState('');
   const [isFollowing, setIsFollowing] = useState(false);
   const [followingPending, setFollowingPending] = useState(false);
@@ -141,6 +119,37 @@ function ActiveLivePlayer({
   const chatScrollRef = useRef<HTMLDivElement | null>(null);
 
   const isLive = stream.state === 'live';
+
+  // Load existing stream messages on mount
+  useEffect(() => {
+    const supabase = createSupabaseBrowserClient();
+    if (!supabase || !stream.id) return;
+
+    let isMounted = true;
+    void supabase
+      .from('live_messages')
+      .select('id, body, sender_id, created_at, profiles(display_name, username)')
+      .eq('livestream_id', stream.id)
+      .order('created_at', { ascending: true })
+      .limit(50)
+      .then(({ data }) => {
+        if (isMounted && data) {
+          const formatted: ChatMessage[] = data.map((msg: any) => ({
+            id: msg.id,
+            body: msg.body,
+            sender_id: msg.sender_id,
+            display_name: msg.profiles?.display_name || msg.profiles?.username || 'Viewer',
+            isHost: msg.sender_id === stream.creator_id,
+            created_at: msg.created_at,
+          }));
+          setMessages(formatted);
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [stream.id, stream.creator_id]);
 
   // Supabase Realtime Chat Subscription
   useEffect(() => {
@@ -480,26 +489,34 @@ function ActiveLivePlayer({
 
         {/* Messages Feed */}
         <div className="flex-1 overflow-y-auto space-y-3 py-3 pr-1">
-          {messages.map((msg) => (
-            <div
-              key={msg.id}
-              className={`p-2.5 rounded-2xl text-xs space-y-0.5 ${
-                msg.isHost
-                  ? 'bg-red-500/10 border border-red-500/30'
-                  : 'bg-brand-twilight border border-slate-800'
-              }`}
-            >
-              <div className="flex items-center justify-between">
-                <span className={`font-bold ${msg.isHost ? 'text-red-400' : 'text-brand-caribbeanSea'}`}>
-                  {msg.display_name}
-                </span>
-                <span className="text-[10px] text-brand-sandstone/40">
-                  {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                </span>
-              </div>
-              <p className="text-slate-200 leading-relaxed break-words">{msg.body}</p>
+          {messages.length === 0 ? (
+            <div className="h-full flex flex-col items-center justify-center text-center p-4 text-brand-sandstone/50 space-y-2">
+              <MessageSquare className="w-8 h-8 text-slate-600 mx-auto" />
+              <p className="text-xs font-semibold text-brand-sandstone/70">No messages yet</p>
+              <p className="text-[11px] text-brand-sandstone/50">Be the first to say hello to the broadcaster and community!</p>
             </div>
-          ))}
+          ) : (
+            messages.map((msg) => (
+              <div
+                key={msg.id}
+                className={`p-2.5 rounded-2xl text-xs space-y-0.5 ${
+                  msg.isHost
+                    ? 'bg-red-500/10 border border-red-500/30'
+                    : 'bg-brand-twilight border border-slate-800'
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <span className={`font-bold ${msg.isHost ? 'text-red-400' : 'text-brand-caribbeanSea'}`}>
+                    {msg.display_name}
+                  </span>
+                  <span className="text-[10px] text-brand-sandstone/40">
+                    {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </span>
+                </div>
+                <p className="text-slate-200 leading-relaxed break-words">{msg.body}</p>
+              </div>
+            ))
+          )}
           <div ref={chatScrollRef} />
         </div>
 

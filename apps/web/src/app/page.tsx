@@ -40,11 +40,23 @@ export default async function HomePage() {
 
   let livePosts: FeedPostData[] = [];
   if (supabase) {
-    const { data } = await supabase
-      .from('posts')
-      .select('id, author_id, content, created_at, media_urls, cultural_tags, likes_count, comments_count, shares_count, profiles(display_name, username, is_verified)')
-      .order('created_at', { ascending: false })
-      .limit(30);
+    const [postsRes, liveRes] = await Promise.all([
+      supabase
+        .from('posts')
+        .select('id, author_id, content, created_at, media_urls, cultural_tags, likes_count, comments_count, shares_count, profiles(display_name, username, is_verified)')
+        .order('created_at', { ascending: false })
+        .limit(30),
+      supabase
+        .from('livestreams')
+        .select('id, title, peak_viewers, profiles(display_name)')
+        .eq('state', 'live')
+        .order('started_at', { ascending: false })
+        .limit(1)
+        .maybeSingle(),
+    ]);
+
+    const data = postsRes.data;
+    const activeLiveStream = liveRes.data;
 
     let userLikedPostIds = new Set<string>();
     if (user && data && data.length > 0) {
@@ -136,12 +148,16 @@ export default async function HomePage() {
             <span className="w-3 h-3 rounded-full bg-red-500 animate-ping" />
             <div>
               <div className="flex items-center gap-2">
-                <h4 className="font-extrabold text-xs text-brand-sandstone uppercase tracking-wider">Live Now: Kingston Dub Session</h4>
+                <h4 className="font-extrabold text-xs text-brand-sandstone uppercase tracking-wider">
+                  Caribbean Live Broadcasts
+                </h4>
                 <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-red-500/20 text-red-300 border border-red-500/30">
-                  1.4K WATCHING
+                  REALTIME
                 </span>
               </div>
-              <p className="text-[11px] text-brand-sandstone/60">Broadcasting live from Trenchtown • Hosted by Zion Sound</p>
+              <p className="text-[11px] text-brand-sandstone/60">
+                Broadcast live fete streams, dub sessions, or cultural talk shows across the diaspora.
+              </p>
             </div>
           </div>
           <div className="flex items-center gap-2">
