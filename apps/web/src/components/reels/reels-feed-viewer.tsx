@@ -619,9 +619,9 @@ export default function ReelsFeedViewer({ initialReels, user }: ReelsFeedViewerP
             </p>
             <div className="space-y-2 pt-1">
               {[
-                { id: 'sound-soca-01', track: 'Soca Monarch Anthem', artist: 'Machel & Kes', flag: '🇹🇹', count: '84.2K' },
-                { id: 'sound-dancehall-02', track: 'Dutty Bass Riddim', artist: 'Shenseea', flag: '🇯🇲', count: '112.5K' },
-                { id: 'sound-kompa-03', track: 'Gouyad Nuits d’Été', artist: 'Kai & Enposib', flag: '🇭🇹', count: '63.1K' },
+                { id: 'sound-soca-01', track: 'Soca Monarch Anthem', artist: 'Machel & Kes', flag: '🇹🇹', genre: 'Soca' },
+                { id: 'sound-dancehall-02', track: 'Dutty Bass Riddim', artist: 'Shenseea', flag: '🇯🇲', genre: 'Dancehall' },
+                { id: 'sound-kompa-03', track: 'Gouyad Nuits d’Été', artist: 'Kai & Enposib', flag: '🇭🇹', genre: 'Kompa' },
               ].map((s) => (
                 <div
                   key={s.id}
@@ -631,7 +631,7 @@ export default function ReelsFeedViewer({ initialReels, user }: ReelsFeedViewerP
                     <span>{s.flag}</span>
                     <div>
                       <p className="font-bold text-slate-200">{s.track}</p>
-                      <p className="text-[10px] text-brand-sandstone/40">{s.artist}</p>
+                      <p className="text-[10px] text-brand-sandstone/40">{s.artist} • {s.genre}</p>
                     </div>
                   </div>
                   <Link

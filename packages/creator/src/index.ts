@@ -163,3 +163,118 @@ export function aggregateCreatorStreams(
   };
 }
 
+// ---------------------------------------------------------------------------
+// Centralized Creator Platform Tiers & Entitlements Engine
+// ---------------------------------------------------------------------------
+
+export type CreatorPlatformTierId = 'free_starter' | 'creator_plus' | 'creator_pro' | 'creator_vip';
+
+export type CreatorEntitlement =
+  | 'live_broadcast_studio'
+  | 'podcast_network_hosting'
+  | 'creator_storefront'
+  | 'fan_membership_tiers'
+  | 'advanced_audience_analytics'
+  | 'media_4k_uploads'
+  | 'verified_creator_badge'
+  | 'priority_caribbean_discovery'
+  | 'spotpay_instant_settlement';
+
+export interface CreatorPlatformTierDefinition {
+  id: CreatorPlatformTierId;
+  name: string;
+  monthlyPriceMinor: number;
+  currency: string;
+  description: string;
+  entitlements: readonly CreatorEntitlement[];
+  maxVideosPerMonth: number;
+  maxPodcastEpisodesPerMonth: number;
+  maxUploadSizeMb: number;
+}
+
+export const CREATOR_PLATFORM_TIERS: Record<CreatorPlatformTierId, CreatorPlatformTierDefinition> = {
+  free_starter: {
+    id: 'free_starter',
+    name: 'Starter Creator',
+    monthlyPriceMinor: 0,
+    currency: 'USD',
+    description: 'Essential publishing tools for new Caribbean creators and cultural storytellers.',
+    entitlements: ['fan_membership_tiers', 'creator_storefront'],
+    maxVideosPerMonth: 20,
+    maxPodcastEpisodesPerMonth: 5,
+    maxUploadSizeMb: 100,
+  },
+  creator_plus: {
+    id: 'creator_plus',
+    name: 'Creator Plus',
+    monthlyPriceMinor: 999, // $9.99/mo
+    currency: 'USD',
+    description: 'Enhanced studio capabilities, Live broadcast streaming, and subscriber clubs.',
+    entitlements: [
+      'fan_membership_tiers',
+      'creator_storefront',
+      'live_broadcast_studio',
+      'podcast_network_hosting',
+      'advanced_audience_analytics',
+      'priority_caribbean_discovery',
+    ],
+    maxVideosPerMonth: 100,
+    maxPodcastEpisodesPerMonth: 30,
+    maxUploadSizeMb: 500,
+  },
+  creator_pro: {
+    id: 'creator_pro',
+    name: 'Creator Pro',
+    monthlyPriceMinor: 2499, // $24.99/mo
+    currency: 'USD',
+    description: 'Professional grade 4K production, multi-show podcasts, and instant SpotPay settlement.',
+    entitlements: [
+      'fan_membership_tiers',
+      'creator_storefront',
+      'live_broadcast_studio',
+      'podcast_network_hosting',
+      'advanced_audience_analytics',
+      'media_4k_uploads',
+      'priority_caribbean_discovery',
+      'spotpay_instant_settlement',
+    ],
+    maxVideosPerMonth: 500,
+    maxPodcastEpisodesPerMonth: 120,
+    maxUploadSizeMb: 2048,
+  },
+  creator_vip: {
+    id: 'creator_vip',
+    name: 'VIP Artist / Master Creator',
+    monthlyPriceMinor: 4999, // $49.99/mo
+    currency: 'USD',
+    description: 'Flagship Caribbean artist tier with verified badge, concierge curation, and unbounded storage.',
+    entitlements: [
+      'fan_membership_tiers',
+      'creator_storefront',
+      'live_broadcast_studio',
+      'podcast_network_hosting',
+      'advanced_audience_analytics',
+      'media_4k_uploads',
+      'verified_creator_badge',
+      'priority_caribbean_discovery',
+      'spotpay_instant_settlement',
+    ],
+    maxVideosPerMonth: 999999,
+    maxPodcastEpisodesPerMonth: 999999,
+    maxUploadSizeMb: 5120,
+  },
+};
+
+export function hasCreatorEntitlement(
+  tierId: CreatorPlatformTierId,
+  entitlement: CreatorEntitlement,
+  subscriptionStatus: string = 'active'
+): boolean {
+  if (tierId !== 'free_starter' && subscriptionStatus !== 'active' && subscriptionStatus !== 'grace') {
+    // If paid tier expired, fall back to free starter entitlements
+    return CREATOR_PLATFORM_TIERS.free_starter.entitlements.includes(entitlement);
+  }
+  const tier = CREATOR_PLATFORM_TIERS[tierId] || CREATOR_PLATFORM_TIERS.free_starter;
+  return tier.entitlements.includes(entitlement);
+}
+

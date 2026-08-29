@@ -173,7 +173,7 @@ export default function AppSidebar({ currentPath }: AppSidebarProps) {
           <Sparkles className="w-3.5 h-3.5 text-brand-goldenHour" /> Caribbean Creator Hub
         </div>
         <p className="text-[11px] text-slate-300 leading-relaxed">
-          Monetize subscriptions, livestream gifts, and event tickets with transparent <strong className="text-brand-sunriseCoral">15% platform fees</strong> and direct SpotPay payouts.
+          Access professional studio tools, Live HD broadcasts, podcast hosting, and direct SpotPay fan memberships with <strong className="text-brand-sunriseCoral">Creator Tiers</strong>.
         </p>
         <Link
           href="/creator-studio"

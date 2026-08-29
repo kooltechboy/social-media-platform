@@ -5,9 +5,9 @@ import { TukubiMasterGateway } from '../../components/gateway/TukubiMasterGatewa
 import { sanitizeRedirectUrl } from '../../lib/auth/redirect-utils';
 
 export const metadata: Metadata = {
-  title: 'TUKUBI — One Caribbean. One Community. One Digital Home.',
+  title: 'TUKUBI — The Caribbean Connected.',
   description:
-    'Sign in to TUKUBI — The premier digital platform connecting 59M+ Caribbean people, businesses, creators, music, and the global diaspora.',
+    'Sign in to TUKUBI — The Caribbean Connected. Connect with Caribbean people, businesses, creators, music, and the global diaspora.',
 };
 
 export default async function LoginPage({

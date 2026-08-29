@@ -175,8 +175,8 @@ export function TukubiMasterGateway() {
             <span className="text-xl sm:text-2xl font-black tracking-tight text-white font-serif">
               TUKUBI
             </span>
-            <span className="block text-[9px] uppercase font-extrabold tracking-[0.25em] text-brand-caribbeanSea">
-              Global Caribbean Network
+            <span className="block text-[10px] font-bold tracking-wide text-brand-sandstone/80">
+              The Caribbean Connected.
             </span>
           </div>
         </div>

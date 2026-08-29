@@ -54,9 +54,11 @@ export default function MessageThread({
   const [isVideoOff, setIsVideoOff] = useState(false);
   const [isScreenSharing, setIsScreenSharing] = useState(false);
 
-  // Audio voice note state
+  // Audio voice note & attachment state
   const [isRecordingAudio, setIsRecordingAudio] = useState(false);
   const [recordingSeconds, setRecordingSeconds] = useState(0);
+  const [selectedFileCount, setSelectedFileCount] = useState(0);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     setMessages(initialMessages);
@@ -265,20 +267,31 @@ export default function MessageThread({
           <Mic className="w-4 h-4" />
         </button>
 
+        <input
+          ref={fileInputRef}
+          type="file"
+          multiple
+          accept="image/*,video/*,.pdf,.doc,.docx"
+          className="hidden"
+          onChange={(e) => setSelectedFileCount(e.target.files?.length || 0)}
+        />
+
         <button
           type="button"
-          onClick={() => {
-            // Mock triggering file input
-            const input = document.createElement('input');
-            input.type = 'file';
-            input.multiple = true;
-            input.accept = 'image/*,video/*,.pdf,.doc,.docx';
-            input.click();
-          }}
-          className="p-2.5 rounded-full text-brand-sandstone/60 hover:text-brand-sandstone hover:bg-brand-dusk transition-all"
-          title="Attach Media or File"
+          onClick={() => fileInputRef.current?.click()}
+          className={`p-2.5 rounded-full transition-all relative ${
+            selectedFileCount > 0
+              ? 'bg-brand-caribbeanSea/20 text-brand-caribbeanSea'
+              : 'text-brand-sandstone/60 hover:text-brand-sandstone hover:bg-brand-dusk'
+          }`}
+          title={selectedFileCount > 0 ? `${selectedFileCount} file(s) selected` : 'Attach Media or File'}
         >
           <Paperclip className="w-4 h-4" />
+          {selectedFileCount > 0 && (
+            <span className="absolute -top-1 -right-1 w-4 h-4 bg-brand-caribbeanSea text-slate-950 rounded-full text-[9px] font-black flex items-center justify-center">
+              {selectedFileCount}
+            </span>
+          )}
         </button>
 
         <input

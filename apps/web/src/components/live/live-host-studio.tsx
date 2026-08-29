@@ -225,13 +225,6 @@ export default function LiveHostStudio({ user }: LiveHostStudioProps) {
     if (isLive) {
       timerRef.current = setInterval(() => {
         setElapsedSeconds((prev) => prev + 1);
-        // Realistic simulated diaspora viewer growth
-        setViewerCount((prev) => {
-          const delta = Math.floor(Math.random() * 3) - 1;
-          const next = Math.max(1, prev + delta);
-          setPeakViewers((peak) => Math.max(peak, next));
-          return next;
-        });
       }, 1000);
     } else {
       if (timerRef.current) clearInterval(timerRef.current);
@@ -241,7 +234,7 @@ export default function LiveHostStudio({ user }: LiveHostStudioProps) {
     };
   }, [isLive]);
 
-  // Realtime live chat subscription while live
+  // Realtime live chat & authentic presence subscription while live
   useEffect(() => {
     if (!isLive || !livestreamId) return;
 
@@ -249,7 +242,17 @@ export default function LiveHostStudio({ user }: LiveHostStudioProps) {
     if (!supabase) return;
 
     const channel = supabase
-      .channel(`host-live-chat-${livestreamId}`)
+      .channel(`host-live-chat-${livestreamId}`, {
+        config: {
+          presence: { key: user.id },
+        },
+      })
+      .on('presence', { event: 'sync' }, () => {
+        const state = channel.presenceState();
+        const activeViewers = Math.max(1, Object.keys(state).length);
+        setViewerCount(activeViewers);
+        setPeakViewers((peak) => Math.max(peak, activeViewers));
+      })
       .on(
         'postgres_changes',
         {
@@ -272,7 +275,11 @@ export default function LiveHostStudio({ user }: LiveHostStudioProps) {
           ]);
         }
       )
-      .subscribe();
+      .subscribe(async (status) => {
+        if (status === 'SUBSCRIBED') {
+          await channel.track({ online_at: new Date().toISOString(), isHost: true });
+        }
+      });
 
     return () => {
       void supabase.removeChannel(channel);

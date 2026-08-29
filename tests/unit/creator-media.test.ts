@@ -6,6 +6,8 @@ import {
   isSubscriptionActive,
   nextPeriodEnd,
   DEFAULT_FEES,
+  CREATOR_PLATFORM_TIERS,
+  hasCreatorEntitlement,
 } from '../../packages/creator/src/index';
 import { MediaPipeline, SURFACE_LIMITS, storyExpiry, STAGE_ORDER } from '../../packages/media/src/index';
 
@@ -126,5 +128,41 @@ describe('Media pipeline (surface limits + stage machine)', () => {
     // Malicious executable disguised with empty or wrong bytes
     const badHeader = new Uint8Array([0x4d, 0x5a, 0x90, 0x00]); // DOS / PE binary
     expect(pipeline.validateMagicBytes(badHeader)).toEqual({ valid: false });
+  });
+});
+
+describe('Centralized Creator Platform Tiers & Entitlement Engine', () => {
+  it('defines 4 canonical tier levels with unambiguous pricing and limits', () => {
+    expect(CREATOR_PLATFORM_TIERS.free_starter.monthlyPriceMinor).toBe(0);
+    expect(CREATOR_PLATFORM_TIERS.creator_plus.monthlyPriceMinor).toBe(999);
+    expect(CREATOR_PLATFORM_TIERS.creator_pro.monthlyPriceMinor).toBe(2499);
+    expect(CREATOR_PLATFORM_TIERS.creator_vip.monthlyPriceMinor).toBe(4999);
+  });
+
+  it('evaluates active creator tier entitlements correctly', () => {
+    // Free starter has storefront and basic fan memberships, but no live broadcast studio or 4K
+    expect(hasCreatorEntitlement('free_starter', 'creator_storefront')).toBe(true);
+    expect(hasCreatorEntitlement('free_starter', 'live_broadcast_studio')).toBe(false);
+    expect(hasCreatorEntitlement('free_starter', 'media_4k_uploads')).toBe(false);
+
+    // Creator Plus unlocks live studio & podcast hosting
+    expect(hasCreatorEntitlement('creator_plus', 'live_broadcast_studio')).toBe(true);
+    expect(hasCreatorEntitlement('creator_plus', 'podcast_network_hosting')).toBe(true);
+    expect(hasCreatorEntitlement('creator_plus', 'media_4k_uploads')).toBe(false);
+
+    // Creator Pro unlocks 4K uploads & SpotPay instant settlement
+    expect(hasCreatorEntitlement('creator_pro', 'media_4k_uploads')).toBe(true);
+    expect(hasCreatorEntitlement('creator_pro', 'spotpay_instant_settlement')).toBe(true);
+
+    // VIP Artist unlocks verified badge & priority discovery
+    expect(hasCreatorEntitlement('creator_vip', 'verified_creator_badge')).toBe(true);
+    expect(hasCreatorEntitlement('creator_vip', 'priority_caribbean_discovery')).toBe(true);
+  });
+
+  it('falls back to starter entitlements if subscription status is expired or cancelled', () => {
+    expect(hasCreatorEntitlement('creator_pro', 'media_4k_uploads', 'active')).toBe(true);
+    expect(hasCreatorEntitlement('creator_pro', 'media_4k_uploads', 'grace')).toBe(true);
+    expect(hasCreatorEntitlement('creator_pro', 'media_4k_uploads', 'expired')).toBe(false);
+    expect(hasCreatorEntitlement('creator_pro', 'media_4k_uploads', 'cancelled')).toBe(false);
   });
 });

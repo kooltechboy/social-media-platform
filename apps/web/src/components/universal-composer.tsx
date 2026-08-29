@@ -213,12 +213,12 @@ export default function UniversalComposer({
               continue;
             }
           }
-        } catch {
-          // Fall back to mock URL if client storage request fails in sandbox
+        } catch (err) {
+          console.error('Storage upload error:', err);
         }
       }
 
-      // Fallback data preview URL for offline / sandbox testing
+      // If storage is not available in local test sandbox, keep preview URL
       uploadedUrls.push(item.previewUrl);
     }
 

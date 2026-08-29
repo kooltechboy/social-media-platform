@@ -114,8 +114,8 @@ export function GatewayShell({ children, activeIslandIso }: GatewayShellProps) {
               </div>
             </div>
             <h1 className="text-3xl font-black tracking-tight text-white">TUKUBI</h1>
-            <p className="text-xs text-brand-sandstone/70 font-medium tracking-wide mt-1">
-              One Caribbean. One Community. One Digital Home.
+            <p className="text-xs text-brand-sandstone/80 font-bold tracking-wide mt-1">
+              The Caribbean Connected.
             </p>
           </div>
 

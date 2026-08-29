@@ -602,7 +602,7 @@ export default function InteractiveCaribbeanMap() {
                         <span>•</span>
                         <span>{hoveredEntity.capital}</span>
                         <span>•</span>
-                        <span className="text-emerald-400 font-semibold">{hoveredEntity.creatorsCount} Creators</span>
+                        <span className="text-emerald-400 font-semibold">{hoveredEntity.region}</span>
                       </div>
                     </div>
                   </div>
@@ -643,8 +643,8 @@ export default function InteractiveCaribbeanMap() {
                     </div>
 
                     <div className="pt-2 border-t border-slate-800/60 flex items-center justify-between text-[11px] text-brand-sandstone/60">
-                      <span>{node.creatorsCount} creators</span>
-                      <span>{node.eventsCount}</span>
+                      <span>Capital: {node.capital}</span>
+                      <span className="text-brand-caribbeanSea font-semibold">{node.region}</span>
                     </div>
                   </div>
                 );

@@ -214,24 +214,20 @@ export default async function CreatorStudioPage() {
       {feeResult && (
         <div className="bg-brand-dusk/60 border border-slate-800 rounded-2xl p-6">
           <h3 className="text-sm font-bold text-brand-sandstone mb-4 flex items-center gap-2">
-            <BarChart2 className="w-4 h-4 text-brand-caribbeanSea" /> Monthly Subscription Revenue Breakdown
+            <BarChart2 className="w-4 h-4 text-brand-caribbeanSea" /> Monthly Fan Subscription Breakdown
           </h3>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-xs">
             <div>
-              <p className="text-brand-sandstone/60 mb-1">Gross</p>
+              <p className="text-brand-sandstone/60 mb-1">Gross Subscriptions</p>
               <p className="text-lg font-black text-brand-sandstone">{new Money(feeResult.grossMinor, 'USD').format()}</p>
             </div>
             <div>
-              <p className="text-brand-sandstone/60 mb-1">Platform Fee (15%)</p>
-              <p className="text-lg font-black text-rose-400">−{new Money(feeResult.platformFeeMinor, 'USD').format()}</p>
-            </div>
-            <div>
-              <p className="text-brand-sandstone/60 mb-1">Processing Fee</p>
+              <p className="text-brand-sandstone/60 mb-1">Estimated Processing (PSP)</p>
               <p className="text-lg font-black text-rose-400">−{new Money(feeResult.processingFeeMinor, 'USD').format()}</p>
             </div>
             <div>
-              <p className="text-brand-sandstone/60 mb-1">Net to Creator</p>
-              <p className="text-lg font-black text-brand-sunriseCoral">{new Money(feeResult.netToCreatorMinor, 'USD').format()}</p>
+              <p className="text-brand-sandstone/60 mb-1">Net Creator Balance</p>
+              <p className="text-lg font-black text-brand-sunriseCoral">{new Money(feeResult.grossMinor - feeResult.processingFeeMinor, 'USD').format()}</p>
             </div>
           </div>
 
