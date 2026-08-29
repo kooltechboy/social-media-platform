@@ -8,7 +8,7 @@ import {
   validateStreamCreation,
   type StreamAccess,
 } from '@caribbean/live';
-import { Money } from '@caribbean/spotpay';
+import { Money } from '@caribbean/payments';
 
 export interface SendGiftState {
   error: string | null;

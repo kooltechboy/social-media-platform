@@ -13,7 +13,7 @@ import {
   Wallet,
   Building2,
 } from 'lucide-react';
-import { Money } from '@caribbean/spotpay';
+import { Money } from '@caribbean/payments';
 import { createSupabaseServerClient, getCurrentUser } from '../../../lib/supabase/server';
 import OrderButton from '../../../components/order-button';
 
@@ -93,7 +93,7 @@ export default async function ProductDetailPage({
           <div className="bg-brand-dusk/60 border border-slate-800 rounded-2xl p-4 space-y-2 text-xs">
             <div className="flex items-center gap-2 text-brand-sunriseCoral font-bold">
               <ShieldCheck className="w-4 h-4" />
-              <span>SpotPay Buyer Protection (Beta)</span>
+              <span>TUKUBI Buyer Protection (30-Day Guarantee)</span>
             </div>
             <p className="text-slate-400 text-[11px] leading-relaxed">
               Payments are recorded via secure double-entry ledger and released to the merchant upon delivery confirmation. Dispute resolution backed by TUKUBI Trust &amp; Safety.

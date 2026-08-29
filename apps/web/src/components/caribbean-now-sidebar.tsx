@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { Calendar, ArrowUpRight, Wallet, Radio, Sparkles, MessageCircle } from 'lucide-react';
 import OnlineFriendsWidget from './online-friends-widget';
 import { createSupabaseServerClient, getCurrentUser } from '../lib/supabase/server';
-import { Money } from '@caribbean/spotpay';
+import { Money } from '@caribbean/payments';
 
 interface LivePulseItem {
   id: string;
@@ -229,32 +229,32 @@ export default async function CaribbeanNowSidebar() {
         </div>
       </div>
 
-      {/* SpotPay Instant Wallet Quick Card */}
+      {/* TUKUBI Financial Center Quick Card */}
       <div className="glass rounded-2xl p-5 space-y-3">
         <div className="flex items-center justify-between">
           <span className="text-[10px] font-black text-brand-sunriseCoral uppercase tracking-wider flex items-center gap-1.5">
-            <Wallet className="w-3.5 h-3.5" /> SpotPay Ledger
+            <Wallet className="w-3.5 h-3.5" /> Financial Center
           </span>
-          <span className="text-[10px] font-bold text-brand-sandstone/60">Double-Entry</span>
+          <span className="text-[10px] font-bold text-emerald-400">Secured</span>
         </div>
         <div>
-          <p className="text-xs text-brand-sandstone/60">Personal Balance</p>
-          <p className="text-2xl font-black text-brand-sandstone">
-            {user ? walletBalanceFormatted : '$0.00 USD'}
+          <p className="text-xs text-brand-sandstone/60">Digital Commerce &amp; Creator Hub</p>
+          <p className="text-xs text-slate-300 mt-1 leading-relaxed">
+            Manage payment methods, orders, fan memberships, and creator payouts.
           </p>
         </div>
         <div className="grid grid-cols-2 gap-2 pt-1">
           <Link
-            href="/spotpay"
+            href="/financial-center"
             className="bg-brand-sunriseCoral hover:bg-brand-sunriseCoral text-slate-950 font-extrabold py-2 px-3 rounded-xl text-xs text-center transition-colors shadow-sm shadow-brand-sunriseCoral/20"
           >
-            {user ? 'Send Money' : 'Open Wallet'}
+            Overview
           </Link>
           <Link
-            href="/spotpay"
+            href="/financial-center/payment-methods"
             className="bg-transparent hover:bg-brand-dusk text-slate-300 font-bold py-2 px-3 rounded-xl text-xs text-center border border-slate-600 transition-colors"
           >
-            {user ? 'Add Funds' : 'Learn More'}
+            Cards &amp; Rails
           </Link>
         </div>
       </div>

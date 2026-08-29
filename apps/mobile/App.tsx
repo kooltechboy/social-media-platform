@@ -8,7 +8,7 @@ import { HomeScreen } from './src/screens/HomeScreen';
 import { ExploreScreen } from './src/screens/ExploreScreen';
 import { CommunitiesScreen } from './src/screens/CommunitiesScreen';
 import { MessagesScreen } from './src/screens/MessagesScreen';
-import { SpotPayScreen } from './src/screens/SpotPayScreen';
+import { FinancialCenterScreen } from './src/screens/FinancialCenterScreen';
 
 const Tab = createBottomTabNavigator();
 
@@ -29,7 +29,7 @@ export default function App() {
           <Tab.Screen name="Explore" component={ExploreScreen} />
           <Tab.Screen name="Communities" component={CommunitiesScreen} />
           <Tab.Screen name="Messages" component={MessagesScreen} />
-          <Tab.Screen name="SpotPay" component={SpotPayScreen} />
+          <Tab.Screen name="Financial Center" component={FinancialCenterScreen} />
         </Tab.Navigator>
       </NavigationContainer>
     </SafeAreaView>

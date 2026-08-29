@@ -48,7 +48,7 @@ export async function createOrderAction(
   }];
   const totals = computeOrderTotals(items);
 
-  const paymentProvider = String(formData.get('paymentProvider') ?? 'spotpay').trim();
+  const paymentProvider = String(formData.get('paymentProvider') ?? 'card').trim();
   const creatorReferralCode = String(formData.get('creatorReferralCode') ?? '').trim();
   const shippingAddressRaw = formData.get('shippingAddress');
   const shippingAddress = shippingAddressRaw ? JSON.parse(String(shippingAddressRaw)) : null;
@@ -59,7 +59,7 @@ export async function createOrderAction(
     .from('orders')
     .insert({
       buyer_id: user.id,
-      status: 'paid', // Instant settlement via SpotPay escrow / verified PSP
+      status: 'paid', // Authorized via verified payment processor
       subtotal_minor: totals.subtotalMinor,
       platform_fee_minor: totals.platformFeeMinor,
       total_minor: totals.totalMinor,
@@ -106,9 +106,7 @@ export async function createOrderAction(
     }
   }
 
-  // Provision SpotPay Double-Entry Escrow Ledger Entries
-  // CRITICAL: This block must NOT silently fail — a ledger failure
-  // means funds were not properly escrowed, creating financial liability.
+  // Provision Universal Double-Entry Escrow Ledger Entries
   {
     const { createServiceSupabaseClient } = await import('../supabase/server');
     const adminClient = await createServiceSupabaseClient();
@@ -131,30 +129,51 @@ export async function createOrderAction(
         currency: product.currency,
         idempotency_key: `pi_${idempotencyKey}`,
         selected_provider: paymentProvider,
-        selected_method_kind: paymentProvider === 'spotpay' ? 'wallet' : 'card',
+        selected_method_kind: paymentProvider === 'paypal' ? 'paypal' : 'card',
         status: 'succeeded',
       })
       .select('id')
       .single();
 
     if (intentErr) {
-      console.error('[SpotPay] Payment intent creation failed:', intentErr.message);
+      console.error('[FinancialCenter] Payment intent creation failed:', intentErr.message);
       await supabase.from('order_items').delete().eq('order_id', order.id);
       await supabase.from('orders').delete().eq('id', order.id);
       return { error: 'Payment processing failed. Please try again.', success: null };
     }
 
-    // Find buyer & seller ledger accounts
-    const [buyerAccRes, sellerAccRes] = await Promise.all([
+    // Find or auto-provision buyer & seller ledger accounts
+    let [buyerAccRes, sellerAccRes] = await Promise.all([
       adminClient.from('ledger_accounts').select('id').eq('owner_id', user.id).maybeSingle(),
       adminClient.from('ledger_accounts').select('id').eq('owner_id', product.seller_id).maybeSingle(),
     ]);
 
-    if (!buyerAccRes.data || !sellerAccRes.data) {
-      console.error('[SpotPay] Ledger accounts not found for buyer or seller');
+    let buyerAccountId = buyerAccRes.data?.id;
+    let sellerAccountId = sellerAccRes.data?.id;
+
+    if (!buyerAccountId) {
+      const { data: newBuyerAcc } = await adminClient
+        .from('ledger_accounts')
+        .insert({ owner_id: user.id, account_type: 'spotpay_wallet', currency: product.currency })
+        .select('id')
+        .single();
+      buyerAccountId = newBuyerAcc?.id;
+    }
+
+    if (!sellerAccountId) {
+      const { data: newSellerAcc } = await adminClient
+        .from('ledger_accounts')
+        .insert({ owner_id: product.seller_id, account_type: 'creator_pending', currency: product.currency })
+        .select('id')
+        .single();
+      sellerAccountId = newSellerAcc?.id;
+    }
+
+    if (!buyerAccountId || !sellerAccountId) {
+      console.error('[FinancialCenter] Ledger accounts provisioning failed');
       await supabase.from('order_items').delete().eq('order_id', order.id);
       await supabase.from('orders').delete().eq('id', order.id);
-      return { error: 'Wallet accounts not configured. Please set up SpotPay first.', success: null };
+      return { error: 'Financial account initialization failed. Please try again.', success: null };
     }
 
     const txId = crypto.randomUUID();
@@ -162,7 +181,7 @@ export async function createOrderAction(
     const { error: ledgerErr } = await adminClient.from('ledger_entries').insert([
       {
         transaction_id: txId,
-        account_id: buyerAccRes.data.id,
+        account_id: buyerAccountId,
         amount: -amountMajor, // DEBIT must be negative per double-entry accounting
         entry_type: 'DEBIT',
         idempotency_key: `${idempotencyKey}_debit`,
@@ -170,7 +189,7 @@ export async function createOrderAction(
       },
       {
         transaction_id: txId,
-        account_id: sellerAccRes.data.id,
+        account_id: sellerAccountId,
         amount: amountMajor, // CREDIT is positive
         entry_type: 'CREDIT',
         idempotency_key: `${idempotencyKey}_credit`,
@@ -179,7 +198,7 @@ export async function createOrderAction(
     ]);
 
     if (ledgerErr) {
-      console.error('[SpotPay] Ledger entry creation failed:', ledgerErr.message);
+      console.error('[FinancialCenter] Ledger entry creation failed:', ledgerErr.message);
       await supabase.from('order_items').delete().eq('order_id', order.id);
       await supabase.from('orders').delete().eq('id', order.id);
       return { error: 'Payment ledger recording failed. Please try again.', success: null };
@@ -188,7 +207,7 @@ export async function createOrderAction(
 
   revalidatePath('/marketplace');
   revalidatePath('/marketplace/orders');
-  return { error: null, success: 'Order created with SpotPay protection.', orderId: order.id };
+  return { error: null, success: 'Order created with TUKUBI buyer protection.', orderId: order.id };
 }
 
 export async function createProductAction(
@@ -306,7 +325,7 @@ export async function cancelOrderAction(orderId: string): Promise<{ error: strin
       }
     }
   } catch (err) {
-    console.error('[SpotPay] Ledger reversal failed for cancelled order:', orderId, err);
+    console.error('[FinancialCenter] Ledger reversal failed for cancelled order:', orderId, err);
     // Non-blocking: order is still cancelled, but finance team must manually reconcile
   }
 

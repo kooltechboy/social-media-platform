@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { Building2, Sparkles, X, Check, ShieldCheck, Zap, Bot, Star, CreditCard, Loader2 } from 'lucide-react';
-import { SELLER_PLANS, type SellerPlan } from '@caribbean/spotpay';
+import { SELLER_PLANS, type SellerPlan } from '@caribbean/payments';
 import { upgradeSellerPlanAction } from '../lib/business/actions';
 
 interface BusinessTierModalProps {
@@ -37,7 +37,7 @@ const UI_PLANS = [
     description: 'Turn your page into a fully transactional Caribbean storefront.',
     features: [
       'Unlimited Marketplace & Service Listings',
-      'SpotPay Escrow & Multimodal Checkout',
+      'Secure Escrow & Multimodal Checkout',
       '0% TUKUBI Percentage on Product Sales',
       'AI Business Assistant ("Ask This Business") 🤖',
       'Real-Time Orders & Revenue Analytics',
@@ -200,7 +200,7 @@ export default function BusinessTierModal({ isOpen, onClose, businessName, busin
         <div className="p-3 rounded-xl bg-slate-900/60 border border-slate-800 flex items-center justify-center gap-4 text-xs text-slate-400">
           <span className="flex items-center gap-1.5"><ShieldCheck className="w-4 h-4 text-emerald-400" /> Cancel anytime</span>
           <span>&bull;</span>
-          <span className="flex items-center gap-1.5"><CreditCard className="w-4 h-4 text-brand-goldenHour" /> Billed securely via SpotPay or Card</span>
+          <span className="flex items-center gap-1.5"><CreditCard className="w-4 h-4 text-brand-goldenHour" /> Billed securely via Card or PayPal</span>
         </div>
       </div>
     </div>

@@ -13,7 +13,7 @@ interface CreatorTierModalProps {
 export default function CreatorTierModal({ isOpen, onClose, creatorName }: CreatorTierModalProps) {
   const [tierPrice, setTierPrice] = useState(499); // $4.99 in minor units
   const [tierName, setTierName] = useState('VIP Patron Circle');
-  const [perks, setPerks] = useState<string>('Exclusive behind-the-scenes streams\nEarly access to music & carnival riddims\nSpotPay subscriber badge & VIP chat');
+  const [perks, setPerks] = useState<string>('Exclusive behind-the-scenes streams\nEarly access to music & carnival riddims\nVIP subscriber badge & private chat access');
   const [isSaving, setIsSaving] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
 
@@ -142,7 +142,7 @@ export default function CreatorTierModal({ isOpen, onClose, creatorName }: Creat
                 </div>
               </div>
               <p className="text-[10px] text-brand-sandstone/50 pt-1">
-                Direct payouts route through SpotPay with zero artificial holding periods. Mobile in-app store fees apply according to Apple/Google policies.
+                Direct payouts route through authorized payment rails and bank partners. Mobile in-app store fees apply according to Apple/Google store policies.
               </p>
             </div>
 

@@ -3,7 +3,7 @@ const nextConfig = {
   transpilePackages: [
     "@caribbean/ui",
     "@caribbean/design-system",
-    "@caribbean/spotpay",
+    "@caribbean/payments",
     "@caribbean/ai",
     "@caribbean/database",
     "@caribbean/analytics",

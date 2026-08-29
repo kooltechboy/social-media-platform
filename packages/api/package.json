@@ -9,7 +9,7 @@
   },
   "dependencies": {
     "@caribbean/auth": "workspace:*",
-    "@caribbean/spotpay": "workspace:*"
+    "@caribbean/payments": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5.5.0"

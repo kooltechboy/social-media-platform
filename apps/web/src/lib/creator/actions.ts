@@ -105,18 +105,18 @@ export async function requestPayoutAction(
     return { error: `Payout ineligible: ${decision.reasons[0]}` };
   }
 
-  // If no spotpay wallet exists, create it
+  // If no main ledger account exists, create it
   if (!spotpayLedger) {
     const { data: newWallet, error: createWalletErr } = await supabase
       .from('ledger_accounts')
       .insert({ owner_id: user.id, account_type: 'spotpay_wallet', currency: 'USD' })
       .select('id')
       .single();
-    if (createWalletErr || !newWallet) return { error: 'Failed to initialize SpotPay wallet.' };
+    if (createWalletErr || !newWallet) return { error: 'Failed to initialize payout account.' };
     spotpayLedger = { id: newWallet.id, account_type: 'spotpay_wallet' };
   }
 
-  // Double-entry: Debit creator_pending and Credit spotpay_wallet
+  // Double-entry: Debit creator_pending and Credit destination account
   const transactionId = crypto.randomUUID();
   const payoutAmountMajor = (decision.amountMinor / 100).toFixed(4);
 
@@ -152,10 +152,11 @@ export async function requestPayoutAction(
   }
 
   revalidatePath('/creator-studio');
+  revalidatePath('/financial-center/creator');
   return {
     error: null,
     success: true,
-    message: `Payout of $${(decision.amountMinor / 100).toFixed(2)} USD successfully initiated to your linked SpotPay account.`,
+    message: `Payout of $${(decision.amountMinor / 100).toFixed(2)} USD successfully initiated to your verified payout account.`,
   };
 }
 
@@ -205,7 +206,7 @@ export async function sendTipAction(
 
   if (!creatorLedger) return { error: 'Failed to initialize creator payment account.' };
 
-  // Find or initialize sender's spotpay wallet
+  // Find or initialize sender's payment account
   let { data: senderWallet } = await supabaseAdmin
     .from('ledger_accounts')
     .select('id, owner_id')
@@ -222,7 +223,7 @@ export async function sendTipAction(
     senderWallet = newSenderWallet;
   }
 
-  if (!senderWallet) return { error: 'Failed to initialize SpotPay wallet.' };
+  if (!senderWallet) return { error: 'Failed to initialize payment account.' };
 
   const transactionId = crypto.randomUUID();
   const amountMajor = (amountMinor / 100).toFixed(4);

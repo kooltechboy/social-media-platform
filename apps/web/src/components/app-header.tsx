@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
-import { Search, Wallet, Bell, MessageSquare, User, CheckCircle, Users, Calendar, ShoppingBag, X } from 'lucide-react';
+import { Search, Wallet, CreditCard, Bell, MessageSquare, User, CheckCircle, Users, Calendar, ShoppingBag, X } from 'lucide-react';
 import SessionWidget from './session-widget';
 import { createSupabaseBrowserClient } from '../lib/supabase/browser';
 
@@ -207,12 +207,12 @@ export default function AppHeader() {
 
       <div className="flex items-center gap-3.5">
         <Link
-          href="/spotpay"
+          href="/financial-center"
           className="flex items-center gap-2 bg-brand-dusk/90 hover:bg-brand-dusk text-brand-sunriseCoral px-3.5 py-1.5 rounded-full border border-brand-sunriseCoral/30 text-xs font-extrabold transition-all shadow-md"
-          aria-label="SpotPay Wallet balance"
+          aria-label="Financial Center"
         >
-          <Wallet className="w-4 h-4 text-brand-sunriseCoral" aria-hidden="true" />
-          <span>SpotPay</span>
+          <CreditCard className="w-4 h-4 text-brand-sunriseCoral" aria-hidden="true" />
+          <span>Financial Center</span>
         </Link>
 
         <Link

@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { createSupabaseServerClient, getCurrentUser } from '../../lib/supabase/server';
 import { PayoutRequestButton } from '../../components/payout-request-button';
 import { applyFees, evaluatePayout, isSubscriptionActive } from '@caribbean/creator';
-import { Money } from '@caribbean/spotpay';
+import { Money } from '@caribbean/payments';
 import BecomeCreatorClientButton from '../../components/become-creator-button';
 import CreatorStudioActions from '../../components/creator-studio-actions';
 

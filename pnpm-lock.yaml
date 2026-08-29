@@ -99,9 +99,9 @@ importers:
       '@caribbean/design-system':
         specifier: workspace:*
         version: link:../../packages/design-system
-      '@caribbean/spotpay':
+      '@caribbean/payments':
         specifier: workspace:*
-        version: link:../../packages/spotpay
+        version: link:../../packages/payments
       '@react-navigation/bottom-tabs':
         specifier: ^7.18.17
         version: 7.18.17(@react-navigation/native@7.3.17(react-native@0.76.5(@babel/core@7.29.7)(@babel/preset-env@7.29.7(@babel/core@7.29.7))(@types/react@18.3.31)(react@18.3.1))(react@18.3.1))(react-native-safe-area-context@5.9.1(react-native@0.76.5(@babel/core@7.29.7)(@babel/preset-env@7.29.7(@babel/core@7.29.7))(@types/react@18.3.31)(react@18.3.1))(react@18.3.1))(react-native-screens@4.27.0(react-native@0.76.5(@babel/core@7.29.7)(@babel/preset-env@7.29.7(@babel/core@7.29.7))(@types/react@18.3.31)(react@18.3.1))(react@18.3.1))(react-native@0.76.5(@babel/core@7.29.7)(@babel/preset-env@7.29.7(@babel/core@7.29.7))(@types/react@18.3.31)(react@18.3.1))(react@18.3.1)
@@ -230,15 +230,15 @@ importers:
       '@caribbean/notifications':
         specifier: workspace:*
         version: link:../../packages/notifications
+      '@caribbean/payments':
+        specifier: workspace:*
+        version: link:../../packages/payments
       '@caribbean/podcasts':
         specifier: workspace:*
         version: link:../../packages/podcasts
       '@caribbean/social':
         specifier: workspace:*
         version: link:../../packages/social
-      '@caribbean/spotpay':
-        specifier: workspace:*
-        version: link:../../packages/spotpay
       '@caribbean/trust-safety':
         specifier: workspace:*
         version: link:../../packages/trust-safety
@@ -328,9 +328,9 @@ importers:
       '@caribbean/auth':
         specifier: workspace:*
         version: link:../auth
-      '@caribbean/spotpay':
+      '@caribbean/payments':
         specifier: workspace:*
-        version: link:../spotpay
+        version: link:../payments
     devDependencies:
       typescript:
         specifier: ^5.5.0
@@ -403,6 +403,16 @@ importers:
         version: 5.9.3
 
   packages/notifications:
+    devDependencies:
+      typescript:
+        specifier: ^5.5.0
+        version: 5.9.3
+
+  packages/payments:
+    dependencies:
+      stripe:
+        specifier: ^22.5.0
+        version: 22.5.0(@types/node@22.20.1)
     devDependencies:
       typescript:
         specifier: ^5.5.0

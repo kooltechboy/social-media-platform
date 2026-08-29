@@ -23,6 +23,7 @@ const PUBLIC_EXEMPT_ROUTES = [
   '/api/auth/check-username',
   '/api/v1/health',
   '/api/webhooks/stripe',
+  '/api/payments/providers',
 ];
 
 export async function middleware(request: NextRequest) {
@@ -41,6 +42,7 @@ export async function middleware(request: NextRequest) {
     PUBLIC_EXEMPT_ROUTES.some(
       (route) => pathname === route || pathname.startsWith(`${route}/`)
     ) ||
+    pathname.startsWith('/api/payments/webhooks/') ||
     // Public RSS feeds for podcast distribution
     (pathname.startsWith('/api/v1/podcasts/') && pathname.endsWith('/rss'));
 

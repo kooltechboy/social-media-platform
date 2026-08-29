@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { StripeAdapter, WebhookProcessor } from '@caribbean/spotpay';
+import { StripeAdapter, WebhookProcessor } from '@caribbean/payments';
 
 export async function POST(req: NextRequest) {
   const payload = await req.text();
@@ -21,6 +21,7 @@ export async function POST(req: NextRequest) {
 
   const outcome = processor.process({
     id: event.id,
+    providerId: 'stripe',
     type: event.type,
     payload,
     signature,

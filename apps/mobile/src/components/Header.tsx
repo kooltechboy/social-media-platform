@@ -8,11 +8,11 @@ export function Header({ onWalletPress }: { onWalletPress?: () => void }) {
       <Text style={styles.headerTitle}>TUKUBI</Text>
       <TouchableOpacity
         accessibilityRole="button"
-        accessibilityLabel="SpotPay Wallet Balance $240.50"
+        accessibilityLabel="Financial Center"
         style={styles.walletBadge}
         onPress={onWalletPress}
       >
-        <Text style={styles.walletText}>SpotPay $240.50</Text>
+        <Text style={styles.walletText}>Financial Center</Text>
       </TouchableOpacity>
     </View>
   );

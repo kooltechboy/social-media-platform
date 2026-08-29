@@ -2,9 +2,8 @@ import React from 'react';
 import { ShoppingBag, Star, Wallet, Plus, ArrowLeft, ShieldCheck, Sparkles, Truck, CheckCircle } from 'lucide-react';
 import Link from 'next/link';
 import { createSupabaseServerClient, getCurrentUser } from '../../lib/supabase/server';
-import { Money } from '@caribbean/spotpay';
+import { Money } from '@caribbean/payments';
 import OrderButton from '../../components/order-button';
-import ConnectSpotPayCard from '../../components/connect-spotpay-card';
 
 export const dynamic = 'force-dynamic';
 
@@ -84,7 +83,7 @@ export default async function MarketplacePage({
             </h1>
           </div>
           <p className="text-xs md:text-sm text-brand-sandstone/60 mt-1">
-            Authentic island goods, artisan craft, food, coffee, and digital audio — SpotPay protected with 30-day dispute settlement.
+            Authentic island goods, artisan craft, food, coffee, and digital audio — protected with 30-day dispute settlement.
           </p>
         </div>
 
@@ -133,15 +132,12 @@ export default async function MarketplacePage({
         })}
       </div>
 
-      {/* SpotPay Connect Onboarding Banner */}
-      <ConnectSpotPayCard />
-
       {/* Trust & Guarantee Banner */}
       <div className="bg-gradient-to-r from-slate-900 via-orange-950/20 to-slate-900 border border-orange-500/20 rounded-3xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-lg text-xs">
         <div className="flex items-center gap-3">
           <ShieldCheck className="w-5 h-5 text-brand-sunriseCoral flex-shrink-0" />
           <p className="text-slate-300">
-            <strong className="text-brand-sandstone">SpotPay Buyer &amp; Seller Protection:</strong> Every purchase is held in escrow until dispatch confirmation with guaranteed double-entry settlement.
+            <strong className="text-brand-sandstone">TUKUBI Buyer &amp; Seller Protection:</strong> Every purchase is backed by automated dispute settlement and escrow resolution via authorized Caribbean and international payment processors.
           </p>
         </div>
         <div className="flex items-center gap-4 text-[11px] text-brand-sandstone/60 flex-shrink-0">

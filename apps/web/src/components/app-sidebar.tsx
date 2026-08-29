@@ -48,7 +48,7 @@ const COMMERCE_NAV: NavItem[] = [
   { href: '/marketplace', label: 'Marketplace', icon: <ShoppingBag className="w-4 h-4 text-orange-400" /> },
   { href: '/events', label: 'Cultural Events', icon: <Calendar className="w-4 h-4 text-yellow-400" /> },
   { href: '/pages', label: 'Pages & Stores', icon: <Building2 className="w-4 h-4 text-brand-sunriseCoral" />, badge: 'VERIFIED' },
-  { href: '/spotpay', label: 'SpotPay Wallet', icon: <Wallet className="w-4 h-4 text-brand-sunriseCoral" /> },
+  { href: '/financial-center', label: 'Financial Center', icon: <Wallet className="w-4 h-4 text-brand-sunriseCoral" /> },
   { href: '/creator-studio', label: 'Creator Studio', icon: <Sparkles className="w-4 h-4 text-brand-caribbeanSea" /> },
 ];
 
@@ -173,7 +173,7 @@ export default function AppSidebar({ currentPath }: AppSidebarProps) {
           <Sparkles className="w-3.5 h-3.5 text-brand-goldenHour" /> Caribbean Creator Hub
         </div>
         <p className="text-[11px] text-slate-300 leading-relaxed">
-          Access professional studio tools, Live HD broadcasts, podcast hosting, and direct SpotPay fan memberships with <strong className="text-brand-sunriseCoral">Creator Tiers</strong>.
+          Access professional studio tools, Live HD broadcasts, podcast hosting, and direct fan memberships with <strong className="text-brand-sunriseCoral">Creator Tiers</strong>.
         </p>
         <Link
           href="/creator-studio"

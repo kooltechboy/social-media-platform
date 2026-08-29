@@ -22,7 +22,7 @@
     "@caribbean/notifications": "workspace:*",
     "@caribbean/podcasts": "workspace:*",
     "@caribbean/social": "workspace:*",
-    "@caribbean/spotpay": "workspace:*",
+    "@caribbean/payments": "workspace:*",
     "@caribbean/trust-safety": "workspace:*",
     "@caribbean/ui": "workspace:*",
     "@supabase/ssr": "^0.12.4",

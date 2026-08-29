@@ -53,7 +53,7 @@ export async function createBusinessPageAction(
     return { error: error.message };
   }
 
-  // 2. Provision SpotPay Ledger Account for the new Page Entity
+  // 2. Provision Financial Center Ledger Account for the new Page Entity
   try {
     const { createServiceSupabaseClient } = await import('../supabase/server');
     const supabaseAdmin = await createServiceSupabaseClient();

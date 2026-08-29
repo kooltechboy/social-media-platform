@@ -71,6 +71,41 @@ export default async function SettingsPage() {
           </div>
         </section>
 
+        <section className="bg-brand-dusk/70 border border-slate-800 rounded-2xl p-6 space-y-3">
+          <div className="flex items-center justify-between">
+            <h2 className="text-sm font-bold text-brand-sandstone">Payments &amp; Financial Center</h2>
+            <Link
+              href="/financial-center"
+              className="text-xs font-bold text-brand-goldenHour hover:underline"
+            >
+              Open Financial Center →
+            </Link>
+          </div>
+          <p className="text-xs text-slate-400">
+            Manage saved payment methods, connected accounts, active creator subscriptions, and payout rails.
+          </p>
+          <div className="pt-2 flex flex-wrap gap-2">
+            <Link
+              href="/financial-center/payment-methods"
+              className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold text-slate-200 transition-colors"
+            >
+              Payment Methods
+            </Link>
+            <Link
+              href="/financial-center/transactions"
+              className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold text-slate-200 transition-colors"
+            >
+              Transaction Receipts
+            </Link>
+            <Link
+              href="/financial-center/security"
+              className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold text-slate-200 transition-colors"
+            >
+              Security Settings
+            </Link>
+          </div>
+        </section>
+
         <section className="bg-brand-dusk/70 border border-rose-900/40 rounded-2xl p-6 space-y-3">
           <h2 className="text-sm font-bold text-rose-400">Danger Zone</h2>
           <p className="text-xs text-brand-sandstone/60">

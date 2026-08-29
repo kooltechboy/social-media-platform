@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Wallet, X, Heart, Sparkles, CheckCircle, Loader2 } from 'lucide-react';
+import { Heart, X, Sparkles, CheckCircle, Loader2, CreditCard, Lock } from 'lucide-react';
 
 interface SpotPayTipModalProps {
   isOpen: boolean;
@@ -18,7 +18,6 @@ export default function SpotPayTipModal({
   onClose,
   creatorName,
   creatorHandle,
-  creatorId,
 }: SpotPayTipModalProps) {
   const [selectedAmount, setSelectedAmount] = useState<number>(5);
   const [customAmount, setCustomAmount] = useState<string>('');
@@ -70,28 +69,28 @@ export default function SpotPayTipModal({
 
         {isSuccess ? (
           <div className="py-8 text-center space-y-3">
-            <div className="w-16 h-16 rounded-full bg-brand-sunriseCoral/20 text-brand-sunriseCoral border border-brand-sunriseCoral/30 flex items-center justify-center mx-auto shadow-lg shadow-brand-sunriseCoral/20">
+            <div className="w-16 h-16 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center justify-center mx-auto shadow-lg shadow-emerald-500/20">
               <CheckCircle className="w-8 h-8" />
             </div>
-            <h3 className="text-lg font-black text-brand-sandstone">SpotPay Tip Sent!</h3>
+            <h3 className="text-lg font-black text-brand-sandstone">Tip Sent Successfully!</h3>
             <p className="text-xs text-slate-300">
-              You sent <span className="font-bold text-brand-sunriseCoral">${finalAmount.toFixed(2)} USD</span> to @{creatorHandle}.
+              You tipped <span className="font-bold text-brand-sunriseCoral">${finalAmount.toFixed(2)} USD</span> to @{creatorHandle}.
             </p>
-            <span className="inline-block text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-brand-sunriseCoral/10 text-emerald-300 border border-brand-sunriseCoral/20">
-              Settled via Double-Entry Ledger
+            <span className="inline-block text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-300 border border-emerald-500/20">
+              Direct Creator Patronage
             </span>
           </div>
         ) : (
           <form onSubmit={handleSendTip} className="space-y-4">
             <div className="flex items-center gap-3">
               <div className="p-3 rounded-2xl bg-brand-sunriseCoral/20 text-brand-sunriseCoral border border-brand-sunriseCoral/30">
-                <Wallet className="w-6 h-6" />
+                <Heart className="w-6 h-6" />
               </div>
               <div>
                 <h3 className="font-black text-base text-brand-sandstone flex items-center gap-1.5">
                   Tip {creatorName} <Sparkles className="w-4 h-4 text-brand-goldenHour" />
                 </h3>
-                <p className="text-xs text-brand-sandstone/60">Direct creator patronage via SpotPay Wallet</p>
+                <p className="text-xs text-brand-sandstone/60">Support Caribbean creativity directly</p>
               </div>
             </div>
 
@@ -156,12 +155,12 @@ export default function SpotPayTipModal({
               <button
                 type="submit"
                 disabled={isProcessing || finalAmount <= 0}
-                className="w-full bg-gradient-to-r from-brand-sunriseCoral to-brand-caribbeanSea hover:from-brand-sunriseCoral hover:to-brand-caribbeanSea text-slate-950 font-black py-3 rounded-2xl text-xs flex items-center justify-center gap-2 transition-all shadow-xl shadow-brand-sunriseCoral/20 disabled:opacity-50"
+                className="w-full bg-gradient-to-r from-brand-sunriseCoral to-brand-goldenHour hover:opacity-95 text-slate-950 font-black py-3 rounded-2xl text-xs flex items-center justify-center gap-2 transition-all shadow-xl shadow-brand-sunriseCoral/20 disabled:opacity-50 cursor-pointer"
               >
                 {isProcessing ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin text-slate-950" />
-                    <span>Settling on Ledger...</span>
+                    <span>Processing Tip...</span>
                   </>
                 ) : (
                   <>
