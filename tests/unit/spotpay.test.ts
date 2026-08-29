@@ -154,4 +154,30 @@ describe('PSP Adapters (Stripe, PayPal, SpotPay Wallet)', () => {
     expect(charge.success).toBe(true);
     expect(charge.providerName).toBe('spotpay');
   });
+
+  it('MonetizationEngine verifies 0% platform fee on Seller Pro and Business+ plans', async () => {
+    const { MonetizationEngine, SELLER_PLANS } = await import('../../packages/spotpay/src/index');
+    const engine = new MonetizationEngine();
+
+    // Seller Pro Plan ($14.99/mo, 0 bps commission)
+    expect(SELLER_PLANS.seller_pro.commissionRateBps).toBe(0);
+    const breakdownPro = engine.calculateCheckoutBreakdown(10000, 'USD', {
+      sellerPlanId: 'seller_pro',
+      processingFeeBps: 290,
+      processingFixedMinor: 30,
+    });
+    expect(breakdownPro.platformFeeMinor).toBe(0);
+    expect(breakdownPro.processingFeeMinor).toBe(320); // 2.9% ($2.90) + 30 cents = $3.20
+    expect(breakdownPro.netToMerchantMinor).toBe(9680); // $96.80 to merchant
+
+    // Business+ Plan ($39.99/mo, 0 bps commission) with 10% creator affiliate commission
+    expect(SELLER_PLANS.business_plus.commissionRateBps).toBe(0);
+    const breakdownAffiliate = engine.calculateCheckoutBreakdown(10000, 'USD', {
+      sellerPlanId: 'business_plus',
+      affiliateCommissionBps: 1000, // 10% to creator
+    });
+    expect(breakdownAffiliate.platformFeeMinor).toBe(0);
+    expect(breakdownAffiliate.affiliateCommissionMinor).toBe(1000); // $10.00
+    expect(breakdownAffiliate.netToMerchantMinor).toBe(8680); // $86.80
+  });
 });

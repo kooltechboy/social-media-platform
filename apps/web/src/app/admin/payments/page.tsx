@@ -85,23 +85,28 @@ export default async function WebAdminPaymentsPage({
         <Link href="/admin" className="text-xs text-brand-sandstone/60 hover:text-brand-sandstone">← Admin Console</Link>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div className="bg-gradient-to-br from-slate-900 to-emerald-950/30 border border-brand-sunriseCoral/30 rounded-2xl p-5">
-          <p className="text-xs font-bold text-brand-sunriseCoral uppercase tracking-wider">Total Succeeded Revenue</p>
+          <p className="text-xs font-bold text-brand-sunriseCoral uppercase tracking-wider">Total Gross Volume (GMV)</p>
           <p className="text-3xl font-black text-brand-sandstone mt-2">{formatMinor(totalRevenue, 'USD')}</p>
           <p className="text-[11px] text-brand-sandstone/60 mt-1 flex items-center gap-1">
             <ShieldCheck className="w-3 h-3 text-brand-sunriseCoral" /> Double-entry verified
           </p>
         </div>
         <div className="bg-brand-dusk/70 border border-slate-800 rounded-2xl p-5">
-          <p className="text-xs font-bold text-brand-caribbeanSea uppercase tracking-wider">Intents ({status})</p>
+          <p className="text-xs font-bold text-brand-caribbeanSea uppercase tracking-wider">Payment Transactions ({status})</p>
           <p className="text-3xl font-black text-brand-sandstone mt-2">{(intentsResult.count ?? 0).toLocaleString()}</p>
           <p className="text-[11px] text-brand-sandstone/60 mt-1">Page {page} of {totalPages || 1}</p>
         </div>
         <div className="bg-brand-dusk/70 border border-slate-800 rounded-2xl p-5">
-          <p className="text-xs font-bold text-brand-goldenHour uppercase tracking-wider">SpotPay Financial</p>
-          <p className="text-sm text-slate-300 mt-2">NASA-Grade Ledger</p>
-          <p className="text-[11px] text-brand-sandstone/60 mt-1">Idempotent paired credit/debit records</p>
+          <p className="text-xs font-bold text-brand-goldenHour uppercase tracking-wider">Seller Subscription Model</p>
+          <p className="text-xl font-extrabold text-brand-goldenHour mt-2">0% Cut on Eligible Plans</p>
+          <p className="text-[11px] text-brand-sandstone/60 mt-1">Pro $14.99/mo &bull; Business+ $39.99/mo</p>
+        </div>
+        <div className="bg-brand-dusk/70 border border-slate-800 rounded-2xl p-5">
+          <p className="text-xs font-bold text-emerald-400 uppercase tracking-wider">Double-Entry Ledger</p>
+          <p className="text-xl font-extrabold text-emerald-400 mt-2">100% Balanced</p>
+          <p className="text-[11px] text-brand-sandstone/60 mt-1">Sum-zero debit/credit invariant intact</p>
         </div>
       </div>
 

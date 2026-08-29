@@ -816,6 +816,21 @@ export default function UniversalComposer({
                 <HeartHandshake className="w-4 h-4 text-rose-400" />
                 <span className="hidden md:inline">Relief</span>
               </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  const topic = content.trim() || 'Caribbean culture and music';
+                  const { generateCreatorContentPlan } = require('@caribbean/ai');
+                  const plan = generateCreatorContentPlan({ topic, category: 'social', dialect: 'standard_english' });
+                  setContent(prev => prev ? `${prev}\n\n${plan.hashtags.join(' ')}` : `${plan.captions[0]}\n\n${plan.hashtags.join(' ')}`);
+                }}
+                title="AI Creator Assistant: Polish & Add Hashtags"
+                className="p-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all text-brand-goldenHour bg-brand-goldenHour/10 border border-brand-goldenHour/30 hover:bg-brand-goldenHour/20"
+              >
+                <Sparkles className="w-4 h-4 text-brand-goldenHour" />
+                <span className="hidden md:inline">AI Creator Assist</span>
+              </button>
             </div>
 
             {/* Submit Button */}

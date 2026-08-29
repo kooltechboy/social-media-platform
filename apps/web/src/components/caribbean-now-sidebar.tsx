@@ -1,7 +1,9 @@
 import React from 'react';
 import Link from 'next/link';
-import { Flame, Radio, Calendar, Sparkles, TrendingUp, ArrowUpRight, Wallet, MapPin } from 'lucide-react';
+import { Calendar, ArrowUpRight, Wallet } from 'lucide-react';
 import OnlineFriendsWidget from './online-friends-widget';
+import { createSupabaseServerClient, getCurrentUser } from '../lib/supabase/server';
+import { Money } from '@caribbean/spotpay';
 
 interface IslandPulse {
   city: string;
@@ -12,16 +14,77 @@ interface IslandPulse {
 }
 
 const ISLAND_PULSES: IslandPulse[] = [
-  { city: 'Kingston', country: 'Jamaica', flag: '🇯🇲', status: 'Dancehall Session Live', tag: '#KingstonNights' },
-  { city: 'Port of Spain', country: 'Trinidad', flag: '🇹🇹', status: 'Carnival Band Launch', tag: '#CarnivalTT' },
-  { city: 'Santo Domingo', country: 'Dominican Rep.', flag: '🇩🇴', status: 'Tech Diaspora Meetup', tag: '#RDTech' },
+  { city: 'Kingston', country: 'Jamaica', flag: '🇯🇲', status: 'Sound System Culture', tag: '#KingstonNights' },
+  { city: 'Port of Spain', country: 'Trinidad', flag: '🇹🇹', status: 'Carnival & Soca Pulse', tag: '#CarnivalTT' },
+  { city: 'Santo Domingo', country: 'Dominican Rep.', flag: '🇩🇴', status: 'Bachata & Tech Meetup', tag: '#RDTech' },
   { city: 'Bridgetown', country: 'Barbados', flag: '🇧🇧', status: 'Crop Over Season Vibes', tag: '#CropOver2026' },
-  { city: 'Miami', country: 'USA Diaspora', flag: '🗽', status: 'Wynwood Soca Fest', tag: '#MiamiCarnival' },
-  { city: 'Toronto', country: 'Canada Diaspora', flag: '🇨🇦', status: 'Caribana Presale Live', tag: '#Caribana2026' },
-  { city: 'London', country: 'UK Diaspora', flag: '🇬🇧', status: 'Notting Hill Prep', tag: '#LondonSoca' },
+  { city: 'Miami', country: 'USA Diaspora', flag: '🗽', status: 'Wynwood Diaspora Fest', tag: '#MiamiCarnival' },
+  { city: 'Toronto', country: 'Canada Diaspora', flag: '🇨🇦', status: 'Caribana Hub', tag: '#Caribana2026' },
+  { city: 'London', country: 'UK Diaspora', flag: '🇬🇧', status: 'Notting Hill Connection', tag: '#LondonSoca' },
 ];
 
-export default function CaribbeanNowSidebar() {
+function formatEventDate(iso: string): string {
+  return new Date(iso).toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+  });
+}
+
+export default async function CaribbeanNowSidebar() {
+  const user = await getCurrentUser();
+  const supabase = await createSupabaseServerClient();
+
+  let walletBalanceFormatted = '$0.00 USD';
+  let upcomingEvents: Array<{
+    id: string;
+    title: string;
+    starts_at: string;
+    venue: string | null;
+    cities: { name: string; country_iso: string } | null;
+  }> = [];
+
+  if (supabase) {
+    const [eventsRes, walletAccountRes] = await Promise.all([
+      supabase
+        .from('events')
+        .select('id, title, starts_at, venue, cities(name, country_iso)')
+        .gte('starts_at', new Date().toISOString())
+        .order('starts_at', { ascending: true })
+        .limit(3),
+      user
+        ? supabase
+            .from('ledger_accounts')
+            .select('id, account_type, currency')
+            .eq('owner_id', user.id)
+            .eq('account_type', 'spotpay_wallet')
+            .maybeSingle()
+        : Promise.resolve({ data: null }),
+    ]);
+
+    if (eventsRes?.data) {
+      upcomingEvents = eventsRes.data as unknown as typeof upcomingEvents;
+    }
+
+    if (walletAccountRes?.data) {
+      const walletAccount = walletAccountRes.data;
+      const { data: entries } = await supabase
+        .from('ledger_entries')
+        .select('amount, entry_type')
+        .eq('account_id', walletAccount.id);
+
+      if (entries && entries.length > 0) {
+        const netMajor = entries.reduce((sum, e) => {
+          const amt = Number(e.amount);
+          return e.entry_type === 'CREDIT' ? sum + amt : sum - amt;
+        }, 0);
+        const minor = Math.round(Math.abs(netMajor) * 100);
+        walletBalanceFormatted = `${new Money(minor, walletAccount.currency || 'USD').format()} ${walletAccount.currency || 'USD'}`;
+      } else {
+        walletBalanceFormatted = `$0.00 ${walletAccount.currency || 'USD'}`;
+      }
+    }
+  }
+
   return (
     <aside className="hidden lg:block col-span-1 space-y-5" aria-label="Caribbean Now Discovery">
       {/* Online Friends Widget */}
@@ -72,24 +135,26 @@ export default function CaribbeanNowSidebar() {
           <span className="text-[10px] font-black text-brand-sunriseCoral uppercase tracking-wider flex items-center gap-1.5">
             <Wallet className="w-3.5 h-3.5" /> SpotPay Ledger
           </span>
-          <span className="text-[10px] font-bold text-brand-sandstone/60">FDIC Partnered</span>
+          <span className="text-[10px] font-bold text-brand-sandstone/60">Double-Entry</span>
         </div>
         <div>
           <p className="text-xs text-brand-sandstone/60">Personal Balance</p>
-          <p className="text-2xl font-black text-brand-sandstone">$240.50 <span className="text-xs font-normal text-brand-sandstone/60">USD</span></p>
+          <p className="text-2xl font-black text-brand-sandstone">
+            {user ? walletBalanceFormatted : '$0.00 USD'}
+          </p>
         </div>
         <div className="grid grid-cols-2 gap-2 pt-1">
           <Link
             href="/spotpay"
             className="bg-brand-sunriseCoral hover:bg-brand-sunriseCoral text-slate-950 font-extrabold py-2 px-3 rounded-xl text-xs text-center transition-colors shadow-sm shadow-brand-sunriseCoral/20"
           >
-            Send Money
+            {user ? 'Send Money' : 'Open Wallet'}
           </Link>
           <Link
             href="/spotpay"
             className="bg-transparent hover:bg-brand-dusk text-slate-300 font-bold py-2 px-3 rounded-xl text-xs text-center border border-slate-600 transition-colors"
           >
-            Add Funds
+            {user ? 'Add Funds' : 'Learn More'}
           </Link>
         </div>
       </div>
@@ -106,19 +171,30 @@ export default function CaribbeanNowSidebar() {
         </div>
 
         <div className="space-y-2.5">
-          {[
-            { title: 'Trinidad Carnival 2026: Soca Monarch', date: 'This Friday • Port of Spain', tickets: 'SpotPay $45' },
-            { title: 'Caribana Toronto Grand Parade', date: 'Aug 1 • Lakeshore Toronto', tickets: 'Free RSVP' },
-            { title: 'Dominican Food & Merengue Festival', date: 'Sunday • Washington Heights, NY', tickets: 'SpotPay $15' },
-          ].map((event, idx) => (
-            <div key={idx} className="p-3 rounded-2xl bg-white/5 border border-white/8 space-y-1">
-              <h4 className="font-bold text-xs text-slate-200 leading-snug">{event.title}</h4>
-              <div className="flex items-center justify-between text-[11px]">
-                <span className="text-brand-sandstone/60">{event.date}</span>
-                <span className="font-extrabold text-brand-goldenHour">{event.tickets}</span>
-              </div>
+          {upcomingEvents.length > 0 ? (
+            upcomingEvents.map((event) => (
+              <Link
+                key={event.id}
+                href="/events"
+                className="p-3 rounded-2xl bg-white/5 border border-white/8 space-y-1 block hover:border-white/20 transition-colors"
+              >
+                <h4 className="font-bold text-xs text-slate-200 leading-snug">{event.title}</h4>
+                <div className="flex items-center justify-between text-[11px]">
+                  <span className="text-brand-sandstone/60">
+                    {formatEventDate(event.starts_at)} {event.cities ? `• ${event.cities.name}` : ''}
+                  </span>
+                  <span className="font-extrabold text-brand-goldenHour">RSVP</span>
+                </div>
+              </Link>
+            ))
+          ) : (
+            <div className="p-3 rounded-2xl bg-white/5 border border-dashed border-slate-800 text-center">
+              <p className="text-xs text-brand-sandstone/60">No upcoming events right now.</p>
+              <Link href="/events" className="text-[11px] text-brand-caribbeanSea hover:underline font-bold mt-1 inline-block">
+                Host an Event →
+              </Link>
             </div>
-          ))}
+          )}
         </div>
       </div>
     </aside>

@@ -43,7 +43,7 @@ export interface LivestreamViewItem {
 }
 
 interface LiveViewerPlayerProps {
-  stream: LivestreamViewItem;
+  stream?: LivestreamViewItem | null;
   user: {
     id: string;
     displayName: string;
@@ -70,6 +70,36 @@ const DEFAULT_STREAM_VIDEO =
   'https://assets.mixkit.co/videos/preview/mixkit-caribbean-tropical-beach-with-turquoise-water-41221-large.mp4';
 
 export default function LiveViewerPlayer({ stream, user }: LiveViewerPlayerProps) {
+  if (!stream) {
+    return (
+      <div className="glass rounded-3xl p-12 text-center max-w-2xl mx-auto space-y-4 border border-red-500/20 my-8">
+        <div className="w-16 h-16 rounded-2xl bg-red-500/10 border border-red-500/30 flex items-center justify-center mx-auto text-red-400">
+          <Tv className="w-8 h-8" />
+        </div>
+        <h3 className="text-lg font-black text-white">No Live Broadcasts Active</h3>
+        <p className="text-xs text-brand-sandstone/70 leading-relaxed max-w-md mx-auto">
+          There are currently no active island livestreams or scheduled dub sessions broadcasting. Be the first to go live!
+        </p>
+        <Link
+          href="/live/broadcast"
+          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-red-600 to-rose-600 text-white font-bold text-xs hover:opacity-90 transition-opacity shadow-lg shadow-red-600/20"
+        >
+          🔴 Go Live Now
+        </Link>
+      </div>
+    );
+  }
+
+  return <ActiveLivePlayer stream={stream} user={user} />;
+}
+
+function ActiveLivePlayer({
+  stream,
+  user,
+}: {
+  stream: LivestreamViewItem;
+  user: LiveViewerPlayerProps['user'];
+}) {
   // Player Controls
   const [isPlaying, setIsPlaying] = useState(true);
   const [isMuted, setIsMuted] = useState(true);

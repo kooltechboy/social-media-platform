@@ -87,3 +87,79 @@ export function isSubscriptionActive(status: string, currentPeriodEnd: string, n
   if (status !== 'active' && status !== 'grace') return false;
   return new Date(currentPeriodEnd).getTime() > now.getTime();
 }
+
+// ---------------------------------------------------------------------------
+// Creator Affiliate Commerce & Multi-Stream Earnings
+// ---------------------------------------------------------------------------
+
+export interface AffiliateReferralInput {
+  creatorId: string;
+  productId: string;
+  orderTotalMinor: number;
+  commissionBps: number; // e.g. 1000 = 10%
+  currency: string;
+}
+
+export interface AffiliateCommissionResult {
+  creatorId: string;
+  productId: string;
+  orderTotalMinor: number;
+  commissionBps: number;
+  commissionMinor: number;
+  currency: string;
+}
+
+export function calculateAffiliateCommission(input: AffiliateReferralInput): AffiliateCommissionResult {
+  if (!Number.isInteger(input.orderTotalMinor) || input.orderTotalMinor <= 0) {
+    throw new Error('Order total must be a positive integer in minor units');
+  }
+  if (input.commissionBps < 0 || input.commissionBps > 5000) {
+    throw new Error('Affiliate commission rate must be between 0% and 50% (0-5000 bps)');
+  }
+
+  const commissionMinor = Math.round((input.orderTotalMinor * input.commissionBps) / 10000);
+
+  return {
+    creatorId: input.creatorId,
+    productId: input.productId,
+    orderTotalMinor: input.orderTotalMinor,
+    commissionBps: input.commissionBps,
+    commissionMinor,
+    currency: input.currency,
+  };
+}
+
+export interface CreatorRevenueStreamSummary {
+  subscriptionsMinor: number;
+  tipsMinor: number;
+  liveGiftsMinor: number;
+  digitalSalesMinor: number;
+  affiliateCommissionsMinor: number;
+  totalGrossMinor: number;
+  currency: string;
+}
+
+export function aggregateCreatorStreams(
+  streams: Partial<Omit<CreatorRevenueStreamSummary, 'totalGrossMinor' | 'currency'>>,
+  currency: string = 'USD'
+): CreatorRevenueStreamSummary {
+  const subscriptionsMinor = streams.subscriptionsMinor ?? 0;
+  const tipsMinor = streams.tipsMinor ?? 0;
+  const liveGiftsMinor = streams.liveGiftsMinor ?? 0;
+  const digitalSalesMinor = streams.digitalSalesMinor ?? 0;
+  const affiliateCommissionsMinor = streams.affiliateCommissionsMinor ?? 0;
+
+  const totalGrossMinor =
+    subscriptionsMinor + tipsMinor + liveGiftsMinor + digitalSalesMinor + affiliateCommissionsMinor;
+
+  return {
+    subscriptionsMinor,
+    tipsMinor,
+    liveGiftsMinor,
+    digitalSalesMinor,
+    affiliateCommissionsMinor,
+    totalGrossMinor,
+    currency,
+  };
+}
+

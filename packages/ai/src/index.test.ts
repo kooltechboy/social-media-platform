@@ -74,5 +74,53 @@ describe('CaribAIEngine', () => {
       expect(plan.locale).toBe('en');
     });
   });
+
+  describe('BusinessAIAssistant (grounded answers)', () => {
+    it('answers hours and location queries with verified facts', async () => {
+      const { BusinessAIAssistant } = await import('./index');
+      const assistant = new BusinessAIAssistant();
+      const res = assistant.answerCustomerQuery('What are your hours and location?', {
+        businessName: 'Kingston Blue Mountain Coffee',
+        category: 'Cafe',
+        location: 'Kingston, Jamaica',
+        hours: 'Mon-Sat 8am-8pm',
+      });
+      expect(res.confidence).toBe('high');
+      expect(res.answer).toContain('Kingston, Jamaica');
+      expect(res.answer).toContain('Mon-Sat 8am-8pm');
+      expect(res.groundedFacts.length).toBeGreaterThan(0);
+    });
+
+    it('answers catalog pricing questions from live product list', async () => {
+      const { BusinessAIAssistant } = await import('./index');
+      const assistant = new BusinessAIAssistant();
+      const res = assistant.answerCustomerQuery('How much is the organic cacao nibs?', {
+        businessName: 'St. Lucia Spice Works',
+        category: 'Spices',
+        location: 'Castries, St. Lucia',
+        products: [
+          { title: 'Organic Cacao Nibs', priceFormatted: '$18.00 USD', kind: 'physical', inStock: true },
+        ],
+      });
+      expect(res.confidence).toBe('high');
+      expect(res.answer).toContain('Organic Cacao Nibs');
+      expect(res.answer).toContain('$18.00 USD');
+    });
+  });
+
+  describe('generateCreatorContentPlan', () => {
+    it('generates Caribbean dialect captions and relevant hashtags', async () => {
+      const { generateCreatorContentPlan } = await import('./index');
+      const plan = generateCreatorContentPlan({
+        topic: 'Carnival J’ouvert Road March',
+        category: 'carnival',
+        dialect: 'trini_creole',
+      });
+      expect(plan.captions.length).toBeGreaterThan(0);
+      expect(plan.captions[0]).toContain('🇹🇹');
+      expect(plan.hashtags).toContain('#CarnivalVibes');
+      expect(plan.hashtags).toContain('#CaribbeanEcosystem');
+    });
+  });
 });
 

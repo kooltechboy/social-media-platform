@@ -34,87 +34,6 @@ interface CommunityDetail {
   flag?: string;
 }
 
-const SHOWCASE_DETAILS: Record<string, CommunityDetail> = {
-  'jamaicans-in-toronto': {
-    id: 'comm-1',
-    name: 'Jamaicans in Toronto & GTA',
-    slug: 'jamaicans-in-toronto',
-    description: 'Diaspora network for community events, Caribana updates, business networking, and culinary meetups in Ontario.',
-    join_policy: 'public',
-    member_count: 18400,
-    country_iso: 'JAM',
-    created_by: null,
-    locationTag: 'Toronto, Canada 🇨🇦',
-    activeNow: 340,
-    flag: '🇯🇲',
-  },
-  'dominicans-in-nyc': {
-    id: 'comm-2',
-    name: 'Dominicans in New York City',
-    slug: 'dominicans-in-nyc',
-    description: 'Connecting Quisqueyanos across Washington Heights, the Bronx, and Queens. Cultural events, sports, and business directory.',
-    join_policy: 'public',
-    member_count: 24900,
-    country_iso: 'DOM',
-    created_by: null,
-    locationTag: 'New York, USA 🗽',
-    activeNow: 520,
-    flag: '🇩🇴',
-  },
-  'caribbean-developers-tech': {
-    id: 'comm-3',
-    name: 'Caribbean Developers & Tech Founders',
-    slug: 'caribbean-developers-tech',
-    description: 'Engineers, designers, product managers, and founders building software and AI across the islands and diaspora.',
-    join_policy: 'public',
-    member_count: 9200,
-    country_iso: null,
-    created_by: null,
-    locationTag: 'Global Diaspora 🚀',
-    activeNow: 210,
-    flag: '🌴',
-  },
-  'haitians-in-miami': {
-    id: 'comm-4',
-    name: 'Haitians in South Florida & Miami',
-    slug: 'haitians-in-miami',
-    description: 'Little Haiti, North Miami, and Broward community for heritage celebration, kompa nights, youth mentorship, and relief.',
-    join_policy: 'public',
-    member_count: 16800,
-    country_iso: 'HTI',
-    created_by: null,
-    locationTag: 'Miami, USA 🏖️',
-    activeNow: 290,
-    flag: '🇭🇹',
-  },
-  'trinbago-london': {
-    id: 'comm-5',
-    name: 'Trinbago Cultural Association London',
-    slug: 'trinbago-london',
-    description: 'Notting Hill Carnival preparations, steelband workshops, panyard sessions, and diaspora fellowship in the UK.',
-    join_policy: 'public',
-    member_count: 11400,
-    country_iso: 'TTO',
-    created_by: null,
-    locationTag: 'London, UK 🇬🇧',
-    activeNow: 180,
-    flag: '🇹🇹',
-  },
-  'bajan-global-network': {
-    id: 'comm-6',
-    name: 'Bajan & Barbadian Global Network',
-    slug: 'bajan-global-network',
-    description: 'Crop Over season updates, tourism ambassadors, investment opportunities, and diaspora homecoming.',
-    join_policy: 'public',
-    member_count: 7300,
-    country_iso: 'BRB',
-    created_by: null,
-    locationTag: 'Bridgetown & Global 🇧🇧',
-    activeNow: 115,
-    flag: '🇧🇧',
-  },
-};
-
 export default async function CommunityHubPage({
   params,
 }: {
@@ -153,56 +72,52 @@ export default async function CommunityHubPage({
         flag: (dbComm.countries as any)?.flag_emoji || '🌴',
       };
 
-      if (user) {
-        const { data: memberRow } = await supabase
-          .from('community_members')
-          .select('community_id')
-          .eq('community_id', dbComm.id)
-          .eq('user_id', user.id)
-          .maybeSingle();
-        isMember = !!memberRow;
+      const [memberRes, postsRes] = await Promise.all([
+        user
+          ? supabase
+              .from('community_members')
+              .select('community_id')
+              .eq('community_id', dbComm.id)
+              .eq('user_id', user.id)
+              .maybeSingle()
+          : Promise.resolve({ data: null }),
+        supabase
+          .from('posts')
+          .select('id, author_id, content, created_at, media_urls, cultural_tags, likes_count, comments_count, shares_count, profiles(display_name, username, is_verified)')
+          .order('created_at', { ascending: false })
+          .limit(20),
+      ]);
+
+      isMember = !!memberRes.data;
+
+      if (postsRes.data && postsRes.data.length > 0) {
+        communityPosts = postsRes.data.map((p: any) => {
+          const rawProfile = p.profiles;
+          const profile = Array.isArray(rawProfile) ? rawProfile[0] : rawProfile;
+          return {
+            id: p.id,
+            authorId: p.author_id,
+            author: profile?.display_name || 'Caribbean Member',
+            handle: profile?.username || 'member',
+            verified: profile?.is_verified ?? true,
+            location: community?.name || 'Community Hub',
+            time: 'Recent',
+            content: p.content || '',
+            mediaUrls: p.media_urls || [],
+            culturalTags: p.cultural_tags || [],
+            likes: p.likes_count || 0,
+            reposts: p.shares_count || 0,
+            comments: p.comments_count || 0,
+            category: 'caribbean',
+          };
+        });
       }
     }
   }
 
   if (!community) {
-    community = SHOWCASE_DETAILS[decodedSlug] || null;
-  }
-
-  if (!community) {
     notFound();
   }
-
-  const sampleCommunityPosts: FeedPostData[] = [
-    {
-      id: `comm-post-${community.id}-1`,
-      author: `${community.name} Announcements`,
-      handle: community.slug,
-      verified: true,
-      location: community.locationTag || 'Diaspora Hub',
-      time: '2 hours ago',
-      content: `Welcome all new members to ${community.name}! Please review our community guidelines and connect with local diaspora organizers. 🌴✨`,
-      likes: 142,
-      reposts: 28,
-      comments: 19,
-      culturalTags: ['Diaspora', 'Community', 'Antilia'],
-      category: 'caribbean',
-    },
-    {
-      id: `comm-post-${community.id}-2`,
-      author: 'Marcus Sterling',
-      handle: 'marcus_carib',
-      verified: false,
-      location: community.locationTag || 'City Hub',
-      time: '5 hours ago',
-      content: 'Organizing our monthly diaspora meetup this Saturday. Looking forward to seeing everyone there for cultural fellowship and food!',
-      likes: 88,
-      reposts: 12,
-      comments: 7,
-      culturalTags: ['Meetup', 'Culture'],
-      category: 'caribbean',
-    },
-  ];
 
   return (
     <div className="min-h-screen bg-[#090D16] text-brand-sandstone p-4 md:p-6 max-w-7xl mx-auto space-y-6">
@@ -287,7 +202,7 @@ export default async function CommunityHubPage({
           </div>
 
           <FeedStream
-            initialPosts={sampleCommunityPosts}
+            initialPosts={communityPosts}
             currentUserId={user?.id}
           />
         </div>

@@ -13,83 +13,13 @@ export interface MomentsCinemaRailProps {
   currentUserName?: string;
 }
 
-const CURATED_DEFAULT_STORIES: StoryData[] = [
-  {
-    id: 'curated-1',
-    authorId: 'curated-author-1',
-    authorName: 'Kingston Sound System',
-    authorHandle: 'kingston_dub',
-    authorAvatar: undefined,
-    mediaUrl: 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=800&auto=format&fit=crop&q=80',
-    mediaKind: 'image',
-    caption: 'Trenchtown dub session live tonight! Massive vinyl selector stack tuned to perfection. 🇯🇲🔊✨',
-    audience: 'public',
-    createdAt: new Date(Date.now() - 45 * 60 * 1000).toISOString(),
-    expiresAt: new Date(Date.now() + 23 * 60 * 60 * 1000).toISOString(),
-  },
-  {
-    id: 'curated-2',
-    authorId: 'curated-author-2',
-    authorName: 'Port of Spain Soca',
-    authorHandle: 'pos_soca',
-    authorAvatar: undefined,
-    mediaUrl: 'https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?w=800&auto=format&fit=crop&q=80',
-    mediaKind: 'image',
-    caption: 'Carnival brass band rehearsal live! Pure adrenaline and percussion on the savannah. 🇹🇹🎭✨',
-    audience: 'public',
-    createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-    expiresAt: new Date(Date.now() + 22 * 60 * 60 * 1000).toISOString(),
-  },
-  {
-    id: 'curated-3',
-    authorId: 'curated-author-3',
-    authorName: 'Santo Domingo Bachata',
-    authorHandle: 'santodomingo_vibes',
-    authorAvatar: undefined,
-    mediaUrl: 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=800&auto=format&fit=crop&q=80',
-    mediaKind: 'image',
-    caption: 'Zona Colonial guitar chords under the warm Caribbean evening sky. 🇩🇴🎸🌴',
-    audience: 'public',
-    createdAt: new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString(),
-    expiresAt: new Date(Date.now() + 21 * 60 * 60 * 1000).toISOString(),
-  },
-  {
-    id: 'curated-4',
-    authorId: 'curated-author-4',
-    authorName: 'Bridgetown Crop Over',
-    authorHandle: 'bajan_fete',
-    authorAvatar: undefined,
-    mediaUrl: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=800&auto=format&fit=crop&q=80',
-    mediaKind: 'image',
-    caption: 'Sweetest summer festival vibes from Carlisle Bay to Spring Garden. 🇧🇧🌞🎶',
-    audience: 'public',
-    createdAt: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(),
-    expiresAt: new Date(Date.now() + 19 * 60 * 60 * 1000).toISOString(),
-  },
-  {
-    id: 'curated-5',
-    authorId: 'curated-author-5',
-    authorName: 'Miami Diaspora Carnival',
-    authorHandle: 'miami_carib',
-    authorAvatar: undefined,
-    mediaUrl: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=800&auto=format&fit=crop&q=80',
-    mediaKind: 'image',
-    caption: 'Connecting all 30+ island nations right here in South Florida. 🇺🇸🌍🔥',
-    audience: 'public',
-    createdAt: new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString(),
-    expiresAt: new Date(Date.now() + 18 * 60 * 60 * 1000).toISOString(),
-  },
-];
-
 export default function MomentsCinemaRail({
   initialStories,
   currentUserId,
   currentUserAvatar,
   currentUserName = 'You',
 }: MomentsCinemaRailProps) {
-  const [stories, setStories] = useState<StoryData[]>(
-    initialStories.length > 0 ? initialStories : CURATED_DEFAULT_STORIES
-  );
+  const [stories, setStories] = useState<StoryData[]>(initialStories ?? []);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [activeStoryIndex, setActiveStoryIndex] = useState<number | null>(null);
 

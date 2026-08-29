@@ -95,3 +95,45 @@ export async function fetchBusinessPageAction(slug: string): Promise<{ business:
 
   return { business, products: products ?? [], error: null };
 }
+
+export async function upgradeSellerPlanAction(
+  businessSlug: string,
+  planId: 'business_free' | 'seller_pro' | 'business_plus' | 'enterprise'
+): Promise<{ success: boolean; error: string | null }> {
+  const user = await getCurrentUser();
+  if (!user) return { success: false, error: 'Sign in to manage your seller subscription.' };
+
+  const supabase = await createSupabaseServerClient();
+  if (!supabase) return { success: false, error: 'Database is unavailable.' };
+
+  const { data: business } = await supabase
+    .from('businesses')
+    .select('id, owner_id')
+    .eq('slug', businessSlug)
+    .maybeSingle();
+
+  if (!business || business.owner_id !== user.id) {
+    return { success: false, error: 'You do not have permission to manage this business.' };
+  }
+
+  // Insert or update business subscription
+  const { error } = await supabase
+    .from('business_subscriptions')
+    .upsert({
+      business_id: business.id,
+      plan_id: planId,
+      status: 'active',
+      current_period_start: new Date().toISOString(),
+      current_period_end: new Date(Date.now() + 30 * 86400000).toISOString(),
+      updated_at: new Date().toISOString(),
+    }, { onConflict: 'business_id' });
+
+  if (error) {
+    return { success: false, error: error.message };
+  }
+
+  revalidatePath(`/pages/${businessSlug}`);
+  revalidatePath('/pages');
+  return { success: true, error: null };
+}
+

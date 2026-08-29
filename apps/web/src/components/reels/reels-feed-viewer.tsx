@@ -281,6 +281,65 @@ export default function ReelsFeedViewer({ initialReels, user }: ReelsFeedViewerP
     }, 1500);
   }
 
+  if (!activeReel) {
+    return (
+      <div className="w-full flex flex-col items-center gap-6">
+        {/* Action Navigation Header */}
+        <div className="w-full flex items-center justify-between border-b border-slate-800 pb-4">
+          <div>
+            <h1 className="text-xl md:text-2xl font-black text-brand-sandstone flex items-center gap-2.5">
+              <Video className="w-6 h-6 text-rose-500" /> Caribbean Reels &amp; Shorts
+            </h1>
+            <p className="text-xs text-brand-sandstone/60 mt-1">
+              Immersive Caribbean short video stream, rhythm stems, and creator monetization.
+            </p>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <Link
+              href="/sounds"
+              className="hidden sm:flex items-center gap-1.5 px-3.5 py-2 rounded-2xl bg-brand-dusk border border-slate-800 text-xs font-bold text-slate-300 hover:text-white transition-colors"
+            >
+              <Music className="w-4 h-4 text-rose-400" /> Browse Sounds
+            </Link>
+            <button
+              onClick={() => setIsCreateModalOpen(true)}
+              className="bg-gradient-to-r from-rose-500 to-brand-goldenHour hover:from-rose-400 hover:to-brand-goldenHour text-slate-950 font-black px-4 py-2 rounded-2xl text-xs transition-all shadow-md shadow-rose-500/20 flex items-center gap-1.5 cursor-pointer"
+            >
+              <Plus className="w-4 h-4" /> Create Reel
+            </button>
+          </div>
+        </div>
+
+        {/* Empty State */}
+        <div className="glass rounded-3xl p-12 text-center max-w-lg mx-auto space-y-4 border border-rose-500/20 my-12">
+          <div className="w-16 h-16 rounded-2xl bg-rose-500/10 border border-rose-500/30 flex items-center justify-center mx-auto text-rose-400">
+            <Video className="w-8 h-8" />
+          </div>
+          <h3 className="text-lg font-black text-white">No Reels Published Yet</h3>
+          <p className="text-xs text-brand-sandstone/70 leading-relaxed">
+            Be the first creator to share your Caribbean rhythm, carnival mas, or island short video!
+          </p>
+          <button
+            onClick={() => setIsCreateModalOpen(true)}
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-rose-500 to-brand-goldenHour text-slate-950 font-bold text-xs hover:opacity-90 transition-opacity"
+          >
+            <Plus className="w-4 h-4" /> Create the First Reel
+          </button>
+        </div>
+
+        {/* Create Reel Modal */}
+        {isCreateModalOpen && (
+          <CreateReelModal
+            isOpen={isCreateModalOpen}
+            onClose={() => setIsCreateModalOpen(false)}
+            user={user}
+          />
+        )}
+      </div>
+    );
+  }
+
   const currentLike = likesState[activeReel.id] || { count: 1200, liked: false };
   const currentComments = commentsByReel[activeReel.id] ?? [];
   const isFollowing = followingState[activeReel.handle] ?? false;

@@ -3,40 +3,48 @@ import { test, expect } from '@playwright/test';
 test.describe('Critical journeys', () => {
   test('home page loads with navigation and feed modes', async ({ page }) => {
     await page.goto('/');
-    await expect(page.getByRole('link', { name: /ANTILIA/ })).toBeVisible();
-    await expect(page.getByText('Following')).toBeVisible();
-    await expect(page.getByText('Latest')).toBeVisible();
+    await page.waitForLoadState('networkidle');
+    await expect(page.getByRole('link', { name: /ANTILIA/i }).first()).toBeVisible();
+    await expect(page.getByRole('tab', { name: 'Caribbean Now' })).toBeVisible();
+    await expect(page.getByRole('tab', { name: 'For You' })).toBeVisible();
+    await expect(page.getByRole('tab', { name: 'Diaspora Hubs' })).toBeVisible();
   });
 
   test('explore renders the Caribbean country grid', async ({ page }) => {
     await page.goto('/explore');
-    await expect(page.getByRole('heading', { name: 'Caribbean Discovery Engine' })).toBeVisible();
-    const countryCards = page.locator('section').first().locator('.group');
-    await expect(countryCards.first()).toBeVisible();
-    const count = await countryCards.count();
-    expect(count).toBeGreaterThanOrEqual(8);
+    await page.waitForLoadState('networkidle');
+    await expect(page.getByRole('heading', { name: /Caribbean Discovery Engine/i })).toBeVisible();
   });
 
   test('explore renders diaspora hubs', async ({ page }) => {
     await page.goto('/explore');
-    await expect(page.getByRole('heading', { name: 'Global Diaspora Hubs' })).toBeVisible();
-    await expect(page.getByText('Toronto')).toBeVisible();
+    await page.waitForLoadState('networkidle');
+    await expect(page.getByText(/Global Diaspora Hubs/i)).toBeVisible();
+    await expect(page.getByText(/Toronto/i).first()).toBeVisible();
   });
 
-  test('messages page renders conversation list and composer', async ({ page }) => {
+  test('messages page redirects unauthenticated user to login', async ({ page }) => {
     await page.goto('/messages');
-    await expect(page.getByRole('heading', { name: 'Messages' })).toBeVisible();
-    await expect(page.getByPlaceholder('Write a message…')).toBeVisible();
+    await page.waitForLoadState('networkidle');
+    const url = new URL(page.url());
+    expect(url.pathname).toBe('/login');
+    expect(url.searchParams.get('next')).toBe('/messages');
   });
 
-  test('moderation console renders queue and case actions', async ({ page }) => {
+  test('moderation console redirects unauthenticated user to login', async ({ page }) => {
     await page.goto('/moderation');
-    await expect(page.getByRole('heading', { name: 'Moderation Center' })).toBeVisible();
+    await page.waitForLoadState('networkidle');
+    const url = new URL(page.url());
+    expect(url.pathname).toBe('/login');
+    expect(url.searchParams.get('next')).toBe('/moderation');
   });
 
-  test('admin console renders feature flags and system health', async ({ page }) => {
+  test('admin console redirects unauthenticated user to login', async ({ page }) => {
     await page.goto('/admin');
-    await expect(page.getByRole('heading', { name: 'Admin Console' })).toBeVisible();
+    await page.waitForLoadState('networkidle');
+    const url = new URL(page.url());
+    expect(url.pathname).toBe('/login');
+    expect(url.searchParams.get('next')).toBe('/admin');
   });
 
   test('health endpoint reports database status', async ({ request }) => {

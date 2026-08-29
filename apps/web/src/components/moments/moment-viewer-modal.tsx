@@ -56,7 +56,7 @@ export default function MomentViewerModal({
 
   // Record story view on active story change
   useEffect(() => {
-    if (isOpen && currentStory && currentStory.id && !currentStory.id.startsWith('curated-')) {
+    if (isOpen && currentStory && currentStory.id) {
       recordStoryViewAction(currentStory.id).catch(() => {});
     }
   }, [isOpen, currentStory]);

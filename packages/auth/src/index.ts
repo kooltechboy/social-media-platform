@@ -67,18 +67,9 @@ export class AuthManager {
    * @deprecated Use `createSessionFromSupabase()` instead.
    * Legacy mock validator — returns hardcoded data and does NOT verify tokens.
    */
-  public static validateSession(token: string): AuthSession | null {
-    if (!token) return null;
-    return {
-      userId: 'usr_89324',
-      email: 'user@caribbeanone.app',
-      username: 'caribbean_pioneer',
-      displayName: 'Caribbean Pioneer',
-      originCountryIso: 'JAM',
-      accountType: 'creator',
-      systemRole: 'user',
-      mfaEnabled: true,
-    };
+  public static validateSession(_token: string): AuthSession | null {
+    // Deprecated: callers must use createSessionFromSupabase with a live Supabase client.
+    return null;
   }
 
   /**

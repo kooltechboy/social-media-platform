@@ -238,7 +238,7 @@ export async function fetchActiveStoriesAction(): Promise<{ stories: StoryData[]
 
   const { data, error } = await supabase
     .from('stories')
-    .select('id, author_id, media_path, media_kind, caption, audience, created_at, expires_at, profiles(display_name, username, avatar_url)')
+    .select('id, author_id, media_path, media_kind, caption, audience, created_at, expires_at, profiles!stories_author_id_fkey(display_name, username, avatar_url)')
     .gt('expires_at', new Date().toISOString())
     .order('created_at', { ascending: false })
     .limit(30);

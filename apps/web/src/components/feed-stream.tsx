@@ -105,7 +105,7 @@ export default function FeedStream({ initialPosts, currentUserId }: FeedStreamPr
     if (initialPosts && initialPosts.length > 0) {
       setPosts((prev) => {
         const existingIds = new Set(initialPosts.map((p) => p.id));
-        const newlyAddedLocal = prev.filter((p) => !existingIds.has(p.id) && !p.id.startsWith('curated-'));
+        const newlyAddedLocal = prev.filter((p) => !existingIds.has(p.id));
         return [...newlyAddedLocal, ...initialPosts];
       });
     }
@@ -344,13 +344,11 @@ export default function FeedStream({ initialPosts, currentUserId }: FeedStreamPr
       prev.map((p) => (p.id === post.id ? { ...p, reposts: p.reposts + 1 } : p))
     );
 
-    if (!post.id.startsWith('curated-')) {
-      try {
-        const dbType = shareType === 'repost' ? 'internal' : shareType === 'copy_link' ? 'copy_link' : 'external';
-        await incrementPostShareAction(post.id, dbType);
-      } catch {
-        // Ignore
-      }
+    try {
+      const dbType = shareType === 'repost' ? 'internal' : shareType === 'copy_link' ? 'copy_link' : 'external';
+      await incrementPostShareAction(post.id, dbType);
+    } catch {
+      // Ignore
     }
   }
 

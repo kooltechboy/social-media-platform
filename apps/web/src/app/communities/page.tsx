@@ -21,87 +21,6 @@ interface Community {
   activeNow?: number;
 }
 
-const SHOWCASE_COMMUNITIES: Community[] = [
-  {
-    id: 'comm-1',
-    name: 'Jamaicans in Toronto & GTA',
-    slug: 'jamaicans-in-toronto',
-    description: 'Diaspora network for community events, Caribana updates, business networking, and culinary meetups in Ontario.',
-    join_policy: 'public',
-    member_count: 18400,
-    country_iso: 'JAM',
-    created_by: null,
-    locationTag: 'Toronto, Canada 🇨🇦',
-    activeNow: 340,
-    countries: { name: 'Jamaica', flag_emoji: '🇯🇲' },
-  },
-  {
-    id: 'comm-2',
-    name: 'Dominicans in New York City',
-    slug: 'dominicans-in-nyc',
-    description: 'Connecting Quisqueyanos across Washington Heights, the Bronx, and Queens. Cultural events, sports, and business directory.',
-    join_policy: 'public',
-    member_count: 24900,
-    country_iso: 'DOM',
-    created_by: null,
-    locationTag: 'New York, USA 🗽',
-    activeNow: 520,
-    countries: { name: 'Dominican Republic', flag_emoji: '🇩🇴' },
-  },
-  {
-    id: 'comm-3',
-    name: 'Caribbean Developers & Tech Founders',
-    slug: 'caribbean-developers-tech',
-    description: 'Engineers, designers, product managers, and founders building software and AI across the islands and diaspora.',
-    join_policy: 'public',
-    member_count: 9200,
-    country_iso: null,
-    created_by: null,
-    locationTag: 'Global Diaspora 🚀',
-    activeNow: 210,
-    countries: { name: 'Pan-Caribbean', flag_emoji: '🌴' },
-  },
-  {
-    id: 'comm-4',
-    name: 'Haitians in South Florida & Miami',
-    slug: 'haitians-in-miami',
-    description: 'Little Haiti, North Miami, and Broward community for heritage celebration, kompa nights, youth mentorship, and relief.',
-    join_policy: 'public',
-    member_count: 16800,
-    country_iso: 'HTI',
-    created_by: null,
-    locationTag: 'Miami, USA 🏖️',
-    activeNow: 290,
-    countries: { name: 'Haiti', flag_emoji: '🇭🇹' },
-  },
-  {
-    id: 'comm-5',
-    name: 'Trinbago Cultural Association London',
-    slug: 'trinbago-london',
-    description: 'Notting Hill Carnival preparations, steelband workshops, panyard sessions, and diaspora fellowship in the UK.',
-    join_policy: 'public',
-    member_count: 11400,
-    country_iso: 'TTO',
-    created_by: null,
-    locationTag: 'London, UK 🇬🇧',
-    activeNow: 180,
-    countries: { name: 'Trinidad & Tobago', flag_emoji: '🇹🇹' },
-  },
-  {
-    id: 'comm-6',
-    name: 'Bajan & Barbadian Global Network',
-    slug: 'bajan-global-network',
-    description: 'Crop Over season updates, tourism ambassadors, investment opportunities, and diaspora homecoming.',
-    join_policy: 'public',
-    member_count: 7300,
-    country_iso: 'BRB',
-    created_by: null,
-    locationTag: 'Bridgetown & Global 🇧🇧',
-    activeNow: 115,
-    countries: { name: 'Barbados', flag_emoji: '🇧🇧' },
-  },
-];
-
 function JoinPolicyBadge({ policy }: { policy: string }) {
   if (policy === 'public')
     return (
@@ -166,10 +85,6 @@ export default async function CommunitiesPage({
     }
   }
 
-  if (communities.length === 0) {
-    communities = SHOWCASE_COMMUNITIES;
-  }
-
   return (
     <div className="min-h-screen bg-[#090D16] text-brand-sandstone p-4 md:p-6 max-w-7xl mx-auto space-y-8">
       {/* Top Header */}
@@ -200,58 +115,68 @@ export default async function CommunitiesPage({
       </div>
 
       {/* Communities Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {communities.map((community) => (
-          <article
-            key={community.id}
-            className="bg-brand-dusk/80 border border-slate-800/90 hover:border-brand-sunriseCoral/50 rounded-3xl p-6 space-y-4 flex flex-col justify-between transition-all shadow-xl group"
-          >
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-3xl">{community.countries?.flag_emoji ?? '🌍'}</span>
-                <JoinPolicyBadge policy={community.join_policy} />
-              </div>
+      {communities.length === 0 ? (
+        <div className="bg-brand-dusk/70 border border-slate-800 rounded-3xl p-12 text-center space-y-4 max-w-xl mx-auto">
+          <Users className="w-12 h-12 text-brand-sunriseCoral/60 mx-auto" />
+          <h3 className="text-base font-bold text-brand-sandstone">No diaspora communities found</h3>
+          <p className="text-xs text-brand-sandstone/60 leading-relaxed">
+            No communities currently match your search or filter. Create your own island guild or diaspora city hub!
+          </p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {communities.map((community) => (
+            <article
+              key={community.id}
+              className="bg-brand-dusk/80 border border-slate-800/90 hover:border-brand-sunriseCoral/50 rounded-3xl p-6 space-y-4 flex flex-col justify-between transition-all shadow-xl group"
+            >
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-3xl">{community.countries?.flag_emoji ?? '🌍'}</span>
+                  <JoinPolicyBadge policy={community.join_policy} />
+                </div>
 
-              <div>
-                <Link href={`/communities/${community.slug}`}>
-                  <h3 className="font-extrabold text-base text-brand-sandstone group-hover:text-emerald-300 hover:underline transition-colors leading-snug cursor-pointer">
-                    {community.name}
-                  </h3>
-                </Link>
-                <p className="text-xs text-brand-sunriseCoral font-semibold mt-0.5">
-                  {community.locationTag ?? community.countries?.name ?? 'Diaspora Wide'}
-                </p>
-              </div>
+                <div>
+                  <Link href={`/communities/${community.slug}`}>
+                    <h3 className="font-extrabold text-base text-brand-sandstone group-hover:text-emerald-300 hover:underline transition-colors leading-snug cursor-pointer">
+                      {community.name}
+                    </h3>
+                  </Link>
+                  <p className="text-xs text-brand-sunriseCoral font-semibold mt-0.5">
+                    {community.locationTag ?? community.countries?.name ?? 'Diaspora Wide'}
+                  </p>
+                </div>
 
-              {community.description && (
-                <p className="text-xs text-slate-300 leading-relaxed line-clamp-3">
-                  {community.description}
-                </p>
-              )}
-            </div>
-
-            <div className="pt-3 border-t border-slate-800/80 space-y-3">
-              <div className="flex items-center justify-between text-xs text-brand-sandstone/60 font-medium">
-                <span>{community.member_count.toLocaleString()} members</span>
-                {community.activeNow && (
-                  <span className="text-brand-sunriseCoral font-bold flex items-center gap-1">
-                    <span className="w-1.5 h-1.5 rounded-full bg-brand-sunriseCoral" /> {community.activeNow} active now
-                  </span>
+                {community.description && (
+                  <p className="text-xs text-slate-300 leading-relaxed line-clamp-3">
+                    {community.description}
+                  </p>
                 )}
               </div>
 
-              <div className="w-full">
-                <CommunityJoinButton
-                  communityId={community.id}
-                  joinPolicy={community.join_policy}
-                  isMember={membershipSet.has(community.id)}
-                  isAuthenticated={!!user}
-                />
+              <div className="pt-3 border-t border-slate-800/80 space-y-3">
+                <div className="flex items-center justify-between text-xs text-brand-sandstone/60 font-medium">
+                  <span>{community.member_count.toLocaleString()} members</span>
+                  {community.activeNow && (
+                    <span className="text-brand-sunriseCoral font-bold flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-brand-sunriseCoral" /> {community.activeNow} active now
+                    </span>
+                  )}
+                </div>
+
+                <div className="w-full">
+                  <CommunityJoinButton
+                    communityId={community.id}
+                    joinPolicy={community.join_policy}
+                    isMember={membershipSet.has(community.id)}
+                    isAuthenticated={!!user}
+                  />
+                </div>
               </div>
-            </div>
-          </article>
-        ))}
-      </div>
+            </article>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

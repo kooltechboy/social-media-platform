@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { VIBE_CATEGORIES } from '../../apps/web/src/lib/explore/actions';
+import { VIBE_CATEGORIES } from '../../apps/web/src/lib/explore/constants';
 import { CARIBBEAN_TERRITORIES, CARIBBEAN_TERRITORIES_BY_ISO } from '../../apps/web/src/lib/constants/caribbean-territories';
 import { DIASPORA_CITY_HUBS, DIASPORA_COUNTRIES } from '../../apps/web/src/lib/constants/diaspora-hubs';
 

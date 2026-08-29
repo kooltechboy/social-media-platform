@@ -44,43 +44,8 @@ export default async function ProductDetailPage({
     }
   }
 
-  // Fallback showcase items for static demo IDs
   if (!product) {
-    if (id === 'prod-1') {
-      product = {
-        id: 'prod-1',
-        title: 'Authentic Jamaican Blue Mountain Coffee (16oz Whole Bean)',
-        description: 'Certified 100% Grade 1 Blue Mountain Arabica, harvested in Portland and roasted in small batches. SpotPay escrow verified with global delivery.',
-        product_kind: 'physical',
-        price_minor: 4800,
-        currency: 'USD',
-        inventory_count: 34,
-        is_active: true,
-        seller_id: 'seller-coffee',
-        origin: 'Jamaica 🇯🇲',
-        rating: 4.9,
-        profiles: { display_name: 'Portland Mountain Roasters', username: 'portlandcoffee' },
-        businesses: { name: 'Blue Mountain Coffee Guild', slug: 'portland-roasters' },
-      };
-    } else if (id === 'prod-6') {
-      product = {
-        id: 'prod-6',
-        title: 'Soca & Dancehall Stem Pack Vol. 1 (24-bit WAV Royalty Free)',
-        description: 'Over 200 authentic percussion loops, steel pan melodies, brass hits, and basslines for producers worldwide. Instant download upon SpotPay settlement.',
-        product_kind: 'digital',
-        price_minor: 2900,
-        currency: 'USD',
-        inventory_count: null,
-        is_active: true,
-        seller_id: 'seller-stems',
-        origin: 'London Diaspora 🇬🇧',
-        rating: 4.9,
-        profiles: { display_name: 'Caribbean Sound Labs', username: 'caribsoundlabs' },
-        businesses: { name: 'Diaspora Audio Ltd', slug: 'carib-sound-labs' },
-      };
-    } else {
-      notFound();
-    }
+    notFound();
   }
 
   const price = new Money(product.price_minor, product.currency);

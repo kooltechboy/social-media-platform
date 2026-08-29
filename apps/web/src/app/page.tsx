@@ -20,96 +20,6 @@ import CaribbeanNowSidebar from '../components/caribbean-now-sidebar';
 
 export const dynamic = 'force-dynamic';
 
-const CURATED_CARIBBEAN_POSTS: FeedPostData[] = [
-  {
-    id: 'curated-1',
-    author: 'Karene Reid',
-    handle: 'karenereid',
-    verified: true,
-    location: 'Kingston, Jamaica 🇯🇲',
-    time: '12m ago',
-    content:
-      'The energy in Kingston tonight is unmatched! Sound system culture alive and vibrant. Big up to everyone streaming in from London, Brooklyn, and Toronto on Antilia! 🇯🇲🔊✨\n\n#KingstonVibes #SoundSystemCulture',
-    likes: 428,
-    reposts: 89,
-    comments: 34,
-    tag: '#KingstonVibes',
-    category: 'caribbean',
-    taggedProduct: {
-      id: 'prod-1',
-      title: 'Blue Mountain Coffee (Grade 1 Single Origin Whole Bean)',
-      priceMinor: 3800,
-      currency: 'USD',
-      sellerName: 'Portland Mountain Roasters',
-      origin: 'Portland, Jamaica 🇯🇲',
-      rating: 4.9,
-    },
-  },
-  {
-    id: 'curated-2',
-    author: 'Carlos Santana-Mendez',
-    handle: 'carlos_rd',
-    verified: true,
-    location: 'Santo Domingo, Dominican Rep. 🇩🇴',
-    time: '45m ago',
-    content:
-      'Excited to launch our Caribbean Tech Founders Circle right here on Antilia. Fresh batch of single-estate Dominican Organic Dark Cacao & Rum Nibs ready for global dispatch! 🇩🇴🍫🚀\n\n#CaribTech #Founders #ChocolatesDelCibao',
-    likes: 312,
-    reposts: 64,
-    comments: 28,
-    tag: '#CaribTech',
-    category: 'foryou',
-    taggedProduct: {
-      id: 'prod-3',
-      title: 'Artisanal Dominican Organic Cacao & Vanilla Rum Nibs',
-      priceMinor: 2400,
-      currency: 'USD',
-      sellerName: 'Chocolates del Cibao',
-      origin: 'San Francisco de Macorís, DR 🇩🇴',
-      rating: 4.8,
-    },
-  },
-  {
-    id: 'curated-3',
-    author: 'Aaliyah Baptiste',
-    handle: 'aaliyah_soca',
-    verified: true,
-    location: 'Port of Spain, Trinidad 🇹🇹',
-    time: '2h ago',
-    content:
-      'Carnival 2026 band launch tickets & feather headdress pieces officially live on SpotPay! Instant checkout, zero foreign exchange hassle. See you on the road! 🇹🇹🎭✨\n\n#CarnivalTT #SpotPay',
-    likes: 892,
-    reposts: 145,
-    comments: 72,
-    tag: '#CarnivalTT',
-    category: 'creator',
-    taggedProduct: {
-      id: 'prod-2',
-      title: 'Handcrafted Carnival Headdress & Beaded Collar Set',
-      priceMinor: 14500,
-      currency: 'USD',
-      sellerName: 'Belmont Mas Studio',
-      origin: 'Port of Spain, Trinidad 🇹🇹',
-      rating: 5.0,
-    },
-  },
-  {
-    id: 'curated-4',
-    author: 'Marcus Garvey Guild',
-    handle: 'garvey_diaspora',
-    verified: true,
-    location: 'Toronto / London Diaspora 🌍',
-    time: '4h ago',
-    content:
-      'Connecting 59M+ people across 30+ island territories and global diaspora hubs. Empowering regional commerce, cultural preservation, and creative independence.',
-    likes: 640,
-    reposts: 112,
-    comments: 53,
-    tag: '#DiasporaUnite',
-    category: 'diaspora',
-  },
-];
-
 function relativeTime(iso: string): string {
   const diffMs = Date.now() - new Date(iso).getTime();
   const minutes = Math.floor(diffMs / 60000);
@@ -175,8 +85,7 @@ export default async function HomePage() {
     }
   }
 
-  // Combined feed (Live database posts prioritized, followed by curated regional highlights)
-  const combinedPosts = [...livePosts, ...CURATED_CARIBBEAN_POSTS];
+  const combinedPosts = livePosts;
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">

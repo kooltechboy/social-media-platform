@@ -4,54 +4,6 @@ import ReelsFeedViewer, { type ReelItem } from '../../components/reels/reels-fee
 
 export const dynamic = 'force-dynamic';
 
-const SHOWCASE_REELS: ReelItem[] = [
-  {
-    id: 'reel-1',
-    title: 'Carnival Road March 2026 Sneak Peek! Costume fitting and pure energy on the avenue 🎭✨',
-    creator: 'Maya Chen',
-    handle: 'mayasoca',
-    views: '84.2K',
-    likes: '14.5K',
-    comments: '1,240',
-    sound: 'Machel Montano • Soca Anthem 2026',
-    soundId: 'sound-soca-01',
-    location: 'Port of Spain, Trinidad 🇹🇹',
-    duration: '0:45',
-    gradient: 'from-purple-900/60 via-slate-900 to-[#090D16]',
-    videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-caribbean-tropical-beach-with-turquoise-water-41221-large.mp4',
-  },
-  {
-    id: 'reel-2',
-    title: 'Secret jerk chicken recipe from Portland, Jamaica. Firewood and pimento wood smoking all morning 🇯🇲🍗',
-    creator: 'Chef Andre Black',
-    handle: 'andrejerk',
-    views: '112.0K',
-    likes: '22.8K',
-    comments: '2,890',
-    sound: 'Bob Marley • Roots Rock Reggae',
-    soundId: 'sound-reggae-05',
-    location: 'Portland, Jamaica 🇯🇲',
-    duration: '0:58',
-    gradient: 'from-amber-900/60 via-slate-900 to-[#090D16]',
-    videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-top-aerial-shot-of-seashore-with-rocks-and-turquoise-water-41487-large.mp4',
-  },
-  {
-    id: 'reel-3',
-    title: 'Sunset bachata session on the Malecón in Santo Domingo with the local academy 🇩🇴💃',
-    creator: 'Lucia & Mateo',
-    handle: 'luciamateo',
-    views: '96.3K',
-    likes: '18.1K',
-    comments: '940',
-    sound: 'Juan Luis Guerra • Bachata Rosa',
-    soundId: 'sound-bachata-04',
-    location: 'Santo Domingo, Dominican Rep. 🇩🇴',
-    duration: '0:35',
-    gradient: 'from-sky-900/60 via-slate-900 to-[#090D16]',
-    videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-tree-branches-in-the-breeze-with-sun-rays-41617-large.mp4',
-  },
-];
-
 export default async function ReelsPage({
   searchParams,
 }: {
@@ -90,9 +42,9 @@ export default async function ReelsPage({
           creatorId: p?.id,
           creator: p?.display_name || 'Caribbean Creator',
           handle: p?.username || 'creator',
-          views: `${v.view_count || 1} views`,
-          likes: '1.2K',
-          comments: '48',
+          views: `${v.view_count || 0} views`,
+          likes: '0',
+          comments: '0',
           sound: 'Original Caribbean Audio',
           location: 'Caribbean & Diaspora 🌴',
           duration: `0:${v.duration_seconds < 10 ? '0' : ''}${v.duration_seconds || 30}`,
@@ -103,7 +55,7 @@ export default async function ReelsPage({
     }
   }
 
-  const allReels = [...dynamicReels, ...SHOWCASE_REELS];
+  const allReels = dynamicReels;
 
   // If specific activeId requested, reorder to place it first
   if (activeId) {

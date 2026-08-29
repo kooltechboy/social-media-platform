@@ -137,6 +137,7 @@ export default function AppSidebar({ currentPath }: AppSidebarProps) {
                 <Link
                   key={item.href}
                   href={item.href}
+                  aria-current={isActive ? 'page' : undefined}
                   className={`flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-xs font-bold transition-all ${
                     isActive
                       ? 'bg-gradient-to-r from-brand-caribbeanSea/20 to-brand-sunriseCoral/10 text-brand-sandstone border border-brand-caribbeanSea/30 shadow-sm'

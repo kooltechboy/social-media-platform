@@ -43,6 +43,7 @@ Thumbs.db
 coverage/
 playwright-report/
 test-results/
+playwright/.auth/
 
 .vercel
 .env*

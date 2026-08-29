@@ -12,17 +12,11 @@ interface SearchResultUser {
   id: string;
   display_name: string;
   username: string;
+  flag?: string;
+  bio?: string;
   origin_country_iso?: string;
   account_type?: string;
 }
-
-const SAMPLE_PEOPLE = [
-  { id: 'u-1', display_name: 'Karene Reid', username: 'karenereid', flag: '🇯🇲', bio: 'Dub Sound Operator & Producer • Kingston' },
-  { id: 'u-2', display_name: 'Carlos Santana-Mendez', username: 'carlos_rd', flag: '🇩🇴', bio: 'Fintech Founder & Tech Ambassador • Santo Domingo' },
-  { id: 'u-3', display_name: 'Aaliyah Baptiste', username: 'aaliyah_soca', flag: '🇹🇹', bio: 'Soca Artist & Event Producer • Port of Spain' },
-  { id: 'u-4', display_name: 'Devon Thorne', username: 'devon_barbados', flag: '🇧🇧', bio: 'Culinary Chef & Artisan • Bridgetown' },
-  { id: 'u-5', display_name: 'Nathalie Jean-Baptiste', username: 'nathalie_haiti', flag: '🇭🇹', bio: 'Cultural Designer & Artist • Port-au-Prince' },
-];
 
 export default function AppHeader() {
   const [query, setQuery] = useState('');
@@ -60,22 +54,16 @@ export default function AppHeader() {
           .or(`display_name.ilike.%${val}%,username.ilike.%${val}%`)
           .limit(5);
 
-        if (data && data.length > 0) {
+        if (data) {
           setLivePeople(data);
           return;
         }
       } catch {
-        // Ignore fallback
+        setLivePeople([]);
       }
+    } else {
+      setLivePeople([]);
     }
-
-    // Filter sample users if DB returns empty
-    const filtered = SAMPLE_PEOPLE.filter(
-      (p) =>
-        p.display_name.toLowerCase().includes(val.toLowerCase()) ||
-        p.username.toLowerCase().includes(val.toLowerCase())
-    );
-    setLivePeople(filtered);
   }
 
   async function toggleFollow(userId: string) {

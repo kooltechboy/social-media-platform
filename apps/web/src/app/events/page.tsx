@@ -20,81 +20,6 @@ interface LiveEvent {
   event_attendees: Array<{ profile_id: string; rsvp_status: string }>;
 }
 
-const SHOWCASE_EVENTS: LiveEvent[] = [
-  {
-    id: 'event-1',
-    title: 'Trinidad Carnival 2026: International Soca Monarch & Fete',
-    description: 'The pinnacle of Trinidad Carnival. Live performances, steel orchestra showcases, and morning breakfast party.',
-    event_kind: 'hybrid',
-    venue: 'Queen’s Park Savannah',
-    starts_at: new Date(Date.now() + 5 * 86400000).toISOString(),
-    capacity: 25000,
-    price: 'SpotPay $45 USD',
-    cities: { name: 'Port of Spain', country_iso: 'TTO 🇹🇹' },
-    event_attendees: [{ profile_id: '1', rsvp_status: 'going' }, { profile_id: '2', rsvp_status: 'going' }],
-  },
-  {
-    id: 'event-2',
-    title: 'Reggae Sumfest 2026: Sound System Explosion',
-    description: 'World-renowned reggae & dancehall festival featuring the greatest sound systems and live artist sets.',
-    event_kind: 'hybrid',
-    venue: 'Catherine Hall Entertainment Complex',
-    starts_at: new Date(Date.now() + 14 * 86400000).toISOString(),
-    capacity: 18000,
-    price: 'SpotPay $60 USD',
-    cities: { name: 'Montego Bay', country_iso: 'JAM 🇯🇲' },
-    event_attendees: [{ profile_id: '3', rsvp_status: 'going' }],
-  },
-  {
-    id: 'event-3',
-    title: 'Caribana Toronto Grand Parade & Lakeshore Celebration',
-    description: 'North America’s largest cultural festival. Masqueraders, steel bands, sound trucks, and diaspora food market.',
-    event_kind: 'in_person',
-    venue: 'Exhibition Place & Lakeshore Blvd',
-    starts_at: new Date(Date.now() + 25 * 86400000).toISOString(),
-    capacity: 50000,
-    price: 'Free Public RSVP',
-    cities: { name: 'Toronto', country_iso: 'CAN 🇨🇦' },
-    event_attendees: [{ profile_id: '4', rsvp_status: 'going' }],
-  },
-  {
-    id: 'event-4',
-    title: 'Dominican Food & Merengue Summit in the Heights',
-    description: 'Traditional Quisqueyan cuisine, chef demonstrations, live accordion merengue, and business expo.',
-    event_kind: 'in_person',
-    venue: 'Highbridge Park Plaza',
-    starts_at: new Date(Date.now() + 8 * 86400000).toISOString(),
-    capacity: 3500,
-    price: 'SpotPay $15 USD',
-    cities: { name: 'New York', country_iso: 'USA 🗽' },
-    event_attendees: [{ profile_id: '5', rsvp_status: 'going' }],
-  },
-  {
-    id: 'event-5',
-    title: 'Barbados Crop Over Foreday Morning Jump',
-    description: 'Mud, paint, powder, and non-stop soca through the streets of St. Michael until sunrise.',
-    event_kind: 'in_person',
-    venue: 'Bridgetown Harbour Route',
-    starts_at: new Date(Date.now() + 30 * 86400000).toISOString(),
-    capacity: 12000,
-    price: 'SpotPay $50 USD',
-    cities: { name: 'Bridgetown', country_iso: 'BRB 🇧🇧' },
-    event_attendees: [{ profile_id: '6', rsvp_status: 'going' }],
-  },
-  {
-    id: 'event-6',
-    title: 'London Notting Hill Warm-Up: Caribbean Creators Summit',
-    description: 'Panel sessions on Caribbean creative monetization, music publishing, and SpotPay European integration.',
-    event_kind: 'hybrid',
-    venue: 'The Tabernacle, Notting Hill',
-    starts_at: new Date(Date.now() + 18 * 86400000).toISOString(),
-    capacity: 800,
-    price: 'Free RSVP',
-    cities: { name: 'London', country_iso: 'GBR 🇬🇧' },
-    event_attendees: [{ profile_id: '7', rsvp_status: 'going' }],
-  },
-];
-
 function formatEventDate(iso: string): string {
   return new Date(iso).toLocaleString('en-US', {
     weekday: 'short',
@@ -145,18 +70,6 @@ export default async function EventsPage({
     cities = (citiesResult.data ?? []) as CityOption[];
   }
 
-  if (events.length === 0) {
-    if (kind) {
-      events = SHOWCASE_EVENTS.filter((e) => e.event_kind === kind);
-    } else if (city) {
-      events = SHOWCASE_EVENTS.filter((e) => e.cities?.name.toLowerCase().includes(city.toLowerCase()));
-    } else if (q) {
-      events = SHOWCASE_EVENTS.filter((e) => e.title.toLowerCase().includes(q.toLowerCase()));
-    } else {
-      events = SHOWCASE_EVENTS;
-    }
-  }
-
   return (
     <div className="min-h-screen bg-[#090D16] text-brand-sandstone p-4 md:p-6 max-w-7xl mx-auto space-y-8">
       {/* Top Header */}
@@ -188,8 +101,17 @@ export default async function EventsPage({
       </div>
 
       {/* Events Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {events.map((event) => {
+      {events.length === 0 ? (
+        <div className="bg-brand-dusk/70 border border-slate-800 rounded-3xl p-12 text-center space-y-4 max-w-xl mx-auto">
+          <Calendar className="w-12 h-12 text-yellow-400/60 mx-auto" />
+          <h3 className="text-base font-bold text-brand-sandstone">No upcoming events found</h3>
+          <p className="text-xs text-brand-sandstone/60 leading-relaxed">
+            There are currently no events matching your query or scheduled in this category. Be the first to host an island gathering or diaspora fete!
+          </p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {events.map((event) => {
           const going = event.event_attendees?.filter((attendee) => attendee.rsvp_status === 'going') ?? [];
           const userGoing = user ? going.some((attendee) => attendee.profile_id === user.id) : false;
           return (
@@ -268,6 +190,7 @@ export default async function EventsPage({
           );
         })}
       </div>
+      )}
     </div>
   );
 }

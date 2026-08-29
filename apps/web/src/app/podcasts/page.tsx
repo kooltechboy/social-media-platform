@@ -22,69 +22,6 @@ interface Podcast {
   episodesCount?: number;
 }
 
-const SHOWCASE_PODCASTS: Podcast[] = [
-  {
-    id: 'pod-1',
-    title: 'The Caribbean Tech Exchange',
-    slug: 'caribbean-tech-exchange',
-    description: 'Conversations with software engineers, fintech founders, and venture builders across Kingston, Miami, and San Juan.',
-    is_paid: false,
-    follower_count: 8420,
-    language: 'English',
-    cover_path: null,
-    creator_id: 'creator-tech',
-    category: 'Technology & Startups',
-    episodesCount: 42,
-    profiles: { display_name: 'Daryl Washington', username: 'darylwash' },
-    podcast_episodes: [{ id: '1' }, { id: '2' }],
-  },
-  {
-    id: 'pod-2',
-    title: 'Island Roots & Reggae History',
-    slug: 'island-roots-reggae-history',
-    description: 'Deep dives into sound system evolution, dubplate culture, and the icons who took Caribbean music global.',
-    is_paid: true,
-    follower_count: 14200,
-    language: 'English / Patois',
-    cover_path: null,
-    creator_id: 'creator-dub',
-    category: 'Music & Culture',
-    episodesCount: 68,
-    profiles: { display_name: 'Roots Archive Kingston', username: 'rootsarchive' },
-    podcast_episodes: [{ id: '3' }],
-  },
-  {
-    id: 'pod-3',
-    title: 'Soca Therapy: Carnival & Road Talks',
-    slug: 'soca-therapy-carnival-road',
-    description: 'Weekly breakdowns of new soca releases, band reviews, costume designers, and carnival road safety.',
-    is_paid: false,
-    follower_count: 19800,
-    language: 'English',
-    cover_path: null,
-    creator_id: 'creator-soca',
-    category: 'Carnival & Entertainment',
-    episodesCount: 95,
-    profiles: { display_name: 'Aaliyah & Friends', username: 'aaliyahsoca' },
-    podcast_episodes: [{ id: '4' }],
-  },
-  {
-    id: 'pod-4',
-    title: 'Diaspora Table: Culinary Stories',
-    slug: 'diaspora-table',
-    description: 'From jerk pits in Portland to roti shops in Flatbush and curry houses in Toronto, exploring our diaspora recipes.',
-    is_paid: false,
-    follower_count: 6100,
-    language: 'English / Creole',
-    cover_path: null,
-    creator_id: 'creator-food',
-    category: 'Food & Heritage',
-    episodesCount: 29,
-    profiles: { display_name: 'Chef Marcus', username: 'marcuscooks' },
-    podcast_episodes: [{ id: '5' }],
-  },
-];
-
 const PODCAST_CATEGORIES = [
   'All Shows',
   'Culture & History',
@@ -130,22 +67,6 @@ export default async function PodcastsPage({
     const { data } = await query;
     if (data && data.length > 0) {
       podcasts = data as unknown as Podcast[];
-    }
-  }
-
-  if (podcasts.length === 0) {
-    if (activeCategory === 'All Shows') {
-      podcasts = SHOWCASE_PODCASTS;
-    } else if (activeCategory === 'Culture & History') {
-      podcasts = SHOWCASE_PODCASTS.filter((p) => p.category?.includes('Culture') || p.category?.includes('History'));
-    } else if (activeCategory === 'Music & Sound Systems') {
-      podcasts = SHOWCASE_PODCASTS.filter((p) => p.category?.includes('Music') || p.category?.includes('Carnival'));
-    } else if (activeCategory === 'Business & Tech') {
-      podcasts = SHOWCASE_PODCASTS.filter((p) => p.category?.includes('Tech') || p.category?.includes('Business'));
-    } else if (activeCategory === 'Food & Culinary') {
-      podcasts = SHOWCASE_PODCASTS.filter((p) => p.category?.includes('Food') || p.category?.includes('Heritage'));
-    } else {
-      podcasts = SHOWCASE_PODCASTS;
     }
   }
 

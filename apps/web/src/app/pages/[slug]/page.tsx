@@ -53,67 +53,13 @@ interface PageDetails {
   }>;
 }
 
-const SAMPLE_PAGE_DATA: Record<string, PageDetails> = {
-  'gov-jamaica': {
-    slug: 'gov-jamaica',
-    name: 'Government of Jamaica (Official)',
-    category: 'Public Sector & Civic Infrastructure',
-    verification: 'government_verified',
-    location: 'Kingston, Jamaica 🇯🇲',
-    followers: '284.5K',
-    description:
-      'Official verified civic entity on Antilia. Providing public notices, consular assistance for the diaspora in North America and Europe, investment programs, and national development updates.',
-    website: 'https://gov.jm',
-    contactEmail: 'consular@gov.jm',
-    avatar: '🇯🇲',
-    coverGradient: 'from-amber-600/40 via-emerald-900/30 to-[#090D16]',
-    products: [],
-    posts: [
-      {
-        id: 'post-gov-1',
-        title: 'Diaspora Investment & Homeland Heritage Bond Launch',
-        time: '3 hours ago',
-        content:
-          'We are proud to announce the launch of the Diaspora Renewable Infrastructure Bond, allowing Jamaicans worldwide to co-invest directly via SpotPay with guaranteed sovereign backing.',
-        likes: 1240,
-      },
-    ],
-  },
-  'portland-roasters': {
-    slug: 'portland-roasters',
-    name: 'Portland Blue Mountain Roasters',
-    category: 'Food, Beverage & Export',
-    verification: 'business_verified',
-    location: 'Portland, Jamaica 🇯🇲',
-    followers: '42.1K',
-    description:
-      'Certified Grade-1 Jamaican Blue Mountain single-origin whole bean coffee. We roast weekly and dispatch globally via Antilia logistics with guaranteed freshness and escrow protection.',
-    website: 'https://portlandcoffee.jm',
-    contactEmail: 'orders@portlandcoffee.jm',
-    avatar: '☕',
-    coverGradient: 'from-amber-900/50 via-slate-900 to-[#090D16]',
-    products: [
-      { id: 'p1', title: 'Estate Reserve Whole Bean (16oz)', price: '$38.00 USD', kind: 'physical', rating: 4.9 },
-      { id: 'p2', title: 'Peaberry Limited Harvest (12oz)', price: '$49.00 USD', kind: 'physical', rating: 5.0 },
-    ],
-    posts: [
-      {
-        id: 'post-biz-1',
-        title: 'New Harvest Export Batches Freshly Packed',
-        time: '1 day ago',
-        content:
-          'Harvest season from the misty slopes of Portland has arrived! Every bag ships in vacuum-sealed nitrogen freshness pouches directly to your door in the US, Canada, or UK.',
-        likes: 412,
-      },
-    ],
-  },
-};
+import { notFound } from 'next/navigation';
 
 export default async function ModularPageView({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const user = await getCurrentUser();
 
-  // Try to load live business page from database
+  // Load live business page from database
   let dbPage: PageDetails | null = null;
   try {
     const { fetchBusinessPageAction } = await import('../../../lib/business/actions');
@@ -150,36 +96,14 @@ export default async function ModularPageView({ params }: { params: Promise<{ sl
       };
     }
   } catch {
-    // Fallback to sample data
+    // DB error
   }
 
-  const page = dbPage || SAMPLE_PAGE_DATA[slug] || {
-    slug,
-    name: slug.replace(/-/g, ' ').toUpperCase(),
-    category: 'Caribbean Organization & Storefront',
-    verification: 'business_verified' as VerificationLevel,
-    location: 'Caribbean & Diaspora 🌍',
-    followers: '12.4K',
-    description:
-      'A verified digital storefront and community organization operating within the Antilia ecosystem.',
-    website: 'https://caribbeanone.com',
-    contactEmail: 'contact@caribbeanone.com',
-    avatar: '🌴',
-    coverGradient: 'from-sky-900/40 via-emerald-900/20 to-[#090D16]',
-    products: [
-      { id: 'sample-p1', title: 'Signature Product / Experience Pass', price: '$25.00 USD', kind: 'service', rating: 4.8 },
-    ],
-    posts: [
-      {
-        id: 'sample-post-1',
-        title: 'Welcome to our verified Antilia Page',
-        time: 'Just now',
-        content:
-          'Connect with us, shop our products, RSVP for upcoming events, or send us a direct message right here on the network.',
-        likes: 128,
-      },
-    ],
-  };
+  if (!dbPage) {
+    notFound();
+  }
+
+  const page = dbPage;
 
   return (
     <div className="min-h-screen bg-[#090D16] text-brand-sandstone p-4 md:p-6 max-w-7xl mx-auto space-y-8">

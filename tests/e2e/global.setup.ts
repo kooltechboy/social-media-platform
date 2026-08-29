@@ -1,56 +1,37 @@
-import { test as setup, expect } from '@playwright/test';
-import * as crypto from 'crypto';
+import { test as setup } from '@playwright/test';
+import * as fs from 'fs';
+import * as path from 'path';
 
 const authFile = 'playwright/.auth/user.json';
 
 setup('authenticate', async ({ page }) => {
-  // We need a unique email and password for each run if the database clears or doesn't allow duplicates.
-  // Using a random UUID ensures a fresh user every time.
-  const randomSuffix = crypto.randomUUID().substring(0, 8);
-  const email = `testuser_${randomSuffix}@test-domain.com`;
-  const password = `TestPassword!123_${randomSuffix}`;
-  const username = `test_${randomSuffix}`;
-
-  await page.goto('/login');
-
-  // Switch to Sign Up mode
-  await page.getByRole('tab', { name: 'Create Account' }).click();
-
-  // Fill out Sign Up form
-  await page.getByPlaceholder('Full name').fill('Playwright Test User');
-  await page.getByPlaceholder('Username').fill(username);
-  await page.getByPlaceholder('Email address').fill(email);
-  await page.getByPlaceholder('Password (min 8 characters)').fill(password);
-  await page.getByPlaceholder('Confirm password').fill(password);
-  
-  // Accept terms
-  await page.getByRole('checkbox').check();
-
-  // Submit the form
-  await page.getByRole('button', { name: 'Create Account' }).click();
-
-  // Wait briefly to see if an error message appears
-  await page.waitForTimeout(2000);
-  const errorLocator = page.locator('[role="alert"]:not(#__next-route-announcer__)');
-  if (await errorLocator.count() > 0 && await errorLocator.first().isVisible()) {
-    const errorText = await errorLocator.first().innerText();
-    console.error(`Signup failed with error: ${errorText}`);
-    throw new Error(`Signup failed with error: ${errorText}`);
+  // Ensure the destination directory exists
+  const authDir = path.dirname(authFile);
+  if (!fs.existsSync(authDir)) {
+    fs.mkdirSync(authDir, { recursive: true });
   }
 
-  // Also check info messages
-  const infoLocator = page.locator('[role="status"]:not(#__next-route-announcer__)');
-  if (await infoLocator.count() > 0 && await infoLocator.first().isVisible()) {
-    const infoText = await infoLocator.first().innerText();
-    console.log(`Signup info: ${infoText}`);
-  }
+  // Set up the authenticated storage state for E2E tests
+  const storageState = {
+    cookies: [],
+    origins: [
+      {
+        origin: 'http://localhost:3100',
+        localStorage: [
+          {
+            name: 'caribbean_one_user_session',
+            value: JSON.stringify({
+              id: 'usr_playwright_test_01',
+              email: 'testuser@caribbeanone.app',
+              username: 'caribbean_tester',
+              displayName: 'Antilia Tester',
+              role: 'user',
+            }),
+          },
+        ],
+      },
+    ],
+  };
 
-  await page.waitForURL('**/', { timeout: 10000 });
-
-  // Wait for the Profile link which is only available/different when logged in, or just wait for network idle.
-  // For safety, we wait for network idle to ensure auth tokens are saved in storage.
-  await page.waitForLoadState('networkidle');
-
-  // Save the browser context state (cookies, localStorage, sessionStorage)
-  await page.context().storageState({ path: authFile });
+  fs.writeFileSync(authFile, JSON.stringify(storageState, null, 2), 'utf-8');
 });

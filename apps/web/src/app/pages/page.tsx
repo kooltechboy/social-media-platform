@@ -31,74 +31,6 @@ interface PageEntry {
   avatar: string;
 }
 
-const SHOWCASE_PAGES: PageEntry[] = [
-  {
-    id: 'page-1',
-    slug: 'gov-jamaica',
-    name: 'Government of Jamaica (Official)',
-    category: 'Public Sector & Civic Infrastructure',
-    type: 'government',
-    verification: 'government_verified',
-    location: 'Kingston, Jamaica 🇯🇲',
-    followers: '284.5K',
-    description: 'Official announcements, tourism initiatives, diaspora civic engagement, and consular notices.',
-    hasStore: false,
-    avatar: '🇯🇲',
-  },
-  {
-    id: 'page-2',
-    slug: 'portland-roasters',
-    name: 'Portland Blue Mountain Roasters',
-    category: 'Food, Beverage & Export',
-    type: 'business',
-    verification: 'business_verified',
-    location: 'Portland, Jamaica 🇯🇲',
-    followers: '42.1K',
-    description: 'Certified single-origin Jamaican Blue Mountain coffee. Direct export shipping worldwide on SpotPay.',
-    hasStore: true,
-    avatar: '☕',
-  },
-  {
-    id: 'page-3',
-    slug: 'belmont-carnival-atelier',
-    name: 'Belmont Mas & Costume Atelier',
-    category: 'Carnival, Fashion & Design',
-    type: 'creator',
-    verification: 'creator_verified',
-    location: 'Port of Spain, Trinidad 🇹🇹',
-    followers: '89.4K',
-    description: 'Award-winning carnival designer crafting custom feather and wire-bra masquerade pieces.',
-    hasStore: true,
-    avatar: '🎭',
-  },
-  {
-    id: 'page-4',
-    slug: 'uwi-mona',
-    name: 'University of the West Indies (UWI)',
-    category: 'Higher Education & Research',
-    type: 'institution',
-    verification: 'institution_verified',
-    location: 'Kingston / St. Augustine / Cave Hill',
-    followers: '195.0K',
-    description: 'Premier Caribbean research institution fostering scholarship, climate science, and innovation.',
-    hasStore: false,
-    avatar: '🎓',
-  },
-  {
-    id: 'page-5',
-    slug: 'carib-tech-alliance',
-    name: 'Caribbean Technology & Startup Alliance',
-    category: 'Technology & Venture Guild',
-    type: 'community',
-    verification: 'business_verified',
-    location: 'Pan-Caribbean & Diaspora 🚀',
-    followers: '34.8K',
-    description: 'Connecting software engineers, founders, and angel syndicates across 26 island nations and diaspora hubs.',
-    hasStore: true,
-    avatar: '💻',
-  },
-];
-
 export default async function PagesDirectoryPage({
   searchParams,
 }: {
@@ -134,7 +66,7 @@ export default async function PagesDirectoryPage({
         type: 'business' as const,
         verification: 'business_verified' as VerificationLevel,
         location: `${b.country_iso || 'Caribbean'} 🌴`,
-        followers: '1.2K',
+        followers: '0',
         description: b.description || 'Verified Caribbean business and storefront on Antilia.',
         hasStore: true,
         avatar: '🏪',
@@ -142,20 +74,7 @@ export default async function PagesDirectoryPage({
     }
   }
 
-  // Filter showcase pages if search or category is active
-  let filteredShowcase = SHOWCASE_PAGES;
-  if (activeCategory && activeCategory !== 'all') {
-    filteredShowcase = filteredShowcase.filter(
-      (p) => p.type.toLowerCase().includes(activeCategory.toLowerCase()) || p.category.toLowerCase().includes(activeCategory.toLowerCase())
-    );
-  }
-  if (searchQuery) {
-    filteredShowcase = filteredShowcase.filter(
-      (p) => p.name.toLowerCase().includes(searchQuery.toLowerCase()) || p.description.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-  }
-
-  const allPages = [...dynamicPages, ...filteredShowcase];
+  const allPages = dynamicPages;
 
   return (
     <div className="min-h-screen bg-[#090D16] text-brand-sandstone p-4 md:p-6 max-w-7xl mx-auto space-y-8">
@@ -179,51 +98,61 @@ export default async function PagesDirectoryPage({
       </div>
 
       {/* Pages Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {allPages.map((page) => (
-          <article
-            key={page.id}
-            className="bg-brand-dusk/80 border border-slate-800 hover:border-brand-sunriseCoral/50 rounded-3xl p-6 flex flex-col justify-between transition-all shadow-xl group space-y-4"
-          >
-            <div className="space-y-3.5">
-              <div className="flex items-center justify-between">
-                <div className="w-14 h-14 rounded-2xl bg-brand-twilight border border-slate-800 flex items-center justify-center text-3xl shadow-inner">
-                  {page.avatar}
+      {allPages.length === 0 ? (
+        <div className="bg-brand-dusk/70 border border-slate-800 rounded-3xl p-12 text-center space-y-4 max-w-xl mx-auto">
+          <Building2 className="w-12 h-12 text-brand-sunriseCoral/60 mx-auto" />
+          <h3 className="text-base font-bold text-brand-sandstone">No verified pages found</h3>
+          <p className="text-xs text-brand-sandstone/60 leading-relaxed">
+            No business or organization pages found matching your search. Create the first verified official Caribbean page!
+          </p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {allPages.map((page) => (
+            <article
+              key={page.id}
+              className="bg-brand-dusk/80 border border-slate-800 hover:border-brand-sunriseCoral/50 rounded-3xl p-6 flex flex-col justify-between transition-all shadow-xl group space-y-4"
+            >
+              <div className="space-y-3.5">
+                <div className="flex items-center justify-between">
+                  <div className="w-14 h-14 rounded-2xl bg-brand-twilight border border-slate-800 flex items-center justify-center text-3xl shadow-inner">
+                    {page.avatar}
+                  </div>
+                  <VerificationBadge level={page.verification} showLabel={true} />
                 </div>
-                <VerificationBadge level={page.verification} showLabel={true} />
+
+                <div>
+                  <h3 className="font-extrabold text-base text-brand-sandstone group-hover:text-emerald-300 transition-colors leading-snug">
+                    {page.name}
+                  </h3>
+                  <span className="text-[11px] font-bold text-brand-sandstone/60 block mt-0.5">
+                    {page.category}
+                  </span>
+                  <span className="text-xs text-brand-sunriseCoral font-semibold flex items-center gap-1 mt-1">
+                    <MapPin className="w-3 h-3 text-brand-sunriseCoral" /> {page.location}
+                  </span>
+                </div>
+
+                <p className="text-xs text-slate-300 leading-relaxed line-clamp-3">
+                  {page.description}
+                </p>
               </div>
 
-              <div>
-                <h3 className="font-extrabold text-base text-brand-sandstone group-hover:text-emerald-300 transition-colors leading-snug">
-                  {page.name}
-                </h3>
-                <span className="text-[11px] font-bold text-brand-sandstone/60 block mt-0.5">
-                  {page.category}
+              <div className="pt-3 border-t border-slate-800/80 flex items-center justify-between">
+                <span className="text-xs font-bold text-brand-sandstone/60">
+                  {page.followers} followers
                 </span>
-                <span className="text-xs text-brand-sunriseCoral font-semibold flex items-center gap-1 mt-1">
-                  <MapPin className="w-3 h-3 text-brand-sunriseCoral" /> {page.location}
-                </span>
+                <Link
+                  href={`/pages/${page.slug}`}
+                  className="bg-brand-dusk hover:bg-slate-700 text-brand-sandstone font-bold px-3.5 py-1.5 rounded-xl text-xs flex items-center gap-1 transition-colors"
+                >
+                  Visit Page <ArrowUpRight className="w-3.5 h-3.5" />
+                </Link>
               </div>
-
-              <p className="text-xs text-slate-300 leading-relaxed line-clamp-3">
-                {page.description}
-              </p>
-            </div>
-
-            <div className="pt-3 border-t border-slate-800/80 flex items-center justify-between">
-              <span className="text-xs font-bold text-brand-sandstone/60">
-                {page.followers} followers
-              </span>
-              <Link
-                href={`/pages/${page.slug}`}
-                className="bg-brand-dusk hover:bg-slate-700 text-brand-sandstone font-bold px-3.5 py-1.5 rounded-xl text-xs flex items-center gap-1 transition-colors"
-              >
-                Visit Page <ArrowUpRight className="w-3.5 h-3.5" />
-              </Link>
-            </div>
-          </article>
-        ))}
-      </div>
+            </article>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

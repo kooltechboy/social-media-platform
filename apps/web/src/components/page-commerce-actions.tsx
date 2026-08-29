@@ -56,6 +56,7 @@ export default function PageCommerceActions({
         isOpen={isTierOpen}
         onClose={() => setIsTierOpen(false)}
         businessName={businessName}
+        businessSlug={businessSlug}
       />
     </>
   );

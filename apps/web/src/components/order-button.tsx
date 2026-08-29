@@ -1,22 +1,35 @@
 'use client';
 
-import React, { useState, useTransition } from 'react';
-import { Wallet, CheckCircle } from 'lucide-react';
+import React, { useState } from 'react';
+import { Wallet, ShoppingBag } from 'lucide-react';
 import Link from 'next/link';
-import { createOrderAction, type MarketplaceActionState } from '../lib/marketplace/actions';
+import UnifiedCheckoutModal from './unified-checkout-modal';
 
 interface Props {
   productId: string;
-  disabled: boolean;
+  disabled?: boolean;
   isAuthenticated: boolean;
   isSeller: boolean;
+  productDetails?: {
+    title: string;
+    priceMinor: number;
+    currency: string;
+    sellerName: string;
+    productKind: 'physical' | 'digital' | 'service';
+    origin?: string;
+  };
+  creatorReferralCode?: string;
 }
 
-const INITIAL: MarketplaceActionState = { error: null, success: null };
-
-export default function OrderButton({ productId, disabled, isAuthenticated, isSeller }: Props) {
-  const [state, setState] = useState<MarketplaceActionState>(INITIAL);
-  const [pending, startTransition] = useTransition();
+export default function OrderButton({
+  productId,
+  disabled,
+  isAuthenticated,
+  isSeller,
+  productDetails,
+  creatorReferralCode,
+}: Props) {
+  const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
 
   if (!isAuthenticated) {
     return (
@@ -35,46 +48,42 @@ export default function OrderButton({ productId, disabled, isAuthenticated, isSe
     );
   }
 
-  const handle = () => {
-    const formData = new FormData();
-    formData.set('productId', productId);
-    formData.set('quantity', '1');
-    startTransition(() => {
-      void createOrderAction(INITIAL, formData).then((result) => {
-        setState(result);
-      });
-    });
+  const defaultDetails = productDetails || {
+    id: productId,
+    title: 'Caribbean Verified Product',
+    priceMinor: 2500,
+    currency: 'USD',
+    sellerName: 'Antilia Merchant',
+    productKind: 'physical' as const,
+    origin: 'Caribbean 🌴',
   };
 
-  if (state.orderId) {
-    return (
-      <div className="p-2.5 rounded-xl bg-orange-500/10 border border-orange-500/30 space-y-1.5 text-center">
-        <p className="text-xs text-orange-400 font-bold flex items-center justify-center gap-1">
-          <CheckCircle className="w-3.5 h-3.5 text-emerald-400" /> Order #{state.orderId.slice(0, 8)} Created!
-        </p>
-        <Link
-          href="/spotpay"
-          className="inline-block text-[11px] font-bold text-slate-950 bg-orange-500 hover:bg-orange-400 px-3 py-1 rounded-lg transition-all"
-        >
-          View SpotPay Escrow →
-        </Link>
-      </div>
-    );
-  }
-
   return (
-    <div className="space-y-1">
+    <>
       <button
-        onClick={handle}
-        disabled={disabled || pending}
-        className="w-full bg-orange-500 hover:bg-orange-400 text-slate-950 font-black py-2 rounded-xl text-xs flex items-center justify-center gap-2 transition-colors shadow-md shadow-orange-500/20 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+        type="button"
+        onClick={() => setIsCheckoutOpen(true)}
+        disabled={disabled}
+        className="w-full bg-gradient-to-r from-orange-500 to-brand-goldenHour hover:from-orange-400 hover:to-brand-goldenHour text-slate-950 font-black py-2.5 rounded-xl text-xs flex items-center justify-center gap-2 transition-all shadow-md shadow-orange-500/20 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
       >
         <Wallet className="w-4 h-4" />
-        {pending ? 'Processing Escrow…' : disabled ? 'Unavailable' : 'Buy with SpotPay'}
+        {disabled ? 'Unavailable' : 'Buy with SpotPay / Card'}
       </button>
-      {state.error && (
-        <p role="alert" className="text-[11px] text-rose-400 text-center font-medium">{state.error}</p>
-      )}
-    </div>
+
+      <UnifiedCheckoutModal
+        isOpen={isCheckoutOpen}
+        onClose={() => setIsCheckoutOpen(false)}
+        product={{
+          id: productId,
+          title: defaultDetails.title,
+          priceMinor: defaultDetails.priceMinor,
+          currency: defaultDetails.currency,
+          sellerName: defaultDetails.sellerName,
+          productKind: defaultDetails.productKind,
+          origin: defaultDetails.origin,
+        }}
+        creatorReferralCode={creatorReferralCode}
+      />
+    </>
   );
 }

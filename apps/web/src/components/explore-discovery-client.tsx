@@ -27,7 +27,7 @@ import {
   Clock,
   Loader2,
 } from 'lucide-react';
-import { VIBE_CATEGORIES, type VibeCategory, type ExploreQueryResult } from '../lib/explore/actions';
+import { VIBE_CATEGORIES, type VibeCategory, type ExploreQueryResult } from '../lib/explore/constants';
 import { CARIBBEAN_TERRITORIES, type CaribbeanTerritory } from '../lib/constants/caribbean-territories';
 import { DIASPORA_CITY_HUBS, type DiasporaCityHub } from '../lib/constants/diaspora-hubs';
 

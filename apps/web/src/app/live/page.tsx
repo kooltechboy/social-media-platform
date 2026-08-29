@@ -7,48 +7,6 @@ import { LIVE_CATEGORIES } from '@caribbean/live';
 
 export const dynamic = 'force-dynamic';
 
-const SHOWCASE_LIVE_STREAMS: LivestreamViewItem[] = [
-  {
-    id: 'live-showcase-1',
-    title: 'Kingston Sound System Session • Vinyl Dubplates & Live MC',
-    state: 'live',
-    access_level: 'public',
-    peak_viewers: 1420,
-    started_at: new Date(Date.now() - 35 * 60000).toISOString(),
-    creator_id: 'creator-1',
-    category: 'Sound Systems & Dub',
-    location: 'Kingston, Jamaica 🇯🇲',
-    profiles: { display_name: 'Zion Sound Kingston', username: 'zionsound' },
-    videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-caribbean-tropical-beach-with-turquoise-water-41221-large.mp4',
-  },
-  {
-    id: 'live-showcase-2',
-    title: 'Trinidad Carnival 2026 Band Launch: Live Avenue Broadcast',
-    state: 'live',
-    access_level: 'public',
-    peak_viewers: 2890,
-    started_at: new Date(Date.now() - 15 * 60000).toISOString(),
-    creator_id: 'creator-2',
-    category: 'Carnival & Mas',
-    location: 'Port of Spain, Trinidad 🇹🇹',
-    profiles: { display_name: 'Carnival Nation TT', username: 'carnivalnation' },
-    videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-top-aerial-shot-of-seashore-with-rocks-and-turquoise-water-41487-large.mp4',
-  },
-  {
-    id: 'live-showcase-3',
-    title: 'Santo Domingo Sunset Acoustic & Bachata Classics',
-    state: 'scheduled',
-    access_level: 'public',
-    peak_viewers: 450,
-    started_at: null,
-    creator_id: 'creator-3',
-    category: 'Acoustic & Bachata',
-    location: 'Santo Domingo, DR 🇩🇴',
-    profiles: { display_name: 'Quisqueya Live', username: 'quisqueyalive' },
-    videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-tree-branches-in-the-breeze-with-sun-rays-41617-large.mp4',
-  },
-];
-
 export default async function LivePage({
   searchParams,
 }: {
@@ -84,18 +42,18 @@ export default async function LivePage({
         title: d.title,
         state: d.state,
         access_level: d.access_level,
-        peak_viewers: d.peak_viewers || 1,
+        peak_viewers: d.peak_viewers || 0,
         started_at: d.started_at,
         creator_id: d.creator_id,
         category: 'Live Broadcast',
         location: 'Caribbean & Diaspora 🌴',
         profiles: d.profiles,
-        videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-caribbean-tropical-beach-with-turquoise-water-41221-large.mp4',
+        videoUrl: '',
       }));
     }
   }
 
-  const liveStreams = dbStreams.length > 0 ? [...dbStreams, ...SHOWCASE_LIVE_STREAMS] : SHOWCASE_LIVE_STREAMS;
+  const liveStreams = dbStreams;
 
   const filteredStreams = selectedCategory && selectedCategory !== 'All Broadcasts'
     ? liveStreams.filter((s) => s.category === selectedCategory || s.title.toLowerCase().includes(selectedCategory.toLowerCase()))
@@ -194,7 +152,7 @@ export default async function LivePage({
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredStreams.map((stream) => {
-            const isFeatured = stream.id === featuredStream.id;
+            const isFeatured = featuredStream && stream.id === featuredStream.id;
             return (
               <Link
                 key={stream.id}

@@ -666,3 +666,141 @@ export class SpotPayWalletAdapter implements PSPAdapter {
     return true;
   }
 }
+
+// ---------------------------------------------------------------------------
+// Configurable Seller Plans & Monetization Engine
+// "ANTILIA doesn't take a percentage of your sales on eligible Seller plans"
+// ---------------------------------------------------------------------------
+
+export interface SellerPlan {
+  id: 'business_free' | 'seller_pro' | 'business_plus' | 'enterprise';
+  name: string;
+  description: string;
+  priceMinor: number;
+  currency: string;
+  billingPeriod: 'monthly' | 'annual';
+  listingLimit: number | null; // null = unlimited
+  commissionRateBps: number; // 0 for Seller Pro & Business+
+  aiToolsEnabled: boolean;
+  crmEnabled: boolean;
+  staffLimit: number;
+  prioritySupport: boolean;
+}
+
+export const SELLER_PLANS: Record<SellerPlan['id'], SellerPlan> = {
+  business_free: {
+    id: 'business_free',
+    name: 'Business Free',
+    description: 'Basic profile, community discovery, messaging, and up to 5 listings.',
+    priceMinor: 0,
+    currency: 'USD',
+    billingPeriod: 'monthly',
+    listingLimit: 5,
+    commissionRateBps: 0, // Zero ANTILIA percentage on free tier
+    aiToolsEnabled: false,
+    crmEnabled: false,
+    staffLimit: 1,
+    prioritySupport: false,
+  },
+  seller_pro: {
+    id: 'seller_pro',
+    name: 'Seller Pro',
+    description: 'Storefront, unlimited listings, SpotPay checkout, orders, analytics, and AI business tools.',
+    priceMinor: 1499, // $14.99/mo
+    currency: 'USD',
+    billingPeriod: 'monthly',
+    listingLimit: null, // Unlimited
+    commissionRateBps: 0, // 0% ANTILIA cut
+    aiToolsEnabled: true,
+    crmEnabled: false,
+    staffLimit: 2,
+    prioritySupport: false,
+  },
+  business_plus: {
+    id: 'business_plus',
+    name: 'Business+',
+    description: 'Advanced analytics, CRM, AI sales assistant, multi-staff access, priority search placement.',
+    priceMinor: 3999, // $39.99/mo
+    currency: 'USD',
+    billingPeriod: 'monthly',
+    listingLimit: null,
+    commissionRateBps: 0,
+    aiToolsEnabled: true,
+    crmEnabled: true,
+    staffLimit: 5,
+    prioritySupport: true,
+  },
+  enterprise: {
+    id: 'enterprise',
+    name: 'Enterprise',
+    description: 'Custom multi-location, dedicated API, custom integrations, enterprise advertising, and 24/7 support.',
+    priceMinor: 0, // Custom contract
+    currency: 'USD',
+    billingPeriod: 'monthly',
+    listingLimit: null,
+    commissionRateBps: 0,
+    aiToolsEnabled: true,
+    crmEnabled: true,
+    staffLimit: 50,
+    prioritySupport: true,
+  },
+};
+
+export interface CheckoutBreakdown {
+  grossMinor: number;
+  platformFeeMinor: number;
+  processingFeeMinor: number;
+  affiliateCommissionMinor: number;
+  netToMerchantMinor: number;
+  currency: string;
+}
+
+export interface MonetizationEngineOptions {
+  sellerPlanId?: SellerPlan['id'];
+  affiliateCommissionBps?: number;
+  processingFeeBps?: number; // e.g. 290 for 2.9%
+  processingFixedMinor?: number; // e.g. 30 for 30 cents
+}
+
+export class MonetizationEngine {
+  /**
+   * Computes the financial breakdown for a checkout transaction.
+   * On Seller Pro and Business+ plans, platform fee is strictly 0.
+   */
+  public calculateCheckoutBreakdown(
+    grossMinor: number,
+    currency: string = 'USD',
+    options: MonetizationEngineOptions = {}
+  ): CheckoutBreakdown {
+    if (!Number.isInteger(grossMinor) || grossMinor <= 0) {
+      throw new Error('Gross amount must be a positive integer in minor units');
+    }
+
+    const plan = SELLER_PLANS[options.sellerPlanId || 'business_free'];
+    const platformFeeBps = plan.commissionRateBps;
+    const platformFeeMinor = Math.round((grossMinor * platformFeeBps) / 10000);
+
+    const processingBps = options.processingFeeBps ?? 290;
+    const processingFixed = options.processingFixedMinor ?? 30;
+    const processingFeeMinor = Math.round((grossMinor * processingBps) / 10000) + processingFixed;
+
+    const affiliateBps = options.affiliateCommissionBps ?? 0;
+    const affiliateCommissionMinor = Math.round((grossMinor * affiliateBps) / 10000);
+
+    const netToMerchantMinor = grossMinor - platformFeeMinor - processingFeeMinor - affiliateCommissionMinor;
+
+    if (netToMerchantMinor < 0) {
+      throw new Error('Total deductions exceed gross amount');
+    }
+
+    return {
+      grossMinor,
+      platformFeeMinor,
+      processingFeeMinor,
+      affiliateCommissionMinor,
+      netToMerchantMinor,
+      currency,
+    };
+  }
+}
+
