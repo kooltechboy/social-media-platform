@@ -170,10 +170,10 @@ export default function AppSidebar({ currentPath }: AppSidebarProps) {
       {/* Creator Studio Action Card */}
       <div className="glass rounded-2xl p-4 text-center space-y-2.5">
         <div className="flex items-center justify-center gap-1.5 text-xs font-black text-brand-caribbeanSea uppercase tracking-wide">
-          <Sparkles className="w-3.5 h-3.5" /> Caribbean Creator Hub
+          <Sparkles className="w-3.5 h-3.5 text-brand-goldenHour" /> Caribbean Creator Hub
         </div>
         <p className="text-[11px] text-slate-300 leading-relaxed">
-          Keep <strong className="text-brand-sunriseCoral">82.1% net</strong> of all subscriptions, gifts, and event ticket sales.
+          Monetize subscriptions, livestream gifts, and event tickets with transparent <strong className="text-brand-sunriseCoral">15% platform fees</strong> and direct SpotPay payouts.
         </p>
         <Link
           href="/creator-studio"

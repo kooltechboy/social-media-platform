@@ -288,11 +288,16 @@ export default async function CaribbeanNowSidebar() {
               </Link>
             ))
           ) : (
-            <div className="p-3 rounded-2xl bg-white/5 border border-dashed border-slate-800 text-center">
-              <p className="text-xs text-brand-sandstone/60">No upcoming events right now.</p>
-              <Link href="/events" className="text-[11px] text-brand-caribbeanSea hover:underline font-bold mt-1 inline-block">
-                Host an Event →
-              </Link>
+            <div className="p-4 rounded-2xl bg-white/5 border border-dashed border-slate-800 text-center space-y-1.5">
+              <p className="text-xs font-semibold text-brand-sandstone/80">No featured cultural fetes right now.</p>
+              <p className="text-[11px] text-brand-sandstone/50 leading-relaxed">
+                Check back soon for island carnivals, music festivals, and diaspora meetups.
+              </p>
+              <div className="pt-1">
+                <Link href="/events" className="text-[11px] text-brand-caribbeanSea hover:underline font-bold inline-block">
+                  Explore Events →
+                </Link>
+              </div>
             </div>
           )}
         </div>

@@ -116,14 +116,14 @@ export default function CreatorTierModal({ isOpen, onClose, creatorName }: Creat
               />
             </div>
 
-            {/* 82.1% Net Transparency Calculation Box */}
+            {/* Transparent Creator Economics Calculation Box */}
             <div className="p-4 rounded-2xl bg-slate-900/90 border border-brand-sunriseCoral/30 space-y-2">
               <div className="flex items-center justify-between text-xs">
                 <span className="font-bold text-slate-300 flex items-center gap-1.5">
-                  <Sparkles className="w-3.5 h-3.5 text-brand-goldenHour" /> 82.1% Net Payout Engine
+                  <Sparkles className="w-3.5 h-3.5 text-brand-goldenHour" /> Transparent Creator Economics
                 </span>
                 <span className="text-[10px] text-emerald-400 font-black uppercase bg-emerald-950/60 border border-emerald-800/40 px-2 py-0.5 rounded-full">
-                  Keep 82.1% Net
+                  15% Platform Fee
                 </span>
               </div>
 
@@ -137,14 +137,17 @@ export default function CreatorTierModal({ isOpen, onClose, creatorName }: Creat
                   <span className="text-slate-400">-${platformFee} USD</span>
                 </div>
                 <div className="flex justify-between text-slate-400">
-                  <span>Payment Processing / Gateway (2.9%):</span>
+                  <span>Estimated Processing / Gateway (~2.9%):</span>
                   <span className="text-slate-400">-${pspFee} USD</span>
                 </div>
                 <div className="border-t border-slate-800 pt-1.5 flex justify-between font-black text-white">
-                  <span>Creator Net per Subscriber:</span>
+                  <span>Estimated Net per Subscriber:</span>
                   <span className="text-emerald-400">${net} USD/mo</span>
                 </div>
               </div>
+              <p className="text-[10px] text-brand-sandstone/50 pt-1">
+                Net earnings reflect standard web gateway processing. Mobile IAP or local Caribbean payment methods may vary based on provider fees.
+              </p>
             </div>
 
             <button
