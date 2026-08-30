@@ -53,7 +53,7 @@ export default async function AdminPage() {
   const [flagsResult, dauResult, newUsersResult, reportsResult, staffResult] = await Promise.all([
     supabase
       .from('feature_flags')
-      .select('key, enabled, description')
+      .select('key, enabled, is_enabled, description')
       .order('key'),
     supabase
       .from('analytics_events')
@@ -73,7 +73,11 @@ export default async function AdminPage() {
       .in('role', ['super_admin', 'superadmin', 'management', 'admin', 'moderator', 'support', 'content_manager', 'analyst']),
   ]);
 
-  const flags = (flagsResult.data ?? []) as FeatureFlag[];
+  const flags: FeatureFlag[] = ((flagsResult.data ?? []) as any[]).map((row) => ({
+    key: row.key,
+    enabled: Boolean(row.enabled ?? row.is_enabled ?? false),
+    description: row.description ?? null,
+  }));
 
   const stats: StatRow[] = [
     { label: 'Staff & Admins', value: (staffResult.count ?? 0).toString(), delta: 'RBAC Active', positive: true },

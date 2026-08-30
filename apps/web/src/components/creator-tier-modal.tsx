@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { Radio, Sparkles, X, Check, ShieldCheck, DollarSign, Users, Award, Loader2 } from 'lucide-react';
 import { applyFees, DEFAULT_FEES } from '@caribbean/creator';
+import { getCreatorLaunchMessaging } from '@caribbean/payments';
 
 interface CreatorTierModalProps {
   isOpen: boolean;
@@ -16,6 +17,8 @@ export default function CreatorTierModal({ isOpen, onClose, creatorName }: Creat
   const [perks, setPerks] = useState<string>('Exclusive behind-the-scenes streams\nEarly access to music & carnival riddims\nVIP subscriber badge & private chat access');
   const [isSaving, setIsSaving] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
+
+  const launchInfo = getCreatorLaunchMessaging();
 
   if (!isOpen) return null;
 
@@ -57,6 +60,17 @@ export default function CreatorTierModal({ isOpen, onClose, creatorName }: Creat
             <h3 className="font-black text-base text-white">Creator Membership Tier</h3>
             <p className="text-xs text-slate-400">Configure monthly patronage for your fans on Tukubi</p>
           </div>
+        </div>
+
+        {/* Promotional Launch Banner (Directives 3, 4, 6) */}
+        <div className="p-3.5 rounded-2xl bg-purple-500/10 border border-purple-500/30 text-purple-200 text-xs space-y-1">
+          <div className="flex items-center gap-1.5 font-bold text-purple-300">
+            <Sparkles className="w-3.5 h-3.5 text-purple-400" />
+            <span>{launchInfo.bannerTitle}</span>
+          </div>
+          <p className="text-[11px] text-brand-sandstone/70">
+            {launchInfo.bannerBody}
+          </p>
         </div>
 
         {isSaved ? (

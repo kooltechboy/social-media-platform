@@ -11,8 +11,10 @@ import {
   ArrowRight,
   Building2,
   Globe,
+  Calendar,
+  AlertCircle,
 } from 'lucide-react';
-import { Money } from '@caribbean/payments';
+import { Money, isMarketplaceCommerceActive } from '@caribbean/payments';
 import { createOrderAction, type MarketplaceActionState } from '../lib/marketplace/actions';
 
 export interface UnifiedCheckoutModalProps {
@@ -30,7 +32,7 @@ export interface UnifiedCheckoutModalProps {
   creatorReferralCode?: string;
 }
 
-type PaymentMethodType = 'card' | 'paypal' | 'wipay' | 'cxpay' | 'apple_pay' | 'google_pay';
+type PaymentMethodType = 'paypal' | 'card' | 'wipay' | 'cxpay' | 'apple_pay' | 'google_pay';
 
 export default function UnifiedCheckoutModal({
   isOpen,
@@ -38,7 +40,7 @@ export default function UnifiedCheckoutModal({
   product,
   creatorReferralCode,
 }: UnifiedCheckoutModalProps) {
-  const [selectedMethod, setSelectedMethod] = useState<PaymentMethodType>('card');
+  const [selectedMethod, setSelectedMethod] = useState<PaymentMethodType>('paypal');
   const [quantity, setQuantity] = useState(1);
   const [shippingAddress, setShippingAddress] = useState({
     fullName: '',
@@ -51,6 +53,8 @@ export default function UnifiedCheckoutModal({
   const [isPending, startTransition] = useTransition();
 
   if (!isOpen) return null;
+
+  const canTransact = isMarketplaceCommerceActive();
 
   const unitPrice = new Money(product.priceMinor, product.currency);
   const subtotalMinor = product.priceMinor * quantity;
@@ -65,6 +69,15 @@ export default function UnifiedCheckoutModal({
 
   function handleCompletePayment(e: React.FormEvent) {
     e.preventDefault();
+    if (!canTransact) {
+      setState({
+        error:
+          'Marketplace transactions officially begin September 30, 2026. You can explore stores and products now. Purchasing will be available when marketplace commerce launches.',
+        success: null,
+      });
+      return;
+    }
+
     const formData = new FormData();
     formData.set('productId', product.id);
     formData.set('quantity', String(quantity));
@@ -99,9 +112,9 @@ export default function UnifiedCheckoutModal({
               <CheckCircle className="w-8 h-8" />
             </div>
             <div className="space-y-1">
-              <h3 className="text-2xl font-black text-white">Payment Authorized!</h3>
+              <h3 className="text-2xl font-black text-white">Order Placed Successfully!</h3>
               <p className="text-xs text-slate-300">
-                Order <strong className="text-brand-sunriseCoral">#{state.orderId.slice(0, 8)}</strong> confirmed and submitted for fulfillment.
+                Order <strong className="text-brand-sunriseCoral">#{state.orderId.slice(0, 8)}</strong> placed with TUKUBI buyer protection.
               </p>
             </div>
             <div className="p-4 rounded-2xl bg-slate-900 border border-slate-800 text-xs text-slate-300 space-y-2 text-left">
@@ -110,11 +123,11 @@ export default function UnifiedCheckoutModal({
                 <span className="font-bold text-white">{product.title}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-400">Total Charged:</span>
+                <span className="text-slate-400">Total:</span>
                 <span className="font-bold text-emerald-400">{total.format()}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-400">Payment Processor:</span>
+                <span className="text-slate-400">Payment Method:</span>
                 <span className="capitalize font-bold text-brand-goldenHour">{selectedMethod.replace('_', ' ')}</span>
               </div>
             </div>
@@ -131,7 +144,7 @@ export default function UnifiedCheckoutModal({
             <div>
               <div className="flex items-center justify-between">
                 <span className="text-[10px] font-black text-brand-sunriseCoral uppercase tracking-widest">
-                  TUKUBI Unified Checkout
+                  TUKUBI Marketplace
                 </span>
                 <span className="text-[10px] text-slate-400 font-semibold flex items-center gap-1">
                   <Lock className="w-3 h-3 text-emerald-400" />
@@ -142,6 +155,22 @@ export default function UnifiedCheckoutModal({
               <p className="text-xs text-slate-400">Sold by {product.sellerName} • {product.origin || 'Caribbean'}</p>
             </div>
 
+            {/* Pre-launch notification banner (Directive 9, 10, 17) */}
+            {!canTransact && (
+              <div className="p-4 rounded-2xl bg-orange-500/10 border border-orange-500/30 text-orange-200 text-xs space-y-2">
+                <div className="flex items-center gap-2 font-black text-orange-400 text-sm">
+                  <Calendar className="w-4 h-4" />
+                  <span>Marketplace Transactions Launch September 30, 2026</span>
+                </div>
+                <p className="text-[11px] leading-relaxed text-orange-200/90 font-medium">
+                  Merchants can create their stores, add products and services, and prepare their businesses now. Buyer and seller transactions will officially begin September 30, 2026.
+                </p>
+                <p className="text-[11px] text-orange-300 font-semibold">
+                  You can explore stores and products now. Purchasing will be available when marketplace commerce launches.
+                </p>
+              </div>
+            )}
+
             {/* Order Summary Box */}
             <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-3">
               <div className="flex items-center justify-between text-xs">
@@ -150,7 +179,8 @@ export default function UnifiedCheckoutModal({
                   <button
                     type="button"
                     onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                    className="w-6 h-6 rounded bg-slate-800 text-white font-bold flex items-center justify-center hover:bg-slate-700 cursor-pointer"
+                    disabled={!canTransact}
+                    className="w-6 h-6 rounded bg-slate-800 text-white font-bold flex items-center justify-center hover:bg-slate-700 cursor-pointer disabled:opacity-50"
                   >
                     -
                   </button>
@@ -158,7 +188,8 @@ export default function UnifiedCheckoutModal({
                   <button
                     type="button"
                     onClick={() => setQuantity(Math.min(10, quantity + 1))}
-                    className="w-6 h-6 rounded bg-slate-800 text-white font-bold flex items-center justify-center hover:bg-slate-700 cursor-pointer"
+                    disabled={!canTransact}
+                    className="w-6 h-6 rounded bg-slate-800 text-white font-bold flex items-center justify-center hover:bg-slate-700 cursor-pointer disabled:opacity-50"
                   >
                     +
                   </button>
@@ -189,29 +220,10 @@ export default function UnifiedCheckoutModal({
 
             {/* Payment Method Selector */}
             <div className="space-y-3">
-              <label className="text-xs font-bold text-slate-200 block">Select Payment Method</label>
+              <label className="text-xs font-bold text-slate-200 block">Payment Method Options</label>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                {/* Credit / Debit Card (Stripe / CX Pay) */}
-                <div
-                  onClick={() => setSelectedMethod('card')}
-                  className={`p-3.5 rounded-2xl border transition-all cursor-pointer flex items-center justify-between ${
-                    selectedMethod === 'card'
-                      ? 'bg-slate-800 border-brand-sunriseCoral text-white shadow-md ring-1 ring-brand-sunriseCoral/50'
-                      : 'bg-slate-900/60 border-slate-800 hover:border-slate-700 text-slate-300'
-                  }`}
-                >
-                  <div className="flex items-center gap-2.5">
-                    <CreditCard className="w-4 h-4 text-brand-sunriseCoral" />
-                    <div>
-                      <div className="text-xs font-bold">Credit / Debit Card</div>
-                      <div className="text-[10px] text-slate-400">Visa, Mastercard, Amex</div>
-                    </div>
-                  </div>
-                  <span className="text-[10px] text-emerald-400 font-semibold">Instant</span>
-                </div>
-
-                {/* PayPal */}
+                {/* PayPal (Primary supported payment path) */}
                 <div
                   onClick={() => setSelectedMethod('paypal')}
                   className={`p-3.5 rounded-2xl border transition-all cursor-pointer flex items-center justify-between ${
@@ -224,86 +236,87 @@ export default function UnifiedCheckoutModal({
                     <Globe className="w-4 h-4 text-blue-400" />
                     <div>
                       <div className="text-xs font-bold">PayPal</div>
-                      <div className="text-[10px] text-slate-400">International Checkout</div>
+                      <div className="text-[10px] text-slate-400">Primary Payment Path</div>
                     </div>
                   </div>
-                  <span className="text-[10px] text-slate-400">Global</span>
+                  <span className="text-[10px] text-blue-400 font-bold bg-blue-500/10 px-2 py-0.5 rounded-full border border-blue-500/30">
+                    Primary
+                  </span>
                 </div>
 
-                {/* Apple Pay */}
+                {/* Credit / Debit Card (Stripe) */}
                 <div
-                  onClick={() => setSelectedMethod('apple_pay')}
+                  onClick={() => setSelectedMethod('card')}
                   className={`p-3.5 rounded-2xl border transition-all cursor-pointer flex items-center justify-between ${
-                    selectedMethod === 'apple_pay'
-                      ? 'bg-slate-800 border-white text-white shadow-md ring-1 ring-white/50'
+                    selectedMethod === 'card'
+                      ? 'bg-slate-800 border-brand-sunriseCoral text-white shadow-md ring-1 ring-brand-sunriseCoral/50'
                       : 'bg-slate-900/60 border-slate-800 hover:border-slate-700 text-slate-300'
                   }`}
                 >
+                  <div className="flex items-center gap-2.5">
+                    <CreditCard className="w-4 h-4 text-brand-sunriseCoral" />
+                    <div>
+                      <div className="text-xs font-bold">Credit / Debit Card</div>
+                      <div className="text-[10px] text-slate-400">Visa, Mastercard</div>
+                    </div>
+                  </div>
+                  <span className="text-[10px] text-emerald-400 font-semibold">Active</span>
+                </div>
+
+                {/* Apple Pay (Coming Soon) */}
+                <div className="p-3.5 rounded-2xl border border-slate-800/60 bg-slate-900/30 text-slate-500 flex items-center justify-between cursor-not-allowed opacity-60">
                   <div className="flex items-center gap-2.5">
                     <span className="text-base"></span>
                     <div>
                       <div className="text-xs font-bold">Apple Pay</div>
-                      <div className="text-[10px] text-slate-400">Biometric Token</div>
+                      <div className="text-[10px] text-slate-500">Biometric Token</div>
                     </div>
                   </div>
-                  <span className="text-[10px] text-slate-400">1-Tap</span>
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 border border-slate-700">
+                    Coming Soon
+                  </span>
                 </div>
 
-                {/* Google Pay */}
-                <div
-                  onClick={() => setSelectedMethod('google_pay')}
-                  className={`p-3.5 rounded-2xl border transition-all cursor-pointer flex items-center justify-between ${
-                    selectedMethod === 'google_pay'
-                      ? 'bg-slate-800 border-sky-400 text-white shadow-md ring-1 ring-sky-400/50'
-                      : 'bg-slate-900/60 border-slate-800 hover:border-slate-700 text-slate-300'
-                  }`}
-                >
+                {/* Google Pay (Coming Soon) */}
+                <div className="p-3.5 rounded-2xl border border-slate-800/60 bg-slate-900/30 text-slate-500 flex items-center justify-between cursor-not-allowed opacity-60">
                   <div className="flex items-center gap-2.5">
-                    <span className="text-xs font-black text-sky-400">G Pay</span>
+                    <span className="text-xs font-black text-slate-500">G Pay</span>
                     <div>
                       <div className="text-xs font-bold">Google Pay</div>
-                      <div className="text-[10px] text-slate-400">Caribbean &amp; Diaspora</div>
+                      <div className="text-[10px] text-slate-500">Mobile Wallet</div>
                     </div>
                   </div>
-                  <span className="text-[10px] text-slate-400">1-Tap</span>
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 border border-slate-700">
+                    Coming Soon
+                  </span>
                 </div>
 
-                {/* WiPay (Caribbean) */}
-                <div
-                  onClick={() => setSelectedMethod('wipay')}
-                  className={`p-3.5 rounded-2xl border transition-all cursor-pointer flex items-center justify-between ${
-                    selectedMethod === 'wipay'
-                      ? 'bg-slate-800 border-amber-400 text-white shadow-md ring-1 ring-amber-400/50'
-                      : 'bg-slate-900/60 border-slate-800 hover:border-slate-700 text-slate-300'
-                  }`}
-                >
+                {/* WiPay (Coming Soon) */}
+                <div className="p-3.5 rounded-2xl border border-slate-800/60 bg-slate-900/30 text-slate-500 flex items-center justify-between cursor-not-allowed opacity-60">
                   <div className="flex items-center gap-2.5">
-                    <Building2 className="w-4 h-4 text-amber-400" />
+                    <Building2 className="w-4 h-4 text-slate-500" />
                     <div>
                       <div className="text-xs font-bold">WiPay Caribbean</div>
-                      <div className="text-[10px] text-slate-400">TTD, JMD, BBD rails</div>
+                      <div className="text-[10px] text-slate-500">Localized Island Rails</div>
                     </div>
                   </div>
-                  <span className="text-[10px] text-amber-400 font-semibold">Local</span>
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 border border-slate-700">
+                    Coming Soon
+                  </span>
                 </div>
 
-                {/* CX Pay (Caribbean) */}
-                <div
-                  onClick={() => setSelectedMethod('cxpay')}
-                  className={`p-3.5 rounded-2xl border transition-all cursor-pointer flex items-center justify-between ${
-                    selectedMethod === 'cxpay'
-                      ? 'bg-slate-800 border-purple-400 text-white shadow-md ring-1 ring-purple-400/50'
-                      : 'bg-slate-900/60 border-slate-800 hover:border-slate-700 text-slate-300'
-                  }`}
-                >
+                {/* CX Pay (Coming Soon) */}
+                <div className="p-3.5 rounded-2xl border border-slate-800/60 bg-slate-900/30 text-slate-500 flex items-center justify-between cursor-not-allowed opacity-60">
                   <div className="flex items-center gap-2.5">
-                    <Building2 className="w-4 h-4 text-purple-400" />
+                    <Building2 className="w-4 h-4 text-slate-500" />
                     <div>
                       <div className="text-xs font-bold">CX Pay Gateway</div>
-                      <div className="text-[10px] text-slate-400">Dutch &amp; English Caribbean</div>
+                      <div className="text-[10px] text-slate-500">Regional Gateway</div>
                     </div>
                   </div>
-                  <span className="text-[10px] text-purple-400 font-semibold">Local</span>
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 border border-slate-700">
+                    Coming Soon
+                  </span>
                 </div>
               </div>
             </div>
@@ -322,21 +335,32 @@ export default function UnifiedCheckoutModal({
               <span className="text-slate-500">Authorized Processor</span>
             </div>
 
-            <button
-              type="submit"
-              disabled={isPending}
-              className="w-full bg-gradient-to-r from-brand-sunriseCoral via-brand-goldenHour to-brand-sunriseCoral hover:opacity-95 text-slate-950 font-black py-3 rounded-2xl text-xs flex items-center justify-center gap-2 transition-all shadow-xl shadow-brand-sunriseCoral/20 disabled:opacity-50 cursor-pointer"
-            >
-              {isPending ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" /> Authorizing Payment...
-                </>
-              ) : (
-                <>
-                  Pay {total.format()} via {selectedMethod.toUpperCase()} <ArrowRight className="w-4 h-4" />
-                </>
-              )}
-            </button>
+            {canTransact ? (
+              <button
+                type="submit"
+                disabled={isPending}
+                className="w-full bg-gradient-to-r from-brand-sunriseCoral via-brand-goldenHour to-brand-sunriseCoral hover:opacity-95 text-slate-950 font-black py-3 rounded-2xl text-xs flex items-center justify-center gap-2 transition-all shadow-xl shadow-brand-sunriseCoral/20 disabled:opacity-50 cursor-pointer"
+              >
+                {isPending ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" /> Authorizing Payment...
+                  </>
+                ) : (
+                  <>
+                    Pay {total.format()} via {selectedMethod.toUpperCase()} <ArrowRight className="w-4 h-4" />
+                  </>
+                )}
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={onClose}
+                className="w-full bg-slate-800 hover:bg-slate-700 text-orange-400 border border-orange-500/30 font-black py-3 rounded-2xl text-xs flex items-center justify-center gap-2 transition-all cursor-pointer"
+              >
+                <Calendar className="w-4 h-4" />
+                Transactions Begin September 30, 2026 — Close Preview
+              </button>
+            )}
           </form>
         )}
       </div>

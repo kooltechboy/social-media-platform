@@ -25,7 +25,7 @@ export async function toggleFeatureFlagAction(
 
   const { error } = await supabase
     .from('feature_flags')
-    .update({ enabled })
+    .update({ enabled, is_enabled: enabled })
     .eq('key', flagKey);
 
   if (error) return { error: error.message, success: null };

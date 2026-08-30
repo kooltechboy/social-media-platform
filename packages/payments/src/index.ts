@@ -15,4 +15,5 @@ export * from './provider-registry';
 export * from './commission-engine';
 export * from './entitlements';
 export * from './reconciliation';
+export * from './launch-config';
 

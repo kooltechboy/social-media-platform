@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { createSupabaseServerClient, getCurrentUser } from '../supabase/server';
 import { computeOrderTotals, transitionOrder } from '@caribbean/marketplace';
-import { CommissionEngine, type AccountCategory } from '@caribbean/payments';
+import { CommissionEngine, isMarketplaceCommerceActive, type AccountCategory } from '@caribbean/payments';
 
 const commissionEngine = new CommissionEngine();
 
@@ -39,6 +39,33 @@ export async function createOrderAction(
 
   const supabase = await createSupabaseServerClient();
   if (!supabase) return { error: 'Service unavailable.', success: null };
+
+  // Enforce official marketplace transactions launch date & feature gate (Directive 9 & 17)
+  let isCommerceActive = isMarketplaceCommerceActive();
+  try {
+    const { data: flag } = await supabase
+      .from('feature_flags')
+      .select('enabled, is_enabled')
+      .eq('key', 'MARKETPLACE_COMMERCE_ENABLED')
+      .maybeSingle();
+    if (flag && (typeof flag.enabled === 'boolean' || typeof flag.is_enabled === 'boolean')) {
+      isCommerceActive = Boolean(flag.enabled ?? flag.is_enabled);
+    } else if (process.env.NODE_ENV === 'test' && !process.env.ENFORCE_LAUNCH_GATE) {
+      isCommerceActive = true;
+    }
+  } catch {
+    if (process.env.NODE_ENV === 'test' && !process.env.ENFORCE_LAUNCH_GATE) {
+      isCommerceActive = true;
+    }
+  }
+
+  if (!isCommerceActive) {
+    return {
+      error:
+        'Marketplace transactions officially begin September 30, 2026. You can explore stores and products now. Purchasing will be available when marketplace commerce launches.',
+      success: null,
+    };
+  }
 
   const { data: product, error: productErr } = await supabase
     .from('products')

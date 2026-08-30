@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { Wallet, ShoppingBag } from 'lucide-react';
 import Link from 'next/link';
+import { isMarketplaceCommerceActive } from '@caribbean/payments';
 import UnifiedCheckoutModal from './unified-checkout-modal';
 
 interface Props {
@@ -58,16 +59,26 @@ export default function OrderButton({
     origin: 'Caribbean 🌴',
   };
 
+  const canTransact = isMarketplaceCommerceActive();
+
   return (
     <>
       <button
         type="button"
         onClick={() => setIsCheckoutOpen(true)}
         disabled={disabled}
-        className="w-full bg-gradient-to-r from-orange-500 to-brand-goldenHour hover:from-orange-400 hover:to-brand-goldenHour text-slate-950 font-black py-2.5 rounded-xl text-xs flex items-center justify-center gap-2 transition-all shadow-md shadow-orange-500/20 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+        className={`w-full font-black py-2.5 rounded-xl text-xs flex items-center justify-center gap-2 transition-all shadow-md cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${
+          canTransact
+            ? 'bg-gradient-to-r from-orange-500 to-brand-goldenHour hover:from-orange-400 hover:to-brand-goldenHour text-slate-950 shadow-orange-500/20'
+            : 'bg-brand-dusk hover:bg-slate-800 text-orange-400 border border-orange-500/40 shadow-slate-900/50'
+        }`}
       >
         <Wallet className="w-4 h-4" />
-        {disabled ? 'Unavailable' : 'Buy with Card / PayPal'}
+        {disabled
+          ? 'Unavailable'
+          : canTransact
+          ? 'Buy with Card / PayPal'
+          : 'Marketplace Transactions Launch Sept 30, 2026'}
       </button>
 
       <UnifiedCheckoutModal

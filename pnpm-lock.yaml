@@ -41,6 +41,9 @@ importers:
       '@caribbean/design-system':
         specifier: workspace:*
         version: link:../../packages/design-system
+      '@caribbean/payments':
+        specifier: workspace:*
+        version: link:../../packages/payments
       '@caribbean/trust-safety':
         specifier: workspace:*
         version: link:../../packages/trust-safety
@@ -441,16 +444,6 @@ importers:
       '@caribbean/database':
         specifier: workspace:*
         version: link:../database
-    devDependencies:
-      typescript:
-        specifier: ^5.5.0
-        version: 5.9.3
-
-  packages/spotpay:
-    dependencies:
-      stripe:
-        specifier: ^22.5.0
-        version: 22.5.0(@types/node@22.20.1)
     devDependencies:
       typescript:
         specifier: ^5.5.0

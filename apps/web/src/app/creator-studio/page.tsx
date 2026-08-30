@@ -21,7 +21,7 @@ import {
   evaluatePayout,
   isSubscriptionActive,
 } from "@caribbean/creator";
-import { Money, sumLedgerMinorUnits } from "@caribbean/payments";
+import { Money, sumLedgerMinorUnits, getCreatorLaunchMessaging } from "@caribbean/payments";
 import BecomeCreatorClientButton from "../../components/become-creator-button";
 import CreatorStudioActions from "../../components/creator-studio-actions";
 
@@ -173,6 +173,8 @@ export default async function CreatorStudioPage() {
   );
   const currency = ledgerAccount?.currency ?? "USD";
 
+  const creatorLaunch = getCreatorLaunchMessaging();
+
   return (
     <div className="min-h-screen bg-[#090D16] text-brand-sandstone p-4 md:p-6 max-w-6xl mx-auto space-y-8">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-6">
@@ -203,6 +205,21 @@ export default async function CreatorStudioPage() {
             <Video className="w-4 h-4" /> Go Live
           </Link>
         </div>
+      </div>
+
+      {/* Phased Creator Launch Promo Banner (Directives 3, 4, 46) */}
+      <div className="bg-gradient-to-r from-purple-950/50 via-slate-900 to-indigo-950/40 border border-purple-500/30 rounded-3xl p-5 shadow-lg space-y-1.5">
+        <div className="flex items-center gap-2">
+          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-purple-500/20 text-purple-300 border border-purple-500/40">
+            {creatorLaunch.badge}
+          </span>
+          <h2 className="text-sm md:text-base font-black text-brand-sandstone">
+            {creatorLaunch.bannerTitle}
+          </h2>
+        </div>
+        <p className="text-xs text-brand-sandstone/70 leading-relaxed font-medium">
+          {creatorLaunch.bannerBody}
+        </p>
       </div>
 
       {/* Metric Cards */}
@@ -372,8 +389,7 @@ function CreatorOnboarding({
           Become a Creator
         </h1>
         <p className="text-sm text-brand-sandstone/60">
-          Set up your Creator Studio to host podcasts, live streams, earn from
-          subscriptions, tips, and gifts.
+          You can create and publish your content for free through October 31, 2026. Enjoy full access to Creator Hub, Podcasting and Creator Studio during our launch period.
         </p>
         <BecomeCreatorClientButton />
       </div>

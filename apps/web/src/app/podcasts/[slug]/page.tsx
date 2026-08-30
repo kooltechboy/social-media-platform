@@ -1,6 +1,6 @@
 import React, { Suspense } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, Mic, Rss, Lock, Headphones, Radio } from 'lucide-react';
+import { ArrowLeft, Radio } from 'lucide-react';
 import { createSupabaseServerClient, getCurrentUser } from '../../../lib/supabase/server';
 import PodcastNetworkFeed, { type PodcastShowItem } from '../../../components/podcasts/podcast-network-feed';
 
@@ -27,42 +27,65 @@ export default async function PodcastShowPage({
       .maybeSingle();
 
     if (dbPod) {
+      const { count: epCount } = await supabase
+        .from('podcast_episodes')
+        .select('id', { count: 'exact', head: true })
+        .eq('podcast_id', dbPod.id);
+
       podcast = {
         id: dbPod.id,
         title: dbPod.title,
         slug: dbPod.slug,
         description: dbPod.description,
         is_paid: dbPod.is_paid,
-        follower_count: dbPod.follower_count,
+        follower_count: dbPod.follower_count ?? 0,
         language: dbPod.language,
         cover_path: dbPod.cover_path,
         creator_id: dbPod.creator_id,
         category: 'Culture & Talk',
-        episodesCount: 12,
+        episodesCount: epCount ?? 0,
         profiles: dbPod.profiles as any,
       };
     }
   }
 
-  // Fallback showcase if not in DB yet
   if (!podcast) {
-    podcast = {
-      id: `pod-${slug}`,
-      title: slug
-        .split('-')
-        .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-        .join(' '),
-      slug,
-      description: 'Exclusive episodes, stories, and interviews from across the Caribbean and Diaspora.',
-      is_paid: false,
-      follower_count: 8450,
-      language: 'English',
-      cover_path: null,
-      creator_id: 'creator-showcase',
-      category: 'Culture & Society',
-      episodesCount: 18,
-      profiles: { display_name: 'Caribbean Network Host', username: 'caribbeannetwork' },
-    };
+    return (
+      <div className="min-h-screen bg-[#090D16] text-brand-sandstone p-4 md:p-6 max-w-7xl mx-auto space-y-6">
+        <div className="flex items-center gap-3">
+          <Link
+            href="/podcasts"
+            className="p-2 rounded-xl bg-brand-dusk border border-slate-800 text-brand-sandstone/80 hover:text-white text-xs font-bold transition-colors flex items-center gap-1.5"
+          >
+            <ArrowLeft className="w-4 h-4" /> All Podcasts
+          </Link>
+        </div>
+
+        <div className="p-12 rounded-3xl bg-brand-dusk/60 border border-slate-800 text-center space-y-4 max-w-lg mx-auto my-12">
+          <div className="w-16 h-16 rounded-full bg-purple-500/10 border border-purple-500/30 flex items-center justify-center mx-auto text-purple-400">
+            <Radio className="w-8 h-8" />
+          </div>
+          <h2 className="text-xl font-black text-white">Podcast Show Not Found</h2>
+          <p className="text-xs text-brand-sandstone/70 leading-relaxed">
+            The requested Caribbean podcast series does not exist or has not been published yet. Creators can produce and broadcast new podcast series directly from Creator Studio.
+          </p>
+          <div className="pt-2 flex items-center justify-center gap-3">
+            <Link
+              href="/podcasts"
+              className="px-4 py-2 rounded-xl bg-slate-800 text-slate-300 hover:text-white text-xs font-bold transition-colors"
+            >
+              Browse Shows
+            </Link>
+            <Link
+              href="/creator-studio"
+              className="px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-black transition-colors shadow-md shadow-purple-600/20"
+            >
+              Creator Studio
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (

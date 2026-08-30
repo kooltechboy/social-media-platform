@@ -149,9 +149,12 @@ export default async function ModularPageView({ params }: { params: Promise<{ sl
             Overview &amp; Feed
           </button>
           {page.products.length > 0 && (
-            <button className="py-3 hover:text-brand-sandstone whitespace-nowrap flex items-center gap-1.5">
-              <ShoppingBag className="w-3.5 h-3.5" /> Storefront ({page.products.length})
-            </button>
+            <Link
+              href={`/store/${page.slug}`}
+              className="py-3 text-orange-400 hover:text-orange-300 whitespace-nowrap flex items-center gap-1.5 transition-colors"
+            >
+              <ShoppingBag className="w-3.5 h-3.5" /> Shop &amp; Storefront ({page.products.length})
+            </Link>
           )}
           <button className="py-3 hover:text-brand-sandstone whitespace-nowrap">
             Events &amp; Notices
@@ -173,7 +176,12 @@ export default async function ModularPageView({ params }: { params: Promise<{ sl
                 <h3 className="text-sm font-extrabold text-brand-sandstone flex items-center gap-2 uppercase tracking-wider">
                   <ShoppingBag className="w-4 h-4 text-brand-sunriseCoral" /> Verified Storefront
                 </h3>
-                <span className="text-xs text-brand-sandstone/40">Instant Escrow Protection</span>
+                <Link
+                  href={`/store/${page.slug}`}
+                  className="text-xs text-orange-400 hover:text-orange-300 font-bold flex items-center gap-1"
+                >
+                  Open Full Storefront →
+                </Link>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

@@ -11,7 +11,7 @@ import {
   DollarSign,
   Download,
 } from "lucide-react";
-import { Money, CREATOR_TIERS, sumLedgerMinorUnits } from "@caribbean/payments";
+import { Money, CREATOR_TIERS, sumLedgerMinorUnits, getCreatorLaunchMessaging } from "@caribbean/payments";
 
 export const dynamic = "force-dynamic";
 
@@ -64,6 +64,8 @@ export default async function CreatorFinancialPage() {
   const isEligibleForPayout =
     pendingMinor >= thresholdMinor && creatorAccount?.kyc_status === "verified";
 
+  const creatorLaunch = getCreatorLaunchMessaging();
+
   return (
     <div className="space-y-6 animate-fadeIn">
       <div>
@@ -74,6 +76,17 @@ export default async function CreatorFinancialPage() {
         <p className="text-xs text-slate-400">
           Monetization metrics, fan patronage revenue, and verified bank payout
           schedules.
+        </p>
+      </div>
+
+      {/* Phased Launch Promotional Banner (Directives 3, 4, 6, 7) */}
+      <div className="p-4 rounded-2xl bg-purple-950/40 border border-purple-500/30 text-purple-200 text-xs space-y-1.5">
+        <div className="flex items-center gap-2 font-bold text-purple-300">
+          <Sparkles className="w-4 h-4 text-purple-400" />
+          <span>{creatorLaunch.bannerTitle}</span>
+        </div>
+        <p className="text-[11px] text-brand-sandstone/70">
+          {creatorLaunch.bannerBody}
         </p>
       </div>
 
@@ -139,9 +152,17 @@ export default async function CreatorFinancialPage() {
 
           {/* Monetization Tier Structure */}
           <div className="p-5 rounded-2xl bg-slate-900/60 border border-slate-800 space-y-3">
-            <h3 className="text-sm font-bold text-white">
-              Creator Tier Monetization Rates
-            </h3>
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-bold text-white">
+                Creator Platform Plans &amp; Tiers
+              </h3>
+              <span className="text-[10px] font-black uppercase tracking-wider text-purple-300 bg-purple-950/60 border border-purple-800/40 px-2 py-0.5 rounded-full">
+                {creatorLaunch.badge}
+              </span>
+            </div>
+            <p className="text-xs text-slate-400">
+              All Creator Studio and Podcasting tools are completely free during our promotional launch period through October 31, 2026. Paid creator plans will begin November 1, 2026.
+            </p>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-1">
               {Object.values(CREATOR_TIERS).map((tier) => (
                 <div
@@ -159,14 +180,10 @@ export default async function CreatorFinancialPage() {
                     </span>
                   </div>
                   <div className="text-[11px] text-slate-300">
-                    Platform Fee: <strong>{tier.platformFeeBps / 100}%</strong>
+                    Status: <strong className="text-emerald-400">Free Access Active</strong>
                   </div>
                 </div>
               ))}
-            </div>
-            <div className="pt-2 border-t border-slate-800 text-[11px] text-slate-400 flex items-center justify-between">
-              <span>Example on $50 Fan Tip:</span>
-              <span>Creator Free: <strong>$45.00 net</strong> • Creator Plus: <strong>$47.50 net</strong> • Creator Pro: <strong>$50.00 net</strong></span>
             </div>
           </div>
 

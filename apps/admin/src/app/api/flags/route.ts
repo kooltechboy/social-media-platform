@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
 
   const { error } = await serviceClient
     .from('feature_flags')
-    .update({ enabled: body.enabled })
+    .update({ enabled: body.enabled, is_enabled: body.enabled })
     .eq('key', body.key);
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
