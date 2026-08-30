@@ -11,7 +11,7 @@
 
 A comprehensive, forensic engineering audit was conducted across all applications, packages, database migrations, security policies, financial ledgers, UX/UI implementations, and automated test suites of TUKUBI.
 
-The codebase represents a **substantially mature and thoughtfully architected modular monolith** featuring strict domain separation across 23 workspace packages, 16 comprehensive database migrations with full Row Level Security (RLS), and an immutable double-entry financial ledger engine (**SpotPay**).
+The codebase represents a **substantially mature and thoughtfully architected modular monolith** featuring strict domain separation across 23 workspace packages, 16 comprehensive database migrations with full Row Level Security (RLS), and an immutable double-entry financial ledger engine (**Payments**).
 
 With the completion of **GATE 0 (Discovery)** and **GATE 1 (Forensic Audit Baseline)**, the platform is positioned to execute **GATE 2 (Prioritization)** and **GATE 3 (Gated Refactoring)** to achieve complete zero-defect production readiness.
 
@@ -30,7 +30,7 @@ With the completion of **GATE 0 (Discovery)** and **GATE 1 (Forensic Audit Basel
 | **Security & OWASP Posture** | **85 / 100** | Excellent | Zero committed secrets, secure cookie auth, strict multi-tenant RLS. |
 | **Database & Schema Integrity** | **88 / 100** | Excellent | 16 versioned migrations, composite indexes, 48 tables, RLS test harness. |
 | **API Endpoints & Contracts** | **84 / 100** | Good | Health checks, grounded Ask AI endpoint, standards-compliant RSS 2.0. |
-| **SpotPay & Payments Ledger** | **84 / 100** | Good | Double-entry debit/credit ledger, integer math; PSP adapter wiring next. |
+| **Payments & Payments Ledger** | **84 / 100** | Good | Double-entry debit/credit ledger, integer math; PSP adapter wiring next. |
 | **Creator Economy Engine** | **84 / 100** | Good | Robust tier subscriptions (Basic/Plus/Pro/Custom) and KYC payout evaluation. |
 | **Media & Transcoding** | **76 / 100** | Good | Transcoding interfaces defined; needs external CDN edge ingestion. |
 | **Live Streaming System** | **76 / 100** | Good | State machine & gift catalog defined; live chat client functional. |
@@ -58,8 +58,8 @@ With the completion of **GATE 0 (Discovery)** and **GATE 1 (Forensic Audit Basel
    - Single-file monolithic structure in `apps/mobile/App.tsx` with mock data arrays.
 
 3. **What is incomplete?**
-   - SpotPay live payment processor SDKs (Stripe / PayPal / Apple IAP / Google Play) are currently stubbed in `@caribbean/spotpay`.
+   - Payments live payment processor SDKs (Stripe / PayPal / Apple IAP / Google Play) are currently stubbed in `@caribbean/Payments`.
    - External WebRTC/HLS CDN edge routing for ultra-high-volume livestreams.
 
 4. **What should leadership know?**
-   - The platform possesses a uniquely defensible cultural, economic, and technological value proposition. Its multi-sided business model (creator subscriptions, live gifting, marketplace commissions, event ticketing, SpotPay remittances) provides commercial viability far superior to generic advertising-only platforms.
+   - The platform possesses a uniquely defensible cultural, economic, and technological value proposition. Its multi-sided business model (creator subscriptions, live gifting, marketplace commissions, event ticketing, Payments remittances) provides commercial viability far superior to generic advertising-only platforms.

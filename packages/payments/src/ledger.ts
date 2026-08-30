@@ -98,4 +98,120 @@ export class LedgerOrchestrator {
       description: `Reversal of tx ${originalTransactionId}: ${reason}`,
     });
   }
+
+  /**
+   * Generates a multi-split balanced ledger set for commercial transactions:
+   * Buyer Debit (-Gross) + Seller Credit (+Net) + Platform Revenue Credit (+Commission + FixedFee)
+   * + Processing Clearing Credit (+ProcessingCost) + Tax Clearing Credit (+Tax) = 0
+   */
+  public createMultiSplitTransactionPayload(input: {
+    transactionId: string;
+    buyerAccountId: string;
+    sellerAccountId: string;
+    platformRevenueAccountId: string;
+    processingClearingAccountId: string;
+    taxClearingAccountId?: string;
+    grossMinor: number;
+    commissionMinor: number;
+    fixedFeeMinor: number;
+    processingFeeMinor: number;
+    taxMinor?: number;
+    sellerNetMinor: number;
+    currency: string;
+    idempotencyKey: string;
+    description: string;
+  }): {
+    entries: Array<{
+      transaction_id: string;
+      account_id: string;
+      amount: number;
+      entry_type: "DEBIT" | "CREDIT";
+      category: string;
+      idempotency_key: string;
+      description: string;
+    }>;
+    totalDebitMinor: number;
+    totalCreditMinor: number;
+    netZeroVerified: boolean;
+  } {
+    const taxMinor = input.taxMinor ?? 0;
+    const platformRevenueMinor = input.commissionMinor + input.fixedFeeMinor;
+
+    // Verify equation: grossMinor = sellerNetMinor + platformRevenueMinor + processingFeeMinor + taxMinor
+    const totalCredits = input.sellerNetMinor + platformRevenueMinor + input.processingFeeMinor + taxMinor;
+    if (totalCredits !== input.grossMinor) {
+      throw new Error(
+        `Ledger integrity violation: Total credits (${totalCredits}) must equal gross debit (${input.grossMinor})`
+      );
+    }
+
+    const entries = [
+      // 1. Buyer Debit
+      {
+        transaction_id: input.transactionId,
+        account_id: input.buyerAccountId,
+        amount: -input.grossMinor,
+        entry_type: "DEBIT" as const,
+        category: "GROSS_TRANSACTION",
+        idempotency_key: `${input.idempotencyKey}_buyer_debit`,
+        description: input.description,
+      },
+      // 2. Seller Credit
+      {
+        transaction_id: input.transactionId,
+        account_id: input.sellerAccountId,
+        amount: input.sellerNetMinor,
+        entry_type: "CREDIT" as const,
+        category: "SELLER_NET",
+        idempotency_key: `${input.idempotencyKey}_seller_net_credit`,
+        description: `Seller net proceeds for ${input.description}`,
+      },
+      // 3. Platform Revenue (Commission + Platform Fee)
+      {
+        transaction_id: input.transactionId,
+        account_id: input.platformRevenueAccountId,
+        amount: platformRevenueMinor,
+        entry_type: "CREDIT" as const,
+        category: "PLATFORM_REVENUE",
+        idempotency_key: `${input.idempotencyKey}_platform_rev_credit`,
+        description: `TUKUBI platform revenue for ${input.description}`,
+      },
+      // 4. Processing Cost Clearing
+      {
+        transaction_id: input.transactionId,
+        account_id: input.processingClearingAccountId,
+        amount: input.processingFeeMinor,
+        entry_type: "CREDIT" as const,
+        category: "PROCESSING_FEE",
+        idempotency_key: `${input.idempotencyKey}_proc_clearing_credit`,
+        description: `Provider payment processing clearing for ${input.description}`,
+      },
+    ];
+
+    // Optional 5. Tax Clearing
+    if (taxMinor > 0 && input.taxClearingAccountId) {
+      entries.push({
+        transaction_id: input.transactionId,
+        account_id: input.taxClearingAccountId,
+        amount: taxMinor,
+        entry_type: "CREDIT" as const,
+        category: "TAX",
+        idempotency_key: `${input.idempotencyKey}_tax_credit`,
+        description: `Jurisdictional tax clearing for ${input.description}`,
+      });
+    }
+
+    const sum = sumLedgerMinorUnits(entries);
+    if (sum !== 0) {
+      throw new Error(`Ledger entry sum mismatch: expected 0, got ${sum}`);
+    }
+
+    return {
+      entries,
+      totalDebitMinor: input.grossMinor,
+      totalCreditMinor: totalCredits,
+      netZeroVerified: true,
+    };
+  }
 }
+

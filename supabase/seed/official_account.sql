@@ -18,7 +18,7 @@ BEGIN
 
     INSERT INTO public.profiles (id, username, display_name, bio)
     VALUES (official_id, 'caribbean_one', 'TUKUBI',
-            'The digital home of the Caribbean and its global diaspora. Social, creators, businesses, events and SpotPay — one ecosystem.')
+            'The digital home of the Caribbean and its global diaspora. Social, creators, businesses, events and commerce — one ecosystem.')
     ON CONFLICT (id) DO NOTHING;
 
     -- Launch posts
@@ -31,7 +31,7 @@ BEGIN
              'From Kingston to Brooklyn, Santo Domingo to Toronto, Port of Spain to London: one graph connects our people, our culture, and our businesses. Tell us where your Caribbean story begins.',
              'public'),
             (official_id,
-             'Creators and businesses: SpotPay is coming. Tips, subscriptions, event tickets, and marketplace sales in one compliant payment layer. Build your audience here first.',
+             'Creators and businesses: Monetization is here. Tips, subscriptions, event tickets, and marketplace sales in one compliant payment layer. Build your audience here first.',
              'public');
     END IF;
 

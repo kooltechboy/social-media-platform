@@ -116,8 +116,8 @@ export function TukubiMasterGateway() {
           <Link href="/podcasts" className="hover:text-brand-caribbeanSea transition-colors">
             Podcasts
           </Link>
-          <Link href="/spotpay" className="hover:text-brand-caribbeanSea transition-colors">
-            SpotPay
+          <Link href="/financial-center" className="hover:text-brand-caribbeanSea transition-colors">
+            Financial Center
           </Link>
         </nav>
 

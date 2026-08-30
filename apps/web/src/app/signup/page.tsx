@@ -27,7 +27,7 @@ const INTENTS: IntentOption[] = [
   {
     id: 'creator',
     title: 'Creator / Artist',
-    desc: 'Publish music, video, art & monetize directly via SpotPay',
+    desc: 'Publish music, video, art & monetize directly with fans',
     icon: <Palette className="w-5 h-5 text-brand-sunriseCoral" />,
     badge: 'Monetize',
   },

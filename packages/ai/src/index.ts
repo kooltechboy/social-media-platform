@@ -203,7 +203,7 @@ export class BusinessAIAssistant {
     if (/\b(deliver|delivery|ship|shipping|dispatch|international)\b/i.test(normalized)) {
       const policy =
         context.deliveryPolicies ||
-        'We ship across the Caribbean, USA, Canada, and UK via SpotPay verified logistics with tracking.';
+        'We ship across the Caribbean, USA, Canada, and UK via verified logistics with tracking.';
       groundedFacts.push('Delivery policy verified');
       return {
         answer: `Delivery information for ${context.businessName}: ${policy}`,
@@ -225,7 +225,7 @@ export class BusinessAIAssistant {
 
         groundedFacts.push(`${list.length} products verified from store catalog`);
         return {
-          answer: `Here are available items from ${context.businessName}:\n\n${formattedList}\n\nYou can order instantly with SpotPay buyer protection!`,
+          answer: `Here are available items from ${context.businessName}:\n\n${formattedList}\n\nYou can order instantly with Tukubi buyer protection!`,
           confidence: 'high',
           groundedFacts,
         };
@@ -249,7 +249,7 @@ export class BusinessAIAssistant {
     // 5. Default Grounded Summary
     groundedFacts.push('General business overview');
     return {
-      answer: `Welcome to ${context.businessName} (${context.category}) in ${context.location}. Feel free to ask about our verified products, opening hours, delivery, or place an order via SpotPay!`,
+      answer: `Welcome to ${context.businessName} (${context.category}) in ${context.location}. Feel free to ask about our verified products, opening hours, delivery, or place an order via Tukubi Checkout!`,
       confidence: 'medium',
       groundedFacts,
     };
@@ -316,7 +316,7 @@ export function generateCreatorContentPlan(input: CreatorAssistInput): CreatorAs
     default:
       captions = [
         `Connecting the Caribbean and our global diaspora through ${topicCapitalized}. 🌴✨`,
-        `Fresh from the islands: ${topicCapitalized}. Available now with SpotPay instant protection! 🚀`,
+        `Fresh from the islands: ${topicCapitalized}. Available now with instant buyer protection! 🚀`,
       ];
       hookIdea = `The untold story behind ${topicCapitalized} you need to experience!`;
   }

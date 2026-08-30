@@ -24,4 +24,4 @@
 **Alert policies:** page on error-rate, ledger drift, payment webhook verification failure, queue depth > threshold; ticket on p99 regression, cache hit-rate decline.
 
 ## 3. Feature Flags
-Centralized flags (`feature_flags` table + cached server evaluation): `stories_enabled`, `reels_enabled`, `live_enabled`, `podcasts_enabled`, `spotpay_enabled`, `creator_subscriptions`, `marketplace_enabled`, `ai_search_enabled`, `new_feed_algorithm`. Support gradual rollout %, kill switches, and per-cohort targeting. Flags gate code paths server-side; dead code paths are removed when flags retire.
+Centralized flags (`feature_flags` table + cached server evaluation): `stories_enabled`, `reels_enabled`, `live_enabled`, `podcasts_enabled`, `payments_enabled`, `creator_subscriptions`, `marketplace_enabled`, `ai_search_enabled`, `new_feed_algorithm`. Support gradual rollout %, kill switches, and per-cohort targeting. Flags gate code paths server-side; dead code paths are removed when flags retire.

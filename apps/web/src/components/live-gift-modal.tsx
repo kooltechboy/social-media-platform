@@ -72,7 +72,7 @@ export function LiveGiftModal({ livestreamId, isAuthenticated }: LiveGiftModalPr
             </div>
 
             <p className="text-xs text-brand-sandstone/60">
-              Support the creator live. Funded instantly via your SpotPay wallet.
+              Support the creator live. Funded instantly via your digital wallet.
             </p>
 
             <form onSubmit={handleSend} className="space-y-4">
@@ -127,7 +127,7 @@ export function LiveGiftModal({ livestreamId, isAuthenticated }: LiveGiftModalPr
                     <Loader2 className="w-4 h-4 animate-spin" /> Sending Gift…
                   </>
                 ) : (
-                  'Send via SpotPay Wallet'
+                  'Send Live Gift'
                 )}
               </button>
             </form>

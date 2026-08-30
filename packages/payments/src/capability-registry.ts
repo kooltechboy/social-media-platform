@@ -142,17 +142,6 @@ export const REGISTERED_PROVIDERS: Record<string, ProviderDefinition> = {
     isThirdPartyPSP: true,
     notes: 'Open banking and authorized direct settlement rails.',
   },
-  spotpay: {
-    id: 'spotpay',
-    name: 'SpotPay (Future / Conditional)',
-    capabilities: [],
-    supportedCountries: [],
-    supportedCurrencies: [],
-    status: 'disabled',
-    environment: 'test',
-    isThirdPartyPSP: true,
-    notes: 'Future conditional integration pending official developer API, OAuth and partner agreement.',
-  },
 };
 
 export const DEFAULT_CAPABILITY_RULES: CapabilityRule[] = [

@@ -11,8 +11,8 @@ Supabase PostgreSQL (ADR-002). RLS is the security boundary (ADR-013 companion: 
 | `profiles` | identity | owner-write, visibility-scoped read |
 | `follows`, `blocks` | social graph | owner-scoped |
 | `posts`, `comments`, `post_reactions` | content | ownership + visibility-scoped |
-| `ledger_accounts`, `ledger_entries` | SpotPay | service-role only; never client-writable |
-| `psp_capabilities` | SpotPay | read-only via API |
+| `ledger_accounts`, `ledger_entries` | payments | service-role only; never client-writable |
+| `psp_capabilities` | payments | read-only via API |
 
 ## 3. Planned Schema Evolution
 
@@ -21,7 +21,7 @@ Supabase PostgreSQL (ADR-002). RLS is the security boundary (ADR-013 companion: 
 **Phase 3 (messaging):** `conversations`, `conversation_members`, `messages`, `message_attachments`, `message_receipts`.
 **Phase 4 (creator):** `stories`, `story_views`, `videos`, `video_views`, `creator_accounts`, `subscriptions`.
 **Phase 5 (live/podcast):** `livestreams`, `live_messages`, `live_gifts`, `podcasts`, `podcast_episodes`.
-**Phase 6 (SpotPay):** `payment_intents`, `payment_methods`, `payment_attempts`, `idempotency_keys`, `refunds`, `disputes`, `chargebacks`, `payouts`, `commissions`, `fees`, `taxes`.
+**Phase 6 (payments):** `payment_intents`, `payment_methods`, `payment_attempts`, `idempotency_keys`, `refunds`, `disputes`, `chargebacks`, `payouts`, `commissions`, `fees`, `taxes`.
 **Phase 7 (business):** `businesses`, `business_locations`, `business_reviews`, `products`, `orders`, `events`, `event_attendees`, `tickets`.
 **Phase 8 (ads):** `advertisers`, `campaigns`, `ad_sets`, `ads`, `ad_impressions`, `ad_clicks`.
 

@@ -5,12 +5,12 @@ import { test, expect } from '@playwright/test';
  *
  * Tests all interactive elements within the FeedStream component:
  * - Feed filter tabs (Caribbean Now, For You, Diaspora Hubs, Creators & Music)
- * - Post interaction bar (Like, Comment, Share, Tip SpotPay)
+ * - Post interaction bar (Like, Comment, Share, Tip Creator)
  * - Post options menu (Copy Link, Save Post, Report Content, Delete Post)
  * - Comment system (inline comments, threaded replies, comment submission)
  * - Share modal (Copy Link, WhatsApp, X/Twitter, Facebook, Internal Repost)
  * - Report modal (4 reason radio buttons, submit)
- * - SpotPay Tip modal trigger
+ * - Creator Tip modal trigger
  * - Empty feed state
  * - Toast notifications
  */
@@ -118,8 +118,8 @@ test.describe('Feed Stream — Post Cards (Unauthenticated)', () => {
       // Share button
       await expect(firstArticle.getByLabel('Share post')).toBeVisible();
 
-      // Tip SpotPay button
-      await expect(firstArticle.getByLabel(/Send SpotPay Tip/)).toBeVisible();
+      // Tip Creator button
+      await expect(firstArticle.getByLabel(/Send Tip/)).toBeVisible();
     }
   });
 
@@ -408,24 +408,24 @@ test.describe('Feed Stream — Report Modal', () => {
   });
 });
 
-test.describe('Feed Stream — SpotPay Tip', () => {
-  test('clicking Tip SpotPay button opens tip modal', async ({ page }) => {
+test.describe('Feed Stream — Creator Tip', () => {
+  test('clicking Tip Creator button opens tip modal', async ({ page }) => {
     await page.goto('/');
     await page.waitForLoadState('networkidle');
 
     const articles = page.locator('article');
     if ((await articles.count()) > 0) {
-      const tipBtn = articles.first().getByLabel(/Send SpotPay Tip/);
+      const tipBtn = articles.first().getByLabel(/Send Tip/);
       await tipBtn.click();
       await page.waitForTimeout(300);
 
-      // SpotPay tip modal should open with preset amounts
-      // The SpotPayTipModal component renders preset amount pills ($2, $5, $10, $25, $50)
+      // Creator tip modal should open with preset amounts
+      // The CreatorTipModal component renders preset amount pills ($2, $5, $10, $25, $50)
       const tipModal = page.locator('.fixed.inset-0');
       if (await tipModal.isVisible()) {
         // Verify some tip-related content appears
         const hasPresets = await page.getByText('$5').isVisible().catch(() => false);
-        const hasTipText = await page.getByText(/tip|SpotPay/i).first().isVisible().catch(() => false);
+        const hasTipText = await page.getByText(/tip|creator/i).first().isVisible().catch(() => false);
         expect(hasPresets || hasTipText).toBeTruthy();
       }
     }
@@ -527,12 +527,12 @@ test.describe('Feed Stream — Unauthenticated Access Banner', () => {
     await expect(signInLink).toHaveAttribute('href', '/login');
   });
 
-  test('community access banner mentions SpotPay wallet and messaging', async ({ page }) => {
+  test('community access banner mentions digital wallet and messaging', async ({ page }) => {
     await page.goto('/');
     await page.waitForLoadState('networkidle');
 
     await expect(
-      page.getByText(/SpotPay wallet, direct messaging, and verified business pages/)
+      page.getByText(/wallet, direct messaging, and verified business pages/)
     ).toBeVisible();
   });
 });

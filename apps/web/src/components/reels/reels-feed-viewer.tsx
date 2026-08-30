@@ -491,7 +491,7 @@ export default function ReelsFeedViewer({ initialReels, user }: ReelsFeedViewerP
                 <span className="text-[11px] font-bold text-slate-200">Share</span>
               </button>
 
-              {/* SpotPay Tip Button */}
+              {/* Creator Tip Button */}
               <button
                 onClick={() => setIsTipModalOpen(true)}
                 className="flex flex-col items-center gap-1 text-brand-goldenHour hover:text-brand-goldenHour transition-colors group"
@@ -742,7 +742,7 @@ export default function ReelsFeedViewer({ initialReels, user }: ReelsFeedViewerP
         </div>
       )}
 
-      {/* SpotPay Tip Modal */}
+      {/* Creator Tip Modal */}
       {isTipModalOpen && (
         <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-[#0D1322] border border-slate-800 rounded-3xl p-6 max-w-sm w-full space-y-4 shadow-2xl">
@@ -762,7 +762,7 @@ export default function ReelsFeedViewer({ initialReels, user }: ReelsFeedViewerP
               <div className="p-4 bg-emerald-500/10 border border-emerald-500/30 rounded-2xl text-center space-y-2">
                 <p className="text-sm font-bold text-emerald-400">🎉 Tip Sent Successfully!</p>
                 <p className="text-xs text-brand-sandstone/60">
-                  ${tipAmount} USD transferred to @{activeReel.handle} via SpotPay Ledger.
+                  ${tipAmount} USD transferred to @{activeReel.handle} via TUKUBI Ledger.
                 </p>
               </div>
             ) : (

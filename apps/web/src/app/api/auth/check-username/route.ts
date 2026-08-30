@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
   }
 
   const reserved = [
-    'admin', 'root', 'support', 'tukubi', 'tukubi', 'spotpay', 'official', 'help', 'api',
+    'admin', 'root', 'support', 'tukubi', 'official', 'help', 'api',
     'auth', 'explore', 'login', 'signup', 'settings', 'moderation', 'security'
   ];
 

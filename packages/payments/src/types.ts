@@ -33,8 +33,7 @@ export type ProviderId =
   | 'cashapp'
   | 'apple_pay'
   | 'google_pay'
-  | 'bank_transfer'
-  | 'spotpay'; // Future / Conditional
+  | 'bank_transfer';
 
 export type IntentStatus =
   | 'requires_payment'
@@ -173,3 +172,93 @@ export interface RefundBreakdown {
   refundedMinor: number;
   remainingMinor: number;
 }
+
+export type AccountCategory = 'user' | 'creator' | 'merchant' | 'business';
+
+export interface CommissionRule {
+  id: string;
+  version: number;
+  ruleName: string;
+  accountCategory: AccountCategory | '*';
+  tierCode: string; // 'free' | 'plus' | 'pro' | '*'
+  productType: string; // 'physical' | 'digital' | 'service' | 'event_ticket' | 'creator_tip' | 'live_gift' | '*'
+  countryIso?: string;
+  currency?: string;
+  percentageBps: number;
+  fixedFeeMinor: number;
+  minCommissionMinor?: number;
+  maxCommissionMinor?: number;
+  promotionalRateBps?: number;
+  promotionalFixedMinor?: number;
+  promoStartsAt?: string;
+  promoEndsAt?: string;
+  isExempt?: boolean;
+  effectiveFrom: string;
+  effectiveTo?: string;
+}
+
+export interface CommissionSnapshot {
+  id: string;
+  transactionId: string;
+  orderId?: string;
+  paymentIntentId?: string;
+  payerId: string;
+  sellerId: string;
+  accountCategory: AccountCategory;
+  sellerTier: string;
+  productType: string;
+  grossAmountMinor: number;
+  currency: string;
+  commissionRuleId?: string;
+  commissionRuleVersion: number;
+  commissionRateBps: number;
+  commissionAmountMinor: number;
+  fixedPlatformFeeMinor: number;
+  paymentProcessingFeeMinor: number;
+  taxAmountMinor: number;
+  sellerNetMinor: number;
+  tukubiRevenueMinor: number;
+  refundedAmountMinor: number;
+  commissionRefundedMinor: number;
+  isSettled: boolean;
+  metadata?: Record<string, unknown>;
+  createdAt: string;
+}
+
+export interface CommercialSubscription {
+  id: string;
+  subscriberId: string;
+  targetType: AccountCategory;
+  targetId: string;
+  tierId: string;
+  billingInterval: 'monthly' | 'annual';
+  priceMinor: number;
+  currency: string;
+  status: 'active' | 'past_due' | 'canceled' | 'trialing' | 'grace_period' | 'expired';
+  currentPeriodStart: string;
+  currentPeriodEnd: string;
+  cancelAtPeriodEnd: boolean;
+  paymentProvider: ProviderId;
+  providerSubscriptionId?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface FinancialDispute {
+  id: string;
+  orderId?: string;
+  paymentIntentId?: string;
+  buyerId: string;
+  sellerId: string;
+  providerId: ProviderId;
+  providerDisputeId: string;
+  originalAmountMinor: number;
+  disputedAmountMinor: number;
+  currency: string;
+  status: 'opened' | 'under_review' | 'resolved_won' | 'resolved_lost' | 'closed';
+  reason?: string;
+  evidence?: Record<string, unknown>;
+  createdAt: string;
+  updatedAt: string;
+}
+

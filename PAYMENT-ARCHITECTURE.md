@@ -49,7 +49,6 @@ Each payment processor declares verified capabilities in the `payment_providers`
 | **CX Pay** | `payment`, `checkout`, `tokenization`, `refund`, `3ds` | USD, DOP, JMD, TTD, BBD, BSD, ANG, AWG, XCD | Caribbean Gateway Candidate |
 | **WiPay** | `payment`, `checkout`, `refund`, `withdrawal`, `bank_settlement` | USD, TTD, JMD, BBD, GYD | Caribbean Processor Candidate |
 | **Apple Pay / Google Pay** | `payment`, `checkout`, `tokenization` | Multi-currency (via underlying PSP) | Active |
-| **SpotPay** | Conditional Future Integration | N/A | Disabled (Pending Official API) |
 
 ---
 
@@ -57,9 +56,9 @@ Each payment processor declares verified capabilities in the `payment_providers`
 
 The database schema is partitioned across versioned migrations in `supabase/migrations/`:
 
-- `00004_spotpay_ledger.sql`: Base ledger accounts, entries, and zero-sum balance triggers.
-- `00011_spotpay_payments.sql`: Payment methods, payment intents, refunds, disputes, payouts.
-- `00012_spotpay_commerce.sql`: Orders, products, event tickets, escrow helpers.
+- `00004_ledger_accounts.sql`: Base ledger accounts, entries, and zero-sum balance triggers.
+- `00011_payments_engine.sql`: Payment methods, payment intents, refunds, disputes, payouts.
+- `00012_commerce_orders.sql`: Orders, products, event tickets, escrow helpers.
 - `00028_monetization_engine.sql`: Seller plans, business subscriptions, monetization rules.
 - `00031_financial_center_schema.sql`: Provider registry, user connected accounts state machine, webhook audit trail, immutable payment audit logs, transfer records.
 

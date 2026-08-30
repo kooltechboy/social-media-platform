@@ -182,7 +182,7 @@ export function HomeScreen() {
                 </TouchableOpacity>
                 
                 <TouchableOpacity style={styles.tipBtn}>
-                  <Text style={styles.tipText}>⚡ Tip SpotPay</Text>
+                  <Text style={styles.tipText}>⚡ Tip Creator</Text>
                 </TouchableOpacity>
               </View>
             </View>

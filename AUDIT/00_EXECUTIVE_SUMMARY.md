@@ -10,7 +10,7 @@
 
 ## 1. Executive Summary
 
-TUKUBI is an ambitious, unified digital ecosystem bridging social networking, creator monetization, live media streaming, podcast distribution, community coordination, commerce marketplace, regional business directories, AI-driven discovery, and financial transaction orchestration via **SpotPay**.
+TUKUBI is an ambitious, unified digital ecosystem bridging social networking, creator monetization, live media streaming, podcast distribution, community coordination, commerce marketplace, regional business directories, AI-driven discovery, and financial transaction orchestration via **Payments**.
 
 This forensic audit evaluated the entire codebase against world-class enterprise criteria:
 1. **Financial Ledger Safety & Idempotency**
@@ -29,7 +29,7 @@ The architectural foundation and domain decomposition (`@caribbean/*` modular pa
 | Category | Score (0–100) | Status | Key Highlights & Blockers |
 | :--- | :---: | :---: | :--- |
 | **Architecture & Monorepo** | **86 / 100** | Good | Clean Turborepo modular architecture; excellent package separation. |
-| **Financial Ledger & SpotPay** | **84 / 100** | Good | Double-entry debit/credit ledger, money integer math; PSP adapters currently stubs. |
+| **Financial Ledger & Payments** | **84 / 100** | Good | Double-entry debit/credit ledger, money integer math; PSP adapters currently stubs. |
 | **Database & Schema Integrity** | **88 / 100** | Excellent | 16 robust migrations, RLS test harness, immutable audit logs, strict foreign keys. |
 | **Authentication & Security** | **85 / 100** | Good | Supabase SSR auth, private Caribbean identity by default, no committed secrets. |
 | **Frontend Web (`apps/web`)** | **74 / 100** | Needs Imp. | Modern Next.js 15 App Router UI; broken imports and type errors in actions/pages. |
@@ -47,7 +47,7 @@ The architectural foundation and domain decomposition (`@caribbean/*` modular pa
 ## 3. Top Gaps & Immediate Critical Path
 
 1. **P0 / Compile & Type Safety:** Fix Next.js 15 cache import errors (`revalidatePath` from `'next/cache'`), PostgREST query chain typings, and parameter signature mismatches in `creator-studio`, `messages`, `communities`, `events`, and `marketplace`.
-2. **P1 / SpotPay PSP Integration:** Implement live PSP adapter SDKs (Stripe / PayPal / Apple IAP / Google Play) behind `@caribbean/spotpay` interfaces to replace stub errors in production checkout flows.
+2. **P1 / Payments PSP Integration:** Implement live PSP adapter SDKs (Stripe / PayPal / Apple IAP / Google Play) behind `@caribbean/Payments` interfaces to replace stub errors in production checkout flows.
 3. **P1 / Mobile Modularization:** Refactor `apps/mobile/App.tsx` into a modular React Navigation / Expo Router architecture connected to live Supabase client sessions.
 4. **P2 / Live Streaming Scalability:** Decouple live stream ingestion from application server and connect Cloudflare Stream / AWS IVS WebRTC endpoints.
 5. **P2 / Design System Harmonization:** Unify Tailwind CSS v4 variables with `@caribbean/design-system` and `@caribbean/ui` tokens across web, admin, and moderation apps.

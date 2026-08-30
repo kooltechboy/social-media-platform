@@ -12,7 +12,7 @@ Mobile is a **first-class product**, not a responsive website. The Caribbean aud
 Primary: **Home, Explore, Create (+), Communities, Messages.** Secondary surfaces discoverable without crowding the bar. Dark/light themes, dynamic type, reduced motion, offline/poor-connectivity as designed states (cache + retry + optimistic UI).
 
 ## 4. Native Capabilities (permissioned, least-privilege)
-Camera & microphone (capture, live), media library (upload w/ background upload), biometric auth (secure storage for session material), push notifications, Apple Pay / Google Pay (capability-detected at runtime via SpotPay matrix — never assumed available).
+Camera & microphone (capture, live), media library (upload w/ background upload), biometric auth (secure storage for session material), push notifications, Apple Pay / Google Pay (capability-detected at runtime via payments capability matrix — never assumed available).
 
 ## 5. Performance Rules
 - Virtualized lists only (FlatList/FlashList); never render unbounded feeds.
@@ -24,4 +24,4 @@ Camera & microphone (capture, live), media library (upload w/ background upload)
 Digital goods/subscriptions on iOS → Apple IAP; on Android → Google Play Billing. Physical goods, services, event tickets → web-checkout routes per the Payment Policy Engine (`PAYMENT-ARCHITECTURE.md`). Route decisions are server-driven — the app never hard-codes checkout behavior.
 
 ## 7. Monorepo Integration
-`apps/mobile` consumes `@caribbean/ui` (RN-compatible subset), `@caribbean/design-system`, `@caribbean/auth`, `@caribbean/api`, `@caribbean/spotpay` (client-safe types only — ledger logic never ships to clients).
+`apps/mobile` consumes `@caribbean/ui` (RN-compatible subset), `@caribbean/design-system`, `@caribbean/auth`, `@caribbean/api`, `@caribbean/payments` (client-safe types only — ledger logic never ships to clients).

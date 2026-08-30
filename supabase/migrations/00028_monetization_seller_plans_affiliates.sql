@@ -23,7 +23,7 @@ CREATE TABLE IF NOT EXISTS public.seller_plans (
 INSERT INTO public.seller_plans (id, name, description, price_minor, currency, listing_limit, commission_rate_bps, ai_tools_enabled, crm_enabled, staff_limit, priority_support)
 VALUES
     ('business_free', 'Business Free', 'Basic profile, community discovery, messaging, and up to 5 listings.', 0, 'USD', 5, 0, false, false, 1, false),
-    ('seller_pro', 'Seller Pro', 'Full digital storefront, unlimited listings, SpotPay checkout, orders, analytics, and AI business tools.', 1499, 'USD', NULL, 0, true, false, 2, false),
+    ('seller_pro', 'Seller Pro', 'Full digital storefront, unlimited listings, unified checkout, orders, analytics, and AI business tools.', 1499, 'USD', NULL, 0, true, false, 2, false),
     ('business_plus', 'Business+', 'Advanced analytics, CRM, AI sales assistant, multi-staff access, priority search placement.', 3999, 'USD', NULL, 0, true, true, 5, true),
     ('enterprise', 'Enterprise', 'Custom multi-location, dedicated API, custom integrations, enterprise advertising, and 24/7 dedicated support.', 0, 'USD', NULL, 0, true, true, 50, true)
 ON CONFLICT (id) DO UPDATE SET

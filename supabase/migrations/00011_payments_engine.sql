@@ -1,4 +1,4 @@
--- Migration 00011: SpotPay Payment Production Layer
+-- Migration 00011: Payments Payment Production Layer
 -- Description: payment intents, tokenized methods, attempts, idempotency keys, refunds, disputes, payouts, commissions
 -- All money values are INTEGER MINOR UNITS + ISO 4217 currency. No mutable balance columns anywhere.
 

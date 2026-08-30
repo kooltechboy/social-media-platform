@@ -19,7 +19,7 @@
   - `advertising.test.ts` (7 tests)
   - `localization.test.ts` (4 tests)
   - `intelligence.test.ts` (10 tests)
-  - `spotpay.test.ts` (11 tests)
+  - `Payments.test.ts` (11 tests)
   - `live-podcasts.test.ts` (10 tests)
   - `social.test.ts` (11 tests)
   - `creator-media.test.ts` (12 tests)

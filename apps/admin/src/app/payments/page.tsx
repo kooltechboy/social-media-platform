@@ -68,11 +68,16 @@ export default async function AdminPaymentsPage({
 
       {/* Revenue summary */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-gradient-to-br from-slate-900 to-emerald-950/30 border border-brand-sunriseCoral/30 rounded-2xl p-5">
-          <p className="text-xs font-bold text-brand-sunriseCoral uppercase tracking-wider">Total Succeeded Revenue</p>
+        <div className="bg-gradient-to-br from-slate-900 to-sky-950/30 border border-sky-500/30 rounded-2xl p-5">
+          <p className="text-xs font-bold text-sky-400 uppercase tracking-wider">Gross Transaction Volume (GMV)</p>
           <p className="text-3xl font-black text-brand-sandstone mt-2">{formatMinor(totalRevenue, 'USD')}</p>
-          <p className="text-[11px] text-brand-sandstone/60 mt-1 flex items-center gap-1">
-            <ShieldCheck className="w-3 h-3 text-brand-sunriseCoral" /> All-time platform payments
+          <p className="text-[11px] text-brand-sandstone/60 mt-1 flex items-center justify-between">
+            <span className="flex items-center gap-1">
+              <ShieldCheck className="w-3 h-3 text-sky-400" /> Succeeded payment intents
+            </span>
+            <Link href="/revenue" className="text-brand-sunriseCoral hover:underline font-bold">
+              View Revenue Center →
+            </Link>
           </p>
         </div>
         <div className="bg-brand-dusk/70 border border-slate-800 rounded-2xl p-5">

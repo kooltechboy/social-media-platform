@@ -4,7 +4,7 @@
 
 **Creator profiles** upgrade from `profiles` with `creator_accounts` (verification, categories, payout linkage in Phase 6). Creator Studio (`apps/creator-studio`, Phase 4): Dashboard, Content, Videos, Shorts, Stories, Live, Podcasts, Subscribers, Analytics, Revenue, Payouts, Settings.
 
-**Monetization surfaces** (all ledger-settled via SpotPay): tips, live gifts, subscriptions ($2.99/$4.99/$9.99 tiers), paid communities, paid podcasts/episodes, paid events, advertising revenue share, marketplace sales. Revenue dashboard reports Gross → Fees → Taxes/Withholding → Net → Available/Pending/Paid Out.
+**Monetization surfaces** (all ledger-settled via payments engine): tips, live gifts, subscriptions ($2.99/$4.99/$9.99 tiers), paid communities, paid podcasts/episodes, paid events, advertising revenue share, marketplace sales. Revenue dashboard reports Gross → Fees → Taxes/Withholding → Net → Available/Pending/Paid Out.
 
 ## 2. Short-Form Video (Reels) & Long-Form Video
 
@@ -22,7 +22,7 @@ Long-form: channels, episodes/playlists, chapters, captions/transcripts (CaribAI
 ```
 Creator (mobile camera / desktop / RTMPS ingest)
   → Live Ingestion → Transcoding → CDN → Viewers
-  (chat via Realtime; gifts via SpotPay ledger; moderation via trust-safety pipeline)
+  (chat via Realtime; gifts via financial ledger; moderation via trust-safety pipeline)
 ```
 
 - **Never stream through the application server.** Ingestion goes to Cloudflare Stream (or equivalent) with the app server only issuing signed capabilities and managing state.

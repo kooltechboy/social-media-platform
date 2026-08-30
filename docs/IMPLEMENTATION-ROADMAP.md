@@ -44,9 +44,9 @@ Repository assessment, gap analysis, PRD, competitive analysis, architecture set
 - `packages/podcasts`: episode/chapter validation, RSS builder, slugify.
 - **Remaining for production:** Cloudflare Stream ingestion wiring, RSS endpoint exposure.
 
-## Phase 6 — SpotPay Production ✅ (delivered 2026-08-20)
+## Phase 6 — Payments & Financial Center Production ✅ (delivered 2026-08-20)
 - Migration `00011`: idempotency_keys, payment_methods (tokenized), payment_intents, payment_attempts, refunds, disputes, chargebacks, payouts, commissions + ledger sum-zero trigger.
-- `packages/spotpay` expanded: `Money` (minor units, Intl), capability-matrix `PaymentPolicyEngine` (store-compliant routing), intent lifecycle with idempotency, provider registry, signature-verified webhook processor, refund accounting.
+- `packages/payments` expanded: `Money` (minor units, Intl), capability-matrix `PaymentPolicyEngine` (store-compliant routing), intent lifecycle with idempotency, provider registry, signature-verified webhook processor, refund accounting.
 - **Remaining for production:** real Stripe/PayPal adapters (interface ready), Apple/Google IAP server verification, reconciliation jobs, sandbox test matrix execution.
 
 ## Phase 7 — Business + Events + Marketplace ✅ (delivered 2026-08-20)

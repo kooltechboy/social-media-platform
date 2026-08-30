@@ -24,7 +24,7 @@ export default function SignupCompletePage() {
   const [setupTasks, setSetupTasks] = useState<TaskStatus[]>([
     { label: 'Minting cryptographic Tukubi Cultural Passport', status: 'in-progress' },
     { label: 'Connecting origin roots to global Caribbean diaspora graph', status: 'pending' },
-    { label: 'Initializing SpotPay multi-currency ledger & zero-fee corridors', status: 'pending' },
+    { label: 'Initializing multi-currency ledger & zero-fee corridors', status: 'pending' },
     { label: 'Calibrating cultural Home Feed & CaribAI recommendation matrix', status: 'pending' },
   ]);
 
@@ -196,7 +196,7 @@ export default function SignupCompletePage() {
                     Personalizing your Tukubi…
                   </h2>
                   <p className="text-xs text-brand-sandstone/70 max-w-sm mx-auto">
-                    Establishing your cultural graph, SpotPay wallet, and curated recommendations.
+                    Establishing your cultural graph, financial center, and curated recommendations.
                   </p>
                 </div>
 

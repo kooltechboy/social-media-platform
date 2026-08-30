@@ -11,7 +11,7 @@ Architectural Decision Records. Format: Status / Context / Decision / Consequenc
 | [ADR-005](ADR-005-media-storage.md) | Cloudflare R2/Stream object storage + CDN for media | Accepted |
 | [ADR-006](ADR-006-live-streaming.md) | Managed live ingestion (never through app server) | Accepted |
 | [ADR-007](ADR-007-podcast-architecture.md) | Podcast hosting with RSS distribution | Accepted |
-| [ADR-008](ADR-008-spotpay.md) | SpotPay unified payment orchestration layer | Accepted |
+| [ADR-008](ADR-008-payment-orchestration.md) | Unified payment orchestration layer | Superseded |
 | [ADR-009](ADR-009-financial-ledger.md) | Immutable double-entry ledger for all money movement | Accepted |
 | [ADR-010](ADR-010-search.md) | Search behind a port; Postgres FTS now, dedicated engine later | Accepted |
 | [ADR-011](ADR-011-ai-architecture.md) | Provider-agnostic AI via OpenRouter (CaribAI) | Accepted |

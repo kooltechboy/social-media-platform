@@ -386,12 +386,12 @@ export default function CreatePodcastModal({
               />
             </div>
 
-            {/* SpotPay Gating Toggle */}
+            {/* Subscriber Gating Toggle */}
             <div className="flex items-center justify-between p-3.5 rounded-2xl bg-brand-twilight border border-slate-800">
               <div className="flex items-center gap-2.5">
                 <Lock className="w-4 h-4 text-brand-goldenHour" />
                 <div>
-                  <span className="text-xs font-bold text-brand-sandstone">SpotPay Member-Exclusive</span>
+                  <span className="text-xs font-bold text-brand-sandstone">Subscriber-Exclusive</span>
                   <p className="text-[11px] text-brand-sandstone/60">Gate this episode to paid monthly subscribers</p>
                 </div>
               </div>

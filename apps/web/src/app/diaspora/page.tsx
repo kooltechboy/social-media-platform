@@ -232,7 +232,7 @@ export default async function DiasporaPortalPage({
                     href="/events"
                     className="block w-full text-center bg-yellow-500 hover:bg-yellow-400 text-slate-950 font-black py-2 rounded-2xl text-xs transition-all shadow-md shadow-yellow-500/20"
                   >
-                    RSVP / Get SpotPay Ticket →
+                    RSVP / Get Event Ticket →
                   </Link>
                 </div>
               </div>

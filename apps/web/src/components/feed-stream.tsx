@@ -34,7 +34,7 @@ import {
   reportPostAction,
 } from '../lib/social/actions';
 import { createSupabaseBrowserClient } from '../lib/supabase/browser';
-import SpotPayTipModal from './spotpay-tip-modal';
+import CreatorTipModal from './creator-tip-modal';
 import ShoppablePostWidget, { type TaggedProduct } from './shoppable-post-widget';
 import UserAvatar from './user-avatar';
 
@@ -79,7 +79,7 @@ export default function FeedStream({ initialPosts, currentUserId }: FeedStreamPr
   const [savedPostIds, setSavedPostIds] = useState<Set<string>>(new Set());
   const [confirmDeletePostId, setConfirmDeletePostId] = useState<string | null>(null);
 
-  // SpotPay Tip state
+  // Creator Tip state
   const [tipTarget, setTipTarget] = useState<{ name: string; handle: string } | null>(null);
 
   // 1. Listen for immediate post-creation events from UniversalComposer
@@ -665,15 +665,15 @@ export default function FeedStream({ initialPosts, currentUserId }: FeedStreamPr
                   <span>{post.reposts > 0 ? post.reposts : 'Share'}</span>
                 </button>
 
-                {/* SpotPay Tip Trigger */}
+                {/* Creator Tip Trigger */}
                 <button
                   type="button"
-                  aria-label={`Send SpotPay Tip to ${post.author}`}
+                  aria-label={`Send Tip to ${post.author}`}
                   onClick={() => setTipTarget({ name: post.author, handle: post.handle })}
                   className="flex items-center gap-1.5 text-brand-sunriseCoral font-extrabold hover:text-emerald-300 transition-all bg-brand-sunriseCoral/10 hover:bg-brand-sunriseCoral/20 px-3 py-1 rounded-full border border-brand-sunriseCoral/20 shadow-sm"
                 >
                   <Wallet className="w-3.5 h-3.5" />
-                  <span>Tip SpotPay</span>
+                  <span>Tip Creator</span>
                 </button>
               </div>
 
@@ -838,9 +838,9 @@ export default function FeedStream({ initialPosts, currentUserId }: FeedStreamPr
         )}
       </div>
 
-      {/* SpotPay Tip Modal */}
+      {/* Creator Tip Modal */}
       {tipTarget && (
-        <SpotPayTipModal
+        <CreatorTipModal
           isOpen={!!tipTarget}
           onClose={() => setTipTarget(null)}
           creatorName={tipTarget.name}

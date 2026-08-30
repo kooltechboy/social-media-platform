@@ -21,7 +21,7 @@ _Stride-based model. Maintained by the AppSec & Compliance Agent; reviewed per r
 | **Denial of service** | Feed fan-out, chat floods, Live concurrent viewers, PSP outage | Cloudflare WAF/DDoS/bot rules; rate limiting (Redis); queue-backed fan-out; provider circuit breakers; graceful degradation modes. |
 | **Elevation of privilege** | Forged JWT claims; community moderator → platform admin; SQL function `SECURITY DEFINER` abuse | Claims validated server-side; role hierarchy enforced in RLS + policies; every `SECURITY DEFINER` function reviewed and hardened; `search_path` pinned. |
 
-## 3. Financial Threats (SpotPay)
+## 3. Financial Threats (Payments & Ledger)
 
 | Threat | Control |
 | :--- | :--- |
@@ -48,5 +48,5 @@ Spam, bots, scams/phishing (prevalent in Caribbean diaspora communities), harass
 
 1. Missing RLS test harness (Database Agent — Phase 1 blocker).
 2. No CI security scanning (DevOps Agent — Phase 1).
-3. Webhook endpoints not yet implemented → design signature verification before first PSP integration (SpotPay Agent).
+3. Webhook endpoints signature verification and replay protection enforced before live PSP integration (Payments Agent).
 4. Secrets currently in `.env.local` files: acceptable for local dev only; production uses platform secret stores; never committed (verified via `.gitignore` + scanning).

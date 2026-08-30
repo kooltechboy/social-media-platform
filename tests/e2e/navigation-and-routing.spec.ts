@@ -31,7 +31,7 @@ test.describe('Navigation & Routing - Unauthenticated', () => {
     const protectedRoutes = [
       '/settings',
       '/creator-studio',
-      '/spotpay',
+      '/financial-center',
       '/messages',
       '/notifications',
       '/create',
@@ -124,7 +124,7 @@ test.describe('Navigation & Routing - Authenticated', () => {
       { name: 'Marketplace', href: '/marketplace' },
       { name: 'Cultural Events', href: '/events' },
       { name: 'Pages & Stores', href: '/pages', badge: 'VERIFIED' },
-      { name: 'SpotPay Wallet', href: '/spotpay' },
+      { name: 'Financial Center', href: '/financial-center' },
       { name: 'Creator Studio', href: '/creator-studio' },
     ];
 
@@ -167,11 +167,11 @@ test.describe('Navigation & Routing - Authenticated', () => {
     await expect(brandLink).toBeVisible();
     await expect(brandLink).toHaveAttribute('href', '/');
 
-    // SpotPay Wallet link
-    const spotpayLink = page.getByLabel('SpotPay Wallet balance').first();
-    if (await spotpayLink.count() > 0) {
-        await expect(spotpayLink).toBeVisible();
-        await expect(spotpayLink).toHaveAttribute('href', '/spotpay');
+    // Financial Center link
+    const financialLink = page.getByLabel('Financial Center').first();
+    if (await financialLink.count() > 0) {
+        await expect(financialLink).toBeVisible();
+        await expect(financialLink).toHaveAttribute('href', '/financial-center');
     }
 
     // Notifications link

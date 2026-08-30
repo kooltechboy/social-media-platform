@@ -9,13 +9,13 @@ Every line of code, migration, and configuration must adhere to NASA-grade softw
 ## Mandates & Inviolable Rules
 
 1. **Inspect Before Modifying**
-   - Search the codebase and existing abstractions (`@caribbean/ui`, `@caribbean/database`, `@caribbean/spotpay`, etc.) before creating new utilities. Never duplicate components or logic.
+   - Search the codebase and existing abstractions (`@caribbean/ui`, `@caribbean/database`, `@caribbean/payments`, etc.) before creating new utilities. Never duplicate components or logic.
 
 2. **Database Integrity & RLS**
    - Direct DDL executions outside versioned SQL migrations in `supabase/migrations/` are forbidden.
    - **Row Level Security (RLS)** is mandatory on every single table accessible by client software.
 
-3. **SpotPay Financial Ledger Safety**
+3. **Double-Entry Financial Ledger Safety**
    - Never alter wallet balances or financial accounts with mutable column increments (`balance = balance + X`).
    - Every monetary transaction must be executed via paired double-entry credit/debit records with idempotency keys.
 
@@ -54,7 +54,7 @@ Full organization: `.agents/agents/` (14 role protocols), `.agents/workflows/` (
 - **Product (`.agents/agents/product.md`):** PRD, roadmap, metrics, competitive analysis.
 - **AppSec & Compliance (`.agents/agents/security.md`):** OWASP reviews, RLS audit, threat modeling.
 - **Database Architect (`.agents/agents/database.md`):** Migrations, indexing, double-entry ledger.
-- **SpotPay Financial (`.agents/agents/spotpay.md`):** PSP connectors, idempotency, wallet safety.
+- **Payments & Financial (`.agents/agents/payments.md`):** PSP connectors, idempotency, wallet safety.
 - **Frontend Principal (`.agents/agents/frontend.md`):** Next.js 15 App Router, RSC, Tailwind v4.
 - **Mobile Principal (`.agents/agents/mobile.md`):** Universal Expo React Native, iOS & Android.
 - **Backend (`.agents/agents/backend.md`):** Domain services, events, Redis, rate limiting.
@@ -71,7 +71,7 @@ Full organization: `.agents/agents/` (14 role protocols), `.agents/workflows/` (
 Product → Architecture → Security → Implementation → Database → QA → Performance → Final Architect Review
 ```
 
-Payment features add: SpotPay Architect → Compliance → Backend → QA → **Financial Reconciliation** → Final Approval.
+Payment features add: Payments Architect → Compliance → Backend → QA → **Financial Reconciliation** → Final Approval.
 
 Every reviewed change must state: WHAT CHANGED / WHY / FILES CHANGED / TESTS RUN / SECURITY IMPACT / PERFORMANCE IMPACT / DATABASE IMPACT / ROLLBACK PLAN.
 

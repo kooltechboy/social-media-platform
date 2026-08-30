@@ -12,3 +12,7 @@ export * from './refunds';
 export * from './webhooks';
 export * from './adapters';
 export * from './provider-registry';
+export * from './commission-engine';
+export * from './entitlements';
+export * from './reconciliation';
+

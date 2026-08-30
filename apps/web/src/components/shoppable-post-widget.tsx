@@ -90,7 +90,7 @@ export default function ShoppablePostWidget({ product }: ShoppablePostWidgetProp
         </button>
       </div>
 
-      {/* 1-Click SpotPay Checkout Modal */}
+      {/* 1-Click Instant Checkout Modal */}
       {isOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-brand-twilight/80 backdrop-blur-md animate-fadeIn">
           <div className="bg-brand-dusk border border-slate-800 rounded-3xl p-6 max-w-md w-full shadow-2xl space-y-4 relative">
@@ -107,7 +107,7 @@ export default function ShoppablePostWidget({ product }: ShoppablePostWidgetProp
                 <ShoppingBag className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="font-black text-base text-white">Instant SpotPay Checkout</h3>
+                <h3 className="font-black text-base text-white">Instant Tukubi Checkout</h3>
                 <p className="text-xs text-slate-400">Sold by {product.sellerName}</p>
               </div>
             </div>
@@ -120,7 +120,7 @@ export default function ShoppablePostWidget({ product }: ShoppablePostWidgetProp
                 <h4 className="text-lg font-black text-white">Order Confirmed!</h4>
                 <p className="text-xs text-slate-300">{state.success}</p>
                 <div className="text-[10px] text-emerald-400 font-bold bg-emerald-950/40 border border-emerald-800/40 px-3 py-1.5 rounded-full inline-block">
-                  Escrow Secured &bull; Seller Dispatched via SpotPay Logistics
+                  Escrow Secured &bull; Seller Dispatched via Secure Logistics
                 </div>
               </div>
             ) : (
@@ -170,7 +170,7 @@ export default function ShoppablePostWidget({ product }: ShoppablePostWidgetProp
                     <span className="font-bold text-slate-300">${platformFee.toFixed(2)}</span>
                   </div>
                   <div className="border-t border-slate-800 pt-1.5 flex justify-between font-black text-white">
-                    <span>Total via SpotPay Wallet:</span>
+                    <span>Total via Secure Checkout:</span>
                     <span className="text-brand-sunriseCoral">${total} {product.currency}</span>
                   </div>
                 </div>
@@ -182,7 +182,7 @@ export default function ShoppablePostWidget({ product }: ShoppablePostWidgetProp
                 >
                   {isSubmitting ? (
                     <>
-                      <Loader2 className="w-4 h-4 animate-spin" /> Authorizing SpotPay Escrow...
+                      <Loader2 className="w-4 h-4 animate-spin" /> Authorizing Escrow Settlement...
                     </>
                   ) : (
                     <>

@@ -13,7 +13,17 @@ export const MAX_QUANTITY_PER_LINE = 20;
 export interface OrderTotals {
   subtotalMinor: number;
   platformFeeMinor: number;
+  processingFeeMinor?: number;
+  taxMinor?: number;
   totalMinor: number;
+}
+
+export interface ComputeOrderTotalsOptions {
+  commissionBps?: number;
+  fixedFeeMinor?: number;
+  processingFeeBps?: number;
+  processingFixedMinor?: number;
+  taxBps?: number;
 }
 
 export function computeLineTotal(line: CartLine): number {
@@ -26,13 +36,35 @@ export function computeLineTotal(line: CartLine): number {
   return line.unitPriceMinor * line.quantity;
 }
 
-export function computeOrderTotals(lines: CartLine[], commissionBps: number = MARKETPLACE_COMMISSION_BPS): OrderTotals {
+export function computeOrderTotals(
+  lines: CartLine[],
+  optionsOrCommissionBps: number | ComputeOrderTotalsOptions = MARKETPLACE_COMMISSION_BPS
+): OrderTotals {
+  const options: ComputeOrderTotalsOptions =
+    typeof optionsOrCommissionBps === 'number'
+      ? { commissionBps: optionsOrCommissionBps }
+      : optionsOrCommissionBps;
+
+  const commissionBps = options.commissionBps ?? MARKETPLACE_COMMISSION_BPS;
+  const fixedFeeMinor = options.fixedFeeMinor ?? 0;
+  const processingFeeBps = options.processingFeeBps ?? 0;
+  const processingFixedMinor = options.processingFixedMinor ?? 0;
+  const taxBps = options.taxBps ?? 0;
+
   const subtotalMinor = lines.reduce((sum, line) => sum + computeLineTotal(line), 0);
-  const platformFeeMinor = Math.round((subtotalMinor * commissionBps) / 10000);
+  const platformFeeMinor = Math.round((subtotalMinor * commissionBps) / 10000) + fixedFeeMinor;
+  const processingFeeMinor =
+    processingFeeBps > 0 || processingFixedMinor > 0
+      ? Math.round((subtotalMinor * processingFeeBps) / 10000) + processingFixedMinor
+      : 0;
+  const taxMinor = taxBps > 0 ? Math.round((subtotalMinor * taxBps) / 10000) : 0;
+
   return {
     subtotalMinor,
     platformFeeMinor,
-    totalMinor: subtotalMinor + platformFeeMinor,
+    processingFeeMinor,
+    taxMinor,
+    totalMinor: subtotalMinor + platformFeeMinor + processingFeeMinor + taxMinor,
   };
 }
 

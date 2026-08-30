@@ -167,15 +167,21 @@ export default function UnifiedCheckoutModal({
 
               <div className="space-y-1.5 border-t border-slate-800/80 pt-2 text-xs">
                 <div className="flex justify-between text-slate-400">
-                  <span>Subtotal ({quantity} item{quantity > 1 ? 's' : ''})</span>
+                  <span>Product Subtotal ({quantity} item{quantity > 1 ? 's' : ''})</span>
                   <span className="text-white font-semibold">{subtotal.format()}</span>
                 </div>
+                {product.productKind === 'physical' && (
+                  <div className="flex justify-between text-slate-400">
+                    <span>Shipping &amp; Handling</span>
+                    <span className="text-emerald-400 font-semibold">Free Caribbean Standard</span>
+                  </div>
+                )}
                 <div className="flex justify-between text-slate-400">
                   <span>Pass-Through Processing Fee</span>
                   <span className="text-slate-300 font-semibold">{processingFee.format()}</span>
                 </div>
                 <div className="flex justify-between text-sm font-black text-white pt-1 border-t border-slate-800">
-                  <span>Total Amount</span>
+                  <span>Total at Checkout</span>
                   <span className="text-brand-sunriseCoral">{total.format()} {product.currency}</span>
                 </div>
               </div>

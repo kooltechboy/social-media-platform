@@ -24,9 +24,9 @@ test.describe('Home Feed Page - Unauthenticated', () => {
   });
 
   test('Unauthenticated State - Banner and Composer', async ({ page }) => {
-    // "Tukubi Community Access" banner appears with text about SpotPay wallet, direct messaging
+    // "Tukubi Community Access" banner appears
     await expect(page.getByText(/(Tukubi|Tukubi) Community Access/)).toBeVisible();
-    await expect(page.getByText(/Sign in or create your profile to access SpotPay/i)).toBeVisible();
+    await expect(page.getByText(/Sign in or create your profile/i)).toBeVisible();
     await expect(page.getByText(/direct messaging/i).first()).toBeVisible();
 
     // "Sign In / Register" link points to `/login`
@@ -84,8 +84,8 @@ test.describe('Home Feed Page - Unauthenticated', () => {
       await expect(sidebar.getByRole('link', { name: new RegExp(city, 'i') }).first()).toBeVisible();
     }
 
-    // SpotPay Wallet card showing balance
-    await expect(page.getByText(/SpotPay Ledger/i).first()).toBeVisible();
+    // Multi-currency Ledger card
+    await expect(page.getByText(/Ledger/i).first()).toBeVisible();
 
     // Upcoming Events / Cultural Fetes section
     await expect(page.getByText(/Cultural Fetes|Upcoming Events/i).first()).toBeVisible();
@@ -130,8 +130,8 @@ test.describe('Home Feed Page - Authenticated', () => {
         const commentBtn = firstPost.getByRole('button', { name: /View or add comments/i });
         await expect(commentBtn).toBeVisible();
 
-        // "Tip SpotPay" button with Wallet icon
-        const tipBtn = firstPost.getByRole('button', { name: /Tip SpotPay/i });
+        // "Tip Creator" button with Wallet icon
+        const tipBtn = firstPost.getByRole('button', { name: /Tip Creator/i });
         await expect(tipBtn).toBeVisible();
 
         // Post Options Menu (three-dot MoreHorizontal button)

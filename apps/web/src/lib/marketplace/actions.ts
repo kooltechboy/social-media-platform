@@ -3,6 +3,9 @@
 import { revalidatePath } from 'next/cache';
 import { createSupabaseServerClient, getCurrentUser } from '../supabase/server';
 import { computeOrderTotals, transitionOrder } from '@caribbean/marketplace';
+import { CommissionEngine, type AccountCategory } from '@caribbean/payments';
+
+const commissionEngine = new CommissionEngine();
 
 function revalidateMarketplacePaths() {
   try {
@@ -133,8 +136,52 @@ export async function createOrderAction(
       return { error: 'Payment service unavailable. Please try again.', success: null };
     }
 
+    // Resolve seller tier & category for authoritative commission calculation
+    let business: { id: string; owner_id: string } | null = null;
+    try {
+      const businessQuery = supabase.from('businesses');
+      if (businessQuery && typeof businessQuery.select === 'function') {
+        const res = await businessQuery.select('id, owner_id').eq('owner_id', product.seller_id).maybeSingle();
+        business = res?.data ?? null;
+      }
+    } catch {
+      business = null;
+    }
+
+    let sellerCategory: AccountCategory = business ? 'merchant' : 'user';
+    let sellerTier = 'free';
+
+    if (business) {
+      try {
+        const subQuery = supabase.from('business_subscriptions');
+        if (subQuery && typeof subQuery.select === 'function') {
+          const { data: sub } = await subQuery
+            .select('plan_id, status')
+            .eq('business_id', business.id)
+            .eq('status', 'active')
+            .maybeSingle();
+          if (sub?.plan_id) {
+            if (sub.plan_id === 'seller_pro') sellerTier = 'pro';
+            else if (sub.plan_id === 'business_plus') sellerTier = 'business_plus';
+            else if (sub.plan_id === 'enterprise') sellerTier = 'enterprise';
+            else sellerTier = sub.plan_id;
+          }
+        }
+      } catch {
+        sellerTier = 'free';
+      }
+    }
+
+    const calcResult = commissionEngine.calculate({
+      grossMinor: totals.subtotalMinor,
+      currency: product.currency,
+      sellerCategory,
+      sellerTierCode: sellerTier,
+      productType: product.product_kind || 'physical',
+    });
+
     // Create payment intent record
-    const { error: intentErr } = await adminClient
+    const { data: intentData, error: intentErr } = await adminClient
       .from('payment_intents')
       .insert({
         payer_id: user.id,
@@ -158,6 +205,27 @@ export async function createOrderAction(
       return { error: 'Payment processing failed. Please try again.', success: null };
     }
 
+    // Persist immutable point-of-sale commission snapshot
+    try {
+      const snapshotPayload = commissionEngine.createSnapshotPayload(
+        calcResult,
+        `pi_${idempotencyKey}`,
+        user.id,
+        product.seller_id,
+        {
+          orderId: order.id,
+          paymentIntentId: intentData?.id,
+          metadata: {
+            productId: product.id,
+            productTitle: product.title,
+            quantity,
+          },
+        }
+      );
+      await adminClient.from('commission_snapshots').insert(snapshotPayload);
+    } catch (snapshotErr) {
+      console.error('[FinancialCenter] Commission snapshot persistence warning:', snapshotErr);
+    }
   }
 
   revalidateMarketplacePaths();
@@ -187,6 +255,50 @@ export async function createProductAction(
 
   const supabase = await createSupabaseServerClient();
   if (!supabase) return { error: 'Service unavailable.', success: null };
+
+  // Check seller's subscription plan & listing limit
+  let hasUnlimitedListings = false;
+  try {
+    const businessQuery = supabase.from('businesses');
+    if (businessQuery && typeof businessQuery.select === 'function') {
+      const { data: business } = await businessQuery
+        .select('id')
+        .eq('owner_id', user.id)
+        .maybeSingle();
+
+      if (business) {
+        const subQuery = supabase.from('business_subscriptions');
+        if (subQuery && typeof subQuery.select === 'function') {
+          const { data: sub } = await subQuery
+            .select('plan_id, status')
+            .eq('business_id', business.id)
+            .eq('status', 'active')
+            .maybeSingle();
+
+          if (sub?.plan_id && ['seller_pro', 'business_plus', 'enterprise'].includes(sub.plan_id)) {
+            hasUnlimitedListings = true;
+          }
+        }
+      }
+    }
+  } catch {
+    hasUnlimitedListings = false;
+  }
+
+  if (!hasUnlimitedListings) {
+    const { count: activeCount } = await supabase
+      .from('products')
+      .select('id', { count: 'exact', head: true })
+      .eq('seller_id', user.id)
+      .eq('is_active', true);
+
+    if ((activeCount ?? 0) >= 5) {
+      return {
+        error: 'Free tier listing limit reached (5 products). Upgrade to Seller Pro for unlimited listings, 0% platform sales commission, and AI tools.',
+        success: null,
+      };
+    }
+  }
 
   const { data: product, error } = await supabase
     .from('products')

@@ -150,9 +150,9 @@ describe('Centralized Creator Platform Tiers & Entitlement Engine', () => {
     expect(hasCreatorEntitlement('creator_plus', 'podcast_network_hosting')).toBe(true);
     expect(hasCreatorEntitlement('creator_plus', 'media_4k_uploads')).toBe(false);
 
-    // Creator Pro unlocks 4K uploads & SpotPay instant settlement
+    // Creator Pro unlocks 4K uploads & instant settlement
     expect(hasCreatorEntitlement('creator_pro', 'media_4k_uploads')).toBe(true);
-    expect(hasCreatorEntitlement('creator_pro', 'spotpay_instant_settlement')).toBe(true);
+    expect(hasCreatorEntitlement('creator_pro', 'instant_settlement')).toBe(true);
 
     // VIP Artist unlocks verified badge & priority discovery
     expect(hasCreatorEntitlement('creator_vip', 'verified_creator_badge')).toBe(true);

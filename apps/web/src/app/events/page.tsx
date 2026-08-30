@@ -82,7 +82,7 @@ export default async function EventsPage({
             </h1>
           </div>
           <p className="text-xs md:text-sm text-brand-sandstone/60 mt-1">
-            Carnivals, festivals, concerts, culinary gatherings, and diaspora meetups with SpotPay ticketing.
+            Carnivals, festivals, concerts, culinary gatherings, and diaspora meetups with digital ticketing.
           </p>
         </div>
 
@@ -174,7 +174,7 @@ export default async function EventsPage({
                           : 'bg-gradient-to-r from-yellow-500 to-brand-goldenHour hover:from-yellow-400 hover:to-brand-goldenHour text-slate-950 shadow-yellow-500/20'
                       }`}
                     >
-                      {userGoing ? '✓ You Are Going (SpotPay Confirmed)' : 'RSVP / Get SpotPay Ticket'}
+                      {userGoing ? '✓ You Are Going (Booking Confirmed)' : 'RSVP / Get Ticket'}
                     </button>
                   </form>
                 ) : (

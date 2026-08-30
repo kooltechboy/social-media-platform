@@ -53,10 +53,10 @@ const MOMENTS: MomentItem[] = [
   {
     id: 'earn',
     title: 'Earn',
-    subtitle: 'Monetize your talent, receive diaspora tips & get paid via SpotPay',
+    subtitle: 'Monetize your talent, receive fan tips & get paid instantly',
     icon: <DollarSign className="w-4 h-4 text-brand-sunriseCoral" />,
     gradient: 'from-rose-500/20 to-amber-600/30',
-    tag: 'SpotPay Wallet',
+    tag: 'Creator Economy',
     bgGradient: 'from-[#2C1215] to-[#140608]',
   },
 ];

@@ -9,4 +9,4 @@
 - **3-Column Editorial Layout:**
   - Left: Global navigation and Creator Studio triggers.
   - Center: Feed, Moments stories cinema rail, Video Reels, Live broadcasts, Podcasts, Marketplace.
-  - Right: Caribbean Now Live Island Tickers, Trending Diaspora topics, SpotPay quick send.
+  - Right: Caribbean Now Live Island Tickers, Trending Diaspora topics, Payments quick send.

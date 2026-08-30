@@ -178,7 +178,7 @@ export type CreatorEntitlement =
   | 'media_4k_uploads'
   | 'verified_creator_badge'
   | 'priority_caribbean_discovery'
-  | 'spotpay_instant_settlement';
+  | 'instant_settlement';
 
 export interface CreatorPlatformTierDefinition {
   id: CreatorPlatformTierId;
@@ -227,7 +227,7 @@ export const CREATOR_PLATFORM_TIERS: Record<CreatorPlatformTierId, CreatorPlatfo
     name: 'Creator Pro',
     monthlyPriceMinor: 2499, // $24.99/mo
     currency: 'USD',
-    description: 'Professional grade 4K production, multi-show podcasts, and instant SpotPay settlement.',
+    description: 'Professional grade 4K production, multi-show podcasts, and instant settlement.',
     entitlements: [
       'fan_membership_tiers',
       'creator_storefront',
@@ -236,7 +236,7 @@ export const CREATOR_PLATFORM_TIERS: Record<CreatorPlatformTierId, CreatorPlatfo
       'advanced_audience_analytics',
       'media_4k_uploads',
       'priority_caribbean_discovery',
-      'spotpay_instant_settlement',
+      'instant_settlement',
     ],
     maxVideosPerMonth: 500,
     maxPodcastEpisodesPerMonth: 120,
@@ -257,7 +257,7 @@ export const CREATOR_PLATFORM_TIERS: Record<CreatorPlatformTierId, CreatorPlatfo
       'media_4k_uploads',
       'verified_creator_badge',
       'priority_caribbean_discovery',
-      'spotpay_instant_settlement',
+      'instant_settlement',
     ],
     maxVideosPerMonth: 999999,
     maxPodcastEpisodesPerMonth: 999999,

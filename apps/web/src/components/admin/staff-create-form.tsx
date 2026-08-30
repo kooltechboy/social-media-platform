@@ -54,7 +54,7 @@ const PERMISSION_OPTIONS = [
   { id: 'manage_admins', label: 'Manage Administrators', desc: 'Create and revoke admin privileges' },
   { id: 'manage_users', label: 'Manage Users', desc: 'Verify, suspend, or manage member accounts' },
   { id: 'manage_content', label: 'Content Moderation', desc: 'Hide posts, take down illegal content' },
-  { id: 'manage_payments', label: 'Financial & SpotPay', desc: 'Inspect ledger, payouts, and transactions' },
+  { id: 'manage_payments', label: 'Financial & Ledger', desc: 'Inspect ledger, payouts, and transactions' },
   { id: 'manage_feature_flags', label: 'Feature Flags', desc: 'Toggle kill switches and rollout percentages' },
   { id: 'view_audit_logs', label: 'View Audit Logs', desc: 'Access immutable platform action logs' },
   { id: 'view_analytics', label: 'Platform Analytics', desc: 'Access event telemetry and growth funnels' },

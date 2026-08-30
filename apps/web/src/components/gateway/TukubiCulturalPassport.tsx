@@ -138,7 +138,7 @@ export function TukubiCulturalPassport({
             </p>
             <p className="text-[9px] text-emerald-400 font-semibold flex items-center gap-1">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
-              SpotPay Multi-Currency Active • {interestsCount} Cultural Streams
+              Multi-Currency Active • {interestsCount} Cultural Streams
             </p>
           </div>
 

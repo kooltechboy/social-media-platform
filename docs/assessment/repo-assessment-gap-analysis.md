@@ -19,7 +19,7 @@ _Date: 2026-08-20 • Performed against the Master Build Prompt, Section 72._
 | `packages/auth` | ✅ Exists | Auth abstraction. |
 | `packages/api` | ✅ Exists | API client layer. |
 | `packages/ai` | ✅ Exists | OpenRouter abstraction (CaribAI). |
-| `packages/spotpay` | ✅ Exists | Ledger + payment routing. |
+| `packages/payments` | ✅ Exists | Ledger + payment routing. |
 | `packages/database` | ❌ Missing | **Conflict:** claimed in `ARCHITECTURE.md` §Monorepo Layout. |
 | `packages/trust-safety` | ❌ Missing | **Conflict:** claimed in `ARCHITECTURE.md` §Monorepo Layout. |
 | Remaining domain packages (social, feed, media, messaging, communities, events, businesses, marketplace, search, recommendations, moderation, analytics, notifications, localization) | ❌ Missing | Created on-demand per phase, per ADR-001 extraction boundaries. |
@@ -30,10 +30,10 @@ _Date: 2026-08-20 • Performed against the Master Build Prompt, Section 72._
 | `00001_initial_schema.sql` | `countries` | Geographic reference (seeded, Montserrat fix committed). |
 | `00002_identity_profiles.sql` | `profiles` | Identity. |
 | `00003_social_graph_posts.sql` | `follows`, `blocks`, `posts`, `comments`, `post_reactions` | Social graph + content. |
-| `00004_spotpay_ledger.sql` | `ledger_accounts`, `ledger_entries`, `psp_capabilities` | Double-entry ledger + capability matrix. |
+| `00004_ledger_accounts.sql` | `ledger_accounts`, `ledger_entries`, `psp_capabilities` | Double-entry ledger + capability matrix. |
 
 ### Agents (.agents/agents)
-Existing: `chief-architect`, `database`, `security`, `spotpay`, `ai` (5 of 24 required by Master Build Prompt §49).
+Existing: `chief-architect`, `database`, `security`, `payments`, `ai` (5 of 24 required by Master Build Prompt §49).
 
 ### Tests
 `tests/unit/ledger.test.ts` only. No integration, RLS, E2E, security, or performance suites.
@@ -53,7 +53,7 @@ pnpm 9 + Turborepo 2, TypeScript 5.5, Vitest, Playwright (declared), Prettier. C
 | 08 | Geographic Data Model | `docs/architecture/geographic-data-model.md`. |
 | 09 | Mobile Architecture | `docs/architecture/mobile-architecture.md`. |
 | 10–12 | Creator / Live / Podcast Architecture | `docs/architecture/creator-media-architecture.md`. |
-| 13–15 | SpotPay / Ledger / Payment Matrix | `PAYMENT-ARCHITECTURE.md` (expanded). |
+| 13–15 | Payments / Ledger / Payment Matrix | `PAYMENT-ARCHITECTURE.md` (expanded). |
 | 16 | Monetization Model | `docs/architecture/monetization-model.md`. |
 | 17 | Trust & Safety Architecture | `TRUST-SAFETY.md` (root). |
 | 18 | Security Threat Model | `THREAT-MODEL.md` (root). |
@@ -79,12 +79,12 @@ pnpm 9 + Turborepo 2, TypeScript 5.5, Vitest, Playwright (declared), Prettier. C
 | C3 | Root `package.json` declares `test:e2e → playwright test` but no Playwright config/installation exists. | Documented as deferred in testing strategy; script remains a forward declaration. Do not wire CI to it until installed. |
 | C4 | Master prompt §48 monorepo structure vs. current reality. | Adopted as **target structure**; packages are created per-phase only when a domain has real logic (avoids empty-package debt per AGENTS.md mandate 1). |
 | C5 | Two migration conventions: seed data committed directly (`countries` seed referenced in git log) vs. versioned-migrations-only rule. | All future reference/seed data must go through `supabase/seed/` + versioned migrations; no direct DDL/DML. |
-| C6 | SpotPay wallet: `psp_capabilities` table exists (good), but no `payment_intents`, `idempotency` enforcement table, payouts, refunds, disputes tables yet. | Scheduled Phase 6 migration set; enumerated in database architecture doc. |
+| C6 | Payments engine: `psp_capabilities` table exists (good), but no `payment_intents`, `idempotency` enforcement table, payouts, refunds, disputes tables yet. | Scheduled Phase 6 migration set; enumerated in database architecture doc. |
 
 ## 4. Status Update (2026-08-20 — Phases 1–9 engineering release)
 
 All gap-analysis findings C1–C6 are resolved. Delivered in this release:
-- **Migrations `00005`–`00013`** (13 total): geographic expansion, security/audit/flags/analytics, social+communities+moderation, messaging, creator economy, live+podcasts, SpotPay payments (with ledger sum-zero trigger), business/events/marketplace, advertising — RLS on every client-accessible table.
+- **Migrations `00005`–`00013`** (13 total): geographic expansion, security/audit/flags/analytics, social+communities+moderation, messaging, creator economy, live+podcasts, payments (with ledger sum-zero trigger), business/events/marketplace, advertising — RLS on every client-accessible table.
 - **19 domain packages** under `packages/` (see `ARCHITECTURE.md` for the full inventory).
 - **Web app**: 15 routes including moderation and admin consoles.
 - **Mobile app**: tabbed navigation with Home/Explore/Communities/Messages screens.

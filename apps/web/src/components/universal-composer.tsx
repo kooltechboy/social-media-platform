@@ -244,11 +244,11 @@ export default function UniversalComposer({
         const validOptions = pollOptions.filter((o) => o.trim());
         finalContent = `${finalContent}\n\n📊 **Poll:** ${pollQuestion}\n${validOptions.map((o) => `• ${o}`).join('\n')}`;
       } else if (mode === 'product' && productTitle.trim()) {
-        finalContent = `${finalContent}\n\n🛍️ **Featured Product:** ${productTitle} ($${productPrice || '0.00'} USD on SpotPay)`;
+        finalContent = `${finalContent}\n\n🛍️ **Featured Product:** ${productTitle} ($${productPrice || '0.00'} USD on TUKUBI)`;
       } else if (mode === 'event' && eventTitle.trim()) {
         finalContent = `${finalContent}\n\n📅 **Upcoming Caribbean Event:** ${eventTitle} (${eventDate || 'TBD'})`;
       } else if (mode === 'fundraiser' && fundraiserTitle.trim()) {
-        finalContent = `${finalContent}\n\n💰 **SpotPay Fundraiser:** ${fundraiserTitle} (Goal: $${fundraiserTarget || '1,000'} USD)`;
+        finalContent = `${finalContent}\n\n💰 **Community Fundraiser:** ${fundraiserTitle} (Goal: $${fundraiserTarget || '1,000'} USD)`;
       }
 
       if (isOfficialAlert) {
@@ -657,7 +657,7 @@ export default function UniversalComposer({
                     type="number"
                     value={productPrice}
                     onChange={(e) => setProductPrice(e.target.value)}
-                    placeholder="Price (USD on SpotPay)"
+                    placeholder="Price (USD on TUKUBI)"
                     className="w-full bg-brand-dusk border border-slate-800 rounded-xl pl-7 pr-3 py-2 text-xs text-brand-sandstone focus:outline-none focus:border-brand-sunriseCoral"
                   />
                 </div>
@@ -699,7 +699,7 @@ export default function UniversalComposer({
             <div className="p-4 rounded-2xl bg-brand-twilight border border-rose-500/30 space-y-3 animate-fadeIn">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-rose-400 flex items-center gap-1.5">
-                  <HeartHandshake className="w-4 h-4" /> Launch SpotPay Fundraiser / Relief
+                  <HeartHandshake className="w-4 h-4" /> Launch Community Fundraiser / Relief
                 </span>
                 <button type="button" onClick={() => setMode('text')} className="text-brand-sandstone/40 hover:text-brand-sandstone">
                   <X className="w-4 h-4" />
@@ -719,7 +719,7 @@ export default function UniversalComposer({
                     type="number"
                     value={fundraiserTarget}
                     onChange={(e) => setFundraiserTarget(e.target.value)}
-                    placeholder="Funding Goal (USD on SpotPay)"
+                    placeholder="Funding Goal (USD on TUKUBI)"
                     className="w-full bg-brand-dusk border border-slate-800 rounded-xl pl-7 pr-3 py-2 text-xs text-brand-sandstone focus:outline-none focus:border-rose-500"
                   />
                 </div>

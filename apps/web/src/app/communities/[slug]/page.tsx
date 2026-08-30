@@ -216,7 +216,7 @@ export default async function CommunityHubPage({
             <ul className="text-xs text-slate-300 space-y-2.5 list-disc list-inside">
               <li>Respect cultural identity and diaspora diversity.</li>
               <li>No harassment, hate speech, or unverified claims.</li>
-              <li>SpotPay commerce must use verified merchant escrow.</li>
+              <li>Marketplace commerce must use verified merchant escrow.</li>
               <li>Keep discussions constructive, supportive, and authentic.</li>
             </ul>
           </div>

@@ -173,7 +173,7 @@ export default async function ModularPageView({ params }: { params: Promise<{ sl
                 <h3 className="text-sm font-extrabold text-brand-sandstone flex items-center gap-2 uppercase tracking-wider">
                   <ShoppingBag className="w-4 h-4 text-brand-sunriseCoral" /> Verified Storefront
                 </h3>
-                <span className="text-xs text-brand-sandstone/40">SpotPay Instant Escrow</span>
+                <span className="text-xs text-brand-sandstone/40">Instant Escrow Protection</span>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -276,7 +276,7 @@ export default async function ModularPageView({ params }: { params: Promise<{ sl
 
           <div className="bg-gradient-to-br from-slate-900 via-slate-900 to-emerald-950/40 border border-brand-sunriseCoral/30 rounded-3xl p-5 space-y-2.5 shadow-lg">
             <div className="flex items-center gap-1.5 text-xs font-black text-brand-sunriseCoral uppercase tracking-wider">
-              <ShieldCheck className="w-4 h-4" /> SpotPay Escrow Backed
+              <ShieldCheck className="w-4 h-4" /> Escrow Protected
             </div>
             <p className="text-xs text-slate-300">
               Orders and contracts placed on this Page are protected with direct double-entry ledger settlement.

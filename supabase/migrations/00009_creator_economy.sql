@@ -60,7 +60,7 @@ CREATE TABLE public.subscriptions (
     tier VARCHAR(10) CHECK (tier IN ('basic', 'plus', 'pro')) NOT NULL,
     price_minor INTEGER NOT NULL,
     currency VARCHAR(3) DEFAULT 'USD' NOT NULL,
-    billing_source VARCHAR(12) CHECK (billing_source IN ('spotpay_wallet', 'stripe', 'apple_iap', 'google_play')) NOT NULL,
+    billing_source VARCHAR(12) CHECK (billing_source IN ('user_wallet', 'stripe', 'apple_iap', 'google_play')) NOT NULL,
     status VARCHAR(12) CHECK (status IN ('active', 'cancelled', 'expired', 'grace')) DEFAULT 'active' NOT NULL,
     current_period_end TIMESTAMPTZ NOT NULL,
     created_at TIMESTAMPTZ DEFAULT now() NOT NULL,

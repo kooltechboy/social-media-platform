@@ -76,7 +76,7 @@ export default async function LivePage({
             </h1>
           </div>
           <p className="text-xs md:text-sm text-brand-sandstone/60 mt-1">
-            Real-time Caribbean broadcasts, fete streams, sound systems, and SpotPay virtual gifts.
+            Real-time Caribbean broadcasts, fete streams, sound systems, and interactive creator gifts.
           </p>
         </div>
 

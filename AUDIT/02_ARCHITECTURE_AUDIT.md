@@ -15,7 +15,7 @@ graph TD
   Web[apps/web (Next.js 15)] --> UI[@caribbean/ui]
   Web --> DS[@caribbean/design-system]
   Web --> Social[@caribbean/social]
-  Web --> SpotPay[@caribbean/spotpay]
+  Web --> Payments[@caribbean/Payments]
   Web --> Creator[@caribbean/creator]
   Web --> Live[@caribbean/live]
   Web --> Podcasts[@caribbean/podcasts]
@@ -23,7 +23,7 @@ graph TD
   Web --> AI[@caribbean/ai]
   Web --> DB[(Supabase PostgreSQL + RLS)]
 
-  Mobile[apps/mobile (Expo RN)] --> SpotPay
+  Mobile[apps/mobile (Expo RN)] --> Payments
   Mobile --> Social
   Mobile --> DB
 
@@ -37,12 +37,12 @@ graph TD
 
 The 23 packages in `packages/` maintain strict unidirectional dependencies:
 - Core Abstractions (`@caribbean/database`, `@caribbean/design-system`, `@caribbean/localization`) have zero dependencies on other internal packages.
-- Domain Packages (`@caribbean/spotpay`, `@caribbean/social`, `@caribbean/creator`, `@caribbean/marketplace`, `@caribbean/communities`) encapsulate domain invariants without importing UI components.
+- Domain Packages (`@caribbean/Payments`, `@caribbean/social`, `@caribbean/creator`, `@caribbean/marketplace`, `@caribbean/communities`) encapsulate domain invariants without importing UI components.
 - Presentation Packages (`@caribbean/ui`) provide headless/styled components dependent only on design tokens.
 
 ### Architectural Invariant Compliance
 - **Rule 1 (Inspect Before Modifying):** Packages avoid code duplication; shared utilities are centralized.
-- **Rule 2 (Ledger Safety):** `@caribbean/spotpay` isolates double-entry mechanics from direct database mutations.
+- **Rule 2 (Ledger Safety):** `@caribbean/Payments` isolates double-entry mechanics from direct database mutations.
 - **Rule 3 (Privacy of Identity):** `@caribbean/social` and `@caribbean/database` enforce private-by-default rules on Caribbean origin/location.
 
 ---

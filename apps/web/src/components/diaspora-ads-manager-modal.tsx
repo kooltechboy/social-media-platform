@@ -105,7 +105,7 @@ export default function DiasporaAdsManagerModal({
               Your campaign is active across <strong className="text-brand-sunriseCoral">{DIASPORA_METROS.find((m) => m.id === selectedMetro)?.name}</strong>.
             </p>
             <div className="text-[10px] text-emerald-400 font-bold bg-emerald-950/40 border border-emerald-800/40 px-3 py-1 rounded-full inline-block">
-              Budget Allocated via SpotPay &bull; Real-time ROI Tracking Active
+              Budget Allocated via Ledger &bull; Real-time ROI Tracking Active
             </div>
           </div>
         ) : (

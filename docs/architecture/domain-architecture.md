@@ -28,7 +28,7 @@ The application is a **modular monolith**: one deployable domain layer, event-dr
 | `creator` | creator accounts, subscriptions, revenue | 4–6 |
 | `live` | ingestion, chat, gifts, replays | 5 |
 | `podcasts` | shows, episodes, RSS, analytics | 5 |
-| `payments` (SpotPay) | ledger, intents, providers, payouts | 6 |
+| `payments` | ledger, intents, providers, payouts | 6 |
 | `advertising` | campaigns, targeting, delivery, metrics | 8 |
 | `moderation` / `trust-safety` | reports, cases, risk engine | 2 |
 | `analytics` | event pipeline, dashboards | 1 (pipeline) |

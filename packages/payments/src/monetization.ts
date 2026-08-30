@@ -106,6 +106,62 @@ export const CREATOR_TIERS: Record<CreatorTier['id'], CreatorTier> = {
   },
 };
 
+export interface UserTier {
+  id: 'user_free' | 'user_premium';
+  name: string;
+  priceMinor: number;
+  features: string[];
+}
+
+export const USER_TIERS: Record<UserTier['id'], UserTier> = {
+  user_free: {
+    id: 'user_free',
+    name: 'Community Member',
+    priceMinor: 0,
+    features: ['Feed browsing', 'Social messaging', 'Marketplace shopping', 'Community participation'],
+  },
+  user_premium: {
+    id: 'user_premium',
+    name: 'TUKUBI Patron',
+    priceMinor: 499, // $4.99/mo
+    features: ['All free features', 'Patron badge', 'Exclusive communities', 'Priority support'],
+  },
+};
+
+export interface BusinessTier {
+  id: 'business_free' | 'seller_pro' | 'business_plus' | 'enterprise';
+  name: string;
+  priceMinor: number;
+  features: string[];
+}
+
+export const BUSINESS_TIERS: Record<BusinessTier['id'], BusinessTier> = {
+  business_free: {
+    id: 'business_free',
+    name: 'Business Free',
+    priceMinor: 0,
+    features: ['Basic profile', '5 listings', 'Standard marketplace rates'],
+  },
+  seller_pro: {
+    id: 'seller_pro',
+    name: 'Seller Pro',
+    priceMinor: 1499, // $14.99/mo
+    features: ['Unlimited listings', '0% platform sales commission', 'AI tools', 'Digital storefront'],
+  },
+  business_plus: {
+    id: 'business_plus',
+    name: 'Business+',
+    priceMinor: 3999, // $39.99/mo
+    features: ['Unlimited listings', '0% platform sales commission', 'Advanced CRM', 'AI sales assistant', '5 staff seats'],
+  },
+  enterprise: {
+    id: 'enterprise',
+    name: 'Enterprise',
+    priceMinor: 0,
+    features: ['Custom contracts', 'Dedicated API', 'Multi-location', '24/7 dedicated support'],
+  },
+};
+
 export interface CheckoutBreakdown {
   grossMinor: number;
   platformFeeMinor: number;

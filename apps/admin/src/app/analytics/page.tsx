@@ -46,7 +46,7 @@ export default async function AdminAnalyticsPage() {
     { label: 'Total Events', value: (eventsTotalResult.count ?? 0).toLocaleString(), delta: 'All-time volume', color: 'text-brand-caribbeanSea' },
     { label: 'Total Profiles', value: (usersTotalResult.count ?? 0).toLocaleString(), delta: `+${newUsers7dResult.count ?? 0} this week`, color: 'text-brand-goldenHour' },
     { label: 'Total Posts', value: (postsTotalResult.count ?? 0).toLocaleString(), delta: 'Community content', color: 'text-brand-sandstone' },
-    { label: 'Succeeded Payments', value: (paymentsTotalResult.count ?? 0).toLocaleString(), delta: 'SpotPay transactions', color: 'text-brand-sunriseCoral' },
+    { label: 'Succeeded Payments', value: (paymentsTotalResult.count ?? 0).toLocaleString(), delta: 'Platform transactions', color: 'text-brand-sunriseCoral' },
   ];
 
   return (

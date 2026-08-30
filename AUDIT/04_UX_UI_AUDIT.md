@@ -25,7 +25,7 @@ Accent:  #0284C7 (Azure) / #F59E0B (Coral Gold) / #059669 (Emerald)
 ## 2. Information Architecture & Navigation Audit
 
 ### Desktop Navigation (`apps/web/src/components/app-sidebar.tsx`)
-- **Structure:** Clean left sidebar featuring Home, Explore, Reels, Live, Podcasts, Communities, Marketplace, Events, Messages, SpotPay.
+- **Structure:** Clean left sidebar featuring Home, Explore, Reels, Live, Podcasts, Communities, Marketplace, Events, Messages, Payments.
 - **Header:** Sticky top header (`app-header.tsx`) with search bar, notification badge, and profile session widget.
 - **Right Rail:** Ranked trending tags, Caribbean event spotlights, and diaspora hubs.
 

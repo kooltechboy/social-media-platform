@@ -53,7 +53,7 @@ export interface NotificationPrefsData {
   mentions_enabled: boolean;
   messages_enabled: boolean;
   community_enabled: boolean;
-  spotpay_enabled: boolean;
+  payments_enabled: boolean;
   marketing_enabled: boolean;
 }
 
@@ -249,7 +249,7 @@ export default function SettingsView({
               href="/financial-center"
               className="text-xs font-bold text-brand-goldenHour hover:underline block mt-1"
             >
-              SpotPay Financial Center →
+              TUKUBI Financial Center →
             </Link>
           </div>
         </aside>
@@ -608,7 +608,7 @@ export default function SettingsView({
                       { key: 'mentions_enabled', label: 'Mentions & Tags' },
                       { key: 'messages_enabled', label: 'Direct Messages' },
                       { key: 'community_enabled', label: 'Diaspora Hub Updates' },
-                      { key: 'spotpay_enabled', label: 'SpotPay Financial Activity' },
+                      { key: 'payments_enabled', label: 'Payments & Financial Activity' },
                       { key: 'marketing_enabled', label: 'Platform Announcements' },
                     ].map((item) => (
                       <div

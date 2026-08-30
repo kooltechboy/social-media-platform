@@ -695,7 +695,7 @@ export default function ExploreDiscoveryClient({
                       href="/marketplace"
                       className="block w-full text-center bg-orange-500 hover:bg-orange-400 text-slate-950 font-black py-2 rounded-2xl text-xs transition-all shadow-md shadow-orange-500/20"
                     >
-                      Order with SpotPay Escrow →
+                      Order with Tukubi Escrow →
                     </Link>
                   </div>
                 </div>

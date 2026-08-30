@@ -42,9 +42,9 @@ export default function AskBusinessAIModal({
   const [messages, setMessages] = useState<Message[]>([
     {
       sender: 'ai',
-      text: `Hello! I am the verified AI Business Assistant for ${businessName}. How can I help you today? You can ask about our products, store hours in ${location}, delivery across the Caribbean and diaspora, or place an order via SpotPay.`,
+      text: `Hello! I am the verified AI Business Assistant for ${businessName}. How can I help you today? You can ask about our products, store hours in ${location}, delivery across the Caribbean and diaspora, or place an order via Tukubi Checkout.`,
       timestamp: 'Just now',
-      groundedFacts: ['Verified Business Profile', 'SpotPay Escrow Active'],
+      groundedFacts: ['Verified Business Profile', 'Tukubi Escrow Active'],
     },
   ]);
   const [input, setInput] = useState('');
@@ -77,7 +77,7 @@ export default function AskBusinessAIModal({
         location,
         hours: 'Monday through Saturday from 8:30 AM to 8:00 PM AST',
         deliveryPolicies:
-          'Worldwide dispatch across the Caribbean, USA (NYC, Miami), Canada (Toronto, Montreal), and UK (London) with SpotPay tracking and customs clearance.',
+          'Worldwide dispatch across the Caribbean, USA (NYC, Miami), Canada (Toronto, Montreal), and UK (London) with certified tracking and customs clearance.',
         products,
       });
 
@@ -111,7 +111,7 @@ export default function AskBusinessAIModal({
                 </span>
               </div>
               <p className="text-[11px] text-slate-400 flex items-center gap-1 mt-0.5">
-                <MapPin className="w-3 h-3 text-brand-sunriseCoral" /> {location} &bull; SpotPay Protected
+                <MapPin className="w-3 h-3 text-brand-sunriseCoral" /> {location} &bull; Escrow Protected
               </p>
             </div>
           </div>

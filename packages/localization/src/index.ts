@@ -5,7 +5,7 @@ export const DEFAULT_LOCALE: Locale = 'en';
 export type TranslationKey =
   | 'nav.home' | 'nav.explore' | 'nav.reels' | 'nav.communities' | 'nav.messages'
   | 'nav.notifications' | 'nav.events' | 'nav.marketplace' | 'nav.saved' | 'nav.settings'
-  | 'nav.creator_studio' | 'nav.business_studio' | 'nav.spotpay' | 'nav.profile'
+  | 'nav.creator_studio' | 'nav.business_studio' | 'nav.payments' | 'nav.profile'
   | 'composer.placeholder' | 'composer.photo' | 'composer.video' | 'composer.live' | 'composer.poll' | 'composer.post'
   | 'feed.for_you' | 'feed.following' | 'feed.friends' | 'feed.caribbean' | 'feed.local' | 'feed.communities' | 'feed.latest'
   | 'feed.empty' | 'feed.loading' | 'feed.error'
@@ -31,7 +31,7 @@ const en: Record<TranslationKey, string> = {
   'nav.settings': 'Settings',
   'nav.creator_studio': 'Creator Studio',
   'nav.business_studio': 'Business Studio',
-  'nav.spotpay': 'SpotPay',
+  'nav.payments': 'Payments',
   'nav.profile': 'Profile',
   'composer.placeholder': "What's happening?",
   'composer.photo': 'Photo',
@@ -93,7 +93,7 @@ const es: Record<TranslationKey, string> = {
   'nav.settings': 'Configuración',
   'nav.creator_studio': 'Estudio de Creadores',
   'nav.business_studio': 'Estudio de Negocios',
-  'nav.spotpay': 'SpotPay',
+  'nav.payments': 'Pagos',
   'nav.profile': 'Perfil',
   'composer.placeholder': '¿Qué está pasando?',
   'composer.photo': 'Foto',
@@ -155,7 +155,7 @@ const fr: Record<TranslationKey, string> = {
   'nav.settings': 'Paramètres',
   'nav.creator_studio': 'Studio Créateur',
   'nav.business_studio': 'Studio Business',
-  'nav.spotpay': 'SpotPay',
+  'nav.payments': 'Paiements',
   'nav.profile': 'Profil',
   'composer.placeholder': 'Que se passe-t-il ?',
   'composer.photo': 'Photo',
@@ -217,7 +217,7 @@ const ht: Record<TranslationKey, string> = {
   'nav.settings': 'Paramèt',
   'nav.creator_studio': 'Estudio Kreyatè',
   'nav.business_studio': 'Estudio Biznis',
-  'nav.spotpay': 'SpotPay',
+  'nav.payments': 'Peman',
   'nav.profile': 'Pwofil',
   'composer.placeholder': 'Kisa k ap pase ?',
   'composer.photo': 'Foto',
@@ -279,7 +279,7 @@ const nl: Record<TranslationKey, string> = {
   'nav.settings': 'Instellingen',
   'nav.creator_studio': 'Creator Studio',
   'nav.business_studio': 'Business Studio',
-  'nav.spotpay': 'SpotPay',
+  'nav.payments': 'Betalingen',
   'nav.profile': 'Profiel',
   'composer.placeholder': 'Wat is er aan de hand?',
   'composer.photo': 'Foto',
@@ -341,7 +341,7 @@ const pap: Record<TranslationKey, string> = {
   'nav.settings': 'Konfigurashon',
   'nav.creator_studio': 'Studio di Kreador',
   'nav.business_studio': 'Studio di Negoshi',
-  'nav.spotpay': 'SpotPay',
+  'nav.payments': 'Pagonan',
   'nav.profile': 'Perfil',
   'composer.placeholder': 'Ki ta pasando?',
   'composer.photo': 'Fotografi',

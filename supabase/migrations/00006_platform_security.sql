@@ -66,7 +66,7 @@ INSERT INTO public.feature_flags (key, description, is_enabled) VALUES
     ('reels_enabled', 'Short-form video surface', false),
     ('live_enabled', 'Live streaming', false),
     ('podcasts_enabled', 'Podcast hosting & RSS', false),
-    ('spotpay_enabled', 'SpotPay wallet & checkout', false),
+    ('payments_enabled', 'Payments & checkout', false),
     ('creator_subscriptions', 'Paid creator memberships', false),
     ('marketplace_enabled', 'Marketplace ordering', false),
     ('ai_search_enabled', 'Ask Caribbean AI search', false),

@@ -8,7 +8,7 @@
 
 ## 1. Top 10 Architectural Principles for Scaling TUKUBI
 
-1. **Maintain Strict Double-Entry Ledger Invariants:** Never bypass SpotPay ledger tables with direct mutable updates. Every financial event must remain auditable, immutable, and paired.
+1. **Maintain Strict Double-Entry Ledger Invariants:** Never bypass Payments ledger tables with direct mutable updates. Every financial event must remain auditable, immutable, and paired.
 2. **Uphold Identity Sovereignty:** Never force public exposure of island origin or location; privacy builds community trust.
 3. **Decouple Heavy Media Streaming:** Video transcoding and live WebRTC streaming must scale horizontally via dedicated CDN edge infrastructures (Cloudflare Stream, AWS IVS) without putting load on transactional database servers.
 4. **Enforce Zero-Tolerance Type Safety:** Prevent runtime regressions by making `pnpm typecheck` and `pnpm test` mandatory in pre-commit and CI/CD pipelines.

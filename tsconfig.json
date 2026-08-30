@@ -21,7 +21,6 @@
       "@caribbean/auth": ["./packages/auth/src"],
       "@caribbean/api": ["./packages/api/src"],
       "@caribbean/payments": ["./packages/payments/src"],
-      "@caribbean/spotpay": ["./packages/payments/src"],
       "@caribbean/ai": ["./packages/ai/src"],
       "@caribbean/trust-safety": ["./packages/trust-safety/src"],
       "@caribbean/localization": ["./packages/localization/src"],

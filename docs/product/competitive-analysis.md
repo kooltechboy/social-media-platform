@@ -20,7 +20,7 @@ We are not cloning any incumbent. Differentiation = **Caribbean Graph** (people 
 ## 2. Our Defensibility
 1. **Caribbean Graph** — proprietary identity/relationship data layer.
 2. **Network density by geography** — DR-first launch strategy (PRODUCT-REQUIREMENTS.md §7) creates local monopolies of attention.
-3. **Creator + business economics in one ecosystem** — SpotPay unifies tips, subs, tickets, marketplace, payouts across fragmented Caribbean payment rails.
+3. **Creator + business economics in one ecosystem** — Unified payments engine coordinates tips, subs, tickets, marketplace, payouts across fragmented Caribbean payment rails.
 4. **Multilingual by design** — en/es/fr/ht/nl/pap at launch vs. English-first incumbents.
 
 ## 3. Risks

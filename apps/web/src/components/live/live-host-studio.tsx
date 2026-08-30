@@ -719,7 +719,7 @@ export default function LiveHostStudio({ user }: LiveHostStudioProps) {
                   >
                     <option value="public">Public (All Caribbean &amp; Diaspora)</option>
                     <option value="followers">Followers Only</option>
-                    <option value="subscribers">SpotPay Subscribers Only</option>
+                    <option value="subscribers">Paid Subscribers Only</option>
                   </select>
                 </div>
               </div>

@@ -7,7 +7,7 @@
 - Features 12 ecosystem creation modalities:
   1. 📝 Post & Update (Dialect, Origin Country & Diaspora Hub tagging)
   2. 🎬 Reel / Short (Vertical video with Caribbean Sounds stems)
-  3. 🔴 Broadcast Live (WebRTC ingest with SpotPay virtual gifts)
+  3. 🔴 Broadcast Live (WebRTC ingest with live virtual gifts)
   4. 🎙 Host Podcast (Audio episodes with iTunes RSS 2.0 XML)
   5. 📅 Cultural Event & Fete (Carnivals, concerts, ticketing)
   6. 🛍 Sell Product / Asset (Physical goods & digital audio stems)
@@ -23,7 +23,7 @@
 - Supports:
   - Multi-line text with Caribbean country & diaspora hub selectors.
   - Interactive multi-choice community polls.
-  - Product attachment with SpotPay price tags.
+  - Product attachment with price tags.
   - Event attachment with date picker.
   - Instant server-side AI risk classification and PostgREST publication.
 
@@ -39,7 +39,7 @@
 ### 4. Modular Pages & Digital Storefronts
 - Built [`apps/web/src/app/pages/page.tsx`](file:///c:/Users/Owner/Desktop/social%20media%20platform/apps/web/src/app/pages/page.tsx) — Showcase directory of verified entities.
 - Built [`apps/web/src/app/pages/create/page.tsx`](file:///c:/Users/Owner/Desktop/social%20media%20platform/apps/web/src/app/pages/create/page.tsx) — 3-step page creation and onboarding wizard.
-- Built [`apps/web/src/app/pages/[slug]/page.tsx`](file:///c:/Users/Owner/Desktop/social%20media%20platform/apps/web/src/app/pages/[slug]/page.tsx) — Modular page profile with storefront shelf, verified announcements, and SpotPay buyer protection.
+- Built [`apps/web/src/app/pages/[slug]/page.tsx`](file:///c:/Users/Owner/Desktop/social%20media%20platform/apps/web/src/app/pages/[slug]/page.tsx) — Modular page profile with storefront shelf, verified announcements, and escrow buyer protection.
 
 ### 5. Interactive Caribbean Discovery Map
 - Built [`apps/web/src/app/map/page.tsx`](file:///c:/Users/Owner/Desktop/social%20media%20platform/apps/web/src/app/map/page.tsx).

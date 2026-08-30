@@ -110,7 +110,7 @@ test.describe('TUKUBI Content Pages', () => {
         '/messages',
         '/notifications',
         '/settings',
-        '/spotpay',
+        '/financial-center',
         '/creator-studio',
         '/create',
         '/admin',

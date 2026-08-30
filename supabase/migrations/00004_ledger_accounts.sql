@@ -1,8 +1,8 @@
--- Migration 00004: SpotPay Double-Entry Financial Ledger, Wallets & PSP Capability Matrix
--- Description: Financial ledger tables, native SpotPay wallet, idempotency protection, payment capability routing
+-- Migration 00004: Payments Double-Entry Financial Ledger, Wallets & PSP Capability Matrix
+-- Description: Financial ledger tables, native Payments wallet, idempotency protection, payment capability routing
 
 CREATE TYPE public.ledger_account_type AS ENUM (
-    'spotpay_wallet',       -- Native stored-value wallet balance
+    'Payments_wallet',       -- Native stored-value wallet balance
     'creator_pending',      -- Creator pending earnings prior to payout
     'platform_revenue',     -- Platform fee & commission account
     'stripe_escrow',        -- External Stripe incoming escrow
@@ -34,7 +34,7 @@ CREATE TABLE public.psp_capabilities (
     country_iso VARCHAR(3) REFERENCES public.countries(iso_code) NOT NULL,
     platform VARCHAR(20) CHECK (platform IN ('web', 'ios', 'android', 'all')) NOT NULL,
     product_type VARCHAR(30) CHECK (product_type IN ('digital_subscription', 'creator_tip', 'live_gift', 'physical_goods', 'event_ticket')) NOT NULL,
-    provider VARCHAR(30) NOT NULL, -- 'spotpay_wallet', 'stripe', 'paypal', 'apple_pay', 'google_pay'
+    provider VARCHAR(30) NOT NULL, -- 'Payments_wallet', 'stripe', 'paypal', 'apple_pay', 'google_pay'
     is_enabled BOOLEAN DEFAULT true NOT NULL,
     created_at TIMESTAMPTZ DEFAULT now() NOT NULL
 );

@@ -9,4 +9,4 @@
 7. **Performance review** — budgets checked for hot paths.
 8. **Final architect review** — then merge.
 
-Payment features additionally route through the SpotPay Agent and financial reconciliation sign-off (see `security-review.md` and PAYMENT-ARCHITECTURE.md).
+Payment features additionally route through the Payments Agent and financial reconciliation sign-off (see `security-review.md` and PAYMENT-ARCHITECTURE.md).

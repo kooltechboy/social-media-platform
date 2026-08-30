@@ -164,6 +164,10 @@ export default async function CreatorFinancialPage() {
                 </div>
               ))}
             </div>
+            <div className="pt-2 border-t border-slate-800 text-[11px] text-slate-400 flex items-center justify-between">
+              <span>Example on $50 Fan Tip:</span>
+              <span>Creator Free: <strong>$45.00 net</strong> • Creator Plus: <strong>$47.50 net</strong> • Creator Pro: <strong>$50.00 net</strong></span>
+            </div>
           </div>
 
           {/* Recent Payout Disbursements */}

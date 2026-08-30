@@ -15,7 +15,7 @@ test.describe('Authentication Flows', () => {
       await expect(page.getByRole('link', { name: /caribbean map/i })).toHaveAttribute('href', '/map');
       await expect(page.getByRole('link', { name: /live shows/i })).toHaveAttribute('href', '/live');
       await expect(page.getByRole('link', { name: /podcasts/i })).toHaveAttribute('href', '/podcasts');
-      await expect(page.getByRole('link', { name: /spotpay/i })).toHaveAttribute('href', '/spotpay');
+      await expect(page.getByRole('link', { name: /financial center/i })).toHaveAttribute('href', '/financial-center');
       await expect(page.getByRole('link', { name: /join (tukubi|tukubi)/i })).toHaveAttribute('href', '/signup');
     });
 

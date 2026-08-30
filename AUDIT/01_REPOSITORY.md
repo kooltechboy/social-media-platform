@@ -11,7 +11,7 @@
 
 - **Domain Packages (23):**
   - Core Foundation: `@caribbean/design-system`, `@caribbean/ui`, `@caribbean/database`, `@caribbean/api`
-  - Financial Subsystem: `@caribbean/spotpay` (Double-entry ledger & PSP Adapters)
+  - Financial Subsystem: `@caribbean/Payments` (Double-entry ledger & PSP Adapters)
   - Social & Community: `@caribbean/social`, `@caribbean/communities`, `@caribbean/messaging`, `@caribbean/notifications`
   - Media & Entertainment: `@caribbean/media`, `@caribbean/live`, `@caribbean/podcasts`
   - Commerce & Creator: `@caribbean/creator`, `@caribbean/marketplace`, `@caribbean/business`, `@caribbean/advertising`

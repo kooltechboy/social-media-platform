@@ -240,7 +240,7 @@ export function InteractiveOnboardingPreview() {
                 { label: '🍛 Food', active: true },
                 { label: '🎭 Carnival', active: true },
                 { label: '💻 Tech', active: true },
-                { label: '💰 SpotPay', active: false },
+                { label: '💰 Finance', active: false },
                 { label: '🏝️ Travel', active: false },
               ].map((pill, idx) => (
                 <div
@@ -286,7 +286,7 @@ export function InteractiveOnboardingPreview() {
             <div className="p-3 rounded-2xl bg-gradient-to-br from-emerald-500/20 to-teal-700/20 border border-emerald-500/40 text-center space-y-1 my-2">
               <Sparkles className="w-5 h-5 text-brand-goldenHour mx-auto" />
               <p className="text-xs font-bold text-white">Passport Activated</p>
-              <p className="text-[9px] text-emerald-300">SpotPay & Feed Seeded</p>
+              <p className="text-[9px] text-emerald-300">Wallet & Feed Seeded</p>
             </div>
           </div>
 

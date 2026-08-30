@@ -103,7 +103,7 @@ export function CaribbeanMapCanvas({ highlightIso, onSelectIsland }: CaribbeanMa
 
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-xl bg-brand-caribbeanSea/10 border border-brand-caribbeanSea/25 text-[11px] font-semibold text-brand-caribbeanSea backdrop-blur-md">
           <Wallet className="w-3.5 h-3.5" />
-          <span>Real-Time SpotPay Multi-Currency Ledger</span>
+          <span>Real-Time Multi-Currency Ledger</span>
         </div>
       </div>
 

@@ -70,7 +70,7 @@ const CREATE_TOOLS: CreateTool[] = [
   {
     id: 'live',
     title: 'Broadcast Live Stream',
-    description: 'Stream live concerts, talks, carnival fetes, and panel sessions with SpotPay virtual gifting.',
+    description: 'Stream live concerts, talks, carnival fetes, and panel sessions with real-time virtual gifting.',
     category: 'media',
     icon: <Tv className="w-6 h-6 text-red-500" />,
     directHref: '/live/broadcast',
@@ -99,7 +99,7 @@ const CREATE_TOOLS: CreateTool[] = [
   {
     id: 'event',
     title: 'Cultural Event & Fete',
-    description: 'Publish carnival, concert, conference, or festival ticketed events with SpotPay escrow.',
+    description: 'Publish carnival, concert, conference, or festival ticketed events with digital escrow.',
     category: 'commerce',
     icon: <Calendar className="w-6 h-6 text-yellow-400" />,
     directHref: '/events',
@@ -242,7 +242,7 @@ export default function CreateHubClient({ user }: CreateHubClientProps) {
           </h1>
 
           <p className="text-xs md:text-sm text-brand-sandstone/70 leading-relaxed">
-            Publish feed posts, upload short reels with Caribbean Sounds, stream live events, launch verified business pages, or sell artisanal products with SpotPay.
+            Publish feed posts, upload short reels with Caribbean Sounds, stream live events, launch verified business pages, or sell artisanal products directly to global customers.
           </p>
 
           <div className="pt-2 flex flex-wrap items-center gap-3">

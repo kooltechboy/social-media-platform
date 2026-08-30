@@ -95,7 +95,6 @@ INSERT INTO public.payment_providers (id, name, status, environment, capabilitie
     ('google_pay', 'Google Pay', 'sandbox', 'sandbox', '{"payment","checkout","tokenization"}', '{"*"}', '{"*"}', true),
     ('cashapp', 'Cash App Pay', 'pending_approval', 'sandbox', '{"payment","refund","webhook_support"}', '{"US"}', '{"USD"}', false),
     ('bank_transfer', 'Bank Transfer Rails', 'pending_approval', 'sandbox', '{"transfer","withdrawal","payout","bank_settlement","account_verification"}', '{"US","DO","JM","TT","BB"}', '{"USD","DOP","JMD","TTD","BBD"}', false),
-    ('spotpay', 'SpotPay', 'disabled', 'test', '{}', '{}', '{}', false)
 ON CONFLICT (id) DO UPDATE SET
     name = EXCLUDED.name,
     capabilities = EXCLUDED.capabilities,

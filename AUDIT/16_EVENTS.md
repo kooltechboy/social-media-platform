@@ -2,4 +2,4 @@
 
 ## 1. Ticketing & RSVP Subsystem
 - In-person, livestream, and hybrid Caribbean events.
-- Instant SpotPay ticket purchase and capacity enforcement.
+- Instant Payments ticket purchase and capacity enforcement.

@@ -78,7 +78,8 @@ describe('TUKUBI — Master Production Readiness Certification Suite', () => {
       expect(REGISTERED_PROVIDERS.google_pay).toBeDefined();
       expect(REGISTERED_PROVIDERS.wipay).toBeDefined();
       expect(REGISTERED_PROVIDERS.cxpay).toBeDefined();
-      expect(REGISTERED_PROVIDERS.spotpay).toBeDefined();
+      expect(REGISTERED_PROVIDERS.cashapp).toBeDefined();
+      expect(REGISTERED_PROVIDERS.bank_transfer).toBeDefined();
 
       expect(DEFAULT_CAPABILITY_RULES.length).toBeGreaterThan(5);
     });

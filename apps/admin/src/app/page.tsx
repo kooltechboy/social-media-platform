@@ -51,6 +51,7 @@ export default async function AdminDashboardPage() {
 
   const NAV = [
     { label: 'Dashboard', icon: LayoutDashboard, href: '/', active: true },
+    { label: 'Revenue Center', icon: TrendingUp, href: '/revenue' },
     { label: 'Users', icon: Users, href: '/users' },
     { label: 'Payments', icon: Wallet, href: '/payments' },
     { label: 'Trust & Safety', icon: ShieldCheck, href: '/trust-safety' },

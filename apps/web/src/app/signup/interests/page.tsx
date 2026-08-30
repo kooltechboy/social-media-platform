@@ -20,7 +20,7 @@ const INTEREST_TOPICS: InterestItem[] = [
   { id: 'food', name: 'Island Culinary 🍛', emoji: '🍛', subtitle: 'Jerk, Roti, Rum, Seafood, Island Fusion' },
   { id: 'carnival', name: 'Carnival Mas 🎭', emoji: '🎭', subtitle: 'Trinidad, Crop Over, Junkanoo, Caribana' },
   { id: 'tech', name: 'CaribAI & Tech 💻', emoji: '💻', subtitle: 'Fintech, developer ecosystem, AI models' },
-  { id: 'finance', name: 'SpotPay & Wallets 💰', emoji: '💰', subtitle: 'Multi-currency ledger, zero-fee remittances' },
+  { id: 'finance', name: 'Caribbean Finance 💰', emoji: '💰', subtitle: 'Multi-currency ledger, commerce & payments' },
   { id: 'travel', name: 'Travel & Islands 🏝️', emoji: '🏝️', subtitle: 'Hidden beaches, eco-resorts, diving, sailing' },
   { id: 'sports', name: 'Sports & Cricket ⚽', emoji: '⚽', subtitle: 'Football, Track & Field, Cricket, Boxing' },
   { id: 'culture', name: 'Art & Heritage 🎨', emoji: '🎨', subtitle: 'Visual art, literature, spoken word, fashion' },

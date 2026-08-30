@@ -37,7 +37,7 @@
 │   ├── recommendations/   # Hybrid recommendation engine (social, geographic, cultural)
 │   ├── search/            # Full-text & semantic search query builders
 │   ├── social/            # Feed query builder, post composer validation, social graph resolution
-│   ├── spotpay/           # Financial Orchestrator, Money value object, double-entry ledger engine
+│   ├── Payments/           # Financial Orchestrator, Money value object, double-entry ledger engine
 │   ├── trust-safety/      # Content risk analysis, moderation cases, sanctions, report rules
 │   └── ui/                # Shared React component library (Buttons, Cards, Badges, Avatars)
 ├── supabase/
@@ -69,14 +69,14 @@
 1. `00001_initial_schema.sql` — Base schema, audit logs, feature flags, extensions.
 2. `00002_identity_profiles.sql` — Profiles, private-by-default Caribbean identity attributes.
 3. `00003_social_graph_posts.sql` — Follows, friendships, blocks, mutes, posts, comments, reactions.
-4. `00004_spotpay_ledger.sql` — Immutable double-entry ledger accounts, entries, idempotency keys, PSP capabilities.
+4. `00004_Payments_ledger.sql` — Immutable double-entry ledger accounts, entries, idempotency keys, PSP capabilities.
 5. `00005_geographic_expansion.sql` — Caribbean sovereign nations, territories, diaspora hub cities, languages.
 6. `00006_platform_security.sql` — Device sessions, security events, MFA tracking, login history.
 7. `00007_social_communities_moderation.sql` — Communities, roles, members, reports, moderation cases, risk scores.
 8. `00008_messaging.sql` — Conversations, members, messages, attachments, read receipts.
 9. `00009_creator_economy.sql` — Creator accounts, subscription tiers, memberships, tips, payouts.
 10. `00010_live_podcasts.sql` — Livestreams, live messages, virtual gifts, podcasts, episodes, RSS metadata.
-11. `00011_spotpay_payments.sql` — Payment intents, payment methods, transaction attempts, refunds, disputes.
+11. `00011_Payments_payments.sql` — Payment intents, payment methods, transaction attempts, refunds, disputes.
 12. `00012_business_events_marketplace.sql` — Businesses, products, marketplace orders, events, ticket inventory.
 13. `00013_advertising.sql` — Advertisers, ad campaigns, ad sets, ads, impression & click logging.
 14. `00014_fix_community_rls_recursion.sql` — Resolves circular subquery recursion in community member RLS.

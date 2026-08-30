@@ -60,7 +60,7 @@ export default async function TukubiLiveSidebar() {
               .from("ledger_accounts")
               .select("id, account_type, currency")
               .eq("owner_id", user.id)
-              .eq("account_type", "spotpay_wallet")
+              .in("account_type", ["user_wallet", "wallet"])
               .maybeSingle()
           : Promise.resolve({ data: null }),
         supabase

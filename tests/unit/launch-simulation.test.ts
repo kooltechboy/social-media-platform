@@ -1,6 +1,5 @@
 import { describe, it, expect } from 'vitest';
 import { ContentRiskEngine } from '../../packages/trust-safety/src/index';
-import { SpotPayOrchestrator, Money } from '../../packages/spotpay/src/index';
 import { computeOrderTotals, transitionOrder } from '../../packages/marketplace/src/index';
 import { MediaPipeline } from '../../packages/media/src/index';
 import { CaribbeanFeedRanker } from '../../packages/recommendations/src/index';

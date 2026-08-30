@@ -467,7 +467,7 @@ function ActiveLivePlayer({
                 </button>
               )}
 
-              {/* SpotPay Gift Modal */}
+              {/* Live Gift Modal */}
               <LiveGiftModal livestreamId={stream.id} isAuthenticated={Boolean(user)} />
             </div>
           </div>

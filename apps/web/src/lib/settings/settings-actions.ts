@@ -116,25 +116,27 @@ export async function updateNotificationPreferencesAction(
   const mentionsEnabled = formData.get('mentions_enabled') === 'on' || formData.get('mentions_enabled') === 'true';
   const messagesEnabled = formData.get('messages_enabled') === 'on' || formData.get('messages_enabled') === 'true';
   const communityEnabled = formData.get('community_enabled') === 'on' || formData.get('community_enabled') === 'true';
-  const spotpayEnabled = formData.get('spotpay_enabled') === 'on' || formData.get('spotpay_enabled') === 'true';
+  const paymentsEnabled = formData.get('payments_enabled') === 'on' || formData.get('payments_enabled') === 'true';
   const marketingEnabled = formData.get('marketing_enabled') === 'on' || formData.get('marketing_enabled') === 'true';
 
+  const upsertPayload: Record<string, any> = {
+    profile_id: user.id,
+    push_enabled: pushEnabled,
+    email_enabled: emailEnabled,
+    sms_enabled: smsEnabled,
+    likes_enabled: likesEnabled,
+    comments_enabled: commentsEnabled,
+    follows_enabled: followsEnabled,
+    mentions_enabled: mentionsEnabled,
+    messages_enabled: messagesEnabled,
+    community_enabled: communityEnabled,
+    payments_enabled: paymentsEnabled,
+    marketing_enabled: marketingEnabled,
+    updated_at: new Date().toISOString(),
+  };
+
   const { error } = await supabase.from('notification_preferences').upsert(
-    {
-      profile_id: user.id,
-      push_enabled: pushEnabled,
-      email_enabled: emailEnabled,
-      sms_enabled: smsEnabled,
-      likes_enabled: likesEnabled,
-      comments_enabled: commentsEnabled,
-      follows_enabled: followsEnabled,
-      mentions_enabled: mentionsEnabled,
-      messages_enabled: messagesEnabled,
-      community_enabled: communityEnabled,
-      spotpay_enabled: spotpayEnabled,
-      marketing_enabled: marketingEnabled,
-      updated_at: new Date().toISOString(),
-    },
+    upsertPayload,
     { onConflict: 'profile_id' }
   );
 

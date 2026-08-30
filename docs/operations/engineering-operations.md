@@ -15,7 +15,7 @@ Pull Request
 
 - Production deploys must be rollback-capable (Vercel instant rollback + reversible migrations).
 - Database migrations deploy **before** app code that depends on them (expand → migrate → contract pattern for zero-downtime changes).
-- Financial-domain PRs additionally require SpotPay agent review + ledger test evidence (AGENTS.md review process).
+- Financial-domain PRs additionally require Payments agent review + ledger test evidence (AGENTS.md review process).
 
 ## 2. Testing Strategy
 

@@ -6,7 +6,7 @@ import { test, expect } from '@playwright/test';
  * Tests the global header component including:
  * - Brand logo link
  * - Instant search with live results
- * - SpotPay wallet shortcut
+ * - Financial Center shortcut
  * - Notifications bell
  * - Messages icon
  * - Session widget (Sign In / Profile)
@@ -23,13 +23,13 @@ test.describe('App Header — Brand & Navigation Links', () => {
     await expect(brandLink).toHaveAttribute('href', '/');
   });
 
-  test('SpotPay Wallet link is visible and links to /spotpay', async ({ page }) => {
+  test('Financial Center link is visible and links to /financial-center', async ({ page }) => {
     await page.goto('/');
     await page.waitForLoadState('networkidle');
 
-    const spotpayLink = page.getByLabel('SpotPay Wallet balance');
-    if (await spotpayLink.isVisible().catch(() => false)) {
-      await expect(spotpayLink).toHaveAttribute('href', '/spotpay');
+    const financialLink = page.getByLabel('Financial Center');
+    if (await financialLink.isVisible().catch(() => false)) {
+      await expect(financialLink).toHaveAttribute('href', '/financial-center');
     }
   });
 
@@ -150,8 +150,8 @@ test.describe('App Header — Cross-Page Consistency', () => {
 
     // Gateway pages isolate children without the AppShell header
     // But the login page itself has an TUKUBI heading, so we check that the 
-    // standard AppHeader nav links (SpotPay, Notifications, Messages) are NOT present
-    const spotpayLink = page.getByLabel('SpotPay Wallet balance');
-    await expect(spotpayLink).not.toBeVisible();
+    // standard AppHeader nav links (Financial Center, Notifications, Messages) are NOT present
+    const financialLink = page.getByLabel('Financial Center');
+    await expect(financialLink).not.toBeVisible();
   });
 });

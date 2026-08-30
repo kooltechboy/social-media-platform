@@ -37,7 +37,7 @@ describe('Root Route Authentication Gate & Complete Protected-Route Security Aud
     '/notifications',
     '/profile',
     '/settings',
-    '/spotpay',
+    '/financial-center',
     '/creator-studio',
     '/create',
     '/search',

@@ -49,13 +49,13 @@ However, a strict compile-time forensic audit (`pnpm typecheck`) surfaced **seve
 | `/explore` | Ask Caribbean AI & Cultural Search | RSC + Search Bar | Public | Functional |
 | `/reels` | Vertical short-form video feed | RSC + Video player | Public | Functional |
 | `/communities` | Island & diaspora community hubs | RSC + Server Actions | Public | Action typing fixes needed |
-| `/creator-studio`| Creator dashboard, earnings & studio | RSC + SpotPay wallet | Creator Only | Typecheck fixes needed |
+| `/creator-studio`| Creator dashboard, earnings & studio | RSC + Payments wallet | Creator Only | Typecheck fixes needed |
 | `/podcasts` | Caribbean audio/video podcast hub | RSC + Audio player | Public | Functional |
 | `/live` | Live broadcast & chat stream | RSC + WebRTC/HLS | Public / Auth | Live chat functional |
 | `/marketplace` | Diaspora & regional goods commerce | RSC + Cart Actions | Public / Auth | Cart action fixes needed |
 | `/events` | Cultural festivals & ticket sales | RSC + RSVP Actions | Public / Auth | Action import fixes needed |
 | `/messages` | Direct & group community chat | RSC + Supabase RT | Authenticated | Conversation typing fix needed |
-| `/spotpay` | Ledger wallet, cards, payout history | RSC + Modal | Authenticated | Functional |
+| `/Payments` | Ledger wallet, cards, payout history | RSC + Modal | Authenticated | Functional |
 | `/notifications`| User alerts, tips, mentions | RSC + Realtime | Authenticated | Functional |
 | `/settings` | Profile, privacy & language preferences| Client / Form Actions | Authenticated | Functional |
 

@@ -19,8 +19,8 @@ The database schema is version-controlled via 16 numbered migration files (`supa
 6. Messaging: conversations, conversation_members, messages, message_attachments, message_receipts
 7. Creator & Media: creator_accounts, subscriptions, videos, video_views, stories, story_views
 8. Live & Podcasts: livestreams, live_messages, live_gifts, podcasts, podcast_episodes, podcast_followers
-9. SpotPay Ledger: ledger_accounts, ledger_entries, psp_capabilities
-10. SpotPay Payments: payment_intents, payment_methods, payment_attempts, idempotency_keys, refunds, disputes, chargebacks, payouts, commissions
+9. Payments Ledger: ledger_accounts, ledger_entries, psp_capabilities
+10. Payments Payments: payment_intents, payment_methods, payment_attempts, idempotency_keys, refunds, disputes, chargebacks, payouts, commissions
 11. Business & Commerce: businesses, business_locations, business_reviews, products, orders, order_items, events, event_attendees, tickets
 12. Advertising: advertisers, campaigns, ad_sets, ads, ad_impressions, ad_clicks
 13. Platform & Security: feature_flags, notifications, analytics_events, audit_logs, security_events, device_sessions, login_events

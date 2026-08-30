@@ -45,7 +45,7 @@ export default async function SettingsPage() {
     mentions_enabled: true,
     messages_enabled: true,
     community_enabled: true,
-    spotpay_enabled: true,
+    payments_enabled: true,
     marketing_enabled: false,
   };
 
@@ -60,7 +60,7 @@ export default async function SettingsPage() {
         mentions_enabled: notifResult.data.mentions_enabled ?? true,
         messages_enabled: notifResult.data.messages_enabled ?? true,
         community_enabled: notifResult.data.community_enabled ?? true,
-        spotpay_enabled: notifResult.data.spotpay_enabled ?? true,
+        payments_enabled: (notifResult.data as any).payments_enabled ?? true,
         marketing_enabled: notifResult.data.marketing_enabled ?? false,
       }
     : defaultNotifPrefs;

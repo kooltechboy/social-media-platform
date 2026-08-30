@@ -31,7 +31,7 @@ function relativeTime(iso: string): string {
 
 function accountTypeLabel(type: string): string {
   switch (type) {
-    case 'spotpay_wallet':
+    case 'user_wallet':
     case 'wallet':
       return 'Account Ledger';
     case 'creator_pending':

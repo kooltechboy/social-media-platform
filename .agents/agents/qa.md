@@ -7,6 +7,6 @@
 - Failure/empty/loading states tested, not just happy paths.
 
 ## Rules
-- Payment test matrix is non-negotiable before SpotPay features ship.
+- Payment test matrix is non-negotiable before payment features ship.
 - RLS tests must run as anon/authenticated/owner/service roles.
 - Never mark a test skipped to make CI pass.

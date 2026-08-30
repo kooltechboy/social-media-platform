@@ -2,8 +2,7 @@
 
 > **North Star:** The digital home of the Caribbean and its global diaspora.
 > **TUKUBI** = Where people discover, socialize, create, sell, and buy.
-> **SpotPay** = How people move and spend money (financial-services platform, digital wallet, send/receive, cross-border transfers, Calypso Card, cards with Apple Pay & Google Pay).
-> Visual Brand Identity: **TUKUBI (Social • Culture • Commerce) — Powered by SpotPay (Money • Payments • Wallet)**.
+> Visual Brand Identity: **TUKUBI — Caribbean Digital Ecosystem & Social Commerce**.
 
 ---
 
@@ -17,7 +16,7 @@ Caribbean people and the diaspora (est. 40M+ globally incl. 10M+ in the US, Cana
 
 ---
 
-## 2. Strategic Ecosystem Architecture: TUKUBI × SpotPay
+## 2. Strategic Ecosystem Architecture: TUKUBI Universal Commerce
 
 ```
                          TUKUBI
@@ -33,26 +32,26 @@ Caribbean people and the diaspora (est. 40M+ globally incl. 10M+ in the US, Cana
                             │
              ┌──────────────┼──────────────┐
              │              │              │
-       🟣 SPOTPAY       APPLE PAY      GOOGLE PAY
-     (Fastest/Rec.)         │              │
-             │              ├──────── PAYPAL
-             │              │              │
-             └──── CREDIT / DEBIT (Stripe) ┘
+          PAYPAL        APPLE PAY      GOOGLE PAY
+      (Primary Merchant)    │              │
+             │              └──────── CARDS
+             │                             │
+             └────── MULTI-SELLER SPLIT ───┘
                             │
                     PAYMENT LAYER (PSP)
                             │
                      MERCHANT / SELLER
 ```
 
-### Three Distinct, Synergistic Businesses:
-1. **Business #1 — TUKUBI (Social & Commerce Platform):**
-   - Monetization: Subscriptions (Business Free $0, Seller Pro $14.99/mo, Business+ $39.99/mo, Enterprise), Advertising, Featured Listings, Creator AI Tools.
-   - Proposition: *"TUKUBI doesn't take a percentage of your product sales on eligible Seller plans."*
-2. **Business #2 — SpotPay (Financial Infrastructure):**
-   - Financial services platform (not a bank) providing digital wallet, send/receive, international transfers, Calypso Card, and card economics with Apple Pay/Google Pay.
-   - Revenue: Payment processing, card interchange, FX, cross-border transfers, merchant/payout services.
-3. **Business #3 — The TUKUBI × SpotPay Network:**
-   - Closed-loop economic network: TUKUBI acquires users/merchants; SpotPay powers frictionless, instant within-ecosystem money movement (peer transfers, creator tips, shopping, event tickets, withdrawals).
+### Synergistic Monetization Architecture:
+1. **TUKUBI Social & Commerce Platform:**
+   - Monetization: Free tiers + configurable subscriptions (Starter $0, Seller Pro $14.99/mo, Business+ $39.99/mo, Enterprise), Advertising, Featured Listings, Creator AI Tools.
+   - Versioned commission engine separating Gross Merchandise Value (GMV) from TUKUBI Retained Net Revenue.
+2. **Universal Payment & Financial Infrastructure:**
+   - Multi-rail payment orchestration with PayPal as primary merchant rail, Stripe / Card processing, and native mobile in-app purchases.
+   - Immutable double-entry financial ledger enforcing zero-sum balance conservation ($\sum \text{Debits} + \sum \text{Credits} = 0$).
+3. **Multi-Seller Fulfillment Network:**
+   - Unified checkout allowing buyers to purchase from multiple Caribbean merchants in a single transaction, automatically splitting orders and payouts per merchant.
 
 ---
 
@@ -62,9 +61,9 @@ Caribbean people and the diaspora (est. 40M+ globally incl. 10M+ in the US, Cana
 2. **Social & Moments** — posts, photos, video reels, comments, reactions, multi-mode feed, search, notifications.
 3. **Communities** — public/private diaspora groups with community moderation.
 4. **Messaging** — end-to-end encrypted DMs and group chats.
-5. **Creator OS** — reels, podcasts, live streaming, creator subscriptions, tipping, and instant SpotPay wallet liquidity.
+5. **Creator OS** — reels, podcasts, live streaming, creator subscriptions, tipping, and instant ledger payouts.
 6. **Business OS & Digital Storefronts** — verified merchant profiles, catalog ordering, bookings, reviews, and AI Business Concierge.
-7. **SpotPay Unified Checkout** — multimodal checkout with `🟣 Pay with SpotPay` as the preferred/fastest rail alongside Apple Pay, Google Pay, PayPal, and Cards.
+7. **TUKUBI Unified Checkout** — multimodal checkout supporting PayPal and eligible debit/credit cards with itemized pricing and regional shipping.
 8. **CaribAI** — Grounded "Ask This Business" AI assistant, dialect translation (Patois/Creole/Spanish/Kreyòl), and content planning.
 
 ---
@@ -76,17 +75,16 @@ At TUKUBI checkout, users experience frictionless payment choice:
 ```
 Choose how you want to pay
 
-🟣 Pay with SpotPay                       [ FASTEST • RECOMMENDED ]
-   Pay instantly from your SpotPay balance ($850.00). Zero FX markups.
-   Funds stay liquid to send to friends, tip creators, or buy next!
+🅿️ PayPal                               [ RECOMMENDED ]
+   Pay securely with your PayPal account or saved payment methods.
 
 Or choose another supported payment method:
  Apple Pay            G Pay Google Pay
-💳 Card (Visa/MC)      P PayPal
+💳 Card (Visa/MC)      🏦 Direct Bank Wire
 ```
 
 - **Runtime Capability Discovery:** Payment methods are resolved at runtime via `psp_capabilities` rather than hardcoding regional banking integrations.
-- **Transparent Processing Costs:** TUKUBI charges zero percentage commission on Seller Pro; payment processing pass-through fees (e.g. 2.9% + 30¢ on card rails) are transparently disclosed.
+- **Transparent Processing Costs:** Transparent unit economics on every transaction: Gross, Commission, Processing Fee, and Seller Net.
 
 ---
 
@@ -96,22 +94,20 @@ Or choose another supported payment method:
 Creator/Merchant Earns:
       │
       ▼
-$1,000 in SpotPay Account
+$1,000 in Merchant Account
       │
-      ├── Send $100 to Family in Jamaica (Instant P2P)
-      ├── Tip $25 to a Collaborating Creator
-      ├── Buy $200 of Artisanal Caribbean Goods from a Dominican Merchant
-      ├── Pay $50 Utility / Mobile Bill
-      └── Withdraw $625 to Bank Account / Spend via Calypso Card
+      ├── Reinvest in Platform Promotion / Ads
+      ├── Tip a Collaborating Creator
+      ├── Purchase Raw Materials from Caribbean Suppliers
+      └── Withdraw to Local Caribbean Bank Account via PayPal / Card Payout
 ```
 
 ---
 
 ## 6. Onboarding & Account Linking
 
-- **Connect SpotPay Step:** Optional, high-value connection flow:
-  *"Connect your SpotPay wallet to unlock faster payments, creator tips, marketplace purchases and instant cross-border transfers. [Connect] [Skip for now]"*
-- **No Merchant Friction:** Merchants are never forced to use a single wallet; TUKUBI enables them to accept whatever payment methods their customers prefer.
+- **Seller Onboarding Flow:** Streamlined merchant onboarding with instant PayPal seller integration and verification.
+- **No Merchant Friction:** Merchants accept whatever payment methods their customers prefer with automatic currency conversion and transparent escrow release.
 
 ---
 
@@ -130,7 +126,7 @@ $1,000 in SpotPay Account
 ## 8. Detailed References
 
 - Geographic Data Model: `docs/architecture/geographic-data-model.md`
-- Monetization Engine: `supabase/migrations/00028_monetization_seller_plans_affiliates.sql`
-- SpotPay Architecture: `PAYMENT-ARCHITECTURE.md`
+- Monetization Engine: `supabase/migrations/00036_hybrid_monetization_revenue_architecture.sql`
+- Payment Architecture: `PAYMENT-ARCHITECTURE.md`
 - System Architecture: `ARCHITECTURE.md`
 - Implementation Roadmap: `docs/IMPLEMENTATION-ROADMAP.md`

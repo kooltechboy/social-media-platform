@@ -13,5 +13,5 @@
 
 ## 2. Inviolable Architectural Mandates
 1. **RLS on All Tables:** Postgres Row Level Security on 100% of tables exposed via PostgREST.
-2. **SpotPay Double-Entry Ledger:** Balance calculation is derived from paired credit/debit records; direct mutable column increments are strictly prohibited.
-3. **Store Policy Compliance:** Digital goods in mobile route via Apple IAP / Google Play Billing; web commerce routes via SpotPay / Stripe / PayPal.
+2. **Payments Double-Entry Ledger:** Balance calculation is derived from paired credit/debit records; direct mutable column increments are strictly prohibited.
+3. **Store Policy Compliance:** Digital goods in mobile route via Apple IAP / Google Play Billing; web commerce routes via Payments / Stripe / PayPal.

@@ -1,9 +1,9 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Heart, X, Sparkles, CheckCircle, Loader2, CreditCard, Lock } from 'lucide-react';
+import { Heart, X, Sparkles, CheckCircle, Loader2 } from 'lucide-react';
 
-interface SpotPayTipModalProps {
+interface CreatorTipModalProps {
   isOpen: boolean;
   onClose: () => void;
   creatorName: string;
@@ -13,12 +13,12 @@ interface SpotPayTipModalProps {
 
 const TIP_AMOUNTS = [2, 5, 10, 25, 50];
 
-export default function SpotPayTipModal({
+export default function CreatorTipModal({
   isOpen,
   onClose,
   creatorName,
   creatorHandle,
-}: SpotPayTipModalProps) {
+}: CreatorTipModalProps) {
   const [selectedAmount, setSelectedAmount] = useState<number>(5);
   const [customAmount, setCustomAmount] = useState<string>('');
   const [message, setMessage] = useState('');

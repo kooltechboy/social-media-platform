@@ -26,7 +26,7 @@ All write mutations across `apps/web` are executed via Next.js Server Actions (`
 
 ## 2. Authorization & Middleware Boundary (`middleware.ts`)
 
-- `apps/web/src/middleware.ts` intercepts protected routes (`/creator-studio`, `/spotpay`, `/settings`, `/messages`, `/admin`) and verifies Supabase auth session tokens.
+- `apps/web/src/middleware.ts` intercepts protected routes (`/creator-studio`, `/Payments`, `/settings`, `/messages`, `/admin`) and verifies Supabase auth session tokens.
 - Unauthenticated requests to protected areas are redirected to `/login?next=...`.
 - Client role spoofing is strictly prohibited; database RLS policies enforce tenant boundaries on all reads and writes.
 
@@ -34,6 +34,6 @@ All write mutations across `apps/web` are executed via Next.js Server Actions (`
 
 ## 3. Background Jobs & Webhooks
 
-- Webhook signature verification and replay protection are defined in `@caribbean/spotpay` (`WebhookProcessor`).
+- Webhook signature verification and replay protection are defined in `@caribbean/Payments` (`WebhookProcessor`).
 - Idempotency keys are enforced for all monetary transactions and order creations.
 - Automatic welcome message generation for new profiles is handled via PostgreSQL trigger (`supabase/migrations/00015_realtime_welcome.sql`).

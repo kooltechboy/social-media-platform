@@ -149,7 +149,7 @@ export default function CreatePageWizard() {
             {pageName} is Officially Published!
           </h2>
           <p className="text-xs md:text-sm text-brand-sandstone/60 max-w-md">
-            Your verified Caribbean Page is live on the Tukubi network with instant SpotPay storefront and community reach.
+            Your verified Caribbean Page is live on the Tukubi network with instant digital storefront and community reach.
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -181,7 +181,7 @@ export default function CreatePageWizard() {
           <h1 className="text-xl md:text-2xl font-black text-brand-sandstone mt-0.5">
             {step === 1 && 'Select Your Page Entity Type'}
             {step === 2 && 'Identity, Geography & Mission'}
-            {step === 3 && 'Storefront, Verification & SpotPay'}
+            {step === 3 && 'Storefront, Verification & Payments'}
           </h1>
         </div>
         <Link href="/pages" className="text-xs text-brand-sandstone/60 hover:text-brand-sandstone">
@@ -334,7 +334,7 @@ export default function CreatePageWizard() {
         </div>
       )}
 
-      {/* Step 3: Storefront & SpotPay Settlement */}
+      {/* Step 3: Storefront & Payment Settlement */}
       {step === 3 && (
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="bg-brand-dusk/80 border border-slate-800 rounded-3xl p-5 space-y-4">
@@ -366,7 +366,7 @@ export default function CreatePageWizard() {
             </p>
             <div className="p-3 rounded-2xl bg-brand-twilight border border-slate-800 flex items-center gap-3">
               <span className="text-xs font-black text-brand-sandstone capitalize">{selectedType} Verified Tier</span>
-              <span className="text-[10px] text-brand-sandstone/60">• Includes dispute protection &amp; instant SpotPay settlement</span>
+              <span className="text-[10px] text-brand-sandstone/60">• Includes dispute protection &amp; instant payment settlement</span>
             </div>
           </div>
 

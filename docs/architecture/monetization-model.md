@@ -8,7 +8,7 @@ Multiple revenue streams from day one of monetization (Phase 6+); never exclusiv
 | Stream | Mechanism | Phase |
 | :--- | :--- | :--- |
 | Creator subscriptions | $2.99/$4.99/$9.99 tiers; platform take-rate transparent | 6 |
-| Tips & live gifts | SpotPay wallet ledger transactions | 6 |
+| Tips & live gifts | Digital wallet ledger transactions | 6 |
 | Marketplace commissions | % of physical/digital goods | 7+ |
 | Event ticketing fees | per-ticket fee at checkout | 7 |
 | Business subscriptions | Business/Business Pro plans (research-priced) | 7 |
@@ -26,9 +26,9 @@ Pricing is **not finalized** without market research per segment/country (purcha
 revenue_engine/
 ├── advertising/ ├── subscriptions/ ├── marketplace/ ├── creator/
 ├── events/      ├── podcasts/      ├── live/        ├── business/
-└── payments/    (SpotPay orchestration)
+└── payments/    (Payment orchestration)
 ```
-Every revenue stream feeds **one centralized financial reporting system** reconciled against the SpotPay ledger (`PAYMENT-ARCHITECTURE.md`).
+Every revenue stream feeds **one centralized financial reporting system** reconciled against the financial ledger (`PAYMENT-ARCHITECTURE.md`).
 
 ## 4. Creator Economics
 

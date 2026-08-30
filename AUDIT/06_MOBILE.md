@@ -5,9 +5,9 @@
 - `apps/mobile/src/`:
   - `theme/tokens.ts`: Mobile design tokens matching web theme.
   - `lib/supabase.ts`: Mobile Supabase client configuration.
-  - `components/Header.tsx`: Top header with SpotPay wallet balance and alerts.
-  - `components/BottomNav.tsx`: 5-tab native navigation bar (Home, Explore, Communities, Messages, SpotPay).
-  - `screens/HomeScreen.tsx`, `screens/ExploreScreen.tsx`, `screens/CommunitiesScreen.tsx`, `screens/MessagesScreen.tsx`, `screens/SpotPayScreen.tsx`.
+  - `components/Header.tsx`: Top header with Payments wallet balance and alerts.
+  - `components/BottomNav.tsx`: 5-tab native navigation bar (Home, Explore, Communities, Messages, Payments).
+  - `screens/HomeScreen.tsx`, `screens/ExploreScreen.tsx`, `screens/CommunitiesScreen.tsx`, `screens/MessagesScreen.tsx`, `screens/PaymentsScreen.tsx`.
 
 ## 2. In-App Purchase (IAP) Strategy
 - Digital goods (virtual gifts, subscriptions) on iOS/Android route through Apple IAP and Google Play Billing in strict adherence to App Store guidelines.

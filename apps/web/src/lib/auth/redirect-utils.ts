@@ -13,7 +13,7 @@ const ALLOWED_REDIRECT_PREFIXES = [
   '/podcasts',
   '/marketplace',
   '/creator-studio',
-  '/spotpay',
+  '/financial-center',
   '/communities',
   '/map',
   '/events',

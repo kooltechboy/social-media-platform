@@ -15,7 +15,7 @@ GATE 2: PRIORITIZATION & ARCHITECTURAL REVIEW (Current)
   ↓
 GATE 3: REMEDIATION & REFACTORING
   - Phase 1: P0 Type Safety & Build Fixes
-  - Phase 2: SpotPay Live Adapter & Wallet Checkout Wiring
+  - Phase 2: Payments Live Adapter & Wallet Checkout Wiring
   - Phase 3: Mobile Modularization (Expo Router & Supabase)
   - Phase 4: UI/UX Refinement & Shared Component Integration
   ↓

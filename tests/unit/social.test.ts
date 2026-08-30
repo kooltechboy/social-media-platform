@@ -300,9 +300,9 @@ describe('Feed post normalization and pipeline state reconciliation', () => {
 
     // Product Mode
     const productContent = (text: string, title: string, price: string) =>
-      `${text}\n\n🛍️ **Featured Product:** ${title} ($${price} USD on SpotPay)`;
+      `${text}\n\n🛍️ **Featured Product:** ${title} ($${price} USD on TUKUBI)`;
     const prod = productContent('Check out new batch', 'Blue Mountain Beans', '35.00');
-    expect(prod).toContain('🛍️ **Featured Product:** Blue Mountain Beans ($35.00 USD on SpotPay)');
+    expect(prod).toContain('🛍️ **Featured Product:** Blue Mountain Beans ($35.00 USD on TUKUBI)');
 
     // Event Mode
     const eventContent = (text: string, title: string, date: string) =>
@@ -312,9 +312,9 @@ describe('Feed post normalization and pipeline state reconciliation', () => {
 
     // Fundraiser Mode
     const fundraiserContent = (text: string, title: string, goal: string) =>
-      `${text}\n\n💰 **SpotPay Fundraiser:** ${title} (Goal: $${goal} USD)`;
+      `${text}\n\n💰 **Community Fundraiser:** ${title} (Goal: $${goal} USD)`;
     const fund = fundraiserContent('Please support', 'Hurricane Relief Fund', '50,000');
-    expect(fund).toContain('💰 **SpotPay Fundraiser:** Hurricane Relief Fund (Goal: $50,000 USD)');
+    expect(fund).toContain('💰 **Community Fundraiser:** Hurricane Relief Fund (Goal: $50,000 USD)');
 
     // Civic Alert Mode
     const alertContent = (text: string) => `🚨 **OFFICIAL CARIBBEAN ADVISORY** 🚨\n\n${text}`;

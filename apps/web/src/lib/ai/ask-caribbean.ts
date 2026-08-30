@@ -227,7 +227,7 @@ export async function askCaribbean(query: string): Promise<AskResponse> {
             entityType: 'products',
             entityId: product.id,
             title: product.title,
-            snippet: `${(product.price_minor / 100).toFixed(2)} ${product.currency} — ${product.description ?? 'SpotPay Verified Product'}`,
+            snippet: `${(product.price_minor / 100).toFixed(2)} ${product.currency} — ${product.description ?? 'Tukubi Verified Product'}`,
             href: '/marketplace',
           });
         }

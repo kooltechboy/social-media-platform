@@ -28,7 +28,7 @@ const CAPABILITIES = [
     roles: { super_admin: true, admin: true, moderator: false, support: false, content_manager: false, analyst: false },
   },
   {
-    name: 'Manage Financials & SpotPay Ledger',
+    name: 'Manage Financials & Payment Ledger',
     desc: 'Inspect double-entry ledger accounts, transactions, and payouts',
     roles: { super_admin: true, admin: true, moderator: false, support: false, content_manager: false, analyst: false },
   },
