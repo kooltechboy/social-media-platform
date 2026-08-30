@@ -6,17 +6,10 @@ import {
   Phone,
   Video,
   Mic,
-  MicOff,
-  Volume2,
-  PhoneOff,
-  VideoOff,
   CheckCircle,
   Sparkles,
   Paperclip,
   X,
-  Play,
-  Pause,
-  Monitor,
 } from 'lucide-react';
 import { createSupabaseBrowserClient } from '../lib/supabase/browser';
 import { sendMessageAction, type MessageActionState } from '../lib/messaging/actions';
@@ -46,19 +39,15 @@ export default function MessageThread({
   const [pending, startTransition] = useTransition();
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // Call states
-  const [isVoiceCallActive, setIsVoiceCallActive] = useState(false);
-  const [isVideoCallActive, setIsVideoCallActive] = useState(false);
-  const [callDuration, setCallDuration] = useState(0);
-  const [isMuted, setIsMuted] = useState(false);
-  const [isVideoOff, setIsVideoOff] = useState(false);
-  const [isScreenSharing, setIsScreenSharing] = useState(false);
+  // Honest "coming soon" toast state for unimplemented features
+  const [comingSoonToast, setComingSoonToast] = useState<string | null>(null);
 
   // Audio voice note & attachment state
   const [isRecordingAudio, setIsRecordingAudio] = useState(false);
   const [recordingSeconds, setRecordingSeconds] = useState(0);
   const [selectedFileCount, setSelectedFileCount] = useState(0);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+
 
   useEffect(() => {
     setMessages(initialMessages);
@@ -89,18 +78,6 @@ export default function MessageThread({
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight });
   }, [messages]);
 
-  // Call duration timer
-  useEffect(() => {
-    let interval: ReturnType<typeof setInterval>;
-    if (isVoiceCallActive || isVideoCallActive) {
-      interval = setInterval(() => {
-        setCallDuration((prev) => prev + 1);
-      }, 1000);
-    } else {
-      setCallDuration(0);
-    }
-    return () => clearInterval(interval);
-  }, [isVoiceCallActive, isVideoCallActive]);
 
   // Audio recording timer
   useEffect(() => {
@@ -135,15 +112,10 @@ export default function MessageThread({
 
   function handleSendVoiceNote() {
     setIsRecordingAudio(false);
-    // Append optimistic voice note message
-    const voiceMsg: ThreadMessage = {
-      id: `audio_${Date.now()}`,
-      sender_id: currentUserId,
-      body: `🎙️ Voice Note (${formatTime(recordingSeconds)})`,
-      created_at: new Date().toISOString(),
-      profiles: { display_name: 'You' },
-    };
-    setMessages((prev) => [...prev, voiceMsg]);
+    // Voice notes require MediaRecorder + storage integration — coming soon
+    // Show a temporary user-facing notice instead of injecting a fake message
+    setComingSoonToast('Voice notes are coming soon to Tukubi! 🎙️');
+    setTimeout(() => setComingSoonToast(null), 4000);
   }
 
   return (
@@ -169,17 +141,23 @@ export default function MessageThread({
         <div className="flex items-center gap-2">
           <button
             type="button"
-            onClick={() => setIsVoiceCallActive(true)}
+            onClick={() => {
+              setComingSoonToast('Voice & video calls are coming soon to Tukubi! 📞');
+              setTimeout(() => setComingSoonToast(null), 4000);
+            }}
             className="p-2.5 rounded-2xl bg-brand-dusk/80 hover:bg-brand-sunriseCoral/20 text-slate-300 hover:text-brand-sunriseCoral border border-slate-700 hover:border-brand-sunriseCoral/40 transition-all shadow-md"
-            title="Start Voice Call"
+            title="Voice calls coming soon"
           >
             <Phone className="w-4 h-4" />
           </button>
           <button
             type="button"
-            onClick={() => setIsVideoCallActive(true)}
+            onClick={() => {
+              setComingSoonToast('Voice & video calls are coming soon to Tukubi! 📞');
+              setTimeout(() => setComingSoonToast(null), 4000);
+            }}
             className="p-2.5 rounded-2xl bg-brand-dusk/80 hover:bg-brand-caribbeanSea/20 text-slate-300 hover:text-brand-caribbeanSea border border-slate-700 hover:border-brand-caribbeanSea/40 transition-all shadow-md"
-            title="Start Video Call"
+            title="Video calls coming soon"
           >
             <Video className="w-4 h-4" />
           </button>
@@ -224,6 +202,13 @@ export default function MessageThread({
         <p role="alert" className="mx-5 mb-2 text-xs text-rose-400 bg-rose-500/10 border border-rose-500/30 rounded-xl px-3 py-2">
           {state.error}
         </p>
+      )}
+
+      {comingSoonToast && (
+        <div role="status" className="mx-5 mb-2 text-xs text-amber-300 bg-amber-500/10 border border-amber-500/30 rounded-xl px-3 py-2 flex items-center gap-2">
+          <span>🚀</span>
+          <span>{comingSoonToast}</span>
+        </div>
       )}
 
       {/* Audio Voice Note Recording Ribbon */}
@@ -311,123 +296,6 @@ export default function MessageThread({
           <Send className="w-4 h-4" />
         </button>
       </form>
-
-      {/* ────────────────────────────────────────────────────────── */}
-      {/* VOICE CALL OVERLAY MODAL                                   */}
-      {/* ────────────────────────────────────────────────────────── */}
-      {isVoiceCallActive && (
-        <div className="absolute inset-0 z-50 bg-brand-twilight/95 backdrop-blur-2xl flex flex-col items-center justify-between p-8 text-center animate-fadeIn">
-          <div className="space-y-2 pt-6">
-            <span className="text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full bg-brand-sunriseCoral/20 text-emerald-300 border border-brand-sunriseCoral/30">
-              WebRTC Voice Call • Encrypted
-            </span>
-            <h3 className="text-xl font-black text-brand-sandstone">{peerName}</h3>
-            <p className="text-xs text-brand-sandstone/60 font-mono">{formatTime(callDuration)}</p>
-          </div>
-
-          {/* Animated Voice Equalizer */}
-          <div className="w-32 h-32 rounded-full bg-gradient-to-tr from-brand-caribbeanSea via-brand-sunriseCoral to-brand-goldenHour p-1 shadow-2xl flex items-center justify-center animate-pulse-glow">
-            <div className="w-full h-full rounded-full bg-brand-twilight flex items-center justify-center">
-              <Volume2 className="w-12 h-12 text-brand-sunriseCoral animate-bounce" />
-            </div>
-          </div>
-
-          {/* Voice Call Actions */}
-          <div className="flex items-center gap-6 pb-6">
-            <button
-              type="button"
-              onClick={() => setIsMuted(!isMuted)}
-              className={`p-4 rounded-full transition-all shadow-lg ${
-                isMuted ? 'bg-rose-500 text-brand-sandstone' : 'bg-brand-dusk text-slate-200 hover:bg-slate-700'
-              }`}
-            >
-              {isMuted ? <MicOff className="w-6 h-6" /> : <Mic className="w-6 h-6" />}
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setIsVoiceCallActive(false)}
-              className="p-5 rounded-full bg-rose-600 hover:bg-rose-500 text-brand-sandstone shadow-xl shadow-rose-600/30 transition-all hover:scale-105"
-              title="End Voice Call"
-            >
-              <PhoneOff className="w-7 h-7" />
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* ────────────────────────────────────────────────────────── */}
-      {/* VIDEO CALL OVERLAY MODAL                                   */}
-      {/* ────────────────────────────────────────────────────────── */}
-      {isVideoCallActive && (
-        <div className="absolute inset-0 z-50 bg-brand-twilight flex flex-col justify-between p-4 animate-fadeIn">
-          {/* Main Remote Video Stream Canvas */}
-          <div className="relative flex-1 bg-brand-dusk rounded-3xl overflow-hidden border border-slate-800 shadow-2xl flex items-center justify-center">
-            {isVideoOff ? (
-              <div className="text-center space-y-2">
-                <VideoOff className="w-12 h-12 text-slate-600 mx-auto" />
-                <p className="text-xs text-brand-sandstone/60">{peerName}&apos;s camera is off</p>
-              </div>
-            ) : (
-              <div className="w-full h-full bg-gradient-to-tr from-slate-950 via-slate-900 to-sky-950 flex flex-col items-center justify-center space-y-3 relative">
-                <span className="text-xs font-black text-brand-caribbeanSea bg-brand-twilight/80 px-3 py-1 rounded-full border border-brand-caribbeanSea/30 backdrop-blur-md">
-                  HD WebRTC Video • {formatTime(callDuration)}
-                </span>
-                <h4 className="text-lg font-black text-brand-sandstone">{peerName}</h4>
-              </div>
-            )}
-
-            {/* Self PIP View */}
-            <div className="absolute bottom-4 right-4 w-32 h-44 bg-brand-twilight rounded-2xl border border-brand-caribbeanSea/40 shadow-2xl overflow-hidden flex flex-col items-center justify-center text-center p-2">
-              <span className="text-[9px] font-bold text-brand-sandstone/60">Your Camera</span>
-            </div>
-          </div>
-
-          {/* Video Call Controls */}
-          <div className="flex items-center justify-center gap-4 pt-4">
-            <button
-              type="button"
-              onClick={() => setIsMuted(!isMuted)}
-              className={`p-3.5 rounded-2xl transition-all shadow-md ${
-                isMuted ? 'bg-rose-500 text-brand-sandstone' : 'bg-brand-dusk text-slate-200 hover:bg-slate-700'
-              }`}
-            >
-              {isMuted ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setIsVideoOff(!isVideoOff)}
-              className={`p-3.5 rounded-2xl transition-all shadow-md ${
-                isVideoOff ? 'bg-rose-500 text-brand-sandstone' : 'bg-brand-dusk text-slate-200 hover:bg-slate-700'
-              }`}
-            >
-              {isVideoOff ? <VideoOff className="w-5 h-5" /> : <Video className="w-5 h-5" />}
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setIsScreenSharing(!isScreenSharing)}
-              className={`p-3.5 rounded-2xl transition-all shadow-md ${
-                isScreenSharing ? 'bg-brand-caribbeanSea text-slate-950 font-bold' : 'bg-brand-dusk text-slate-200 hover:bg-slate-700'
-              }`}
-              title="Share Screen"
-            >
-              <Monitor className="w-5 h-5" />
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setIsVideoCallActive(false)}
-              className="p-4 rounded-2xl bg-rose-600 hover:bg-rose-500 text-brand-sandstone shadow-xl shadow-rose-600/30 transition-all hover:scale-105"
-              title="End Video Call"
-            >
-              <PhoneOff className="w-6 h-6" />
-            </button>
-          </div>
-        </div>
-      )}
     </section>
   );
 }
-

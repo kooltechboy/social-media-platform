@@ -65,7 +65,10 @@ export async function GET(request: NextRequest) {
     }
 
     return NextResponse.json({ available: true });
-  } catch (err: any) {
-    return NextResponse.json({ available: true, warning: 'Database check skipped' });
+  } catch {
+    return NextResponse.json(
+      { error: 'Service temporarily unavailable. Please try again.' },
+      { status: 503 }
+    );
   }
 }

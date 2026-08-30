@@ -77,6 +77,7 @@ export default function FeedStream({ initialPosts, currentUserId }: FeedStreamPr
   const [reportReason, setReportReason] = useState<string>('spam');
   const [isSubmittingReport, setIsSubmittingReport] = useState(false);
   const [savedPostIds, setSavedPostIds] = useState<Set<string>>(new Set());
+  const [confirmDeletePostId, setConfirmDeletePostId] = useState<string | null>(null);
 
   // SpotPay Tip state
   const [tipTarget, setTipTarget] = useState<{ name: string; handle: string } | null>(null);
@@ -97,9 +98,7 @@ export default function FeedStream({ initialPosts, currentUserId }: FeedStreamPr
     }
 
     window.addEventListener('tukubi:new-post', handleNewPost);
-    window.addEventListener('tukubi:new-post', handleNewPost);
     return () => {
-      window.removeEventListener('tukubi:new-post', handleNewPost);
       window.removeEventListener('tukubi:new-post', handleNewPost);
     };
   }, []);
@@ -280,9 +279,13 @@ export default function FeedStream({ initialPosts, currentUserId }: FeedStreamPr
     }
   }
 
-  async function handleDeletePost(postId: string) {
-    if (!confirm('Are you sure you want to delete this post? This action cannot be undone.')) return;
+  function handleDeletePost(postId: string) {
     setActiveMenuPostId(null);
+    setConfirmDeletePostId(postId);
+  }
+
+  async function executeDeletePost(postId: string) {
+    setConfirmDeletePostId(null);
 
     // Optimistically remove from state
     setPosts((prev) => prev.filter((p) => p.id !== postId));
@@ -1009,6 +1012,39 @@ export default function FeedStream({ initialPosts, currentUserId }: FeedStreamPr
                 className="w-full flex items-center justify-center gap-2 p-3 rounded-2xl bg-gradient-to-r from-brand-caribbeanSea/20 to-brand-sunriseCoral/20 border border-brand-caribbeanSea/30 hover:bg-brand-caribbeanSea/30 text-brand-sandstone font-extrabold text-xs transition-colors mt-2"
               >
                 <Repeat className="w-4 h-4 text-brand-caribbeanSea" /> Repost to My Caribbean Feed
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {confirmDeletePostId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fadeIn">
+          <div className="bg-brand-dusk border border-slate-700/80 rounded-3xl p-6 max-w-sm w-full shadow-2xl space-y-4">
+            <div className="flex items-center gap-3 text-rose-400">
+              <div className="p-2.5 rounded-2xl bg-rose-500/20 border border-rose-500/30">
+                <Trash2 className="w-5 h-5" />
+              </div>
+              <h3 className="font-extrabold text-base text-brand-sandstone">Delete Post</h3>
+            </div>
+            <p className="text-xs text-brand-sandstone/70 leading-relaxed">
+              Are you sure you want to delete this post? This action cannot be undone.
+            </p>
+            <div className="flex items-center justify-end gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setConfirmDeletePostId(null)}
+                className="px-4 py-2 rounded-2xl text-xs font-bold text-slate-300 hover:bg-slate-800 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => executeDeletePost(confirmDeletePostId)}
+                className="px-4 py-2 rounded-2xl text-xs font-black bg-rose-600 hover:bg-rose-500 text-white transition-colors shadow-lg shadow-rose-600/20"
+              >
+                Delete
               </button>
             </div>
           </div>

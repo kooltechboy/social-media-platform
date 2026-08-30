@@ -302,11 +302,6 @@ export default function UniversalComposer({
             detail: { post: result.post },
           })
         );
-        window.dispatchEvent(
-          new CustomEvent('tukubi:new-post', {
-            detail: { post: result.post },
-          })
-        );
       }
 
       if (onPostCreated) onPostCreated(result.post);

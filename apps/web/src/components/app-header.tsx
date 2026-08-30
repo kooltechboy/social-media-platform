@@ -47,13 +47,19 @@ export default function AppHeader() {
     }
 
     setIsOpen(true);
+    const sanitized = val.replace(/[^a-zA-Z0-9_\-\s]/g, '').trim();
+    if (!sanitized) {
+      setLivePeople([]);
+      return;
+    }
+
     const supabase = createSupabaseBrowserClient();
     if (supabase) {
       try {
         const { data } = await supabase
           .from('profiles')
           .select('id, display_name, username, avatar_url, origin_country_iso, account_type')
-          .or(`display_name.ilike.%${val}%,username.ilike.%${val}%`)
+          .or(`display_name.ilike.%${sanitized}%,username.ilike.%${sanitized}%`)
           .limit(5);
 
         if (data) {

@@ -42,6 +42,7 @@ export default async function FinancialCenterOverviewPage() {
   let recentTransactionsCount = 0;
   let creatorPendingMinor = 0;
   let creatorCurrency = "USD";
+  let activeSubscriptionsCount = 0;
 
   const creatorAccount = accounts.find(
     (a: { account_type: string }) => a.account_type === "creator_pending",
@@ -50,22 +51,33 @@ export default async function FinancialCenterOverviewPage() {
     creatorCurrency = creatorAccount.currency || "USD";
   }
 
-  if (accountIds.length > 0) {
-    const { data: entries } = await supabase
-      .from("ledger_entries")
-      .select("id, amount, account_id, entry_type")
-      .in("account_id", accountIds);
+  // Fetch ledger entries and active subscriptions in parallel
+  const fetchExtras = await Promise.all([
+    accountIds.length > 0
+      ? supabase
+          .from("ledger_entries")
+          .select("id, amount, account_id, entry_type")
+          .in("account_id", accountIds)
+      : Promise.resolve({ data: [] }),
+    creatorRes.data?.id
+      ? supabase
+          .from("subscriptions")
+          .select("id", { count: "exact", head: true })
+          .eq("creator_account_id", creatorRes.data.id)
+          .eq("status", "active")
+      : Promise.resolve({ count: 0 }),
+  ]);
 
-    const ledgerEntries = entries ?? [];
-    recentTransactionsCount = ledgerEntries.length;
+  const ledgerEntries = fetchExtras[0].data ?? [];
+  recentTransactionsCount = ledgerEntries.length;
+  activeSubscriptionsCount = fetchExtras[1].count ?? 0;
 
-    if (creatorAccount) {
-      const creatorEntries = ledgerEntries.filter(
-        (e: { account_id: string }) => e.account_id === creatorAccount.id,
-      );
-      const totalAmount = sumLedgerMinorUnits(creatorEntries);
-      creatorPendingMinor = Math.max(0, totalAmount);
-    }
+  if (creatorAccount) {
+    const creatorEntries = ledgerEntries.filter(
+      (e: { account_id: string }) => e.account_id === creatorAccount.id,
+    );
+    const totalAmount = sumLedgerMinorUnits(creatorEntries);
+    creatorPendingMinor = Math.max(0, totalAmount);
   }
 
   const creatorMoney = new Money(creatorPendingMinor, creatorCurrency);
@@ -75,9 +87,10 @@ export default async function FinancialCenterOverviewPage() {
       paymentMethodsCount={paymentMethodsCount}
       connectedProvidersCount={connectedProvidersCount}
       recentTransactionsCount={recentTransactionsCount}
-      activeSubscriptionsCount={0}
+      activeSubscriptionsCount={activeSubscriptionsCount}
       creatorPendingFormatted={creatorMoney.format()}
       hasCreatorAccount={Boolean(creatorRes.data)}
     />
   );
 }
+

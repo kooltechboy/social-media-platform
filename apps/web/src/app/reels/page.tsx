@@ -22,7 +22,7 @@ export default async function ReelsPage({
   if (supabase) {
     const { data: dbVideos } = await supabase
       .from('videos')
-      .select('id, title, storage_path, duration_seconds, view_count, created_at, profiles(id, display_name, username)')
+      .select('id, title, storage_path, duration_seconds, view_count, likes_count, comments_count, audio_track, location_tag, created_at, profiles(id, display_name, username)')
       .eq('video_kind', 'reel')
       .order('created_at', { ascending: false })
       .limit(20);
@@ -30,6 +30,7 @@ export default async function ReelsPage({
     if (dbVideos && dbVideos.length > 0) {
       dynamicReels = dbVideos.map((v: any, index: number) => {
         const p = v.profiles;
+        const durationSecs = v.duration_seconds || 30;
         const gradients = [
           'from-purple-900/60 via-slate-900 to-[#090D16]',
           'from-amber-900/60 via-slate-900 to-[#090D16]',
@@ -42,12 +43,12 @@ export default async function ReelsPage({
           creatorId: p?.id,
           creator: p?.display_name || 'Caribbean Creator',
           handle: p?.username || 'creator',
-          views: `${v.view_count || 0} views`,
-          likes: '0',
-          comments: '0',
-          sound: 'Original Caribbean Audio',
-          location: 'Caribbean & Diaspora 🌴',
-          duration: `0:${v.duration_seconds < 10 ? '0' : ''}${v.duration_seconds || 30}`,
+          views: `${(v.view_count || 0).toLocaleString()} views`,
+          likes: String(v.likes_count || 0),
+          comments: String(v.comments_count || 0),
+          sound: v.audio_track || 'Original Caribbean Audio',
+          location: v.location_tag || 'Caribbean & Diaspora 🌴',
+          duration: `${Math.floor(durationSecs / 60)}:${String(durationSecs % 60).padStart(2, '0')}`,
           gradient: gradients[index % gradients.length],
           videoUrl: v.storage_path,
         };

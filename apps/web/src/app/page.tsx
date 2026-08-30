@@ -87,7 +87,7 @@ export default async function HomePage() {
           author: profile?.display_name || 'Caribbean Member',
           handle: profile?.username || 'member',
           avatarUrl: profile?.avatar_url || null,
-          verified: profile?.is_verified ?? true,
+          verified: profile?.is_verified ?? false,
           location: 'Tukubi Network 🌴',
           time: relativeTime(p.created_at),
           content: p.content || '',
