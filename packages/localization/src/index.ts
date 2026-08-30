@@ -2,10 +2,30 @@ export const LOCALES = ['en', 'es', 'fr', 'ht', 'nl', 'pap'] as const;
 export type Locale = (typeof LOCALES)[number];
 export const DEFAULT_LOCALE: Locale = 'en';
 
+export interface LocaleMeta {
+  code: Locale;
+  name: string;
+  nativeName: string;
+  flag: string;
+  dir: 'ltr' | 'rtl';
+  region: string;
+}
+
+export const LOCALE_DETAILS: Record<Locale, LocaleMeta> = {
+  en: { code: 'en', name: 'English', nativeName: 'English', flag: '🌐', dir: 'ltr', region: 'Global & Caribbean' },
+  es: { code: 'es', name: 'Spanish', nativeName: 'Español', flag: '🇨🇺', dir: 'ltr', region: 'Cuba, RD, Puerto Rico, Caribe' },
+  fr: { code: 'fr', name: 'French', nativeName: 'Français', flag: '🇲🇶', dir: 'ltr', region: 'Martinique, Guadeloupe, Guyane, Haïti' },
+  ht: { code: 'ht', name: 'Haitian Creole', nativeName: 'Kreyòl Ayisyen', flag: '🇭🇹', dir: 'ltr', region: 'Ayiti & Dyaspora' },
+  nl: { code: 'nl', name: 'Dutch', nativeName: 'Nederlands', flag: '🇸🇷', dir: 'ltr', region: 'Suriname, Aruba, Curaçao' },
+  pap: { code: 'pap', name: 'Papiamentu', nativeName: 'Papiamentu', flag: '🇨🇼', dir: 'ltr', region: 'Aruba, Bonaire, Kòrsou' },
+};
+
 export type TranslationKey =
   | 'nav.home' | 'nav.explore' | 'nav.reels' | 'nav.communities' | 'nav.messages'
   | 'nav.notifications' | 'nav.events' | 'nav.marketplace' | 'nav.saved' | 'nav.settings'
   | 'nav.creator_studio' | 'nav.business_studio' | 'nav.payments' | 'nav.profile'
+  | 'nav.reels_shorts' | 'nav.sounds' | 'nav.live_streams' | 'nav.podcasts'
+  | 'nav.cultural_events' | 'nav.pages_stores' | 'nav.financial_center' | 'nav.map' | 'nav.create_hub' | 'nav.sign_in'
   | 'composer.placeholder' | 'composer.photo' | 'composer.video' | 'composer.live' | 'composer.poll' | 'composer.post'
   | 'feed.for_you' | 'feed.following' | 'feed.friends' | 'feed.caribbean' | 'feed.local' | 'feed.communities' | 'feed.latest'
   | 'feed.empty' | 'feed.loading' | 'feed.error'
@@ -15,6 +35,16 @@ export type TranslationKey =
   | 'community.join' | 'community.leave' | 'community.members' | 'community.rules'
   | 'messages.empty' | 'messages.placeholder' | 'messages.send'
   | 'notifications.empty'
+  | 'post.translate' | 'post.show_original' | 'post.translating' | 'post.translated_from'
+  | 'post.translation_unavailable' | 'post.report' | 'post.repost' | 'post.tip_creator'
+  | 'settings.language' | 'settings.language_title' | 'settings.language_description' | 'settings.language_updated'
+  | 'settings.save_changes' | 'settings.account' | 'settings.privacy' | 'settings.notifications'
+  | 'onboarding.choose_language' | 'onboarding.language_subtitle' | 'onboarding.welcome'
+  | 'onboarding.identity_title' | 'onboarding.identity_subtitle' | 'onboarding.search_roots'
+  | 'onboarding.diaspora_question' | 'onboarding.continue'
+  | 'marketplace.title' | 'marketplace.search' | 'marketplace.buy_now' | 'marketplace.add_to_cart' | 'marketplace.out_of_stock'
+  | 'a11y.open_menu' | 'a11y.close' | 'a11y.search'
+  | 'time.just_now' | 'time.minutes_ago' | 'time.hours_ago' | 'time.days_ago'
   | 'common.loading' | 'common.error' | 'common.retry' | 'common.cancel' | 'common.save' | 'common.delete'
   | 'common.see_more' | 'common.offline' | 'common.private';
 
@@ -33,6 +63,16 @@ const en: Record<TranslationKey, string> = {
   'nav.business_studio': 'Business Studio',
   'nav.payments': 'Payments',
   'nav.profile': 'Profile',
+  'nav.reels_shorts': 'Reels & Shorts',
+  'nav.sounds': 'Caribbean Sounds',
+  'nav.live_streams': 'Live Streams',
+  'nav.podcasts': 'Podcasts Network',
+  'nav.cultural_events': 'Cultural Events',
+  'nav.pages_stores': 'Pages & Stores',
+  'nav.financial_center': 'Financial Center',
+  'nav.map': 'Caribbean Map',
+  'nav.create_hub': 'Create Hub',
+  'nav.sign_in': 'Sign In',
   'composer.placeholder': "What's happening?",
   'composer.photo': 'Photo',
   'composer.video': 'Video',
@@ -69,6 +109,42 @@ const en: Record<TranslationKey, string> = {
   'messages.placeholder': 'Write a message…',
   'messages.send': 'Send',
   'notifications.empty': 'You are all caught up.',
+  'post.translate': 'Translate to {lang}',
+  'post.show_original': 'Show original',
+  'post.translating': 'Translating…',
+  'post.translated_from': 'Translated from {lang}',
+  'post.translation_unavailable': 'Translation temporarily unavailable.',
+  'post.report': 'Report Content',
+  'post.repost': 'Repost',
+  'post.tip_creator': 'Tip Creator',
+  'settings.language': 'Language',
+  'settings.language_title': 'Language & Region',
+  'settings.language_description': 'Select your preferred language for the TUKUBI platform.',
+  'settings.language_updated': 'Language preference saved.',
+  'settings.save_changes': 'Save Changes',
+  'settings.account': 'Account',
+  'settings.privacy': 'Privacy',
+  'settings.notifications': 'Notifications',
+  'onboarding.choose_language': 'Choose your language',
+  'onboarding.language_subtitle': 'Select your preferred language. You can change this at any time in Settings.',
+  'onboarding.welcome': 'Welcome to TUKUBI',
+  'onboarding.identity_title': 'Identity Setup',
+  'onboarding.identity_subtitle': 'To personalize your cultural feeds and connect with your diaspora, select your Caribbean roots.',
+  'onboarding.search_roots': 'Search all 30+ islands and territories…',
+  'onboarding.diaspora_question': 'Are you living outside your home territory (Diaspora)?',
+  'onboarding.continue': 'Continue',
+  'marketplace.title': 'Marketplace',
+  'marketplace.search': 'Search marketplace…',
+  'marketplace.buy_now': 'Buy Now',
+  'marketplace.add_to_cart': 'Add to Cart',
+  'marketplace.out_of_stock': 'Out of stock',
+  'a11y.open_menu': 'Open menu',
+  'a11y.close': 'Close',
+  'a11y.search': 'Search',
+  'time.just_now': 'Just now',
+  'time.minutes_ago': '{count}m ago',
+  'time.hours_ago': '{count}h ago',
+  'time.days_ago': '{count}d ago',
   'common.loading': 'Loading…',
   'common.error': 'Something went wrong.',
   'common.retry': 'Retry',
@@ -95,6 +171,16 @@ const es: Record<TranslationKey, string> = {
   'nav.business_studio': 'Estudio de Negocios',
   'nav.payments': 'Pagos',
   'nav.profile': 'Perfil',
+  'nav.reels_shorts': 'Reels y Cortos',
+  'nav.sounds': 'Sonidos del Caribe',
+  'nav.live_streams': 'Transmisiones en Vivo',
+  'nav.podcasts': 'Red de Podcasts',
+  'nav.cultural_events': 'Eventos Culturales',
+  'nav.pages_stores': 'Páginas y Tiendas',
+  'nav.financial_center': 'Centro Financiero',
+  'nav.map': 'Mapa del Caribe',
+  'nav.create_hub': 'Crear Centro',
+  'nav.sign_in': 'Iniciar Sesión',
   'composer.placeholder': '¿Qué está pasando?',
   'composer.photo': 'Foto',
   'composer.video': 'Video',
@@ -131,6 +217,42 @@ const es: Record<TranslationKey, string> = {
   'messages.placeholder': 'Escribe un mensaje…',
   'messages.send': 'Enviar',
   'notifications.empty': 'Estás al día.',
+  'post.translate': 'Traducir al {lang}',
+  'post.show_original': 'Mostrar original',
+  'post.translating': 'Traduciendo…',
+  'post.translated_from': 'Traducido del {lang}',
+  'post.translation_unavailable': 'Traducción no disponible temporalmente.',
+  'post.report': 'Reportar Contenido',
+  'post.repost': 'Republicar',
+  'post.tip_creator': 'Dar Propina',
+  'settings.language': 'Idioma',
+  'settings.language_title': 'Idioma y Región',
+  'settings.language_description': 'Selecciona tu idioma preferido para la plataforma TUKUBI.',
+  'settings.language_updated': 'Preferencia de idioma guardada.',
+  'settings.save_changes': 'Guardar Cambios',
+  'settings.account': 'Cuenta',
+  'settings.privacy': 'Privacidad',
+  'settings.notifications': 'Notificaciones',
+  'onboarding.choose_language': 'Elige tu idioma',
+  'onboarding.language_subtitle': 'Selecciona tu idioma preferido. Puedes cambiarlo en cualquier momento en Configuración.',
+  'onboarding.welcome': 'Bienvenido a TUKUBI',
+  'onboarding.identity_title': 'Configuración de Identidad',
+  'onboarding.identity_subtitle': 'Para personalizar tus feeds culturales y conectar con tu diáspora, selecciona tus raíces caribeñas.',
+  'onboarding.search_roots': 'Buscar entre más de 30 islas y territorios…',
+  'onboarding.diaspora_question': '¿Vives fuera de tu territorio natal (Diáspora)?',
+  'onboarding.continue': 'Continuar',
+  'marketplace.title': 'Mercado',
+  'marketplace.search': 'Buscar en el mercado…',
+  'marketplace.buy_now': 'Comprar Ahora',
+  'marketplace.add_to_cart': 'Añadir al Carrito',
+  'marketplace.out_of_stock': 'Agotado',
+  'a11y.open_menu': 'Abrir menú',
+  'a11y.close': 'Cerrar',
+  'a11y.search': 'Buscar',
+  'time.just_now': 'Hace un momento',
+  'time.minutes_ago': 'Hace {count}m',
+  'time.hours_ago': 'Hace {count}h',
+  'time.days_ago': 'Hace {count}d',
   'common.loading': 'Cargando…',
   'common.error': 'Algo salió mal.',
   'common.retry': 'Reintentar',
@@ -157,6 +279,16 @@ const fr: Record<TranslationKey, string> = {
   'nav.business_studio': 'Studio Business',
   'nav.payments': 'Paiements',
   'nav.profile': 'Profil',
+  'nav.reels_shorts': 'Reels & Courts',
+  'nav.sounds': 'Sons des Caraïbes',
+  'nav.live_streams': 'Diffusions en Direct',
+  'nav.podcasts': 'Réseau de Podcasts',
+  'nav.cultural_events': 'Événements Culturels',
+  'nav.pages_stores': 'Pages & Boutiques',
+  'nav.financial_center': 'Centre Financier',
+  'nav.map': 'Carte des Caraïbes',
+  'nav.create_hub': 'Créer un Hub',
+  'nav.sign_in': 'Se connecter',
   'composer.placeholder': 'Que se passe-t-il ?',
   'composer.photo': 'Photo',
   'composer.video': 'Vidéo',
@@ -193,6 +325,42 @@ const fr: Record<TranslationKey, string> = {
   'messages.placeholder': 'Écrivez un message…',
   'messages.send': 'Envoyer',
   'notifications.empty': 'Vous êtes à jour.',
+  'post.translate': 'Traduire en {lang}',
+  'post.show_original': "Afficher l'original",
+  'post.translating': 'Traduction en cours…',
+  'post.translated_from': 'Traduit du {lang}',
+  'post.translation_unavailable': 'Traduction temporairement indisponible.',
+  'post.report': 'Signaler le contenu',
+  'post.repost': 'Repartager',
+  'post.tip_creator': 'Pourboire créateur',
+  'settings.language': 'Langue',
+  'settings.language_title': 'Langue & Région',
+  'settings.language_description': 'Sélectionnez votre langue préférée pour la plateforme TUKUBI.',
+  'settings.language_updated': 'Préférence de langue enregistrée.',
+  'settings.save_changes': 'Enregistrer les modifications',
+  'settings.account': 'Compte',
+  'settings.privacy': 'Confidentialité',
+  'settings.notifications': 'Notifications',
+  'onboarding.choose_language': 'Choisissez votre langue',
+  'onboarding.language_subtitle': 'Sélectionnez votre langue préférée. Vous pouvez la modifier à tout moment dans Paramètres.',
+  'onboarding.welcome': 'Bienvenue sur TUKUBI',
+  'onboarding.identity_title': 'Configuration de l’identité',
+  'onboarding.identity_subtitle': 'Pour personnaliser vos fils culturels et vous connecter à votre diaspora, sélectionnez vos origines caribéennes.',
+  'onboarding.search_roots': 'Rechercher parmi plus de 30 îles et territoires…',
+  'onboarding.diaspora_question': 'Vivez-vous hors de votre territoire d’origine (Diaspora) ?',
+  'onboarding.continue': 'Continuer',
+  'marketplace.title': 'Marché',
+  'marketplace.search': 'Rechercher sur le marché…',
+  'marketplace.buy_now': 'Acheter maintenant',
+  'marketplace.add_to_cart': 'Ajouter au panier',
+  'marketplace.out_of_stock': 'Rupture de stock',
+  'a11y.open_menu': 'Ouvrir le menu',
+  'a11y.close': 'Fermer',
+  'a11y.search': 'Rechercher',
+  'time.just_now': 'À l’instant',
+  'time.minutes_ago': 'Il y a {count}m',
+  'time.hours_ago': 'Il y a {count}h',
+  'time.days_ago': 'Il y a {count}j',
   'common.loading': 'Chargement…',
   'common.error': 'Une erreur est survenue.',
   'common.retry': 'Réessayer',
@@ -215,10 +383,20 @@ const ht: Record<TranslationKey, string> = {
   'nav.marketplace': 'Mache',
   'nav.saved': 'Sere',
   'nav.settings': 'Paramèt',
-  'nav.creator_studio': 'Estudio Kreyatè',
-  'nav.business_studio': 'Estudio Biznis',
+  'nav.creator_studio': 'Estidyo Kreyatè',
+  'nav.business_studio': 'Estidyo Biznis',
   'nav.payments': 'Peman',
   'nav.profile': 'Pwofil',
+  'nav.reels_shorts': 'Reels ak Kout',
+  'nav.sounds': 'Son Karayib',
+  'nav.live_streams': 'Difizyon an Dirèk',
+  'nav.podcasts': 'Rezo Podkas',
+  'nav.cultural_events': 'Evènman Kiltirèl',
+  'nav.pages_stores': 'Paj ak Boutik',
+  'nav.financial_center': 'Sant Finansye',
+  'nav.map': 'Kat Karayib la',
+  'nav.create_hub': 'Kreye Sant',
+  'nav.sign_in': 'Konekte',
   'composer.placeholder': 'Kisa k ap pase ?',
   'composer.photo': 'Foto',
   'composer.video': 'Videyo',
@@ -244,7 +422,7 @@ const ht: Record<TranslationKey, string> = {
   'search.placeholder': 'Chèche nan Karayib la…',
   'search.ask_caribbean': 'Mande Karayib la',
   'wallet.balance': 'Balans',
-  'wallet.top_up': 'Recharje',
+  'wallet.top_up': 'Rechaje',
   'wallet.send': 'Voye',
   'wallet.payouts': 'Peman',
   'community.join': 'Rantre',
@@ -255,6 +433,42 @@ const ht: Record<TranslationKey, string> = {
   'messages.placeholder': 'Ekri yon mesaj…',
   'messages.send': 'Voye',
   'notifications.empty': 'Ou a jou.',
+  'post.translate': 'Tradwi an {lang}',
+  'post.show_original': 'Montre orijinal la',
+  'post.translating': 'Ap tradwi…',
+  'post.translated_from': 'Tradwi soti nan {lang}',
+  'post.translation_unavailable': 'Tradiksyon an pa disponib pou kounye a.',
+  'post.report': 'Siyale Kontni',
+  'post.repost': 'Repibliye',
+  'post.tip_creator': 'Bay Kreyatè a Ti Kouròn',
+  'settings.language': 'Lang',
+  'settings.language_title': 'Lang ak Rejyon',
+  'settings.language_description': 'Chwazi lang ou pi pito pou platfòm TUKUBI a.',
+  'settings.language_updated': 'Preferans lang sovgade.',
+  'settings.save_changes': 'Sovgade Chanjman yo',
+  'settings.account': 'Kont',
+  'settings.privacy': 'Konfidansyalite',
+  'settings.notifications': 'Notifikasyon',
+  'onboarding.choose_language': 'Chwazi lang ou',
+  'onboarding.language_subtitle': 'Chwazi lang ou pi pito. Ou ka chanje sa nenpòt ki lè nan Paramèt.',
+  'onboarding.welcome': 'Byenvini sou TUKUBI',
+  'onboarding.identity_title': 'Konfigirasyon Idantite',
+  'onboarding.identity_subtitle': 'Pou pèsonalize fil kiltirèl ou epi konekte ak dyaspora ou, chwazi rasin Karayib ou.',
+  'onboarding.search_roots': 'Chèche nan tout plis pase 30 zile ak teritwa…',
+  'onboarding.diaspora_question': 'Èske w ap viv deyò teritwa natal ou (Dyaspora) ?',
+  'onboarding.continue': 'Kontinye',
+  'marketplace.title': 'Mache',
+  'marketplace.search': 'Chèche nan mache a…',
+  'marketplace.buy_now': 'Achte Kounye a',
+  'marketplace.add_to_cart': 'Mete nan Panyen',
+  'marketplace.out_of_stock': 'Fini',
+  'a11y.open_menu': 'Louvri meni',
+  'a11y.close': 'Fèmen',
+  'a11y.search': 'Chèche',
+  'time.just_now': 'Kounye a',
+  'time.minutes_ago': 'Sa gen {count}m',
+  'time.hours_ago': 'Sa gen {count}h',
+  'time.days_ago': 'Sa gen {count}j',
   'common.loading': 'Ap chaje…',
   'common.error': 'Yon erè pase.',
   'common.retry': 'Eseye ankò',
@@ -281,6 +495,16 @@ const nl: Record<TranslationKey, string> = {
   'nav.business_studio': 'Business Studio',
   'nav.payments': 'Betalingen',
   'nav.profile': 'Profiel',
+  'nav.reels_shorts': 'Reels & Korte video’s',
+  'nav.sounds': 'Caribische Geluiden',
+  'nav.live_streams': 'Livestreams',
+  'nav.podcasts': 'Podcastnetwerk',
+  'nav.cultural_events': 'Culturele Evenementen',
+  'nav.pages_stores': 'Pagina’s & Winkels',
+  'nav.financial_center': 'Financieel Centrum',
+  'nav.map': 'Caribische Kaart',
+  'nav.create_hub': 'Maak Hub',
+  'nav.sign_in': 'Inloggen',
   'composer.placeholder': 'Wat is er aan de hand?',
   'composer.photo': 'Foto',
   'composer.video': 'Video',
@@ -317,6 +541,42 @@ const nl: Record<TranslationKey, string> = {
   'messages.placeholder': 'Schrijf een bericht…',
   'messages.send': 'Versturen',
   'notifications.empty': 'Je bent helemaal bij.',
+  'post.translate': 'Vertalen naar {lang}',
+  'post.show_original': 'Origineel tonen',
+  'post.translating': 'Vertalen…',
+  'post.translated_from': 'Vertaald uit het {lang}',
+  'post.translation_unavailable': 'Vertaling tijdelijk niet beschikbaar.',
+  'post.report': 'Inhoud Rapporteren',
+  'post.repost': 'Opnieuw plaatsen',
+  'post.tip_creator': 'Maker Fooi Geven',
+  'settings.language': 'Taal',
+  'settings.language_title': 'Taal & Regio',
+  'settings.language_description': 'Selecteer uw voorkeurstaal voor het TUKUBI-platform.',
+  'settings.language_updated': 'Taalvoorkeur opgeslagen.',
+  'settings.save_changes': 'Wijzigingen Opslaan',
+  'settings.account': 'Account',
+  'settings.privacy': 'Privacy',
+  'settings.notifications': 'Meldingen',
+  'onboarding.choose_language': 'Kies uw taal',
+  'onboarding.language_subtitle': 'Selecteer uw voorkeurstaal. U kunt dit op elk moment wijzigen via Instellingen.',
+  'onboarding.welcome': 'Welkom bij TUKUBI',
+  'onboarding.identity_title': 'Identiteitsconfiguratie',
+  'onboarding.identity_subtitle': 'Selecteer uw Caribische wortels om culturele feeds te personaliseren en contact te maken met uw diaspora.',
+  'onboarding.search_roots': 'Zoek in meer dan 30 eilanden en gebieden…',
+  'onboarding.diaspora_question': 'Woont u buiten uw thuisgebied (Diaspora)?',
+  'onboarding.continue': 'Doorgaan',
+  'marketplace.title': 'Marktplaats',
+  'marketplace.search': 'Zoek in marktplaats…',
+  'marketplace.buy_now': 'Nu Kopen',
+  'marketplace.add_to_cart': 'In Winkelwagen',
+  'marketplace.out_of_stock': 'Niet op voorraad',
+  'a11y.open_menu': 'Menu openen',
+  'a11y.close': 'Sluiten',
+  'a11y.search': 'Zoeken',
+  'time.just_now': 'Zojuist',
+  'time.minutes_ago': '{count}m geleden',
+  'time.hours_ago': '{count}u geleden',
+  'time.days_ago': '{count}d geleden',
   'common.loading': 'Laden…',
   'common.error': 'Er ging iets mis.',
   'common.retry': 'Opnieuw proberen',
@@ -343,6 +603,16 @@ const pap: Record<TranslationKey, string> = {
   'nav.business_studio': 'Studio di Negoshi',
   'nav.payments': 'Pagonan',
   'nav.profile': 'Perfil',
+  'nav.reels_shorts': 'Reels & Kortiko',
+  'nav.sounds': 'Sonidonan di Karibe',
+  'nav.live_streams': 'Transmití en Vivo',
+  'nav.podcasts': 'Netwèrk di Podcast',
+  'nav.cultural_events': 'Eventunan Kultural',
+  'nav.pages_stores': 'Páginanan & Tiendanan',
+  'nav.financial_center': 'Sentro Finansiero',
+  'nav.map': 'Mapa di Karibe',
+  'nav.create_hub': 'Krea Sentro',
+  'nav.sign_in': 'Drenta',
   'composer.placeholder': 'Ki ta pasando?',
   'composer.photo': 'Fotografi',
   'composer.video': 'Video',
@@ -379,6 +649,42 @@ const pap: Record<TranslationKey, string> = {
   'messages.placeholder': 'Skirbi un mensah…',
   'messages.send': 'Manda',
   'notifications.empty': 'Bo ta al dia.',
+  'post.translate': 'Tradusí na {lang}',
+  'post.show_original': 'Mostra original',
+  'post.translating': 'Tradusiendo…',
+  'post.translated_from': 'Tradusí for di {lang}',
+  'post.translation_unavailable': 'Traduccion no ta disponibel temporalmente.',
+  'post.report': 'Rapòrt Kontenido',
+  'post.repost': 'Publiká di nobo',
+  'post.tip_creator': 'Duna Propina',
+  'settings.language': 'Idioma',
+  'settings.language_title': 'Idioma & Region',
+  'settings.language_description': 'Selekshoná bo idioma preferí pa e plataforma TUKUBI.',
+  'settings.language_updated': 'Preferencia di idioma a keda wardá.',
+  'settings.save_changes': 'Warda Kambionan',
+  'settings.account': 'Kuenta',
+  'settings.privacy': 'Privasidat',
+  'settings.notifications': 'Notifikashon',
+  'onboarding.choose_language': 'Skohe bo idioma',
+  'onboarding.language_subtitle': 'Selekshoná bo idioma preferí. Bo por kambia esaki kualke momento den Konfigurashon.',
+  'onboarding.welcome': 'Bon bini na TUKUBI',
+  'onboarding.identity_title': 'Konfigurashon di Identidat',
+  'onboarding.identity_subtitle': 'Pa personalisá bo feed kultural i konektá ku bo diasporá, skohe bo raisnan Karibe.',
+  'onboarding.search_roots': 'Buska den mas ku 30 isla i teritorio…',
+  'onboarding.diaspora_question': 'Bo ta biba pafó di bo teritorio natal (Diaspora)?',
+  'onboarding.continue': 'Kontinuá',
+  'marketplace.title': 'Merka',
+  'marketplace.search': 'Buska den merka…',
+  'marketplace.buy_now': 'Kumpra Awor',
+  'marketplace.add_to_cart': 'Pone den Kiri',
+  'marketplace.out_of_stock': 'A kaba',
+  'a11y.open_menu': 'Habri menu',
+  'a11y.close': 'Sera',
+  'a11y.search': 'Buska',
+  'time.just_now': 'Djis awor',
+  'time.minutes_ago': '{count}m pasá',
+  'time.hours_ago': '{count}o pasá',
+  'time.days_ago': '{count}d pasá',
   'common.loading': 'Kargando…',
   'common.error': 'Algo a bai mal.',
   'common.retry': 'Inténta otron bia',
@@ -396,11 +702,74 @@ export function isLocale(value: string): value is Locale {
   return (LOCALES as readonly string[]).includes(value);
 }
 
-export function t(locale: Locale, key: TranslationKey): string {
-  return dictionaries[locale]?.[key] ?? dictionaries[DEFAULT_LOCALE][key];
+export function t(locale: Locale, key: TranslationKey, params?: Record<string, string | number>): string {
+  let template = dictionaries[locale]?.[key] ?? dictionaries[DEFAULT_LOCALE]?.[key] ?? key;
+  if (params) {
+    for (const [pKey, pVal] of Object.entries(params)) {
+      template = template.replace(new RegExp('\\{' + pKey + '\\}', 'g'), String(pVal));
+    }
+  }
+  return template;
+}
+
+export function tPlural(
+  locale: Locale,
+  key: TranslationKey,
+  count: number,
+  params?: Record<string, string | number>
+): string {
+  return t(locale, key, { count, ...params });
+}
+
+export function formatDate(
+  date: Date | string | number,
+  locale: Locale,
+  options?: Intl.DateTimeFormatOptions
+): string {
+  const d = typeof date === 'object' ? date : new Date(date);
+  const localeTag = locale === 'pap' ? 'nl-CW' : locale === 'ht' ? 'fr-HT' : locale;
+  try {
+    return new Intl.DateTimeFormat(localeTag, options || { dateStyle: 'medium' }).format(d);
+  } catch {
+    return d.toLocaleDateString();
+  }
+}
+
+export function formatRelativeTime(date: Date | string | number, locale: Locale): string {
+  const d = typeof date === 'object' ? date.getTime() : new Date(date).getTime();
+  const diffMs = Date.now() - d;
+  const diffSec = Math.floor(diffMs / 1000);
+  if (diffSec < 60) return t(locale, 'time.just_now');
+  const diffMin = Math.floor(diffSec / 60);
+  if (diffMin < 60) return t(locale, 'time.minutes_ago', { count: diffMin });
+  const diffHours = Math.floor(diffMin / 60);
+  if (diffHours < 24) return t(locale, 'time.hours_ago', { count: diffHours });
+  const diffDays = Math.floor(diffHours / 24);
+  return t(locale, 'time.days_ago', { count: diffDays });
+}
+
+export function formatNumber(value: number, locale: Locale, options?: Intl.NumberFormatOptions): string {
+  const localeTag = locale === 'pap' ? 'nl-CW' : locale === 'ht' ? 'fr-HT' : locale;
+  try {
+    return new Intl.NumberFormat(localeTag, options).format(value);
+  } catch {
+    return String(value);
+  }
+}
+
+export function formatCurrency(amount: number, currency: string, locale: Locale): string {
+  const localeTag = locale === 'pap' ? 'nl-CW' : locale === 'ht' ? 'fr-HT' : locale;
+  try {
+    return new Intl.NumberFormat(localeTag, { style: 'currency', currency }).format(amount);
+  } catch {
+    return currency.toUpperCase() + ' ' + amount.toFixed(2);
+  }
 }
 
 export function missingKeys(locale: Locale): TranslationKey[] {
   const reference = Object.keys(dictionaries[DEFAULT_LOCALE]) as TranslationKey[];
   return reference.filter((key) => dictionaries[locale]?.[key] === undefined);
 }
+
+export * from './service';
+export * from './react';

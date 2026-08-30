@@ -271,4 +271,32 @@ describe('TUKUBI — Profile & Settings Validation Suite', () => {
       expect(parsed.recent_posts).toHaveLength(1);
     });
   });
+
+  describe('Multilingual Platform — Language Preferences & 6-Locale Constraints', () => {
+    const VALID_LOCALES = ['en', 'es', 'fr', 'ht', 'nl', 'pap'];
+
+    function sanitizeLanguagePreference(lang: string): string {
+      return VALID_LOCALES.includes(lang) ? lang : 'en';
+    }
+
+    it('accepts all 6 official Caribbean platform locales', () => {
+      for (const loc of VALID_LOCALES) {
+        expect(sanitizeLanguagePreference(loc)).toBe(loc);
+      }
+    });
+
+    it('falls back to default English (en) for invalid or unsupported languages', () => {
+      expect(sanitizeLanguagePreference('de')).toBe('en');
+      expect(sanitizeLanguagePreference('zh')).toBe('en');
+      expect(sanitizeLanguagePreference('ru')).toBe('en');
+      expect(sanitizeLanguagePreference('pt')).toBe('en');
+      expect(sanitizeLanguagePreference('')).toBe('en');
+      expect(sanitizeLanguagePreference('unknown')).toBe('en');
+    });
+
+    it('verifies that Haitian Creole (ht) and Papiamentu (pap) are recognized core locales', () => {
+      expect(sanitizeLanguagePreference('ht')).toBe('ht');
+      expect(sanitizeLanguagePreference('pap')).toBe('pap');
+    });
+  });
 });

@@ -25,6 +25,17 @@ const PUBLIC_EXEMPT_ROUTES = [
   '/api/payments/providers',
 ];
 
+function detectLocaleFromHeaders(header: string | null): string {
+  if (!header) return 'en';
+  const lower = header.toLowerCase();
+  if (lower.startsWith('ht') || lower.includes('kreyol') || lower.includes('creole')) return 'ht';
+  if (lower.startsWith('pap') || lower.includes('papiamentu') || lower.includes('papiamento')) return 'pap';
+  if (lower.startsWith('es')) return 'es';
+  if (lower.startsWith('fr')) return 'fr';
+  if (lower.startsWith('nl')) return 'nl';
+  return 'en';
+}
+
 export async function middleware(request: NextRequest) {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
   const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY;
@@ -46,6 +57,19 @@ export async function middleware(request: NextRequest) {
     (pathname.startsWith('/api/v1/podcasts/') && pathname.endsWith('/rss'));
 
   let response = NextResponse.next({ request });
+
+  // 0. Language & Locale Detection (Requirement 2 & 5)
+  const existingLocale = request.cookies.get('tukubi_locale')?.value;
+  let targetLocale = existingLocale;
+  if (!existingLocale) {
+    const acceptLang = request.headers.get('accept-language');
+    targetLocale = detectLocaleFromHeaders(acceptLang);
+    response.cookies.set('tukubi_locale', targetLocale, {
+      path: '/',
+      maxAge: 31536000,
+      sameSite: 'lax',
+    });
+  }
 
   // If Supabase environment is not configured, pass through in non-production environments
   if (!url || !anonKey) {

@@ -42,6 +42,7 @@ import {
   reactivateAccountAction,
 } from '../lib/settings/settings-actions';
 import type { ProfileData } from './profile-edit-modal';
+import { useTranslation, isLocale, LOCALE_DETAILS, LOCALES } from '@caribbean/localization';
 
 export interface NotificationPrefsData {
   push_enabled: boolean;
@@ -85,6 +86,7 @@ export default function SettingsView({
   userEmail,
 }: SettingsViewProps) {
   const { signOut, refresh } = useAuth();
+  const { t, setLocale, locale: currentLocale } = useTranslation();
   const [activeSection, setActiveSection] = useState<SettingsSection>('account');
   const [profile, setProfile] = useState(initialProfile);
   const [notifPrefs, setNotifPrefs] = useState(initialNotificationPrefs);
@@ -159,11 +161,13 @@ export default function SettingsView({
   };
 
   const handleLanguageChange = (lang: string) => {
+    if (!isLocale(lang)) return;
+    setLocale(lang);
+    setProfile((p) => ({ ...p, language_preference: lang }));
     startTransition(async () => {
       const res = await updateLanguageAction(lang);
       if (res.success) {
-        setProfile((p) => ({ ...p, language_preference: lang }));
-        setFeedback({ error: null, success: res.message || 'Language updated.' });
+        setFeedback({ error: null, success: res.message || t('settings.language_updated') });
       } else {
         setFeedback({ error: res.error || 'Failed to update language.', success: null });
       }
@@ -771,28 +775,22 @@ export default function SettingsView({
             <section className="bg-brand-dusk/70 border border-slate-800 rounded-3xl p-6 space-y-6">
               <div>
                 <h2 className="text-sm font-black uppercase tracking-wider text-brand-caribbeanSea">
-                  Language &amp; Region
+                  {t('settings.language_title')}
                 </h2>
                 <p className="text-xs text-brand-sandstone/60">
-                  Select your preferred language for the Tukubi platform.
+                  {t('settings.language_description')}
                 </p>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {[
-                  { code: 'en', name: 'English', native: 'English' },
-                  { code: 'es', name: 'Spanish', native: 'Español' },
-                  { code: 'fr', name: 'French', native: 'Français' },
-                  { code: 'ht', name: 'Haitian Creole', native: 'Kreyòl Ayisyen' },
-                  { code: 'nl', name: 'Dutch', native: 'Nederlands' },
-                  { code: 'pap', name: 'Papiamento', native: 'Papiamentu' },
-                ].map((lang) => {
-                  const isSelected = (profile.language_preference || 'en') === lang.code;
+                {LOCALES.map((code) => {
+                  const lang = LOCALE_DETAILS[code];
+                  const isSelected = (profile.language_preference || currentLocale || 'en') === code;
                   return (
                     <button
-                      key={lang.code}
+                      key={code}
                       type="button"
-                      onClick={() => handleLanguageChange(lang.code)}
+                      onClick={() => handleLanguageChange(code)}
                       disabled={isPending}
                       className={`p-3.5 rounded-2xl border flex items-center justify-between text-left transition-all cursor-pointer ${
                         isSelected
@@ -800,11 +798,14 @@ export default function SettingsView({
                           : 'bg-[#131D33] border-slate-800 hover:border-slate-700'
                       }`}
                     >
-                      <div>
-                        <span className="text-xs font-bold text-brand-sandstone block">{lang.native}</span>
-                        <span className="text-[10px] text-brand-sandstone/50">{lang.name}</span>
+                      <div className="flex items-center gap-3">
+                        <span className="text-2xl flex-shrink-0">{lang.flag}</span>
+                        <div>
+                          <span className="text-xs font-bold text-brand-sandstone block">{lang.nativeName}</span>
+                          <span className="text-[10px] text-brand-sandstone/50">{lang.name} • {lang.region}</span>
+                        </div>
                       </div>
-                      {isSelected && <CheckCircle className="w-4 h-4 text-brand-caribbeanSea" />}
+                      {isSelected && <CheckCircle className="w-4 h-4 text-brand-caribbeanSea flex-shrink-0" />}
                     </button>
                   );
                 })}

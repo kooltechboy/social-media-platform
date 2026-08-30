@@ -7,9 +7,12 @@ import { GatewayShell } from '../../components/gateway/GatewayShell';
 import { CARIBBEAN_TERRITORIES } from '../../lib/constants/caribbean-territories';
 import { DIASPORA_COUNTRIES, DIASPORA_CITY_HUBS } from '../../lib/constants/diaspora-hubs';
 import { updateOnboardingIdentity } from '../../lib/social/onboarding-actions';
+import { useTranslation, LOCALES, LOCALE_DETAILS, Locale } from '@caribbean/localization';
 
 export default function OnboardingPage() {
   const router = useRouter();
+  const { t, setLocale, locale } = useTranslation();
+  const [selectedLocale, setSelectedLocale] = useState<Locale>(locale);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState('');
   const [originIso, setOriginIso] = useState<string>('');
@@ -27,7 +30,7 @@ export default function OnboardingPage() {
 
     setLoading(true);
     try {
-      await updateOnboardingIdentity(originIso, isDiaspora ? diasporaId : null);
+      await updateOnboardingIdentity(originIso, isDiaspora ? diasporaId : null, selectedLocale);
       router.push('/');
       router.refresh();
     } catch (err) {
@@ -43,17 +46,54 @@ export default function OnboardingPage() {
 
         <div className="mb-5">
           <span className="px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-widest bg-brand-caribbeanSea/15 text-brand-caribbeanSea border border-brand-caribbeanSea/30 inline-block mb-2">
-            Identity Setup
+            {t('onboarding.identity_title')}
           </span>
           <h2 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
-            Welcome to TUKUBI
+            {t('onboarding.welcome')}
           </h2>
           <p className="text-xs sm:text-sm text-brand-sandstone/60 mt-1">
-            To personalize your cultural feeds and connect with your diaspora, select your Caribbean roots.
+            {t('onboarding.identity_subtitle')}
           </p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4" noValidate>
+          {/* Language Selection */}
+          <div className="space-y-2 pb-3 border-b border-white/10">
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-bold text-white flex items-center gap-1.5">
+                <Globe className="w-3.5 h-3.5 text-brand-caribbeanSea" />
+                <span>{t('onboarding.choose_language')}</span>
+              </label>
+              <span className="text-[10px] text-brand-sandstone/50">
+                {t('settings.language')}
+              </span>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
+              {LOCALES.map((code) => {
+                const lang = LOCALE_DETAILS[code];
+                const isSelected = selectedLocale === code;
+                return (
+                  <button
+                    key={code}
+                    type="button"
+                    onClick={() => {
+                      setSelectedLocale(code);
+                      setLocale(code);
+                    }}
+                    className={`flex items-center gap-2 p-2 rounded-xl border text-left transition-all ${
+                      isSelected
+                        ? 'bg-brand-caribbeanSea/20 border-brand-caribbeanSea text-white font-bold shadow-sm'
+                        : 'bg-[#080D18] border-white/5 text-brand-sandstone/70 hover:border-white/20 hover:bg-[#0A111F]'
+                    }`}
+                  >
+                    <span className="text-base flex-shrink-0">{lang.flag}</span>
+                    <span className="text-xs truncate leading-tight">{lang.nativeName}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
           {/* Island Search */}
           <div className="relative flex items-center">
             <Search className="absolute left-3.5 w-4 h-4 text-brand-sandstone/40 pointer-events-none" />
@@ -61,7 +101,7 @@ export default function OnboardingPage() {
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search all 30+ islands and territories…"
+              placeholder={t('onboarding.search_roots')}
               className="w-full bg-[#080D18] border border-white/10 rounded-xl pl-10 pr-4 py-2.5 text-xs text-white placeholder-brand-sandstone/40 focus:outline-none focus:border-brand-caribbeanSea transition-all"
             />
           </div>
@@ -103,7 +143,7 @@ export default function OnboardingPage() {
               />
               <span className="text-xs font-bold text-brand-sandstone group-hover:text-white transition-colors flex items-center gap-1.5">
                 <Globe className="w-3.5 h-3.5 text-brand-goldenHour" />
-                I currently live in the Global Diaspora
+                {t('onboarding.diaspora_question')}
               </span>
             </label>
 
@@ -148,7 +188,7 @@ export default function OnboardingPage() {
                 <span className="w-4 h-4 border-2 border-slate-950 border-t-transparent rounded-full animate-spin" />
               ) : (
                 <>
-                  <span>ENTER THE PLATFORM</span>
+                  <span>{t('onboarding.continue').toUpperCase()}</span>
                   <ArrowRight className="w-4 h-4" />
                 </>
               )}

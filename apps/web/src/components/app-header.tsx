@@ -8,6 +8,7 @@ import { createSupabaseBrowserClient } from '../lib/supabase/browser';
 
 import { followAction, unfollowAction } from '../lib/social/profile-actions';
 import UserAvatar from './user-avatar';
+import { useTranslation } from '@caribbean/localization';
 
 interface SearchResultUser {
   id: string;
@@ -21,6 +22,7 @@ interface SearchResultUser {
 }
 
 export default function AppHeader() {
+  const { t } = useTranslation();
   const [query, setQuery] = useState('');
   const [isOpen, setIsOpen] = useState(false);
   const [livePeople, setLivePeople] = useState<SearchResultUser[]>([]);
@@ -134,8 +136,8 @@ export default function AppHeader() {
               value={query}
               onChange={(e) => handleSearchChange(e.target.value)}
               onFocus={() => query.trim() && setIsOpen(true)}
-              placeholder="Search people, creators, events, culture..."
-              aria-label="Search users and ecosystem"
+              placeholder={t('search.placeholder')}
+              aria-label={t('a11y.search')}
               className="w-full bg-brand-twilight/90 border border-slate-700/80 hover:border-brand-caribbeanSea/60 rounded-full pl-11 pr-10 py-2.5 text-sm text-brand-sandstone placeholder-brand-sandstone/60 focus:outline-none focus:border-brand-caribbeanSea focus:ring-2 focus:ring-brand-caribbeanSea/30 transition-all shadow-inner"
             />
             {query && (

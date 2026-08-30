@@ -17,6 +17,7 @@
     "@caribbean/database": "workspace:*",
     "@caribbean/design-system": "workspace:*",
     "@caribbean/live": "workspace:*",
+    "@caribbean/localization": "workspace:*",
     "@caribbean/marketplace": "workspace:*",
     "@caribbean/messaging": "workspace:*",
     "@caribbean/notifications": "workspace:*",

@@ -37,6 +37,7 @@ import { createSupabaseBrowserClient } from '../lib/supabase/browser';
 import CreatorTipModal from './creator-tip-modal';
 import ShoppablePostWidget, { type TaggedProduct } from './shoppable-post-widget';
 import UserAvatar from './user-avatar';
+import { useTranslation, LOCALE_DETAILS, Locale } from '@caribbean/localization';
 
 export interface FeedPostData {
   id: string;
@@ -65,6 +66,7 @@ interface FeedStreamProps {
 }
 
 export default function FeedStream({ initialPosts, currentUserId }: FeedStreamProps) {
+  const { t, locale } = useTranslation();
   const [activeTab, setActiveTab] = useState<'caribbean' | 'foryou' | 'diaspora' | 'creator'>('caribbean');
   const [posts, setPosts] = useState<FeedPostData[]>(initialPosts);
   const [expandedCommentsPostId, setExpandedCommentsPostId] = useState<string | null>(null);
@@ -78,6 +80,80 @@ export default function FeedStream({ initialPosts, currentUserId }: FeedStreamPr
   const [isSubmittingReport, setIsSubmittingReport] = useState(false);
   const [savedPostIds, setSavedPostIds] = useState<Set<string>>(new Set());
   const [confirmDeletePostId, setConfirmDeletePostId] = useState<string | null>(null);
+
+  // Content Translation State (Requirement 6, 8, 12, 13)
+  const [postTranslations, setPostTranslations] = useState<
+    Record<
+      string,
+      {
+        translatedText?: string;
+        sourceLang?: string;
+        isTranslating?: boolean;
+        isShowingOriginal?: boolean;
+        error?: string | null;
+      }
+    >
+  >({});
+
+  async function handleTranslatePost(postId: string, content: string) {
+    setPostTranslations((prev) => ({
+      ...prev,
+      [postId]: { ...prev[postId], isTranslating: true, error: null },
+    }));
+
+    try {
+      const res = await fetch('/api/translate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          text: content,
+          targetLang: locale,
+          postId,
+        }),
+      });
+      const data = await res.json();
+      if (data.success && data.translatedText) {
+        setPostTranslations((prev) => ({
+          ...prev,
+          [postId]: {
+            translatedText: data.translatedText,
+            sourceLang: data.sourceLang,
+            isTranslating: false,
+            isShowingOriginal: false,
+            error: null,
+          },
+        }));
+      } else {
+        setPostTranslations((prev) => ({
+          ...prev,
+          [postId]: {
+            ...prev[postId],
+            isTranslating: false,
+            error: data.error || t('post.translation_unavailable'),
+          },
+        }));
+      }
+    } catch {
+      setPostTranslations((prev) => ({
+        ...prev,
+        [postId]: {
+          ...prev[postId],
+          isTranslating: false,
+          error: t('post.translation_unavailable'),
+        },
+      }));
+    }
+  }
+
+  function handleToggleOriginal(postId: string) {
+    setPostTranslations((prev) => ({
+      ...prev,
+      [postId]: {
+        ...prev[postId],
+        isShowingOriginal: !prev[postId]?.isShowingOriginal,
+      },
+    }));
+  }
 
   // Creator Tip state
   const [tipTarget, setTipTarget] = useState<{ name: string; handle: string } | null>(null);
@@ -430,10 +506,10 @@ export default function FeedStream({ initialPosts, currentUserId }: FeedStreamPr
       {/* Feed Filter Tab Bar */}
       <div className="flex gap-2 sm:gap-4 border-b border-slate-800 pb-2 overflow-x-auto scrollbar-none" role="tablist">
         {[
-          { id: 'caribbean', label: 'Caribbean' },
-          { id: 'foryou', label: 'For You' },
-          { id: 'diaspora', label: 'Diaspora Hubs' },
-          { id: 'creator', label: 'Creators & Music' },
+          { id: 'caribbean', label: t('feed.caribbean') },
+          { id: 'foryou', label: t('feed.for_you') },
+          { id: 'diaspora', label: t('nav.communities') },
+          { id: 'creator', label: t('nav.creator_studio') },
         ].map((tab) => {
           const isActive = activeTab === tab.id;
           return (
@@ -594,8 +670,70 @@ export default function FeedStream({ initialPosts, currentUserId }: FeedStreamPr
 
               {/* Content Body */}
               <p className="text-sm text-slate-200 leading-relaxed font-medium whitespace-pre-wrap">
-                {post.content}
+                {postTranslations[post.id]?.translatedText && !postTranslations[post.id]?.isShowingOriginal
+                  ? postTranslations[post.id]!.translatedText
+                  : post.content}
               </p>
+
+              {/* Translation Affordance & Status */}
+              <div className="mt-1">
+                {postTranslations[post.id]?.isTranslating ? (
+                  <div className="flex items-center gap-2 text-[11px] text-brand-sandstone/70">
+                    <Loader2 className="w-3.5 h-3.5 animate-spin text-brand-caribbeanSea" />
+                    <span>{t('post.translating')}</span>
+                  </div>
+                ) : postTranslations[post.id]?.translatedText ? (
+                  <div className="mt-1.5 p-2.5 rounded-xl bg-brand-caribbeanSea/10 border border-brand-caribbeanSea/20 flex flex-wrap items-center justify-between gap-2 text-xs animate-fadeIn">
+                    <div className="flex items-center gap-1.5 text-brand-sandstone/80 text-[11px]">
+                      <Sparkles className="w-3.5 h-3.5 text-brand-caribbeanSea" />
+                      <span>
+                        {postTranslations[post.id]?.isShowingOriginal
+                          ? 'Showing original'
+                          : t('post.translated_from', {
+                              lang:
+                                LOCALE_DETAILS[postTranslations[post.id]?.sourceLang as Locale]?.nativeName ||
+                                postTranslations[post.id]?.sourceLang ||
+                                'detected',
+                            })}
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleToggleOriginal(post.id)}
+                      className="text-[11px] font-bold text-brand-caribbeanSea hover:underline"
+                    >
+                      {postTranslations[post.id]?.isShowingOriginal
+                        ? t('post.translate', { lang: LOCALE_DETAILS[locale]?.nativeName || 'English' })
+                        : t('post.show_original')}
+                    </button>
+                  </div>
+                ) : postTranslations[post.id]?.error ? (
+                  <div className="flex items-center gap-2 text-[11px] text-amber-400 mt-1">
+                    <AlertCircle className="w-3.5 h-3.5" />
+                    <span>{postTranslations[post.id]?.error}</span>
+                    <button
+                      type="button"
+                      onClick={() => handleTranslatePost(post.id, post.content)}
+                      className="underline font-bold text-brand-caribbeanSea ml-1"
+                    >
+                      {t('common.retry')}
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => handleTranslatePost(post.id, post.content)}
+                    className="flex items-center gap-1.5 text-[11px] font-semibold text-brand-caribbeanSea/80 hover:text-brand-caribbeanSea transition-colors"
+                  >
+                    <Globe className="w-3.5 h-3.5" />
+                    <span>
+                      {t('post.translate', {
+                        lang: LOCALE_DETAILS[locale]?.nativeName || 'English',
+                      })}
+                    </span>
+                  </button>
+                )}
+              </div>
 
               {/* Media Gallery Previews */}
               {post.mediaUrls && post.mediaUrls.length > 0 && (

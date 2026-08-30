@@ -25,31 +25,35 @@ import {
   Music,
 } from 'lucide-react';
 
+import { useTranslation, TranslationKey } from '@caribbean/localization';
+
 interface NavItem {
   href: string;
-  label: string;
+  label?: string;
+  labelKey?: TranslationKey;
+  fallbackLabel?: string;
   icon: React.ReactNode;
   badge?: string;
 }
 
 const PRIMARY_NAV: NavItem[] = [
-  { href: '/', label: 'Home Feed', icon: <Home className="w-4 h-4 text-brand-caribbeanSea" /> },
-  { href: '/create', label: 'Create Hub', icon: <PlusCircle className="w-4 h-4 text-brand-sunriseCoral" />, badge: 'NEW' },
-  { href: '/explore', label: 'Explore & Diaspora', icon: <Compass className="w-4 h-4 text-brand-goldenHour" /> },
-  { href: '/map', label: 'Caribbean Map', icon: <MapPin className="w-4 h-4 text-rose-400" /> },
-  { href: '/reels', label: 'Reels & Shorts', icon: <Video className="w-4 h-4 text-pink-400" /> },
-  { href: '/sounds', label: 'Caribbean Sounds', icon: <Music className="w-4 h-4 text-rose-400" />, badge: 'NEW' },
-  { href: '/live', label: 'Live Streams', icon: <Tv className="w-4 h-4 text-red-400" />, badge: 'LIVE' },
-  { href: '/podcasts', label: 'Podcasts Network', icon: <Mic className="w-4 h-4 text-purple-400" /> },
-  { href: '/communities', label: 'Diaspora Hubs', icon: <Users className="w-4 h-4 text-cyan-400" /> },
+  { href: '/', labelKey: 'nav.home', fallbackLabel: 'Home Feed', icon: <Home className="w-4 h-4 text-brand-caribbeanSea" /> },
+  { href: '/create', labelKey: 'nav.create_hub', fallbackLabel: 'Create Hub', icon: <PlusCircle className="w-4 h-4 text-brand-sunriseCoral" />, badge: 'NEW' },
+  { href: '/explore', labelKey: 'nav.explore', fallbackLabel: 'Explore & Diaspora', icon: <Compass className="w-4 h-4 text-brand-goldenHour" /> },
+  { href: '/map', labelKey: 'nav.map', fallbackLabel: 'Caribbean Map', icon: <MapPin className="w-4 h-4 text-rose-400" /> },
+  { href: '/reels', labelKey: 'nav.reels_shorts', fallbackLabel: 'Reels & Shorts', icon: <Video className="w-4 h-4 text-pink-400" /> },
+  { href: '/sounds', labelKey: 'nav.sounds', fallbackLabel: 'Caribbean Sounds', icon: <Music className="w-4 h-4 text-rose-400" />, badge: 'NEW' },
+  { href: '/live', labelKey: 'nav.live_streams', fallbackLabel: 'Live Streams', icon: <Tv className="w-4 h-4 text-red-400" />, badge: 'LIVE' },
+  { href: '/podcasts', labelKey: 'nav.podcasts', fallbackLabel: 'Podcasts Network', icon: <Mic className="w-4 h-4 text-purple-400" /> },
+  { href: '/communities', labelKey: 'nav.communities', fallbackLabel: 'Diaspora Hubs', icon: <Users className="w-4 h-4 text-cyan-400" /> },
 ];
 
 const COMMERCE_NAV: NavItem[] = [
-  { href: '/marketplace', label: 'Marketplace', icon: <ShoppingBag className="w-4 h-4 text-orange-400" /> },
-  { href: '/events', label: 'Cultural Events', icon: <Calendar className="w-4 h-4 text-yellow-400" /> },
-  { href: '/pages', label: 'Pages & Stores', icon: <Building2 className="w-4 h-4 text-brand-sunriseCoral" />, badge: 'VERIFIED' },
-  { href: '/financial-center', label: 'Financial Center', icon: <Wallet className="w-4 h-4 text-brand-sunriseCoral" /> },
-  { href: '/creator-studio', label: 'Creator Studio', icon: <Sparkles className="w-4 h-4 text-brand-caribbeanSea" /> },
+  { href: '/marketplace', labelKey: 'nav.marketplace', fallbackLabel: 'Marketplace', icon: <ShoppingBag className="w-4 h-4 text-orange-400" /> },
+  { href: '/events', labelKey: 'nav.cultural_events', fallbackLabel: 'Cultural Events', icon: <Calendar className="w-4 h-4 text-yellow-400" /> },
+  { href: '/pages', labelKey: 'nav.pages_stores', fallbackLabel: 'Pages & Stores', icon: <Building2 className="w-4 h-4 text-brand-sunriseCoral" />, badge: 'VERIFIED' },
+  { href: '/financial-center', labelKey: 'nav.financial_center', fallbackLabel: 'Financial Center', icon: <Wallet className="w-4 h-4 text-brand-sunriseCoral" /> },
+  { href: '/creator-studio', labelKey: 'nav.creator_studio', fallbackLabel: 'Creator Studio', icon: <Sparkles className="w-4 h-4 text-brand-caribbeanSea" /> },
 ];
 
 interface AppSidebarProps {
@@ -59,17 +63,18 @@ interface AppSidebarProps {
 export default function AppSidebar({ currentPath }: AppSidebarProps) {
   const pathname = usePathname();
   const { user } = useAuth();
+  const { t } = useTranslation();
   const activePath = currentPath || pathname || '/';
 
-  const personalNav: NavItem[] = [
-    { href: '/messages', label: 'Messages', icon: <MessageSquare className="w-4 h-4 text-slate-300" /> },
-    { href: '/notifications', label: 'Notifications', icon: <Bell className="w-4 h-4 text-slate-300" /> },
+  const personalNav = [
+    { href: '/messages', label: t('nav.messages'), icon: <MessageSquare className="w-4 h-4 text-slate-300" /> },
+    { href: '/notifications', label: t('nav.notifications'), icon: <Bell className="w-4 h-4 text-slate-300" /> },
     {
       href: user ? '/profile' : '/login',
-      label: user ? `@${user.username}` : 'Sign In',
+      label: user ? `@${user.username}` : t('nav.sign_in'),
       icon: <User className="w-4 h-4 text-slate-300" />,
     },
-    { href: '/settings', label: 'Settings', icon: <Settings className="w-4 h-4 text-slate-300" /> },
+    { href: '/settings', label: t('nav.settings'), icon: <Settings className="w-4 h-4 text-slate-300" /> },
   ];
   const renderNavGroup = (items: NavItem[], title?: string) => (
     <div className="space-y-1">
@@ -97,7 +102,7 @@ export default function AppSidebar({ currentPath }: AppSidebarProps) {
           >
             <div className="flex items-center gap-3">
               {item.icon}
-              <span>{item.label}</span>
+              <span>{item.labelKey ? t(item.labelKey) : (item.label || item.fallbackLabel)}</span>
             </div>
             {item.badge && (
               <span className={`text-[9px] font-black px-1.5 py-0.5 rounded-full border ${

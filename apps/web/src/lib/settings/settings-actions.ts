@@ -1,6 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import { cookies } from 'next/headers';
 import { createSupabaseServerClient, getCurrentUser } from '../supabase/server';
 import type { ActionResponse } from '../profile/profile-actions';
 
@@ -198,7 +199,19 @@ export async function updateLanguageAction(language: string): Promise<ActionResp
 
   if (error) return { success: false, error: error.message };
 
+  try {
+    const cookieStore = await cookies();
+    cookieStore.set('tukubi_locale', safeLang, {
+      path: '/',
+      maxAge: 31536000,
+      sameSite: 'lax',
+    });
+  } catch {
+    // Non-blocking cookie set
+  }
+
   revalidatePath('/settings');
+  revalidatePath('/');
   return { success: true, message: 'Language preference saved.' };
 }
 

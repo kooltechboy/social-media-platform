@@ -224,6 +224,9 @@ importers:
       '@caribbean/live':
         specifier: workspace:*
         version: link:../../packages/live
+      '@caribbean/localization':
+        specifier: workspace:*
+        version: link:../../packages/localization
       '@caribbean/marketplace':
         specifier: workspace:*
         version: link:../../packages/marketplace
@@ -383,6 +386,12 @@ importers:
 
   packages/localization:
     devDependencies:
+      '@types/react':
+        specifier: ^19.0.0
+        version: 19.2.18
+      react:
+        specifier: ^19.0.0
+        version: 19.2.8
       typescript:
         specifier: ^5.5.0
         version: 5.9.3

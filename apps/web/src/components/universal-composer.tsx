@@ -31,6 +31,7 @@ import {
 } from 'lucide-react';
 import { createPostAction } from '../lib/social/actions';
 import { createSupabaseBrowserClient } from '../lib/supabase/browser';
+import { useTranslation } from '@caribbean/localization';
 
 export type ComposerMode = 'text' | 'photo' | 'video' | 'reel' | 'live' | 'poll' | 'product' | 'event' | 'fundraiser' | 'alert';
 
@@ -62,6 +63,7 @@ export default function UniversalComposer({
   defaultExpanded = false,
 }: UniversalComposerProps) {
   const router = useRouter();
+  const { t } = useTranslation();
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
   const [mode, setMode] = useState<ComposerMode>('text');
   const [content, setContent] = useState('');
@@ -534,7 +536,7 @@ export default function UniversalComposer({
                   handlePublish(e);
                 }
               }}
-              placeholder={`What is happening across the ${audienceContext === 'diaspora' ? 'diaspora' : 'island'}, ${firstName}?`}
+              placeholder={`${t('composer.placeholder')} (${firstName})`}
               rows={4}
               maxLength={3000}
               className="w-full bg-brand-twilight/80 border border-slate-800/80 rounded-2xl p-4 text-sm text-brand-sandstone placeholder-brand-sandstone/40 focus:outline-none focus:border-brand-caribbeanSea/60 focus:ring-1 focus:ring-brand-caribbeanSea/60 transition-all resize-none leading-relaxed"
@@ -848,7 +850,7 @@ export default function UniversalComposer({
                 ) : (
                   <>
                     <Send className="w-3.5 h-3.5" />
-                    <span>{audienceContext === 'diaspora' ? 'Post to Diaspora' : 'Post Locally'}</span>
+                    <span>{t('composer.post')} ({audienceContext === 'diaspora' ? 'Diaspora' : 'Local'})</span>
                   </>
                 )}
               </button>
