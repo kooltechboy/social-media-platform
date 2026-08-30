@@ -7,11 +7,13 @@ import SessionWidget from './session-widget';
 import { createSupabaseBrowserClient } from '../lib/supabase/browser';
 
 import { followAction, unfollowAction } from '../lib/social/profile-actions';
+import UserAvatar from './user-avatar';
 
 interface SearchResultUser {
   id: string;
   display_name: string;
   username: string;
+  avatar_url?: string | null;
   flag?: string;
   bio?: string;
   origin_country_iso?: string;
@@ -50,7 +52,7 @@ export default function AppHeader() {
       try {
         const { data } = await supabase
           .from('profiles')
-          .select('id, display_name, username, origin_country_iso, account_type')
+          .select('id, display_name, username, avatar_url, origin_country_iso, account_type')
           .or(`display_name.ilike.%${val}%,username.ilike.%${val}%`)
           .limit(5);
 
@@ -172,9 +174,11 @@ export default function AppHeader() {
                         onClick={() => setIsOpen(false)}
                         className="flex items-center gap-3 flex-1 min-w-0"
                       >
-                        <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-brand-caribbeanSea to-brand-sunriseCoral text-slate-950 font-black flex items-center justify-center text-xs shadow-md flex-shrink-0">
-                          {person.display_name.slice(0, 2).toUpperCase()}
-                        </div>
+                        <UserAvatar
+                          src={person.avatar_url}
+                          name={person.display_name}
+                          size="sm"
+                        />
                         <div className="min-w-0">
                           <h5 className="text-xs font-bold text-brand-sandstone truncate flex items-center gap-1 group-hover:text-brand-caribbeanSea">
                             {person.display_name}

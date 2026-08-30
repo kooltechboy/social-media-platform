@@ -36,12 +36,14 @@ import {
 import { createSupabaseBrowserClient } from '../lib/supabase/browser';
 import SpotPayTipModal from './spotpay-tip-modal';
 import ShoppablePostWidget, { type TaggedProduct } from './shoppable-post-widget';
+import UserAvatar from './user-avatar';
 
 export interface FeedPostData {
   id: string;
   authorId?: string;
   author: string;
   handle: string;
+  avatarUrl?: string | null;
   verified?: boolean;
   location?: string;
   time: string;
@@ -478,12 +480,14 @@ export default function FeedStream({ initialPosts, currentUserId }: FeedStreamPr
                 <div className="flex items-center gap-3">
                   <Link
                     href={`/profile/${post.handle}`}
-                    className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-brand-goldenHour via-rose-500 to-brand-caribbeanSea p-0.5 shadow-md flex-shrink-0 hover:scale-105 transition-transform"
+                    className="hover:scale-105 transition-transform shrink-0"
                     aria-label={`View profile for ${post.author}`}
                   >
-                    <div className="w-full h-full bg-brand-twilight rounded-2xl flex items-center justify-center font-black text-xs text-brand-sandstone">
-                      {post.author.slice(0, 2).toUpperCase()}
-                    </div>
+                    <UserAvatar
+                      src={post.avatarUrl}
+                      name={post.author}
+                      size="md"
+                    />
                   </Link>
                   <div>
                     <div className="flex items-center gap-1.5">

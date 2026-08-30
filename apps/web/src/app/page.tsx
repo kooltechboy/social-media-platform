@@ -48,7 +48,7 @@ export default async function HomePage() {
     const [postsRes, liveRes] = await Promise.all([
       supabase
         .from('posts')
-        .select('id, author_id, content, created_at, media_urls, cultural_tags, likes_count, comments_count, shares_count, profiles(display_name, username, is_verified)')
+        .select('id, author_id, content, created_at, media_urls, cultural_tags, likes_count, comments_count, shares_count, profiles(display_name, username, avatar_url, is_verified)')
         .order('created_at', { ascending: false })
         .limit(30),
       supabase
@@ -86,6 +86,7 @@ export default async function HomePage() {
           authorId: p.author_id,
           author: profile?.display_name || 'Caribbean Member',
           handle: profile?.username || 'member',
+          avatarUrl: profile?.avatar_url || null,
           verified: profile?.is_verified ?? true,
           location: 'Tukubi Network 🌴',
           time: relativeTime(p.created_at),

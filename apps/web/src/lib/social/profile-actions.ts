@@ -40,6 +40,7 @@ export async function updateProfileAction(
       display_name: displayName,
       bio: bio || null,
       website: website || null,
+      updated_at: new Date().toISOString(),
     })
     .eq('id', user.id);
 
@@ -47,6 +48,7 @@ export async function updateProfileAction(
 
   revalidatePath('/profile');
   revalidatePath(`/profile/${user.username}`);
+  revalidatePath('/settings');
   return { error: null, success: 'Profile updated.' };
 }
 

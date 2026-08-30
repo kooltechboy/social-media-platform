@@ -3,6 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { useAuth } from './auth-provider';
+import UserAvatar from './user-avatar';
 
 export default function SessionWidget() {
   const { user, loading, signOut } = useAuth();
@@ -27,20 +28,11 @@ export default function SessionWidget() {
   return (
     <div className="flex items-center gap-3">
       <Link href="/profile" className="flex items-center gap-2 group" aria-label={`View profile for @${user.username}`}>
-        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-brand-goldenHour via-brand-caribbeanSea to-brand-sunriseCoral p-0.5 shadow-md flex-shrink-0">
-          {user.avatarUrl ? (
-            /* eslint-disable-next-line @next/next/no-img-element */
-            <img
-              src={user.avatarUrl}
-              alt={user.displayName || user.username}
-              className="w-full h-full object-cover rounded-full"
-            />
-          ) : (
-            <div className="w-full h-full bg-brand-twilight rounded-full flex items-center justify-center text-[11px] font-black text-brand-sandstone">
-              {initials}
-            </div>
-          )}
-        </div>
+        <UserAvatar
+          src={user.avatarUrl}
+          name={user.displayName || user.username}
+          size="sm"
+        />
         <span className="hidden md:block text-xs font-bold text-slate-200 group-hover:text-amber-300 transition-colors">
           @{user.username}
         </span>
