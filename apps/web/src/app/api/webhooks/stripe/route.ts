@@ -56,17 +56,42 @@ export async function POST(req: NextRequest) {
   }
 
   // Handle specific Stripe events
-  switch (event.type) {
-    case 'payment_intent.succeeded':
-       const paymentIntent = event.data?.object as { amount?: number } | undefined;
-       console.log(`PaymentIntent for ${paymentIntent?.amount ?? 'unknown'} was successful!`);
-      // Here you would use PaymentIntentService to transition ledger state to 'succeeded'
-      break;
-    case 'payment_intent.payment_failed':
-      console.log('Payment failed!');
-      break;
-    default:
-       console.log(`Unhandled event type ${eventType}`);
+  const supabase = await createServiceSupabaseClient();
+  if (supabase) {
+    const object = (event.data?.object || {}) as {
+      id?: string;
+      amount?: number;
+      metadata?: Record<string, string>;
+    };
+    const orderId = object.metadata?.orderId;
+    const paymentIntentId = object.metadata?.paymentIntentId;
+
+    switch (event.type) {
+      case 'payment_intent.succeeded': {
+        if (orderId) {
+          await supabase.from('orders').update({ status: 'paid' }).eq('id', orderId);
+        }
+        if (paymentIntentId) {
+          await supabase.from('payment_intents').update({ status: 'succeeded' }).eq('id', paymentIntentId);
+        } else if (orderId) {
+          await supabase.from('payment_intents').update({ status: 'succeeded' }).eq('reference_id', orderId);
+        }
+        break;
+      }
+      case 'payment_intent.payment_failed': {
+        if (orderId) {
+          await supabase.from('orders').update({ status: 'cancelled' }).eq('id', orderId);
+        }
+        if (paymentIntentId) {
+          await supabase.from('payment_intents').update({ status: 'failed' }).eq('id', paymentIntentId);
+        } else if (orderId) {
+          await supabase.from('payment_intents').update({ status: 'failed' }).eq('reference_id', orderId);
+        }
+        break;
+      }
+      default:
+        console.log(`Unhandled event type ${eventType}`);
+    }
   }
 
   return NextResponse.json({ received: true });

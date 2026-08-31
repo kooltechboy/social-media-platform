@@ -59,8 +59,20 @@ export async function POST(
     return NextResponse.json({ error: outcome.reason }, { status: outcome.reason === 'Webhook persistence unavailable' ? 503 : 400 });
   }
 
-  if (outcome.duplicate) {
-    return NextResponse.json({ received: true, duplicate: true }, { status: 200 });
+  if (providerId === 'paypal') {
+    const supabase = await createServiceSupabaseClient();
+    if (supabase) {
+      const resource = (parsedPayload.resource || {}) as {
+        id?: string;
+        custom_id?: string;
+        invoice_id?: string;
+      };
+      const orderId = resource.custom_id || resource.invoice_id;
+      if (orderId && (eventType === 'PAYMENT.CAPTURE.COMPLETED' || eventType === 'CHECKOUT.ORDER.APPROVED')) {
+        await supabase.from('orders').update({ status: 'paid' }).eq('id', orderId);
+        await supabase.from('payment_intents').update({ status: 'succeeded' }).eq('reference_id', orderId);
+      }
+    }
   }
 
   return NextResponse.json({ received: true, processed: true }, { status: 200 });
