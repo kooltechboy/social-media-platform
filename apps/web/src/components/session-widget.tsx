@@ -2,6 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
+import { LogOut } from 'lucide-react';
 import { useAuth } from './auth-provider';
 import UserAvatar from './user-avatar';
 
@@ -23,11 +24,13 @@ export default function SessionWidget() {
     );
   }
 
-  const initials = (user.displayName || user.username || 'CB').slice(0, 2).toUpperCase();
-
   return (
-    <div className="flex items-center gap-3">
-      <Link href="/profile" className="flex items-center gap-2 group" aria-label={`View profile for @${user.username}`}>
+    <div className="flex items-center gap-2">
+      <Link
+        href="/profile"
+        className="flex items-center gap-2 group"
+        aria-label={`View profile for @${user.username}`}
+      >
         <UserAvatar
           src={user.avatarUrl}
           name={user.displayName || user.username}
@@ -37,13 +40,16 @@ export default function SessionWidget() {
           @{user.username}
         </span>
       </Link>
+
+      {/* Sign out — visible on all screen sizes with icon and text */}
       <button
         type="button"
         onClick={() => void signOut()}
-        className="text-[11px] font-bold text-brand-sandstone/60 hover:text-rose-400 transition-colors cursor-pointer"
-        aria-label="Sign out"
+        className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 border border-transparent hover:border-rose-500/20 transition-all min-h-[32px] cursor-pointer"
+        aria-label="Sign out of your TUKUBI account"
       >
-        Sign out
+        <LogOut className="w-3.5 h-3.5 flex-shrink-0" aria-hidden="true" />
+        <span className="hidden sm:inline">Sign out</span>
       </button>
     </div>
   );
