@@ -112,7 +112,7 @@ export async function askCaribbean(query: string): Promise<AskResponse> {
       (async () => {
         const { data } = await supabase
           .from('posts')
-          .select('id, content, profiles(display_name)')
+          .select('id, content, profiles:profiles!posts_author_id_fkey(display_name)')
           .or(buildOrPattern(keywords, 'content'))
           .order('created_at', { ascending: false })
           .limit(10);

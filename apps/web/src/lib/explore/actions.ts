@@ -48,7 +48,7 @@ export async function fetchExploreDataAction(params: {
     // 1. Fetch Posts with filtering
     let postQuery = supabase
       .from('posts')
-      .select('id, content, media_urls, cultural_tags, likes_count, comments_count, shares_count, created_at, author_id, profiles(id, display_name, username, avatar_url, is_verified, origin_country_iso)')
+      .select('id, content, media_urls, cultural_tags, likes_count, comments_count, shares_count, created_at, author_id, profiles:profiles!posts_author_id_fkey(id, display_name, username, avatar_url, is_verified, origin_country_iso)')
       .eq('visibility', 'public')
       .order('created_at', { ascending: false })
       .limit(20);

@@ -48,7 +48,7 @@ export default async function PodcastsPage({
   if (supabase) {
     let query = supabase
       .from('podcasts')
-      .select('id, title, slug, description, is_paid, follower_count, language, cover_path, creator_id, profiles(display_name, username), podcast_episodes(id)')
+      .select('id, title, slug, description, is_paid, follower_count, language, cover_path, creator_id, profiles:profiles!podcasts_creator_id_fkey(display_name, username), podcast_episodes(id)')
       .order('follower_count', { ascending: false })
       .limit(24);
 

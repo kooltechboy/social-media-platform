@@ -19,7 +19,7 @@ export async function GET(
 
   const { data: podcast, error: podcastErr } = await supabase
     .from('podcasts')
-    .select('id, title, slug, description, language, cover_path, profiles(display_name)')
+    .select('id, title, slug, description, language, cover_path, profiles:profiles!podcasts_creator_id_fkey(display_name)')
     .eq('id', id)
     .maybeSingle();
 

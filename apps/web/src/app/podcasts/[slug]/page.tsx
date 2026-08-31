@@ -22,7 +22,7 @@ export default async function PodcastShowPage({
   if (supabase) {
     const { data: dbPod } = await supabase
       .from('podcasts')
-      .select('id, title, slug, description, is_paid, follower_count, language, cover_path, creator_id, profiles(display_name, username)')
+      .select('id, title, slug, description, is_paid, follower_count, language, cover_path, creator_id, profiles:profiles!podcasts_creator_id_fkey(display_name, username)')
       .eq('slug', slug)
       .maybeSingle();
 

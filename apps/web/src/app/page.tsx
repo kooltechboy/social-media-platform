@@ -48,7 +48,7 @@ export default async function HomePage() {
     const [postsRes, liveRes] = await Promise.all([
       supabase
         .from('posts')
-        .select('id, author_id, content, created_at, media_urls, cultural_tags, likes_count, comments_count, shares_count, profiles(display_name, username, avatar_url, is_verified)')
+        .select('id, author_id, content, created_at, media_urls, cultural_tags, likes_count, comments_count, shares_count, profiles:profiles!posts_author_id_fkey(display_name, username, avatar_url, is_verified)')
         .order('created_at', { ascending: false })
         .limit(30),
       supabase

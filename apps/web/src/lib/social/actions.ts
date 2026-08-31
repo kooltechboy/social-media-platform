@@ -121,7 +121,7 @@ export async function createPostAction(_prev: PostActionState, formData: FormDat
       media_urls: mediaUrls,
       cultural_tags: culturalTags,
     })
-    .select('id, content, created_at, media_urls, cultural_tags, likes_count, comments_count, shares_count, visibility, profiles(display_name, username, avatar_url, is_verified)')
+    .select('id, content, created_at, media_urls, cultural_tags, likes_count, comments_count, shares_count, visibility, profiles:profiles!posts_author_id_fkey(display_name, username, avatar_url, is_verified)')
     .single();
 
   if (error) {
@@ -196,7 +196,7 @@ export async function createStoryAction(formData: FormData): Promise<{ success: 
       audience,
       expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
     })
-    .select('id, author_id, media_path, media_kind, caption, audience, created_at, expires_at, profiles(display_name, username, avatar_url)')
+    .select('id, author_id, media_path, media_kind, caption, audience, created_at, expires_at, profiles:profiles!stories_author_id_fkey(display_name, username, avatar_url)')
     .single();
 
   if (error) {

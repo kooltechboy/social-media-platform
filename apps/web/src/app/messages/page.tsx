@@ -159,7 +159,7 @@ export default async function MessagesPage({ searchParams }: { searchParams: Pro
   if (selectedId) {
     const threadResult = await supabase
       .from('messages')
-      .select('id, sender_id, body, created_at, profiles(display_name)')
+      .select('id, sender_id, body, created_at, profiles:profiles!messages_sender_id_fkey(display_name)')
       .eq('conversation_id', selectedId)
       .order('created_at', { ascending: true })
       .limit(100);

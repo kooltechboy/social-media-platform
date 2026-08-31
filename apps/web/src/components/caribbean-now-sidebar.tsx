@@ -74,7 +74,7 @@ export default async function TukubiLiveSidebar() {
         supabase
           .from("stories")
           .select(
-            "id, media_url, caption, expires_at, created_at, profiles(display_name, username)",
+            "id, media_url, caption, expires_at, created_at, profiles:profiles!stories_author_id_fkey(display_name, username)",
           )
           .gte("expires_at", new Date().toISOString())
           .order("created_at", { ascending: false })
@@ -82,7 +82,7 @@ export default async function TukubiLiveSidebar() {
         supabase
           .from("posts")
           .select(
-            "id, content, likes_count, comments_count, created_at, profiles(display_name, username)",
+            "id, content, likes_count, comments_count, created_at, profiles:profiles!posts_author_id_fkey(display_name, username)",
           )
           .gte(
             "created_at",
