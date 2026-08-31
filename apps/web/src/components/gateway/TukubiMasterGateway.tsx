@@ -6,7 +6,6 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '../auth-provider';
 import {
   Sparkles,
-  Play,
   UserPlus,
   Flame,
 } from 'lucide-react';
@@ -15,38 +14,9 @@ import { SignInForm } from './SignInForm';
 import { ShowcaseMoments } from './ShowcaseMoments';
 import { TukubiLogo } from '../brand/tukubi-logo';
 
-export interface CarnivalScene {
-  id: string;
-  name: string;
-  badge: string;
-  title: string;
-  url: string;
-  fallbackUrl?: string;
-  overlayGradient: string;
-}
-
-export const CARNIVAL_SCENES: CarnivalScene[] = [
-  {
-    id: 'grenada-spicemas',
-    name: '🇬🇩 Grenada Spicemas',
-  badge: 'Caribbean Carnival Spotlight',
-    title: 'Spice Isle Carnival • St. George’s, Grenada',
-    // Sunlit Caribbean carnival dancers in vibrant gold, scarlet, and turquoise feathered costume
-    url: '/backgrounds/grenada-spicemas.jpg',
-    fallbackUrl: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=2600&q=95',
-    overlayGradient: `linear-gradient(to bottom,
-      rgba(8, 16, 32, 0.55) 0%,
-      rgba(8, 16, 32, 0.15) 25%,
-      rgba(8, 16, 32, 0.20) 60%,
-      rgba(8, 16, 32, 0.90) 100%
-    )`,
-  },
-];
-
 export function TukubiMasterGateway() {
   const { isAuthenticated, loading } = useAuth();
   const router = useRouter();
-  const activeScene = CARNIVAL_SCENES[0];
 
   useEffect(() => {
     if (!loading && isAuthenticated) {
@@ -56,37 +26,8 @@ export function TukubiMasterGateway() {
 
   return (
     <div className="min-h-screen w-full bg-transparent text-brand-sandstone relative overflow-x-hidden select-none">
-      {/* ── 1. High-Resolution Grenada Carnival / Spicemas Photographic Layer ── */}
-      <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none">
-        {/* Crisp Full-Resolution Carnival Photograph */}
-        <div
-          key={activeScene.id}
-          className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-all duration-1000 transform scale-100 animate-fadeIn"
-          style={{
-            backgroundImage: `url('${activeScene.url}')`,
-          }}
-        />
-
-        {/* Clean, light gradient overlay: lets the photo remain crisp, bright & colorful */}
-        <div
-          className="absolute inset-0 transition-all duration-700"
-          style={{
-            background: activeScene.overlayGradient,
-          }}
-        />
-
-        {/* Subtle dot matrix grid */}
-        <div
-          className="absolute inset-0 opacity-20"
-          style={{
-            backgroundImage: 'radial-gradient(circle, rgba(0, 180, 216, 0.2) 1px, transparent 1px)',
-            backgroundSize: '32px 32px',
-          }}
-        />
-      </div>
-
-      {/* ── 2. Top Navigation Bar ── */}
-      <header className="relative z-30 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 flex items-center justify-between border-b border-white/15 bg-[#081020]/75 backdrop-blur-2xl">
+      {/* ── 1. Top Navigation Bar ── */}
+      <header className="relative z-30 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 flex items-center justify-between border-b border-white/10 glass rounded-b-2xl mt-0">
         <TukubiLogo variant="horizontal" size="sm" href="/" priority />
 
         {/* Center Desktop Links */}
@@ -122,7 +63,7 @@ export function TukubiMasterGateway() {
         </div>
       </header>
 
-      {/* ── 3. Master Hero Showcase ── */}
+      {/* ── 2. Master Hero Showcase ── */}
       <section className="relative z-20 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-16 lg:pt-14 lg:pb-24">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
           {/* Left Column: Brand & Value Proposition */}
@@ -135,7 +76,7 @@ export function TukubiMasterGateway() {
 
               <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-brand-sunriseCoral/25 border border-brand-sunriseCoral/40 text-brand-sunriseCoral text-[11px] font-extrabold backdrop-blur-2xl shadow-md">
                 <Flame className="w-3.5 h-3.5 text-brand-goldenHour fill-current" />
-        <span>{activeScene.badge}</span>
+                <span>Caribbean Spotlight</span>
               </div>
             </div>
 
@@ -164,14 +105,6 @@ export function TukubiMasterGateway() {
                 <UserPlus className="w-4 h-4" />
                 <span>Create Account</span>
               </Link>
-
-              <Link
-                href="/explore"
-                className="px-6 py-3.5 rounded-2xl font-bold text-sm text-white bg-[#081020]/75 hover:bg-[#081020]/90 border border-white/30 backdrop-blur-2xl transition-all flex items-center gap-2 active:scale-[0.98] shadow-xl"
-              >
-                <Play className="w-4 h-4 text-brand-caribbeanSea fill-current" />
-                <span>Explore First</span>
-              </Link>
             </div>
 
             <div className="pt-6 border-t border-white/20">
@@ -193,13 +126,13 @@ export function TukubiMasterGateway() {
         </div>
       </section>
 
-      {/* ── 4. Section: The Caribbean in Every Moment ── */}
-      <section className="relative z-20 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 border-t border-white/15 bg-[#081020]/80 backdrop-blur-2xl">
+      {/* ── 3. Section: The Caribbean in Every Moment ── */}
+      <section className="relative z-20 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 border-t border-white/10 glass rounded-2xl mb-8">
         <ShowcaseMoments />
       </section>
 
-      {/* ── 5. Master Footer ── */}
-      <footer className="relative z-20 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 border-t border-white/15 bg-[#081020]/95 backdrop-blur-2xl flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-brand-sandstone/70">
+      {/* ── 4. Master Footer ── */}
+      <footer className="relative z-20 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 border-t border-white/10 glass rounded-t-2xl flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-brand-sandstone/70">
         <div className="flex items-center gap-3">
           <TukubiLogo variant="emblem" size="xs" href="/" />
           <span className="font-bold text-white font-serif">TUKUBI</span>
