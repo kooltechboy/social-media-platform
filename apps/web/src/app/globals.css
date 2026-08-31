@@ -12,9 +12,13 @@
   --brand-purple:       #8B5CF6;
 }
 
-/* Body baseline — transparent so the full-screen bg shows */
+html {
+  background-color: var(--brand-twilight);
+}
+
+/* Body baseline — transparent so the full-screen Caribbean background shows through */
 body {
-  background: var(--brand-twilight);
+  background-color: transparent;
   color: var(--brand-sandstone);
   font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
   -webkit-font-smoothing: antialiased;

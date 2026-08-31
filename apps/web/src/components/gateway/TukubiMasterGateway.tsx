@@ -21,6 +21,7 @@ export interface CarnivalScene {
   badge: string;
   title: string;
   url: string;
+  fallbackUrl?: string;
   overlayGradient: string;
 }
 
@@ -31,7 +32,8 @@ export const CARNIVAL_SCENES: CarnivalScene[] = [
   badge: 'Caribbean Carnival Spotlight',
     title: 'Spice Isle Carnival • St. George’s, Grenada',
     // Sunlit Caribbean carnival dancers in vibrant gold, scarlet, and turquoise feathered costume
-    url: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=2600&q=95',
+    url: '/backgrounds/grenada-spicemas.jpg',
+    fallbackUrl: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=2600&q=95',
     overlayGradient: `linear-gradient(to bottom,
       rgba(8, 16, 32, 0.55) 0%,
       rgba(8, 16, 32, 0.15) 25%,

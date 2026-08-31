@@ -6,6 +6,7 @@ export interface BackgroundTheme {
   id: string;
   name: string;
   url: string;
+  fallbackUrl: string;
   description: string;
   overlayGradient: string;
 }
@@ -14,59 +15,60 @@ export const CARIBBEAN_THEMES: BackgroundTheme[] = [
   {
     id: 'palm-beach',
     name: '🌴 Palm Beach',
-    // Turquoise Caribbean sea, fine white sand, and swaying tropical coconut palms
-    url: 'https://images.unsplash.com/photo-1559494007-9f5847c49d94?auto=format&fit=crop&w=2400&q=90',
+    url: '/backgrounds/palm-beach.jpg',
+    fallbackUrl: 'https://images.unsplash.com/photo-1559494007-9f5847c49d94?auto=format&fit=crop&w=2400&q=90',
     description: 'Crystal turquoise waters, fine white sand, and swaying tropical coconut palms',
     overlayGradient: `linear-gradient(to bottom,
-      rgba(8, 16, 32, 0.45) 0%,
-      rgba(8, 16, 32, 0.15) 30%,
-      rgba(8, 16, 32, 0.35) 65%,
-      rgba(8, 16, 32, 0.85) 100%
+      rgba(8, 16, 32, 0.35) 0%,
+      rgba(8, 16, 32, 0.10) 25%,
+      rgba(8, 16, 32, 0.25) 60%,
+      rgba(8, 16, 32, 0.75) 100%
     )`,
   },
   {
     id: 'sunset-shore',
     name: '🌅 Sunset Shore',
-    // Vivid Caribbean sunset with warm coral, amber, and golden horizon tones
-    url: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=2400&q=90',
+    url: '/backgrounds/sunset-shore.jpg',
+    fallbackUrl: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=2400&q=90',
     description: 'Vivid Caribbean sunset with warm coral, amber, and golden horizon tones',
     overlayGradient: `linear-gradient(to bottom,
-      rgba(36, 14, 10, 0.45) 0%,
-      rgba(36, 14, 10, 0.15) 30%,
-      rgba(36, 14, 10, 0.35) 65%,
-      rgba(18, 8, 12, 0.85) 100%
+      rgba(36, 14, 10, 0.35) 0%,
+      rgba(36, 14, 10, 0.10) 25%,
+      rgba(36, 14, 10, 0.25) 60%,
+      rgba(18, 8, 12, 0.75) 100%
     )`,
   },
   {
     id: 'island-vibes',
     name: '🎉 Island Vibes',
-    // Tropical beach gathering, warm festive energy, and vibrant Caribbean culture
-    url: 'https://images.unsplash.com/photo-1531761535209-180857e963b9?auto=format&fit=crop&w=2400&q=90',
+    url: '/backgrounds/island-vibes.jpg',
+    fallbackUrl: 'https://images.unsplash.com/photo-1531761535209-180857e963b9?auto=format&fit=crop&w=2400&q=90',
     description: 'Tropical beach gathering, warm festive energy, and vibrant Caribbean culture',
     overlayGradient: `linear-gradient(to bottom,
-      rgba(24, 10, 36, 0.45) 0%,
-      rgba(24, 10, 36, 0.15) 30%,
-      rgba(24, 10, 36, 0.35) 65%,
-      rgba(17, 13, 23, 0.85) 100%
+      rgba(24, 10, 36, 0.35) 0%,
+      rgba(24, 10, 36, 0.10) 25%,
+      rgba(24, 10, 36, 0.25) 60%,
+      rgba(17, 13, 23, 0.75) 100%
     )`,
   },
   {
     id: 'reef-dusk',
     name: '🌊 Reef Dusk',
-    // Dramatic azure and bioluminescent turquoise deep-sea Caribbean waters
-    url: 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=2400&q=90',
+    url: '/backgrounds/reef-dusk.jpg',
+    fallbackUrl: 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=2400&q=90',
     description: 'Dramatic azure and bioluminescent turquoise deep-sea Caribbean waters',
     overlayGradient: `linear-gradient(to bottom,
-      rgba(0, 24, 48, 0.45) 0%,
-      rgba(0, 24, 48, 0.15) 30%,
-      rgba(0, 24, 48, 0.35) 65%,
-      rgba(5, 15, 30, 0.85) 100%
+      rgba(0, 24, 48, 0.35) 0%,
+      rgba(0, 24, 48, 0.10) 25%,
+      rgba(0, 24, 48, 0.25) 60%,
+      rgba(5, 15, 30, 0.75) 100%
     )`,
   },
 ];
 
 export default function CaribbeanSunsetBackground() {
   const [activeThemeIndex, setActiveThemeIndex] = useState(0);
+  const [imgSrc, setImgSrc] = useState(CARIBBEAN_THEMES[0].url);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -77,6 +79,7 @@ export default function CaribbeanSunsetBackground() {
         const found = CARIBBEAN_THEMES.findIndex((t) => t.id === savedThemeId);
         if (found >= 0) {
           setActiveThemeIndex(found);
+          setImgSrc(CARIBBEAN_THEMES[found].url);
         }
       }
     } catch {
@@ -86,6 +89,7 @@ export default function CaribbeanSunsetBackground() {
 
   const handleSelectTheme = (idx: number) => {
     setActiveThemeIndex(idx);
+    setImgSrc(CARIBBEAN_THEMES[idx].url);
     try {
       localStorage.setItem('tukubi_bg_theme', CARIBBEAN_THEMES[idx].id);
     } catch {
@@ -102,15 +106,23 @@ export default function CaribbeanSunsetBackground() {
         className="fixed inset-0 z-0 overflow-hidden pointer-events-none select-none"
         aria-hidden="true"
       >
-        {/* High-Resolution Caribbean Backdrop Image */}
-        <div
-          key={currentTheme.id}
-          className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-opacity duration-700"
-          style={{
-            backgroundImage: `url('${currentTheme.url}')`,
-            filter: 'saturate(1.10) brightness(1.02)',
-          }}
-        />
+        {/* High-Resolution Caribbean Backdrop Image via Native Element */}
+        <picture className="absolute inset-0 w-full h-full">
+          <img
+            key={currentTheme.id}
+            src={imgSrc}
+            alt="Caribbean Backdrop"
+            className="w-full h-full object-cover object-center transition-opacity duration-700"
+            style={{
+              filter: 'saturate(1.15) brightness(1.05)',
+            }}
+            onError={() => {
+              if (imgSrc !== currentTheme.fallbackUrl) {
+                setImgSrc(currentTheme.fallbackUrl);
+              }
+            }}
+          />
+        </picture>
 
         {/* Atmospheric Contrast Overlay Gradient */}
         <div
@@ -122,17 +134,17 @@ export default function CaribbeanSunsetBackground() {
 
         {/* Radiant Golden Hour / Coral Glow (Top-Right) */}
         <div
-          className="absolute -top-16 -right-16 w-[700px] h-[700px] rounded-full bg-gradient-to-br from-amber-400/20 via-orange-500/10 to-transparent blur-[140px] pointer-events-none"
+          className="absolute -top-16 -right-16 w-[700px] h-[700px] rounded-full bg-gradient-to-br from-amber-400/25 via-orange-500/15 to-transparent blur-[140px] pointer-events-none"
         />
 
         {/* Radiant Caribbean Sea Turquoise Glow (Bottom-Left) */}
         <div
-          className="absolute -bottom-20 -left-20 w-[650px] h-[650px] rounded-full bg-gradient-to-tr from-cyan-400/20 via-sky-500/10 to-transparent blur-[140px] pointer-events-none"
+          className="absolute -bottom-20 -left-20 w-[650px] h-[650px] rounded-full bg-gradient-to-tr from-cyan-400/25 via-sky-500/15 to-transparent blur-[140px] pointer-events-none"
         />
 
         {/* Subtle Water Shimmer Ripple Pattern */}
         <div
-          className="absolute inset-0 bg-[radial-gradient(#38bdf8_1px,transparent_1px)] [background-size:32px_32px] opacity-[0.035]"
+          className="absolute inset-0 bg-[radial-gradient(#38bdf8_1px,transparent_1px)] [background-size:32px_32px] opacity-[0.04]"
         />
       </div>
 

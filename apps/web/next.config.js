@@ -9,8 +9,8 @@ const TUKUBI_CSP = [
   "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://www.paypal.com https://www.paypalobjects.com https://accounts.google.com",
   // Styles: self + inline (Tailwind injects inline styles)
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-  // Images: self + Supabase Storage + data URIs + common CDNs
-  "img-src 'self' data: blob: https://*.supabase.co https://*.supabase.in https://www.paypalobjects.com https://www.gstatic.com",
+  // Images: self + Supabase Storage + Unsplash + data URIs + common CDNs
+  "img-src 'self' data: blob: https://*.supabase.co https://*.supabase.in https://images.unsplash.com https://*.unsplash.com https://www.paypalobjects.com https://www.gstatic.com",
   // Fonts: self + Google Fonts
   "font-src 'self' https://fonts.gstatic.com",
   // API/WebSocket connections: Supabase, Stripe, PayPal, self
@@ -34,6 +34,18 @@ const TUKUBI_CSP = [
 const nextConfig = {
   transpilePackages: ["@caribbean/ui", "@caribbean/design-system", "@caribbean/payments", "@caribbean/ai"],
   reactStrictMode: true,
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'images.unsplash.com',
+      },
+      {
+        protocol: 'https',
+        hostname: '*.supabase.co',
+      },
+    ],
+  },
   async headers() {
     return [
       {
