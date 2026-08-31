@@ -13,6 +13,7 @@ import {
 import { LanguageDropdown } from './LanguageDropdown';
 import { SignInForm } from './SignInForm';
 import { ShowcaseMoments } from './ShowcaseMoments';
+import { TukubiLogo } from '../brand/tukubi-logo';
 
 export interface CarnivalScene {
   id: string;
@@ -84,23 +85,7 @@ export function TukubiMasterGateway() {
 
       {/* ── 2. Top Navigation Bar ── */}
       <header className="relative z-30 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 flex items-center justify-between border-b border-white/15 bg-[#081020]/75 backdrop-blur-2xl">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-brand-caribbeanSea via-brand-goldenHour to-brand-sunriseCoral p-[1.5px] shadow-xl shadow-brand-caribbeanSea/35">
-            <div className="w-full h-full bg-[#0A1428] rounded-2xl flex items-center justify-center">
-              <span className="font-black text-transparent bg-clip-text bg-gradient-to-tr from-brand-caribbeanSea to-brand-goldenHour text-xl">
-                T
-              </span>
-            </div>
-          </div>
-          <div>
-            <span className="text-xl sm:text-2xl font-black tracking-tight text-white font-serif">
-              TUKUBI
-            </span>
-            <span className="block text-[10px] font-bold tracking-wide text-brand-sandstone/80">
-              The Caribbean Connected.
-            </span>
-          </div>
-        </div>
+        <TukubiLogo variant="horizontal" size="sm" href="/" priority />
 
         {/* Center Desktop Links */}
         <nav className="hidden md:flex items-center gap-6 text-xs font-semibold text-brand-sandstone/90">
@@ -214,6 +199,7 @@ export function TukubiMasterGateway() {
       {/* ── 5. Master Footer ── */}
       <footer className="relative z-20 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 border-t border-white/15 bg-[#081020]/95 backdrop-blur-2xl flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-brand-sandstone/70">
         <div className="flex items-center gap-3">
+          <TukubiLogo variant="emblem" size="xs" href="/" />
           <span className="font-bold text-white font-serif">TUKUBI</span>
           <span>•</span>
           <span>&copy; {new Date().getFullYear()} TUKUBI. The Caribbean Connected. All rights reserved.</span>

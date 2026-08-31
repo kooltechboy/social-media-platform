@@ -19,9 +19,11 @@ import {
   LogOut,
   ChevronRight,
   Sparkles,
+  Smartphone,
 } from 'lucide-react';
 import Link from 'next/link';
 import { useAuth } from './auth-provider';
+import { usePwa } from './pwa/pwa-provider';
 import { AvatarUpload, CoverUpload } from './avatar-upload';
 import {
   updateProfileBasicAction,
@@ -77,6 +79,7 @@ type SettingsSection =
   | 'security'
   | 'appearance'
   | 'language'
+  | 'install'
   | 'data'
   | 'management';
 
@@ -86,6 +89,7 @@ export default function SettingsView({
   userEmail,
 }: SettingsViewProps) {
   const { signOut, refresh } = useAuth();
+  const pwa = usePwa();
   const { t, setLocale, locale: currentLocale } = useTranslation();
   const [activeSection, setActiveSection] = useState<SettingsSection>('account');
   const [profile, setProfile] = useState(initialProfile);
@@ -195,6 +199,7 @@ export default function SettingsView({
     { id: 'security', label: 'Security & Password', icon: Lock },
     { id: 'appearance', label: 'Appearance', icon: Palette },
     { id: 'language', label: 'Language', icon: Globe },
+    { id: 'install', label: 'Install TUKUBI', icon: Smartphone },
     { id: 'data', label: 'Your Data', icon: Download },
     { id: 'management', label: 'Account Management', icon: AlertTriangle },
   ];
@@ -809,6 +814,117 @@ export default function SettingsView({
                     </button>
                   );
                 })}
+              </div>
+            </section>
+          )}
+
+          {/* INSTALL TUKUBI (PWA) */}
+          {activeSection === 'install' && (
+            <section className="bg-brand-dusk/70 border border-slate-800 rounded-3xl p-6 space-y-6">
+              <div>
+                <h2 className="text-sm font-black uppercase tracking-wider text-brand-caribbeanSea flex items-center gap-2">
+                  <Smartphone className="w-4 h-4 text-brand-caribbeanSea" /> Install TUKUBI Application
+                </h2>
+                <p className="text-xs text-brand-sandstone/60">
+                  Experience TUKUBI as a fast, standalone application on your phone, tablet, or desktop with instant access and offline resilience.
+                </p>
+              </div>
+
+              {/* Status Card */}
+              <div className="p-5 rounded-2xl bg-[#131D33] border border-slate-800 space-y-4">
+                <div className="flex items-center justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-brand-caribbeanSea via-brand-goldenHour to-brand-sunriseCoral p-[1.5px] shadow-lg shadow-brand-caribbeanSea/25 shrink-0">
+                      <div className="w-full h-full bg-[#0A1428] rounded-2xl flex items-center justify-center">
+                        <span className="font-black text-transparent bg-clip-text bg-gradient-to-tr from-brand-caribbeanSea to-brand-goldenHour text-xl">
+                          T
+                        </span>
+                      </div>
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h3 className="text-sm font-black text-white">TUKUBI App</h3>
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-brand-caribbeanSea/20 text-brand-caribbeanSea border border-brand-caribbeanSea/30">
+                          v1.0.0
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-brand-sandstone/60">
+                        {pwa.isStandalone
+                          ? 'Running in standalone application mode.'
+                          : pwa.isInstalled
+                          ? 'Installed on this device.'
+                          : 'Progressive Web Application'}
+                      </p>
+                    </div>
+                  </div>
+
+                  {pwa.isInstalled || pwa.isStandalone ? (
+                    <span className="inline-flex items-center gap-1.5 text-xs font-black text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 px-3 py-1.5 rounded-xl">
+                      <CheckCircle className="w-3.5 h-3.5" /> Active &amp; Installed
+                    </span>
+                  ) : null}
+                </div>
+
+                {/* Features List */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
+                  <div className="p-3 bg-white/5 rounded-xl border border-white/5 space-y-1">
+                    <span className="text-xs font-bold text-white block">⚡ Instant Access</span>
+                    <span className="text-[10px] text-brand-sandstone/60 block">Launch directly from your Home Screen, Dock, or Taskbar.</span>
+                  </div>
+                  <div className="p-3 bg-white/5 rounded-xl border border-white/5 space-y-1">
+                    <span className="text-xs font-bold text-white block">🌴 Full-Screen Vibes</span>
+                    <span className="text-[10px] text-brand-sandstone/60 block">Immersive Caribbean interface without browser URL bars.</span>
+                  </div>
+                  <div className="p-3 bg-white/5 rounded-xl border border-white/5 space-y-1">
+                    <span className="text-xs font-bold text-white block">📡 Offline Fallback</span>
+                    <span className="text-[10px] text-brand-sandstone/60 block">Protected against flaky connections with branded fallback.</span>
+                  </div>
+                </div>
+
+                {/* Action Trigger based on platform and install state */}
+                <div className="pt-3 border-t border-slate-800/80">
+                  {pwa.isInstalled || pwa.isStandalone ? (
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-brand-sandstone/70">
+                        TUKUBI is already installed. You can open it from your app launcher or home screen.
+                      </span>
+                    </div>
+                  ) : pwa.platform.isIOS ? (
+                    <div className="space-y-3">
+                      <button
+                        type="button"
+                        onClick={() => pwa.promptInstall()}
+                        className="flex items-center gap-2 bg-gradient-to-r from-brand-caribbeanSea via-brand-goldenHour to-brand-sunriseCoral hover:opacity-95 text-slate-950 font-black text-xs py-2.5 px-5 rounded-xl transition-all shadow-md shadow-brand-caribbeanSea/20 cursor-pointer"
+                      >
+                        <Smartphone className="w-4 h-4" />
+                        <span>Add TUKUBI to Home Screen</span>
+                      </button>
+                      <p className="text-[11px] text-brand-sandstone/60">
+                        Safari on iOS requires adding to Home Screen via the Share menu.
+                      </p>
+                    </div>
+                  ) : pwa.hasNativePrompt ? (
+                    <div className="space-y-3">
+                      <button
+                        type="button"
+                        onClick={() => pwa.promptInstall()}
+                        className="flex items-center gap-2 bg-gradient-to-r from-brand-caribbeanSea via-brand-goldenHour to-brand-sunriseCoral hover:opacity-95 text-slate-950 font-black text-xs py-2.5 px-5 rounded-xl transition-all shadow-md shadow-brand-caribbeanSea/20 cursor-pointer"
+                      >
+                        <Download className="w-4 h-4" />
+                        <span>Install TUKUBI App</span>
+                      </button>
+                      <p className="text-[11px] text-brand-sandstone/60">
+                        Clicking install will prompt your browser to add TUKUBI to your device.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <div className="text-xs text-brand-sandstone/80">
+                        To install TUKUBI on this device, open <strong className="text-brand-sandstone">https://www.tukubi.com</strong> in Google Chrome, Microsoft Edge, or Safari on iOS, and select <em>Install</em> from the browser menu or this Settings page.
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
             </section>
           )}

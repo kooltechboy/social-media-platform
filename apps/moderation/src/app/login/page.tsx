@@ -2,6 +2,7 @@
 
 import React, { useState, useCallback, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { createBrowserClient } from '@supabase/ssr';
 import { ShieldAlert, Loader2 } from 'lucide-react';
 
@@ -57,10 +58,16 @@ export default function LoginPage() {
       <div className="w-full max-w-sm space-y-8">
         {/* Branding */}
         <div className="text-center space-y-2">
-          <div className="flex items-center justify-center gap-2 mb-4">
-            <ShieldAlert className="w-8 h-8 text-brand-goldenHour" aria-hidden="true" />
+          <div className="flex justify-center mb-2">
+            <Image
+              src="/brand/tukubi-emblem.png"
+              alt="TUKUBI"
+              width={56}
+              height={56}
+              className="object-contain"
+            />
           </div>
-          <h1 className="text-lg font-extrabold text-brand-sandstone tracking-wider">
+          <h1 className="text-xl font-black bg-gradient-to-r from-brand-caribbeanSea via-brand-goldenHour to-brand-sunriseCoral bg-clip-text text-transparent tracking-wider">
             TUKUBI
           </h1>
           <p className="text-sm font-semibold text-amber-300">
@@ -122,25 +129,43 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full flex items-center justify-center gap-2 bg-sky-600 hover:bg-brand-caribbeanSea disabled:bg-sky-800 disabled:opacity-60 text-brand-sandstone font-bold text-sm px-4 py-2.5 rounded-xl transition-colors focus:outline-none focus:ring-2 focus:ring-brand-caribbeanSea focus:ring-offset-2 focus:ring-offset-[#090D16]"
+            className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-brand-caribbeanSea to-brand-sunriseCoral hover:opacity-95 disabled:opacity-60 text-slate-950 font-black text-sm px-4 py-3 rounded-xl transition-all focus:outline-none focus:ring-2 focus:ring-brand-caribbeanSea shadow-lg shadow-brand-caribbeanSea/20"
           >
             {loading ? (
               <>
-                <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
+                <Loader2 className="w-4 h-4 animate-spin text-slate-950" aria-hidden="true" />
                 Signing in...
               </>
             ) : (
-              'Sign in'
+              'Sign in to Moderation Center'
             )}
           </button>
         </form>
 
-        {/* Restricted access notice */}
-        <p className="text-center text-[11px] text-slate-600">
-          Access restricted to authorized moderators.
-          <br />
-          Contact Trust & Safety if you need access.
-        </p>
+        {/* Restricted access notice & Image 2 Dark Footer */}
+        <div className="pt-4 text-center space-y-4 border-t border-slate-800">
+          <p className="text-[11px] text-slate-500">
+            Access restricted to authorized Trust &amp; Safety moderators.
+            <br />
+            New moderator?{' '}
+            <a
+              href={`${process.env.NEXT_PUBLIC_WEB_URL ?? 'http://localhost:3000'}/moderator/signup`}
+              className="text-brand-goldenHour font-bold hover:underline"
+            >
+              Apply at Moderator Portal →
+            </a>
+          </p>
+
+          <div className="flex justify-center pt-2">
+            <Image
+              src="/brand/tukubi-footer-dark.png"
+              alt="TUKUBI — The Caribbean Connected."
+              width={140}
+              height={56}
+              className="object-contain rounded-lg border border-white/10"
+            />
+          </div>
+        </div>
       </div>
     </div>
   );

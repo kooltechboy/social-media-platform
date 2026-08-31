@@ -9,6 +9,7 @@ import { createSupabaseBrowserClient } from '../lib/supabase/browser';
 import { followAction, unfollowAction } from '../lib/social/profile-actions';
 import UserAvatar from './user-avatar';
 import { useTranslation } from '@caribbean/localization';
+import { TukubiLogo } from './brand/tukubi-logo';
 
 interface SearchResultUser {
   id: string;
@@ -109,18 +110,7 @@ export default function AppHeader() {
       {/* 1. LEFT: PROMINENT TUKUBI BRAND & OFFICIAL TAGLINE         */}
       {/* ────────────────────────────────────────────────────────── */}
       <div className="flex items-center shrink-0">
-        <Link
-          href="/"
-          className="flex flex-col tracking-tight text-brand-sandstone focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-caribbeanSea rounded-md group"
-          aria-label="TUKUBI — The Caribbean Connected."
-        >
-          <span className="text-2xl sm:text-3xl font-black bg-gradient-to-r from-brand-caribbeanSea via-brand-goldenHour to-brand-sunriseCoral bg-clip-text text-transparent tracking-wider leading-none">
-            TUKUBI
-          </span>
-          <span className="text-xs sm:text-[11.5px] font-bold text-brand-sandstone/80 tracking-wide mt-1 group-hover:text-brand-caribbeanSea transition-colors">
-            The Caribbean Connected.
-          </span>
-        </Link>
+        <TukubiLogo variant="horizontal" size="sm" href="/" priority />
       </div>
 
       {/* ────────────────────────────────────────────────────────── */}

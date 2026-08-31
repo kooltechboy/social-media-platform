@@ -24,6 +24,11 @@ import FollowButton from '../../../components/follow-button';
 import ProfileHeaderActions from '../../../components/profile-header-actions';
 import UserAvatar from '../../../components/user-avatar';
 import type { ProfileData } from '../../../components/profile-edit-modal';
+import { RecognitionService } from '../../../lib/recognition/recognition-service';
+import FounderBadge from '../../../components/recognition/founder-badge';
+import ReputationIndicator from '../../../components/recognition/reputation-indicator';
+import BadgePill from '../../../components/recognition/badge-pill';
+import ProfileRecognitionTab from '../../../components/recognition/profile-recognition-tab';
 
 export const dynamic = 'force-dynamic';
 
@@ -164,8 +169,9 @@ export default async function ProfilePage({
     );
   }
 
-  // Fetch real counts, follow status, and posts in parallel
-  const [countsResult, followResult, postsResult] = await Promise.all([
+  // Fetch real counts, follow status, posts, and recognition in parallel
+  const recognitionService = new RecognitionService(supabase);
+  const [countsResult, followResult, postsResult, recognition] = await Promise.all([
     supabase
       .from('profile_counts')
       .select('followers_count, following_count, posts_count, likes_received_count')
@@ -185,6 +191,7 @@ export default async function ProfilePage({
       .eq('author_id', profileData.id)
       .order('created_at', { ascending: false })
       .limit(20),
+    recognitionService.getProfileRecognition(profileData.id),
   ]);
 
   const counts = (countsResult.data as ProfileCountRow | null) || {
@@ -279,21 +286,31 @@ export default async function ProfilePage({
                   className="ring-4 ring-[#090D16] shadow-2xl"
                 />
 
-                <div className="mb-2">
-                  <div className="flex items-center gap-2">
+                <div className="mb-2 space-y-1">
+                  <div className="flex items-center gap-2 flex-wrap">
                     <h1 className="text-xl sm:text-2xl font-black text-brand-sandstone tracking-tight">
                       {profileData.display_name}
                     </h1>
                     {profileData.is_verified && (
                       <BadgeCheck className="w-5 h-5 text-brand-caribbeanSea" aria-label="Verified Member" />
                     )}
-                  </div>
-                  <p className="text-xs sm:text-sm font-semibold text-brand-sandstone/60">
-                    @{profileData.username}
-                    {profileData.pronouns && (
-                      <span className="ml-2 text-[11px] text-brand-sandstone/40">({profileData.pronouns})</span>
+                    {recognition.founder.is_founder && (
+                      <FounderBadge founder={recognition.founder} size="sm" />
                     )}
-                  </p>
+                    <ReputationIndicator reputation={recognition.reputation} size="sm" />
+                  </div>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <p className="text-xs sm:text-sm font-semibold text-brand-sandstone/60">
+                      @{profileData.username}
+                      {profileData.pronouns && (
+                        <span className="ml-2 text-[11px] text-brand-sandstone/40">({profileData.pronouns})</span>
+                      )}
+                    </p>
+                    {/* Top 2 featured badges preview */}
+                    {recognition.badges.slice(0, 2).map((b) => (
+                      <BadgePill key={b.id} badge={b} size="sm" />
+                    ))}
+                  </div>
                 </div>
               </div>
 
@@ -401,6 +418,19 @@ export default async function ProfilePage({
             }`}
           >
             Posts ({posts.length})
+          </Link>
+          <Link
+            href={`/profile/${profileData.username}?tab=recognition`}
+            className={`pb-3 border-b-2 transition-all flex items-center gap-1.5 ${
+              tab === 'recognition'
+                ? 'border-brand-goldenHour text-brand-goldenHour font-black'
+                : 'border-transparent text-brand-sandstone/60 hover:text-slate-200'
+            }`}
+          >
+            <span>Recognition</span>
+            <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-brand-goldenHour/20 text-amber-300 font-mono">
+              {recognition.badges.length + (recognition.founder.is_founder ? 1 : 0)}
+            </span>
           </Link>
         </nav>
 
@@ -637,6 +667,15 @@ export default async function ProfilePage({
               ))
             )}
           </section>
+        )}
+
+        {/* TAB: RECOGNITION CONTENT */}
+        {tab === 'recognition' && (
+          <ProfileRecognitionTab
+            recognition={recognition}
+            username={profileData.username}
+            isOwnProfile={isOwnProfile}
+          />
         )}
       </main>
     </div>

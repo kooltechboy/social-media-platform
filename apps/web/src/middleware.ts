@@ -23,6 +23,10 @@ const PUBLIC_EXEMPT_ROUTES = [
   '/api/v1/health',
   '/api/webhooks/stripe',
   '/api/payments/providers',
+  '/manifest.webmanifest',
+  '/manifest.json',
+  '/sw.js',
+  '/offline',
 ];
 
 function detectLocaleFromHeaders(header: string | null): string {
@@ -148,8 +152,9 @@ export const config = {
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
+     * - sw.js, manifest.webmanifest, manifest.json
      * - static asset extensions (.svg, .png, .jpg, .jpeg, .gif, .webp, .ico, .css, .js)
      */
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|css|js)$).*)',
+    '/((?!_next/static|_next/image|favicon.ico|sw.js|manifest.webmanifest|manifest.json|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|css|js)$).*)',
   ],
 };

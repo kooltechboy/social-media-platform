@@ -8,6 +8,8 @@ import Link from 'next/link';
 import { createServiceSupabaseClient, getAuthorizedUser } from '../../lib/supabase/server';
 import ModerationActionButton from '../../components/moderation-action-button';
 import AccessDenied from '../../components/access-denied';
+import { TukubiLogo } from '../../components/brand/tukubi-logo';
+import { AdminFooter } from '../../components/admin/admin-footer';
 
 export const dynamic = 'force-dynamic';
 
@@ -104,20 +106,21 @@ export default async function ModerationPage() {
 
   return (
     <div className="min-h-screen bg-[#090D16] text-brand-sandstone">
-      <header className="sticky top-0 z-50 bg-[#0F172A]/90 backdrop-blur-md border-b border-slate-800 px-4 py-3 flex items-center gap-4">
-        <Link href="/" className="flex items-center gap-2 text-slate-300 hover:text-brand-sandstone text-sm font-semibold">
-          <ArrowLeft className="w-4 h-4" /> Back
-        </Link>
-        <h1 className="text-lg font-extrabold text-brand-sandstone flex items-center gap-2">
-          <ShieldAlert className="w-5 h-5 text-brand-goldenHour" /> Moderation Center
-        </h1>
-        <div className="hidden sm:flex items-center gap-2 ml-4">
+      <header className="sticky top-0 z-50 bg-[#0F172A]/90 backdrop-blur-md border-b border-slate-800 px-4 py-3 flex items-center justify-between gap-4">
+        <div className="flex items-center gap-4">
+          <TukubiLogo variant="horizontal" size="xs" href="/" />
+          <div className="h-5 w-px bg-slate-700 hidden sm:block" />
+          <h1 className="text-base font-extrabold text-brand-sandstone flex items-center gap-2">
+            <ShieldAlert className="w-4 h-4 text-brand-goldenHour" /> Moderation
+          </h1>
+        </div>
+        <div className="flex items-center gap-2">
           <Link href="/moderation" className="bg-brand-dusk text-brand-sandstone px-3 py-1 rounded-lg text-xs font-semibold">Queue</Link>
           <Link href="/moderation/cases" className="text-brand-sandstone/60 hover:text-brand-sandstone px-3 py-1 rounded-lg text-xs font-semibold">Cases</Link>
           <Link href="/moderation/appeals" className="text-brand-sandstone/60 hover:text-brand-sandstone px-3 py-1 rounded-lg text-xs font-semibold">Appeals</Link>
           <Link href="/moderation/analytics" className="text-brand-sandstone/60 hover:text-brand-sandstone px-3 py-1 rounded-lg text-xs font-semibold">Analytics</Link>
         </div>
-        <span className="ml-auto text-[11px] text-brand-sandstone/60 hidden md:block">
+        <span className="text-[11px] text-brand-sandstone/60 hidden md:block">
           Human-in-the-loop · every action is logged
         </span>
       </header>

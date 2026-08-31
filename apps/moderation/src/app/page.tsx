@@ -1,5 +1,6 @@
 import React from 'react';
 import { redirect } from 'next/navigation';
+import Image from 'next/image';
 import {
   ShieldAlert, Eye, EyeOff, Flag, CheckCircle,
   AlertTriangle, Clock, ChevronRight, BarChart3
@@ -91,9 +92,20 @@ export default async function ModerationDashboard() {
     <div className="min-h-screen bg-[#090D16] text-brand-sandstone flex">
       {/* Sidebar */}
       <aside className="hidden lg:flex flex-col w-56 bg-[#0F172A] border-r border-slate-800 p-4 space-y-1 sticky top-0 min-h-screen">
-        <div className="px-2 py-4 mb-2">
-          <h1 className="text-sm font-extrabold text-brand-sandstone tracking-wider">TUKUBI</h1>
-          <p className="text-[11px] text-amber-300 font-semibold mt-0.5">Moderation Center</p>
+        <div className="px-2 py-4 mb-2 flex items-center gap-2.5">
+          <Image
+            src="/brand/tukubi-emblem.png"
+            alt="TUKUBI"
+            width={36}
+            height={36}
+            className="object-contain"
+          />
+          <div>
+            <h1 className="text-sm font-black bg-gradient-to-r from-brand-caribbeanSea to-brand-sunriseCoral bg-clip-text text-transparent tracking-wider">
+              TUKUBI
+            </h1>
+            <p className="text-[10px] text-amber-300 font-semibold">Moderation Center</p>
+          </div>
         </div>
         {[
           { label: 'Queue', href: '/', icon: ShieldAlert },
@@ -292,6 +304,25 @@ export default async function ModerationDashboard() {
               </div>
             </aside>
           </div>
+
+          {/* Dark Footer with Image 2 Logo */}
+          <footer className="mt-8 pt-6 border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-brand-sandstone/40">
+            <div className="flex items-center gap-3">
+              <Image
+                src="/brand/tukubi-footer-dark.png"
+                alt="TUKUBI — The Caribbean Connected."
+                width={130}
+                height={52}
+                className="object-contain rounded-lg border border-white/10"
+              />
+              <span>&copy; {new Date().getFullYear()} TUKUBI Network Inc.</span>
+            </div>
+            <div className="flex items-center gap-3 text-[11px]">
+              <span>Role: Trust &amp; Safety Moderator</span>
+              <span>•</span>
+              <span>All moderation actions cryptographically audited</span>
+            </div>
+          </footer>
         </main>
       </div>
     </div>

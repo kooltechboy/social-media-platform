@@ -13,10 +13,28 @@ import {
   LOCALE_DETAILS,
 } from '@caribbean/localization';
 
+import { PwaProvider } from '../components/pwa/pwa-provider';
+
 export const metadata: Metadata = {
   title: 'TUKUBI — The Caribbean Connected.',
   description:
     'The premier platform for Caribbean culture, community, creators, businesses, and the global diaspora. The Caribbean Connected.',
+  manifest: '/manifest.webmanifest',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'black-translucent',
+    title: 'TUKUBI',
+  },
+  icons: {
+    icon: [
+      { url: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' },
+      { url: '/icons/icon-512.png', sizes: '512x512', type: 'image/png' },
+      { url: '/favicon.svg', type: 'image/svg+xml' },
+    ],
+    apple: [
+      { url: '/icons/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
+    ],
+  },
 };
 
 export const viewport: Viewport = {
@@ -48,11 +66,13 @@ export default async function RootLayout({
         {/* Full-screen Caribbean background — always fills the entire viewport */}
         <CaribbeanSunsetBackground />
 
-        {/* Global Localization & Auth Providers */}
+        {/* Global Localization, Auth, and PWA Installation Providers */}
         <I18nProvider initialLocale={activeLocale}>
           <AuthProvider initialUser={user}>
-            {/* App shell with gateway page isolation */}
-            <AppShell>{children}</AppShell>
+            <PwaProvider>
+              {/* App shell with gateway page isolation */}
+              <AppShell>{children}</AppShell>
+            </PwaProvider>
           </AuthProvider>
         </I18nProvider>
       </body>

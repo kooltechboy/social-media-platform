@@ -1,11 +1,21 @@
 import React from 'react';
-import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, Image } from 'react-native';
 import { TOKENS } from '../theme/tokens';
 
 export function Header({ onWalletPress }: { onWalletPress?: () => void }) {
   return (
     <View style={styles.header}>
-      <Text style={styles.headerTitle}>TUKUBI</Text>
+      <View style={styles.brandContainer}>
+        <Image
+          source={require('../../assets/tukubi-emblem.png')}
+          style={styles.logoEmblem}
+          resizeMode="contain"
+        />
+        <View>
+          <Text style={styles.headerTitle}>TUKUBI</Text>
+          <Text style={styles.headerTagline}>The Caribbean Connected.</Text>
+        </View>
+      </View>
       <TouchableOpacity
         accessibilityRole="button"
         accessibilityLabel="Financial Center"
@@ -20,7 +30,7 @@ export function Header({ onWalletPress }: { onWalletPress?: () => void }) {
 
 const styles = StyleSheet.create({
   header: {
-    height: 56,
+    height: 60,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -29,11 +39,27 @@ const styles = StyleSheet.create({
     borderBottomColor: TOKENS.border,
     backgroundColor: TOKENS.surface,
   },
+  brandContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  logoEmblem: {
+    width: 32,
+    height: 32,
+  },
   headerTitle: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '900',
     color: TOKENS.action,
     letterSpacing: 0.5,
+    lineHeight: 18,
+  },
+  headerTagline: {
+    fontSize: 9,
+    fontWeight: '700',
+    color: '#94A3B8',
+    letterSpacing: 0.2,
   },
   walletBadge: {
     backgroundColor: '#064E3B',

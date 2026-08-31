@@ -14,6 +14,13 @@ export const EVENT_NAMES = [
   'video_started',
   'video_completed',
   'payment_completed',
+  'pwa_install_prompt_available',
+  'pwa_install_prompt_shown',
+  'pwa_install_clicked',
+  'pwa_install_completed',
+  'pwa_install_dismissed',
+  'pwa_ios_install_instructions_shown',
+  'pwa_already_installed',
 ] as const;
 
 export type EventName = (typeof EVENT_NAMES)[number];

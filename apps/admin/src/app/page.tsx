@@ -3,8 +3,10 @@ import { redirect } from 'next/navigation';
 import {
   LayoutDashboard, Users, Wallet, ShieldCheck, Flag,
   BarChart3, ToggleLeft, Globe, Database, Bell, Settings,
-  TrendingUp, AlertTriangle, CheckCircle, Activity
+  TrendingUp, AlertTriangle, CheckCircle, Activity, Award
 } from 'lucide-react';
+import Link from 'next/link';
+import Image from 'next/image';
 import { createAdminSupabaseClient, getAdminSession } from '../lib/supabase/server';
 
 export const dynamic = 'force-dynamic';
@@ -51,6 +53,7 @@ export default async function AdminDashboardPage() {
 
   const NAV = [
     { label: 'Dashboard', icon: LayoutDashboard, href: '/', active: true },
+    { label: 'Recognition & Rewards', icon: Award, href: '/recognition' },
     { label: 'Revenue Center', icon: TrendingUp, href: '/revenue' },
     { label: 'Users', icon: Users, href: '/users' },
     { label: 'Payments', icon: Wallet, href: '/payments' },
@@ -68,9 +71,20 @@ export default async function AdminDashboardPage() {
     <div className="min-h-screen bg-[#090D16] text-brand-sandstone flex">
       {/* Sidebar */}
       <aside className="hidden lg:flex flex-col w-60 bg-[#0F172A] border-r border-slate-800 p-4 space-y-1 min-h-screen sticky top-0">
-        <div className="px-2 py-4 mb-2">
-          <h1 className="text-sm font-extrabold text-brand-sandstone tracking-wider">TUKUBI</h1>
-          <p className="text-[11px] text-rose-300 font-semibold mt-0.5">Admin Console</p>
+        <div className="px-2 py-4 mb-2 flex items-center gap-2.5">
+          <Image
+            src="/brand/tukubi-emblem.png"
+            alt="TUKUBI"
+            width={36}
+            height={36}
+            className="object-contain"
+          />
+          <div>
+            <h1 className="text-sm font-black bg-gradient-to-r from-brand-caribbeanSea to-brand-sunriseCoral bg-clip-text text-transparent tracking-wider">
+              TUKUBI
+            </h1>
+            <p className="text-[10px] text-rose-300 font-semibold">Admin Console</p>
+          </div>
         </div>
         {NAV.map((item) => (
           <a
@@ -156,6 +170,25 @@ export default async function AdminDashboardPage() {
               ))}
             </div>
           </div>
+
+          {/* Dark Footer with Image 2 Logo */}
+          <footer className="mt-8 pt-6 border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-brand-sandstone/40">
+            <div className="flex items-center gap-3">
+              <Image
+                src="/brand/tukubi-footer-dark.png"
+                alt="TUKUBI — The Caribbean Connected."
+                width={130}
+                height={52}
+                className="object-contain rounded-lg border border-white/10"
+              />
+              <span>&copy; {new Date().getFullYear()} TUKUBI Network Inc.</span>
+            </div>
+            <div className="flex items-center gap-3 text-[11px]">
+              <span>Role: Administrator</span>
+              <span>•</span>
+              <span>All operations cryptographically audited</span>
+            </div>
+          </footer>
         </main>
       </div>
     </div>

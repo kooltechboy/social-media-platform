@@ -170,3 +170,62 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
     </div>
   );
 };
+
+export interface BrandLogoProps {
+  variant?: 'horizontal' | 'emblem' | 'full' | 'footer-dark';
+  className?: string;
+  alt?: string;
+}
+
+export const BrandLogo: React.FC<BrandLogoProps> = ({
+  variant = 'horizontal',
+  className = '',
+  alt = 'TUKUBI — The Caribbean Connected.',
+}) => {
+  if (variant === 'emblem') {
+    return (
+      <img
+        src="/brand/tukubi-emblem.png"
+        alt={alt}
+        className={`w-10 h-10 object-contain drop-shadow-md ${className}`}
+      />
+    );
+  }
+  if (variant === 'footer-dark') {
+    return (
+      <img
+        src="/brand/tukubi-footer-dark.png"
+        alt={alt}
+        className={`h-12 w-auto object-contain rounded-lg border border-white/10 ${className}`}
+      />
+    );
+  }
+  if (variant === 'full') {
+    return (
+      <img
+        src="/brand/tukubi-logo-transparent.png"
+        alt={alt}
+        className={`w-48 h-auto object-contain ${className}`}
+      />
+    );
+  }
+  return (
+    <div className={`inline-flex items-center gap-2.5 ${className}`}>
+      <img
+        src="/brand/tukubi-emblem.png"
+        alt=""
+        aria-hidden="true"
+        className="w-9 h-9 object-contain drop-shadow-md"
+      />
+      <div className="flex flex-col leading-tight">
+        <span className="text-xl font-black bg-gradient-to-r from-brand-caribbeanSea via-brand-goldenHour to-brand-sunriseCoral bg-clip-text text-transparent tracking-wider">
+          TUKUBI
+        </span>
+        <span className="text-[10px] font-bold text-brand-sandstone/80 tracking-wide">
+          The Caribbean Connected.
+        </span>
+      </div>
+    </div>
+  );
+};
+

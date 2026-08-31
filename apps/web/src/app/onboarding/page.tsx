@@ -8,6 +8,7 @@ import { CARIBBEAN_TERRITORIES } from '../../lib/constants/caribbean-territories
 import { DIASPORA_COUNTRIES, DIASPORA_CITY_HUBS } from '../../lib/constants/diaspora-hubs';
 import { updateOnboardingIdentity } from '../../lib/social/onboarding-actions';
 import { useTranslation, LOCALES, LOCALE_DETAILS, Locale } from '@caribbean/localization';
+import FounderOnboardingModal from '../../components/recognition/founder-onboarding-modal';
 
 export default function OnboardingPage() {
   const router = useRouter();
@@ -18,6 +19,11 @@ export default function OnboardingPage() {
   const [originIso, setOriginIso] = useState<string>('');
   const [diasporaId, setDiasporaId] = useState<string>('');
   const [isDiaspora, setIsDiaspora] = useState<boolean>(false);
+  const [founderMoment, setFounderMoment] = useState<{
+    founderNumber: number;
+    formattedNumber: string;
+    programName: string;
+  } | null>(null);
 
   const filteredTerritories = CARIBBEAN_TERRITORIES.filter((t) =>
     t.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -31,12 +37,40 @@ export default function OnboardingPage() {
     setLoading(true);
     try {
       await updateOnboardingIdentity(originIso, isDiaspora ? diasporaId : null, selectedLocale);
+
+      // Attempt to claim Founder status for early adopter
+      const res = await fetch('/api/recognition/founders/claim', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ programSlug: 'founding_1000' }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success && data.founder_number) {
+          setFounderMoment({
+            founderNumber: data.founder_number,
+            formattedNumber: data.formatted_number || `#${String(data.founder_number).padStart(4, '0')}`,
+            programName: data.program_name || 'TUKUBI Founding 1000',
+          });
+          setLoading(false);
+          return;
+        }
+      }
+
       router.push('/');
       router.refresh();
     } catch (err) {
       console.error(err);
       setLoading(false);
+      router.push('/');
+      router.refresh();
     }
+  };
+
+  const handleModalClose = () => {
+    router.push('/');
+    router.refresh();
   };
 
   return (
@@ -195,6 +229,15 @@ export default function OnboardingPage() {
             </button>
           </div>
         </form>
+
+        {founderMoment && (
+          <FounderOnboardingModal
+            founderNumber={founderMoment.founderNumber}
+            formattedNumber={founderMoment.formattedNumber}
+            programName={founderMoment.programName}
+            onClose={handleModalClose}
+          />
+        )}
       </div>
     </GatewayShell>
   );

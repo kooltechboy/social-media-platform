@@ -8,6 +8,8 @@ import Link from 'next/link';
 import { createServiceSupabaseClient, getAuthorizedUser } from '../../lib/supabase/server';
 import FeatureFlagToggle from '../../components/feature-flag-toggle';
 import AccessDenied from '../../components/access-denied';
+import { TukubiLogo } from '../../components/brand/tukubi-logo';
+import { AdminFooter } from '../../components/admin/admin-footer';
 
 export const dynamic = 'force-dynamic';
 
@@ -103,14 +105,15 @@ export default async function AdminPage() {
 
   return (
     <div className="min-h-screen bg-[#090D16] text-brand-sandstone">
-      <header className="sticky top-0 z-50 bg-[#0F172A]/90 backdrop-blur-md border-b border-slate-800 px-4 py-3 flex items-center gap-4">
-        <Link href="/" className="flex items-center gap-2 text-slate-300 hover:text-brand-sandstone text-sm font-semibold">
-          ← Home
-        </Link>
-        <h1 className="text-lg font-extrabold text-brand-sandstone flex items-center gap-2">
-          <LayoutDashboard className="w-5 h-5 text-brand-caribbeanSea" /> Admin Console
-        </h1>
-        <span className="ml-auto text-[11px] text-rose-300 border border-rose-500/40 bg-rose-500/10 px-2 py-0.5 rounded font-semibold hidden md:block">
+      <header className="sticky top-0 z-50 bg-[#0F172A]/90 backdrop-blur-md border-b border-slate-800 px-4 py-3 flex items-center justify-between gap-4">
+        <div className="flex items-center gap-4">
+          <TukubiLogo variant="horizontal" size="xs" href="/" />
+          <div className="h-5 w-px bg-slate-700 hidden sm:block" />
+          <h1 className="text-base font-extrabold text-brand-sandstone flex items-center gap-2">
+            <LayoutDashboard className="w-4 h-4 text-brand-caribbeanSea" /> Admin Console
+          </h1>
+        </div>
+        <span className="text-[11px] text-rose-300 border border-rose-500/40 bg-rose-500/10 px-2.5 py-0.5 rounded-full font-semibold hidden md:block">
           Restricted — all actions audited
         </span>
       </header>

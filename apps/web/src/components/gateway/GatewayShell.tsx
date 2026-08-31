@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { CaribbeanMapCanvas } from './CaribbeanMapCanvas';
 import { RotatingTaglines } from './RotatingTaglines';
 import { Sparkles, Globe, Compass, ShieldCheck } from 'lucide-react';
+import { TukubiLogo } from '../brand/tukubi-logo';
 
 interface GatewayShellProps {
   children: React.ReactNode;
@@ -33,21 +34,7 @@ export function GatewayShell({ children, activeIslandIso }: GatewayShellProps) {
 
         {/* Top Header Wordmark & Trust Badge */}
         <div className="relative z-10 flex items-center justify-between">
-          <div className="flex items-center gap-3.5">
-            <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-brand-caribbeanSea via-brand-goldenHour to-brand-sunriseCoral p-[1.5px] shadow-xl shadow-brand-caribbeanSea/25">
-              <div className="w-full h-full bg-[#090D16] rounded-2xl flex items-center justify-center">
-                <span className="font-black text-transparent bg-clip-text bg-gradient-to-tr from-brand-caribbeanSea to-brand-goldenHour text-2xl tracking-tighter">
-                  T
-                </span>
-              </div>
-            </div>
-            <div>
-              <span className="text-3xl font-black tracking-tight text-white font-serif leading-none block">TUKUBI</span>
-              <span className="block text-xs font-bold tracking-wide text-brand-sandstone/80 mt-1">
-                The Caribbean Connected.
-              </span>
-            </div>
-          </div>
+          <TukubiLogo variant="horizontal" size="md" href="/" priority />
 
           <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/5 border border-white/10 backdrop-blur-xl text-xs font-semibold text-brand-sandstone/90 shadow-lg">
             <ShieldCheck className="w-4 h-4 text-brand-caribbeanSea" />
@@ -105,18 +92,8 @@ export function GatewayShell({ children, activeIslandIso }: GatewayShellProps) {
 
         <div className="w-full max-w-md relative z-10">
           {/* Mobile Top Brand Wordmark */}
-          <div className="lg:hidden text-center mb-6">
-            <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-gradient-to-br from-brand-caribbeanSea to-brand-sunriseCoral p-[1.5px] mb-3 shadow-xl">
-              <div className="w-full h-full bg-[#090D16] rounded-2xl flex items-center justify-center">
-                <span className="font-black text-transparent bg-clip-text bg-gradient-to-tr from-brand-caribbeanSea to-brand-goldenHour text-2xl">
-                  T
-                </span>
-              </div>
-            </div>
-            <h1 className="text-3xl font-black tracking-tight text-white">TUKUBI</h1>
-            <p className="text-xs text-brand-sandstone/80 font-bold tracking-wide mt-1">
-              The Caribbean Connected.
-            </p>
+          <div className="lg:hidden text-center mb-6 flex justify-center">
+            <TukubiLogo variant="horizontal" size="md" href="/" priority />
           </div>
 
           {/* Children: Auth Card */}

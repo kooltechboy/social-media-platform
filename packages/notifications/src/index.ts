@@ -8,7 +8,18 @@ export type NotificationKind =
   | 'event_reminder'
   | 'payment_received'
   | 'payout_completed'
-  | 'moderation_decision';
+  | 'moderation_decision'
+  | 'badge_earned'
+  | 'achievement_unlocked'
+  | 'founder_number_assigned'
+  | 'reputation_level_up'
+  | 'founders_council_invited'
+  | 'ambassador_invited'
+  | 'spotlight_featured'
+  | 'award_nominated'
+  | 'award_won'
+  | 'certification_completed'
+  | 'labs_invited';
 
 export type NotificationChannel = 'in_app' | 'push' | 'email' | 'sms';
 
@@ -29,6 +40,17 @@ export const TEMPLATES: Record<NotificationKind, NotificationTemplate> = {
   payment_received: { kind: 'payment_received', channels: ['in_app', 'push'], batchSize: 1 },
   payout_completed: { kind: 'payout_completed', channels: ['in_app', 'push', 'email'], batchSize: 1 },
   moderation_decision: { kind: 'moderation_decision', channels: ['in_app', 'email'], batchSize: 1 },
+  badge_earned: { kind: 'badge_earned', channels: ['in_app', 'push', 'email'], batchSize: 1 },
+  achievement_unlocked: { kind: 'achievement_unlocked', channels: ['in_app', 'push'], batchSize: 1 },
+  founder_number_assigned: { kind: 'founder_number_assigned', channels: ['in_app', 'push', 'email'], batchSize: 1 },
+  reputation_level_up: { kind: 'reputation_level_up', channels: ['in_app', 'push'], batchSize: 1 },
+  founders_council_invited: { kind: 'founders_council_invited', channels: ['in_app', 'push', 'email'], batchSize: 1 },
+  ambassador_invited: { kind: 'ambassador_invited', channels: ['in_app', 'push', 'email'], batchSize: 1 },
+  spotlight_featured: { kind: 'spotlight_featured', channels: ['in_app', 'push', 'email'], batchSize: 1 },
+  award_nominated: { kind: 'award_nominated', channels: ['in_app', 'push', 'email'], batchSize: 1 },
+  award_won: { kind: 'award_won', channels: ['in_app', 'push', 'email'], batchSize: 1 },
+  certification_completed: { kind: 'certification_completed', channels: ['in_app', 'push', 'email'], batchSize: 1 },
+  labs_invited: { kind: 'labs_invited', channels: ['in_app', 'push'], batchSize: 1 },
 };
 
 export interface PendingNotification {
