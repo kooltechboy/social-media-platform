@@ -7,8 +7,10 @@ import { Mail, Lock, Eye, EyeOff, AlertCircle, Sparkles } from 'lucide-react';
 import { SocialAuthButtons } from './SocialAuthButtons';
 import { MagicLinkForm } from './MagicLinkForm';
 import { signInAction } from '../../lib/auth/actions';
+import { useTranslation } from '@caribbean/localization';
 
 export function SignInForm() {
+  const { t } = useTranslation();
   const searchParams = useSearchParams();
   const [authMode, setAuthMode] = useState<'password' | 'magic_link'>('password');
   const [email, setEmail] = useState('');
@@ -64,10 +66,10 @@ export function SignInForm() {
       {/* Heading */}
       <div className="mb-6 text-center sm:text-left">
         <h2 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
-          Welcome back
+          {t('auth.welcome_back')}
         </h2>
         <p className="text-xs sm:text-sm text-brand-sandstone/70 mt-1">
-          Sign in to TUKUBI — The Caribbean Connected.
+          {t('auth.signin_subtitle')}
         </p>
       </div>
 
@@ -78,7 +80,7 @@ export function SignInForm() {
           {/* Email / Phone Field */}
           <div className="space-y-1">
             <label htmlFor="signin-email" className="block text-xs font-semibold text-brand-sandstone/90">
-              Email or phone
+              {t('auth.email_label')}
             </label>
             <div className="relative flex items-center">
               <Mail className="absolute left-3.5 w-4 h-4 text-brand-sandstone/50 pointer-events-none" />
@@ -104,13 +106,13 @@ export function SignInForm() {
           <div className="space-y-1">
             <div className="flex items-center justify-between">
               <label htmlFor="signin-password" className="block text-xs font-semibold text-brand-sandstone/90">
-                Password
+                {t('auth.password_label')}
               </label>
               <Link
                 href="/forgot-password"
                 className="text-xs text-brand-caribbeanSea hover:text-brand-goldenHour transition-colors font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-caribbeanSea rounded-md px-1"
               >
-                Forgot password?
+                {t('auth.forgot_password')}
               </Link>
             </div>
             <div className="relative flex items-center">
@@ -151,7 +153,7 @@ export function SignInForm() {
                 className="w-4 h-4 rounded border-slate-700 bg-[#080D18] text-brand-caribbeanSea focus:ring-brand-caribbeanSea/50"
               />
               <span className="text-xs text-brand-sandstone/80 group-hover:text-white transition-colors">
-                Remember me
+                {t('auth.remember_me')}
               </span>
             </label>
 
@@ -181,7 +183,7 @@ export function SignInForm() {
           <button
             type="submit"
             disabled={isPending}
-            className="w-full py-3.5 px-4 rounded-xl font-black text-sm tracking-wide bg-gradient-to-r from-brand-caribbeanSea via-brand-goldenHour to-brand-sunriseCoral text-[#060A12] hover:opacity-95 active:scale-[0.99] transition-all shadow-lg shadow-brand-caribbeanSea/25 flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+            className="w-full py-3.5 px-4 rounded-xl font-black text-sm tracking-wide bg-gradient-to-r from-brand-caribbeanSea via-brand-goldenHour to-brand-sunriseCoral text-[#060A12] hover:opacity-95 active:scale-[0.99] transition-all shadow-lg shadow-brand-caribbeanSea/25 flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white cursor-pointer"
           >
             {isPending ? (
               <>
@@ -189,7 +191,7 @@ export function SignInForm() {
                 <span>Signing in…</span>
               </>
             ) : (
-              <span>SIGN IN</span>
+              <span>{t('auth.sign_in').toUpperCase()}</span>
             )}
           </button>
         </form>
@@ -213,12 +215,12 @@ export function SignInForm() {
       {/* ── Create Account & Explore First Links ── */}
       <div className="mt-6 pt-5 border-t border-white/10 space-y-3 text-center">
         <p className="text-xs text-brand-sandstone/80">
-          New to Tukubi?{' '}
+          {t('auth.dont_have_account')}{' '}
           <Link
             href="/signup"
             className="font-bold text-transparent bg-clip-text bg-gradient-to-r from-brand-caribbeanSea to-brand-sunriseCoral hover:underline underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-caribbeanSea rounded-md px-1"
           >
-            Create your account
+            {t('gateway.create_account')}
           </Link>
         </p>
       </div>

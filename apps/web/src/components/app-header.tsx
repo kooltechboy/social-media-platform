@@ -10,6 +10,7 @@ import { followAction, unfollowAction } from '../lib/social/profile-actions';
 import UserAvatar from './user-avatar';
 import { useTranslation } from '@caribbean/localization';
 import { TukubiLogo } from './brand/tukubi-logo';
+import { LanguageDropdown } from './gateway/LanguageDropdown';
 
 interface SearchResultUser {
   id: string;
@@ -149,10 +150,10 @@ export default function AppHeader() {
             <div className="absolute top-12 left-0 right-0 bg-brand-dusk/95 backdrop-blur-2xl border border-brand-caribbeanSea/30 rounded-3xl p-3 shadow-2xl z-50 space-y-3 animate-fadeIn">
               <div className="flex items-center justify-between px-2 pt-1 border-b border-slate-800 pb-2">
                 <span className="text-[10px] font-black uppercase tracking-widest text-brand-caribbeanSea flex items-center gap-1">
-                  <User className="w-3 h-3" /> People &amp; Creators
+                  <User className="w-3 h-3" /> {t('nav.people_creators')}
                 </span>
                 <Link href={`/search?q=${encodeURIComponent(query)}`} className="text-[10px] font-bold text-brand-goldenHour hover:underline">
-                  View All Results →
+                  {t('nav.view_all_results')}
                 </Link>
               </div>
 
@@ -207,20 +208,22 @@ export default function AppHeader() {
         </div>
       </div>
 
-      <div className="flex items-center gap-3.5">
+      <div className="flex items-center gap-2.5 sm:gap-3.5">
+        <LanguageDropdown variant="compact" />
+
         <Link
           href="/financial-center"
           className="flex items-center gap-2 bg-brand-dusk/90 hover:bg-brand-dusk text-brand-sunriseCoral px-3.5 py-1.5 rounded-full border border-brand-sunriseCoral/30 text-xs font-extrabold transition-all shadow-md"
-          aria-label="Financial Center"
+          aria-label={t('nav.financial_center')}
         >
           <CreditCard className="w-4 h-4 text-brand-sunriseCoral" aria-hidden="true" />
-          <span>Financial Center</span>
+          <span className="hidden sm:inline">{t('nav.financial_center')}</span>
         </Link>
 
         <Link
           href="/notifications"
           className="p-2 text-slate-300 hover:text-brand-sandstone rounded-full hover:bg-brand-dusk/80 relative transition-colors"
-          aria-label="Notifications"
+          aria-label={t('nav.notifications')}
         >
           <Bell className="w-5 h-5" aria-hidden="true" />
           <span className="absolute top-1 right-1 w-2 h-2 bg-brand-goldenHour rounded-full animate-pulse" />
@@ -229,7 +232,7 @@ export default function AppHeader() {
         <Link
           href="/messages"
           className="hidden md:flex p-2 text-slate-300 hover:text-brand-sandstone rounded-full hover:bg-brand-dusk/80 transition-colors"
-          aria-label="Messages"
+          aria-label={t('nav.messages')}
         >
           <MessageSquare className="w-5 h-5" aria-hidden="true" />
         </Link>

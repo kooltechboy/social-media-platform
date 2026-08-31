@@ -124,13 +124,13 @@ export default function AppSidebar({ currentPath }: AppSidebarProps) {
   return (
     <aside className="hidden md:block col-span-1 space-y-5" aria-label="Primary navigation">
       <div className="glass rounded-2xl p-3 space-y-4">
-        {renderNavGroup(PRIMARY_NAV, 'Explore & Connect')}
+        {renderNavGroup(PRIMARY_NAV, t('nav.explore_connect'))}
         <div className="h-px bg-brand-dusk/60 my-2" />
         
         {/* Accordion for secondary features to reduce visual clutter */}
         <details className="group">
           <summary className="text-[10px] font-black tracking-wider uppercase text-brand-sandstone/40 px-3 py-1.5 cursor-pointer list-none flex justify-between items-center hover:text-slate-300 transition-colors">
-            Economy & Culture
+            {t('nav.economy_culture')}
             <span className="transition group-open:rotate-180">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
             </span>
@@ -151,7 +151,7 @@ export default function AppSidebar({ currentPath }: AppSidebarProps) {
                 >
                   <div className="flex items-center gap-3">
                     {item.icon}
-                    <span>{item.label}</span>
+                    <span>{item.labelKey ? t(item.labelKey) : (item.label || item.fallbackLabel)}</span>
                   </div>
                   {item.badge && (
                     <span className={`text-[9px] font-black px-1.5 py-0.5 rounded-full border ${
@@ -169,7 +169,7 @@ export default function AppSidebar({ currentPath }: AppSidebarProps) {
         </details>
 
         <div className="h-px bg-brand-dusk/60 my-2" />
-        {renderNavGroup(personalNav, 'Account')}
+        {renderNavGroup(personalNav, t('settings.account'))}
       </div>
 
       {/* Creator Studio Action Card */}

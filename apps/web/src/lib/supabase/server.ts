@@ -55,6 +55,7 @@ export interface SessionUser {
   role?: string;
   status?: string;
   permissions?: string[];
+  language_preference?: string;
 }
 
 export interface AuthCheckResult {
@@ -81,6 +82,7 @@ export async function getCurrentUser(): Promise<SessionUser | null> {
     username: profile?.username ?? data.user.user_metadata?.username ?? data.user.email?.split('@')[0] ?? 'member',
     displayName: profile?.display_name ?? data.user.user_metadata?.display_name ?? data.user.email ?? 'Member',
     avatarUrl: profile?.avatar_url ?? data.user.user_metadata?.avatar_url ?? undefined,
+    language_preference: profile?.language_preference ?? undefined,
   };
 }
 

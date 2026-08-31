@@ -46,7 +46,12 @@ export type TranslationKey =
   | 'a11y.open_menu' | 'a11y.close' | 'a11y.search'
   | 'time.just_now' | 'time.minutes_ago' | 'time.hours_ago' | 'time.days_ago'
   | 'common.loading' | 'common.error' | 'common.retry' | 'common.cancel' | 'common.save' | 'common.delete'
-  | 'common.see_more' | 'common.offline' | 'common.private';
+  | 'common.see_more' | 'common.offline' | 'common.private'
+  | 'gateway.tagline' | 'gateway.hero_title_1' | 'gateway.hero_connected' | 'gateway.hero_empowered'
+  | 'gateway.hero_subtitle' | 'gateway.join_tukubi' | 'gateway.create_account' | 'gateway.spotlight'
+  | 'auth.welcome_back' | 'auth.signin_subtitle' | 'auth.email_label' | 'auth.password_label'
+  | 'auth.remember_me' | 'auth.forgot_password' | 'auth.dont_have_account' | 'auth.sign_in'
+  | 'nav.economy_culture' | 'nav.explore_connect' | 'nav.people_creators' | 'nav.view_all_results';
 
 const en: Record<TranslationKey, string> = {
   'nav.home': 'Home',
@@ -154,6 +159,26 @@ const en: Record<TranslationKey, string> = {
   'common.see_more': 'See more',
   'common.offline': 'You are offline. Showing cached content.',
   'common.private': 'Private',
+  'gateway.tagline': 'One Caribbean. One Community. One Digital Home.',
+  'gateway.hero_title_1': 'Your Caribbean.',
+  'gateway.hero_connected': 'Connected.',
+  'gateway.hero_empowered': 'Empowered.',
+  'gateway.hero_subtitle': 'The Caribbean and its global diaspora united in one platform to connect with family & culture, create content, discover commerce, and thrive.',
+  'gateway.join_tukubi': 'Join Tukubi',
+  'gateway.create_account': 'Create your account',
+  'gateway.spotlight': 'Caribbean Spotlight',
+  'auth.welcome_back': 'Welcome back',
+  'auth.signin_subtitle': 'Sign in to TUKUBI — The Caribbean Connected.',
+  'auth.email_label': 'Email or phone',
+  'auth.password_label': 'Password',
+  'auth.remember_me': 'Remember me',
+  'auth.forgot_password': 'Forgot password?',
+  'auth.dont_have_account': "Don't have an account?",
+  'auth.sign_in': 'Sign In',
+  'nav.economy_culture': 'Economy & Culture',
+  'nav.explore_connect': 'Explore & Connect',
+  'nav.people_creators': 'People & Creators',
+  'nav.view_all_results': 'View All Results →',
 };
 
 const es: Record<TranslationKey, string> = {
@@ -262,6 +287,26 @@ const es: Record<TranslationKey, string> = {
   'common.see_more': 'Ver más',
   'common.offline': 'Sin conexión. Mostrando contenido guardado.',
   'common.private': 'Privado',
+  'gateway.tagline': 'Un Caribe. Una Comunidad. Un Hogar Digital.',
+  'gateway.hero_title_1': 'Tu Caribe.',
+  'gateway.hero_connected': 'Conectado.',
+  'gateway.hero_empowered': 'Empoderado.',
+  'gateway.hero_subtitle': 'El Caribe y su diáspora global unidos en una sola plataforma para conectar con familia y cultura, crear contenido, descubrir comercio y prosperar.',
+  'gateway.join_tukubi': 'Unirse a Tukubi',
+  'gateway.create_account': 'Crear Cuenta',
+  'gateway.spotlight': 'Destacado del Caribe',
+  'auth.welcome_back': 'Bienvenido de nuevo',
+  'auth.signin_subtitle': 'Inicia sesión en TUKUBI — El Caribe Conectado.',
+  'auth.email_label': 'Correo electrónico o teléfono',
+  'auth.password_label': 'Contraseña',
+  'auth.remember_me': 'Recordarme',
+  'auth.forgot_password': '¿Olvidaste tu contraseña?',
+  'auth.dont_have_account': '¿No tienes una cuenta?',
+  'auth.sign_in': 'Iniciar Sesión',
+  'nav.economy_culture': 'Economía y Cultura',
+  'nav.explore_connect': 'Explorar y Conectar',
+  'nav.people_creators': 'Personas y Creadores',
+  'nav.view_all_results': 'Ver Todos los Resultados →',
 };
 
 const fr: Record<TranslationKey, string> = {
@@ -370,6 +415,26 @@ const fr: Record<TranslationKey, string> = {
   'common.see_more': 'Voir plus',
   'common.offline': 'Vous êtes hors ligne. Contenu en cache affiché.',
   'common.private': 'Privé',
+  'gateway.tagline': 'Une Caraïbe. Une Communauté. Un Foyer Numérique.',
+  'gateway.hero_title_1': 'Vos Caraïbes.',
+  'gateway.hero_connected': 'Connectées.',
+  'gateway.hero_empowered': 'Autonomisées.',
+  'gateway.hero_subtitle': 'La Caraïbe et sa diaspora mondiale unies sur une seule plateforme pour se connecter avec la famille et la culture, créer du contenu, découvrir le commerce et prospérer.',
+  'gateway.join_tukubi': 'Rejoindre Tukubi',
+  'gateway.create_account': 'Créer un Compte',
+  'gateway.spotlight': 'Pleins feux sur les Caraïbes',
+  'auth.welcome_back': 'Bon retour',
+  'auth.signin_subtitle': 'Connectez-vous à TUKUBI — Les Caraïbes Connectées.',
+  'auth.email_label': 'E-mail ou téléphone',
+  'auth.password_label': 'Mot de passe',
+  'auth.remember_me': 'Se souvenir de moi',
+  'auth.forgot_password': 'Mot de passe oublié ?',
+  'auth.dont_have_account': "Vous n'avez pas de compte ?",
+  'auth.sign_in': 'Se connecter',
+  'nav.economy_culture': 'Économie & Culture',
+  'nav.explore_connect': 'Explorer & Connecter',
+  'nav.people_creators': 'Personnes & Créateurs',
+  'nav.view_all_results': 'Voir Tous les Résultats →',
 };
 
 const ht: Record<TranslationKey, string> = {
@@ -478,6 +543,26 @@ const ht: Record<TranslationKey, string> = {
   'common.see_more': 'Wè plis',
   'common.offline': 'Ou dekonekte. Kontni an kachèt ap afiche.',
   'common.private': 'Prive',
+  'gateway.tagline': 'Yon Karayib. Yon Kominote. Yon Sèl Kay Dijital.',
+  'gateway.hero_title_1': 'Karayib Ou.',
+  'gateway.hero_connected': 'Konekte.',
+  'gateway.hero_empowered': 'Otonòm.',
+  'gateway.hero_subtitle': 'Karayib la ak dyaspora mondyal li reyini nan yon sèl platfòm pou konekte ak fanmi ak kilti, kreye kontni, dekouvri komès, epi pwospere.',
+  'gateway.join_tukubi': 'Antre nan Tukubi',
+  'gateway.create_account': 'Kreye yon Kont',
+  'gateway.spotlight': 'Limyè sou Karayib la',
+  'auth.welcome_back': 'Byenvini ankò',
+  'auth.signin_subtitle': 'Konekte sou TUKUBI — Karayib la Konekte.',
+  'auth.email_label': 'Imèl oswa telefòn',
+  'auth.password_label': 'Modpas',
+  'auth.remember_me': 'Sonje mwen',
+  'auth.forgot_password': 'Bliye modpas?',
+  'auth.dont_have_account': 'Ou pa gen yon kont?',
+  'auth.sign_in': 'Konekte',
+  'nav.economy_culture': 'Ekonomi & Kilti',
+  'nav.explore_connect': 'Eksplore & Konekte',
+  'nav.people_creators': 'Moun & Kreyatè',
+  'nav.view_all_results': 'Wè Tout Rezilta Yo →',
 };
 
 const nl: Record<TranslationKey, string> = {
@@ -586,6 +671,26 @@ const nl: Record<TranslationKey, string> = {
   'common.see_more': 'Meer zien',
   'common.offline': 'Je bent offline. Gebufferde inhoud wordt getoond.',
   'common.private': 'Privé',
+  'gateway.tagline': 'Eén Caraïben. Eén Gemeenschap. Eén Digitaal Thuis.',
+  'gateway.hero_title_1': 'Jouw Caraïben.',
+  'gateway.hero_connected': 'Verbonden.',
+  'gateway.hero_empowered': 'Versterkt.',
+  'gateway.hero_subtitle': 'Het Caribisch gebied en zijn wereldwijde diaspora verenigd op één platform om verbinding te maken met familie en cultuur, content te creëren, handel te ontdekken en te floreren.',
+  'gateway.join_tukubi': 'Word lid van Tukubi',
+  'gateway.create_account': 'Account Aanmaken',
+  'gateway.spotlight': 'Caribische Spotlight',
+  'auth.welcome_back': 'Welkom terug',
+  'auth.signin_subtitle': 'Log in op TUKUBI — Het Caribisch Gebied Verbonden.',
+  'auth.email_label': 'E-mail of telefoon',
+  'auth.password_label': 'Wachtwoord',
+  'auth.remember_me': 'Onthoud mij',
+  'auth.forgot_password': 'Wachtwoord vergeten?',
+  'auth.dont_have_account': 'Heb je nog geen account?',
+  'auth.sign_in': 'Inloggen',
+  'nav.economy_culture': 'Economie & Cultuur',
+  'nav.explore_connect': 'Ontdekken & Verbinden',
+  'nav.people_creators': 'Mensen & Makers',
+  'nav.view_all_results': 'Bekijk Alle Resultaten →',
 };
 
 const pap: Record<TranslationKey, string> = {
@@ -694,6 +799,26 @@ const pap: Record<TranslationKey, string> = {
   'common.see_more': 'Wak mas',
   'common.offline': 'Bo ta offline. Mostrando kontenido kashá.',
   'common.private': 'Privá',
+  'gateway.tagline': 'Un Karibe. Un Komunidat. Un Kas Digital.',
+  'gateway.hero_title_1': 'Bo Karibe.',
+  'gateway.hero_connected': 'Konekta.',
+  'gateway.hero_empowered': 'Empoderá.',
+  'gateway.hero_subtitle': 'Karibe i su diaspora global uni riba un plataforma pa konektá ku famia i kultura, krea kontenido, deskubrí komèrsio i prosperá.',
+  'gateway.join_tukubi': 'Drenta Tukubi',
+  'gateway.create_account': 'Krea un Kuenta',
+  'gateway.spotlight': 'Lus riba Karibe',
+  'auth.welcome_back': 'Bon biní bèk',
+  'auth.signin_subtitle': 'Inisiá seshon na TUKUBI — E Karibe Konekta.',
+  'auth.email_label': 'Email òf telefòn',
+  'auth.password_label': 'Kontraseña',
+  'auth.remember_me': 'Kòrda riba mi',
+  'auth.forgot_password': 'A lubidá kontraseña?',
+  'auth.dont_have_account': 'Bo no tin un kuenta?',
+  'auth.sign_in': 'Inisiá seshon',
+  'nav.economy_culture': 'Ekonomia & Kultura',
+  'nav.explore_connect': 'Eksplorá & Konektá',
+  'nav.people_creators': 'Hende & Kreador',
+  'nav.view_all_results': 'Mira Tur Resultado →',
 };
 
 export const dictionaries: Record<Locale, Record<TranslationKey, string>> = { en, es, fr, ht, nl, pap };

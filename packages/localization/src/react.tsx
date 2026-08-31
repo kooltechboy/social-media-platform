@@ -51,6 +51,13 @@ export function I18nProvider({ initialLocale, children }: I18nProviderProps) {
     }
   }, []);
 
+  // Sync if initialLocale changes on Server Component navigation or router.refresh()
+  useEffect(() => {
+    if (initialLocale && isLocale(initialLocale) && initialLocale !== locale) {
+      setLocaleState(initialLocale);
+    }
+  }, [initialLocale]);
+
   const setLocale = useCallback((newLocale: Locale) => {
     if (!isLocale(newLocale)) return;
     setLocaleState(newLocale);

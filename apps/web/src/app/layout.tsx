@@ -52,8 +52,8 @@ export default async function RootLayout({
 }) {
   const [user, cookieStore] = await Promise.all([getCurrentUser(), cookies()]);
   const cookieLocale = cookieStore.get('tukubi_locale')?.value;
-  const userLocale = (user as any)?.language_preference;
-  const rawLocale = userLocale || cookieLocale || DEFAULT_LOCALE;
+  const userLocale = user?.language_preference;
+  const rawLocale = cookieLocale || userLocale || DEFAULT_LOCALE;
   const activeLocale: Locale = isLocale(rawLocale) ? rawLocale : DEFAULT_LOCALE;
   const dir = LOCALE_DETAILS[activeLocale]?.dir || 'ltr';
 
