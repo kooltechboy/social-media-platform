@@ -128,6 +128,7 @@ export async function createOrderAction(
 
   if (itemErr) return { error: itemErr.message, success: null };
 
+
   // Handle Affiliate Referral attribution if referral code was provided
   if (creatorReferralCode) {
     try {
@@ -162,7 +163,6 @@ export async function createOrderAction(
       await supabase.from('orders').delete().eq('id', order.id);
       return { error: 'Payment service unavailable. Please try again.', success: null };
     }
-
     // Resolve seller tier & category for authoritative commission calculation
     let business: { id: string; owner_id: string } | null = null;
     try {

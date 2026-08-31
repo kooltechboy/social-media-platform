@@ -6,7 +6,7 @@ import {
   computeContentHash,
   defaultTranslationService,
 } from '@caribbean/localization';
-import { createSupabaseServerClient, getCurrentUser } from '../../../lib/supabase/server';
+import { createSupabaseServerClient, createServiceSupabaseClient, getCurrentUser } from '../../../lib/supabase/server';
 
 export const dynamic = 'force-dynamic';
 
@@ -92,10 +92,14 @@ export async function POST(request: NextRequest) {
     });
 
     // 3. Asynchronously persist to database cache if new translation was made
-    if (supabase && !result.cached && result.provider !== 'identity' && result.provider !== 'noop') {
+    // Uses service role client because RLS only permits service_role to write
+    // to content_translations_cache (migration 00043 security hardening).
+    if (!result.cached && result.provider !== 'identity' && result.provider !== 'noop') {
       (async () => {
         try {
-          await supabase
+          const serviceClient = await createServiceSupabaseClient();
+          if (!serviceClient) return;
+          await serviceClient
             .from('content_translations_cache')
             .upsert(
               {

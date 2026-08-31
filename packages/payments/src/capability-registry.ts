@@ -14,6 +14,24 @@ export interface ProviderDefinition {
   notes?: string;
 }
 
+/**
+ * Determines whether the payment layer should operate in production mode.
+ * Reads TUKUBI_PAYMENT_ENV first (explicit override), then falls back to NODE_ENV.
+ * This allows staging deployments to keep sandbox mode while production uses live keys.
+ */
+function isProductionPaymentEnv(): boolean {
+  if (typeof process !== 'undefined') {
+    const explicit = process.env.TUKUBI_PAYMENT_ENV;
+    if (explicit) return explicit === 'production';
+    return process.env.NODE_ENV === 'production';
+  }
+  return false;
+}
+
+const _isProd = isProductionPaymentEnv();
+const _activeStatus: ProviderDefinition['status'] = _isProd ? 'active' : 'sandbox';
+const _activeEnv: ProviderDefinition['environment'] = _isProd ? 'production' : 'sandbox';
+
 export const REGISTERED_PROVIDERS: Record<string, ProviderDefinition> = {
   stripe: {
     id: 'stripe',
@@ -36,8 +54,8 @@ export const REGISTERED_PROVIDERS: Record<string, ProviderDefinition> = {
     ],
     supportedCountries: ['US', 'CA', 'GB', 'IE', 'PR'],
     supportedCurrencies: ['USD', 'CAD', 'GBP', 'EUR'],
-    status: 'sandbox',
-    environment: 'sandbox',
+    status: _activeStatus,
+    environment: _activeEnv,
     isThirdPartyPSP: true,
     notes: 'Primary international card processing rail.',
   },
@@ -57,8 +75,8 @@ export const REGISTERED_PROVIDERS: Record<string, ProviderDefinition> = {
     ],
     supportedCountries: ['*'],
     supportedCurrencies: ['USD', 'CAD', 'GBP', 'EUR', 'DOP', 'JMD', 'TTD'],
-    status: 'sandbox',
-    environment: 'sandbox',
+    status: _activeStatus,
+    environment: _activeEnv,
     isThirdPartyPSP: true,
     notes: 'Global diaspora checkout and merchant receiving.',
   },
