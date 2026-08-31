@@ -57,7 +57,7 @@ export default async function ModerationPage() {
   const supabase = await createServiceSupabaseClient();
   if (!supabase) {
     return (
-      <div className="min-h-screen bg-[#090D16] text-brand-sandstone flex items-center justify-center p-4">
+      <div className="min-h-screen bg-transparent text-brand-sandstone flex items-center justify-center p-4">
         <p className="text-sm text-brand-sandstone/60">Service temporarily unavailable. Please try again.</p>
       </div>
     );
@@ -105,7 +105,7 @@ export default async function ModerationPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#090D16] text-brand-sandstone">
+    <div className="min-h-screen bg-transparent text-brand-sandstone">
       <header className="sticky top-0 z-50 bg-[#0F172A]/90 backdrop-blur-md border-b border-slate-800 px-4 py-3 flex items-center justify-between gap-4">
         <div className="flex items-center gap-4">
           <TukubiLogo variant="horizontal" size="xs" href="/" />

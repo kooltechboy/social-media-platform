@@ -6,7 +6,7 @@ export const dynamic = 'force-dynamic';
 
 export default async function SuperAdminBootstrapPage() {
   return (
-    <div className="min-h-screen bg-[#090D16] text-brand-sandstone flex flex-col items-center justify-center p-4">
+    <div className="min-h-screen bg-transparent text-brand-sandstone flex flex-col items-center justify-center p-4">
       <div className="max-w-xl w-full space-y-6">
         {/* Brand Header */}
         <div className="text-center space-y-2">

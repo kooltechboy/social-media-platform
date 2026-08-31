@@ -68,7 +68,7 @@ export default async function ReelsPage({
   }
 
   return (
-    <div className="min-h-screen bg-[#090D16] text-brand-sandstone flex flex-col items-center justify-start p-4 gap-6 max-w-5xl mx-auto">
+    <div className="min-h-screen bg-transparent text-brand-sandstone flex flex-col items-center justify-start p-4 gap-6 max-w-5xl mx-auto">
       <Suspense
         fallback={
           <div className="w-full flex items-center justify-center p-20">

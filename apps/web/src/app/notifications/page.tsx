@@ -69,7 +69,7 @@ export default async function NotificationsPage() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-[#090D16] text-brand-sandstone flex items-center justify-center p-6">
+      <div className="min-h-screen bg-transparent text-brand-sandstone flex items-center justify-center p-6">
         <div className="bg-brand-dusk/70 border border-slate-800 rounded-2xl p-8 text-center max-w-sm">
           <Bell className="w-8 h-8 text-brand-caribbeanSea mx-auto mb-3" />
           <h1 className="text-lg font-bold text-brand-sandstone mb-2">Notifications</h1>
@@ -99,7 +99,7 @@ export default async function NotificationsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#090D16] text-brand-sandstone">
+    <div className="min-h-screen bg-transparent text-brand-sandstone">
       <header className="sticky top-0 z-50 bg-[#0F172A]/90 backdrop-blur-md border-b border-slate-800 px-4 py-3 flex items-center gap-4">
         <Link href="/" className="flex items-center gap-2 text-slate-300 hover:text-brand-sandstone text-sm font-semibold">
           <ArrowLeft className="w-4 h-4" /> Back

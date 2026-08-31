@@ -16,7 +16,7 @@ export default async function FinancialCenterLayout({
   }
 
   return (
-    <div className="min-h-screen bg-brand-twilight text-brand-sandstone p-4 md:p-6">
+    <div className="min-h-screen bg-transparent text-brand-sandstone p-4 md:p-6">
       <div className="max-w-7xl mx-auto space-y-6">
         <div className="border-b border-slate-800 pb-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>

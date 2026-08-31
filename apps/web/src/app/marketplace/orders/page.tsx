@@ -35,7 +35,7 @@ export default async function MarketplaceOrdersPage() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-[#090D16] text-brand-sandstone flex items-center justify-center p-6">
+      <div className="min-h-screen bg-transparent text-brand-sandstone flex items-center justify-center p-6">
         <div className="bg-brand-dusk/70 border border-slate-800 rounded-3xl p-8 text-center max-w-sm space-y-4">
           <ShoppingBag className="w-10 h-10 text-orange-400 mx-auto" />
           <h1 className="text-lg font-bold text-brand-sandstone">Marketplace Orders</h1>
@@ -66,7 +66,7 @@ export default async function MarketplaceOrdersPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#090D16] text-brand-sandstone p-4 md:p-6 max-w-5xl mx-auto space-y-8 animate-fadeIn">
+    <div className="min-h-screen bg-transparent text-brand-sandstone p-4 md:p-6 max-w-5xl mx-auto space-y-8 animate-fadeIn">
       {/* Top Header */}
       <div className="flex items-center justify-between border-b border-slate-800 pb-4">
         <Link

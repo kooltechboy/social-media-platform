@@ -26,7 +26,7 @@ export default async function WebModerationAnalyticsPage() {
   const supabase = await createServiceSupabaseClient();
   if (!supabase) {
     return (
-      <div className="min-h-screen bg-[#090D16] text-brand-sandstone flex items-center justify-center p-4">
+      <div className="min-h-screen bg-transparent text-brand-sandstone flex items-center justify-center p-4">
         <p className="text-sm text-brand-sandstone/60">Service temporarily unavailable. Please try again.</p>
       </div>
     );
@@ -76,7 +76,7 @@ export default async function WebModerationAnalyticsPage() {
   }>;
 
   return (
-    <div className="min-h-screen bg-[#090D16] text-brand-sandstone">
+    <div className="min-h-screen bg-transparent text-brand-sandstone">
       <header className="sticky top-0 z-50 bg-[#0F172A]/90 backdrop-blur-md border-b border-slate-800 px-4 py-3 flex items-center gap-4">
         <Link href="/moderation" className="flex items-center gap-2 text-slate-300 hover:text-brand-sandstone text-sm font-semibold">
           <ArrowLeft className="w-4 h-4" /> Queue

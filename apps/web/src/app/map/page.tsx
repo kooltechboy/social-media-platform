@@ -7,7 +7,7 @@ export default function CaribbeanMapDiscoveryPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen bg-[#090D16] text-brand-sandstone flex items-center justify-center p-6">
+        <div className="min-h-screen bg-transparent text-brand-sandstone flex items-center justify-center p-6">
           <div className="flex flex-col items-center gap-3">
             <div className="w-10 h-10 border-2 border-brand-caribbeanSea border-t-transparent rounded-full animate-spin" />
             <p className="text-xs text-brand-sandstone/60 font-semibold tracking-wider uppercase">

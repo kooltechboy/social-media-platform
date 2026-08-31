@@ -97,7 +97,7 @@ export default async function ModularPageView({ params }: { params: Promise<{ sl
   const page = dbPage;
 
   return (
-    <div className="min-h-screen bg-[#090D16] text-brand-sandstone p-4 md:p-6 max-w-7xl mx-auto space-y-8">
+    <div className="min-h-screen bg-transparent text-brand-sandstone p-4 md:p-6 max-w-7xl mx-auto space-y-8">
       {/* Page Header & Cover */}
       <div className="bg-brand-dusk border border-slate-800 rounded-3xl overflow-hidden shadow-2xl relative">
         {/* Cover Banner */}

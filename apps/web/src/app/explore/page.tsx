@@ -25,7 +25,7 @@ export default async function ExplorePage({
   });
 
   return (
-    <div className="min-h-screen bg-[#090D16] text-brand-sandstone p-4 md:p-6 max-w-7xl mx-auto">
+    <div className="min-h-screen bg-transparent text-brand-sandstone p-4 md:p-6 max-w-7xl mx-auto">
       <ExploreDiscoveryClient
         initialResult={exploreData}
         activeVibeKey={vibe}

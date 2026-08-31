@@ -58,7 +58,7 @@ export default async function DiasporaPortalPage({
   }
 
   return (
-    <div className="min-h-screen bg-[#090D16] text-brand-sandstone p-4 md:p-6 max-w-7xl mx-auto space-y-8 animate-fadeIn">
+    <div className="min-h-screen bg-transparent text-brand-sandstone p-4 md:p-6 max-w-7xl mx-auto space-y-8 animate-fadeIn">
       {/* ────────────────────────────────────────────────────────── */}
       {/* HERO BANNER                                                */}
       {/* ────────────────────────────────────────────────────────── */}

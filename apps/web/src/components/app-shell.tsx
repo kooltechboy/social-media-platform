@@ -20,7 +20,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
   if (isGateway) {
     return (
-      <div className="fixed inset-0 z-20 overflow-y-auto bg-[#060A13]">
+      <div className="fixed inset-0 z-20 overflow-y-auto">
         {children}
       </div>
     );

@@ -66,7 +66,7 @@ export default async function SettingsPage() {
     : defaultNotifPrefs;
 
   return (
-    <div className="min-h-screen bg-[#090D16] text-brand-sandstone">
+    <div className="min-h-screen bg-transparent text-brand-sandstone">
       <header className="sticky top-0 z-40 bg-[#0F172A]/90 backdrop-blur-md border-b border-slate-800 px-4 py-3 flex items-center justify-between gap-4">
         <Link
           href={`/profile/${profile.username}`}

@@ -78,7 +78,7 @@ export default function ModeratorSignupPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#081020] text-brand-sandstone flex flex-col justify-between selection:bg-[#FF7A59]/30">
+    <div className="min-h-screen bg-transparent text-brand-sandstone flex flex-col justify-between selection:bg-[#FF7A59]/30">
       {/* ── Top Header ── */}
       <header className="sticky top-0 z-50 bg-[#081020]/90 backdrop-blur-xl border-b border-white/10 px-4 sm:px-8 py-3.5 flex items-center justify-between">
         <TukubiLogo variant="horizontal" size="sm" href="/" />

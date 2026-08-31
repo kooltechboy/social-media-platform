@@ -22,7 +22,7 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
   const response = query ? await askCaribbean(query) : null;
 
   return (
-    <div className="min-h-screen bg-[#090D16] text-brand-sandstone p-6 max-w-4xl mx-auto space-y-6">
+    <div className="min-h-screen bg-transparent text-brand-sandstone p-6 max-w-4xl mx-auto space-y-6">
       <div className="flex items-center gap-4 border-b border-slate-800 pb-6">
         <Link href="/" className="flex items-center gap-2 text-slate-300 hover:text-brand-sandstone text-sm font-semibold">
           <ArrowLeft className="w-4 h-4" /> Back

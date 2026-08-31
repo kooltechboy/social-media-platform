@@ -51,7 +51,7 @@ export default async function PodcastShowPage({
 
   if (!podcast) {
     return (
-      <div className="min-h-screen bg-[#090D16] text-brand-sandstone p-4 md:p-6 max-w-7xl mx-auto space-y-6">
+      <div className="min-h-screen bg-transparent text-brand-sandstone p-4 md:p-6 max-w-7xl mx-auto space-y-6">
         <div className="flex items-center gap-3">
           <Link
             href="/podcasts"
@@ -89,7 +89,7 @@ export default async function PodcastShowPage({
   }
 
   return (
-    <div className="min-h-screen bg-[#090D16] text-brand-sandstone p-4 md:p-6 max-w-7xl mx-auto space-y-6">
+    <div className="min-h-screen bg-transparent text-brand-sandstone p-4 md:p-6 max-w-7xl mx-auto space-y-6">
       {/* Header Bar */}
       <div className="flex items-center gap-3">
         <Link

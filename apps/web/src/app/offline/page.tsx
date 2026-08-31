@@ -6,7 +6,7 @@ import { WifiOff, RotateCcw, Home } from 'lucide-react';
 
 export default function OfflinePage() {
   return (
-    <div className="min-h-screen w-full bg-[#060A13] text-brand-sandstone flex flex-col items-center justify-center p-4 sm:p-6 text-center select-none relative overflow-hidden">
+    <div className="min-h-screen w-full bg-transparent text-brand-sandstone flex flex-col items-center justify-center p-4 sm:p-6 text-center select-none relative overflow-hidden">
       {/* Background Ambience */}
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute -top-40 -left-40 w-96 h-96 bg-brand-caribbeanSea/10 rounded-full blur-3xl" />

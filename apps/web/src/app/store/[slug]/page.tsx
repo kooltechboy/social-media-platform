@@ -128,7 +128,7 @@ export default async function BespokeStorefrontPage({
   const serviceCount = products.filter((p) => p.product_kind === 'service').length;
 
   return (
-    <div className="min-h-screen bg-[#090D16] text-brand-sandstone p-4 md:p-6 max-w-7xl mx-auto space-y-8 animate-fadeIn">
+    <div className="min-h-screen bg-transparent text-brand-sandstone p-4 md:p-6 max-w-7xl mx-auto space-y-8 animate-fadeIn">
       {/* Top Breadcrumb Header */}
       <div className="flex items-center justify-between border-b border-slate-800 pb-4">
         <Link

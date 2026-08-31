@@ -140,7 +140,7 @@ export default function CreatePageWizard() {
 
   if (isCreated) {
     return (
-      <div className="min-h-screen bg-[#090D16] text-brand-sandstone p-6 max-w-2xl mx-auto flex flex-col items-center justify-center text-center space-y-6">
+      <div className="min-h-screen bg-transparent text-brand-sandstone p-6 max-w-2xl mx-auto flex flex-col items-center justify-center text-center space-y-6">
         <div className="w-20 h-20 rounded-3xl bg-brand-sunriseCoral/20 border border-brand-sunriseCoral/50 flex items-center justify-center text-brand-sunriseCoral shadow-2xl shadow-brand-sunriseCoral/20">
           <CheckCircle className="w-10 h-10" />
         </div>
@@ -171,7 +171,7 @@ export default function CreatePageWizard() {
   }
 
   return (
-    <div className="min-h-screen bg-[#090D16] text-brand-sandstone p-4 md:p-6 max-w-3xl mx-auto space-y-8">
+    <div className="min-h-screen bg-transparent text-brand-sandstone p-4 md:p-6 max-w-3xl mx-auto space-y-8">
       {/* Step Counter */}
       <div className="border-b border-slate-800 pb-4 flex items-center justify-between">
         <div>

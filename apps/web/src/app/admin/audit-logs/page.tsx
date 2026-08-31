@@ -56,7 +56,7 @@ export default async function AuditLogsPage({
   const supabase = await createServiceSupabaseClient();
   if (!supabase) {
     return (
-      <div className="min-h-screen bg-[#090D16] text-brand-sandstone flex items-center justify-center p-4">
+      <div className="min-h-screen bg-transparent text-brand-sandstone flex items-center justify-center p-4">
         <p className="text-sm text-brand-sandstone/60">Service temporarily unavailable. Please try again.</p>
       </div>
     );
@@ -105,7 +105,7 @@ export default async function AuditLogsPage({
   const totalPages = Math.ceil((count ?? 0) / pageSize);
 
   return (
-    <div className="min-h-screen bg-[#090D16] text-brand-sandstone p-6 max-w-6xl mx-auto space-y-6">
+    <div className="min-h-screen bg-transparent text-brand-sandstone p-6 max-w-6xl mx-auto space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-4">
         <div>
           <div className="flex items-center gap-2">

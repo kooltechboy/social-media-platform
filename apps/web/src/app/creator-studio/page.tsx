@@ -176,7 +176,7 @@ export default async function CreatorStudioPage() {
   const creatorLaunch = getCreatorLaunchMessaging();
 
   return (
-    <div className="min-h-screen bg-[#090D16] text-brand-sandstone p-4 md:p-6 max-w-6xl mx-auto space-y-8">
+    <div className="min-h-screen bg-transparent text-brand-sandstone p-4 md:p-6 max-w-6xl mx-auto space-y-8">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-6">
         <div>
           <h1 className="text-2xl md:text-3xl font-black text-brand-sandstone flex items-center gap-3">
@@ -382,7 +382,7 @@ function CreatorOnboarding({
   displayName: string;
 }) {
   return (
-    <div className="min-h-screen bg-[#090D16] text-brand-sandstone flex items-center justify-center p-6">
+    <div className="min-h-screen bg-transparent text-brand-sandstone flex items-center justify-center p-6">
       <div className="bg-brand-dusk/70 border border-slate-800 rounded-2xl p-8 max-w-md w-full text-center space-y-5">
         <Radio className="w-10 h-10 text-brand-caribbeanSea mx-auto" />
         <h1 className="text-xl font-extrabold text-brand-sandstone">

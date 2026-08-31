@@ -105,7 +105,7 @@ export default async function ProductDetailPage({
       : '5.0';
 
   return (
-    <div className="min-h-screen bg-[#090D16] text-brand-sandstone p-4 md:p-6 max-w-6xl mx-auto space-y-8 animate-fadeIn">
+    <div className="min-h-screen bg-transparent text-brand-sandstone p-4 md:p-6 max-w-6xl mx-auto space-y-8 animate-fadeIn">
       {/* Top Breadcrumb Header */}
       <div className="flex items-center justify-between border-b border-slate-800 pb-4">
         <Link

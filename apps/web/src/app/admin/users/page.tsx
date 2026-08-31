@@ -38,7 +38,7 @@ export default async function WebAdminUsersPage({
   const supabase = await createServiceSupabaseClient();
   if (!supabase) {
     return (
-      <div className="min-h-screen bg-[#090D16] text-brand-sandstone flex items-center justify-center p-4">
+      <div className="min-h-screen bg-transparent text-brand-sandstone flex items-center justify-center p-4">
         <p className="text-sm text-brand-sandstone/60">Service temporarily unavailable. Please try again.</p>
       </div>
     );
@@ -65,7 +65,7 @@ export default async function WebAdminUsersPage({
   const totalPages = Math.ceil((count ?? 0) / pageSize);
 
   return (
-    <div className="min-h-screen bg-[#090D16] text-brand-sandstone p-6 max-w-6xl mx-auto space-y-6">
+    <div className="min-h-screen bg-transparent text-brand-sandstone p-6 max-w-6xl mx-auto space-y-6">
       <div className="flex items-center justify-between border-b border-slate-800 pb-4">
         <h1 className="text-xl font-extrabold text-brand-sandstone flex items-center gap-2">
           <Users className="w-6 h-6 text-brand-caribbeanSea" /> Admin Users Management

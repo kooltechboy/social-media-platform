@@ -83,7 +83,7 @@ export default async function ProfilePage({
 
   if (!supabase) {
     return (
-      <div className="min-h-screen bg-[#090D16] text-brand-sandstone flex items-center justify-center p-6">
+      <div className="min-h-screen bg-transparent text-brand-sandstone flex items-center justify-center p-6">
         <div className="bg-brand-dusk/70 border border-slate-800 rounded-3xl p-8 text-center max-w-sm">
           <p className="text-sm text-brand-sandstone/60">Database service temporarily unavailable.</p>
         </div>
@@ -110,7 +110,7 @@ export default async function ProfilePage({
 
   if (!profile) {
     return (
-      <div className="min-h-screen bg-[#090D16] text-brand-sandstone flex items-center justify-center p-6">
+      <div className="min-h-screen bg-transparent text-brand-sandstone flex items-center justify-center p-6">
         <div className="bg-brand-dusk/80 border border-slate-800 rounded-3xl p-8 text-center max-w-md space-y-4">
           <div className="w-16 h-16 rounded-full bg-brand-sunriseCoral/20 text-brand-sunriseCoral border border-brand-sunriseCoral/30 flex items-center justify-center mx-auto text-2xl font-black">
             🌴
@@ -149,7 +149,7 @@ export default async function ProfilePage({
   // Privacy barrier: if profile is private and viewer is not the owner
   if (profileData.is_private && !isOwnProfile) {
     return (
-      <div className="min-h-screen bg-[#090D16] text-brand-sandstone flex items-center justify-center p-6">
+      <div className="min-h-screen bg-transparent text-brand-sandstone flex items-center justify-center p-6">
         <div className="bg-brand-dusk/80 border border-slate-800 rounded-3xl p-8 text-center max-w-md space-y-4">
           <div className="w-16 h-16 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30 flex items-center justify-center mx-auto text-2xl font-black">
             <Lock className="w-8 h-8" />
@@ -219,7 +219,7 @@ export default async function ProfilePage({
   const coverUrl = profileData.cover_url || profileData.banner_url;
 
   return (
-    <div className="min-h-screen bg-[#090D16] text-brand-sandstone">
+    <div className="min-h-screen bg-transparent text-brand-sandstone">
       {/* Top sticky app header */}
       <header className="sticky top-0 z-40 bg-[#0F172A]/90 backdrop-blur-md border-b border-slate-800 px-4 py-3 flex items-center justify-between gap-4">
         <div className="flex items-center gap-3">

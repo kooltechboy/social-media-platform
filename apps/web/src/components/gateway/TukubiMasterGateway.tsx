@@ -53,7 +53,7 @@ export function TukubiMasterGateway() {
   }, [isAuthenticated, loading, router]);
 
   return (
-    <div className="min-h-screen w-full bg-[#081020] text-brand-sandstone relative overflow-x-hidden select-none">
+    <div className="min-h-screen w-full bg-transparent text-brand-sandstone relative overflow-x-hidden select-none">
       {/* ── 1. High-Resolution Grenada Carnival / Spicemas Photographic Layer ── */}
       <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none">
         {/* Crisp Full-Resolution Carnival Photograph */}

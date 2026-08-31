@@ -13,7 +13,7 @@ export default async function SoundTrackPage({
   const user = await getCurrentUser();
 
   return (
-    <div className="min-h-screen bg-[#090D16] text-brand-sandstone p-4 md:p-6 max-w-6xl mx-auto">
+    <div className="min-h-screen bg-transparent text-brand-sandstone p-4 md:p-6 max-w-6xl mx-auto">
       <Suspense
         fallback={
           <div className="w-full flex items-center justify-center p-20">

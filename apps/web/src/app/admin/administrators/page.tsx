@@ -61,7 +61,7 @@ export default async function AdministratorsPage({
   const supabase = await createServiceSupabaseClient();
   if (!supabase) {
     return (
-      <div className="min-h-screen bg-[#090D16] text-brand-sandstone flex items-center justify-center p-4">
+      <div className="min-h-screen bg-transparent text-brand-sandstone flex items-center justify-center p-4">
         <p className="text-sm text-brand-sandstone/60">Service temporarily unavailable. Please try again.</p>
       </div>
     );
@@ -109,7 +109,7 @@ export default async function AdministratorsPage({
   }, {} as Record<string, number>);
 
   return (
-    <div className="min-h-screen bg-[#090D16] text-brand-sandstone p-6 max-w-6xl mx-auto space-y-6">
+    <div className="min-h-screen bg-transparent text-brand-sandstone p-6 max-w-6xl mx-auto space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-5">
         <div>
