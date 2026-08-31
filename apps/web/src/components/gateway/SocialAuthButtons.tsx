@@ -77,24 +77,6 @@ export function SocialAuthButtons({ redirectTo = '/', onError }: SocialAuthButto
         <span>Continue with Google</span>
       </button>
 
-      {/* ── Apple Button ── */}
-      <button
-        type="button"
-        disabled={!!loadingProvider}
-        onClick={() => handleOAuthSignIn('apple')}
-        aria-label="Continue with Apple"
-        className="w-full flex items-center justify-center gap-3 py-3 px-4 rounded-xl font-semibold text-sm bg-black hover:bg-neutral-900 text-white border border-neutral-800 transition-all shadow-sm hover:shadow active:scale-[0.99] disabled:opacity-60 disabled:cursor-not-allowed"
-      >
-        {loadingProvider === 'apple' ? (
-          <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-        ) : (
-          <svg className="w-4 h-4 flex-shrink-0 fill-current" viewBox="0 0 170 170">
-            <path d="M150.37 130.25c-2.45 5.66-5.35 10.87-8.71 15.66-4.58 6.53-8.33 11.05-11.22 13.56-4.48 4.12-9.28 6.23-14.42 6.35-3.69 0-8.14-1.05-13.32-3.18-5.19-2.12-9.97-3.17-14.34-3.17-4.58 0-9.49 1.05-14.75 3.17-5.26 2.13-9.5 3.24-12.74 3.35-4.35.13-9.16-1.9-14.42-6.08-3.7-3.04-7.6-7.7-11.72-13.98-6.19-9.58-11.05-20.66-14.58-33.24-3.53-12.58-5.3-24.16-5.3-34.73 0-14.47 3.52-26.68 10.55-36.63 7.03-9.95 16.03-15.06 27.02-15.34 5.3 0 11.08 1.48 17.34 4.45 6.25 2.97 10.15 4.51 11.69 4.62 1.34 0 5.48-1.63 12.44-4.89 6.95-3.26 12.82-4.66 17.6-4.22 13.68.87 24.32 5.92 31.92 15.15-12.06 7.28-17.96 17.32-17.7 30.13.25 10.09 4.09 18.52 11.52 25.29 7.42 6.77 16.32 10.53 26.69 11.28-2.39 7.39-5.43 14.88-9.12 22.47zM119.22 31.84c0-7.29 2.62-14.15 7.85-20.59 5.23-6.44 11.83-10.45 19.8-12.04.22 1.52.33 2.93.33 4.24 0 7.39-2.76 14.48-8.28 21.26-5.52 6.78-12.21 10.74-20.07 11.88-.22-1.41-.33-2.67-.33-3.75z" />
-          </svg>
-        )}
-        <span>Continue with Apple</span>
-      </button>
-
       {/* ── Facebook Button ── */}
       <button
         type="button"

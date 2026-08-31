@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useTransition } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { Mail, Lock, Eye, EyeOff, AlertCircle, Sparkles, Compass } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, AlertCircle, Sparkles } from 'lucide-react';
 import { SocialAuthButtons } from './SocialAuthButtons';
 import { MagicLinkForm } from './MagicLinkForm';
 import { signInAction } from '../../lib/auth/actions';
@@ -221,16 +221,6 @@ export function SignInForm() {
             Create your account
           </Link>
         </p>
-
-        <div>
-          <Link
-            href="/explore"
-            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold text-brand-sandstone/90 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 transition-all hover:border-brand-goldenHour/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-caribbeanSea"
-          >
-            <Compass className="w-3.5 h-3.5 text-brand-goldenHour" />
-            <span>Explore Tukubi First →</span>
-          </Link>
-        </div>
       </div>
     </div>
   );
