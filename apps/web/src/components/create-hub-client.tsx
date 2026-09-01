@@ -186,12 +186,13 @@ export default function CreateHubClient({ user }: CreateHubClientProps) {
   const [activeFilter, setActiveFilter] = useState('all');
   const [hasDraft, setHasDraft] = useState(false);
   const [publishedPostId, setPublishedPostId] = useState<string | null>(null);
+  const [composerMode, setComposerMode] = useState<ComposerMode>('text');
   const composerSectionRef = useRef<HTMLDivElement>(null);
 
   // Check for saved draft on mount
   useEffect(() => {
     try {
-      const draft = localStorage.getItem('tukubi_composer_draft_v1') || localStorage.getItem('caribbean_one_composer_draft_v1');
+      const draft = localStorage.getItem('tukubi_composer_draft_v3') || localStorage.getItem('tukubi_composer_draft_v2');
       if (draft) {
         const parsed = JSON.parse(draft);
         if (parsed.content || (parsed.media && parsed.media.length > 0)) {
@@ -204,16 +205,9 @@ export default function CreateHubClient({ user }: CreateHubClientProps) {
   }, []);
 
   function handleStartCreating(mode: ComposerMode = 'text') {
+    setComposerMode(mode);
     if (composerSectionRef.current) {
       composerSectionRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      // Trigger mode switch via custom event or click
-      const modeBtn = document.querySelector(`button[data-mode="${mode}"]`) as HTMLButtonElement;
-      if (modeBtn) {
-        modeBtn.click();
-      } else {
-        const promptInput = document.querySelector('textarea, input[placeholder*="What is happening"]') as HTMLElement;
-        if (promptInput) promptInput.focus();
-      }
     }
   }
 
@@ -310,6 +304,8 @@ export default function CreateHubClient({ user }: CreateHubClientProps) {
         </div>
 
         <UniversalComposer
+          key={composerMode}
+          initialMode={composerMode}
           displayName={user?.displayName ?? 'Caribbean Citizen'}
           avatarInitials={(user?.displayName ?? 'CO').slice(0, 2).toUpperCase()}
           defaultExpanded={true}

@@ -12,7 +12,11 @@ import {
   Send,
   X,
   Plus,
-  Smile,
+  Trash2,
+  BarChart2,
+  ShoppingBag,
+  Calendar,
+  HeartHandshake,
   CheckCircle,
   AlertCircle,
   UploadCloud,
@@ -25,9 +29,21 @@ import {
 import { createPostAction } from '../lib/social/actions';
 import { createSupabaseBrowserClient } from '../lib/supabase/browser';
 import { useTranslation } from '@caribbean/localization';
+import { generateCreatorContentPlan } from '@caribbean/ai';
 import DeviceMediaCaptureModal, { type CaptureMode } from './media/device-media-capture-modal';
 
-export type ComposerMode = 'text' | 'photo' | 'video' | 'reel' | 'live' | 'poll' | 'product' | 'event' | 'fundraiser' | 'alert';
+export type ComposerMode =
+  | 'text'
+  | 'photo'
+  | 'video'
+  | 'reel'
+  | 'live'
+  | 'poll'
+  | 'product'
+  | 'event'
+  | 'fundraiser'
+  | 'alert';
+
 export type AudienceSelection = 'everyone' | 'friends' | 'local' | 'caribbean' | 'diaspora';
 
 export interface UniversalComposerProps {
@@ -48,7 +64,7 @@ interface UploadedMediaItem {
   uploadedUrl?: string;
 }
 
-const DRAFT_KEY = 'tukubi_composer_draft_v2';
+const DRAFT_KEY = 'tukubi_composer_draft_v3';
 
 export default function UniversalComposer({
   displayName = 'Caribbean Member',
@@ -56,14 +72,16 @@ export default function UniversalComposer({
   accountType = 'personal',
   onPostCreated,
   defaultExpanded = false,
+  initialMode = 'text',
 }: UniversalComposerProps) {
   const router = useRouter();
   const { t } = useTranslation();
 
-  const [isExpanded, setIsExpanded] = useState(defaultExpanded);
+  const [isExpanded, setIsExpanded] = useState(defaultExpanded || initialMode !== 'text');
+  const [mode, setMode] = useState<ComposerMode>(initialMode);
   const [content, setContent] = useState('');
   const [audience, setAudience] = useState<AudienceSelection>('everyone');
-  const [isReel, setIsReel] = useState(false);
+  const [isReel, setIsReel] = useState(initialMode === 'reel');
 
   // Media files
   const [mediaList, setMediaList] = useState<UploadedMediaItem[]>([]);
@@ -73,6 +91,27 @@ export default function UniversalComposer({
   // Native / Live Camera modal
   const [cameraModalOpen, setCameraModalOpen] = useState(false);
   const [cameraModalMode, setCameraModalMode] = useState<CaptureMode>('photo');
+
+  // Interactive Attachment States
+  // 1. Poll
+  const [pollQuestion, setPollQuestion] = useState('');
+  const [pollOptions, setPollOptions] = useState<string[]>(['', '']);
+
+  // 2. Product / Marketplace
+  const [productTitle, setProductTitle] = useState('');
+  const [productPrice, setProductPrice] = useState('');
+
+  // 3. Event
+  const [eventTitle, setEventTitle] = useState('');
+  const [eventDate, setEventDate] = useState('');
+  const [eventLocation, setEventLocation] = useState('');
+
+  // 4. Fundraiser / Relief
+  const [fundraiserTitle, setFundraiserTitle] = useState('');
+  const [fundraiserTarget, setFundraiserTarget] = useState('');
+
+  // 5. Official Alert (Government / Institution)
+  const [isOfficialAlert, setIsOfficialAlert] = useState(false);
 
   // Hidden File Inputs
   const photoInputRef = useRef<HTMLInputElement>(null);
@@ -119,7 +158,7 @@ export default function UniversalComposer({
     }
   }, [content, audience]);
 
-  function handleFileSelect(files: FileList | null, preferredType?: 'image' | 'video') {
+  function handleFileSelect(files: FileList | null, preferredType?: 'image' | 'video', markAsReel = false) {
     if (!files || files.length === 0) return;
     const items: UploadedMediaItem[] = [];
 
@@ -139,6 +178,10 @@ export default function UniversalComposer({
     if (items.length > 0) {
       setMediaList((prev) => [...prev, ...items]);
       setIsExpanded(true);
+      if (markAsReel) {
+        setIsReel(true);
+        setMode('reel');
+      }
       setActiveMediaDropdown(null);
     }
   }
@@ -156,6 +199,7 @@ export default function UniversalComposer({
     setIsExpanded(true);
     if (cameraModalMode === 'reel') {
       setIsReel(true);
+      setMode('reel');
     }
   }
 
@@ -199,41 +243,42 @@ export default function UniversalComposer({
     }
   }
 
+  // Upload files to Supabase 'post-media' bucket
   async function uploadMediaFiles(): Promise<string[]> {
     if (mediaList.length === 0) return [];
-    setUploadProgressText('Uploading media to Tukubi...');
-
     const supabase = createSupabaseBrowserClient();
     const uploadedUrls: string[] = [];
 
     for (let i = 0; i < mediaList.length; i++) {
       const item = mediaList[i];
-      const ext = item.file.name?.split('.').pop() || (item.type === 'video' ? 'mp4' : 'jpg');
-      const filename = `feed_${Date.now()}_${i}_${Math.random().toString(36).substring(2, 6)}.${ext}`;
+      setUploadProgressText(`Uploading media ${i + 1} of ${mediaList.length}...`);
 
       if (supabase) {
         try {
-          const { data, error } = await supabase.storage
+          const fileExt = item.file.name.split('.').pop() || (item.type === 'video' ? 'mp4' : 'jpg');
+          const cleanName = item.file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+          const filePath = `${Date.now()}_${Math.random().toString(36).substring(2, 8)}_${cleanName}.${fileExt}`;
+
+          const { error: uploadError } = await supabase.storage
             .from('post-media')
-            .upload(filename, item.file, {
+            .upload(filePath, item.file, {
               cacheControl: '3600',
               upsert: false,
             });
 
-          if (!error && data) {
-            const { data: publicData } = supabase.storage
-              .from('post-media')
-              .getPublicUrl(data.path);
-            if (publicData?.publicUrl) {
-              uploadedUrls.push(publicData.publicUrl);
+          if (!uploadError) {
+            const { data: pubData } = supabase.storage.from('post-media').getPublicUrl(filePath);
+            if (pubData && pubData.publicUrl) {
+              uploadedUrls.push(pubData.publicUrl);
               continue;
             }
           }
         } catch (err) {
-          console.warn('Direct storage upload fallback:', err);
+          console.error('Storage upload error:', err);
         }
       }
 
+      // Fallback data preview URL for offline or test sandbox
       uploadedUrls.push(item.previewUrl);
     }
 
@@ -242,7 +287,17 @@ export default function UniversalComposer({
 
   async function handlePublish(e: React.FormEvent) {
     e.preventDefault();
-    if (!content.trim() && mediaList.length === 0) return;
+    const hasMedia = mediaList.length > 0;
+    const hasContent = content.trim().length > 0;
+    const hasPoll = mode === 'poll' && pollQuestion.trim().length > 0;
+    const hasProduct = mode === 'product' && productTitle.trim().length > 0;
+    const hasEvent = mode === 'event' && eventTitle.trim().length > 0;
+    const hasFundraiser = mode === 'fundraiser' && fundraiserTitle.trim().length > 0;
+
+    if (!hasContent && !hasMedia && !hasPoll && !hasProduct && !hasEvent && !hasFundraiser) {
+      setErrorMessage('Please enter some text, add photos/videos, or attach an update.');
+      return;
+    }
 
     setIsSubmitting(true);
     setErrorMessage(null);
@@ -252,7 +307,7 @@ export default function UniversalComposer({
       // 1. Upload media files
       const uploadedMediaUrls = await uploadMediaFiles();
 
-      // 2. Build captions & content
+      // 2. Build structured captions & content
       let finalContent = content.trim();
 
       // Append individual media captions if provided
@@ -263,19 +318,39 @@ export default function UniversalComposer({
       if (mediaCaptions.length > 0 && !finalContent) {
         finalContent = mediaCaptions.join('\n');
       } else if (mediaCaptions.length > 0 && finalContent) {
-        // If content and captions both exist, keep unified text
         const extraCaptions = mediaCaptions.filter((c) => c !== finalContent);
         if (extraCaptions.length > 0) {
           finalContent = `${finalContent}\n\n${extraCaptions.join('\n')}`;
         }
       }
 
+      // Attach dynamic mode sections
+      if (mode === 'poll' && pollQuestion.trim()) {
+        const validOptions = pollOptions.filter((o) => o.trim());
+        if (validOptions.length > 0) {
+          finalContent = `${finalContent ? `${finalContent}\n\n` : ''}📊 **Poll:** ${pollQuestion.trim()}\n${validOptions.map((o) => `• ${o.trim()}`).join('\n')}`;
+        }
+      } else if (mode === 'product' && productTitle.trim()) {
+        finalContent = `${finalContent ? `${finalContent}\n\n` : ''}🛍️ **Featured Product:** ${productTitle.trim()} ($${productPrice ? productPrice.trim() : '0.00'} USD on TUKUBI)`;
+      } else if (mode === 'event' && eventTitle.trim()) {
+        finalContent = `${finalContent ? `${finalContent}\n\n` : ''}📅 **Upcoming Caribbean Event:** ${eventTitle.trim()} (${eventDate ? eventDate.trim() : 'TBD'}${eventLocation ? ` • 📍 ${eventLocation.trim()}` : ''})`;
+      } else if (mode === 'fundraiser' && fundraiserTitle.trim()) {
+        finalContent = `${finalContent ? `${finalContent}\n\n` : ''}💰 **Community Fundraiser:** ${fundraiserTitle.trim()} (Goal: $${fundraiserTarget ? fundraiserTarget.trim() : '1,000'} USD on TUKUBI)`;
+      }
+
+      if (isOfficialAlert) {
+        finalContent = `🚨 **OFFICIAL CIVIC ADVISORY** 🚨\n\n${finalContent}`;
+      }
+
       // Map simplified audience to backend visibility and cultural tags
       let backendVisibility: 'public' | 'followers' | 'friends' | 'private' = 'public';
       const culturalTags: string[] = [];
 
-      if (isReel) {
+      if (isReel || mode === 'reel') {
         culturalTags.push('reel');
+      }
+      if (isOfficialAlert) {
+        culturalTags.push('civic_alert', 'official');
       }
 
       switch (audience) {
@@ -314,11 +389,23 @@ export default function UniversalComposer({
         return;
       }
 
-      // Clean state on success
+      // Reset state on successful publish
       setContent('');
       setMediaList([]);
+      setMode('text');
       setIsReel(false);
+      setPollQuestion('');
+      setPollOptions(['', '']);
+      setProductTitle('');
+      setProductPrice('');
+      setEventTitle('');
+      setEventDate('');
+      setEventLocation('');
+      setFundraiserTitle('');
+      setFundraiserTarget('');
+      setIsOfficialAlert(false);
       setIsExpanded(false);
+
       try {
         localStorage.removeItem(DRAFT_KEY);
       } catch {
@@ -328,7 +415,7 @@ export default function UniversalComposer({
       setSuccessMessage('Published! Your post is live on the feed.');
       setTimeout(() => setSuccessMessage(null), 4000);
 
-      // Dispatch global window event for instant zero-latency feed update
+      // Dispatch global window event for instant feed update
       if (typeof window !== 'undefined' && result.post) {
         window.dispatchEvent(
           new CustomEvent('tukubi:new-post', {
@@ -347,10 +434,25 @@ export default function UniversalComposer({
     }
   }
 
-  function openCameraFor(mode: CaptureMode) {
-    setCameraModalMode(mode);
+  function openCameraFor(captureMode: CaptureMode) {
+    setCameraModalMode(captureMode);
     setCameraModalOpen(true);
     setActiveMediaDropdown(null);
+  }
+
+  function handleAiAssist() {
+    const topic = content.trim() || 'Caribbean culture, community, and diaspora connection';
+    const plan = generateCreatorContentPlan({
+      topic,
+      category: 'social',
+      dialect: 'standard_english',
+    });
+    if (!content.trim() && plan.captions.length > 0) {
+      setContent(`${plan.captions[0]}\n\n${plan.hashtags.join(' ')}`);
+    } else {
+      setContent((prev) => `${prev.trim()}\n\n${plan.hashtags.join(' ')}`);
+    }
+    setIsExpanded(true);
   }
 
   return (
@@ -362,216 +464,211 @@ export default function UniversalComposer({
         onClose={() => setCameraModalOpen(false)}
         onCaptureComplete={handleDirectCapture}
         onFallbackToFilePicker={() => {
-          if (cameraModalMode === 'photo') photoInputRef.current?.click();
-          else if (cameraModalMode === 'video') videoInputRef.current?.click();
-          else reelInputRef.current?.click();
+          setCameraModalOpen(false);
+          if (cameraModalMode === 'video') videoInputRef.current?.click();
+          else if (cameraModalMode === 'reel') reelInputRef.current?.click();
+          else photoInputRef.current?.click();
         }}
       />
 
-      {/* Hidden file pickers */}
+      {/* Hidden File Pickers */}
       <input
+        type="file"
         ref={photoInputRef}
-        type="file"
-        multiple
         accept="image/*"
-        onChange={(e) => handleFileSelect(e.target.files, 'image')}
+        multiple
         className="hidden"
-      />
-      <input
-        ref={videoInputRef}
-        type="file"
-        accept="video/*"
-        onChange={(e) => handleFileSelect(e.target.files, 'video')}
-        className="hidden"
-      />
-      <input
-        ref={reelInputRef}
-        type="file"
-        accept="video/*"
         onChange={(e) => {
-          setIsReel(true);
-          handleFileSelect(e.target.files, 'video');
+          handleFileSelect(e.target.files, 'image');
+          e.target.value = '';
         }}
+      />
+      <input
+        type="file"
+        ref={videoInputRef}
+        accept="video/*"
+        multiple
         className="hidden"
+        onChange={(e) => {
+          handleFileSelect(e.target.files, 'video');
+          e.target.value = '';
+        }}
+      />
+      <input
+        type="file"
+        ref={reelInputRef}
+        accept="video/*"
+        className="hidden"
+        onChange={(e) => {
+          handleFileSelect(e.target.files, 'video', true);
+          e.target.value = '';
+        }}
       />
 
+      {/* Main Composer Box */}
       <div
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
-        className={`relative transition-all duration-300 rounded-3xl border shadow-xl ${
+        className={`glass rounded-3xl border transition-all ${
           isDragging
-            ? 'border-brand-caribbeanSea bg-sky-950/40 ring-4 ring-brand-caribbeanSea/20'
-            : 'border-slate-800/90 bg-brand-dusk/90 backdrop-blur-xl hover:border-slate-700/90'
+            ? 'border-brand-caribbeanSea shadow-2xl shadow-brand-caribbeanSea/30 ring-2 ring-brand-caribbeanSea/40 bg-brand-dusk/95'
+            : 'border-slate-800/80 hover:border-slate-700 bg-brand-dusk/80 shadow-xl'
         }`}
       >
-        {/* Dragging Overlay */}
-        {isDragging && (
-          <div className="absolute inset-0 z-30 rounded-3xl bg-brand-twilight/90 backdrop-blur-md flex flex-col items-center justify-center border-2 border-dashed border-brand-caribbeanSea p-6 text-center space-y-2 pointer-events-none">
-            <UploadCloud className="w-12 h-12 text-brand-caribbeanSea animate-bounce" />
-            <h3 className="text-base font-black text-brand-sandstone">Drop Photos or Videos Here</h3>
-            <p className="text-xs text-brand-caribbeanSea">Attach directly to your post</p>
-          </div>
-        )}
-
-        {/* ────────────────────────────────────────────────────────── */}
-        {/* 1. COLLAPSED QUICK-TRIGGER STATE                          */}
-        {/* ────────────────────────────────────────────────────────── */}
         {!isExpanded ? (
-          <div className="p-4 sm:p-5 space-y-4">
-            {successMessage && (
-              <div className="p-3 rounded-2xl bg-brand-sunriseCoral/10 border border-brand-sunriseCoral/30 text-emerald-300 text-xs font-bold flex items-center gap-2 animate-fadeIn">
-                <CheckCircle className="w-4 h-4 text-brand-sunriseCoral flex-shrink-0" />
-                <span>{successMessage}</span>
-              </div>
-            )}
-            {errorMessage && (
-              <div className="p-3 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs font-bold flex items-center gap-2 animate-fadeIn">
-                <AlertCircle className="w-4 h-4 text-rose-400 flex-shrink-0" />
-                <span>{errorMessage}</span>
-              </div>
-            )}
-
+          /* ────────────────────────────────────────────────────────── */
+          /* 1. COLLAPSED STREAM PROMPT BAR (ALL OPTIONS DIRECTLY CLICKABLE) */
+          /* ────────────────────────────────────────────────────────── */
+          <div className="p-4 sm:p-5 space-y-3">
             <div className="flex items-center gap-3">
-              <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-brand-caribbeanSea via-brand-sunriseCoral to-brand-goldenHour p-0.5 shadow-md flex-shrink-0">
-                <div className="w-full h-full bg-brand-twilight rounded-2xl flex items-center justify-center font-black text-xs text-brand-sandstone">
-                  {avatarInitials}
-                </div>
+              <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-brand-caribbeanSea via-brand-goldenHour to-brand-sunriseCoral text-slate-950 font-black flex items-center justify-center text-xs shadow-md flex-shrink-0 ring-2 ring-brand-caribbeanSea/30">
+                {avatarInitials}
               </div>
 
-              {/* Clickable prompt input */}
               <button
                 type="button"
                 onClick={() => setIsExpanded(true)}
-                className="flex-1 bg-brand-twilight/90 hover:bg-brand-twilight border border-slate-800/90 hover:border-brand-caribbeanSea/40 text-left px-5 py-3 rounded-2xl text-xs sm:text-sm text-brand-sandstone/60 hover:text-slate-200 transition-all flex items-center justify-between group shadow-inner"
+                className="flex-1 bg-brand-twilight/90 hover:bg-brand-twilight text-left px-4 py-3 rounded-2xl text-sm font-medium text-brand-sandstone/50 hover:text-brand-sandstone border border-slate-800 transition-all flex items-center justify-between group cursor-text"
               >
                 <span>What&apos;s happening, {firstName}?</span>
-                <span className="text-[11px] font-bold text-brand-caribbeanSea/80 group-hover:text-brand-caribbeanSea flex items-center gap-1">
+                <span className="text-xs font-bold text-brand-caribbeanSea group-hover:text-brand-goldenHour flex items-center gap-1">
                   <Sparkles className="w-3.5 h-3.5 text-brand-goldenHour" /> Create Post
                 </span>
               </button>
             </div>
 
-            {/* Direct Media Actions Bar */}
-            <div className="flex items-center justify-between pt-3 border-t border-slate-800/70 overflow-x-auto scrollbar-none gap-2">
-              {/* Photo Action */}
-              <div className="relative">
-                <button
-                  type="button"
-                  onClick={() => setActiveMediaDropdown(activeMediaDropdown === 'photo' ? null : 'photo')}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-slate-300 hover:text-brand-caribbeanSea hover:bg-brand-dusk/80 transition-all whitespace-nowrap"
-                >
-                  <ImageIcon className="w-4 h-4 text-brand-sunriseCoral" />
-                  <span>Photo</span>
-                  <ChevronDown className="w-3 h-3 opacity-60" />
-                </button>
-                {activeMediaDropdown === 'photo' && (
-                  <div className="absolute left-0 top-9 z-40 w-44 bg-brand-dusk border border-slate-700 rounded-2xl shadow-xl p-1.5 space-y-1 animate-fadeIn">
-                    <button
-                      type="button"
-                      onClick={() => openCameraFor('photo')}
-                      className="w-full text-left px-3 py-2 rounded-xl text-xs text-slate-200 hover:bg-white/10 flex items-center gap-2 font-semibold"
-                    >
-                      <Camera className="w-4 h-4 text-brand-sunriseCoral" />
-                      <span>Take Photo</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        photoInputRef.current?.click();
-                        setActiveMediaDropdown(null);
-                      }}
-                      className="w-full text-left px-3 py-2 rounded-xl text-xs text-slate-200 hover:bg-white/10 flex items-center gap-2 font-semibold"
-                    >
-                      <FolderOpen className="w-4 h-4 text-brand-caribbeanSea" />
-                      <span>Choose From Device</span>
-                    </button>
-                  </div>
-                )}
-              </div>
+            {/* Direct Action Buttons Row */}
+            <div className="flex items-center justify-between pt-2 border-t border-slate-800/70 overflow-x-auto scrollbar-none gap-1 sm:gap-2">
+              {/* Photo Direct Trigger */}
+              <button
+                type="button"
+                onClick={() => {
+                  photoInputRef.current?.click();
+                }}
+                className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold text-slate-300 hover:text-brand-sunriseCoral hover:bg-brand-twilight transition-all whitespace-nowrap"
+                title="Choose Photos from Device"
+              >
+                <ImageIcon className="w-4 h-4 text-brand-sunriseCoral" />
+                <span>Photo</span>
+              </button>
 
-              {/* Video Action */}
-              <div className="relative">
-                <button
-                  type="button"
-                  onClick={() => setActiveMediaDropdown(activeMediaDropdown === 'video' ? null : 'video')}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-slate-300 hover:text-rose-300 hover:bg-brand-dusk/80 transition-all whitespace-nowrap"
-                >
-                  <Video className="w-4 h-4 text-rose-400" />
-                  <span>Video</span>
-                  <ChevronDown className="w-3 h-3 opacity-60" />
-                </button>
-                {activeMediaDropdown === 'video' && (
-                  <div className="absolute left-0 top-9 z-40 w-44 bg-brand-dusk border border-slate-700 rounded-2xl shadow-xl p-1.5 space-y-1 animate-fadeIn">
-                    <button
-                      type="button"
-                      onClick={() => openCameraFor('video')}
-                      className="w-full text-left px-3 py-2 rounded-xl text-xs text-slate-200 hover:bg-white/10 flex items-center gap-2 font-semibold"
-                    >
-                      <Camera className="w-4 h-4 text-rose-400" />
-                      <span>Record Video</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        videoInputRef.current?.click();
-                        setActiveMediaDropdown(null);
-                      }}
-                      className="w-full text-left px-3 py-2 rounded-xl text-xs text-slate-200 hover:bg-white/10 flex items-center gap-2 font-semibold"
-                    >
-                      <FolderOpen className="w-4 h-4 text-brand-caribbeanSea" />
-                      <span>Choose From Device</span>
-                    </button>
-                  </div>
-                )}
-              </div>
+              {/* Video Direct Trigger */}
+              <button
+                type="button"
+                onClick={() => {
+                  videoInputRef.current?.click();
+                }}
+                className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold text-slate-300 hover:text-rose-400 hover:bg-brand-twilight transition-all whitespace-nowrap"
+                title="Choose Videos from Device"
+              >
+                <Video className="w-4 h-4 text-rose-400" />
+                <span>Video</span>
+              </button>
 
-              {/* Reel Action */}
-              <div className="relative">
-                <button
-                  type="button"
-                  onClick={() => setActiveMediaDropdown(activeMediaDropdown === 'reel' ? null : 'reel')}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-slate-300 hover:text-amber-300 hover:bg-brand-dusk/80 transition-all whitespace-nowrap"
-                >
-                  <Film className="w-4 h-4 text-brand-goldenHour" />
-                  <span>Reel</span>
-                  <ChevronDown className="w-3 h-3 opacity-60" />
-                </button>
-                {activeMediaDropdown === 'reel' && (
-                  <div className="absolute left-0 top-9 z-40 w-44 bg-brand-dusk border border-slate-700 rounded-2xl shadow-xl p-1.5 space-y-1 animate-fadeIn">
-                    <button
-                      type="button"
-                      onClick={() => openCameraFor('reel')}
-                      className="w-full text-left px-3 py-2 rounded-xl text-xs text-slate-200 hover:bg-white/10 flex items-center gap-2 font-semibold"
-                    >
-                      <Camera className="w-4 h-4 text-brand-goldenHour" />
-                      <span>Record Reel</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        reelInputRef.current?.click();
-                        setActiveMediaDropdown(null);
-                      }}
-                      className="w-full text-left px-3 py-2 rounded-xl text-xs text-slate-200 hover:bg-white/10 flex items-center gap-2 font-semibold"
-                    >
-                      <FolderOpen className="w-4 h-4 text-brand-caribbeanSea" />
-                      <span>Choose Video</span>
-                    </button>
-                  </div>
-                )}
-              </div>
+              {/* Reel Direct Trigger */}
+              <button
+                type="button"
+                onClick={() => {
+                  setIsReel(true);
+                  setMode('reel');
+                  reelInputRef.current?.click();
+                }}
+                className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold text-slate-300 hover:text-amber-300 hover:bg-brand-twilight transition-all whitespace-nowrap"
+                title="Upload Short Video Reel"
+              >
+                <Film className="w-4 h-4 text-brand-goldenHour" />
+                <span>Reel</span>
+              </button>
+
+              {/* Live Camera Direct Trigger */}
+              <button
+                type="button"
+                onClick={() => openCameraFor('photo')}
+                className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold text-slate-300 hover:text-brand-caribbeanSea hover:bg-brand-twilight transition-all whitespace-nowrap"
+                title="Open Camera"
+              >
+                <Camera className="w-4 h-4 text-brand-caribbeanSea" />
+                <span className="hidden md:inline">Camera</span>
+              </button>
+
+              {/* Poll Trigger */}
+              <button
+                type="button"
+                onClick={() => {
+                  setMode('poll');
+                  setIsExpanded(true);
+                }}
+                className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold text-slate-300 hover:text-purple-400 hover:bg-brand-twilight transition-all whitespace-nowrap"
+                title="Create Community Poll"
+              >
+                <BarChart2 className="w-4 h-4 text-purple-400" />
+                <span className="hidden sm:inline">Poll</span>
+              </button>
+
+              {/* Store / Product Trigger */}
+              <button
+                type="button"
+                onClick={() => {
+                  setMode('product');
+                  setIsExpanded(true);
+                }}
+                className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold text-slate-300 hover:text-emerald-400 hover:bg-brand-twilight transition-all whitespace-nowrap"
+                title="Feature a Product"
+              >
+                <ShoppingBag className="w-4 h-4 text-emerald-400" />
+                <span className="hidden sm:inline">Store</span>
+              </button>
+
+              {/* Event Trigger */}
+              <button
+                type="button"
+                onClick={() => {
+                  setMode('event');
+                  setIsExpanded(true);
+                }}
+                className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold text-slate-300 hover:text-yellow-400 hover:bg-brand-twilight transition-all whitespace-nowrap"
+                title="Share an Upcoming Caribbean Event"
+              >
+                <Calendar className="w-4 h-4 text-yellow-400" />
+                <span className="hidden sm:inline">Event</span>
+              </button>
+
+              {/* Fundraiser / Relief Trigger */}
+              <button
+                type="button"
+                onClick={() => {
+                  setMode('fundraiser');
+                  setIsExpanded(true);
+                }}
+                className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold text-slate-300 hover:text-rose-400 hover:bg-brand-twilight transition-all whitespace-nowrap"
+                title="Launch Community Fundraiser"
+              >
+                <HeartHandshake className="w-4 h-4 text-rose-400" />
+                <span className="hidden sm:inline">Relief</span>
+              </button>
+
+              {/* AI Creator Assist Trigger */}
+              <button
+                type="button"
+                onClick={handleAiAssist}
+                className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold text-brand-goldenHour bg-brand-goldenHour/10 hover:bg-brand-goldenHour/20 border border-brand-goldenHour/30 transition-all whitespace-nowrap"
+                title="AI Creator Assistant"
+              >
+                <Sparkles className="w-4 h-4 text-brand-goldenHour" />
+                <span className="hidden md:inline">AI Assist</span>
+              </button>
             </div>
           </div>
         ) : (
           /* ────────────────────────────────────────────────────────── */
-          /* 2. EXPANDED SINGLE-SCREEN COMPOSER WORKSPACE               */
+          /* 2. EXPANDED FULL-FEATURED COMPOSER WORKSPACE               */
           /* ────────────────────────────────────────────────────────── */
           <form onSubmit={handlePublish} className="p-5 space-y-4">
-            {/* Header: Author & Simple Audience Selector */}
+            {/* Header: Author, Audience & Mode Badge */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-800/80">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-brand-caribbeanSea to-brand-sunriseCoral text-slate-950 font-black flex items-center justify-center text-xs shadow-md">
+                <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-brand-caribbeanSea to-brand-sunriseCoral text-slate-950 font-black flex items-center justify-center text-xs shadow-md flex-shrink-0">
                   {avatarInitials}
                 </div>
                 <div>
@@ -582,9 +679,14 @@ export default function UniversalComposer({
                         Reel
                       </span>
                     )}
+                    {mode !== 'text' && mode !== 'reel' && (
+                      <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded-full bg-brand-caribbeanSea/20 text-brand-caribbeanSea border border-brand-caribbeanSea/30">
+                        {mode}
+                      </span>
+                    )}
                   </h4>
 
-                  {/* Simple Audience Control */}
+                  {/* Audience Selector */}
                   <div className="flex items-center gap-1.5 mt-1">
                     <label htmlFor="audience-select" className="text-[11px] font-bold text-brand-sandstone/60">
                       Who can see this?
@@ -611,7 +713,10 @@ export default function UniversalComposer({
               {/* Close Button */}
               <button
                 type="button"
-                onClick={() => setIsExpanded(false)}
+                onClick={() => {
+                  setIsExpanded(false);
+                  setMode('text');
+                }}
                 className="self-end sm:self-auto p-1.5 rounded-full text-brand-sandstone/60 hover:text-brand-sandstone hover:bg-brand-dusk transition-colors"
                 title="Close composer"
               >
@@ -626,10 +731,18 @@ export default function UniversalComposer({
                 onChange={(e) => setContent(e.target.value)}
                 placeholder={
                   mediaList.length > 0
-                    ? 'Add a caption for your post...'
-                    : `What's on your mind, ${firstName}? Write a post or add photos/videos...`
+                    ? 'Add a caption for your media...'
+                    : mode === 'poll'
+                    ? 'Ask your Caribbean community a question...'
+                    : mode === 'product'
+                    ? 'Describe this product, handcrafted items, or store deal...'
+                    : mode === 'event'
+                    ? 'Describe your upcoming carnival fete, concert, or gathering...'
+                    : mode === 'fundraiser'
+                    ? 'Share why this community relief or initiative needs support...'
+                    : `What's on your mind, ${firstName}? Share stories, thoughts, photos, or videos...`
                 }
-                rows={mediaList.length > 0 ? 3 : 4}
+                rows={mediaList.length > 0 || mode !== 'text' ? 3 : 4}
                 maxLength={3000}
                 className="w-full bg-brand-twilight/80 border border-slate-800/80 rounded-2xl p-4 text-sm text-brand-sandstone placeholder-brand-sandstone/40 focus:outline-none focus:border-brand-caribbeanSea/60 focus:ring-1 focus:ring-brand-caribbeanSea/60 transition-all resize-none leading-relaxed"
               />
@@ -638,7 +751,204 @@ export default function UniversalComposer({
               </div>
             </div>
 
-            {/* Media Previews with per-media Captions */}
+            {/* ────────────────────────────────────────────────────────── */}
+            {/* ATTACHMENT PANELS FOR SPECIALIZED MODES                    */}
+            {/* ────────────────────────────────────────────────────────── */}
+
+            {/* 1. POLL PANEL */}
+            {mode === 'poll' && (
+              <div className="p-4 rounded-2xl bg-brand-twilight border border-purple-500/30 space-y-3 animate-fadeIn">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-purple-400 flex items-center gap-1.5">
+                    <BarChart2 className="w-4 h-4" /> Interactive Community Poll
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setMode('text')}
+                    className="text-brand-sandstone/40 hover:text-brand-sandstone text-xs flex items-center gap-1"
+                  >
+                    <X className="w-3.5 h-3.5" /> Remove
+                  </button>
+                </div>
+
+                <input
+                  type="text"
+                  value={pollQuestion}
+                  onChange={(e) => setPollQuestion(e.target.value)}
+                  placeholder="Poll Question (e.g. Best Carnival road march of 2026?)"
+                  className="w-full bg-brand-dusk border border-slate-800 rounded-xl px-3 py-2 text-xs text-brand-sandstone focus:outline-none focus:border-purple-500"
+                />
+
+                <div className="space-y-2">
+                  {pollOptions.map((opt, idx) => (
+                    <div key={idx} className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        value={opt}
+                        onChange={(e) => {
+                          const next = [...pollOptions];
+                          next[idx] = e.target.value;
+                          setPollOptions(next);
+                        }}
+                        placeholder={`Option ${idx + 1}`}
+                        className="flex-1 bg-brand-dusk border border-slate-800 rounded-xl px-3 py-1.5 text-xs text-brand-sandstone focus:outline-none focus:border-purple-500"
+                      />
+                      {pollOptions.length > 2 && (
+                        <button
+                          type="button"
+                          onClick={() => setPollOptions(pollOptions.filter((_, i) => i !== idx))}
+                          className="p-1.5 text-brand-sandstone/40 hover:text-rose-400"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                  {pollOptions.length < 5 && (
+                    <button
+                      type="button"
+                      onClick={() => setPollOptions([...pollOptions, ''])}
+                      className="text-xs font-bold text-purple-400 hover:text-purple-300 flex items-center gap-1 pt-1"
+                    >
+                      <Plus className="w-3.5 h-3.5" /> Add Option
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* 2. PRODUCT / STORE PANEL */}
+            {mode === 'product' && (
+              <div className="p-4 rounded-2xl bg-brand-twilight border border-emerald-500/30 space-y-3 animate-fadeIn">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-emerald-400 flex items-center gap-1.5">
+                    <ShoppingBag className="w-4 h-4" /> Feature Marketplace Product
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setMode('text')}
+                    className="text-brand-sandstone/40 hover:text-brand-sandstone text-xs flex items-center gap-1"
+                  >
+                    <X className="w-3.5 h-3.5" /> Remove
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <input
+                    type="text"
+                    value={productTitle}
+                    onChange={(e) => setProductTitle(e.target.value)}
+                    placeholder="Product Name (e.g. Handmade Jamaican Blue Mountain Roast)"
+                    className="w-full bg-brand-dusk border border-slate-800 rounded-xl px-3 py-2 text-xs text-brand-sandstone focus:outline-none focus:border-emerald-500"
+                  />
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={productPrice}
+                    onChange={(e) => setProductPrice(e.target.value)}
+                    placeholder="Price ($ USD on TUKUBI)"
+                    className="w-full bg-brand-dusk border border-slate-800 rounded-xl px-3 py-2 text-xs text-brand-sandstone focus:outline-none focus:border-emerald-500"
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* 3. EVENT PANEL */}
+            {mode === 'event' && (
+              <div className="p-4 rounded-2xl bg-brand-twilight border border-yellow-500/30 space-y-3 animate-fadeIn">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-yellow-400 flex items-center gap-1.5">
+                    <Calendar className="w-4 h-4" /> Caribbean Event / Gathering
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setMode('text')}
+                    className="text-brand-sandstone/40 hover:text-brand-sandstone text-xs flex items-center gap-1"
+                  >
+                    <X className="w-3.5 h-3.5" /> Remove
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <input
+                    type="text"
+                    value={eventTitle}
+                    onChange={(e) => setEventTitle(e.target.value)}
+                    placeholder="Event Name (e.g. Port of Spain Carnival Fete)"
+                    className="w-full bg-brand-dusk border border-slate-800 rounded-xl px-3 py-2 text-xs text-brand-sandstone focus:outline-none focus:border-yellow-500"
+                  />
+                  <input
+                    type="date"
+                    value={eventDate}
+                    onChange={(e) => setEventDate(e.target.value)}
+                    className="w-full bg-brand-dusk border border-slate-800 rounded-xl px-3 py-2 text-xs text-brand-sandstone focus:outline-none focus:border-yellow-500"
+                  />
+                  <input
+                    type="text"
+                    value={eventLocation}
+                    onChange={(e) => setEventLocation(e.target.value)}
+                    placeholder="Location / Island (e.g. Queen's Park Savannah)"
+                    className="w-full bg-brand-dusk border border-slate-800 rounded-xl px-3 py-2 text-xs text-brand-sandstone focus:outline-none focus:border-yellow-500"
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* 4. FUNDRAISER / RELIEF PANEL */}
+            {mode === 'fundraiser' && (
+              <div className="p-4 rounded-2xl bg-brand-twilight border border-rose-500/30 space-y-3 animate-fadeIn">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-rose-400 flex items-center gap-1.5">
+                    <HeartHandshake className="w-4 h-4" /> Launch Community Relief / Fundraiser
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setMode('text')}
+                    className="text-brand-sandstone/40 hover:text-brand-sandstone text-xs flex items-center gap-1"
+                  >
+                    <X className="w-3.5 h-3.5" /> Remove
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <input
+                    type="text"
+                    value={fundraiserTitle}
+                    onChange={(e) => setFundraiserTitle(e.target.value)}
+                    placeholder="Cause / Initiative Title (e.g. Hurricane Preparedness Relief)"
+                    className="w-full bg-brand-dusk border border-slate-800 rounded-xl px-3 py-2 text-xs text-brand-sandstone focus:outline-none focus:border-rose-500"
+                  />
+                  <input
+                    type="number"
+                    value={fundraiserTarget}
+                    onChange={(e) => setFundraiserTarget(e.target.value)}
+                    placeholder="Funding Goal ($ USD on TUKUBI)"
+                    className="w-full bg-brand-dusk border border-slate-800 rounded-xl px-3 py-2 text-xs text-brand-sandstone focus:outline-none focus:border-rose-500"
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* 5. CIVIC ALERT CHECKBOX (Government / Institution accounts) */}
+            {(accountType === 'government' || accountType === 'institution') && (
+              <div className="flex items-center justify-between p-3 rounded-2xl bg-amber-950/30 border border-brand-goldenHour/30">
+                <div className="flex items-center gap-2">
+                  <Shield className="w-4 h-4 text-brand-goldenHour" />
+                  <div>
+                    <p className="text-xs font-bold text-amber-300">Mark as Official Civic Advisory</p>
+                    <p className="text-[10px] text-brand-sandstone/60">High priority alert for residents and diaspora</p>
+                  </div>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={isOfficialAlert}
+                  onChange={(e) => setIsOfficialAlert(e.target.checked)}
+                  className="w-4 h-4 accent-brand-goldenHour rounded cursor-pointer"
+                />
+              </div>
+            )}
+
+            {/* Media Previews Grid with per-media Captions */}
             {mediaList.length > 0 && (
               <div className="space-y-3 p-3 rounded-2xl bg-brand-twilight/80 border border-slate-800">
                 <div className="flex items-center justify-between text-xs font-bold text-brand-sandstone/80 px-1">
@@ -676,7 +986,6 @@ export default function UniversalComposer({
                         </span>
                       </div>
 
-                      {/* Optional caption for this media item */}
                       <input
                         type="text"
                         value={item.caption || ''}
@@ -736,130 +1045,157 @@ export default function UniversalComposer({
               </div>
             )}
 
-            {/* Action Bar Footer */}
-            <div className="flex items-center justify-between pt-2 border-t border-slate-800/80">
-              {/* Media selection buttons */}
-              <div className="flex items-center gap-1 sm:gap-2">
-                {/* Photo Trigger */}
-                <div className="relative">
-                  <button
-                    type="button"
-                    onClick={() => setActiveMediaDropdown(activeMediaDropdown === 'photo' ? null : 'photo')}
-                    className="p-2 rounded-xl text-slate-300 hover:text-brand-sunriseCoral hover:bg-brand-twilight transition-colors flex items-center gap-1 text-xs font-bold"
-                    title="Add Photo"
-                  >
-                    <ImageIcon className="w-4 h-4 text-brand-sunriseCoral" />
-                    <span className="hidden sm:inline">Photo</span>
-                  </button>
-                  {activeMediaDropdown === 'photo' && (
-                    <div className="absolute left-0 bottom-10 z-40 w-44 bg-brand-dusk border border-slate-700 rounded-2xl shadow-xl p-1.5 space-y-1 animate-fadeIn">
-                      <button
-                        type="button"
-                        onClick={() => openCameraFor('photo')}
-                        className="w-full text-left px-3 py-2 rounded-xl text-xs text-slate-200 hover:bg-white/10 flex items-center gap-2 font-semibold"
-                      >
-                        <Camera className="w-4 h-4 text-brand-sunriseCoral" />
-                        <span>Take Photo</span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          photoInputRef.current?.click();
-                          setActiveMediaDropdown(null);
-                        }}
-                        className="w-full text-left px-3 py-2 rounded-xl text-xs text-slate-200 hover:bg-white/10 flex items-center gap-2 font-semibold"
-                      >
-                        <FolderOpen className="w-4 h-4 text-brand-caribbeanSea" />
-                        <span>Choose From Device</span>
-                      </button>
-                    </div>
-                  )}
-                </div>
+            {/* Action Bar Footer (All options directly clickable) */}
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 border-t border-slate-800/80">
+              {/* Attachment Mode Switchers */}
+              <div className="flex items-center gap-1.5 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0 scrollbar-none">
+                {/* Media */}
+                <button
+                  type="button"
+                  onClick={() => photoInputRef.current?.click()}
+                  title="Add Photos from Device"
+                  className={`p-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all ${
+                    mediaList.length > 0
+                      ? 'bg-brand-sunriseCoral/20 text-brand-sunriseCoral border border-brand-sunriseCoral/30'
+                      : 'text-brand-sandstone/70 hover:text-brand-sunriseCoral hover:bg-brand-twilight'
+                  }`}
+                >
+                  <ImageIcon className="w-4 h-4 text-brand-sunriseCoral" />
+                  <span className="hidden md:inline">Photo</span>
+                </button>
 
-                {/* Video Trigger */}
-                <div className="relative">
-                  <button
-                    type="button"
-                    onClick={() => setActiveMediaDropdown(activeMediaDropdown === 'video' ? null : 'video')}
-                    className="p-2 rounded-xl text-slate-300 hover:text-rose-400 hover:bg-brand-twilight transition-colors flex items-center gap-1 text-xs font-bold"
-                    title="Add Video"
-                  >
-                    <Video className="w-4 h-4 text-rose-400" />
-                    <span className="hidden sm:inline">Video</span>
-                  </button>
-                  {activeMediaDropdown === 'video' && (
-                    <div className="absolute left-0 bottom-10 z-40 w-44 bg-brand-dusk border border-slate-700 rounded-2xl shadow-xl p-1.5 space-y-1 animate-fadeIn">
-                      <button
-                        type="button"
-                        onClick={() => openCameraFor('video')}
-                        className="w-full text-left px-3 py-2 rounded-xl text-xs text-slate-200 hover:bg-white/10 flex items-center gap-2 font-semibold"
-                      >
-                        <Camera className="w-4 h-4 text-rose-400" />
-                        <span>Record Video</span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          videoInputRef.current?.click();
-                          setActiveMediaDropdown(null);
-                        }}
-                        className="w-full text-left px-3 py-2 rounded-xl text-xs text-slate-200 hover:bg-white/10 flex items-center gap-2 font-semibold"
-                      >
-                        <FolderOpen className="w-4 h-4 text-brand-caribbeanSea" />
-                        <span>Choose From Device</span>
-                      </button>
-                    </div>
-                  )}
-                </div>
+                {/* Video */}
+                <button
+                  type="button"
+                  onClick={() => videoInputRef.current?.click()}
+                  title="Add Video from Device"
+                  className="p-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all text-brand-sandstone/70 hover:text-rose-400 hover:bg-brand-twilight"
+                >
+                  <Video className="w-4 h-4 text-rose-400" />
+                  <span className="hidden md:inline">Video</span>
+                </button>
 
-                {/* Reel Trigger */}
-                <div className="relative">
-                  <button
-                    type="button"
-                    onClick={() => setActiveMediaDropdown(activeMediaDropdown === 'reel' ? null : 'reel')}
-                    className="p-2 rounded-xl text-slate-300 hover:text-amber-300 hover:bg-brand-twilight transition-colors flex items-center gap-1 text-xs font-bold"
-                    title="Create Reel"
-                  >
-                    <Film className="w-4 h-4 text-brand-goldenHour" />
-                    <span className="hidden sm:inline">Reel</span>
-                  </button>
-                  {activeMediaDropdown === 'reel' && (
-                    <div className="absolute left-0 bottom-10 z-40 w-44 bg-brand-dusk border border-slate-700 rounded-2xl shadow-xl p-1.5 space-y-1 animate-fadeIn">
-                      <button
-                        type="button"
-                        onClick={() => openCameraFor('reel')}
-                        className="w-full text-left px-3 py-2 rounded-xl text-xs text-slate-200 hover:bg-white/10 flex items-center gap-2 font-semibold"
-                      >
-                        <Camera className="w-4 h-4 text-brand-goldenHour" />
-                        <span>Record Reel (9:16)</span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          reelInputRef.current?.click();
-                          setActiveMediaDropdown(null);
-                        }}
-                        className="w-full text-left px-3 py-2 rounded-xl text-xs text-slate-200 hover:bg-white/10 flex items-center gap-2 font-semibold"
-                      >
-                        <FolderOpen className="w-4 h-4 text-brand-caribbeanSea" />
-                        <span>Choose Video</span>
-                      </button>
-                    </div>
-                  )}
-                </div>
+                {/* Reel */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsReel(true);
+                    setMode('reel');
+                    reelInputRef.current?.click();
+                  }}
+                  title="Upload Short Vertical Reel"
+                  className={`p-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all ${
+                    isReel
+                      ? 'bg-brand-goldenHour/20 text-amber-300 border border-brand-goldenHour/30'
+                      : 'text-brand-sandstone/70 hover:text-amber-300 hover:bg-brand-twilight'
+                  }`}
+                >
+                  <Film className="w-4 h-4 text-brand-goldenHour" />
+                  <span className="hidden md:inline">Reel</span>
+                </button>
+
+                {/* Live Camera */}
+                <button
+                  type="button"
+                  onClick={() => openCameraFor('photo')}
+                  title="Capture from Camera"
+                  className="p-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all text-brand-sandstone/70 hover:text-brand-caribbeanSea hover:bg-brand-twilight"
+                >
+                  <Camera className="w-4 h-4 text-brand-caribbeanSea" />
+                  <span className="hidden lg:inline">Camera</span>
+                </button>
+
+                {/* Poll */}
+                <button
+                  type="button"
+                  onClick={() => setMode(mode === 'poll' ? 'text' : 'poll')}
+                  title="Create Interactive Poll"
+                  className={`p-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all ${
+                    mode === 'poll'
+                      ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30'
+                      : 'text-brand-sandstone/70 hover:text-purple-400 hover:bg-brand-twilight'
+                  }`}
+                >
+                  <BarChart2 className="w-4 h-4 text-purple-400" />
+                  <span className="hidden md:inline">Poll</span>
+                </button>
+
+                {/* Store */}
+                <button
+                  type="button"
+                  onClick={() => setMode(mode === 'product' ? 'text' : 'product')}
+                  title="Feature a Store Product"
+                  className={`p-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all ${
+                    mode === 'product'
+                      ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                      : 'text-brand-sandstone/70 hover:text-emerald-400 hover:bg-brand-twilight'
+                  }`}
+                >
+                  <ShoppingBag className="w-4 h-4 text-emerald-400" />
+                  <span className="hidden md:inline">Store</span>
+                </button>
+
+                {/* Event */}
+                <button
+                  type="button"
+                  onClick={() => setMode(mode === 'event' ? 'text' : 'event')}
+                  title="Attach Upcoming Event"
+                  className={`p-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all ${
+                    mode === 'event'
+                      ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30'
+                      : 'text-brand-sandstone/70 hover:text-yellow-400 hover:bg-brand-twilight'
+                  }`}
+                >
+                  <Calendar className="w-4 h-4 text-yellow-400" />
+                  <span className="hidden md:inline">Event</span>
+                </button>
+
+                {/* Fundraiser */}
+                <button
+                  type="button"
+                  onClick={() => setMode(mode === 'fundraiser' ? 'text' : 'fundraiser')}
+                  title="Launch Community Relief Fundraiser"
+                  className={`p-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all ${
+                    mode === 'fundraiser'
+                      ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30'
+                      : 'text-brand-sandstone/70 hover:text-rose-400 hover:bg-brand-twilight'
+                  }`}
+                >
+                  <HeartHandshake className="w-4 h-4 text-rose-400" />
+                  <span className="hidden md:inline">Relief</span>
+                </button>
+
+                {/* AI Creator Assistant */}
+                <button
+                  type="button"
+                  onClick={handleAiAssist}
+                  title="AI Creator Assistant: Polish & Add Hashtags"
+                  className="p-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all text-brand-goldenHour bg-brand-goldenHour/10 border border-brand-goldenHour/30 hover:bg-brand-goldenHour/20"
+                >
+                  <Sparkles className="w-4 h-4 text-brand-goldenHour" />
+                  <span className="hidden lg:inline">AI Assist</span>
+                </button>
               </div>
 
               {/* Submit Button */}
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 w-full sm:w-auto">
                 <button
                   type="submit"
-                  disabled={isSubmitting || (!content.trim() && mediaList.length === 0)}
-                  className="bg-gradient-to-r from-brand-caribbeanSea via-brand-sunriseCoral to-brand-goldenHour hover:opacity-95 disabled:opacity-40 text-slate-950 font-black px-6 py-2.5 rounded-full text-xs transition-all shadow-lg flex items-center gap-2"
+                  disabled={
+                    isSubmitting ||
+                    (!content.trim() &&
+                      mediaList.length === 0 &&
+                      !pollQuestion.trim() &&
+                      !productTitle.trim() &&
+                      !eventTitle.trim() &&
+                      !fundraiserTitle.trim())
+                  }
+                  className="w-full sm:w-auto bg-gradient-to-r from-brand-caribbeanSea via-brand-sunriseCoral to-brand-goldenHour hover:opacity-95 disabled:opacity-40 text-slate-950 font-black px-6 py-2.5 rounded-2xl text-xs flex items-center justify-center gap-2 transition-all shadow-lg shadow-brand-caribbeanSea/20 cursor-pointer"
                 >
                   {isSubmitting ? (
                     <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      <span>Publishing...</span>
+                      <Loader2 className="w-4 h-4 animate-spin text-slate-950" />
+                      <span>{uploadProgressText || 'Publishing...'}</span>
                     </>
                   ) : (
                     <>
@@ -870,6 +1206,14 @@ export default function UniversalComposer({
                 </button>
               </div>
             </div>
+
+            {/* Success Notification */}
+            {successMessage && (
+              <div className="p-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs font-bold flex items-center gap-2 animate-fadeIn">
+                <CheckCircle className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+                <span>{successMessage}</span>
+              </div>
+            )}
           </form>
         )}
       </div>
