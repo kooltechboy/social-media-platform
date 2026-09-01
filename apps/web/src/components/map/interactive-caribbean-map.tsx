@@ -28,15 +28,22 @@ import {
   Share2,
   Check,
   Radio,
+  ExternalLink,
+  Tag,
+  Coins,
+  Clock,
+  BookOpen,
 } from 'lucide-react';
 import {
   CARIBBEAN_GEO_ENTITIES,
   CARIBBEAN_GEO_BY_ISO,
+  CLASSIFICATION_COLORS,
   type CaribbeanGeoEntity,
+  type CaribbeanClassification,
 } from '../../lib/constants/caribbean-geography';
 
 const REGIONS = [
-  'All',
+  'All Regions',
   'Greater Antilles',
   'Lesser Antilles (Leeward)',
   'Lesser Antilles (Windward)',
@@ -44,6 +51,16 @@ const REGIONS = [
   'Guianas & Mainland Coast',
   'Diaspora Hub',
 ] as const;
+
+const CLASSIFICATIONS: ('All Classifications' | CaribbeanClassification)[] = [
+  'All Classifications',
+  'Independent Country',
+  'Constituent Country',
+  'Dependent Territory',
+  'Caribbean Netherlands',
+  'Mainland Caribbean',
+  'Diaspora Hub',
+];
 
 export default function InteractiveCaribbeanMap() {
   const searchParams = useSearchParams();
@@ -56,10 +73,12 @@ export default function InteractiveCaribbeanMap() {
     CARIBBEAN_GEO_BY_ISO[initialIso] || CARIBBEAN_GEO_ENTITIES[3] // Default Jamaica
   );
   const [viewMode, setViewMode] = useState<'map' | 'grid'>(initialView);
-  const [activeRegion, setActiveRegion] = useState<string>('All');
+  const [activeRegion, setActiveRegion] = useState<string>('All Regions');
+  const [activeClassification, setActiveClassification] = useState<string>('All Classifications');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [hoveredEntity, setHoveredEntity] = useState<CaribbeanGeoEntity | null>(null);
   const [copiedLink, setCopiedLink] = useState(false);
+  const [isMobileSheetOpen, setIsMobileSheetOpen] = useState(false);
 
   // SVG Map Canvas Pan & Zoom State
   const [zoom, setZoom] = useState(1);
@@ -82,9 +101,12 @@ export default function InteractiveCaribbeanMap() {
 
   // Handle territory selection
   const handleSelectEntity = useCallback(
-    (entity: CaribbeanGeoEntity) => {
+    (entity: CaribbeanGeoEntity, openMobileSheet: boolean = true) => {
       setSelectedEntity(entity);
       updateUrlState(entity.iso, viewMode);
+      if (openMobileSheet) {
+        setIsMobileSheetOpen(true);
+      }
     },
     [viewMode, updateUrlState]
   );
@@ -164,21 +186,25 @@ export default function InteractiveCaribbeanMap() {
     };
   }, [selectedEntity.iso]);
 
-  // Filtered entities based on region and search query
+  // Filtered entities based on region, classification, and search query
   const filteredEntities = useMemo(() => {
     return CARIBBEAN_GEO_ENTITIES.filter((entity) => {
-      const matchesRegion = activeRegion === 'All' || entity.region === activeRegion;
+      const matchesRegion = activeRegion === 'All Regions' || entity.region === activeRegion;
+      const matchesClassification =
+        activeClassification === 'All Classifications' || entity.classification === activeClassification;
       const q = searchQuery.toLowerCase().trim();
       const matchesSearch =
         !q ||
         entity.name.toLowerCase().includes(q) ||
         entity.shortName.toLowerCase().includes(q) ||
+        (entity.officialName && entity.officialName.toLowerCase().includes(q)) ||
         entity.capital.toLowerCase().includes(q) ||
         entity.iso.toLowerCase().includes(q) ||
-        entity.trendingTag.toLowerCase().includes(q);
-      return matchesRegion && matchesSearch;
+        entity.trendingTag.toLowerCase().includes(q) ||
+        entity.classification.toLowerCase().includes(q);
+      return matchesRegion && matchesClassification && matchesSearch;
     });
-  }, [activeRegion, searchQuery]);
+  }, [activeRegion, activeClassification, searchQuery]);
 
   // Pan and Drag Handlers
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -192,7 +218,7 @@ export default function InteractiveCaribbeanMap() {
     const newX = e.clientX - dragStart.x;
     const newY = e.clientY - dragStart.y;
     // Bound panning range
-    const maxPan = 400 * zoom;
+    const maxPan = 450 * zoom;
     setPan({
       x: Math.max(-maxPan, Math.min(maxPan, newX)),
       y: Math.max(-maxPan, Math.min(maxPan, newY)),
@@ -218,7 +244,6 @@ export default function InteractiveCaribbeanMap() {
 
   const handleRecenterOnSelected = () => {
     setZoom(1.4);
-    // Center selected node (canvas is 1000x750)
     const targetX = (500 - selectedEntity.x) * 1.4;
     const targetY = (375 - selectedEntity.y) * 1.4;
     setPan({ x: targetX, y: targetY });
@@ -230,7 +255,7 @@ export default function InteractiveCaribbeanMap() {
       try {
         await navigator.share({
           title: `${selectedEntity.flag} ${selectedEntity.name} on Tukubi Caribbean Map`,
-          text: `Explore ${selectedEntity.name} creators, culture, events and diaspora connections.`,
+          text: `Explore ${selectedEntity.name} (${selectedEntity.classification}) on TUKUBI — Caribbean creators, businesses, events & diaspora.`,
           url,
         });
         return;
@@ -259,10 +284,18 @@ export default function InteractiveCaribbeanMap() {
     }
   };
 
+  const classificationStyle = CLASSIFICATION_COLORS[selectedEntity.classification] || {
+    bg: 'bg-brand-caribbeanSea/20',
+    text: 'text-brand-caribbeanSea',
+    border: 'border-brand-caribbeanSea/40',
+    glow: '#00B4D8',
+    badge: selectedEntity.classification,
+  };
+
   return (
     <div
       ref={containerRef}
-      className={`min-h-screen bg-[#090D16] text-brand-sandstone p-4 md:p-6 max-w-7xl mx-auto space-y-6 select-none ${
+      className={`min-h-screen bg-[#090D16] text-brand-sandstone p-4 md:p-6 max-w-7xl mx-auto space-y-5 select-none ${
         isFullscreen ? 'fixed inset-0 z-50 p-6 bg-[#090D16] overflow-y-auto' : ''
       }`}
     >
@@ -272,11 +305,11 @@ export default function InteractiveCaribbeanMap() {
           <div className="flex items-center gap-2.5">
             <span className="w-3 h-3 rounded-full bg-brand-caribbeanSea animate-ping" />
             <h1 className="text-2xl md:text-3xl font-black text-brand-sandstone flex items-center gap-3">
-              <Compass className="w-8 h-8 text-brand-caribbeanSea" /> Caribbean Discovery Map
+              <Compass className="w-8 h-8 text-brand-caribbeanSea shrink-0" /> Caribbean Discovery Map
             </h1>
           </div>
           <p className="text-xs md:text-sm text-brand-sandstone/60 mt-1">
-            Interactive geospatial discovery across 32+ islands, nations, overseas territories, and global diaspora hubs.
+            Geospatial discovery engine connecting {CARIBBEAN_GEO_ENTITIES.length} Caribbean nations, overseas territories, constituent countries, special municipalities, and global diaspora hubs.
           </p>
         </div>
 
@@ -288,13 +321,14 @@ export default function InteractiveCaribbeanMap() {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search island, capital, ISO..."
+              placeholder="Search island, capital, status, ISO..."
               className="w-full bg-brand-dusk border border-slate-800 rounded-2xl pl-10 pr-8 py-2 text-xs text-brand-sandstone placeholder-brand-sandstone/40 focus:outline-none focus:border-brand-caribbeanSea transition-colors"
             />
             {searchQuery && (
               <button
                 type="button"
                 onClick={() => setSearchQuery('')}
+                aria-label="Clear search"
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-brand-sandstone/40 hover:text-brand-sandstone"
               >
                 <X className="w-3.5 h-3.5" />
@@ -331,23 +365,55 @@ export default function InteractiveCaribbeanMap() {
         </div>
       </div>
 
-      {/* ── Region Filter Tabs ── */}
-      <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none" role="tablist">
-        {REGIONS.map((reg) => (
-          <button
-            key={reg}
-            role="tab"
-            aria-selected={activeRegion === reg}
-            onClick={() => setActiveRegion(reg)}
-            className={`px-4 py-1.5 rounded-2xl text-xs font-black whitespace-nowrap transition-all ${
-              activeRegion === reg
-                ? 'bg-brand-caribbeanSea text-slate-950 shadow-md shadow-brand-caribbeanSea/20 ring-1 ring-brand-caribbeanSea'
-                : 'bg-brand-dusk text-brand-sandstone/60 hover:text-brand-sandstone border border-slate-800'
-            }`}
-          >
-            {reg}
-          </button>
-        ))}
+      {/* ── Dual Filter System: Region Tabs & Political Status Badges ── */}
+      <div className="space-y-2.5">
+        {/* 1. Sub-Region Filter Tabs */}
+        <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none" role="tablist" aria-label="Filter by geographic region">
+          {REGIONS.map((reg) => (
+            <button
+              key={reg}
+              role="tab"
+              aria-selected={activeRegion === reg}
+              onClick={() => setActiveRegion(reg)}
+              className={`px-3.5 py-1.5 rounded-2xl text-xs font-black whitespace-nowrap transition-all ${
+                activeRegion === reg
+                  ? 'bg-brand-caribbeanSea text-slate-950 shadow-md shadow-brand-caribbeanSea/20 ring-1 ring-brand-caribbeanSea'
+                  : 'bg-brand-dusk text-brand-sandstone/60 hover:text-brand-sandstone border border-slate-800'
+              }`}
+            >
+              {reg}
+            </button>
+          ))}
+        </div>
+
+        {/* 2. Political Classification Badges */}
+        <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none items-center" role="tablist" aria-label="Filter by political classification">
+          <span className="text-[11px] font-bold text-brand-sandstone/40 uppercase tracking-wider shrink-0 mr-1 flex items-center gap-1">
+            <Tag className="w-3 h-3" /> Status:
+          </span>
+          {CLASSIFICATIONS.map((cls) => {
+            const isSelected = activeClassification === cls;
+            const style = cls !== 'All Classifications' ? CLASSIFICATION_COLORS[cls] : null;
+
+            return (
+              <button
+                key={cls}
+                role="tab"
+                aria-selected={isSelected}
+                onClick={() => setActiveClassification(cls)}
+                className={`px-3 py-1 rounded-xl text-[11px] font-bold whitespace-nowrap transition-all border ${
+                  isSelected
+                    ? 'bg-brand-goldenHour text-slate-950 border-brand-goldenHour shadow-sm font-extrabold'
+                    : style
+                    ? `${style.bg} ${style.text} ${style.border} hover:brightness-125`
+                    : 'bg-brand-dusk text-brand-sandstone/60 border-slate-800 hover:text-brand-sandstone'
+                }`}
+              >
+                {cls}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {/* ── Main Map Canvas & Territory Detail Drawer Grid ── */}
@@ -355,7 +421,7 @@ export default function InteractiveCaribbeanMap() {
         {/* Left Column: Interactive Map Canvas or Directory Grid (Col 8) */}
         <div className="lg:col-span-8 space-y-4">
           {viewMode === 'map' ? (
-            <div className="relative w-full h-[580px] bg-[#060A13] border border-slate-800 rounded-3xl overflow-hidden shadow-2xl">
+            <div className="relative w-full h-[580px] md:h-[620px] bg-[#060A13] border border-slate-800 rounded-3xl overflow-hidden shadow-2xl">
               {/* Atmospheric Gradient Backgrounds */}
               <div className="absolute inset-0 bg-gradient-to-t from-brand-sunriseCoral/10 via-transparent to-brand-sunsetPurple/10 pointer-events-none" />
               <div className="absolute top-1/3 left-1/3 w-[500px] h-[500px] rounded-full bg-brand-caribbeanSea/8 blur-[120px] pointer-events-none" />
@@ -366,7 +432,7 @@ export default function InteractiveCaribbeanMap() {
                   type="button"
                   onClick={handleZoomIn}
                   aria-label="Zoom in"
-                  className="p-2 text-slate-200 hover:text-brand-caribbeanSea hover:bg-slate-800 rounded-xl transition-colors"
+                  className="p-2 text-slate-200 hover:text-brand-caribbeanSea hover:bg-slate-800 rounded-xl transition-colors min-w-[36px] min-h-[36px] flex items-center justify-center"
                 >
                   <Plus className="w-4 h-4" />
                 </button>
@@ -374,7 +440,7 @@ export default function InteractiveCaribbeanMap() {
                   type="button"
                   onClick={handleZoomOut}
                   aria-label="Zoom out"
-                  className="p-2 text-slate-200 hover:text-brand-caribbeanSea hover:bg-slate-800 rounded-xl transition-colors"
+                  className="p-2 text-slate-200 hover:text-brand-caribbeanSea hover:bg-slate-800 rounded-xl transition-colors min-w-[36px] min-h-[36px] flex items-center justify-center"
                 >
                   <Minus className="w-4 h-4" />
                 </button>
@@ -382,7 +448,7 @@ export default function InteractiveCaribbeanMap() {
                   type="button"
                   onClick={handleResetMap}
                   aria-label="Reset zoom and center"
-                  className="p-2 text-slate-200 hover:text-brand-goldenHour hover:bg-slate-800 rounded-xl transition-colors border-t border-slate-700/50"
+                  className="p-2 text-slate-200 hover:text-brand-goldenHour hover:bg-slate-800 rounded-xl transition-colors border-t border-slate-700/50 min-w-[36px] min-h-[36px] flex items-center justify-center"
                   title="Reset view"
                 >
                   <RotateCcw className="w-4 h-4" />
@@ -391,7 +457,7 @@ export default function InteractiveCaribbeanMap() {
                   type="button"
                   onClick={handleRecenterOnSelected}
                   aria-label="Center on selected island"
-                  className="p-2 text-slate-200 hover:text-brand-sunriseCoral hover:bg-slate-800 rounded-xl transition-colors"
+                  className="p-2 text-slate-200 hover:text-brand-sunriseCoral hover:bg-slate-800 rounded-xl transition-colors min-w-[36px] min-h-[36px] flex items-center justify-center"
                   title="Focus selected island"
                 >
                   <MapPin className="w-4 h-4" />
@@ -400,27 +466,27 @@ export default function InteractiveCaribbeanMap() {
                   type="button"
                   onClick={toggleFullscreen}
                   aria-label="Toggle fullscreen mode"
-                  className="p-2 text-slate-200 hover:text-brand-caribbeanSea hover:bg-slate-800 rounded-xl transition-colors border-t border-slate-700/50"
+                  className="p-2 text-slate-200 hover:text-brand-caribbeanSea hover:bg-slate-800 rounded-xl transition-colors border-t border-slate-700/50 min-w-[36px] min-h-[36px] flex items-center justify-center"
                 >
                   {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
                 </button>
               </div>
 
-              {/* Live HUD Indicator Top-Left */}
+              {/* Live Dynamic Count Indicator Top-Left */}
               <div className="absolute top-4 left-4 z-20 pointer-events-none flex flex-col gap-1.5">
                 <div className="px-3 py-1 rounded-xl bg-brand-dusk/90 backdrop-blur-md border border-slate-700/80 flex items-center gap-2 text-[11px] shadow-lg">
                   <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
                   <span className="font-extrabold text-white">{filteredEntities.length}</span>
-                  <span className="text-brand-sandstone/60">Territories Active</span>
+                  <span className="text-brand-sandstone/60">Caribbean Places Active</span>
                 </div>
-                <div className="text-[10px] text-brand-sandstone/40 bg-black/40 px-2.5 py-0.5 rounded-lg backdrop-blur-sm">
-                  Drag to pan • Scroll / +/- to zoom • Tap to explore
+                <div className="hidden sm:block text-[10px] text-brand-sandstone/40 bg-black/40 px-2.5 py-0.5 rounded-lg backdrop-blur-sm">
+                  Drag to pan • Scroll / +/- to zoom • Tap to open hub
                 </div>
               </div>
 
               {/* ── Interactive SVG Canvas ── */}
               <div
-                className="w-full h-full cursor-grab active:cursor-grabbing"
+                className="w-full h-full cursor-grab active:cursor-grabbing touch-none"
                 onMouseDown={handleMouseDown}
                 onMouseMove={handleMouseMove}
                 onMouseUp={handleMouseUp}
@@ -457,7 +523,7 @@ export default function InteractiveCaribbeanMap() {
                   {/* Flight & Cultural Connection Arcs */}
                   <g opacity="0.65">
                     {filteredEntities
-                      .filter((e) => e.region === 'Diaspora Hub' && e.diasporaLinks)
+                      .filter((e) => e.classification === 'Diaspora Hub' && e.diasporaLinks)
                       .flatMap((diaspora) =>
                         (diaspora.diasporaLinks || []).map((targetIso) => {
                           const targetIsland = CARIBBEAN_GEO_BY_ISO[targetIso];
@@ -487,6 +553,7 @@ export default function InteractiveCaribbeanMap() {
                     const isSelected = selectedEntity.iso === entity.iso;
                     const isHovered = hoveredEntity?.iso === entity.iso;
                     const isProminent = isSelected || isHovered;
+                    const entityColors = CLASSIFICATION_COLORS[entity.classification] || CLASSIFICATION_COLORS['Independent Country'];
 
                     return (
                       <g
@@ -494,22 +561,22 @@ export default function InteractiveCaribbeanMap() {
                         className="cursor-pointer group focus:outline-none"
                         tabIndex={0}
                         role="button"
-                        aria-label={`${entity.name} (${entity.iso})`}
-                        onClick={() => handleSelectEntity(entity)}
+                        aria-label={`${entity.name} (${entity.iso}) — ${entity.classification}`}
+                        onClick={() => handleSelectEntity(entity, true)}
                         onKeyDown={(e) => {
                           if (e.key === 'Enter' || e.key === ' ') {
                             e.preventDefault();
-                            handleSelectEntity(entity);
+                            handleSelectEntity(entity, true);
                           }
                         }}
                         onMouseEnter={() => setHoveredEntity(entity)}
                         onMouseLeave={() => setHoveredEntity(null)}
                       >
-                        {/* Enlarged Transparent Touch/Click Hit Area (Enables effortless clicking on small islands) */}
+                        {/* Enlarged Transparent Touch/Click Hit Area (Minimum 44px hit radius) */}
                         <circle
                           cx={entity.x}
                           cy={entity.y}
-                          r={Math.max(entity.r * 2.5, 20)}
+                          r={Math.max(entity.r * 3, 24)}
                           fill="transparent"
                           className="pointer-events-auto"
                         />
@@ -519,8 +586,8 @@ export default function InteractiveCaribbeanMap() {
                           cx={entity.x}
                           cy={entity.y}
                           r={entity.r * (isProminent ? 4.5 : 2.5)}
-                          fill={isSelected ? '#FF7A59' : entity.region === 'Diaspora Hub' ? '#FFB347' : '#00B4D8'}
-                          fillOpacity={isProminent ? 0.35 : 0.08}
+                          fill={entityColors.glow}
+                          fillOpacity={isProminent ? 0.4 : 0.12}
                           className="transition-all duration-300"
                         />
 
@@ -529,7 +596,7 @@ export default function InteractiveCaribbeanMap() {
                           cx={entity.x}
                           cy={entity.y}
                           r={entity.r * (isProminent ? 2.8 : 1.7)}
-                          fill={isSelected ? '#FF7A59' : '#FFB347'}
+                          fill={isSelected ? '#FF7A59' : entityColors.glow}
                           fillOpacity={isProminent ? 0.6 : 0.25}
                           className="animate-pulse"
                           style={{
@@ -542,15 +609,7 @@ export default function InteractiveCaribbeanMap() {
                           cx={entity.x}
                           cy={entity.y}
                           r={entity.r * (isSelected ? 1.3 : 1)}
-                          fill={
-                            isSelected
-                              ? '#FF7A59'
-                              : isHovered
-                              ? '#FFB347'
-                              : entity.region === 'Diaspora Hub'
-                              ? '#FFB347'
-                              : '#00B4D8'
-                          }
+                          fill={isSelected ? '#FF7A59' : entityColors.glow}
                           stroke="#FFFFFF"
                           strokeWidth={isProminent ? 2.5 : 1}
                           filter="url(#nodeGlow)"
@@ -564,7 +623,7 @@ export default function InteractiveCaribbeanMap() {
                             y={entity.y + entity.r + 14}
                             textAnchor="middle"
                             fill={isSelected ? '#FFB347' : '#FDF2E9'}
-                            fillOpacity={isProminent ? 1 : 0.85}
+                            fillOpacity={isProminent ? 1 : 0.9}
                             fontSize={isProminent ? '12' : '10.5'}
                             fontWeight={isProminent ? '800' : '600'}
                             letterSpacing="0.03em"
@@ -602,7 +661,7 @@ export default function InteractiveCaribbeanMap() {
                         <span>•</span>
                         <span>{hoveredEntity.capital}</span>
                         <span>•</span>
-                        <span className="text-emerald-400 font-semibold">{hoveredEntity.region}</span>
+                        <span className="text-emerald-400 font-semibold">{hoveredEntity.classification}</span>
                       </div>
                     </div>
                   </div>
@@ -611,13 +670,15 @@ export default function InteractiveCaribbeanMap() {
             </div>
           ) : (
             /* Directory Grid View */
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 max-h-[580px] overflow-y-auto pr-1">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 max-h-[620px] overflow-y-auto pr-1">
               {filteredEntities.map((node) => {
                 const isSelected = selectedEntity.iso === node.iso;
+                const nodeColors = CLASSIFICATION_COLORS[node.classification] || CLASSIFICATION_COLORS['Independent Country'];
+
                 return (
                   <div
                     key={node.iso}
-                    onClick={() => handleSelectEntity(node)}
+                    onClick={() => handleSelectEntity(node, true)}
                     className={`p-4 rounded-3xl border transition-all cursor-pointer flex flex-col justify-between space-y-3 shadow-lg group ${
                       isSelected
                         ? 'bg-brand-caribbeanSea/15 border-brand-caribbeanSea ring-2 ring-brand-caribbeanSea/30'
@@ -628,23 +689,28 @@ export default function InteractiveCaribbeanMap() {
                       <span className="text-3xl group-hover:scale-110 transition-transform">
                         {node.flag}
                       </span>
-                      <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-brand-twilight text-brand-caribbeanSea border border-slate-800">
-                        {node.iso}
-                      </span>
+                      <div className="flex items-center gap-1.5">
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${nodeColors.bg} ${nodeColors.text} ${nodeColors.border}`}>
+                          {node.classification}
+                        </span>
+                        <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-brand-twilight text-brand-caribbeanSea border border-slate-800">
+                          {node.iso}
+                        </span>
+                      </div>
                     </div>
 
                     <div>
                       <h3 className="font-black text-sm text-brand-sandstone group-hover:text-brand-caribbeanSea transition-colors line-clamp-1">
                         {node.name}
                       </h3>
-                      <p className="text-[11px] font-bold text-brand-goldenHour mt-0.5">
+                      <p className="text-[11px] font-bold text-brand-goldenHour mt-0.5 line-clamp-1">
                         {node.trendingTag}
                       </p>
                     </div>
 
                     <div className="pt-2 border-t border-slate-800/60 flex items-center justify-between text-[11px] text-brand-sandstone/60">
                       <span>Capital: {node.capital}</span>
-                      <span className="text-brand-caribbeanSea font-semibold">{node.region}</span>
+                      <span className="text-slate-300 font-semibold">{node.region}</span>
                     </div>
                   </div>
                 );
@@ -653,8 +719,8 @@ export default function InteractiveCaribbeanMap() {
           )}
         </div>
 
-        {/* Right Column: Selected Territory Inspector Drawer (Col 4) */}
-        <div className="lg:col-span-4 space-y-5">
+        {/* Right Column (Desktop Inspector Drawer): Col 4 */}
+        <div className="hidden lg:block lg:col-span-4 space-y-5">
           <div className="bg-brand-dusk/95 border border-slate-800 rounded-3xl p-6 shadow-2xl space-y-5 relative overflow-hidden">
             <div className="absolute top-0 right-0 left-0 h-1 bg-gradient-to-r from-brand-caribbeanSea via-brand-goldenHour to-brand-sunriseCoral" />
 
@@ -669,7 +735,10 @@ export default function InteractiveCaribbeanMap() {
                 >
                   {copiedLink ? <Check className="w-4 h-4 text-emerald-400" /> : <Share2 className="w-4 h-4" />}
                 </button>
-                <span className="text-[10px] font-black px-3 py-1 rounded-full bg-brand-caribbeanSea/20 text-brand-caribbeanSea border border-brand-caribbeanSea/30 uppercase tracking-wider">
+                <span className={`text-[10px] font-black px-2.5 py-1 rounded-full border uppercase tracking-wider ${classificationStyle.bg} ${classificationStyle.text} ${classificationStyle.border}`}>
+                  {selectedEntity.classification}
+                </span>
+                <span className="text-[10px] font-black px-2.5 py-1 rounded-full bg-brand-caribbeanSea/20 text-brand-caribbeanSea border border-brand-caribbeanSea/30 uppercase tracking-wider">
                   {selectedEntity.iso}
                 </span>
               </div>
@@ -679,10 +748,35 @@ export default function InteractiveCaribbeanMap() {
               <div className="flex items-center gap-2">
                 <h2 className="text-xl font-black text-brand-sandstone">{selectedEntity.name}</h2>
               </div>
-              <p className="text-xs text-brand-sandstone/60 mt-0.5">
-                Capital: <span className="text-slate-300 font-semibold">{selectedEntity.capital}</span> • {selectedEntity.region}
+              {selectedEntity.officialName && (
+                <p className="text-[11px] text-brand-sandstone/50 italic mt-0.5">
+                  {selectedEntity.officialName}
+                </p>
+              )}
+              <p className="text-xs text-brand-sandstone/70 mt-1">
+                Capital: <span className="text-slate-200 font-semibold">{selectedEntity.capital}</span> • {selectedEntity.region}
               </p>
-              <span className="inline-block text-xs font-bold text-brand-goldenHour mt-2">
+
+              {/* Metadata chips */}
+              <div className="flex flex-wrap gap-2 mt-2 pt-1">
+                {selectedEntity.languages && selectedEntity.languages.length > 0 && (
+                  <span className="text-[10.5px] px-2 py-0.5 rounded-lg bg-brand-twilight text-slate-300 border border-slate-800 flex items-center gap-1">
+                    <BookOpen className="w-3 h-3 text-brand-caribbeanSea" /> {selectedEntity.languages.join(', ')}
+                  </span>
+                )}
+                {selectedEntity.currency && (
+                  <span className="text-[10.5px] px-2 py-0.5 rounded-lg bg-brand-twilight text-slate-300 border border-slate-800 flex items-center gap-1">
+                    <Coins className="w-3 h-3 text-brand-goldenHour" /> {selectedEntity.currency}
+                  </span>
+                )}
+                {selectedEntity.timezone && (
+                  <span className="text-[10.5px] px-2 py-0.5 rounded-lg bg-brand-twilight text-slate-300 border border-slate-800 flex items-center gap-1">
+                    <Clock className="w-3 h-3 text-emerald-400" /> {selectedEntity.timezone}
+                  </span>
+                )}
+              </div>
+
+              <span className="inline-block text-xs font-bold text-brand-goldenHour mt-2.5">
                 {selectedEntity.trendingTag}
               </span>
               <p className="text-xs text-slate-300 mt-2 leading-relaxed font-medium">
@@ -694,7 +788,7 @@ export default function InteractiveCaribbeanMap() {
             <div className="grid grid-cols-2 gap-3 pt-1">
               <div className="p-3 rounded-2xl bg-brand-twilight border border-slate-800 space-y-0.5">
                 <span className="text-[10px] font-bold text-brand-sandstone/60 flex items-center gap-1">
-                  <Users className="w-3 h-3 text-brand-caribbeanSea" /> Verified Members
+                  <Users className="w-3 h-3 text-brand-caribbeanSea" /> Members
                 </span>
                 <p className="text-base font-black text-brand-sandstone">
                   {geoStats.loading ? '…' : geoStats.creators.toLocaleString()}
@@ -729,11 +823,11 @@ export default function InteractiveCaribbeanMap() {
               </div>
             </div>
 
-            {/* Deep-link Action Buttons */}
+            {/* Deep-link Action Buttons (Discovery Architecture) */}
             <div className="space-y-2 pt-2">
               <Link
                 href={`/explore?country=${selectedEntity.iso}`}
-                className="w-full block bg-gradient-to-r from-brand-caribbeanSea to-brand-sunriseCoral hover:from-brand-caribbeanSea hover:to-brand-sunriseCoral text-slate-950 font-black py-2.5 rounded-2xl text-xs text-center transition-all shadow-md shadow-brand-caribbeanSea/20"
+                className="w-full block bg-gradient-to-r from-brand-caribbeanSea to-brand-sunriseCoral text-slate-950 font-black py-2.5 rounded-2xl text-xs text-center transition-all shadow-md shadow-brand-caribbeanSea/20 hover:brightness-110"
               >
                 Explore {selectedEntity.shortName} Feed →
               </Link>
@@ -759,6 +853,118 @@ export default function InteractiveCaribbeanMap() {
           </div>
         </div>
       </div>
+
+      {/* ── Mobile-First Slide-Up Bottom Sheet (< lg screens) ── */}
+      {isMobileSheetOpen && (
+        <div
+          className="lg:hidden fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm flex items-end animate-fadeIn"
+          role="dialog"
+          aria-modal="true"
+          aria-label={`${selectedEntity.name} Discovery Hub`}
+        >
+          <div className="w-full max-h-[85vh] overflow-y-auto bg-[#0C1322] border-t border-slate-800 rounded-t-3xl p-5 space-y-4 shadow-2xl animate-slideUp">
+            {/* Sheet Handle and Header */}
+            <div className="flex flex-col items-center">
+              <div className="w-12 h-1.5 rounded-full bg-slate-700/80 mb-3" />
+            </div>
+
+            <div className="flex items-center justify-between pb-1">
+              <div className="flex items-center gap-3">
+                <span className="text-4xl">{selectedEntity.flag}</span>
+                <div>
+                  <h2 className="text-lg font-black text-white leading-tight">
+                    {selectedEntity.name}
+                  </h2>
+                  <p className="text-xs text-brand-sandstone/60">
+                    {selectedEntity.capital} • {selectedEntity.region}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={handleShareEntity}
+                  aria-label="Share territory"
+                  className="p-2 rounded-xl bg-slate-800 text-slate-300 hover:text-white"
+                >
+                  {copiedLink ? <Check className="w-4 h-4 text-emerald-400" /> : <Share2 className="w-4 h-4" />}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsMobileSheetOpen(false)}
+                  aria-label="Close sheet"
+                  className="p-2 rounded-xl bg-slate-800 text-slate-400 hover:text-white"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <span className={`text-[10px] font-black px-2.5 py-0.5 rounded-full border ${classificationStyle.bg} ${classificationStyle.text} ${classificationStyle.border}`}>
+                {selectedEntity.classification}
+              </span>
+              <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-brand-twilight text-brand-caribbeanSea border border-slate-800">
+                {selectedEntity.iso}
+              </span>
+              <span className="text-[11px] font-bold text-brand-goldenHour ml-auto">
+                {selectedEntity.trendingTag}
+              </span>
+            </div>
+
+            <p className="text-xs text-slate-300 leading-relaxed font-medium">
+              {selectedEntity.summary}
+            </p>
+
+            {/* Quick Metrics */}
+            <div className="grid grid-cols-2 gap-2.5">
+              <div className="p-2.5 rounded-xl bg-slate-800/60 border border-slate-700/60">
+                <span className="text-[10px] font-bold text-brand-sandstone/60 flex items-center gap-1">
+                  <Users className="w-3 h-3 text-brand-caribbeanSea" /> Members
+                </span>
+                <p className="text-sm font-black text-white">
+                  {geoStats.loading ? '…' : geoStats.creators.toLocaleString()}
+                </p>
+              </div>
+              <div className="p-2.5 rounded-xl bg-slate-800/60 border border-slate-700/60">
+                <span className="text-[10px] font-bold text-brand-sandstone/60 flex items-center gap-1">
+                  <Building2 className="w-3 h-3 text-brand-sunriseCoral" /> Businesses
+                </span>
+                <p className="text-sm font-black text-white">
+                  {geoStats.loading ? '…' : geoStats.businesses.toLocaleString()}
+                </p>
+              </div>
+            </div>
+
+            {/* Mobile Actions */}
+            <div className="space-y-2 pt-2 pb-4">
+              <Link
+                href={`/explore?country=${selectedEntity.iso}`}
+                onClick={() => setIsMobileSheetOpen(false)}
+                className="w-full block bg-gradient-to-r from-brand-caribbeanSea to-brand-sunriseCoral text-slate-950 font-black py-3 rounded-2xl text-xs text-center transition-all shadow-md min-h-[44px] flex items-center justify-center"
+              >
+                Explore {selectedEntity.shortName} Feed →
+              </Link>
+              <Link
+                href={`/events?city=${encodeURIComponent(selectedEntity.shortName)}`}
+                onClick={() => setIsMobileSheetOpen(false)}
+                className="w-full block bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold py-2.5 rounded-2xl text-xs text-center border border-slate-700/80 transition-colors min-h-[44px] flex items-center justify-center"
+              >
+                View Cultural Fetes &amp; Events
+              </Link>
+              <Link
+                href={`/communities?country=${selectedEntity.iso}`}
+                onClick={() => setIsMobileSheetOpen(false)}
+                className="w-full block bg-slate-800 hover:bg-slate-700 text-brand-caribbeanSea font-bold py-2.5 rounded-2xl text-xs text-center border border-slate-700/80 transition-colors min-h-[44px] flex items-center justify-center"
+              >
+                Join {selectedEntity.shortName} Hubs &amp; Guilds
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
+

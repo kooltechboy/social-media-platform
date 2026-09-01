@@ -57,9 +57,14 @@ export const CARIBBEAN_TERRITORIES: CaribbeanTerritory[] = [
   { iso: 'SXM', name: 'Sint Maarten',                 flag: '🇸🇽', lang: 'nl',  sovereign: false },
   { iso: 'TCA', name: 'Turks & Caicos',               flag: '🇹🇨', lang: 'en',  sovereign: false },
   { iso: 'VIR', name: 'US Virgin Islands',            flag: '🇻🇮', lang: 'en',  sovereign: false },
+  { iso: 'SAB', name: 'Saba',                         flag: '🇸🇧', lang: 'nl',  sovereign: false },
+  { iso: 'EUX', name: 'Sint Eustatius',               flag: '🇧🇶', lang: 'nl',  sovereign: false },
+  { iso: 'BLM', name: 'Saint Barthélemy',             flag: '🇧🇱', lang: 'fr',  sovereign: false },
+  { iso: 'MAF', name: 'Saint Martin (French)',        flag: '🇲🇫', lang: 'fr',  sovereign: false },
   // ── Caribbean-Coast Nations (culturally integrated) ──
   { iso: 'PAN', name: 'Panama',                       flag: '🇵🇦', lang: 'es',  sovereign: true },
   { iso: 'COL', name: 'Colombia (Caribbean)',         flag: '🇨🇴', lang: 'es',  sovereign: true },
+  { iso: 'VEN', name: 'Venezuela (Caribbean)',        flag: '🇻🇪', lang: 'es',  sovereign: true },
 ];
 
 export const SOVEREIGN_CARIBBEAN = CARIBBEAN_TERRITORIES.filter(t => t.sovereign);

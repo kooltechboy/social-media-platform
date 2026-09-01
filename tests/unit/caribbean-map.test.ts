@@ -2,7 +2,9 @@ import { describe, it, expect } from 'vitest';
 import {
   CARIBBEAN_GEO_ENTITIES,
   CARIBBEAN_GEO_BY_ISO,
+  CLASSIFICATION_COLORS,
   type CaribbeanGeoEntity,
+  type CaribbeanClassification,
 } from '../../apps/web/src/lib/constants/caribbean-geography';
 import { CARIBBEAN_TERRITORIES } from '../../apps/web/src/lib/constants/caribbean-territories';
 
@@ -74,6 +76,44 @@ describe('Caribbean Geospatial Taxonomy & Canonical Registry', () => {
     expect(diaspora.length).toBeGreaterThanOrEqual(6);
   });
 
+  it('validates explicit political classifications and integrity guarantees', () => {
+    const validClassifications: CaribbeanClassification[] = [
+      'Independent Country',
+      'Constituent Country',
+      'Dependent Territory',
+      'Caribbean Netherlands',
+      'Mainland Caribbean',
+      'Diaspora Hub',
+    ];
+
+    for (const entity of CARIBBEAN_GEO_ENTITIES) {
+      expect(validClassifications).toContain(entity.classification);
+      expect(CLASSIFICATION_COLORS[entity.classification]).toBeDefined();
+
+      // Independent countries must have sovereign = true
+      if (entity.classification === 'Independent Country') {
+        expect(entity.sovereign).toBe(true);
+      }
+      // Territories and Caribbean Netherlands municipalities must have sovereign = false
+      if (entity.classification === 'Dependent Territory' || entity.classification === 'Caribbean Netherlands') {
+        expect(entity.sovereign).toBe(false);
+      }
+    }
+
+    // Check specific critical classifications
+    expect(CARIBBEAN_GEO_BY_ISO['JAM'].classification).toBe('Independent Country');
+    expect(CARIBBEAN_GEO_BY_ISO['ABW'].classification).toBe('Constituent Country');
+    expect(CARIBBEAN_GEO_BY_ISO['PRI'].classification).toBe('Dependent Territory');
+    expect(CARIBBEAN_GEO_BY_ISO['BES'].classification).toBe('Caribbean Netherlands');
+    expect(CARIBBEAN_GEO_BY_ISO['SAB'].classification).toBe('Caribbean Netherlands');
+    expect(CARIBBEAN_GEO_BY_ISO['EUX'].classification).toBe('Caribbean Netherlands');
+    expect(CARIBBEAN_GEO_BY_ISO['BLM'].classification).toBe('Dependent Territory');
+    expect(CARIBBEAN_GEO_BY_ISO['MAF'].classification).toBe('Dependent Territory');
+    expect(CARIBBEAN_GEO_BY_ISO['COL'].classification).toBe('Mainland Caribbean');
+    expect(CARIBBEAN_GEO_BY_ISO['VEN'].classification).toBe('Mainland Caribbean');
+    expect(CARIBBEAN_GEO_BY_ISO['MIA'].classification).toBe('Diaspora Hub');
+  });
+
   it('validates diaspora hub flight connection links resolve to valid Caribbean island ISOs', () => {
     const diasporaHubs = CARIBBEAN_GEO_ENTITIES.filter((e) => e.region === 'Diaspora Hub');
     for (const hub of diasporaHubs) {
@@ -112,3 +152,4 @@ describe('Map Deep-Linking and URL Route Integrity', () => {
     }
   });
 });
+
