@@ -37,7 +37,7 @@ import { createSupabaseBrowserClient } from '../lib/supabase/browser';
 import CreatorTipModal from './creator-tip-modal';
 import ShoppablePostWidget, { type TaggedProduct } from './shoppable-post-widget';
 import UserAvatar from './user-avatar';
-import { useTranslation, LOCALE_DETAILS, Locale } from '@caribbean/localization';
+import { useTranslation, LOCALE_DETAILS, LOCALES, Locale } from '@caribbean/localization';
 
 export interface FeedPostData {
   id: string;
@@ -81,13 +81,14 @@ export default function FeedStream({ initialPosts, currentUserId }: FeedStreamPr
   const [savedPostIds, setSavedPostIds] = useState<Set<string>>(new Set());
   const [confirmDeletePostId, setConfirmDeletePostId] = useState<string | null>(null);
 
-  // Content Translation State (Requirement 6, 8, 12, 13)
+  // Content Translation State with full multilingual target support
   const [postTranslations, setPostTranslations] = useState<
     Record<
       string,
       {
         translatedText?: string;
         sourceLang?: string;
+        targetLang?: Locale;
         isTranslating?: boolean;
         isShowingOriginal?: boolean;
         error?: string | null;
@@ -95,10 +96,15 @@ export default function FeedStream({ initialPosts, currentUserId }: FeedStreamPr
     >
   >({});
 
-  async function handleTranslatePost(postId: string, content: string) {
+  async function handleTranslatePost(postId: string, content: string, targetLang: Locale) {
     setPostTranslations((prev) => ({
       ...prev,
-      [postId]: { ...prev[postId], isTranslating: true, error: null },
+      [postId]: {
+        ...prev[postId],
+        isTranslating: true,
+        targetLang,
+        error: null,
+      },
     }));
 
     try {
@@ -107,7 +113,7 @@ export default function FeedStream({ initialPosts, currentUserId }: FeedStreamPr
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           text: content,
-          targetLang: locale,
+          targetLang,
           postId,
         }),
       });
@@ -118,6 +124,7 @@ export default function FeedStream({ initialPosts, currentUserId }: FeedStreamPr
           [postId]: {
             translatedText: data.translatedText,
             sourceLang: data.sourceLang,
+            targetLang,
             isTranslating: false,
             isShowingOriginal: false,
             error: null,
@@ -676,62 +683,87 @@ export default function FeedStream({ initialPosts, currentUserId }: FeedStreamPr
               </p>
 
               {/* Translation Affordance & Status */}
-              <div className="mt-1">
+              <div className="mt-2 flex flex-wrap items-center gap-2">
                 {postTranslations[post.id]?.isTranslating ? (
                   <div className="flex items-center gap-2 text-[11px] text-brand-sandstone/70">
                     <Loader2 className="w-3.5 h-3.5 animate-spin text-brand-caribbeanSea" />
                     <span>{t('post.translating')}</span>
                   </div>
                 ) : postTranslations[post.id]?.translatedText ? (
-                  <div className="mt-1.5 p-2.5 rounded-xl bg-brand-caribbeanSea/10 border border-brand-caribbeanSea/20 flex flex-wrap items-center justify-between gap-2 text-xs animate-fadeIn">
+                  <div className="w-full mt-1.5 p-2.5 rounded-xl bg-brand-caribbeanSea/10 border border-brand-caribbeanSea/20 flex flex-wrap items-center justify-between gap-2 text-xs animate-fadeIn">
                     <div className="flex items-center gap-1.5 text-brand-sandstone/80 text-[11px]">
-                      <Sparkles className="w-3.5 h-3.5 text-brand-caribbeanSea" />
+                      <Sparkles className="w-3.5 h-3.5 text-brand-caribbeanSea flex-shrink-0" />
                       <span>
                         {postTranslations[post.id]?.isShowingOriginal
-                          ? 'Showing original'
-                          : t('post.translated_from', {
-                              lang:
-                                LOCALE_DETAILS[postTranslations[post.id]?.sourceLang as Locale]?.nativeName ||
-                                postTranslations[post.id]?.sourceLang ||
-                                'detected',
-                            })}
+                          ? 'Original text'
+                          : `Translated from ${
+                              LOCALE_DETAILS[postTranslations[post.id]?.sourceLang as Locale]?.nativeName ||
+                              postTranslations[post.id]?.sourceLang ||
+                              'detected'
+                            } to ${
+                              LOCALE_DETAILS[postTranslations[post.id]?.targetLang as Locale]?.nativeName ||
+                              postTranslations[post.id]?.targetLang ||
+                              'selected language'
+                            }`}
                       </span>
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => handleToggleOriginal(post.id)}
-                      className="text-[11px] font-bold text-brand-caribbeanSea hover:underline"
-                    >
-                      {postTranslations[post.id]?.isShowingOriginal
-                        ? t('post.translate', { lang: LOCALE_DETAILS[locale]?.nativeName || 'English' })
-                        : t('post.show_original')}
-                    </button>
-                  </div>
-                ) : postTranslations[post.id]?.error ? (
-                  <div className="flex items-center gap-2 text-[11px] text-amber-400 mt-1">
-                    <AlertCircle className="w-3.5 h-3.5" />
-                    <span>{postTranslations[post.id]?.error}</span>
-                    <button
-                      type="button"
-                      onClick={() => handleTranslatePost(post.id, post.content)}
-                      className="underline font-bold text-brand-caribbeanSea ml-1"
-                    >
-                      {t('common.retry')}
-                    </button>
+                    <div className="flex items-center gap-2.5">
+                      {/* Language change dropdown */}
+                      <select
+                        value={postTranslations[post.id]?.targetLang || locale}
+                        onChange={(e) => handleTranslatePost(post.id, post.content, e.target.value as Locale)}
+                        aria-label="Change translation target language"
+                        className="bg-brand-twilight/90 border border-brand-caribbeanSea/30 text-[10px] font-bold text-brand-caribbeanSea rounded-lg px-2 py-0.5 focus:outline-none cursor-pointer"
+                      >
+                        {LOCALES.map((code) => (
+                          <option key={code} value={code} className="bg-brand-dusk text-slate-200">
+                            {LOCALE_DETAILS[code].nativeName}
+                          </option>
+                        ))}
+                      </select>
+
+                      <button
+                        type="button"
+                        onClick={() => handleToggleOriginal(post.id)}
+                        className="text-[11px] font-bold text-brand-caribbeanSea hover:underline whitespace-nowrap"
+                      >
+                        {postTranslations[post.id]?.isShowingOriginal ? 'Show Translation' : 'Show Original'}
+                      </button>
+                    </div>
                   </div>
                 ) : (
-                  <button
-                    type="button"
-                    onClick={() => handleTranslatePost(post.id, post.content)}
-                    className="flex items-center gap-1.5 text-[11px] font-semibold text-brand-caribbeanSea/80 hover:text-brand-caribbeanSea transition-colors"
-                  >
-                    <Globe className="w-3.5 h-3.5" />
-                    <span>
-                      {t('post.translate', {
-                        lang: LOCALE_DETAILS[locale]?.nativeName || 'English',
-                      })}
-                    </span>
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <div className="relative inline-flex items-center">
+                      <Globe className="w-3.5 h-3.5 text-brand-caribbeanSea mr-1" />
+                      <select
+                        defaultValue=""
+                        onChange={(e) => {
+                          if (e.target.value) {
+                            handleTranslatePost(post.id, post.content, e.target.value as Locale);
+                            e.target.value = '';
+                          }
+                        }}
+                        aria-label="Translate post to language"
+                        className="bg-brand-twilight/80 hover:bg-brand-twilight border border-slate-700 hover:border-brand-caribbeanSea/60 text-[11px] font-semibold text-brand-caribbeanSea rounded-full pl-2.5 pr-6 py-0.5 focus:outline-none focus:border-brand-caribbeanSea cursor-pointer transition-colors appearance-none"
+                      >
+                        <option value="" disabled>
+                          Translate to ▾
+                        </option>
+                        {LOCALES.map((code) => (
+                          <option key={code} value={code} className="bg-brand-dusk text-slate-200">
+                            {LOCALE_DETAILS[code].nativeName} ({LOCALE_DETAILS[code].name})
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {postTranslations[post.id]?.error && (
+                      <span className="text-[11px] text-rose-400 flex items-center gap-1">
+                        <AlertCircle className="w-3 h-3 flex-shrink-0" />
+                        <span>{postTranslations[post.id]?.error}</span>
+                      </span>
+                    )}
+                  </div>
                 )}
               </div>
 

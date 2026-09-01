@@ -209,6 +209,14 @@ export default function AppHeader() {
       </div>
 
       <div className="flex items-center gap-2.5 sm:gap-3.5">
+        <Link
+          href="/search"
+          className="md:hidden p-2 text-slate-300 hover:text-brand-caribbeanSea rounded-full hover:bg-brand-dusk/80 transition-colors"
+          aria-label={t('a11y.search')}
+        >
+          <Search className="w-5 h-5" aria-hidden="true" />
+        </Link>
+
         <LanguageDropdown variant="compact" />
 
         <Link
