@@ -24,6 +24,8 @@ import {
   type ActionResponse,
 } from '../lib/profile/profile-actions';
 import { AvatarUpload, CoverUpload } from './avatar-upload';
+import { CARIBBEAN_TERRITORIES } from '../lib/constants/caribbean-territories';
+import { DIASPORA_COUNTRIES } from '../lib/constants/diaspora-hubs';
 
 export interface ProfileData {
   id: string;
@@ -401,10 +403,18 @@ export default function ProfileEditModal({ isOpen, onClose, initialProfile }: Pr
                   <input
                     id="island"
                     name="island"
-                    placeholder="e.g. Jamaica, Trinidad, Barbados"
+                    list="caribbean-islands-datalist"
+                    placeholder="e.g. Trinidad, Barbados, Jamaica"
                     defaultValue={profile.island ?? ''}
                     className="w-full bg-[#131D33] border border-slate-700 rounded-xl px-3 py-2 text-sm text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea"
                   />
+                  <datalist id="caribbean-islands-datalist">
+                    {CARIBBEAN_TERRITORIES.map((t) => (
+                      <option key={t.iso} value={t.name}>
+                        {t.flag} {t.name}
+                      </option>
+                    ))}
+                  </datalist>
                 </div>
                 <div>
                   <label htmlFor="city" className="block text-xs font-bold text-brand-sandstone/70 mb-1">
@@ -420,15 +430,28 @@ export default function ProfileEditModal({ isOpen, onClose, initialProfile }: Pr
                 </div>
                 <div>
                   <label htmlFor="country" className="block text-xs font-bold text-brand-sandstone/70 mb-1">
-                    Country
+                    Country (Residence)
                   </label>
                   <input
                     id="country"
                     name="country"
-                    placeholder="e.g. Jamaica, United States, UK"
+                    list="world-countries-datalist"
+                    placeholder="e.g. United States, Canada, United Kingdom"
                     defaultValue={profile.country ?? ''}
                     className="w-full bg-[#131D33] border border-slate-700 rounded-xl px-3 py-2 text-sm text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea"
                   />
+                  <datalist id="world-countries-datalist">
+                    {DIASPORA_COUNTRIES.map((c) => (
+                      <option key={c.iso} value={c.name}>
+                        {c.flag} {c.name}
+                      </option>
+                    ))}
+                    {CARIBBEAN_TERRITORIES.map((t) => (
+                      <option key={`geo-${t.iso}`} value={t.name}>
+                        {t.flag} {t.name}
+                      </option>
+                    ))}
+                  </datalist>
                 </div>
               </div>
 

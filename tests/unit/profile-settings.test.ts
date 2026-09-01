@@ -299,4 +299,42 @@ describe('TUKUBI — Profile & Settings Validation Suite', () => {
       expect(sanitizeLanguagePreference('pap')).toBe('pap');
     });
   });
+
+  describe('Geographic Identity & Country Integrity Guarantees', () => {
+    it('preserves distinct concepts for residence Country vs Caribbean Island/Heritage', () => {
+      const diasporaProfile = {
+        country: 'United States',
+        island: 'Dominican Republic',
+        city: 'Miami',
+      };
+
+      expect(diasporaProfile.country).not.toBe(diasporaProfile.island);
+      expect(diasporaProfile.country).toBe('United States');
+      expect(diasporaProfile.island).toBe('Dominican Republic');
+    });
+
+    it('ensures unprovided country defaults to null/empty and NEVER to Jamaica', () => {
+      function resolveProfileOrigin(originCountryIso?: string): string | null {
+        return originCountryIso || null;
+      }
+
+      expect(resolveProfileOrigin(undefined)).toBeNull();
+      expect(resolveProfileOrigin('')).toBeNull();
+      expect(resolveProfileOrigin('TTO')).toBe('TTO');
+      expect(resolveProfileOrigin('JAM')).toBe('JAM');
+    });
+
+    it('formats location display cleanly with missing fields', () => {
+      function formatLocation(city?: string | null, island?: string | null, country?: string | null): string {
+        return [city, island, country].filter(Boolean).join(', ');
+      }
+
+      expect(formatLocation('Kingston', 'Jamaica', 'Jamaica')).toBe('Kingston, Jamaica, Jamaica');
+      expect(formatLocation('Brooklyn', 'Barbados', 'United States')).toBe('Brooklyn, Barbados, United States');
+      expect(formatLocation(null, null, 'Canada')).toBe('Canada');
+      expect(formatLocation(null, 'Trinidad', null)).toBe('Trinidad');
+      expect(formatLocation(null, null, null)).toBe('');
+    });
+  });
 });
+

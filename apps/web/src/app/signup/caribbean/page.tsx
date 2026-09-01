@@ -22,10 +22,6 @@ export default function SignupCaribbeanPage() {
     if (session.originCountryIso) {
       const found = CARIBBEAN_TERRITORIES.find((t) => t.iso === session.originCountryIso);
       if (found) setSelectedTerritory(found);
-    } else {
-      // Default initial focus to Jamaica
-      const defaultIsland = CARIBBEAN_TERRITORIES.find((t) => t.iso === 'JAM');
-      if (defaultIsland) setSelectedTerritory(defaultIsland);
     }
 
     if (session.isDiaspora) {

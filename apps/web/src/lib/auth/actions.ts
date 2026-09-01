@@ -78,7 +78,8 @@ export async function completeFullRegistrationAction(payload: CompleteRegistrati
         username: cleanUsername,
         display_name: (displayName || cleanUsername).trim(),
         account_type: accountType,
-        origin_country_iso: originCountryIso || 'JAM',
+        // Never assign a Caribbean origin the user did not consciously select
+        origin_country_iso: originCountryIso || null,
         is_diaspora: isDiaspora || false,
         diaspora_country_iso: diasporaCountryIso || null,
         cultural_interests: interests,
@@ -97,7 +98,7 @@ export async function completeFullRegistrationAction(payload: CompleteRegistrati
     return { error: error.message };
   }
 
-  // If user profile record can be created or updated right away
+  // Write profile record immediately if available
   if (data.user) {
     try {
       await supabase.from('profiles').upsert({
@@ -109,6 +110,7 @@ export async function completeFullRegistrationAction(payload: CompleteRegistrati
         updated_at: new Date().toISOString(),
       });
 
+      // Only persist Caribbean origin when the user explicitly selected one
       if (originCountryIso) {
         await supabase.from('profile_identity').upsert({
           profile_id: data.user.id,

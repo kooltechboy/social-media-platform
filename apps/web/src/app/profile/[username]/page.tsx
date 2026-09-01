@@ -187,7 +187,7 @@ export default async function ProfilePage({
       : Promise.resolve({ data: null }),
     supabase
       .from('posts')
-      .select('id, content, created_at')
+      .select('id, content, created_at, media_urls')
       .eq('author_id', profileData.id)
       .order('created_at', { ascending: false })
       .limit(20),
@@ -267,11 +267,7 @@ export default async function ProfilePage({
                 className="w-full h-full object-cover"
               />
             ) : (
-              <div className="w-full h-full bg-gradient-to-tr from-brand-twilight via-slate-900 to-[#1A2642] flex items-center justify-center">
-                <span className="text-xs text-brand-sandstone/30 font-bold uppercase tracking-widest">
-                  Tukubi Ecosystem
-                </span>
-              </div>
+              <div className="w-full h-full bg-gradient-to-tr from-brand-twilight via-slate-900 to-[#1A2642]" />
             )}
           </div>
 
@@ -662,7 +658,34 @@ export default async function ProfilePage({
                       <span className="text-[11px] text-brand-sandstone/40">{relativeTime(post.created_at)}</span>
                     </div>
                   </div>
-                  <p className="text-sm text-slate-200 leading-relaxed whitespace-pre-wrap">{post.content}</p>
+                  {post.content && (
+                    <p className="text-sm text-slate-200 leading-relaxed whitespace-pre-wrap mb-3">{post.content}</p>
+                  )}
+                  {post.media_urls && post.media_urls.length > 0 && (
+                    <div className={`grid gap-2 rounded-xl overflow-hidden ${
+                      post.media_urls.length === 1 ? 'grid-cols-1 max-h-96' : 'grid-cols-2 max-h-80'
+                    }`}>
+                      {post.media_urls.map((url, idx) => {
+                        const isVideo = url.match(/\.(mp4|webm|ogg|mov)$/i) || url.includes('/video');
+                        return isVideo ? (
+                          <video
+                            key={idx}
+                            src={url}
+                            controls
+                            className="w-full h-full object-cover rounded-lg bg-black"
+                          />
+                        ) : (
+                          /* eslint-disable-next-line @next/next/no-img-element */
+                          <img
+                            key={idx}
+                            src={url}
+                            alt={`Post attachment ${idx + 1}`}
+                            className="w-full h-full object-cover rounded-lg"
+                          />
+                        );
+                      })}
+                    </div>
+                  )}
                 </article>
               ))
             )}
