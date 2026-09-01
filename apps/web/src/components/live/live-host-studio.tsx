@@ -88,7 +88,7 @@ export default function LiveHostStudio({ user }: LiveHostStudioProps) {
   const [title, setTitle] = useState(`${user.displayName}'s Caribbean Live Session 🌴`);
   const [category, setCategory] = useState<string>('Culture & Talk');
   const [accessLevel, setAccessLevel] = useState<StreamAccess>('public');
-  const [locationTag, setLocationTag] = useState('Kingston, Jamaica 🇯🇲');
+  const [locationTag, setLocationTag] = useState('');
 
   const [isLive, setIsLive] = useState(false);
   const [livestreamId, setLivestreamId] = useState<string | null>(null);
@@ -721,6 +721,17 @@ export default function LiveHostStudio({ user }: LiveHostStudioProps) {
                     <option value="followers">Followers Only</option>
                     <option value="subscribers">Paid Subscribers Only</option>
                   </select>
+                </div>
+
+                <div className="space-y-1.5 md:col-span-2">
+                  <label className="text-xs font-bold text-brand-sandstone/80">Location / Island Tag (Optional)</label>
+                  <input
+                    type="text"
+                    value={locationTag}
+                    onChange={(e) => setLocationTag(e.target.value)}
+                    placeholder="e.g. Kingston, Port of Spain, Miami, London, or Pan-Caribbean"
+                    className="w-full bg-brand-twilight border border-slate-700 rounded-2xl px-4 py-2.5 text-xs text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea"
+                  />
                 </div>
               </div>
             </div>

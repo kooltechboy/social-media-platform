@@ -21,19 +21,6 @@ BEGIN
             'The digital home of the Caribbean and its global diaspora. Social, creators, businesses, events and commerce — one ecosystem.')
     ON CONFLICT (id) DO NOTHING;
 
-    -- Launch posts
-    IF NOT EXISTS (SELECT 1 FROM public.posts WHERE author_id = official_id) THEN
-        INSERT INTO public.posts (author_id, content, visibility) VALUES
-            (official_id,
-             'Welcome to TUKUBI 🌴 The digital home of the Caribbean and its global diaspora. Connect with your islands, your communities, and your culture — wherever you are.',
-             'public'),
-            (official_id,
-             'From Kingston to Brooklyn, Santo Domingo to Toronto, Port of Spain to London: one graph connects our people, our culture, and our businesses. Tell us where your Caribbean story begins.',
-             'public'),
-            (official_id,
-             'Creators and businesses: Monetization is here. Tips, subscriptions, event tickets, and marketplace sales in one compliant payment layer. Build your audience here first.',
-             'public');
-    END IF;
 
     -- Flagship community
     INSERT INTO public.communities (name, slug, description, join_policy, created_by)

@@ -19,6 +19,9 @@ import {
   Wallet,
 } from 'lucide-react';
 
+import { CARIBBEAN_TERRITORIES } from '../../../lib/constants/caribbean-territories';
+import { DIASPORA_COUNTRIES } from '../../../lib/constants/diaspora-hubs';
+
 type PageType = 'business' | 'creator' | 'government' | 'institution' | 'media' | 'community' | 'event';
 
 interface PageTypeOption {
@@ -80,8 +83,8 @@ export default function CreatePageWizard() {
   const [pageName, setPageName] = useState('');
   const [pageSlug, setPageSlug] = useState('');
   const [category, setCategory] = useState('');
-  const [country, setCountry] = useState('Jamaica 🇯🇲');
-  const [city, setCity] = useState('Kingston');
+  const [country, setCountry] = useState('');
+  const [city, setCity] = useState('');
   const [description, setDescription] = useState('');
   const [enableStore, setEnableStore] = useState(true);
   const [isCreated, setIsCreated] = useState(false);
@@ -106,17 +109,12 @@ export default function CreatePageWizard() {
     formData.set('slug', pageSlug);
     formData.set('category', selectedType);
     formData.set('description', description);
-    const COUNTRY_ISO_MAP: Record<string, string> = {
-      'Jamaica 🇯🇲': 'JM',
-      'Trinidad & Tobago 🇹🇹': 'TT',
-      'Dominican Republic 🇩🇴': 'DO',
-      'Barbados 🇧🇧': 'BB',
-      'Haiti 🇭🇹': 'HT',
-      'Bahamas 🇧🇸': 'BS',
-      'Puerto Rico 🇵🇷': 'PR',
-      'Global Diaspora 🌍': 'WW',
-    };
-    formData.set('countryIso', COUNTRY_ISO_MAP[country] || 'JM');
+
+    // Resolve country ISO dynamically from official territories and diaspora hubs
+    const matchedTerritory = CARIBBEAN_TERRITORIES.find((t) => t.name === country || t.iso === country);
+    const matchedDiaspora = DIASPORA_COUNTRIES.find((d) => d.name === country || d.iso === country);
+    const resolvedIso = matchedTerritory?.iso || matchedDiaspora?.iso || (country === 'Global Diaspora 🌍' ? 'WW' : country ? country.slice(0, 3).toUpperCase() : 'WW');
+    formData.set('countryIso', resolvedIso);
 
     try {
       const { createBusinessPageAction } = await import('../../../lib/business/actions');
@@ -255,7 +253,7 @@ export default function CreatePageWizard() {
                 Custom Page Slug URL
               </label>
               <div className="flex items-center bg-brand-twilight border border-slate-800 rounded-2xl px-4 py-2 text-xs text-brand-sandstone/60 font-mono">
-                <span>caribbeanone.com/pages/</span>
+                <span>tukubi.com/pages/</span>
                 <input
                   type="text"
                   value={pageSlug}
@@ -273,16 +271,24 @@ export default function CreatePageWizard() {
                 <select
                   value={country}
                   onChange={(e) => setCountry(e.target.value)}
-                  className="w-full bg-brand-dusk border border-slate-800 rounded-2xl px-4 py-2.5 text-xs text-brand-sandstone focus:outline-none focus:border-brand-sunriseCoral"
+                  className="w-full bg-brand-dusk border border-slate-800 rounded-2xl px-4 py-2.5 text-xs text-brand-sandstone focus:outline-none focus:border-brand-sunriseCoral cursor-pointer"
                 >
-                  <option>Jamaica 🇯🇲</option>
-                  <option>Trinidad & Tobago 🇹🇹</option>
-                  <option>Dominican Republic 🇩🇴</option>
-                  <option>Barbados 🇧🇧</option>
-                  <option>Haiti 🇭🇹</option>
-                  <option>Bahamas 🇧🇸</option>
-                  <option>Puerto Rico 🇵🇷</option>
-                  <option>Global Diaspora 🌍</option>
+                  <option value="">Select Country / Territory...</option>
+                  <optgroup label="Caribbean Nations & Territories">
+                    {CARIBBEAN_TERRITORIES.map((t) => (
+                      <option key={t.iso} value={t.name}>
+                        {t.flag} {t.name}
+                      </option>
+                    ))}
+                  </optgroup>
+                  <optgroup label="Global Diaspora Hubs">
+                    {DIASPORA_COUNTRIES.map((c) => (
+                      <option key={c.iso} value={c.name}>
+                        {c.flag} {c.name}
+                      </option>
+                    ))}
+                    <option value="Global Diaspora 🌍">🌍 Global Diaspora</option>
+                  </optgroup>
                 </select>
               </div>
 

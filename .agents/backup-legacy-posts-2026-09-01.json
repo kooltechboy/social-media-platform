@@ -1,0 +1,122 @@
+{
+  "timestamp": "2026-09-01T12:58:14.498Z",
+  "environment": "https://qixlaqwohhrynownvqwp.supabase.co",
+  "totalPosts": 5,
+  "posts": [
+    {
+      "id": "a17e8952-3a09-4bc2-ba8f-3c1861d99edb",
+      "author_id": "a0000000-0000-4000-8000-000000000001",
+      "content": "Welcome to CARIBBEAN ONE 🌴 The digital home of the Caribbean and its global diaspora. Connect with your islands, your communities, and your culture — wherever you are.",
+      "visibility": "public",
+      "country_id": null,
+      "cultural_tags": [],
+      "media_urls": [],
+      "likes_count": 0,
+      "comments_count": 0,
+      "shares_count": 0,
+      "created_at": "2026-08-21T12:30:31.10475+00:00",
+      "updated_at": "2026-08-21T12:30:31.10475+00:00",
+      "is_hidden": false
+    },
+    {
+      "id": "ff2b4fd6-2d68-41fd-a849-f1b8fdf77c4d",
+      "author_id": "a0000000-0000-4000-8000-000000000001",
+      "content": "From Kingston to Brooklyn, Santo Domingo to Toronto, Port of Spain to London: one graph connects our people, our culture, and our businesses. Tell us where your Caribbean story begins.",
+      "visibility": "public",
+      "country_id": null,
+      "cultural_tags": [],
+      "media_urls": [],
+      "likes_count": 0,
+      "comments_count": 0,
+      "shares_count": 0,
+      "created_at": "2026-08-21T12:30:31.10475+00:00",
+      "updated_at": "2026-08-21T12:30:31.10475+00:00",
+      "is_hidden": false
+    },
+    {
+      "id": "b91d9659-d9cb-4719-8560-51aced27a5cf",
+      "author_id": "a0000000-0000-4000-8000-000000000001",
+      "content": "Creators and businesses: SpotPay is coming. Tips, subscriptions, event tickets, and marketplace sales in one compliant payment layer. Build your audience here first.",
+      "visibility": "public",
+      "country_id": null,
+      "cultural_tags": [],
+      "media_urls": [],
+      "likes_count": 0,
+      "comments_count": 0,
+      "shares_count": 0,
+      "created_at": "2026-08-21T12:30:31.10475+00:00",
+      "updated_at": "2026-08-21T12:30:31.10475+00:00",
+      "is_hidden": false
+    },
+    {
+      "id": "06edecbb-8e1b-41bd-b5bd-26c1c1710bf9",
+      "author_id": "b4be9228-99d1-4d3b-a930-59537adcc8f6",
+      "content": "This is such a great way to communicate with and meet fellow Caribbean people at home and in the diaspora",
+      "visibility": "public",
+      "country_id": null,
+      "cultural_tags": [
+        "text"
+      ],
+      "media_urls": [],
+      "likes_count": 0,
+      "comments_count": 0,
+      "shares_count": 0,
+      "created_at": "2026-08-27T02:38:56.423912+00:00",
+      "updated_at": "2026-08-27T02:38:56.423912+00:00",
+      "is_hidden": false
+    },
+    {
+      "id": "41b8e21a-8388-4ff6-8831-dfd97141508b",
+      "author_id": "b4be9228-99d1-4d3b-a930-59537adcc8f6",
+      "content": "Welcome to Antilia",
+      "visibility": "public",
+      "country_id": null,
+      "cultural_tags": [
+        "text"
+      ],
+      "media_urls": [],
+      "likes_count": 0,
+      "comments_count": 0,
+      "shares_count": 0,
+      "created_at": "2026-08-27T02:40:25.450122+00:00",
+      "updated_at": "2026-08-27T02:40:25.450122+00:00",
+      "is_hidden": false
+    }
+  ],
+  "totalTranslations": 3,
+  "translations": [
+    {
+      "id": "c14b6599-1ee5-4499-9a92-60e0d7db2c6d",
+      "content_hash": "40be66ee0096214c40be66ee0096214c40be66ee0096214c40be66ee0096214c",
+      "source_language": "en",
+      "target_language": "es",
+      "original_text": "This is such a great way to communicate with and meet fellow Caribbean people at home and in the diaspora",
+      "translated_text": "This is such a great way to communicate with and meet fellow Caribbean people at home and in the diaspora",
+      "provider": "caribai",
+      "created_at": "2026-09-01T03:00:33.228374+00:00",
+      "updated_at": "2026-09-01T03:00:33.11+00:00"
+    },
+    {
+      "id": "3d2fd7f5-81cf-4201-9d4f-43bab2365ca8",
+      "content_hash": "3160d4e99bfbedcb3160d4e99bfbedcb3160d4e99bfbedcb3160d4e99bfbedcb",
+      "source_language": "en",
+      "target_language": "ht",
+      "original_text": "From Kingston to Brooklyn, Santo Domingo to Toronto, Port of Spain to London: one graph connects our people, our culture, and our businesses. Tell us where your Caribbean story begins.",
+      "translated_text": "Soti Kingston rive Brooklyn, Santo Domingo rive Toronto, Port of Spain rive London: yon graf konekte moun nou yo, kilti nou yo ak biznis nou yo. Di nou ki kote istwa Karayib ou a kòmanse.",
+      "provider": "caribai",
+      "created_at": "2026-09-01T11:34:35.744914+00:00",
+      "updated_at": "2026-09-01T11:34:35.653+00:00"
+    },
+    {
+      "id": "0cb59eb8-1a44-4b2b-b34d-9f8be7480af7",
+      "content_hash": "3160d4e99bfbedcb3160d4e99bfbedcb3160d4e99bfbedcb3160d4e99bfbedcb",
+      "source_language": "en",
+      "target_language": "pap",
+      "original_text": "From Kingston to Brooklyn, Santo Domingo to Toronto, Port of Spain to London: one graph connects our people, our culture, and our businesses. Tell us where your Caribbean story begins.",
+      "translated_text": "Di Kingston pa Brooklyn, Santo Domingo pa Toronto, Port of Spain pa London: un grafico ta conecta nos hendenan, nos cultura y nos negoshinan. Dime Donde Esta Tu Historia Del Caribe?",
+      "provider": "caribai",
+      "created_at": "2026-09-01T11:36:04.277979+00:00",
+      "updated_at": "2026-09-01T11:36:04.179+00:00"
+    }
+  ]
+}

@@ -188,12 +188,16 @@ export default function FeedStream({ initialPosts, currentUserId }: FeedStreamPr
 
   // 2. Reconcile server-refreshed initialPosts with local state
   useEffect(() => {
-    if (initialPosts && initialPosts.length > 0) {
-      setPosts((prev) => {
-        const existingIds = new Set(initialPosts.map((p) => p.id));
-        const newlyAddedLocal = prev.filter((p) => !existingIds.has(p.id));
-        return [...newlyAddedLocal, ...initialPosts];
-      });
+    if (initialPosts) {
+      if (initialPosts.length === 0) {
+        setPosts((prev) => prev.filter((p) => p.id.startsWith('temp-') || p.time === 'just now'));
+      } else {
+        setPosts((prev) => {
+          const existingIds = new Set(initialPosts.map((p) => p.id));
+          const newlyAddedLocal = prev.filter((p) => !existingIds.has(p.id) && (p.id.startsWith('temp-') || p.time === 'just now'));
+          return [...newlyAddedLocal, ...initialPosts];
+        });
+      }
     }
   }, [initialPosts]);
 

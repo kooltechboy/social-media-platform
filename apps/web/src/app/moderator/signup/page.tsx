@@ -18,15 +18,16 @@ import {
 } from 'lucide-react';
 import { TukubiLogo } from '../../../components/brand/tukubi-logo';
 import { AdminFooter } from '../../../components/admin/admin-footer';
+import { CARIBBEAN_TERRITORIES } from '../../../lib/constants/caribbean-territories';
+import { DIASPORA_COUNTRIES } from '../../../lib/constants/diaspora-hubs';
 
 const DIASPORA_REGIONS = [
-  'Jamaica & Northern Caribbean',
-  'Trinidad & Tobago / Southern Caribbean',
-  'Barbados & OECS / Eastern Caribbean',
-  'Guyana & Suriname / Guianas',
-  'Bahamas & Bermuda',
-  'North America Diaspora (NY, Miami, Toronto)',
-  'UK & European Diaspora (London, Amsterdam, Paris)',
+  'Northern Caribbean (Jamaica, Cayman, Cuba, Bahamas)',
+  'Southern Caribbean (Trinidad & Tobago, Guyana, Suriname, ABC Islands)',
+  'Eastern Caribbean & OECS (Barbados, St. Lucia, Antigua, Grenada, Dominica, St. Vincent)',
+  'Greater Antilles (Dominican Republic, Haiti, Puerto Rico)',
+  'North America Diaspora (NY, Miami, Toronto, Montreal, Atlanta, Houston)',
+  'UK & European Diaspora (London, Birmingham, Amsterdam, Paris)',
 ];
 
 const DIALECT_OPTIONS = [
@@ -43,9 +44,9 @@ export default function ModeratorSignupPage() {
     fullName: '',
     email: '',
     phone: '',
-    country: 'Jamaica',
-    diasporaRegion: DIASPORA_REGIONS[0],
-    dialects: ['English & Patois / Patwa'],
+    country: '',
+    diasporaRegion: '',
+    dialects: [] as string[],
     experience: '',
     reason: '',
     agreeEthics: false,
@@ -199,19 +200,47 @@ export default function ModeratorSignupPage() {
                   <h3 className="text-xs font-black tracking-widest text-brand-goldenHour uppercase flex items-center gap-2">
                     <Globe className="w-4 h-4" /> 2. Regional Coverage &amp; Island Diaspora
                   </h3>
-                  <div className="space-y-1.5">
-                    <label className="block text-xs font-bold text-brand-sandstone/80">Primary Regional Focus</label>
-                    <select
-                      value={formData.diasporaRegion}
-                      onChange={(e) => setFormData({ ...formData, diasporaRegion: e.target.value })}
-                      className="w-full bg-[#081020] border border-slate-700/80 rounded-xl px-4 py-2.5 text-sm text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea"
-                    >
-                      {DIASPORA_REGIONS.map((region) => (
-                        <option key={region} value={region}>
-                          {region}
-                        </option>
-                      ))}
-                    </select>
+                  <div className="grid sm:grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                      <label className="block text-xs font-bold text-brand-sandstone/80">Country / Island of Residence or Origin</label>
+                      <select
+                        value={formData.country}
+                        onChange={(e) => setFormData({ ...formData, country: e.target.value })}
+                        className="w-full bg-[#081020] border border-slate-700/80 rounded-xl px-4 py-2.5 text-sm text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea cursor-pointer"
+                      >
+                        <option value="">Select Country / Island...</option>
+                        <optgroup label="Caribbean Nations & Territories">
+                          {CARIBBEAN_TERRITORIES.map((t) => (
+                            <option key={t.iso} value={t.name}>
+                              {t.flag} {t.name}
+                            </option>
+                          ))}
+                        </optgroup>
+                        <optgroup label="Global Diaspora Nations">
+                          {DIASPORA_COUNTRIES.map((c) => (
+                            <option key={c.iso} value={c.name}>
+                              {c.flag} {c.name}
+                            </option>
+                          ))}
+                        </optgroup>
+                      </select>
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <label className="block text-xs font-bold text-brand-sandstone/80">Primary Regional Focus</label>
+                      <select
+                        value={formData.diasporaRegion}
+                        onChange={(e) => setFormData({ ...formData, diasporaRegion: e.target.value })}
+                        className="w-full bg-[#081020] border border-slate-700/80 rounded-xl px-4 py-2.5 text-sm text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea cursor-pointer"
+                      >
+                        <option value="">Select Regional Focus...</option>
+                        {DIASPORA_REGIONS.map((region) => (
+                          <option key={region} value={region}>
+                            {region}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
                   </div>
 
                   {/* Cultural Dialects */}

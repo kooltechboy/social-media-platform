@@ -46,7 +46,7 @@ export default function UnifiedCheckoutModal({
     fullName: '',
     addressLine: '',
     city: '',
-    country: 'Jamaica 🇯🇲',
+    country: '',
   });
 
   const [state, setState] = useState<MarketplaceActionState>({ error: null, success: null });

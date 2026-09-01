@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   Camera,
   Video,
@@ -40,10 +40,23 @@ export default function DeviceMediaCaptureModal({
   const [capturedBlob, setCapturedBlob] = useState<{ blob: Blob; type: 'image' | 'video'; previewUrl: string } | null>(null);
   const [isInitializing, setIsInitializing] = useState(false);
 
+  const streamRef = useRef<MediaStream | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const recordedChunksRef = useRef<Blob[]>([]);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+
+  const stopAllMedia = useCallback(() => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach((track) => track.stop());
+      streamRef.current = null;
+      setStream(null);
+    }
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+  }, []);
 
   // Initialize camera stream when modal opens or facingMode changes
   useEffect(() => {
@@ -87,6 +100,7 @@ export default function DeviceMediaCaptureModal({
           return;
         }
 
+        streamRef.current = mediaStream;
         setStream(mediaStream);
         if (videoRef.current) {
           videoRef.current.srcObject = mediaStream;
@@ -116,18 +130,7 @@ export default function DeviceMediaCaptureModal({
       isCancelled = true;
       stopAllMedia();
     };
-  }, [isOpen, mode, facingMode]);
-
-  function stopAllMedia() {
-    if (stream) {
-      stream.getTracks().forEach((track) => track.stop());
-      setStream(null);
-    }
-    if (timerRef.current) {
-      clearInterval(timerRef.current);
-      timerRef.current = null;
-    }
-  }
+  }, [isOpen, mode, facingMode, stopAllMedia]);
 
   // Handle Photo Snapshot
   function takePhotoSnapshot() {
