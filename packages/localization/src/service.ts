@@ -199,15 +199,82 @@ export class RobustHeuristicProvider implements ITranslationProvider {
   }
 }
 
-// 3. OpenRouter / CaribAI Provider
+// 3. Free Web Translation Provider (MyMemory / Public Translation API Fallback)
+export class FreeWebTranslationProvider implements ITranslationProvider {
+  name = 'free-web-translate';
+
+  async detectLanguage(text: string): Promise<LanguageDetectionResult> {
+    return new RobustHeuristicProvider().detectLanguage(text);
+  }
+
+  async translate(text: string, sourceLang: Locale | 'und', targetLang: Locale): Promise<string> {
+    const sLang = sourceLang === 'und' ? 'en' : sourceLang;
+    if (sLang === targetLang) return text;
+
+    // First try dictionary heuristics for instantaneous matching
+    const heuristic = await new RobustHeuristicProvider().translate(text, sourceLang, targetLang);
+    if (heuristic !== text) {
+      return heuristic;
+    }
+
+    try {
+      const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text.slice(0, 500))}&langpair=${sLang}|${targetLang}`;
+      const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
+      const timeoutId = controller ? setTimeout(() => controller.abort(), 6000) : null;
+
+      const res = await fetch(url, {
+        signal: controller ? controller.signal : undefined,
+        headers: {
+          'Accept': 'application/json',
+          'User-Agent': 'Tukubi-Platform/1.0',
+        },
+      });
+      if (timeoutId) clearTimeout(timeoutId);
+
+      if (res.ok) {
+        const data = await res.json();
+        const translated = data?.responseData?.translatedText;
+        if (
+          translated &&
+          typeof translated === 'string' &&
+          !translated.includes('MYMEMORY WARNING') &&
+          !translated.includes('INVALID TARGET LANGUAGE')
+        ) {
+          // Unescape HTML entities
+          const cleaned = translated
+            .replace(/&#39;/g, "'")
+            .replace(/&quot;/g, '"')
+            .replace(/&amp;/g, '&')
+            .replace(/&lt;/g, '<')
+            .replace(/&gt;/g, '>')
+            .replace(/&#([0-9]{1,5});/gi, (_match, numStr) => {
+              const num = parseInt(numStr, 10);
+              return String.fromCharCode(num);
+            });
+          if (cleaned.trim() && cleaned.trim().toLowerCase() !== text.trim().toLowerCase()) {
+            return cleaned.trim();
+          }
+        }
+      }
+    } catch {
+      // Fallback
+    }
+
+    return heuristic;
+  }
+}
+
+// 4. OpenRouter / CaribAI Provider
 export class CaribAITranslationProvider implements ITranslationProvider {
   name = 'caribai';
   private apiKey: string;
   private model: string;
+  private fallbackWeb: FreeWebTranslationProvider;
 
   constructor(apiKey?: string, model?: string) {
     this.apiKey = apiKey || (typeof process !== 'undefined' ? process.env?.OPENROUTER_API_KEY : '') || '';
     this.model = model || (typeof process !== 'undefined' ? process.env?.OPENROUTER_DEFAULT_MODEL : '') || 'meta-llama/llama-3.3-70b-instruct:free';
+    this.fallbackWeb = new FreeWebTranslationProvider();
   }
 
   async detectLanguage(text: string): Promise<LanguageDetectionResult> {
@@ -247,7 +314,7 @@ Text: "${text.slice(0, 300)}"`;
 
   async translate(text: string, sourceLang: Locale | 'und', targetLang: Locale): Promise<string> {
     if (!this.apiKey) {
-      return new RobustHeuristicProvider().translate(text, sourceLang, targetLang);
+      return this.fallbackWeb.translate(text, sourceLang, targetLang);
     }
 
     const targetName = LOCALE_DETAILS[targetLang]?.nativeName || targetLang;
@@ -282,7 +349,7 @@ ${text}`;
       console.warn('CaribAI translation call failed, using fallback:', err);
     }
 
-    return new RobustHeuristicProvider().translate(text, sourceLang, targetLang);
+    return this.fallbackWeb.translate(text, sourceLang, targetLang);
   }
 }
 

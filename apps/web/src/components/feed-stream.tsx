@@ -118,7 +118,7 @@ export default function FeedStream({ initialPosts, currentUserId }: FeedStreamPr
         }),
       });
       const data = await res.json();
-      if (data.success && data.translatedText) {
+      if (data.success && data.translatedText && data.translatedText.trim() !== content.trim()) {
         setPostTranslations((prev) => ({
           ...prev,
           [postId]: {

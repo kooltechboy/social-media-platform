@@ -119,6 +119,14 @@ export async function POST(request: NextRequest) {
       })();
     }
 
+    // If no translation could be generated across all providers
+    if (result.translatedText.trim() === trimmed && safeTarget !== (result.sourceLang || 'und')) {
+      return NextResponse.json(
+        { success: false, error: 'Translation temporarily unavailable for this language.' },
+        { status: 200 }
+      );
+    }
+
     return NextResponse.json({
       success: true,
       translatedText: result.translatedText,
