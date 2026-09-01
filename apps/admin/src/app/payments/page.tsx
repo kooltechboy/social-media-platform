@@ -58,7 +58,7 @@ export default async function AdminPaymentsPage({
   }
 
   return (
-    <div className="min-h-screen bg-[#090D16] text-brand-sandstone p-6 max-w-6xl mx-auto space-y-6">
+    <div className="min-h-screen bg-brand-twilight text-brand-sandstone p-6 max-w-6xl mx-auto space-y-6">
       <div className="flex items-center justify-between border-b border-slate-800 pb-4">
         <h1 className="text-xl font-extrabold text-brand-sandstone flex items-center gap-2">
           <Wallet className="w-6 h-6 text-brand-sunriseCoral" /> Payments

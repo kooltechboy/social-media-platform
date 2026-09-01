@@ -1,20 +1,48 @@
-// Design Tokens for TUKUBI Visual Language (Caribbean Sunrise & Sunset)
+// Design Tokens for TUKUBI Visual Language (Island Vibes / Caribbean Sunrise & Sunset)
+
+export const DEFAULT_THEME = 'island-vibes' as const;
 
 export const colors = {
   brand: {
-    twilight: '#110D17',        // Deep Twilight Base (replaces Volcanic)
+    twilight: '#110D17',        // Deep Twilight Base (Island Vibes night sky)
     dusk: '#1D1429',            // Warm Dusk Surface 
+    sunsetPlum: '#2A1B38',      // Deep Plum Raised Surface
     sunriseCoral: '#FF7A59',    // Vibrant Sunrise Coral
     goldenHour: '#FFB347',      // Warm Golden Hour
     caribbeanSea: '#00B4D8',    // Beautiful Tropical Sea
     sandstone: '#FDF2E9',       // Warm Sandstone Text/White
     sunsetPurple: '#8B5CF6',    // Deep Sunset Purple
+    oceanSurge: '#0284C7',      // Deep Ocean Blue Accent
+    palmGreen: '#10B981',       // Tropical Emerald Green
+    amberGlow: '#F59E0B',       // Amber Glow
+  },
+  islandVibes: {
+    name: 'Island Vibes',
+    id: 'island-vibes',
+    canvas: '#110D17',
+    surface: '#1D1429',
+    surfaceRaised: '#2A1B38',
+    surfaceGlass: 'rgba(17, 13, 23, 0.70)',
+    border: 'rgba(255, 255, 255, 0.10)',
+    borderHover: 'rgba(255, 122, 89, 0.40)',
+    primary: '#FF7A59',
+    secondary: '#8B5CF6',
+    accent: '#FFB347',
+    sea: '#00B4D8',
+    textPrimary: '#FDF2E9',
+    textMuted: '#A1A1AA',
+    textDim: '#71717A',
+    success: '#10B981',
+    warning: '#FFB347',
+    danger: '#F43F5E',
   },
   gradients: {
     tukubiAmbient: 'linear-gradient(135deg, #110D17 0%, #1D1429 50%, #2A1B38 100%)',
+    islandVibesHeader: 'linear-gradient(135deg, #00B4D8 0%, #FFB347 50%, #FF7A59 100%)',
     sunriseGlow: 'radial-gradient(circle at 80% 20%, rgba(255, 122, 89, 0.2), transparent 40%)',
     goldenGlow: 'radial-gradient(circle at 20% 80%, rgba(255, 179, 71, 0.15), transparent 40%)',
     oceanGlow: 'radial-gradient(circle at 50% 50%, rgba(0, 180, 216, 0.15), transparent 50%)',
+    islandSunset: 'linear-gradient(to bottom, rgba(24, 10, 36, 0.35) 0%, rgba(24, 10, 36, 0.10) 25%, rgba(24, 10, 36, 0.25) 60%, rgba(17, 13, 23, 0.75) 100%)',
   },
   neutral: {
     50: '#FAFAFA',
@@ -64,4 +92,6 @@ export const elevations = {
   glowCoral: '0 0 25px -5px rgba(255, 122, 89, 0.4)',
   glowGold: '0 0 25px -5px rgba(255, 179, 71, 0.4)',
   glowSea: '0 0 25px -5px rgba(0, 180, 216, 0.4)',
+  glowPurple: '0 0 25px -5px rgba(139, 92, 246, 0.4)',
 };
+

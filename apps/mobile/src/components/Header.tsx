@@ -58,20 +58,20 @@ const styles = StyleSheet.create({
   headerTagline: {
     fontSize: 9,
     fontWeight: '700',
-    color: '#94A3B8',
+    color: TOKENS.textMuted,
     letterSpacing: 0.2,
   },
   walletBadge: {
-    backgroundColor: '#064E3B',
+    backgroundColor: 'rgba(255, 122, 89, 0.15)',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: '#059669',
+    borderColor: 'rgba(255, 122, 89, 0.40)',
   },
   walletText: {
-    color: TOKENS.success,
+    color: TOKENS.action,
     fontSize: 12,
-    fontWeight: '700',
+    fontWeight: '800',
   },
 });

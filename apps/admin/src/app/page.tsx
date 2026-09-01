@@ -68,9 +68,9 @@ export default async function AdminDashboardPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-[#090D16] text-brand-sandstone flex">
+    <div className="min-h-screen bg-brand-twilight text-brand-sandstone flex">
       {/* Sidebar */}
-      <aside className="hidden lg:flex flex-col w-60 bg-[#0F172A] border-r border-slate-800 p-4 space-y-1 min-h-screen sticky top-0">
+      <aside className="hidden lg:flex flex-col w-60 bg-brand-dusk border-r border-brand-sunsetPurple/20 p-4 space-y-1 min-h-screen sticky top-0">
         <div className="px-2 py-4 mb-2 flex items-center gap-2.5">
           <Image
             src="/brand/tukubi-emblem.png"
@@ -83,7 +83,7 @@ export default async function AdminDashboardPage() {
             <h1 className="text-sm font-black bg-gradient-to-r from-brand-caribbeanSea to-brand-sunriseCoral bg-clip-text text-transparent tracking-wider">
               TUKUBI
             </h1>
-            <p className="text-[10px] text-rose-300 font-semibold">Admin Console</p>
+            <p className="text-[10px] text-brand-sunriseCoral font-semibold">Admin Console</p>
           </div>
         </div>
         {NAV.map((item) => (
@@ -92,7 +92,7 @@ export default async function AdminDashboardPage() {
             href={item.href}
             className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors ${
               item.active
-                ? 'bg-sky-600/20 text-brand-caribbeanSea'
+                ? 'bg-brand-sunriseCoral/20 text-brand-sunriseCoral font-bold border border-brand-sunriseCoral/30'
                 : 'text-brand-sandstone/60 hover:bg-brand-dusk/60 hover:text-brand-sandstone'
             }`}
           >
@@ -100,15 +100,15 @@ export default async function AdminDashboardPage() {
             {item.label}
           </a>
         ))}
-        <div className="mt-auto pt-4 border-t border-slate-800">
-          <p className="text-[10px] text-slate-600 px-2">Signed in as</p>
+        <div className="mt-auto pt-4 border-t border-brand-sunsetPurple/20">
+          <p className="text-[10px] text-slate-400 px-2">Signed in as</p>
           <p className="text-[11px] text-brand-sandstone/60 px-2 truncate">{adminUser.email}</p>
         </div>
       </aside>
 
       {/* Main */}
       <div className="flex-1 flex flex-col">
-        <header className="sticky top-0 z-40 bg-[#0F172A]/95 backdrop-blur border-b border-slate-800 px-6 py-3 flex items-center justify-between">
+        <header className="sticky top-0 z-40 bg-brand-dusk/95 backdrop-blur border-b border-brand-sunsetPurple/20 px-6 py-3 flex items-center justify-between">
           <h2 className="text-base font-bold text-brand-sandstone flex items-center gap-2">
             <LayoutDashboard className="w-5 h-5 text-brand-caribbeanSea" /> Dashboard
           </h2>

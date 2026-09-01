@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 export default function ModerationRootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className="dark" suppressHydrationWarning>
-      <body className="bg-[#090D16] text-brand-sandstone antialiased min-h-screen" suppressHydrationWarning>
+      <body className="bg-brand-twilight text-brand-sandstone antialiased min-h-screen" suppressHydrationWarning>
         {children}
       </body>
     </html>

@@ -20,9 +20,9 @@ export default function AccessDenied({
   const displayRequired = requiredRole.toUpperCase();
 
   return (
-    <div className="min-h-screen bg-[#090D16] text-brand-sandstone flex flex-col justify-between selection:bg-brand-sunriseCoral/30">
+    <div className="min-h-screen bg-brand-twilight text-brand-sandstone flex flex-col justify-between selection:bg-brand-sunriseCoral/30">
       {/* Top Navbar */}
-      <header className="sticky top-0 z-50 bg-[#0F172A]/90 backdrop-blur-md border-b border-slate-800 px-6 py-4 flex items-center justify-between">
+      <header className="sticky top-0 z-50 bg-brand-dusk/90 backdrop-blur-md border-b border-brand-sunsetPurple/20 px-6 py-4 flex items-center justify-between">
         <Link
           href="/"
           className="flex items-center gap-2 text-slate-400 hover:text-brand-sandstone text-sm font-semibold transition-colors"
@@ -39,7 +39,7 @@ export default function AccessDenied({
         {/* Glow & Shield Icon */}
         <div className="relative mb-6">
           <div className="absolute -inset-4 bg-gradient-to-r from-rose-500/20 via-brand-goldenHour/20 to-brand-caribbeanSea/20 rounded-full blur-xl opacity-70 animate-pulse" />
-          <div className="relative bg-brand-dusk border border-slate-800 rounded-3xl p-6 shadow-2xl">
+          <div className="relative bg-brand-dusk border border-brand-sunsetPurple/30 rounded-3xl p-6 shadow-2xl">
             <ShieldAlert className="w-16 h-16 text-rose-400 mx-auto" />
           </div>
         </div>
@@ -53,7 +53,7 @@ export default function AccessDenied({
         </p>
 
         {/* Account & Role Metadata Card */}
-        <div className="mt-8 w-full bg-brand-dusk/70 border border-slate-800 rounded-2xl p-5 text-left space-y-4">
+        <div className="mt-8 w-full bg-brand-dusk/70 border border-brand-sunsetPurple/20 rounded-2xl p-5 text-left space-y-4">
           <div className="flex items-center justify-between border-b border-slate-800/80 pb-3">
             <span className="text-xs font-medium text-brand-sandstone/60">Signed-in Identity</span>
             <div className="text-right">
@@ -67,16 +67,16 @@ export default function AccessDenied({
           </div>
 
           <div className="grid grid-cols-2 gap-3 pt-1">
-            <div className="bg-[#0F172A] border border-slate-800 rounded-xl p-3">
+            <div className="bg-brand-twilight border border-brand-sunsetPurple/20 rounded-xl p-3">
               <span className="text-[10px] font-bold text-brand-sandstone/50 uppercase tracking-wider block mb-1">
                 Your Current Role
               </span>
-              <span className="inline-block text-xs font-bold px-2.5 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700">
+              <span className="inline-block text-xs font-bold px-2.5 py-0.5 rounded-full bg-brand-dusk text-slate-300 border border-brand-sunsetPurple/30">
                 {displayRole}
               </span>
             </div>
 
-            <div className="bg-[#0F172A] border border-rose-500/20 rounded-xl p-3">
+            <div className="bg-brand-twilight border border-rose-500/20 rounded-xl p-3">
               <span className="text-[10px] font-bold text-rose-300/70 uppercase tracking-wider block mb-1">
                 Required Clearance
               </span>

@@ -2,10 +2,12 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ─── Root tokens ─── */
+/* ─── Root Island Vibes tokens ─── */
 :root {
-  --brand-twilight:     #0a0612;
-  --brand-sandstone:    #f5ede0;
+  --brand-twilight:     #110D17;
+  --brand-dusk:         #1D1429;
+  --brand-plum:         #2A1B38;
+  --brand-sandstone:    #FDF2E9;
   --brand-sunrise:      #FF7A59;
   --brand-gold:         #FFB347;
   --brand-sea:          #00B4D8;
@@ -24,19 +26,19 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* ─── Utility: glass card — used by all surface components ─── */
+/* ─── Utility: glass card — used by all surface components in Island Vibes ─── */
 .glass {
-  background: rgba(10, 6, 18, 0.60);
+  background: rgba(17, 13, 23, 0.70);
   backdrop-filter: blur(24px) saturate(160%);
   -webkit-backdrop-filter: blur(24px) saturate(160%);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.10);
 }
 
 .glass-light {
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.06);
   backdrop-filter: blur(16px) saturate(140%);
   -webkit-backdrop-filter: blur(16px) saturate(140%);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.10);
 }
 
 /* ─── Smooth fade-in ─── */
@@ -45,3 +47,4 @@ body {
   to   { opacity: 1; transform: translateY(0);   }
 }
 .animate-fadeIn { animation: fadeIn 0.2s ease-out; }
+

@@ -191,7 +191,7 @@ export function InteractiveOnboardingPreview() {
 
             {/* Avatar bubble */}
             <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-brand-caribbeanSea to-brand-sunriseCoral p-[1px] mx-auto mb-3">
-              <div className="w-full h-full rounded-2xl bg-[#090D16] flex items-center justify-center text-sm font-bold text-white">
+              <div className="w-full h-full rounded-2xl bg-brand-twilight flex items-center justify-center text-sm font-bold text-white">
                 D
               </div>
             </div>

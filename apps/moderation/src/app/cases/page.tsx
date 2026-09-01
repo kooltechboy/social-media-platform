@@ -85,9 +85,9 @@ export default async function AllCasesPage({
   }
 
   return (
-    <div className="min-h-screen bg-[#090D16] text-brand-sandstone flex">
+    <div className="min-h-screen bg-brand-twilight text-brand-sandstone flex">
       {/* Sidebar */}
-      <aside className="hidden lg:flex flex-col w-56 bg-[#0F172A] border-r border-slate-800 p-4 space-y-1 sticky top-0 min-h-screen">
+      <aside className="hidden lg:flex flex-col w-56 bg-brand-dusk border-r border-brand-sunsetPurple/20 p-4 space-y-1 sticky top-0 min-h-screen">
         <div className="px-2 py-4 mb-2">
           <h1 className="text-sm font-extrabold text-brand-sandstone tracking-wider">TUKUBI</h1>
           <p className="text-[11px] text-amber-300 font-semibold mt-0.5">Moderation Center</p>

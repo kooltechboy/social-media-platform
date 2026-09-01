@@ -282,7 +282,7 @@ export default function PodcastNetworkFeed({ podcasts, user }: PodcastNetworkFee
 
       {/* Persistent Top Audio Deck */}
       {activePodcast && (
-        <div className="bg-gradient-to-br from-purple-950/70 via-slate-900 to-[#090D16] border border-purple-500/40 rounded-3xl p-6 shadow-2xl space-y-4">
+        <div className="bg-gradient-to-br from-purple-950/70 via-slate-900 to-brand-twilight border border-purple-500/40 rounded-3xl p-6 shadow-2xl space-y-4">
           <div className="flex flex-col md:flex-row items-center gap-6">
             {/* Cover & Play Toggle */}
             <div

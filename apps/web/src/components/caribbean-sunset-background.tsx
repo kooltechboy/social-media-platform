@@ -11,18 +11,20 @@ export interface BackgroundTheme {
   overlayGradient: string;
 }
 
+export const DEFAULT_THEME_ID = 'island-vibes';
+
 export const CARIBBEAN_THEMES: BackgroundTheme[] = [
   {
-    id: 'palm-beach',
-    name: '🌴 Palm Beach',
-    url: '/backgrounds/palm-beach.jpg',
-    fallbackUrl: 'https://images.unsplash.com/photo-1559494007-9f5847c49d94?auto=format&fit=crop&w=2400&q=90',
-    description: 'Crystal turquoise waters, fine white sand, and swaying tropical coconut palms',
+    id: 'island-vibes',
+    name: '🎉 Island Vibes',
+    url: '/backgrounds/island-vibes.jpg',
+    fallbackUrl: 'https://images.unsplash.com/photo-1531761535209-180857e963b9?auto=format&fit=crop&w=2400&q=90',
+    description: 'Tropical beach gathering, warm festive energy, and vibrant Caribbean culture',
     overlayGradient: `linear-gradient(to bottom,
-      rgba(8, 16, 32, 0.35) 0%,
-      rgba(8, 16, 32, 0.10) 25%,
-      rgba(8, 16, 32, 0.25) 60%,
-      rgba(8, 16, 32, 0.75) 100%
+      rgba(24, 10, 36, 0.35) 0%,
+      rgba(24, 10, 36, 0.10) 25%,
+      rgba(24, 10, 36, 0.25) 60%,
+      rgba(17, 13, 23, 0.75) 100%
     )`,
   },
   {
@@ -39,16 +41,16 @@ export const CARIBBEAN_THEMES: BackgroundTheme[] = [
     )`,
   },
   {
-    id: 'island-vibes',
-    name: '🎉 Island Vibes',
-    url: '/backgrounds/island-vibes.jpg',
-    fallbackUrl: 'https://images.unsplash.com/photo-1531761535209-180857e963b9?auto=format&fit=crop&w=2400&q=90',
-    description: 'Tropical beach gathering, warm festive energy, and vibrant Caribbean culture',
+    id: 'palm-beach',
+    name: '🌴 Palm Beach',
+    url: '/backgrounds/palm-beach.jpg',
+    fallbackUrl: 'https://images.unsplash.com/photo-1559494007-9f5847c49d94?auto=format&fit=crop&w=2400&q=90',
+    description: 'Crystal turquoise waters, fine white sand, and swaying tropical coconut palms',
     overlayGradient: `linear-gradient(to bottom,
-      rgba(24, 10, 36, 0.35) 0%,
-      rgba(24, 10, 36, 0.10) 25%,
-      rgba(24, 10, 36, 0.25) 60%,
-      rgba(17, 13, 23, 0.75) 100%
+      rgba(8, 16, 32, 0.35) 0%,
+      rgba(8, 16, 32, 0.10) 25%,
+      rgba(8, 16, 32, 0.25) 60%,
+      rgba(8, 16, 32, 0.75) 100%
     )`,
   },
   {

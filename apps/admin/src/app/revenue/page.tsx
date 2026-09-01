@@ -135,7 +135,7 @@ export default async function AdminRevenueCenterPage({
   ];
 
   return (
-    <div className="min-h-screen bg-[#090D16] text-brand-sandstone p-6 max-w-7xl mx-auto space-y-6">
+    <div className="min-h-screen bg-brand-twilight text-brand-sandstone p-6 max-w-7xl mx-auto space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-4">
         <div>

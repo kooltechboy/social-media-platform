@@ -63,7 +63,7 @@ export default async function AdminRecognitionDashboard() {
   ];
 
   return (
-    <div className="min-h-screen bg-[#090D16] text-brand-sandstone p-6 lg:p-10 space-y-8">
+    <div className="min-h-screen bg-brand-twilight text-brand-sandstone p-6 lg:p-10 space-y-8">
       {/* Top Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-800">
         <div className="flex items-center gap-3">

@@ -147,7 +147,7 @@ export default function ProfileEditModal({ isOpen, onClose, initialProfile }: Pr
         </div>
 
         {/* Tab Navigation */}
-        <div className="flex border-b border-slate-800 overflow-x-auto px-4 bg-[#090D16] scrollbar-none">
+        <div className="flex border-b border-brand-sunsetPurple/20 overflow-x-auto px-4 bg-brand-twilight scrollbar-none">
           {[
             { id: 'photos', label: 'Photos', icon: Camera },
             { id: 'about', label: 'About', icon: User },

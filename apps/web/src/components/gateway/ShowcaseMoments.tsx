@@ -70,7 +70,7 @@ export function ShowcaseMoments() {
             The Caribbean in Every Moment
           </h3>
           <p className="text-xs text-brand-sandstone/60 mt-0.5">
-            A comprehensive ecosystem designed for connection, commerce, and culture.
+            A unified platform designed for connection, commerce, and culture.
           </p>
         </div>
       </div>

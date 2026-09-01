@@ -31,7 +31,7 @@ export default function BootstrapForm() {
               <p className="font-bold text-base text-emerald-300">Root Super Admin Initialized!</p>
               <p className="text-xs text-emerald-300/80 mt-1">{state.success}</p>
             </div>
-            <div className="bg-[#090D16] border border-emerald-500/30 rounded-xl p-3 text-xs text-brand-sandstone space-y-1">
+            <div className="bg-brand-twilight border border-emerald-500/30 rounded-xl p-3 text-xs text-brand-sandstone space-y-1">
               <p className="font-semibold text-emerald-400">Next Steps:</p>
               <p className="text-brand-sandstone/70">
                 1. Sign in to your account with your credentials at <code className="text-emerald-300">/login</code>.

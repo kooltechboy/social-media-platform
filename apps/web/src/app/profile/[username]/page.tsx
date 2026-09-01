@@ -279,7 +279,7 @@ export default async function ProfilePage({
                   src={profileData.avatar_url}
                   name={profileData.display_name}
                   size="2xl"
-                  className="ring-4 ring-[#090D16] shadow-2xl"
+                  className="ring-4 ring-brand-twilight shadow-2xl"
                 />
 
                 <div className="mb-2 space-y-1">

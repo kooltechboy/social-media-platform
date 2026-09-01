@@ -1,3 +1,21 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+:root {
+  --brand-twilight: #110D17;
+  --brand-dusk: #1D1429;
+  --brand-plum: #2A1B38;
+  --brand-sandstone: #FDF2E9;
+  --brand-sunrise: #FF7A59;
+  --brand-gold: #FFB347;
+  --brand-sea: #00B4D8;
+  --brand-purple: #8B5CF6;
+}
+
+body {
+  background-color: var(--brand-twilight);
+  color: var(--brand-sandstone);
+  font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
+}
+

@@ -76,7 +76,7 @@ export default async function ModularPageView({ params }: { params: Promise<{ sl
         website: business.website || 'https://tukubi.com',
         contactEmail: 'contact@tukubi.com',
         avatar: '🏪',
-        coverGradient: 'from-amber-900/50 via-slate-900 to-[#090D16]',
+        coverGradient: 'from-amber-900/50 via-slate-900 to-[#110D17]',
         products: (products || []).map((p: any) => ({
           id: p.id,
           title: p.title,

@@ -54,7 +54,7 @@ export default function LoginPage() {
   );
 
   return (
-    <div className="min-h-screen bg-[#090D16] flex items-center justify-center px-4">
+    <div className="min-h-screen bg-brand-twilight flex items-center justify-center px-4">
       <div className="w-full max-w-sm space-y-8">
         {/* Branding */}
         <div className="text-center space-y-2">

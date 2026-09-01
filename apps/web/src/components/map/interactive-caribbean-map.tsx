@@ -295,8 +295,8 @@ export default function InteractiveCaribbeanMap() {
   return (
     <div
       ref={containerRef}
-      className={`min-h-screen bg-[#090D16] text-brand-sandstone p-4 md:p-6 max-w-7xl mx-auto space-y-5 select-none ${
-        isFullscreen ? 'fixed inset-0 z-50 p-6 bg-[#090D16] overflow-y-auto' : ''
+      className={`min-h-screen bg-brand-twilight/90 backdrop-blur-md text-brand-sandstone p-4 md:p-6 max-w-7xl mx-auto space-y-5 select-none rounded-3xl ${
+        isFullscreen ? 'fixed inset-0 z-50 p-6 bg-brand-twilight overflow-y-auto' : ''
       }`}
     >
       {/* ── Top Discovery Header ── */}

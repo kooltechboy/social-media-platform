@@ -59,7 +59,7 @@ export default function StaffRoleModal({
 
       {isOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-150">
-          <div className="bg-[#090D16] border border-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-5">
+          <div className="bg-brand-dusk border border-brand-sunsetPurple/30 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-5">
             {/* Header */}
             <div className="flex items-start justify-between border-b border-slate-800 pb-3">
               <div>

@@ -89,9 +89,9 @@ export default async function ModerationDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-[#090D16] text-brand-sandstone flex">
+    <div className="min-h-screen bg-brand-twilight text-brand-sandstone flex">
       {/* Sidebar */}
-      <aside className="hidden lg:flex flex-col w-56 bg-[#0F172A] border-r border-slate-800 p-4 space-y-1 sticky top-0 min-h-screen">
+      <aside className="hidden lg:flex flex-col w-56 bg-brand-dusk border-r border-brand-sunsetPurple/20 p-4 space-y-1 sticky top-0 min-h-screen">
         <div className="px-2 py-4 mb-2 flex items-center gap-2.5">
           <Image
             src="/brand/tukubi-emblem.png"
@@ -104,7 +104,7 @@ export default async function ModerationDashboard() {
             <h1 className="text-sm font-black bg-gradient-to-r from-brand-caribbeanSea to-brand-sunriseCoral bg-clip-text text-transparent tracking-wider">
               TUKUBI
             </h1>
-            <p className="text-[10px] text-amber-300 font-semibold">Moderation Center</p>
+            <p className="text-[10px] text-brand-goldenHour font-semibold">Moderation Center</p>
           </div>
         </div>
         {[
@@ -122,14 +122,14 @@ export default async function ModerationDashboard() {
             {item.label}
           </a>
         ))}
-        <div className="mt-auto pt-4 border-t border-slate-800">
-          <p className="text-[10px] text-slate-600 px-2">Moderator</p>
+        <div className="mt-auto pt-4 border-t border-brand-sunsetPurple/20">
+          <p className="text-[10px] text-slate-400 px-2">Moderator</p>
           <p className="text-[11px] text-brand-sandstone/60 px-2 truncate">{moderator.displayName}</p>
         </div>
       </aside>
 
       <div className="flex-1 flex flex-col">
-        <header className="sticky top-0 z-40 bg-[#0F172A]/95 backdrop-blur border-b border-slate-800 px-6 py-3 flex items-center justify-between">
+        <header className="sticky top-0 z-40 bg-brand-dusk/95 backdrop-blur border-b border-brand-sunsetPurple/20 px-6 py-3 flex items-center justify-between">
           <h2 className="text-base font-bold text-brand-sandstone flex items-center gap-2">
             <ShieldAlert className="w-5 h-5 text-brand-goldenHour" /> Moderation Queue
           </h2>

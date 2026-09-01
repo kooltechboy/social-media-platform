@@ -70,7 +70,7 @@ export default function MobileNav() {
         >
           <div
             ref={sheetRef}
-            className="w-full bg-[#0C1322] border-t border-slate-800 rounded-t-3xl p-5 space-y-3 shadow-2xl animate-slideUp"
+            className="w-full bg-[#1D1429]/95 backdrop-blur-2xl border-t border-brand-sunsetPurple/30 rounded-t-3xl p-5 space-y-3 shadow-2xl animate-slideUp"
           >
             {/* Sheet header */}
             <div className="flex items-center justify-between pb-1">
@@ -93,18 +93,18 @@ export default function MobileNav() {
                 type="button"
                 onClick={() => setIsProfileSheetOpen(false)}
                 aria-label="Close menu"
-                className="w-9 h-9 rounded-xl bg-slate-800/80 flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-700 transition-colors"
+                className="w-9 h-9 rounded-xl bg-white/10 flex items-center justify-center text-slate-300 hover:text-white hover:bg-white/20 transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <div className="h-px bg-slate-800" />
+            <div className="h-px bg-white/10" />
 
             {/* Profile & Settings links */}
             <Link
               href="/profile"
-              className="flex items-center gap-3 w-full px-4 py-3.5 rounded-2xl bg-slate-800/50 hover:bg-slate-800 text-white text-sm font-bold transition-colors min-h-[44px]"
+              className="flex items-center gap-3 w-full px-4 py-3.5 rounded-2xl bg-brand-twilight/70 hover:bg-brand-dusk border border-white/5 text-white text-sm font-bold transition-colors min-h-[44px]"
               onClick={() => setIsProfileSheetOpen(false)}
             >
               <User className="w-5 h-5 text-brand-caribbeanSea flex-shrink-0" />
@@ -113,14 +113,14 @@ export default function MobileNav() {
 
             <Link
               href="/settings"
-              className="flex items-center gap-3 w-full px-4 py-3.5 rounded-2xl bg-slate-800/50 hover:bg-slate-800 text-white text-sm font-bold transition-colors min-h-[44px]"
+              className="flex items-center gap-3 w-full px-4 py-3.5 rounded-2xl bg-brand-twilight/70 hover:bg-brand-dusk border border-white/5 text-white text-sm font-bold transition-colors min-h-[44px]"
               onClick={() => setIsProfileSheetOpen(false)}
             >
-              <Settings className="w-5 h-5 text-slate-400 flex-shrink-0" />
+              <Settings className="w-5 h-5 text-brand-goldenHour flex-shrink-0" />
               <span>Settings</span>
             </Link>
 
-            <div className="h-px bg-slate-800" />
+            <div className="h-px bg-white/10" />
 
             {/* Sign Out — prominent, accessible, 44px+ touch target */}
             <button
@@ -141,7 +141,7 @@ export default function MobileNav() {
 
       {/* ── Bottom Tab Bar ── */}
       <nav
-        className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#090D16]/95 backdrop-blur-md border-t border-slate-800 shadow-2xl"
+        className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#110D17]/90 backdrop-blur-2xl border-t border-white/10 shadow-2xl"
         aria-label="Main navigation"
       >
         <ul className="flex items-center justify-around px-2 py-2" role="tablist">

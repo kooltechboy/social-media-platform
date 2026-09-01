@@ -445,7 +445,7 @@ export default function LiveHostStudio({ user }: LiveHostStudioProps) {
   }
 
   return (
-    <div className="min-h-screen bg-[#090D16] text-brand-sandstone flex flex-col justify-between p-3 md:p-6 max-w-7xl mx-auto space-y-6">
+    <div className="min-h-screen bg-brand-twilight/90 backdrop-blur-md text-brand-sandstone flex flex-col justify-between p-3 md:p-6 max-w-7xl mx-auto space-y-6 rounded-3xl">
       {/* Top Studio Header */}
       <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-4">
         <div className="flex items-center gap-3">

@@ -3,7 +3,7 @@ import Image from 'next/image';
 
 export default function AdminLoginPage() {
   return (
-    <div className="min-h-screen bg-[#090D16] text-brand-sandstone flex flex-col justify-between p-6">
+    <div className="min-h-screen bg-brand-twilight text-brand-sandstone flex flex-col justify-between p-6">
       <div className="flex-1 flex items-center justify-center">
         <div className="bg-brand-dusk/70 border border-slate-800 rounded-2xl p-8 max-w-sm w-full space-y-6 shadow-2xl">
           <div className="text-center space-y-3">

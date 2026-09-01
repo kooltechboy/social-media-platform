@@ -27,7 +27,7 @@ export default function FounderOnboardingModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-300">
-      <div className="relative w-full max-w-lg bg-gradient-to-b from-[#101A30] via-brand-dusk to-[#090D16] border border-amber-500/40 rounded-3xl p-6 sm:p-8 shadow-2xl shadow-amber-950/40 text-center space-y-6 overflow-hidden">
+      <div className="relative w-full max-w-lg bg-gradient-to-b from-[#1D1429] via-brand-dusk to-brand-twilight border border-brand-goldenHour/40 rounded-3xl p-6 sm:p-8 shadow-2xl shadow-amber-950/40 text-center space-y-6 overflow-hidden">
         {/* Glow Effects */}
         <div className="absolute -top-24 -left-24 w-48 h-48 bg-amber-500/20 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute -bottom-24 -right-24 w-48 h-48 bg-purple-500/20 rounded-full blur-3xl pointer-events-none" />

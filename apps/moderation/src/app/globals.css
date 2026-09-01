@@ -3,12 +3,21 @@
 @tailwind utilities;
 
 :root {
-  --background: #090d16;
-  --foreground: #f8fafc;
+  --background: #110D17;
+  --foreground: #FDF2E9;
+  --brand-twilight: #110D17;
+  --brand-dusk: #1D1429;
+  --brand-plum: #2A1B38;
+  --brand-sandstone: #FDF2E9;
+  --brand-sunrise: #FF7A59;
+  --brand-gold: #FFB347;
+  --brand-sea: #00B4D8;
+  --brand-purple: #8B5CF6;
 }
 
 body {
   color: var(--foreground);
   background: var(--background);
-  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', Roboto, sans-serif;
 }
+
