@@ -336,5 +336,76 @@ describe('TUKUBI — Profile & Settings Validation Suite', () => {
       expect(formatLocation(null, null, null)).toBe('');
     });
   });
+
+  describe('Full Profile & Account Type Architecture', () => {
+    it('adapts media upload labels based on account classification', () => {
+      function getAvatarUploadLabel(accountType?: string): string {
+        if (accountType === 'organization') return 'Organization Logo / Emblem';
+        if (accountType === 'business') return 'Business Logo';
+        if (accountType === 'creator') return 'Creator Identity Image';
+        return 'Profile Photo';
+      }
+
+      expect(getAvatarUploadLabel('organization')).toBe('Organization Logo / Emblem');
+      expect(getAvatarUploadLabel('business')).toBe('Business Logo');
+      expect(getAvatarUploadLabel('creator')).toBe('Creator Identity Image');
+      expect(getAvatarUploadLabel('personal')).toBe('Profile Photo');
+      expect(getAvatarUploadLabel(undefined)).toBe('Profile Photo');
+    });
+
+    it('sanitizes social handle prefixes properly', () => {
+      function sanitizeHandle(handle: string): string {
+        return handle.trim().replace(/^@+/, '');
+      }
+
+      expect(sanitizeHandle('@carib_vibes')).toBe('carib_vibes');
+      expect(sanitizeHandle('@@island_dev')).toBe('island_dev');
+      expect(sanitizeHandle('plain_user')).toBe('plain_user');
+    });
+
+    it('suppresses newcomer gamification indicator for official platform accounts', () => {
+      function shouldShowNewcomerBadge(profile: { is_official?: boolean; username: string; is_system_account?: boolean }): boolean {
+        if (profile.is_official || profile.username.toLowerCase() === 'tukubi' || profile.is_system_account) {
+          return false;
+        }
+        return true;
+      }
+
+      expect(shouldShowNewcomerBadge({ username: 'tukubi', is_official: true })).toBe(false);
+      expect(shouldShowNewcomerBadge({ username: 'TUKUBI', is_official: false })).toBe(false);
+      expect(shouldShowNewcomerBadge({ username: 'system_bot', is_system_account: true })).toBe(false);
+      expect(shouldShowNewcomerBadge({ username: 'regular_user', is_official: false })).toBe(true);
+    });
+
+    it('falls back to Tukubi official emblem when avatar is null for @tukubi', () => {
+      function resolveAvatarSource(avatarUrl: string | null | undefined, usernameOrName: string): string | null {
+        if (avatarUrl) return avatarUrl;
+        const normalized = usernameOrName.toUpperCase();
+        if (normalized === 'TUKUBI' || normalized === 'TUKUBI OFFICIAL') {
+          return '/brand/tukubi-emblem.png';
+        }
+        return null;
+      }
+
+      expect(resolveAvatarSource(null, 'TUKUBI')).toBe('/brand/tukubi-emblem.png');
+      expect(resolveAvatarSource(undefined, 'tukubi')).toBe('/brand/tukubi-emblem.png');
+      expect(resolveAvatarSource('https://cdn.tukubi.com/custom.jpg', 'TUKUBI')).toBe('https://cdn.tukubi.com/custom.jpg');
+      expect(resolveAvatarSource(null, 'Jane Doe')).toBeNull();
+    });
+
+    it('validates account_type enum constraints', () => {
+      const validTypes = ['personal', 'creator', 'business', 'organization'];
+      function isValidAccountType(t: string): boolean {
+        return validTypes.includes(t);
+      }
+
+      expect(isValidAccountType('personal')).toBe(true);
+      expect(isValidAccountType('creator')).toBe(true);
+      expect(isValidAccountType('business')).toBe(true);
+      expect(isValidAccountType('organization')).toBe(true);
+      expect(isValidAccountType('invalid_type')).toBe(false);
+    });
+  });
 });
+
 

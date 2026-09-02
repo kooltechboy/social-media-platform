@@ -29,6 +29,9 @@ export default function UserAvatar({
   const [imgError, setImgError] = useState(false);
 
   const displayName = name?.trim() || 'Member';
+  const isTukubiBrand = displayName.toUpperCase() === 'TUKUBI' || displayName.toUpperCase() === 'TUKUBI OFFICIAL';
+  const resolvedSrc = src || (isTukubiBrand ? '/brand/tukubi-emblem.png' : null);
+
   const initials = displayName
     .split(/\s+/)
     .map((part) => part[0])
@@ -49,13 +52,13 @@ export default function UserAvatar({
       role="img"
       aria-label={displayName}
     >
-      {src && !imgError ? (
+      {resolvedSrc && !imgError ? (
         /* eslint-disable-next-line @next/next/no-img-element */
         <img
-          src={src}
+          src={resolvedSrc}
           alt={displayName}
           onError={() => setImgError(true)}
-          className="w-full h-full object-cover rounded-full"
+          className={`w-full h-full object-cover rounded-full ${isTukubiBrand && !src ? 'bg-[#110D17] p-1' : ''}`}
         />
       ) : (
         <div

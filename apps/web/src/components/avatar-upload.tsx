@@ -9,15 +9,24 @@ import UserAvatar from './user-avatar';
 interface AvatarUploadProps {
   currentAvatarUrl?: string | null;
   displayName: string;
+  accountType?: 'personal' | 'creator' | 'business' | 'organization';
+  isOfficial?: boolean;
   onAvatarUpdated?: (newUrl: string) => void;
 }
 
 interface CoverUploadProps {
   currentCoverUrl?: string | null;
+  accountType?: 'personal' | 'creator' | 'business' | 'organization';
   onCoverUpdated?: (newUrl: string | null) => void;
 }
 
-export function AvatarUpload({ currentAvatarUrl, displayName, onAvatarUpdated }: AvatarUploadProps) {
+export function AvatarUpload({
+  currentAvatarUrl,
+  displayName,
+  accountType = 'personal',
+  isOfficial = false,
+  onAvatarUpdated,
+}: AvatarUploadProps) {
   const { refresh } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(currentAvatarUrl || null);
@@ -74,8 +83,17 @@ export function AvatarUpload({ currentAvatarUrl, displayName, onAvatarUpdated }:
     }
   };
 
+  const getLabel = () => {
+    if (accountType === 'organization') return { upload: 'Upload Organization Logo', change: 'Change Logo', alt: 'Organization Logo' };
+    if (accountType === 'business') return { upload: 'Upload Business Logo', change: 'Change Logo', alt: 'Business Logo' };
+    if (accountType === 'creator') return { upload: 'Upload Creator Photo', change: 'Change Photo', alt: 'Creator Identity Photo' };
+    return { upload: 'Upload Profile Photo', change: 'Change Photo', alt: 'Profile Photo' };
+  };
+
+  const labels = getLabel();
+
   return (
-    <div className="flex flex-col items-center sm:items-start gap-4">
+    <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4">
       <div className="relative group">
         <UserAvatar
           src={previewUrl}
@@ -88,7 +106,7 @@ export function AvatarUpload({ currentAvatarUrl, displayName, onAvatarUpdated }:
           type="button"
           onClick={() => fileInputRef.current?.click()}
           disabled={uploading}
-          aria-label="Change profile photo"
+          aria-label={labels.change}
           className="absolute inset-0 rounded-full bg-black/60 opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity flex flex-col items-center justify-center text-white cursor-pointer"
         >
           {uploading ? (
@@ -96,7 +114,7 @@ export function AvatarUpload({ currentAvatarUrl, displayName, onAvatarUpdated }:
           ) : (
             <>
               <Camera className="w-5 h-5 text-brand-caribbeanSea mb-0.5" />
-              <span className="text-[10px] font-bold">Change</span>
+              <span className="text-[10px] font-bold">{labels.change}</span>
             </>
           )}
         </button>
@@ -111,29 +129,29 @@ export function AvatarUpload({ currentAvatarUrl, displayName, onAvatarUpdated }:
         />
       </div>
 
-      <div className="space-y-1 text-center sm:text-left">
-        <div className="flex items-center gap-2">
+      <div className="space-y-1 text-center sm:text-left flex-1">
+        <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
             disabled={uploading}
-            className="px-3.5 py-1.5 rounded-xl bg-brand-caribbeanSea/20 hover:bg-brand-caribbeanSea text-brand-caribbeanSea hover:text-slate-950 border border-brand-caribbeanSea/30 text-xs font-bold transition-all disabled:opacity-50 flex items-center gap-1.5"
+            className="px-3.5 py-1.5 rounded-xl bg-brand-caribbeanSea/20 hover:bg-brand-caribbeanSea text-brand-caribbeanSea hover:text-slate-950 border border-brand-caribbeanSea/30 text-xs font-bold transition-all disabled:opacity-50 flex items-center gap-1.5 cursor-pointer"
           >
             {uploading ? (
               <>
                 <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                <span>Uploading photo…</span>
+                <span>Uploading…</span>
               </>
             ) : (
               <>
                 <Camera className="w-3.5 h-3.5" />
-                <span>Upload New Photo</span>
+                <span>{previewUrl ? labels.change : labels.upload}</span>
               </>
             )}
           </button>
         </div>
         <p className="text-[11px] text-brand-sandstone/50">
-          JPG, PNG, or WebP up to 5MB.
+          JPG, PNG, WebP, or GIF up to 5MB.
         </p>
 
         {error && (
@@ -145,7 +163,7 @@ export function AvatarUpload({ currentAvatarUrl, displayName, onAvatarUpdated }:
         {success && (
           <p className="text-xs text-emerald-400 flex items-center gap-1 mt-1 bg-emerald-500/10 px-2.5 py-1 rounded-lg border border-emerald-500/20">
             <CheckCircle className="w-3.5 h-3.5 shrink-0" />
-            <span>Profile photo updated successfully!</span>
+            <span>Updated successfully!</span>
           </p>
         )}
       </div>
@@ -153,7 +171,7 @@ export function AvatarUpload({ currentAvatarUrl, displayName, onAvatarUpdated }:
   );
 }
 
-export function CoverUpload({ currentCoverUrl, onCoverUpdated }: CoverUploadProps) {
+export function CoverUpload({ currentCoverUrl, accountType = 'personal', onCoverUpdated }: CoverUploadProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(currentCoverUrl || null);
   const [uploading, setUploading] = useState(false);
@@ -256,7 +274,7 @@ export function CoverUpload({ currentCoverUrl, onCoverUpdated }: CoverUploadProp
             type="button"
             onClick={() => fileInputRef.current?.click()}
             disabled={uploading || removing}
-            className="px-3.5 py-1.5 rounded-xl bg-brand-caribbeanSea/20 hover:bg-brand-caribbeanSea text-brand-caribbeanSea hover:text-slate-950 border border-brand-caribbeanSea/30 text-xs font-bold transition-all disabled:opacity-50 flex items-center gap-1.5"
+            className="px-3.5 py-1.5 rounded-xl bg-brand-caribbeanSea/20 hover:bg-brand-caribbeanSea text-brand-caribbeanSea hover:text-slate-950 border border-brand-caribbeanSea/30 text-xs font-bold transition-all disabled:opacity-50 flex items-center gap-1.5 cursor-pointer"
           >
             <ImageIcon className="w-3.5 h-3.5" />
             <span>{previewUrl ? 'Change Cover' : 'Upload Cover'}</span>
@@ -267,7 +285,7 @@ export function CoverUpload({ currentCoverUrl, onCoverUpdated }: CoverUploadProp
               type="button"
               onClick={handleRemove}
               disabled={uploading || removing}
-              className="px-3 py-1.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 text-xs font-bold transition-all disabled:opacity-50 flex items-center gap-1"
+              className="px-3 py-1.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 text-xs font-bold transition-all disabled:opacity-50 flex items-center gap-1 cursor-pointer"
             >
               <X className="w-3.5 h-3.5" />
               <span>{removing ? 'Removing…' : 'Remove'}</span>

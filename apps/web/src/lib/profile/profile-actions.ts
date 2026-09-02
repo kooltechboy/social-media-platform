@@ -10,6 +10,54 @@ export interface ActionResponse<T = unknown> {
   data?: T;
 }
 
+export interface FullProfileUpdatePayload {
+  // Identity & Visuals
+  displayName: string;
+  username: string;
+  accountType?: 'personal' | 'creator' | 'business' | 'organization';
+  pronouns?: string;
+  bio?: string;
+  website?: string;
+  avatarUrl?: string | null;
+  coverUrl?: string | null;
+
+  // Personal
+  firstName?: string;
+  lastName?: string;
+  dateOfBirth?: string;
+  gender?: string;
+  relationshipStatus?: string;
+  address?: string;
+  phone?: string;
+
+  // Roots & Geography
+  country?: string;
+  island?: string;
+  city?: string;
+  culturalInterests?: string[];
+
+  // Professional & Education
+  jobTitle?: string;
+  employer?: string;
+  industry?: string;
+  education?: string;
+  school?: string;
+  skills?: string[];
+  professionalBio?: string;
+
+  // Social
+  socialLinks?: Record<string, string>;
+
+  // Privacy
+  profileVisibility?: 'public' | 'followers' | 'private';
+  dobVisibility?: 'public' | 'followers' | 'private';
+  addressVisibility?: 'public' | 'followers' | 'private';
+  relationshipVisibility?: 'public' | 'followers' | 'private';
+  onlineStatusEnabled?: boolean;
+  messagingPermission?: string;
+  interactionPermission?: string;
+}
+
 const RESERVED_USERNAMES = new Set([
   'admin',
   'superadmin',
@@ -514,3 +562,171 @@ export async function removeCoverAction(): Promise<ActionResponse> {
 
   return { success: true, message: 'Cover banner removed.' };
 }
+
+/**
+ * 9. Comprehensive Full Profile Update (Unified single-save action)
+ */
+export async function updateFullProfileAction(
+  payload: FullProfileUpdatePayload
+): Promise<ActionResponse<{ username: string }>> {
+  const user = await getCurrentUser();
+  if (!user) return { success: false, error: 'Sign in required.' };
+
+  const supabase = await createSupabaseServerClient();
+  if (!supabase) return { success: false, error: 'Database service unavailable.' };
+
+  const displayName = (payload.displayName || '').trim();
+  const rawUsername = (payload.username || '').trim().toLowerCase();
+  const bio = (payload.bio || '').trim();
+  const pronouns = (payload.pronouns || '').trim();
+  let website = (payload.website || '').trim();
+
+  if (!displayName) {
+    return { success: false, error: 'Display name is required.' };
+  }
+  if (displayName.length > 100) {
+    return { success: false, error: 'Display name cannot exceed 100 characters.' };
+  }
+
+  const username = rawUsername || user.username;
+  if (!/^[a-z0-9_.]{3,30}$/.test(username)) {
+    return {
+      success: false,
+      error: 'Username must be 3-30 characters and contain only lowercase letters, numbers, underscores, or periods.',
+    };
+  }
+
+  if (RESERVED_USERNAMES.has(username) && username !== user.username) {
+    return { success: false, error: 'This username is reserved by the platform.' };
+  }
+
+  if (username !== user.username) {
+    const { data: collision } = await supabase
+      .from('profiles')
+      .select('id')
+      .ilike('username', username)
+      .neq('id', user.id)
+      .maybeSingle();
+
+    if (collision) {
+      return { success: false, error: 'Username is already taken by another member.' };
+    }
+  }
+
+  if (bio.length > 500) {
+    return { success: false, error: 'Bio cannot exceed 500 characters.' };
+  }
+
+  if (pronouns.length > 50) {
+    return { success: false, error: 'Pronouns cannot exceed 50 characters.' };
+  }
+
+  if (website && !/^https?:\/\//i.test(website)) {
+    website = `https://${website}`;
+  }
+  if (website && !/^https?:\/\/[a-z0-9.-]+\.[a-z]{2,}/i.test(website)) {
+    return { success: false, error: 'Please enter a valid website URL.' };
+  }
+
+  // Validate DOB if provided
+  let formattedDob: string | null = null;
+  if (payload.dateOfBirth) {
+    const parsed = new Date(payload.dateOfBirth);
+    if (!isNaN(parsed.getTime())) {
+      if (parsed > new Date()) {
+        return { success: false, error: 'Date of birth cannot be in the future.' };
+      }
+      formattedDob = parsed.toISOString().split('T')[0];
+    }
+  }
+
+  // Account type validation
+  const validAccountTypes = ['personal', 'creator', 'business', 'organization'] as const;
+  const requestedAccountType = payload.accountType && validAccountTypes.includes(payload.accountType)
+    ? payload.accountType
+    : 'personal';
+
+  // Sanitized privacy values
+  const validVis = ['public', 'followers', 'private'];
+  const pVis = validVis.includes(payload.profileVisibility || '') ? payload.profileVisibility! : 'public';
+  const dobVis = validVis.includes(payload.dobVisibility || '') ? payload.dobVisibility! : 'private';
+  const addrVis = validVis.includes(payload.addressVisibility || '') ? payload.addressVisibility! : 'private';
+  const relVis = validVis.includes(payload.relationshipVisibility || '') ? payload.relationshipVisibility! : 'public';
+
+  const updateFields: Record<string, any> = {
+    display_name: displayName,
+    username,
+    bio: bio || null,
+    pronouns: pronouns || null,
+    website: website || null,
+    account_type: requestedAccountType,
+    first_name: payload.firstName ? payload.firstName.trim() : null,
+    last_name: payload.lastName ? payload.lastName.trim() : null,
+    date_of_birth: formattedDob,
+    gender: payload.gender ? payload.gender.trim() : null,
+    relationship_status: payload.relationshipStatus ? payload.relationshipStatus.trim() : null,
+    country: payload.country ? payload.country.trim() : null,
+    island: payload.island ? payload.island.trim() : null,
+    city: payload.city ? payload.city.trim() : null,
+    address: payload.address ? payload.address.trim() : null,
+    phone: payload.phone ? payload.phone.trim() : null,
+    job_title: payload.jobTitle ? payload.jobTitle.trim() : null,
+    employer: payload.employer ? payload.employer.trim() : null,
+    industry: payload.industry ? payload.industry.trim() : null,
+    education: payload.education ? payload.education.trim() : null,
+    school: payload.school ? payload.school.trim() : null,
+    skills: Array.isArray(payload.skills) ? payload.skills.slice(0, 20) : [],
+    professional_bio: payload.professionalBio ? payload.professionalBio.trim() : null,
+    social_links: payload.socialLinks || {},
+    profile_visibility: pVis,
+    dob_visibility: dobVis,
+    address_visibility: addrVis,
+    relationship_visibility: relVis,
+    online_status_enabled: payload.onlineStatusEnabled !== false,
+    messaging_permission: payload.messagingPermission || 'everyone',
+    interaction_permission: payload.interactionPermission || 'everyone',
+    is_private: pVis === 'private',
+    updated_at: new Date().toISOString(),
+  };
+
+  if (payload.culturalInterests && Array.isArray(payload.culturalInterests)) {
+    updateFields.cultural_interests = payload.culturalInterests.slice(0, 15);
+  }
+
+  if (payload.avatarUrl !== undefined) {
+    updateFields.avatar_url = payload.avatarUrl;
+  }
+
+  if (payload.coverUrl !== undefined) {
+    updateFields.cover_url = payload.coverUrl;
+    updateFields.banner_url = payload.coverUrl;
+  }
+
+  const { error } = await supabase
+    .from('profiles')
+    .update(updateFields)
+    .eq('id', user.id);
+
+  if (error) {
+    return { success: false, error: error.message };
+  }
+
+  // Also sync avatar if updated
+  if (payload.avatarUrl) {
+    await supabase.auth.updateUser({
+      data: { avatar_url: payload.avatarUrl },
+    });
+  }
+
+  revalidatePath('/profile');
+  revalidatePath(`/profile/${username}`);
+  revalidatePath(`/profile/${user.username}`);
+  revalidatePath('/settings');
+
+  return {
+    success: true,
+    message: 'Profile updated successfully!',
+    data: { username },
+  };
+}
+

@@ -12,25 +12,26 @@ import {
   Loader2,
   CheckCircle,
   AlertCircle,
-  Lock,
-  Globe,
+  BadgeCheck,
 } from 'lucide-react';
 import {
-  updateProfileBasicAction,
-  updateProfilePersonalInfoAction,
-  updateProfileProfessionalAction,
-  updateProfileSocialAction,
-  updateProfilePrivacyAction,
-  type ActionResponse,
+  updateFullProfileAction,
+  uploadAvatarAction,
+  uploadCoverAction,
+  removeCoverAction,
+  type FullProfileUpdatePayload,
 } from '../lib/profile/profile-actions';
-import { AvatarUpload, CoverUpload } from './avatar-upload';
 import { CARIBBEAN_TERRITORIES } from '../lib/constants/caribbean-territories';
 import { DIASPORA_COUNTRIES } from '../lib/constants/diaspora-hubs';
+import UserAvatar from './user-avatar';
+import OfficialBadge from './official/official-badge';
+import { useAuth } from './auth-provider';
 
 export interface ProfileData {
   id: string;
   username: string;
   display_name: string;
+  account_type?: 'personal' | 'creator' | 'business' | 'organization' | null;
   first_name?: string | null;
   last_name?: string | null;
   bio?: string | null;
@@ -47,6 +48,7 @@ export interface ProfileData {
   city?: string | null;
   address?: string | null;
   phone?: string | null;
+  cultural_interests?: string[] | null;
   job_title?: string | null;
   employer?: string | null;
   industry?: string | null;
@@ -62,27 +64,43 @@ export interface ProfileData {
   online_status_enabled?: boolean | null;
   messaging_permission?: string | null;
   interaction_permission?: string | null;
+  is_verified?: boolean | null;
+  is_official?: boolean | null;
+  is_system_account?: boolean | null;
 }
 
 interface ProfileEditModalProps {
   isOpen: boolean;
   onClose: () => void;
   initialProfile: ProfileData;
+  onProfileUpdated?: (updated: ProfileData) => void;
 }
 
-type TabType = 'photos' | 'about' | 'personal' | 'work' | 'social' | 'privacy';
+type TabType = 'identity' | 'about' | 'career' | 'personal' | 'social' | 'privacy';
 
-export default function ProfileEditModal({ isOpen, onClose, initialProfile }: ProfileEditModalProps) {
-  const [activeTab, setActiveTab] = useState<TabType>('about');
-  const [profile, setProfile] = useState<ProfileData>(initialProfile);
+export default function ProfileEditModal({
+  isOpen,
+  onClose,
+  initialProfile,
+  onProfileUpdated,
+}: ProfileEditModalProps) {
+  const { refresh } = useAuth();
+  const [activeTab, setActiveTab] = useState<TabType>('identity');
   const [isPending, startTransition] = useTransition();
   const [feedback, setFeedback] = useState<{ error: string | null; success: string | null }>({
     error: null,
     success: null,
   });
 
+  // Media upload state
+  const [avatarUploading, setAvatarUploading] = useState(false);
+  const [coverUploading, setCoverUploading] = useState(false);
+
+  // Form State
+  const [form, setForm] = useState<ProfileData>(initialProfile);
+
   useEffect(() => {
-    setProfile(initialProfile);
+    setForm(initialProfile);
   }, [initialProfile]);
 
   useEffect(() => {
@@ -101,60 +119,298 @@ export default function ProfileEditModal({ isOpen, onClose, initialProfile }: Pr
 
   if (!isOpen) return null;
 
-  const handleFormSubmit = (e: React.FormEvent<HTMLFormElement>, actionFn: (prev: ActionResponse, fd: FormData) => Promise<ActionResponse>) => {
-    e.preventDefault();
+  const isOfficial = form.is_official || form.username?.toLowerCase() === 'tukubi';
+  const accountType = form.account_type || 'personal';
+
+  // Handle local text field changes
+  const handleChange = (
+    field: keyof ProfileData,
+    value: any
+  ) => {
+    setForm((prev) => ({ ...prev, [field]: value }));
     setFeedback({ error: null, success: null });
-    const formData = new FormData(e.currentTarget);
+  };
+
+  // Handle social links changes
+  const handleSocialChange = (network: string, value: string) => {
+    setForm((prev) => ({
+      ...prev,
+      social_links: {
+        ...(prev.social_links || {}),
+        [network]: value,
+      },
+    }));
+    setFeedback({ error: null, success: null });
+  };
+
+  // Handle avatar upload directly inside modal
+  const handleAvatarFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+    if (!allowed.includes(file.type.toLowerCase())) {
+      setFeedback({ error: 'Please select a JPG, PNG, WebP, or GIF image.', success: null });
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setFeedback({ error: 'Avatar image must be under 5MB.', success: null });
+      return;
+    }
+
+    // Local instant preview
+    const previewUrl = URL.createObjectURL(file);
+    setForm((prev) => ({ ...prev, avatar_url: previewUrl }));
+    setAvatarUploading(true);
+
+    try {
+      const fd = new FormData();
+      fd.append('file', file);
+      const res = await uploadAvatarAction(fd);
+      if (res.success && res.data?.url) {
+        setForm((prev) => ({ ...prev, avatar_url: res.data!.url }));
+        setFeedback({ error: null, success: 'Photo uploaded!' });
+        await refresh();
+      } else {
+        setFeedback({ error: res.error || 'Failed to upload photo.', success: null });
+        setForm((prev) => ({ ...prev, avatar_url: initialProfile.avatar_url }));
+      }
+    } catch {
+      setFeedback({ error: 'Network error uploading photo.', success: null });
+      setForm((prev) => ({ ...prev, avatar_url: initialProfile.avatar_url }));
+    } finally {
+      setAvatarUploading(false);
+    }
+  };
+
+  // Handle cover banner upload directly inside modal
+  const handleCoverFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const allowed = ['image/jpeg', 'image/png', 'image/webp'];
+    if (!allowed.includes(file.type.toLowerCase())) {
+      setFeedback({ error: 'Please select a JPG, PNG, or WebP banner.', success: null });
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      setFeedback({ error: 'Banner image must be under 10MB.', success: null });
+      return;
+    }
+
+    const previewUrl = URL.createObjectURL(file);
+    setForm((prev) => ({ ...prev, cover_url: previewUrl, banner_url: previewUrl }));
+    setCoverUploading(true);
+
+    try {
+      const fd = new FormData();
+      fd.append('file', file);
+      const res = await uploadCoverAction(fd);
+      if (res.success && res.data?.url) {
+        setForm((prev) => ({ ...prev, cover_url: res.data!.url, banner_url: res.data!.url }));
+        setFeedback({ error: null, success: 'Banner updated!' });
+      } else {
+        setFeedback({ error: res.error || 'Failed to upload banner.', success: null });
+        setForm((prev) => ({ ...prev, cover_url: initialProfile.cover_url, banner_url: initialProfile.cover_url }));
+      }
+    } catch {
+      setFeedback({ error: 'Network error uploading banner.', success: null });
+      setForm((prev) => ({ ...prev, cover_url: initialProfile.cover_url, banner_url: initialProfile.cover_url }));
+    } finally {
+      setCoverUploading(false);
+    }
+  };
+
+  // Handle remove cover banner
+  const handleRemoveCover = async () => {
+    setCoverUploading(true);
+    try {
+      const res = await removeCoverAction();
+      if (res.success) {
+        setForm((prev) => ({ ...prev, cover_url: null, banner_url: null }));
+        setFeedback({ error: null, success: 'Cover banner removed.' });
+      } else {
+        setFeedback({ error: res.error || 'Failed to remove cover.', success: null });
+      }
+    } catch {
+      setFeedback({ error: 'Failed to remove cover banner.', success: null });
+    } finally {
+      setCoverUploading(false);
+    }
+  };
+
+  // Master Save Action (Unified Single-Save)
+  const handleSaveAll = () => {
+    setFeedback({ error: null, success: null });
+
+    const payload: FullProfileUpdatePayload = {
+      displayName: form.display_name,
+      username: form.username,
+      accountType: form.account_type || 'personal',
+      pronouns: form.pronouns || '',
+      bio: form.bio || '',
+      website: form.website || '',
+      avatarUrl: form.avatar_url,
+      coverUrl: form.cover_url,
+      firstName: form.first_name || '',
+      lastName: form.last_name || '',
+      dateOfBirth: form.date_of_birth || '',
+      gender: form.gender || '',
+      relationshipStatus: form.relationship_status || '',
+      address: form.address || '',
+      phone: form.phone || '',
+      country: form.country || '',
+      island: form.island || '',
+      city: form.city || '',
+      culturalInterests: form.cultural_interests || [],
+      jobTitle: form.job_title || '',
+      employer: form.employer || '',
+      industry: form.industry || '',
+      education: form.education || '',
+      school: form.school || '',
+      skills: form.skills || [],
+      professionalBio: form.professional_bio || '',
+      socialLinks: form.social_links || {},
+      profileVisibility: (form.profile_visibility as any) || 'public',
+      dobVisibility: (form.dob_visibility as any) || 'private',
+      addressVisibility: (form.address_visibility as any) || 'private',
+      relationshipVisibility: (form.relationship_visibility as any) || 'public',
+      onlineStatusEnabled: form.online_status_enabled !== false,
+      messagingPermission: form.messaging_permission || 'everyone',
+      interactionPermission: form.interaction_permission || 'everyone',
+    };
 
     startTransition(async () => {
       try {
-        const res = await actionFn({ success: false }, formData);
+        const res = await updateFullProfileAction(payload);
         if (res.success) {
-          setFeedback({ error: null, success: res.message || 'Saved successfully.' });
+          setFeedback({ error: null, success: 'TUKUBI profile saved successfully!' });
+          onProfileUpdated?.(form);
+          await refresh();
+          setTimeout(() => {
+            onClose();
+          }, 800);
         } else {
-          setFeedback({ error: res.error || 'Failed to update.', success: null });
+          setFeedback({ error: res.error || 'Failed to save changes.', success: null });
         }
       } catch {
-        setFeedback({ error: 'A network error occurred. Please try again.', success: null });
+        setFeedback({ error: 'A network error occurred while saving.', success: null });
       }
     });
   };
 
+  const getAvatarLabel = () => {
+    if (accountType === 'organization') return 'Organization Logo / Emblem';
+    if (accountType === 'business') return 'Business Logo';
+    if (accountType === 'creator') return 'Creator Identity Image';
+    return 'Profile Photo';
+  };
+
+  const getAccountTypeBadgeLabel = () => {
+    if (accountType === 'organization') return 'Organization';
+    if (accountType === 'business') return 'Business';
+    if (accountType === 'creator') return 'Creator';
+    return 'Member';
+  };
+
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fadeIn"
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/80 backdrop-blur-md animate-fadeIn"
       role="dialog"
       aria-modal="true"
-      aria-labelledby="edit-profile-title"
+      aria-labelledby="edit-profile-modal-title"
     >
-      <div className="bg-[#0D1527] border border-slate-800 rounded-3xl w-full max-w-2xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
-        {/* Modal Header */}
-        <div className="px-6 py-4 border-b border-slate-800 flex items-center justify-between bg-[#0F172A]">
+      <div className="bg-[#110D17] border border-slate-700/80 rounded-3xl w-full max-w-3xl max-h-[calc(100dvh-2rem)] flex flex-col shadow-[0_20px_60px_rgba(0,0,0,0.85)] overflow-hidden">
+        {/* Sticky Header */}
+        <div className="px-5 sm:px-6 py-3.5 border-b border-slate-800 flex items-center justify-between bg-[#1D1429]/95 backdrop-blur-md shrink-0">
           <div>
-            <h2 id="edit-profile-title" className="text-base font-extrabold text-brand-sandstone">
-              Edit Profile
+            <h2 id="edit-profile-modal-title" className="text-base font-black text-brand-sandstone flex items-center gap-2">
+              <span>Edit Profile</span>
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-brand-caribbeanSea/10 text-brand-caribbeanSea border border-brand-caribbeanSea/30 uppercase font-black tracking-wider">
+                {getAccountTypeBadgeLabel()}
+              </span>
             </h2>
-            <p className="text-xs text-brand-sandstone/60">Customize your public Caribbean identity</p>
+            <p className="text-[11px] text-brand-sandstone/60">Manage your TUKUBI public identity &amp; Caribbean story</p>
           </div>
           <button
             type="button"
             onClick={onClose}
-            aria-label="Close dialog"
-            className="p-1.5 rounded-full text-brand-sandstone/60 hover:text-brand-sandstone hover:bg-slate-800 transition-colors"
+            aria-label="Close edit profile dialog"
+            className="p-2 rounded-full text-brand-sandstone/60 hover:text-brand-sandstone hover:bg-slate-800 transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
+        {/* Live Profile Header Miniature Preview */}
+        <div className="px-5 sm:px-6 pt-4 pb-2 shrink-0 bg-[#151020] border-b border-slate-800/80">
+          <div className="rounded-2xl border border-slate-800 bg-brand-dusk/60 overflow-hidden shadow-inner">
+            {/* Banner preview */}
+            <div className="h-20 sm:h-24 relative w-full overflow-hidden bg-gradient-to-r from-sky-950 via-slate-900 to-amber-950/40">
+              {form.cover_url ? (
+                /* eslint-disable-next-line @next/next/no-img-element */
+                <img
+                  src={form.cover_url}
+                  alt="Banner preview"
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full bg-gradient-to-tr from-brand-twilight via-slate-900 to-[#1A2642]" />
+              )}
+            </div>
+
+            {/* Avatar & text preview */}
+            <div className="p-3 sm:p-4 -mt-8 sm:-mt-10 relative flex items-end justify-between gap-3">
+              <div className="flex items-end gap-3">
+                <UserAvatar
+                  src={form.avatar_url}
+                  name={form.display_name || 'Member'}
+                  size="lg"
+                  className="ring-2 ring-brand-twilight shadow-lg"
+                />
+                <div className="mb-1 space-y-0.5">
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <span className="text-sm font-black text-brand-sandstone">
+                      {form.display_name || 'Your Name'}
+                    </span>
+                    {isOfficial ? (
+                      <OfficialBadge
+                        size="xs"
+                        showLabel={true}
+                        label={form.username?.toLowerCase() === 'tukubi' ? 'Official TUKUBI' : 'Official Platform'}
+                      />
+                    ) : form.is_verified ? (
+                      <BadgeCheck className="w-4 h-4 text-brand-caribbeanSea" aria-label="Verified" />
+                    ) : null}
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-brand-twilight text-brand-goldenHour border border-brand-goldenHour/30 font-bold">
+                      {getAccountTypeBadgeLabel()}
+                    </span>
+                  </div>
+                  <p className="text-xs text-brand-sandstone/60">
+                    @{form.username || 'username'}
+                    {form.pronouns && (
+                      <span className="ml-1.5 text-[10px] text-brand-sandstone/40">({form.pronouns})</span>
+                    )}
+                  </p>
+                </div>
+              </div>
+
+              <span className="text-[10px] text-brand-sandstone/40 hidden sm:inline-block italic">
+                Live Preview
+              </span>
+            </div>
+          </div>
+        </div>
+
         {/* Tab Navigation */}
-        <div className="flex border-b border-brand-sunsetPurple/20 overflow-x-auto px-4 bg-brand-twilight scrollbar-none">
+        <div className="flex border-b border-slate-800 overflow-x-auto px-4 bg-[#181124] scrollbar-none shrink-0">
           {[
-            { id: 'photos', label: 'Photos', icon: Camera },
-            { id: 'about', label: 'About', icon: User },
-            { id: 'personal', label: 'Personal', icon: MapPin },
-            { id: 'work', label: 'Work & School', icon: Briefcase },
+            { id: 'identity', label: 'Identity & Visuals', icon: Camera },
+            { id: 'about', label: 'About & Roots', icon: MapPin },
+            { id: 'career', label: 'Work & School', icon: Briefcase },
+            { id: 'personal', label: 'Personal Details', icon: User },
             { id: 'social', label: 'Social Links', icon: Share2 },
-            { id: 'privacy', label: 'Privacy', icon: Shield },
+            { id: 'privacy', label: 'Privacy Controls', icon: Shield },
           ].map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
@@ -166,7 +422,7 @@ export default function ProfileEditModal({ isOpen, onClose, initialProfile }: Pr
                   setActiveTab(tab.id as TabType);
                   setFeedback({ error: null, success: null });
                 }}
-                className={`flex items-center gap-1.5 px-4 py-3 text-xs font-bold whitespace-nowrap border-b-2 transition-all cursor-pointer ${
+                className={`flex items-center gap-1.5 px-3.5 py-2.5 text-xs font-bold whitespace-nowrap border-b-2 transition-all cursor-pointer ${
                   isActive
                     ? 'border-brand-caribbeanSea text-brand-caribbeanSea'
                     : 'border-transparent text-brand-sandstone/60 hover:text-slate-200'
@@ -179,211 +435,464 @@ export default function ProfileEditModal({ isOpen, onClose, initialProfile }: Pr
           })}
         </div>
 
-        {/* Feedback Messages */}
-        <div className="px-6 pt-3">
-          {feedback.error && (
-            <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs flex items-center gap-2">
-              <AlertCircle className="w-4 h-4 shrink-0" />
-              <span>{feedback.error}</span>
-            </div>
-          )}
-          {feedback.success && (
-            <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs flex items-center gap-2">
-              <CheckCircle className="w-4 h-4 shrink-0" />
-              <span>{feedback.success}</span>
-            </div>
-          )}
-        </div>
+        {/* Status Feedback */}
+        {feedback.error && (
+          <div className="mx-5 sm:mx-6 mt-3 p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 shrink-0" />
+            <span>{feedback.error}</span>
+          </div>
+        )}
+        {feedback.success && (
+          <div className="mx-5 sm:mx-6 mt-3 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs flex items-center gap-2">
+            <CheckCircle className="w-4 h-4 shrink-0" />
+            <span>{feedback.success}</span>
+          </div>
+        )}
 
-        {/* Modal Body */}
-        <div className="p-6 overflow-y-auto flex-1 space-y-6">
-          {/* TAB: PHOTOS */}
-          {activeTab === 'photos' && (
-            <div className="space-y-6">
-              <div>
-                <h3 className="text-xs font-black uppercase tracking-wider text-brand-caribbeanSea mb-3">
-                  Profile Photo
-                </h3>
-                <AvatarUpload
-                  currentAvatarUrl={profile.avatar_url}
-                  displayName={profile.display_name}
-                  onAvatarUpdated={(url) => setProfile((p) => ({ ...p, avatar_url: url }))}
-                />
+        {/* Scrollable Form Body */}
+        <div className="p-5 sm:p-6 overflow-y-auto flex-1 space-y-5">
+          {/* TAB: IDENTITY & VISUALS */}
+          {activeTab === 'identity' && (
+            <div className="space-y-5">
+              {/* Media Upload Section */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 rounded-2xl bg-brand-dusk/50 border border-slate-800">
+                {/* Avatar / Logo Upload */}
+                <div className="space-y-2">
+                  <label className="block text-xs font-black uppercase tracking-wider text-brand-caribbeanSea">
+                    {getAvatarLabel()}
+                  </label>
+                  <div className="flex items-center gap-3">
+                    <UserAvatar
+                      src={form.avatar_url}
+                      name={form.display_name}
+                      size="lg"
+                      className="ring-2 ring-slate-700"
+                    />
+                    <div className="space-y-1">
+                      <label className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-brand-caribbeanSea/20 hover:bg-brand-caribbeanSea text-brand-caribbeanSea hover:text-slate-950 border border-brand-caribbeanSea/30 text-xs font-bold transition-all cursor-pointer">
+                        {avatarUploading ? (
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        ) : (
+                          <Camera className="w-3.5 h-3.5" />
+                        )}
+                        <span>{avatarUploading ? 'Uploading…' : 'Upload Image'}</span>
+                        <input
+                          type="file"
+                          accept="image/jpeg,image/png,image/webp,image/gif"
+                          onChange={handleAvatarFile}
+                          disabled={avatarUploading}
+                          className="hidden"
+                        />
+                      </label>
+                      <p className="text-[10px] text-brand-sandstone/40">JPG, PNG, WebP up to 5MB.</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Cover Banner Upload */}
+                <div className="space-y-2 border-t md:border-t-0 md:border-l border-slate-800 pt-3 md:pt-0 md:pl-4">
+                  <label className="block text-xs font-black uppercase tracking-wider text-brand-goldenHour">
+                    Cover / Banner Image
+                  </label>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <label className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-brand-goldenHour/20 hover:bg-brand-goldenHour text-brand-goldenHour hover:text-slate-950 border border-brand-goldenHour/30 text-xs font-bold transition-all cursor-pointer">
+                      {coverUploading ? (
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      ) : (
+                        <Camera className="w-3.5 h-3.5" />
+                      )}
+                      <span>{coverUploading ? 'Uploading…' : form.cover_url ? 'Change Banner' : 'Upload Banner'}</span>
+                      <input
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp"
+                        onChange={handleCoverFile}
+                        disabled={coverUploading}
+                        className="hidden"
+                      />
+                    </label>
+
+                    {form.cover_url && (
+                      <button
+                        type="button"
+                        onClick={handleRemoveCover}
+                        disabled={coverUploading}
+                        className="px-2.5 py-1.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 text-xs font-bold transition-colors cursor-pointer"
+                      >
+                        Remove
+                      </button>
+                    )}
+                  </div>
+                  <p className="text-[10px] text-brand-sandstone/40">1500x500 recommended, up to 10MB.</p>
+                </div>
               </div>
 
-              <div className="pt-4 border-t border-slate-800">
-                <h3 className="text-xs font-black uppercase tracking-wider text-brand-caribbeanSea mb-3">
-                  Cover Banner
-                </h3>
-                <CoverUpload
-                  currentCoverUrl={profile.cover_url}
-                  onCoverUpdated={(url) => setProfile((p) => ({ ...p, cover_url: url }))}
-                />
-              </div>
-            </div>
-          )}
-
-          {/* TAB: ABOUT YOU */}
-          {activeTab === 'about' && (
-            <form
-              onSubmit={(e) => handleFormSubmit(e, updateProfileBasicAction)}
-              className="space-y-4"
-            >
+              {/* Text Fields */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label htmlFor="displayName" className="block text-xs font-bold text-brand-sandstone/70 mb-1">
+                  <label htmlFor="modal-displayName" className="block text-xs font-bold text-brand-sandstone/80 mb-1">
                     Display Name *
                   </label>
                   <input
-                    id="displayName"
-                    name="displayName"
+                    id="modal-displayName"
+                    value={form.display_name}
+                    onChange={(e) => handleChange('display_name', e.target.value)}
                     required
                     maxLength={100}
-                    defaultValue={profile.display_name}
-                    className="w-full bg-[#131D33] border border-slate-700 rounded-xl px-3 py-2 text-sm text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea"
+                    className="w-full bg-[#181124] border border-slate-700 rounded-xl px-3 py-2 text-sm text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea transition-colors"
                   />
                 </div>
+
                 <div>
-                  <label htmlFor="username" className="block text-xs font-bold text-brand-sandstone/70 mb-1">
+                  <label htmlFor="modal-username" className="block text-xs font-bold text-brand-sandstone/80 mb-1">
                     Username (@handle) *
                   </label>
                   <input
-                    id="username"
-                    name="username"
+                    id="modal-username"
+                    value={form.username}
+                    onChange={(e) => handleChange('username', e.target.value)}
+                    disabled={isOfficial}
                     required
                     maxLength={30}
-                    defaultValue={profile.username}
-                    className="w-full bg-[#131D33] border border-slate-700 rounded-xl px-3 py-2 text-sm text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea"
+                    className="w-full bg-[#181124] border border-slate-700 rounded-xl px-3 py-2 text-sm text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
                   />
+                  {isOfficial && (
+                    <span className="text-[10px] text-brand-caribbeanSea/70 mt-0.5 block">
+                      Reserved official platform handle
+                    </span>
+                  )}
                 </div>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label htmlFor="pronouns" className="block text-xs font-bold text-brand-sandstone/70 mb-1">
+                  <label htmlFor="modal-accountType" className="block text-xs font-bold text-brand-sandstone/80 mb-1">
+                    Account Classification / Identity
+                  </label>
+                  <select
+                    id="modal-accountType"
+                    value={form.account_type || 'personal'}
+                    onChange={(e) => handleChange('account_type', e.target.value)}
+                    disabled={isOfficial}
+                    className="w-full bg-[#181124] border border-slate-700 rounded-xl px-3 py-2 text-sm text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea transition-colors disabled:opacity-60"
+                  >
+                    <option value="personal">Personal / Member Profile</option>
+                    <option value="creator">Digital Creator / Artist</option>
+                    <option value="business">Commercial Business / Enterprise</option>
+                    <option value="organization">Organization / Cultural Institution</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label htmlFor="modal-pronouns" className="block text-xs font-bold text-brand-sandstone/80 mb-1">
                     Pronouns (Optional)
                   </label>
                   <input
-                    id="pronouns"
-                    name="pronouns"
-                    maxLength={50}
+                    id="modal-pronouns"
                     placeholder="e.g. they/them, she/her, he/him"
-                    defaultValue={profile.pronouns ?? ''}
-                    className="w-full bg-[#131D33] border border-slate-700 rounded-xl px-3 py-2 text-sm text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea"
-                  />
-                </div>
-                <div>
-                  <label htmlFor="website" className="block text-xs font-bold text-brand-sandstone/70 mb-1">
-                    Personal Website
-                  </label>
-                  <input
-                    id="website"
-                    name="website"
-                    type="url"
-                    placeholder="https://yoursite.com"
-                    defaultValue={profile.website ?? ''}
-                    className="w-full bg-[#131D33] border border-slate-700 rounded-xl px-3 py-2 text-sm text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea"
+                    value={form.pronouns ?? ''}
+                    onChange={(e) => handleChange('pronouns', e.target.value)}
+                    maxLength={50}
+                    className="w-full bg-[#181124] border border-slate-700 rounded-xl px-3 py-2 text-sm text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea transition-colors"
                   />
                 </div>
               </div>
-
-              <div>
-                <label htmlFor="bio" className="block text-xs font-bold text-brand-sandstone/70 mb-1">
-                  Bio
-                </label>
-                <textarea
-                  id="bio"
-                  name="bio"
-                  rows={3}
-                  maxLength={500}
-                  placeholder="Share your Caribbean roots, vibe, or background…"
-                  defaultValue={profile.bio ?? ''}
-                  className="w-full bg-[#131D33] border border-slate-700 rounded-xl px-3 py-2 text-sm text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea resize-none"
-                />
-                <span className="text-[10px] text-brand-sandstone/40">Max 500 characters.</span>
-              </div>
-
-              <div className="pt-2 flex justify-end">
-                <button
-                  type="submit"
-                  disabled={isPending}
-                  className="px-5 py-2 rounded-xl bg-brand-caribbeanSea text-slate-950 font-extrabold text-xs hover:bg-brand-caribbeanSea transition-colors disabled:opacity-50 flex items-center gap-1.5"
-                >
-                  {isPending && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-                  <span>{isPending ? 'Saving changes…' : 'Save About Info'}</span>
-                </button>
-              </div>
-            </form>
+            </div>
           )}
 
-          {/* TAB: PERSONAL & LOCATION */}
-          {activeTab === 'personal' && (
-            <form
-              onSubmit={(e) => handleFormSubmit(e, updateProfilePersonalInfoAction)}
-              className="space-y-4"
-            >
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {/* TAB: ABOUT & ROOTS */}
+          {activeTab === 'about' && (
+            <div className="space-y-4">
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <label htmlFor="modal-bio" className="block text-xs font-bold text-brand-sandstone/80">
+                    Bio &amp; Cultural Story
+                  </label>
+                  <span className="text-[10px] text-brand-sandstone/40">
+                    {(form.bio || '').length}/500 chars
+                  </span>
+                </div>
+                <textarea
+                  id="modal-bio"
+                  rows={4}
+                  maxLength={500}
+                  placeholder="Share your Caribbean roots, vibe, creative story, or business mission…"
+                  value={form.bio ?? ''}
+                  onChange={(e) => handleChange('bio', e.target.value)}
+                  className="w-full bg-[#181124] border border-slate-700 rounded-xl px-3 py-2 text-sm text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea resize-none transition-colors"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div>
-                  <label htmlFor="firstName" className="block text-xs font-bold text-brand-sandstone/70 mb-1">
-                    First Name
+                  <label htmlFor="modal-island" className="block text-xs font-bold text-brand-sandstone/80 mb-1">
+                    Caribbean Territory / Island
                   </label>
                   <input
-                    id="firstName"
-                    name="firstName"
-                    maxLength={100}
-                    defaultValue={profile.first_name ?? ''}
-                    className="w-full bg-[#131D33] border border-slate-700 rounded-xl px-3 py-2 text-sm text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea"
+                    id="modal-island"
+                    list="caribbean-territory-options"
+                    placeholder="Select island/territory"
+                    value={form.island ?? ''}
+                    onChange={(e) => handleChange('island', e.target.value)}
+                    className="w-full bg-[#181124] border border-slate-700 rounded-xl px-3 py-2 text-sm text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea transition-colors"
+                  />
+                  <datalist id="caribbean-territory-options">
+                    {CARIBBEAN_TERRITORIES.map((t) => (
+                      <option key={t.iso} value={t.name}>
+                        {t.flag} {t.name}
+                      </option>
+                    ))}
+                  </datalist>
+                </div>
+
+                <div>
+                  <label htmlFor="modal-city" className="block text-xs font-bold text-brand-sandstone/80 mb-1">
+                    City / Town
+                  </label>
+                  <input
+                    id="modal-city"
+                    placeholder="e.g. Kingston, Port of Spain, Miami"
+                    value={form.city ?? ''}
+                    onChange={(e) => handleChange('city', e.target.value)}
+                    className="w-full bg-[#181124] border border-slate-700 rounded-xl px-3 py-2 text-sm text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea transition-colors"
                   />
                 </div>
+
                 <div>
-                  <label htmlFor="lastName" className="block text-xs font-bold text-brand-sandstone/70 mb-1">
-                    Last Name
+                  <label htmlFor="modal-country" className="block text-xs font-bold text-brand-sandstone/80 mb-1">
+                    Country of Residence
                   </label>
                   <input
-                    id="lastName"
-                    name="lastName"
-                    maxLength={100}
-                    defaultValue={profile.last_name ?? ''}
-                    className="w-full bg-[#131D33] border border-slate-700 rounded-xl px-3 py-2 text-sm text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea"
+                    id="modal-country"
+                    list="world-diaspora-country-options"
+                    placeholder="Select country"
+                    value={form.country ?? ''}
+                    onChange={(e) => handleChange('country', e.target.value)}
+                    className="w-full bg-[#181124] border border-slate-700 rounded-xl px-3 py-2 text-sm text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea transition-colors"
+                  />
+                  <datalist id="world-diaspora-country-options">
+                    {DIASPORA_COUNTRIES.map((c) => (
+                      <option key={c.iso} value={c.name}>
+                        {c.flag} {c.name}
+                      </option>
+                    ))}
+                    {CARIBBEAN_TERRITORIES.map((t) => (
+                      <option key={`res-${t.iso}`} value={t.name}>
+                        {t.flag} {t.name}
+                      </option>
+                    ))}
+                  </datalist>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label htmlFor="modal-website" className="block text-xs font-bold text-brand-sandstone/80 mb-1">
+                    Personal / Business Website
+                  </label>
+                  <input
+                    id="modal-website"
+                    type="url"
+                    placeholder="https://yoursite.com"
+                    value={form.website ?? ''}
+                    onChange={(e) => handleChange('website', e.target.value)}
+                    className="w-full bg-[#181124] border border-slate-700 rounded-xl px-3 py-2 text-sm text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea transition-colors"
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="modal-culturalInterests" className="block text-xs font-bold text-brand-sandstone/80 mb-1">
+                    Cultural Interests &amp; Tags
+                  </label>
+                  <input
+                    id="modal-culturalInterests"
+                    placeholder="e.g. Reggae, Soca, Gastronomy, Carnival, Tech"
+                    value={form.cultural_interests?.join(', ') ?? ''}
+                    onChange={(e) =>
+                      handleChange(
+                        'cultural_interests',
+                        e.target.value.split(',').map((s) => s.trim()).filter(Boolean)
+                      )
+                    }
+                    className="w-full bg-[#181124] border border-slate-700 rounded-xl px-3 py-2 text-sm text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea transition-colors"
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* TAB: CAREER & EDUCATION */}
+          {activeTab === 'career' && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label htmlFor="modal-jobTitle" className="block text-xs font-bold text-brand-sandstone/80 mb-1">
+                    Job Title / Professional Role
+                  </label>
+                  <input
+                    id="modal-jobTitle"
+                    placeholder="e.g. Creative Director, Sound Engineer"
+                    value={form.job_title ?? ''}
+                    onChange={(e) => handleChange('job_title', e.target.value)}
+                    className="w-full bg-[#181124] border border-slate-700 rounded-xl px-3 py-2 text-sm text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea transition-colors"
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="modal-employer" className="block text-xs font-bold text-brand-sandstone/80 mb-1">
+                    Company / Organization / Brand
+                  </label>
+                  <input
+                    id="modal-employer"
+                    placeholder="e.g. Island Media, Self-Employed"
+                    value={form.employer ?? ''}
+                    onChange={(e) => handleChange('employer', e.target.value)}
+                    className="w-full bg-[#181124] border border-slate-700 rounded-xl px-3 py-2 text-sm text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea transition-colors"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div>
-                  <label htmlFor="dateOfBirth" className="block text-xs font-bold text-brand-sandstone/70 mb-1">
+                  <label htmlFor="modal-industry" className="block text-xs font-bold text-brand-sandstone/80 mb-1">
+                    Industry
+                  </label>
+                  <input
+                    id="modal-industry"
+                    placeholder="e.g. Music, Tourism, FinTech"
+                    value={form.industry ?? ''}
+                    onChange={(e) => handleChange('industry', e.target.value)}
+                    className="w-full bg-[#181124] border border-slate-700 rounded-xl px-3 py-2 text-sm text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea transition-colors"
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="modal-education" className="block text-xs font-bold text-brand-sandstone/80 mb-1">
+                    Degree / Qualification
+                  </label>
+                  <input
+                    id="modal-education"
+                    placeholder="e.g. B.A. Digital Media"
+                    value={form.education ?? ''}
+                    onChange={(e) => handleChange('education', e.target.value)}
+                    className="w-full bg-[#181124] border border-slate-700 rounded-xl px-3 py-2 text-sm text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea transition-colors"
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="modal-school" className="block text-xs font-bold text-brand-sandstone/80 mb-1">
+                    School / University
+                  </label>
+                  <input
+                    id="modal-school"
+                    placeholder="e.g. University of the West Indies"
+                    value={form.school ?? ''}
+                    onChange={(e) => handleChange('school', e.target.value)}
+                    className="w-full bg-[#181124] border border-slate-700 rounded-xl px-3 py-2 text-sm text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea transition-colors"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label htmlFor="modal-skills" className="block text-xs font-bold text-brand-sandstone/80 mb-1">
+                  Skills &amp; Expertise (Comma-separated)
+                </label>
+                <input
+                  id="modal-skills"
+                  placeholder="e.g. Music Production, Sound Mixing, Event Management, Brand Design"
+                  value={form.skills?.join(', ') ?? ''}
+                  onChange={(e) =>
+                    handleChange(
+                      'skills',
+                      e.target.value.split(',').map((s) => s.trim()).filter(Boolean)
+                    )
+                  }
+                  className="w-full bg-[#181124] border border-slate-700 rounded-xl px-3 py-2 text-sm text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea transition-colors"
+                />
+              </div>
+
+              <div>
+                <label htmlFor="modal-professionalBio" className="block text-xs font-bold text-brand-sandstone/80 mb-1">
+                  Professional Summary
+                </label>
+                <textarea
+                  id="modal-professionalBio"
+                  rows={2}
+                  maxLength={500}
+                  placeholder="Summary of career background, notable projects, or collaborations…"
+                  value={form.professional_bio ?? ''}
+                  onChange={(e) => handleChange('professional_bio', e.target.value)}
+                  className="w-full bg-[#181124] border border-slate-700 rounded-xl px-3 py-2 text-sm text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea resize-none transition-colors"
+                />
+              </div>
+            </div>
+          )}
+
+          {/* TAB: PERSONAL DETAILS */}
+          {activeTab === 'personal' && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label htmlFor="modal-firstName" className="block text-xs font-bold text-brand-sandstone/80 mb-1">
+                    First Name
+                  </label>
+                  <input
+                    id="modal-firstName"
+                    value={form.first_name ?? ''}
+                    onChange={(e) => handleChange('first_name', e.target.value)}
+                    maxLength={100}
+                    className="w-full bg-[#181124] border border-slate-700 rounded-xl px-3 py-2 text-sm text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea transition-colors"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="modal-lastName" className="block text-xs font-bold text-brand-sandstone/80 mb-1">
+                    Last Name
+                  </label>
+                  <input
+                    id="modal-lastName"
+                    value={form.last_name ?? ''}
+                    onChange={(e) => handleChange('last_name', e.target.value)}
+                    maxLength={100}
+                    className="w-full bg-[#181124] border border-slate-700 rounded-xl px-3 py-2 text-sm text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea transition-colors"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div>
+                  <label htmlFor="modal-dateOfBirth" className="block text-xs font-bold text-brand-sandstone/80 mb-1">
                     Date of Birth
                   </label>
                   <input
-                    id="dateOfBirth"
-                    name="dateOfBirth"
+                    id="modal-dateOfBirth"
                     type="date"
-                    defaultValue={profile.date_of_birth ?? ''}
-                    className="w-full bg-[#131D33] border border-slate-700 rounded-xl px-3 py-2 text-sm text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea"
+                    value={form.date_of_birth ?? ''}
+                    onChange={(e) => handleChange('date_of_birth', e.target.value)}
+                    className="w-full bg-[#181124] border border-slate-700 rounded-xl px-3 py-2 text-sm text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea transition-colors"
                   />
                 </div>
+
                 <div>
-                  <label htmlFor="gender" className="block text-xs font-bold text-brand-sandstone/70 mb-1">
+                  <label htmlFor="modal-gender" className="block text-xs font-bold text-brand-sandstone/80 mb-1">
                     Gender (Optional)
                   </label>
                   <input
-                    id="gender"
-                    name="gender"
-                    maxLength={50}
+                    id="modal-gender"
                     placeholder="e.g. Female, Male, Non-binary"
-                    defaultValue={profile.gender ?? ''}
-                    className="w-full bg-[#131D33] border border-slate-700 rounded-xl px-3 py-2 text-sm text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea"
+                    value={form.gender ?? ''}
+                    onChange={(e) => handleChange('gender', e.target.value)}
+                    className="w-full bg-[#181124] border border-slate-700 rounded-xl px-3 py-2 text-sm text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea transition-colors"
                   />
                 </div>
+
                 <div>
-                  <label htmlFor="relationshipStatus" className="block text-xs font-bold text-brand-sandstone/70 mb-1">
+                  <label htmlFor="modal-relationshipStatus" className="block text-xs font-bold text-brand-sandstone/80 mb-1">
                     Relationship Status
                   </label>
                   <select
-                    id="relationshipStatus"
-                    name="relationshipStatus"
-                    defaultValue={profile.relationship_status ?? ''}
-                    className="w-full bg-[#131D33] border border-slate-700 rounded-xl px-3 py-2 text-sm text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea"
+                    id="modal-relationshipStatus"
+                    value={form.relationship_status ?? ''}
+                    onChange={(e) => handleChange('relationship_status', e.target.value)}
+                    className="w-full bg-[#181124] border border-slate-700 rounded-xl px-3 py-2 text-sm text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea transition-colors"
                   >
                     <option value="">Prefer not to say</option>
                     <option value="Single">Single</option>
@@ -395,420 +904,227 @@ export default function ProfileEditModal({ isOpen, onClose, initialProfile }: Pr
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div>
-                  <label htmlFor="island" className="block text-xs font-bold text-brand-sandstone/70 mb-1">
-                    Caribbean Island / Territory
-                  </label>
-                  <input
-                    id="island"
-                    name="island"
-                    list="caribbean-islands-datalist"
-                    placeholder="e.g. Trinidad, Barbados, Jamaica"
-                    defaultValue={profile.island ?? ''}
-                    className="w-full bg-[#131D33] border border-slate-700 rounded-xl px-3 py-2 text-sm text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea"
-                  />
-                  <datalist id="caribbean-islands-datalist">
-                    {CARIBBEAN_TERRITORIES.map((t) => (
-                      <option key={t.iso} value={t.name}>
-                        {t.flag} {t.name}
-                      </option>
-                    ))}
-                  </datalist>
-                </div>
-                <div>
-                  <label htmlFor="city" className="block text-xs font-bold text-brand-sandstone/70 mb-1">
-                    City / Town
-                  </label>
-                  <input
-                    id="city"
-                    name="city"
-                    placeholder="e.g. Kingston, Port of Spain, Miami"
-                    defaultValue={profile.city ?? ''}
-                    className="w-full bg-[#131D33] border border-slate-700 rounded-xl px-3 py-2 text-sm text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea"
-                  />
-                </div>
-                <div>
-                  <label htmlFor="country" className="block text-xs font-bold text-brand-sandstone/70 mb-1">
-                    Country (Residence)
-                  </label>
-                  <input
-                    id="country"
-                    name="country"
-                    list="world-countries-datalist"
-                    placeholder="e.g. United States, Canada, United Kingdom"
-                    defaultValue={profile.country ?? ''}
-                    className="w-full bg-[#131D33] border border-slate-700 rounded-xl px-3 py-2 text-sm text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea"
-                  />
-                  <datalist id="world-countries-datalist">
-                    {DIASPORA_COUNTRIES.map((c) => (
-                      <option key={c.iso} value={c.name}>
-                        {c.flag} {c.name}
-                      </option>
-                    ))}
-                    {CARIBBEAN_TERRITORIES.map((t) => (
-                      <option key={`geo-${t.iso}`} value={t.name}>
-                        {t.flag} {t.name}
-                      </option>
-                    ))}
-                  </datalist>
-                </div>
-              </div>
-
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label htmlFor="address" className="block text-xs font-bold text-brand-sandstone/70 mb-1">
+                  <label htmlFor="modal-address" className="block text-xs font-bold text-brand-sandstone/80 mb-1">
                     Address (Private by default)
                   </label>
                   <input
-                    id="address"
-                    name="address"
-                    placeholder="Street or residential area"
-                    defaultValue={profile.address ?? ''}
-                    className="w-full bg-[#131D33] border border-slate-700 rounded-xl px-3 py-2 text-sm text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea"
+                    id="modal-address"
+                    placeholder="Street or neighborhood"
+                    value={form.address ?? ''}
+                    onChange={(e) => handleChange('address', e.target.value)}
+                    className="w-full bg-[#181124] border border-slate-700 rounded-xl px-3 py-2 text-sm text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea transition-colors"
                   />
                 </div>
                 <div>
-                  <label htmlFor="phone" className="block text-xs font-bold text-brand-sandstone/70 mb-1">
-                    Phone Number (Private)
+                  <label htmlFor="modal-phone" className="block text-xs font-bold text-brand-sandstone/80 mb-1">
+                    Phone (Private by default)
                   </label>
                   <input
-                    id="phone"
-                    name="phone"
+                    id="modal-phone"
                     type="tel"
                     placeholder="+1 (876) 000-0000"
-                    defaultValue={profile.phone ?? ''}
-                    className="w-full bg-[#131D33] border border-slate-700 rounded-xl px-3 py-2 text-sm text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea"
+                    value={form.phone ?? ''}
+                    onChange={(e) => handleChange('phone', e.target.value)}
+                    className="w-full bg-[#181124] border border-slate-700 rounded-xl px-3 py-2 text-sm text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea transition-colors"
                   />
                 </div>
               </div>
-
-              <div className="pt-2 flex justify-end">
-                <button
-                  type="submit"
-                  disabled={isPending}
-                  className="px-5 py-2 rounded-xl bg-brand-caribbeanSea text-slate-950 font-extrabold text-xs hover:bg-brand-caribbeanSea transition-colors disabled:opacity-50 flex items-center gap-1.5"
-                >
-                  {isPending && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-                  <span>{isPending ? 'Saving changes…' : 'Save Personal Details'}</span>
-                </button>
-              </div>
-            </form>
-          )}
-
-          {/* TAB: WORK & EDUCATION */}
-          {activeTab === 'work' && (
-            <form
-              onSubmit={(e) => handleFormSubmit(e, updateProfileProfessionalAction)}
-              className="space-y-4"
-            >
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label htmlFor="jobTitle" className="block text-xs font-bold text-brand-sandstone/70 mb-1">
-                    Job Title / Role
-                  </label>
-                  <input
-                    id="jobTitle"
-                    name="jobTitle"
-                    placeholder="e.g. Music Producer, Software Engineer"
-                    defaultValue={profile.job_title ?? ''}
-                    className="w-full bg-[#131D33] border border-slate-700 rounded-xl px-3 py-2 text-sm text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea"
-                  />
-                </div>
-                <div>
-                  <label htmlFor="employer" className="block text-xs font-bold text-brand-sandstone/70 mb-1">
-                    Company / Employer
-                  </label>
-                  <input
-                    id="employer"
-                    name="employer"
-                    placeholder="e.g. Island Records, Self-Employed"
-                    defaultValue={profile.employer ?? ''}
-                    className="w-full bg-[#131D33] border border-slate-700 rounded-xl px-3 py-2 text-sm text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div>
-                  <label htmlFor="industry" className="block text-xs font-bold text-brand-sandstone/70 mb-1">
-                    Industry
-                  </label>
-                  <input
-                    id="industry"
-                    name="industry"
-                    placeholder="e.g. Entertainment, Tourism, Tech"
-                    defaultValue={profile.industry ?? ''}
-                    className="w-full bg-[#131D33] border border-slate-700 rounded-xl px-3 py-2 text-sm text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea"
-                  />
-                </div>
-                <div>
-                  <label htmlFor="education" className="block text-xs font-bold text-brand-sandstone/70 mb-1">
-                    Degree / Qualification
-                  </label>
-                  <input
-                    id="education"
-                    name="education"
-                    placeholder="e.g. B.Sc. Computer Science"
-                    defaultValue={profile.education ?? ''}
-                    className="w-full bg-[#131D33] border border-slate-700 rounded-xl px-3 py-2 text-sm text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea"
-                  />
-                </div>
-                <div>
-                  <label htmlFor="school" className="block text-xs font-bold text-brand-sandstone/70 mb-1">
-                    School / University
-                  </label>
-                  <input
-                    id="school"
-                    name="school"
-                    placeholder="e.g. University of the West Indies"
-                    defaultValue={profile.school ?? ''}
-                    className="w-full bg-[#131D33] border border-slate-700 rounded-xl px-3 py-2 text-sm text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label htmlFor="skills" className="block text-xs font-bold text-brand-sandstone/70 mb-1">
-                  Skills &amp; Expertise (Comma-separated)
-                </label>
-                <input
-                  id="skills"
-                  name="skills"
-                  placeholder="e.g. Reggae Production, Culinary Arts, Sound Engineering, Event Hosting"
-                  defaultValue={profile.skills?.join(', ') ?? ''}
-                  className="w-full bg-[#131D33] border border-slate-700 rounded-xl px-3 py-2 text-sm text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea"
-                />
-              </div>
-
-              <div>
-                <label htmlFor="professionalBio" className="block text-xs font-bold text-brand-sandstone/70 mb-1">
-                  Professional Summary
-                </label>
-                <textarea
-                  id="professionalBio"
-                  name="professionalBio"
-                  rows={2}
-                  maxLength={500}
-                  placeholder="Summary of career background, projects, or creative portfolio…"
-                  defaultValue={profile.professional_bio ?? ''}
-                  className="w-full bg-[#131D33] border border-slate-700 rounded-xl px-3 py-2 text-sm text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea resize-none"
-                />
-              </div>
-
-              <div className="pt-2 flex justify-end">
-                <button
-                  type="submit"
-                  disabled={isPending}
-                  className="px-5 py-2 rounded-xl bg-brand-caribbeanSea text-slate-950 font-extrabold text-xs hover:bg-brand-caribbeanSea transition-colors disabled:opacity-50 flex items-center gap-1.5"
-                >
-                  {isPending && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-                  <span>{isPending ? 'Saving changes…' : 'Save Career Details'}</span>
-                </button>
-              </div>
-            </form>
+            </div>
           )}
 
           {/* TAB: SOCIAL LINKS */}
           {activeTab === 'social' && (
-            <form
-              onSubmit={(e) => handleFormSubmit(e, updateProfileSocialAction)}
-              className="space-y-4"
-            >
+            <div className="space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label htmlFor="instagram" className="block text-xs font-bold text-brand-sandstone/70 mb-1">
+                  <label htmlFor="modal-instagram" className="block text-xs font-bold text-brand-sandstone/80 mb-1">
                     Instagram Handle
                   </label>
                   <div className="relative">
-                    <span className="absolute left-3 top-2.5 text-xs text-brand-sandstone/40">@</span>
+                    <span className="absolute left-3 top-2 text-xs text-brand-sandstone/40 font-mono">@</span>
                     <input
-                      id="instagram"
-                      name="instagram"
+                      id="modal-instagram"
                       placeholder="handle"
-                      defaultValue={profile.social_links?.instagram ?? ''}
-                      className="w-full bg-[#131D33] border border-slate-700 rounded-xl pl-7 pr-3 py-2 text-sm text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea"
+                      value={form.social_links?.instagram ?? ''}
+                      onChange={(e) => handleSocialChange('instagram', e.target.value.replace(/^@/, ''))}
+                      className="w-full bg-[#181124] border border-slate-700 rounded-xl pl-8 pr-3 py-2 text-sm text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea transition-colors"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label htmlFor="twitter" className="block text-xs font-bold text-brand-sandstone/70 mb-1">
+                  <label htmlFor="modal-twitter" className="block text-xs font-bold text-brand-sandstone/80 mb-1">
                     X / Twitter Handle
                   </label>
                   <div className="relative">
-                    <span className="absolute left-3 top-2.5 text-xs text-brand-sandstone/40">@</span>
+                    <span className="absolute left-3 top-2 text-xs text-brand-sandstone/40 font-mono">@</span>
                     <input
-                      id="twitter"
-                      name="twitter"
+                      id="modal-twitter"
                       placeholder="handle"
-                      defaultValue={profile.social_links?.twitter ?? ''}
-                      className="w-full bg-[#131D33] border border-slate-700 rounded-xl pl-7 pr-3 py-2 text-sm text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea"
+                      value={form.social_links?.twitter ?? ''}
+                      onChange={(e) => handleSocialChange('twitter', e.target.value.replace(/^@/, ''))}
+                      className="w-full bg-[#181124] border border-slate-700 rounded-xl pl-8 pr-3 py-2 text-sm text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea transition-colors"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label htmlFor="tiktok" className="block text-xs font-bold text-brand-sandstone/70 mb-1">
+                  <label htmlFor="modal-tiktok" className="block text-xs font-bold text-brand-sandstone/80 mb-1">
                     TikTok Handle
                   </label>
                   <div className="relative">
-                    <span className="absolute left-3 top-2.5 text-xs text-brand-sandstone/40">@</span>
+                    <span className="absolute left-3 top-2 text-xs text-brand-sandstone/40 font-mono">@</span>
                     <input
-                      id="tiktok"
-                      name="tiktok"
+                      id="modal-tiktok"
                       placeholder="handle"
-                      defaultValue={profile.social_links?.tiktok ?? ''}
-                      className="w-full bg-[#131D33] border border-slate-700 rounded-xl pl-7 pr-3 py-2 text-sm text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea"
+                      value={form.social_links?.tiktok ?? ''}
+                      onChange={(e) => handleSocialChange('tiktok', e.target.value.replace(/^@/, ''))}
+                      className="w-full bg-[#181124] border border-slate-700 rounded-xl pl-8 pr-3 py-2 text-sm text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea transition-colors"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label htmlFor="youtube" className="block text-xs font-bold text-brand-sandstone/70 mb-1">
-                    YouTube Channel URL
+                  <label htmlFor="modal-youtube" className="block text-xs font-bold text-brand-sandstone/80 mb-1">
+                    YouTube URL / Channel
                   </label>
                   <input
-                    id="youtube"
-                    name="youtube"
+                    id="modal-youtube"
                     placeholder="https://youtube.com/@channel"
-                    defaultValue={profile.social_links?.youtube ?? ''}
-                    className="w-full bg-[#131D33] border border-slate-700 rounded-xl px-3 py-2 text-sm text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea"
+                    value={form.social_links?.youtube ?? ''}
+                    onChange={(e) => handleSocialChange('youtube', e.target.value)}
+                    className="w-full bg-[#181124] border border-slate-700 rounded-xl px-3 py-2 text-sm text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea transition-colors"
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="linkedin" className="block text-xs font-bold text-brand-sandstone/70 mb-1">
+                  <label htmlFor="modal-linkedin" className="block text-xs font-bold text-brand-sandstone/80 mb-1">
                     LinkedIn Profile URL
                   </label>
                   <input
-                    id="linkedin"
-                    name="linkedin"
+                    id="modal-linkedin"
                     placeholder="https://linkedin.com/in/username"
-                    defaultValue={profile.social_links?.linkedin ?? ''}
-                    className="w-full bg-[#131D33] border border-slate-700 rounded-xl px-3 py-2 text-sm text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea"
+                    value={form.social_links?.linkedin ?? ''}
+                    onChange={(e) => handleSocialChange('linkedin', e.target.value)}
+                    className="w-full bg-[#181124] border border-slate-700 rounded-xl px-3 py-2 text-sm text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea transition-colors"
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="facebook" className="block text-xs font-bold text-brand-sandstone/70 mb-1">
+                  <label htmlFor="modal-facebook" className="block text-xs font-bold text-brand-sandstone/80 mb-1">
                     Facebook Profile URL
                   </label>
                   <input
-                    id="facebook"
-                    name="facebook"
+                    id="modal-facebook"
                     placeholder="https://facebook.com/username"
-                    defaultValue={profile.social_links?.facebook ?? ''}
-                    className="w-full bg-[#131D33] border border-slate-700 rounded-xl px-3 py-2 text-sm text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea"
+                    value={form.social_links?.facebook ?? ''}
+                    onChange={(e) => handleSocialChange('facebook', e.target.value)}
+                    className="w-full bg-[#181124] border border-slate-700 rounded-xl px-3 py-2 text-sm text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea transition-colors"
                   />
                 </div>
               </div>
-
-              <div className="pt-2 flex justify-end">
-                <button
-                  type="submit"
-                  disabled={isPending}
-                  className="px-5 py-2 rounded-xl bg-brand-caribbeanSea text-slate-950 font-extrabold text-xs hover:bg-brand-caribbeanSea transition-colors disabled:opacity-50 flex items-center gap-1.5"
-                >
-                  {isPending && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-                  <span>{isPending ? 'Saving changes…' : 'Save Social Links'}</span>
-                </button>
-              </div>
-            </form>
+            </div>
           )}
 
           {/* TAB: PRIVACY & VISIBILITY */}
           {activeTab === 'privacy' && (
-            <form
-              onSubmit={(e) => handleFormSubmit(e, updateProfilePrivacyAction)}
-              className="space-y-5"
-            >
-              <div className="space-y-4">
-                <div className="p-4 rounded-2xl bg-[#131D33] border border-slate-800 space-y-2">
-                  <label htmlFor="profileVisibility" className="block text-xs font-extrabold text-brand-sandstone">
-                    Profile Visibility
+            <div className="space-y-4">
+              <div className="p-4 rounded-2xl bg-brand-dusk/60 border border-slate-800 space-y-2">
+                <label htmlFor="modal-profileVisibility" className="block text-xs font-black text-brand-sandstone">
+                  Profile Search &amp; Feed Visibility
+                </label>
+                <p className="text-[11px] text-brand-sandstone/60">
+                  Controls discoverability in public search, diaspora directory, and community feeds.
+                </p>
+                <select
+                  id="modal-profileVisibility"
+                  value={form.profile_visibility ?? 'public'}
+                  onChange={(e) => handleChange('profile_visibility', e.target.value)}
+                  className="w-full bg-[#181124] border border-slate-700 rounded-xl px-3 py-2 text-xs text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea"
+                >
+                  <option value="public">Public (Visible to all members and diaspora search)</option>
+                  <option value="followers">Followers Only (Restricted to accepted followers)</option>
+                  <option value="private">Private (Only visible to you)</option>
+                </select>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="p-4 rounded-2xl bg-brand-dusk/60 border border-slate-800 space-y-2">
+                  <label htmlFor="modal-dobVisibility" className="block text-xs font-bold text-brand-sandstone">
+                    Date of Birth Visibility
                   </label>
-                  <p className="text-[11px] text-brand-sandstone/60">
-                    Controls whether your profile is discoverable in public search and diaspora feeds.
-                  </p>
                   <select
-                    id="profileVisibility"
-                    name="profileVisibility"
-                    defaultValue={profile.profile_visibility ?? 'public'}
-                    className="w-full bg-[#0D1527] border border-slate-700 rounded-xl px-3 py-2 text-xs text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea"
+                    id="modal-dobVisibility"
+                    value={form.dob_visibility ?? 'private'}
+                    onChange={(e) => handleChange('dob_visibility', e.target.value)}
+                    className="w-full bg-[#181124] border border-slate-700 rounded-xl px-3 py-2 text-xs text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea"
                   >
-                    <option value="public">Public (Visible to all members and diaspora engines)</option>
+                    <option value="private">Only Me (Private)</option>
                     <option value="followers">Followers Only</option>
-                    <option value="private">Private (Only you can see your profile)</option>
+                    <option value="public">Everyone</option>
                   </select>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="p-4 rounded-2xl bg-[#131D33] border border-slate-800 space-y-2">
-                    <label htmlFor="dobVisibility" className="block text-xs font-bold text-brand-sandstone">
-                      Date of Birth Visibility
-                    </label>
-                    <select
-                      id="dobVisibility"
-                      name="dobVisibility"
-                      defaultValue={profile.dob_visibility ?? 'private'}
-                      className="w-full bg-[#0D1527] border border-slate-700 rounded-xl px-3 py-2 text-xs text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea"
-                    >
-                      <option value="private">Only Me (Private)</option>
-                      <option value="followers">Followers Only</option>
-                      <option value="public">Everyone</option>
-                    </select>
-                  </div>
-
-                  <div className="p-4 rounded-2xl bg-[#131D33] border border-slate-800 space-y-2">
-                    <label htmlFor="addressVisibility" className="block text-xs font-bold text-brand-sandstone">
-                      Address Visibility
-                    </label>
-                    <select
-                      id="addressVisibility"
-                      name="addressVisibility"
-                      defaultValue={profile.address_visibility ?? 'private'}
-                      className="w-full bg-[#0D1527] border border-slate-700 rounded-xl px-3 py-2 text-xs text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea"
-                    >
-                      <option value="private">Only Me (Private)</option>
-                      <option value="followers">Followers Only</option>
-                      <option value="public">Everyone</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div className="p-4 rounded-2xl bg-[#131D33] border border-slate-800 flex items-center justify-between">
-                  <div>
-                    <span className="text-xs font-bold text-brand-sandstone block">Online Activity Status</span>
-                    <span className="text-[11px] text-brand-sandstone/60">
-                      Show when you are currently active on the Tukubi platform
-                    </span>
-                  </div>
-                  <label className="relative inline-flex items-center cursor-pointer">
-                    <input
-                      type="checkbox"
-                      name="onlineStatusEnabled"
-                      value="true"
-                      defaultChecked={profile.online_status_enabled !== false}
-                      className="sr-only peer"
-                    />
-                    <div className="w-9 h-5 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-brand-caribbeanSea"></div>
+                <div className="p-4 rounded-2xl bg-brand-dusk/60 border border-slate-800 space-y-2">
+                  <label htmlFor="modal-addressVisibility" className="block text-xs font-bold text-brand-sandstone">
+                    Address Visibility
                   </label>
+                  <select
+                    id="modal-addressVisibility"
+                    value={form.address_visibility ?? 'private'}
+                    onChange={(e) => handleChange('address_visibility', e.target.value)}
+                    className="w-full bg-[#181124] border border-slate-700 rounded-xl px-3 py-2 text-xs text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea"
+                  >
+                    <option value="private">Only Me (Private)</option>
+                    <option value="followers">Followers Only</option>
+                    <option value="public">Everyone</option>
+                  </select>
                 </div>
               </div>
 
-              <div className="pt-2 flex justify-end">
-                <button
-                  type="submit"
-                  disabled={isPending}
-                  className="px-5 py-2 rounded-xl bg-brand-caribbeanSea text-slate-950 font-extrabold text-xs hover:bg-brand-caribbeanSea transition-colors disabled:opacity-50 flex items-center gap-1.5"
-                >
-                  {isPending && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-                  <span>{isPending ? 'Saving changes…' : 'Save Privacy Controls'}</span>
-                </button>
+              <div className="p-4 rounded-2xl bg-brand-dusk/60 border border-slate-800 flex items-center justify-between">
+                <div>
+                  <span className="text-xs font-bold text-brand-sandstone block">Online Activity Status</span>
+                  <span className="text-[11px] text-brand-sandstone/60">
+                    Display active presence indicator across messaging and communities
+                  </span>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={form.online_status_enabled !== false}
+                    onChange={(e) => handleChange('online_status_enabled', e.target.checked)}
+                    className="sr-only peer"
+                  />
+                  <div className="w-9 h-5 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-brand-caribbeanSea"></div>
+                </label>
               </div>
-            </form>
+            </div>
           )}
+        </div>
+
+        {/* Sticky Footer Actions */}
+        <div className="px-5 sm:px-6 py-3.5 border-t border-slate-800 bg-[#1D1429]/95 backdrop-blur-md flex items-center justify-between gap-3 shrink-0">
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={isPending}
+            className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs transition-colors cursor-pointer disabled:opacity-50"
+          >
+            Cancel
+          </button>
+
+          <button
+            type="button"
+            onClick={handleSaveAll}
+            disabled={isPending || avatarUploading || coverUploading}
+            className="px-6 py-2 rounded-xl bg-gradient-to-r from-brand-caribbeanSea to-[#0284C7] hover:brightness-110 text-slate-950 font-black text-xs transition-all shadow-lg shadow-brand-caribbeanSea/20 disabled:opacity-50 flex items-center gap-2 cursor-pointer"
+          >
+            {isPending && <Loader2 className="w-3.5 h-3.5 animate-spin text-slate-950" />}
+            <span>{isPending ? 'Saving profile…' : 'Save Changes'}</span>
+          </button>
         </div>
       </div>
     </div>

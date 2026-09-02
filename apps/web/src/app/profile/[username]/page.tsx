@@ -295,19 +295,39 @@ export default async function ProfilePage({
                     <h1 className="text-xl sm:text-2xl font-black text-brand-sandstone tracking-tight">
                       {profileData.display_name}
                     </h1>
-                    {profileData.is_official ? (
-                      <OfficialBadge
-                        size="md"
-                        showLabel={true}
-                        label={profileData.username.toLowerCase() === 'tukubi' ? 'Official TUKUBI' : 'Official Platform'}
-                      />
-                    ) : profileData.is_verified ? (
-                      <BadgeCheck className="w-5 h-5 text-brand-caribbeanSea" aria-label="Verified Member" />
-                    ) : null}
-                    {recognition.founder.is_founder && (
-                      <FounderBadge founder={recognition.founder} size="sm" />
+                    {profileData.is_official || profileData.username.toLowerCase() === 'tukubi' || profileData.is_system_account ? (
+                      <>
+                        <OfficialBadge
+                          size="md"
+                          showLabel={true}
+                          label={profileData.username.toLowerCase() === 'tukubi' ? 'Official TUKUBI' : 'Official Platform'}
+                        />
+                        <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-brand-twilight text-brand-goldenHour border border-brand-goldenHour/30 font-bold uppercase tracking-wider">
+                          {profileData.account_type === 'organization'
+                            ? 'Organization'
+                            : profileData.account_type === 'business'
+                            ? 'Business'
+                            : profileData.account_type === 'creator'
+                            ? 'Creator'
+                            : 'Official Platform'}
+                        </span>
+                      </>
+                    ) : (
+                      <>
+                        {profileData.is_verified && (
+                          <BadgeCheck className="w-5 h-5 text-brand-caribbeanSea" aria-label="Verified Member" />
+                        )}
+                        {recognition.founder.is_founder && (
+                          <FounderBadge founder={recognition.founder} size="sm" />
+                        )}
+                        {profileData.account_type && profileData.account_type !== 'personal' && (
+                          <span className="text-[10px] px-2 py-0.5 rounded-full bg-brand-twilight text-brand-goldenHour border border-brand-goldenHour/30 font-bold uppercase tracking-wider">
+                            {profileData.account_type}
+                          </span>
+                        )}
+                        <ReputationIndicator reputation={recognition.reputation} size="sm" />
+                      </>
                     )}
-                    <ReputationIndicator reputation={recognition.reputation} size="sm" />
                   </div>
                   <div className="flex items-center gap-2 flex-wrap">
                     <p className="text-xs sm:text-sm font-semibold text-brand-sandstone/60">
