@@ -78,14 +78,19 @@ export async function getCurrentUser(): Promise<SessionUser | null> {
   // Resiliently resolve or create user profile to prevent foreign key errors
   const profile = await ensureUserProfile(supabase, data.user);
 
+  const username = profile?.username ?? data.user.user_metadata?.username ?? data.user.email?.split('@')[0] ?? 'member';
+  const displayName = profile?.display_name ?? data.user.user_metadata?.display_name ?? (username ? `@${username}` : 'Member');
+  const avatarUrl = profile?.avatar_url ?? data.user.user_metadata?.avatar_url ?? (username.toLowerCase() === 'tukubi' ? '/brand/tukubi-emblem.png' : undefined);
+  const isOfficial = username.toLowerCase() === 'tukubi' || (profile as any)?.is_official || false;
+
   return {
     id: data.user.id,
     email: data.user.email ?? '',
-    username: profile?.username ?? data.user.user_metadata?.username ?? data.user.email?.split('@')[0] ?? 'member',
-    displayName: profile?.display_name ?? data.user.user_metadata?.display_name ?? data.user.email ?? 'Member',
-    avatarUrl: profile?.avatar_url ?? data.user.user_metadata?.avatar_url ?? undefined,
+    username,
+    displayName,
+    avatarUrl,
     language_preference: profile?.language_preference ?? undefined,
-    isOfficial: profile?.is_official ?? false,
+    isOfficial,
     isVerified: profile?.is_verified ?? false,
   };
 }

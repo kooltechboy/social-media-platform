@@ -52,8 +52,7 @@ export default async function HomePage() {
     const [postsRes, liveRes, officialProfileRes, officialCountsRes] = await Promise.all([
       supabase
         .from('posts')
-        .select('id, author_id, content, created_at, media_urls, cultural_tags, likes_count, comments_count, shares_count, is_official, is_pinned, official_content_type, profiles:profiles!posts_author_id_fkey(display_name, username, avatar_url, is_verified, is_official)')
-        .order('is_pinned', { ascending: false })
+        .select('id, author_id, content, created_at, media_urls, cultural_tags, likes_count, comments_count, shares_count, profiles:profiles!posts_author_id_fkey(display_name, username, avatar_url, is_verified)')
         .order('created_at', { ascending: false })
         .limit(30),
       supabase
@@ -65,7 +64,7 @@ export default async function HomePage() {
         .maybeSingle(),
       supabase
         .from('profiles')
-        .select('id, display_name, username, avatar_url, bio, is_official, is_verified')
+        .select('id, display_name, username, avatar_url, bio, is_verified')
         .ilike('username', 'tukubi')
         .maybeSingle(),
       supabase
@@ -98,16 +97,17 @@ export default async function HomePage() {
       livePosts = data.map((p: any) => {
         const rawProfile = p.profiles;
         const profile = Array.isArray(rawProfile) ? rawProfile[0] : rawProfile;
+        const isPostOfficial = profile?.username?.toLowerCase() === 'tukubi' || profile?.is_verified || false;
         return {
           id: p.id,
           authorId: p.author_id,
           author: profile?.display_name || 'Caribbean Member',
           handle: profile?.username || 'member',
-          avatarUrl: profile?.avatar_url || null,
+          avatarUrl: profile?.avatar_url || (profile?.username?.toLowerCase() === 'tukubi' ? '/brand/tukubi-emblem.png' : null),
           verified: profile?.is_verified ?? false,
-          isOfficial: p.is_official || profile?.is_official || false,
-          isPinned: p.is_pinned || false,
-          officialContentType: p.official_content_type || undefined,
+          isOfficial: isPostOfficial,
+          isPinned: isPostOfficial,
+          officialContentType: isPostOfficial ? 'welcome' : undefined,
           location: 'Tukubi Network 🌴',
           time: relativeTime(p.created_at),
           content: p.content || '',

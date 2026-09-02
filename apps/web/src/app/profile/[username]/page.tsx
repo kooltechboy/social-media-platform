@@ -194,9 +194,8 @@ export default async function ProfilePage({
       : Promise.resolve({ data: null }),
     supabase
       .from('posts')
-      .select('id, content, created_at, media_urls, is_pinned, is_official, official_content_type')
+      .select('id, content, created_at, media_urls')
       .eq('author_id', profileData.id)
-      .order('is_pinned', { ascending: false })
       .order('created_at', { ascending: false })
       .limit(20),
     recognitionService.getProfileRecognition(profileData.id),

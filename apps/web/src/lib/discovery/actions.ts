@@ -153,7 +153,7 @@ export async function universalSearchAction(params: {
     // 1. Profiles Search (People, Creators)
     let profileQuery = supabase
       .from('profiles')
-      .select('id, display_name, username, avatar_url, bio, origin_country_iso, is_verified, is_official, account_type, status, is_private')
+      .select('id, display_name, username, avatar_url, bio, origin_country_iso, is_verified, account_type, status, is_private')
       .eq('is_private', false)
       .neq('status', 'suspended')
       .or(`display_name.ilike.${termFilter},username.ilike.${termFilter},first_name.ilike.${termFilter},last_name.ilike.${termFilter}`)
@@ -245,7 +245,7 @@ export async function universalSearchAction(params: {
         origin_country_iso: p.origin_country_iso,
         country_name: countryInfo?.name || null,
         is_verified: !!p.is_verified,
-        is_official: !!p.is_official,
+        is_official: p.username?.toLowerCase() === 'tukubi' || !!(p as any).is_official,
         account_type: p.account_type,
         relationship: relationshipMap[p.id] || { state: 'none', isFollowing: false, friendshipStatus: 'none' },
       };
@@ -438,29 +438,30 @@ export async function fetchPeopleYouMayKnowAction(params?: {
     const friendIds = new Set<string>();
 
     if (user) {
-      const [dismissRes, blockRes, followRes, friendRes] = await Promise.all([
-        supabase.from('recommendation_feedback').select('entity_id').eq('user_id', user.id),
-        supabase.from('blocks').select('blocked_id').eq('blocker_id', user.id),
-        supabase.from('follows').select('following_id').eq('follower_id', user.id),
-        supabase.from('friendships').select('requester_id, addressee_id, status').or(`requester_id.eq.${user.id},addressee_id.eq.${user.id}`),
-      ]);
+      try {
+        const [blockRes, followRes, friendRes] = await Promise.all([
+          supabase.from('blocks').select('blocked_id').eq('blocker_id', user.id),
+          supabase.from('follows').select('following_id').eq('follower_id', user.id),
+          supabase.from('friendships').select('requester_id, addressee_id, status').or(`requester_id.eq.${user.id},addressee_id.eq.${user.id}`),
+        ]);
 
-      (dismissRes.data || []).forEach((d) => dismissedIds.add(d.entity_id));
-      (blockRes.data || []).forEach((b) => blockedIds.add(b.blocked_id));
-      (followRes.data || []).forEach((f) => followingIds.add(f.following_id));
-      (friendRes.data || []).forEach((fr) => {
-        if (fr.status === 'accepted') {
-          friendIds.add(fr.requester_id === user.id ? fr.addressee_id : fr.requester_id);
-        }
-      });
+        (blockRes.data || []).forEach((b) => blockedIds.add(b.blocked_id));
+        (followRes.data || []).forEach((f) => followingIds.add(f.following_id));
+        (friendRes.data || []).forEach((fr) => {
+          if (fr.status === 'accepted') {
+            friendIds.add(fr.requester_id === user.id ? fr.addressee_id : fr.requester_id);
+          }
+        });
+      } catch {
+        // Continue gracefully
+      }
     }
 
     // 2. Query candidate profiles
     let query = supabase
       .from('profiles')
-      .select('id, display_name, username, avatar_url, bio, origin_country_iso, is_verified, is_official, account_type, status, is_private, show_in_recommendations')
+      .select('id, display_name, username, avatar_url, bio, origin_country_iso, is_verified, account_type, status, is_private')
       .eq('is_private', false)
-      .eq('show_in_recommendations', true)
       .neq('status', 'suspended')
       .limit(50);
 
@@ -495,7 +496,7 @@ export async function fetchPeopleYouMayKnowAction(params?: {
         origin_country_iso: c.origin_country_iso,
         country_name: countryInfo?.name || null,
         is_verified: !!c.is_verified,
-        is_official: !!c.is_official,
+        is_official: c.username?.toLowerCase() === 'tukubi' || !!(c as any).is_official,
         account_type: c.account_type,
         relationship: relationshipMap[c.id] || { state: 'none', isFollowing: false, friendshipStatus: 'none' },
       };
@@ -508,7 +509,7 @@ export async function fetchPeopleYouMayKnowAction(params?: {
           originCountryIso: c.origin_country_iso,
           countryName: countryInfo?.name || null,
           isVerified: !!c.is_verified,
-          isOfficial: !!c.is_official,
+          isOfficial: c.username?.toLowerCase() === 'tukubi' || !!(c as any).is_official,
         },
         {
           viewerId: user?.id,
@@ -634,7 +635,7 @@ export async function fetchFriendsOverviewAction(params?: {
     if (allProfileIds.length > 0) {
       const { data: profilesData } = await supabase
         .from('profiles')
-        .select('id, display_name, username, avatar_url, bio, origin_country_iso, is_verified, is_official, account_type')
+        .select('id, display_name, username, avatar_url, bio, origin_country_iso, is_verified, account_type')
         .in('id', allProfileIds);
 
       const relationshipBatch = await getRelationshipBatchAction(allProfileIds);
@@ -650,7 +651,7 @@ export async function fetchFriendsOverviewAction(params?: {
           origin_country_iso: p.origin_country_iso,
           country_name: countryInfo?.name || null,
           is_verified: !!p.is_verified,
-          is_official: !!p.is_official,
+          is_official: p.username?.toLowerCase() === 'tukubi' || !!(p as any).is_official,
           account_type: p.account_type,
           relationship: relationshipBatch[p.id] || { state: 'none', isFollowing: false, friendshipStatus: 'none' },
         };
@@ -723,7 +724,7 @@ export async function fetchMembersDirectoryAction(params?: {
   try {
     let query = supabase
       .from('profiles')
-      .select('id, display_name, username, avatar_url, bio, origin_country_iso, is_verified, is_official, account_type, status, is_private, updated_at', { count: 'exact' })
+      .select('id, display_name, username, avatar_url, bio, origin_country_iso, is_verified, account_type, status, is_private, updated_at', { count: 'exact' })
       .eq('is_private', false)
       .neq('status', 'suspended')
       .order('is_verified', { ascending: false })
@@ -760,7 +761,7 @@ export async function fetchMembersDirectoryAction(params?: {
         origin_country_iso: d.origin_country_iso,
         country_name: countryInfo?.name || null,
         is_verified: !!d.is_verified,
-        is_official: !!d.is_official,
+        is_official: d.username?.toLowerCase() === 'tukubi' || !!(d as any).is_official,
         account_type: d.account_type,
         relationship: relationshipMap[d.id] || { state: 'none', isFollowing: false, friendshipStatus: 'none' },
       };

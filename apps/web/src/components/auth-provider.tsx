@@ -38,14 +38,14 @@ export function AuthProvider({ children, initialUser = null }: AuthProviderProps
     try {
       const { data: profile } = await supabase
         .from('profiles')
-        .select('username, display_name, avatar_url, is_official, is_verified')
+        .select('username, display_name, avatar_url, is_verified')
         .eq('id', authUserId)
         .maybeSingle();
 
       const username = profile?.username || userMeta?.username || authEmail?.split('@')[0] || 'member';
-      const displayName = profile?.display_name || userMeta?.display_name || authEmail || 'Member';
-      const avatarUrl = profile?.avatar_url || userMeta?.avatar_url || undefined;
-      const isOfficial = profile?.is_official ?? false;
+      const displayName = profile?.display_name || userMeta?.display_name || (username ? `@${username}` : 'Member');
+      const avatarUrl = profile?.avatar_url || userMeta?.avatar_url || (username?.toLowerCase() === 'tukubi' ? '/brand/tukubi-emblem.png' : undefined);
+      const isOfficial = username?.toLowerCase() === 'tukubi' || (profile as any)?.is_official || false;
       const isVerified = profile?.is_verified ?? false;
 
       return {
@@ -58,11 +58,14 @@ export function AuthProvider({ children, initialUser = null }: AuthProviderProps
         isVerified,
       };
     } catch {
+      const fallbackUsername = userMeta?.username || authEmail?.split('@')[0] || 'member';
       return {
         id: authUserId,
         email: authEmail || '',
-        username: userMeta?.username || authEmail?.split('@')[0] || 'member',
-        displayName: userMeta?.display_name || authEmail || 'Member',
+        username: fallbackUsername,
+        displayName: userMeta?.display_name || `@${fallbackUsername}`,
+        avatarUrl: fallbackUsername.toLowerCase() === 'tukubi' ? '/brand/tukubi-emblem.png' : undefined,
+        isOfficial: fallbackUsername.toLowerCase() === 'tukubi',
       };
     }
   }, []);
