@@ -242,6 +242,12 @@ importers:
       '@caribbean/podcasts':
         specifier: workspace:*
         version: link:../../packages/podcasts
+      '@caribbean/recommendations':
+        specifier: workspace:*
+        version: link:../../packages/recommendations
+      '@caribbean/search':
+        specifier: workspace:*
+        version: link:../../packages/search
       '@caribbean/social':
         specifier: workspace:*
         version: link:../../packages/social

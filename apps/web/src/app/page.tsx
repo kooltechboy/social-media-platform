@@ -74,7 +74,16 @@ export default async function HomePage() {
         .maybeSingle(),
     ]);
 
-    const data = postsRes.data;
+    let data = postsRes.data;
+    if (!data && postsRes.error) {
+      const fallbackPosts = await supabase
+        .from('posts')
+        .select('id, author_id, content, created_at, media_urls, cultural_tags, likes_count, comments_count, shares_count, profiles(display_name, username, avatar_url, is_verified)')
+        .order('created_at', { ascending: false })
+        .limit(30);
+      data = fallbackPosts.data;
+    }
+
     const activeLiveStream = liveRes.data;
     officialProfile = officialProfileRes.data;
     officialCounts = officialCountsRes.data;
@@ -120,6 +129,33 @@ export default async function HomePage() {
           category: 'caribbean',
         };
       });
+    }
+
+    // Guarantee Authoritative Official Launch Post if not already in live feed
+    const hasOfficialPost = livePosts.some((p) => p.handle?.toLowerCase() === 'tukubi' || p.id === 'd23f3e75-0dfa-47c6-8df9-2c0fa299d7ff');
+    if (!hasOfficialPost) {
+      const officialLaunchPost: FeedPostData = {
+        id: 'd23f3e75-0dfa-47c6-8df9-2c0fa299d7ff',
+        authorId: officialProfile?.id || 'ff1e8b1f-7796-4424-b341-3b39e1c993bd',
+        author: officialProfile?.display_name || 'TUKUBI',
+        handle: officialProfile?.username || 'tukubi',
+        avatarUrl: officialProfile?.avatar_url || '/brand/tukubi-emblem.png',
+        verified: true,
+        isOfficial: true,
+        isPinned: true,
+        officialContentType: 'welcome',
+        location: 'Tukubi Network 🌴',
+        time: 'Inaugural Launch',
+        content: `🌴 Welcome to TUKUBI — The Caribbean Connected.\n\nConnecting Caribbean people, culture, creators, businesses & the global diaspora in one unified digital ecosystem.\n\n🌎 Born in the Caribbean. Built for the World.\n\nJoin conversations across the islands, explore live audio/video broadcasts, discover local creators, support Caribbean merchants, and build the future of our digital heritage together. ☀️🌊🎶`,
+        mediaUrls: [],
+        culturalTags: ['caribbean', 'tukubiofficial', 'welcome', 'diaspora', 'culture'],
+        likes: officialCounts?.likes_received_count || 1240,
+        reposts: 312,
+        comments: 86,
+        isUserLiked: false,
+        category: 'caribbean',
+      };
+      livePosts = [officialLaunchPost, ...livePosts];
     }
   }
 

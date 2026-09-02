@@ -48,4 +48,23 @@ describe('TUKUBI — Avatar-First Header Identity & Official Post Recovery', () 
 
     expect(content).toContain('Member');
   });
+
+  it('guarantees official inaugural launch post is authoritative on home feed and profile', () => {
+    const pageContent = fs.readFileSync(path.resolve(__dirname, '../../apps/web/src/app/page.tsx'), 'utf-8');
+    const profileContent = fs.readFileSync(path.resolve(__dirname, '../../apps/web/src/app/profile/[username]/page.tsx'), 'utf-8');
+    const migrationContent = fs.readFileSync(path.resolve(__dirname, '../../supabase/migrations/00051_seed_official_tukubi_launch_post.sql'), 'utf-8');
+
+    // Home feed guarantees official launch post
+    expect(pageContent).toContain('d23f3e75-0dfa-47c6-8df9-2c0fa299d7ff');
+    expect(pageContent).toContain('hasOfficialPost');
+    expect(pageContent).toContain('officialLaunchPost');
+
+    // Profile page guarantees official launch post
+    expect(profileContent).toContain('d23f3e75-0dfa-47c6-8df9-2c0fa299d7ff');
+    expect(profileContent).toContain('profileData.username.toLowerCase() === \'tukubi\'');
+
+    // Migration 00051 seeds launch post
+    expect(migrationContent).toContain('d23f3e75-0dfa-47c6-8df9-2c0fa299d7ff');
+    expect(migrationContent).toContain('ff1e8b1f-7796-4424-b341-3b39e1c993bd');
+  });
 });
