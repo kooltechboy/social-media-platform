@@ -510,10 +510,10 @@ export default function UniversalComposer({
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
-        className={`glass rounded-3xl border transition-all ${
+        className={`glass-aerospace rounded-3xl border transition-all duration-300 ${
           isDragging
-            ? 'border-brand-caribbeanSea shadow-2xl shadow-brand-caribbeanSea/30 ring-2 ring-brand-caribbeanSea/40 bg-brand-dusk/95'
-            : 'border-slate-800/80 hover:border-slate-700 bg-brand-dusk/80 shadow-xl'
+            ? 'border-brand-caribbeanSea shadow-2xl shadow-brand-caribbeanSea/30 ring-2 ring-brand-caribbeanSea/40 bg-[#0E152B]/95'
+            : 'border-white/14 hover:border-white/25 bg-[#0A0F22]/85 shadow-2xl'
         }`}
       >
         {!isExpanded ? (
@@ -521,19 +521,19 @@ export default function UniversalComposer({
           /* 1. COLLAPSED STREAM PROMPT BAR (ALL OPTIONS DIRECTLY CLICKABLE) */
           /* ────────────────────────────────────────────────────────── */
           <div className="p-4 sm:p-5 space-y-3">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-brand-caribbeanSea via-brand-goldenHour to-brand-sunriseCoral text-slate-950 font-black flex items-center justify-center text-xs shadow-md flex-shrink-0 ring-2 ring-brand-caribbeanSea/30">
+            <div className="flex items-center gap-3.5">
+              <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-brand-caribbeanSea via-brand-goldenHour to-brand-sunriseCoral text-slate-950 font-black flex items-center justify-center text-xs shadow-lg shadow-cyan-500/20 flex-shrink-0 ring-2 ring-white/20">
                 {avatarInitials}
               </div>
 
               <button
                 type="button"
                 onClick={() => setIsExpanded(true)}
-                className="flex-1 bg-brand-twilight/90 hover:bg-brand-twilight text-left px-4 py-3 rounded-2xl text-sm font-medium text-brand-sandstone/50 hover:text-brand-sandstone border border-slate-800 transition-all flex items-center justify-between group cursor-text"
+                className="flex-1 bg-black/40 hover:bg-black/60 text-left px-5 py-3 rounded-2xl text-sm font-medium text-white/50 hover:text-white border border-white/10 hover:border-white/20 transition-all flex items-center justify-between group cursor-text shadow-inner"
               >
-                <span>What&apos;s happening, {firstName}?</span>
-                <span className="text-xs font-bold text-brand-caribbeanSea group-hover:text-brand-goldenHour flex items-center gap-1">
-                  <Sparkles className="w-3.5 h-3.5 text-brand-goldenHour" /> Create Post
+                <span className="tracking-tight">What&apos;s happening, {firstName}?</span>
+                <span className="text-xs font-black text-brand-caribbeanSea group-hover:text-brand-goldenHour flex items-center gap-1.5 transition-colors">
+                  <Sparkles className="w-3.5 h-3.5 text-brand-goldenHour animate-spin" style={{ animationDuration: '8s' }} /> Create Post
                 </span>
               </button>
             </div>

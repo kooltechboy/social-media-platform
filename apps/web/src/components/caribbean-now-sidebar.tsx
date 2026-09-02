@@ -176,16 +176,21 @@ export default async function TukubiLiveSidebar() {
       <OnlineFriendsWidget />
 
       {/* TUKUBI Live Ticker */}
-      <div className="glass rounded-2xl p-5 space-y-4">
+      <div className="glass-aerospace rounded-3xl p-5 space-y-4 shadow-xl border border-white/12 relative overflow-hidden">
+        <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent pointer-events-none" />
+
         <div className="flex items-center justify-between">
-          <h3 className="font-extrabold text-sm text-brand-sandstone flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-ping" />
-            <span className="bg-gradient-to-r from-red-400 via-amber-300 to-brand-caribbeanSea bg-clip-text text-transparent">
+          <h3 className="font-black text-sm text-white flex items-center gap-2 tracking-tight">
+            <span className="flex h-2.5 w-2.5 relative">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
+              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500" />
+            </span>
+            <span className="bg-gradient-to-r from-red-400 via-amber-300 to-brand-caribbeanSea bg-clip-text text-transparent font-black">
               TUKUBI LIVE
             </span>
           </h3>
-          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-red-500/20 text-red-300 border border-red-500/30">
-            LIVE PULSE
+          <span className="text-[10px] font-black px-2.5 py-0.5 rounded-full bg-red-500/20 text-red-300 border border-red-500/30">
+            PULSE
           </span>
         </div>
 
@@ -195,10 +200,10 @@ export default async function TukubiLiveSidebar() {
               <Link
                 key={pulse.id}
                 href={pulse.href}
-                className={`flex items-center justify-between p-2.5 rounded-2xl border transition-all group ${
+                className={`flex items-center justify-between p-3 rounded-2xl border transition-all duration-200 group ${
                   pulse.isLive
-                    ? "bg-red-950/20 hover:bg-red-900/30 border-red-500/30 hover:border-red-500/50"
-                    : "bg-white/5 hover:bg-white/10 border-white/8 hover:border-white/20"
+                    ? "bg-red-950/30 hover:bg-red-900/40 border-red-500/40 hover:border-red-500/60 shadow-lg shadow-red-900/20"
+                    : "bg-white/5 hover:bg-white/10 border-white/10 hover:border-white/20"
                 }`}
               >
                 <div className="flex items-center gap-2.5 min-w-0 flex-1">
@@ -216,30 +221,30 @@ export default async function TukubiLiveSidebar() {
                           className={`text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded border ${
                             pulse.isLive
                               ? "bg-red-500/20 text-red-300 border-red-500/30 animate-pulse"
-                              : "bg-brand-caribbeanSea/10 text-brand-caribbeanSea border-brand-caribbeanSea/20"
+                              : "bg-brand-caribbeanSea/15 text-brand-caribbeanSea border-brand-caribbeanSea/30"
                           }`}
                         >
                           {pulse.badge}
                         </span>
                       )}
-                      <h4 className="font-extrabold text-xs text-slate-200 group-hover:text-brand-caribbeanSea transition-colors truncate">
+                      <h4 className="font-bold text-xs text-white group-hover:text-brand-caribbeanSea transition-colors truncate">
                         {pulse.title}
                       </h4>
                     </div>
-                    <p className="text-[11px] text-brand-sandstone/60 font-medium truncate mt-0.5">
+                    <p className="text-[11px] text-white/60 font-medium truncate mt-0.5">
                       {pulse.subtitle}
                     </p>
                   </div>
                 </div>
-                <ArrowUpRight className="w-3.5 h-3.5 text-brand-sandstone/40 group-hover:text-brand-caribbeanSea transition-colors flex-shrink-0 ml-2" />
+                <ArrowUpRight className="w-4 h-4 text-white/40 group-hover:text-brand-caribbeanSea transition-colors flex-shrink-0 ml-2" />
               </Link>
             ))
           ) : (
-            <div className="p-4 rounded-2xl bg-white/5 border border-dashed border-slate-800 text-center space-y-2">
-              <p className="text-xs font-semibold text-brand-sandstone/80">
+            <div className="p-4 rounded-2xl bg-white/5 border border-dashed border-white/10 text-center space-y-2">
+              <p className="text-xs font-semibold text-white/80">
                 Nothing happening right now.
               </p>
-              <p className="text-[11px] text-brand-sandstone/50 leading-relaxed">
+              <p className="text-[11px] text-white/50 leading-relaxed">
                 Check back soon for live broadcasts, fetes, and island moments.
               </p>
               <div className="pt-2 flex items-center justify-center gap-2">
@@ -249,7 +254,7 @@ export default async function TukubiLiveSidebar() {
                 >
                   Explore Caribbean →
                 </Link>
-                <span className="text-brand-sandstone/30">•</span>
+                <span className="text-white/30">•</span>
                 <Link
                   href="/create"
                   className="inline-flex items-center gap-1 text-[11px] font-bold text-brand-goldenHour hover:underline"
@@ -263,20 +268,22 @@ export default async function TukubiLiveSidebar() {
       </div>
 
       {/* TUKUBI Financial Center Quick Card */}
-      <div className="glass rounded-2xl p-5 space-y-3">
+      <div className="glass-aerospace rounded-3xl p-5 space-y-3.5 shadow-xl border border-white/12 relative overflow-hidden">
+        <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent pointer-events-none" />
+
         <div className="flex items-center justify-between">
-          <span className="text-[10px] font-black text-brand-sunriseCoral uppercase tracking-wider flex items-center gap-1.5">
-            <Wallet className="w-3.5 h-3.5" /> Financial Center
+          <span className="text-[10px] font-black text-brand-sunriseCoral uppercase tracking-widest flex items-center gap-1.5">
+            <Wallet className="w-3.5 h-3.5 text-brand-sunriseCoral" /> Financial Center
           </span>
-          <span className="text-[10px] font-bold text-emerald-400">
+          <span className="text-[10px] font-black text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
             Secured
           </span>
         </div>
         <div>
-          <p className="text-xs text-brand-sandstone/60">
+          <p className="text-xs font-black text-white">
             Digital Commerce &amp; Creator Hub
           </p>
-          <p className="text-xs text-slate-300 mt-1 leading-relaxed">
+          <p className="text-xs text-white/60 mt-1 leading-relaxed font-medium">
             Manage payment methods, orders, fan memberships, and creator
             payouts.
           </p>
@@ -284,13 +291,13 @@ export default async function TukubiLiveSidebar() {
         <div className="grid grid-cols-2 gap-2 pt-1">
           <Link
             href="/financial-center"
-            className="bg-brand-sunriseCoral hover:bg-brand-sunriseCoral text-slate-950 font-extrabold py-2 px-3 rounded-xl text-xs text-center transition-colors shadow-sm shadow-brand-sunriseCoral/20"
+            className="bg-gradient-to-r from-brand-sunriseCoral to-brand-goldenHour hover:brightness-110 text-slate-950 font-black py-2 px-3 rounded-2xl text-xs text-center transition-all shadow-md shadow-orange-500/20 active:scale-95"
           >
             Overview
           </Link>
           <Link
             href="/financial-center/payment-methods"
-            className="bg-transparent hover:bg-brand-dusk text-slate-300 font-bold py-2 px-3 rounded-xl text-xs text-center border border-slate-600 transition-colors"
+            className="bg-white/5 hover:bg-white/10 text-white font-bold py-2 px-3 rounded-2xl text-xs text-center border border-white/15 transition-all"
           >
             Cards &amp; Rails
           </Link>
@@ -298,9 +305,11 @@ export default async function TukubiLiveSidebar() {
       </div>
 
       {/* Upcoming Cultural Fetes & Events */}
-      <div className="glass rounded-2xl p-5 space-y-3">
+      <div className="glass-aerospace rounded-3xl p-5 space-y-3.5 shadow-xl border border-white/12 relative overflow-hidden">
+        <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent pointer-events-none" />
+
         <div className="flex items-center justify-between">
-          <h3 className="font-extrabold text-sm text-brand-sandstone flex items-center gap-2">
+          <h3 className="font-black text-sm text-white flex items-center gap-2 tracking-tight">
             <Calendar className="w-4 h-4 text-brand-goldenHour" /> Featured
             Cultural Fetes
           </h3>
@@ -318,28 +327,28 @@ export default async function TukubiLiveSidebar() {
               <Link
                 key={event.id}
                 href="/events"
-                className="p-3 rounded-2xl bg-white/5 border border-white/8 space-y-1 block hover:border-white/20 transition-colors"
+                className="p-3.5 rounded-2xl bg-white/5 border border-white/10 space-y-1 block hover:border-white/25 hover:bg-white/10 transition-all group"
               >
-                <h4 className="font-bold text-xs text-slate-200 leading-snug">
+                <h4 className="font-bold text-xs text-white group-hover:text-brand-caribbeanSea transition-colors leading-snug">
                   {event.title}
                 </h4>
-                <div className="flex items-center justify-between text-[11px]">
-                  <span className="text-brand-sandstone/60">
+                <div className="flex items-center justify-between text-[11px] font-medium">
+                  <span className="text-white/60">
                     {formatEventDate(event.starts_at)}{" "}
                     {event.cities ? `• ${event.cities.name}` : ""}
                   </span>
-                  <span className="font-extrabold text-brand-goldenHour">
-                    RSVP
+                  <span className="font-black text-brand-goldenHour group-hover:underline">
+                    RSVP →
                   </span>
                 </div>
               </Link>
             ))
           ) : (
-            <div className="p-4 rounded-2xl bg-white/5 border border-dashed border-slate-800 text-center space-y-1.5">
-              <p className="text-xs font-semibold text-brand-sandstone/80">
+            <div className="p-4 rounded-2xl bg-white/5 border border-dashed border-white/10 text-center space-y-1.5">
+              <p className="text-xs font-semibold text-white/80">
                 No featured cultural fetes right now.
               </p>
-              <p className="text-[11px] text-brand-sandstone/50 leading-relaxed">
+              <p className="text-[11px] text-white/50 leading-relaxed">
                 Check back soon for island carnivals, music festivals, and
                 diaspora meetups.
               </p>

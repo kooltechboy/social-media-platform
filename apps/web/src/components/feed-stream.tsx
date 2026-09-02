@@ -571,11 +571,14 @@ export default function FeedStream({ initialPosts, currentUserId }: FeedStreamPr
             <article
               key={post.id}
               id={post.id}
-              className="glass rounded-2xl p-5 space-y-4 hover:border-white/15 transition-all"
+              className="glass-aerospace rounded-3xl p-5 sm:p-6 space-y-4 hover:border-white/25 transition-all duration-300 relative group overflow-hidden shadow-2xl"
             >
+              {/* Subtle top edge specular highlight */}
+              <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent pointer-events-none" />
+
               {/* Post Author Header */}
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3.5">
                   <Link
                     href={`/profile/${post.handle}`}
                     className="hover:scale-105 transition-transform shrink-0"
@@ -591,41 +594,41 @@ export default function FeedStream({ initialPosts, currentUserId }: FeedStreamPr
                     <div className="flex items-center gap-1.5 flex-wrap">
                       <Link
                         href={`/profile/${post.handle}`}
-                        className="font-extrabold text-sm text-brand-sandstone hover:text-brand-caribbeanSea transition-colors"
+                        className="font-black text-sm text-white hover:text-brand-caribbeanSea transition-colors tracking-tight"
                       >
                         {post.author}
                       </Link>
                       {post.isOfficial ? (
                         <OfficialBadge size="xs" showLabel={true} label={post.handle.toLowerCase() === 'tukubi' ? 'Official TUKUBI' : 'Official'} />
                       ) : post.verified ? (
-                        <CheckCircle className="w-3.5 h-3.5 text-brand-caribbeanSea fill-brand-caribbeanSea/20" />
+                        <CheckCircle className="w-4 h-4 text-brand-caribbeanSea fill-brand-caribbeanSea/20 drop-shadow-[0_0_6px_rgba(0,180,216,0.5)]" />
                       ) : null}
                       <Link
                         href={`/profile/${post.handle}`}
-                        className="text-xs text-brand-sandstone/40 hover:text-brand-sandstone/70 transition-colors"
+                        className="text-xs font-semibold text-white/50 hover:text-white/80 transition-colors"
                       >
                         @{post.handle}
                       </Link>
                       {post.isPinned && (
-                        <span className="inline-flex items-center gap-1 text-[10px] font-bold text-brand-sunriseCoral bg-brand-sunriseCoral/10 px-2 py-0.5 rounded-full border border-brand-sunriseCoral/20">
+                        <span className="inline-flex items-center gap-1 text-[10px] font-black text-brand-sunriseCoral bg-brand-sunriseCoral/15 px-2.5 py-0.5 rounded-full border border-brand-sunriseCoral/30">
                           <Pin className="w-2.5 h-2.5" />
                           Pinned
                         </span>
                       )}
                     </div>
-                    <div className="flex items-center gap-2 text-[11px] text-brand-sandstone/60 mt-0.5">
+                    <div className="flex items-center gap-2 text-[11px] font-medium text-white/60 mt-0.5">
                       {post.location && (
-                        <span className="flex items-center gap-1">
+                        <span className="flex items-center gap-1 text-white/70">
                           <MapPin className="w-3 h-3 text-brand-sunriseCoral" />
                           {post.location}
                         </span>
                       )}
-                      <span>•</span>
+                      <span className="text-white/30">•</span>
                       <span>{post.time}</span>
                       {post.officialContentType && (
                         <>
-                          <span>•</span>
-                          <span className="text-[10px] font-semibold text-brand-caribbeanSea capitalize">
+                          <span className="text-white/30">•</span>
+                          <span className="text-[10px] font-bold text-brand-caribbeanSea capitalize px-1.5 py-0.2 rounded bg-brand-caribbeanSea/10 border border-brand-caribbeanSea/20">
                             {post.officialContentType.replace('_', ' ')}
                           </span>
                         </>

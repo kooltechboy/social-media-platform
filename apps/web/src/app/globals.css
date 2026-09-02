@@ -2,7 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ─── Root Island Vibes tokens ─── */
+/* ─── Root Island Vibes & Aerospace Caribbean Futurism tokens ─── */
 :root {
   --brand-twilight:     #110D17;
   --brand-dusk:         #1D1429;
@@ -16,35 +16,77 @@
 
 html {
   background-color: var(--brand-twilight);
+  scroll-behavior: smooth;
 }
 
 /* Body baseline — transparent so the full-screen Caribbean background shows through */
 body {
   background-color: transparent;
   color: var(--brand-sandstone);
-  font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Plus Jakarta Sans', 'Segoe UI', Roboto, sans-serif;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  letter-spacing: -0.011em;
 }
 
-/* ─── Utility: glass card — used by all surface components in Island Vibes ─── */
+/* ─── Utility: Aerospace Glass Card — Fortune-100 Specular Depth ─── */
 .glass {
   background: rgba(17, 13, 23, 0.70);
-  backdrop-filter: blur(24px) saturate(160%);
-  -webkit-backdrop-filter: blur(24px) saturate(160%);
-  border: 1px solid rgba(255, 255, 255, 0.10);
+  backdrop-filter: blur(28px) saturate(175%);
+  -webkit-backdrop-filter: blur(28px) saturate(175%);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.6), inset 0 1px 0 0 rgba(255, 255, 255, 0.14);
+}
+
+.glass:hover {
+  border-color: rgba(255, 255, 255, 0.20);
 }
 
 .glass-light {
-  background: rgba(255, 255, 255, 0.06);
-  backdrop-filter: blur(16px) saturate(140%);
-  -webkit-backdrop-filter: blur(16px) saturate(140%);
-  border: 1px solid rgba(255, 255, 255, 0.10);
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(20px) saturate(150%);
+  -webkit-backdrop-filter: blur(20px) saturate(150%);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.10);
 }
 
-/* ─── Smooth fade-in ─── */
+.glass-aerospace {
+  background: linear-gradient(135deg, rgba(29, 20, 41, 0.85) 0%, rgba(17, 13, 23, 0.90) 100%);
+  backdrop-filter: blur(32px) saturate(180%);
+  -webkit-backdrop-filter: blur(32px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.7), inset 0 1px 0 0 rgba(255, 255, 255, 0.18);
+}
+
+.glass-interactive {
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.glass-interactive:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 35px -10px rgba(0, 0, 0, 0.7), 0 0 20px -5px rgba(0, 180, 216, 0.2), inset 0 1px 0 0 rgba(255, 255, 255, 0.22);
+  border-color: rgba(0, 180, 216, 0.35);
+}
+
+/* ─── Smooth animations ─── */
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(6px); }
   to   { opacity: 1; transform: translateY(0);   }
 }
-.animate-fadeIn { animation: fadeIn 0.2s ease-out; }
+.animate-fadeIn { animation: fadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1); }
+
+@keyframes subtlePulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.85; transform: scale(1.02); }
+}
+.animate-subtlePulse { animation: subtlePulse 4s ease-in-out infinite; }
+
+/* Micro-Scrollbar styling */
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
 
