@@ -23,6 +23,7 @@ import {
   MapPin,
   PlusCircle,
   Music,
+  UserPlus,
 } from 'lucide-react';
 
 import { useTranslation, TranslationKey } from '@caribbean/localization';
@@ -38,6 +39,8 @@ interface NavItem {
 
 const PRIMARY_NAV: NavItem[] = [
   { href: '/', labelKey: 'nav.home', fallbackLabel: 'Home Feed', icon: <Home className="w-4 h-4 text-brand-caribbeanSea" /> },
+  { href: '/friends', fallbackLabel: 'Friends & Network', icon: <UserPlus className="w-4 h-4 text-emerald-400" /> },
+  { href: '/members', fallbackLabel: 'Members Directory', icon: <Users className="w-4 h-4 text-cyan-400" /> },
   { href: '/create', labelKey: 'nav.create_hub', fallbackLabel: 'Create Hub', icon: <PlusCircle className="w-4 h-4 text-brand-sunriseCoral" />, badge: 'NEW' },
   { href: '/explore', labelKey: 'nav.explore', fallbackLabel: 'Explore & Diaspora', icon: <Compass className="w-4 h-4 text-brand-goldenHour" /> },
   { href: '/map', labelKey: 'nav.map', fallbackLabel: 'Caribbean Map', icon: <MapPin className="w-4 h-4 text-rose-400" /> },
@@ -195,4 +198,3 @@ export default function AppSidebar({ currentPath }: AppSidebarProps) {
     </aside>
   );
 }
-

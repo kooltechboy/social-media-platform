@@ -2,10 +2,10 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Search, Wallet, CreditCard, Bell, MessageSquare, User, CheckCircle, Users, Calendar, ShoppingBag, X } from 'lucide-react';
 import SessionWidget from './session-widget';
 import { createSupabaseBrowserClient } from '../lib/supabase/browser';
-
 import { followAction, unfollowAction } from '../lib/social/profile-actions';
 import UserAvatar from './user-avatar';
 import { useTranslation } from '@caribbean/localization';
@@ -24,6 +24,7 @@ interface SearchResultUser {
 }
 
 export default function AppHeader() {
+  const router = useRouter();
   const { t } = useTranslation();
   const [query, setQuery] = useState('');
   const [isOpen, setIsOpen] = useState(false);
@@ -40,6 +41,27 @@ export default function AppHeader() {
     }
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Fetch current user followings on mount
+  useEffect(() => {
+    async function loadFollowings() {
+      const supabase = createSupabaseBrowserClient();
+      if (!supabase) return;
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: follows } = await supabase
+          .from('follows')
+          .select('following_id')
+          .eq('follower_id', user.id);
+        if (follows) {
+          const map: Record<string, boolean> = {};
+          follows.forEach((f) => (map[f.following_id] = true));
+          setFollowingMap(map);
+        }
+      }
+    }
+    loadFollowings();
   }, []);
 
   async function handleSearchChange(val: string) {
@@ -63,8 +85,9 @@ export default function AppHeader() {
         const { data } = await supabase
           .from('profiles')
           .select('id, display_name, username, avatar_url, origin_country_iso, account_type')
+          .eq('is_private', false)
           .or(`display_name.ilike.%${sanitized}%,username.ilike.%${sanitized}%`)
-          .limit(5);
+          .limit(6);
 
         if (data) {
           setLivePeople(data);
@@ -77,6 +100,14 @@ export default function AppHeader() {
       setLivePeople([]);
     }
   }
+
+  const handleFormSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (query.trim()) {
+      setIsOpen(false);
+      router.push(`/search?q=${encodeURIComponent(query.trim())}`);
+    }
+  };
 
   async function toggleFollow(userId: string) {
     const currentlyFollowing = !!followingMap[userId];
@@ -119,7 +150,7 @@ export default function AppHeader() {
       {/* ────────────────────────────────────────────────────────── */}
       <div className="hidden md:flex flex-1 justify-center max-w-2xl mx-auto px-4">
         <div ref={searchRef} className="relative w-full max-w-xl">
-          <form action="/search" method="GET" className="w-full relative">
+          <form onSubmit={handleFormSubmit} action="/search" method="GET" className="w-full relative">
             <Search className="absolute left-4 top-3 w-4.5 h-4.5 text-brand-caribbeanSea pointer-events-none" aria-hidden="true" />
             <input
               type="text"
@@ -152,7 +183,11 @@ export default function AppHeader() {
                 <span className="text-[10px] font-black uppercase tracking-widest text-brand-caribbeanSea flex items-center gap-1">
                   <User className="w-3 h-3" /> {t('nav.people_creators')}
                 </span>
-                <Link href={`/search?q=${encodeURIComponent(query)}`} className="text-[10px] font-bold text-brand-goldenHour hover:underline">
+                <Link
+                  href={`/search?q=${encodeURIComponent(query)}`}
+                  onClick={() => setIsOpen(false)}
+                  className="text-[10px] font-bold text-brand-goldenHour hover:underline"
+                >
                   {t('nav.view_all_results')}
                 </Link>
               </div>
@@ -250,6 +285,3 @@ export default function AppHeader() {
     </header>
   );
 }
-
-
-

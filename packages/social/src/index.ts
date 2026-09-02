@@ -154,3 +154,44 @@ export function resolveFeedVisibility(authorId: string, visibility: Visibility, 
       return false;
   }
 }
+
+// =============================================================================
+// SOCIAL RELATIONSHIP STATE MACHINE
+// =============================================================================
+
+export type RelationshipState =
+  | 'none'
+  | 'following'
+  | 'friends'
+  | 'request_sent'
+  | 'request_received'
+  | 'blocked'
+  | 'muted';
+
+export interface UserRelationship {
+  targetUserId: string;
+  isFollowing: boolean;
+  isFollower: boolean;
+  friendshipStatus: 'none' | 'pending_sent' | 'pending_received' | 'accepted' | 'declined';
+  isBlocked: boolean;
+  isMuted: boolean;
+  primaryState: RelationshipState;
+}
+
+/**
+ * Resolves high-level primary relationship state for UI buttons and interactions
+ */
+export function resolvePrimaryRelationshipState(rel: {
+  isBlocked?: boolean;
+  isMuted?: boolean;
+  friendshipStatus?: 'none' | 'pending_sent' | 'pending_received' | 'accepted' | 'declined';
+  isFollowing?: boolean;
+}): RelationshipState {
+  if (rel.isBlocked) return 'blocked';
+  if (rel.friendshipStatus === 'accepted') return 'friends';
+  if (rel.friendshipStatus === 'pending_sent') return 'request_sent';
+  if (rel.friendshipStatus === 'pending_received') return 'request_received';
+  if (rel.isFollowing) return 'following';
+  if (rel.isMuted) return 'muted';
+  return 'none';
+}

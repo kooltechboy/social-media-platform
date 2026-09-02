@@ -1,15 +1,16 @@
 'use client';
 
 import React, { useState, useEffect, useMemo, useTransition } from 'react';
-import { Search, MessageCircle, BadgeCheck, Users } from 'lucide-react';
+import { Search, MessageCircle, BadgeCheck, Users, Compass, ArrowRight, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { createBrowserClient } from '@supabase/ssr';
+import UserAvatar from './user-avatar';
 
 interface FriendMember {
   id: string;
   name: string;
   username: string;
-  avatar: string;
+  avatarUrl?: string | null;
   isVerified: boolean;
   isOnline: boolean;
   lastSeen?: string;
@@ -42,7 +43,8 @@ export default function OnlineFriendsWidget() {
 
         let query = supabase
           .from('profiles')
-          .select('id, display_name, username, is_verified, avatar_path, updated_at')
+          .select('id, display_name, username, is_verified, avatar_url, updated_at')
+          .eq('is_private', false)
           .order('updated_at', { ascending: false })
           .limit(12);
 
@@ -58,7 +60,7 @@ export default function OnlineFriendsWidget() {
             id: p.id,
             name: p.display_name || p.username || 'Caribbean Member',
             username: p.username || p.id.slice(0, 8),
-            avatar: (p.display_name || p.username || 'CM').slice(0, 2).toUpperCase(),
+            avatarUrl: p.avatar_url,
             isVerified: !!p.is_verified,
             isOnline: false,
           }));
@@ -116,7 +118,8 @@ export default function OnlineFriendsWidget() {
           const cleanQuery = search.trim();
           let query = supabase
             .from('profiles')
-            .select('id, display_name, username, is_verified, avatar_path, updated_at')
+            .select('id, display_name, username, is_verified, avatar_url, updated_at')
+            .eq('is_private', false)
             .or(`display_name.ilike.%${cleanQuery}%,username.ilike.%${cleanQuery}%`)
             .limit(10);
 
@@ -130,7 +133,7 @@ export default function OnlineFriendsWidget() {
               id: p.id,
               name: p.display_name || p.username || 'Caribbean Member',
               username: p.username || p.id.slice(0, 8),
-              avatar: (p.display_name || p.username || 'CM').slice(0, 2).toUpperCase(),
+              avatarUrl: p.avatar_url,
               isVerified: !!p.is_verified,
               isOnline: onlineUserIds.has(p.id),
             }));
@@ -150,10 +153,10 @@ export default function OnlineFriendsWidget() {
   return (
     <div className="bg-brand-dusk/80 border border-slate-800/80 rounded-3xl p-5 shadow-xl space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="font-extrabold text-sm text-brand-sandstone flex items-center gap-2">
+        <Link href="/friends" className="font-extrabold text-sm text-brand-sandstone flex items-center gap-2 hover:text-brand-caribbeanSea transition-colors">
           <Users className="w-4 h-4 text-brand-caribbeanSea" />
           Friends & Members
-        </h3>
+        </Link>
         <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-brand-sunriseCoral/20 text-brand-sunriseCoral border border-brand-sunriseCoral/30">
           {onlineCount} ONLINE
         </span>
@@ -167,7 +170,7 @@ export default function OnlineFriendsWidget() {
           type="text"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search members by name or @..."
+          placeholder="Search people by name or @..."
           className="w-full bg-brand-twilight/60 border border-slate-800 rounded-xl pl-9 pr-4 py-2 text-xs text-slate-200 placeholder-brand-sandstone/40 focus:outline-none focus:border-brand-caribbeanSea focus:ring-1 focus:ring-brand-caribbeanSea/50 transition-all"
         />
       </div>
@@ -193,11 +196,13 @@ export default function OnlineFriendsWidget() {
                 className="flex items-center gap-3 flex-1 min-w-0"
               >
                 <div className="relative flex-shrink-0">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-brand-twilight to-brand-dusk border border-slate-700 flex items-center justify-center text-xs font-bold text-slate-200 shadow-sm group-hover:border-brand-caribbeanSea/50 transition-colors">
-                    {friend.avatar}
-                  </div>
+                  <UserAvatar
+                    src={friend.avatarUrl}
+                    name={friend.name}
+                    size="sm"
+                  />
                   {friend.isOnline && (
-                    <span className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-brand-sunriseCoral border-2 border-slate-900" title="Online" />
+                    <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-brand-sunriseCoral border-2 border-slate-900" title="Online" />
                   )}
                 </div>
                 <div className="min-w-0">
@@ -226,6 +231,21 @@ export default function OnlineFriendsWidget() {
             No members found matching &quot;{search}&quot;
           </div>
         )}
+      </div>
+
+      <div className="pt-2 border-t border-slate-800/80 flex items-center justify-between text-xs">
+        <Link
+          href="/friends"
+          className="text-[11px] font-bold text-brand-caribbeanSea hover:underline flex items-center gap-1"
+        >
+          View All Friends <ArrowRight className="w-3 h-3" />
+        </Link>
+        <Link
+          href="/members"
+          className="text-[11px] font-bold text-brand-goldenHour hover:underline flex items-center gap-1"
+        >
+          <Compass className="w-3 h-3" /> Discover
+        </Link>
       </div>
     </div>
   );

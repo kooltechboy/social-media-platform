@@ -22,6 +22,8 @@
     "@caribbean/messaging": "workspace:*",
     "@caribbean/notifications": "workspace:*",
     "@caribbean/podcasts": "workspace:*",
+    "@caribbean/recommendations": "workspace:*",
+    "@caribbean/search": "workspace:*",
     "@caribbean/social": "workspace:*",
     "@caribbean/payments": "workspace:*",
     "@caribbean/trust-safety": "workspace:*",
