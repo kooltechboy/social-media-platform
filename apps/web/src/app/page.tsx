@@ -149,9 +149,9 @@ export default async function HomePage() {
         content: `🌴 Welcome to TUKUBI — The Caribbean Connected.\n\nConnecting Caribbean people, culture, creators, businesses & the global diaspora in one unified digital ecosystem.\n\n🌎 Born in the Caribbean. Built for the World.\n\nJoin conversations across the islands, explore live audio/video broadcasts, discover local creators, support Caribbean merchants, and build the future of our digital heritage together. ☀️🌊🎶`,
         mediaUrls: [],
         culturalTags: ['caribbean', 'tukubiofficial', 'welcome', 'diaspora', 'culture'],
-        likes: officialCounts?.likes_received_count || 1240,
-        reposts: 312,
-        comments: 86,
+        likes: officialCounts?.likes_received_count || 0,
+        reposts: 0,
+        comments: 0,
         isUserLiked: false,
         category: 'caribbean',
       };

@@ -53,19 +53,55 @@ export function HomeScreen() {
     setRefreshing(false);
   };
 
-  const handlePublish = () => {
+  const handlePublish = async () => {
     if (!draft.trim()) return;
-    const newPost: MobilePost = {
-      id: `p_${Date.now()}`,
-      author: 'You (Caribbean Member)',
-      location: 'Kingston, Jamaica',
-      time: 'Just now',
-      body: draft.trim(),
-      likes: 0,
-      comments: 0,
-    };
-    setPosts([newPost, ...posts]);
+    const contentToPublish = draft.trim();
     setDraft('');
+
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: insertedPost, error } = await supabase
+          .from('posts')
+          .insert({
+            author_id: user.id,
+            content: contentToPublish,
+            visibility: 'public',
+            cultural_tags: ['mobile', 'caribbean'],
+            media_urls: [],
+          })
+          .select('id, content, created_at, likes_count, comments_count')
+          .single();
+
+        if (insertedPost && !error) {
+          const newPost: MobilePost = {
+            id: insertedPost.id,
+            author: 'You',
+            location: 'Caribbean',
+            time: 'Just now',
+            body: insertedPost.content || contentToPublish,
+            likes: 0,
+            comments: 0,
+          };
+          setPosts([newPost, ...posts]);
+          return;
+        }
+      }
+
+      // Optimistic fallback
+      const newPost: MobilePost = {
+        id: `p_${Date.now()}`,
+        author: 'You (Caribbean Member)',
+        location: 'Caribbean',
+        time: 'Just now',
+        body: contentToPublish,
+        likes: 0,
+        comments: 0,
+      };
+      setPosts([newPost, ...posts]);
+    } catch (err) {
+      console.warn('Error publishing on mobile:', err);
+    }
   };
 
   const toggleLike = (id: string) => {

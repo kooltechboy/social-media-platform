@@ -1,36 +1,11 @@
 /**
- * TUKUBI — Guarantee and Publish Official Inaugural Launch Post
+ * TUKUBI — Guarantee and Publish Official Inaugural Launch Post (Zero Fake Engagement)
  * Target Author UUID: ff1e8b1f-7796-4424-b341-3b39e1c993bd (@tukubi)
  * Post UUID: d23f3e75-0dfa-47c6-8df9-2c0fa299d7ff
- *
- * Usage:
- *   npx tsx scripts/publish-official-launch-post.ts
  */
 
-import { createClient } from '@supabase/supabase-js';
-import * as fs from 'fs';
-import * as path from 'path';
-
-function loadEnvLocal() {
-  const envPath = path.resolve(process.cwd(), '.env.local');
-  if (fs.existsSync(envPath)) {
-    const lines = fs.readFileSync(envPath, 'utf8').split('\n');
-    for (const line of lines) {
-      const match = line.match(/^\s*([A-Za-z0-9_]+)\s*=\s*(.*)?\s*$/);
-      if (match) {
-        const key = match[1];
-        let val = (match[2] || '').trim();
-        if (val.startsWith('"') && val.endsWith('"')) val = val.slice(1, -1);
-        if (val.startsWith("'") && val.endsWith("'")) val = val.slice(1, -1);
-        if (!process.env[key]) {
-          process.env[key] = val;
-        }
-      }
-    }
-  }
-}
-
-loadEnvLocal();
+const path = require('path');
+const { createClient } = require(path.resolve(__dirname, '../apps/web/node_modules/@supabase/supabase-js'));
 
 const OFFICIAL_PROFILE_ID = 'ff1e8b1f-7796-4424-b341-3b39e1c993bd';
 const OFFICIAL_POST_ID = 'd23f3e75-0dfa-47c6-8df9-2c0fa299d7ff';
@@ -56,7 +31,7 @@ async function publishOfficialLaunchPost() {
     auth: { persistSession: false, autoRefreshToken: false },
   });
 
-  console.log(`🚀 Seeding Official Inaugural Post [${OFFICIAL_POST_ID}] on ${url}...`);
+  console.log(`🚀 Publishing & Sanitizing Official Inaugural Post [${OFFICIAL_POST_ID}] on ${url}...`);
 
   // 1. Ensure Profile is marked official and verified
   const { error: profileErr } = await supabase
@@ -79,7 +54,7 @@ async function publishOfficialLaunchPost() {
     console.warn(`⚠️ Warning upserting profile: ${profileErr.message}`);
   }
 
-  // 2. Upsert Official Post
+  // 2. Upsert Official Post with real organic engagement metrics (0 default)
   const { data: post, error: postErr } = await supabase
     .from('posts')
     .upsert({
@@ -102,7 +77,7 @@ async function publishOfficialLaunchPost() {
     process.exit(1);
   }
 
-  // 3. Update profile_counts
+  // 3. Update profile_counts to zero mock figures
   await supabase
     .from('profile_counts')
     .upsert({
@@ -123,12 +98,12 @@ async function publishOfficialLaunchPost() {
     metadata: {
       username: 'tukubi',
       post_id: OFFICIAL_POST_ID,
-      source: 'publish_script',
+      source: 'zero_mock_sanitization',
     },
     created_at: new Date().toISOString(),
   });
 
-  console.log('✅ SUCCESS: Official TUKUBI Inaugural Launch Post is live!');
+  console.log('✅ SUCCESS: Official TUKUBI Inaugural Launch Post is live with zero-mock data integrity!');
   console.log(`   Post ID: ${OFFICIAL_POST_ID}`);
   console.log(`   Author: @tukubi (TUKUBI)`);
 }

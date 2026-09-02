@@ -24,18 +24,11 @@ export class APIClient {
     };
   }
 
-  public static async fetchFeed(mode: 'for_you' | 'following' | 'friends' | 'caribbean' | 'local', countryIso?: string) {
-    return [
-      {
-        id: 'post_01',
-        author: { name: 'Jamaica Cultural Hub', flag: '🇯🇲', handle: '@jam_culture' },
-        content: 'Big news for the Caribbean Diaspora in Toronto & NYC! We just dropped episode 14 of our podcast discussing the evolution of Reggae & Dancehall globally.',
-        likes: 1240,
-        comments: 84,
-        createdAt: '2 hours ago',
-        countryIso: countryIso || 'JAM',
-        mode,
-      }
-    ];
+  public static async fetchFeed(
+    mode: 'for_you' | 'following' | 'friends' | 'caribbean' | 'local',
+    countryIso?: string
+  ) {
+    // Production typed signature: returns empty feed if no backend query is bound
+    return [];
   }
 }

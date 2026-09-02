@@ -220,10 +220,10 @@ export default async function ProfilePage({
   }
 
   const counts = (countsResult.data as ProfileCountRow | null) || {
-    followers_count: profileData.username.toLowerCase() === 'tukubi' ? 5420 : 0,
-    following_count: profileData.username.toLowerCase() === 'tukubi' ? 18 : 0,
+    followers_count: 0,
+    following_count: 0,
     posts_count: posts.length,
-    likes_received_count: profileData.username.toLowerCase() === 'tukubi' ? 1240 : 0,
+    likes_received_count: 0,
   };
 
   // Privacy filters for visitor view
