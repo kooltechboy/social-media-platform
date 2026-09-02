@@ -2,7 +2,7 @@ import React from 'react';
 import { redirect } from 'next/navigation';
 import {
   LayoutDashboard, Users, Wallet, Shield, ShieldCheck, Flag, BarChart3, ToggleLeft,
-  Globe, Database, Bell, Settings
+  Globe, Database, Bell, Settings, Sparkles
 } from 'lucide-react';
 import Link from 'next/link';
 import { createServiceSupabaseClient, getAuthorizedUser } from '../../lib/supabase/server';
@@ -91,6 +91,7 @@ export default async function AdminPage() {
 
   const SECTIONS = [
     { label: 'Dashboard', icon: LayoutDashboard, href: '/admin' },
+    { label: 'Official Accounts', icon: Sparkles, href: '/admin/official-accounts' },
     { label: 'Administrators', icon: Shield, href: '/admin/administrators' },
     { label: 'Roles & RBAC', icon: ShieldCheck, href: '/admin/administrators/roles' },
     { label: 'Audit Logs', icon: Database, href: '/admin/audit-logs' },

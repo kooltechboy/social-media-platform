@@ -22,6 +22,9 @@ export interface PostActionState {
     likes: number;
     reposts: number;
     comments: number;
+    isOfficial?: boolean;
+    isPinned?: boolean;
+    officialContentType?: string;
     category?: 'caribbean' | 'foryou' | 'diaspora' | 'creator';
   };
 }
@@ -121,7 +124,7 @@ export async function createPostAction(_prev: PostActionState, formData: FormDat
       media_urls: mediaUrls,
       cultural_tags: culturalTags,
     })
-    .select('id, content, created_at, media_urls, cultural_tags, likes_count, comments_count, shares_count, visibility, profiles:profiles!posts_author_id_fkey(display_name, username, avatar_url, is_verified)')
+    .select('id, content, created_at, media_urls, cultural_tags, likes_count, comments_count, shares_count, visibility, is_official, is_pinned, official_content_type, profiles:profiles!posts_author_id_fkey(display_name, username, avatar_url, is_verified, is_official)')
     .single();
 
   if (error) {
@@ -140,6 +143,9 @@ export async function createPostAction(_prev: PostActionState, formData: FormDat
     author: profile?.display_name || user.displayName || 'Caribbean Member',
     handle: profile?.username || user.username || 'member',
     verified: profile?.is_verified ?? true,
+    isOfficial: data.is_official || profile?.is_official || false,
+    isPinned: data.is_pinned || false,
+    officialContentType: data.official_content_type || undefined,
     location: 'Tukubi Network 🌴',
     time: 'just now',
     content: data.content || '',

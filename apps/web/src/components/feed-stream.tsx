@@ -23,6 +23,7 @@ import {
   Link2,
   X,
   AlertCircle,
+  Pin,
 } from 'lucide-react';
 import {
   toggleLikeAction,
@@ -37,6 +38,7 @@ import { createSupabaseBrowserClient } from '../lib/supabase/browser';
 import CreatorTipModal from './creator-tip-modal';
 import ShoppablePostWidget, { type TaggedProduct } from './shoppable-post-widget';
 import UserAvatar from './user-avatar';
+import OfficialBadge from './official/official-badge';
 import { useTranslation, LOCALE_DETAILS, LOCALES, Locale } from '@caribbean/localization';
 
 export interface FeedPostData {
@@ -46,6 +48,9 @@ export interface FeedPostData {
   handle: string;
   avatarUrl?: string | null;
   verified?: boolean;
+  isOfficial?: boolean;
+  isPinned?: boolean;
+  officialContentType?: string;
   location?: string;
   time: string;
   content: string;
@@ -218,7 +223,7 @@ export default function FeedStream({ initialPosts, currentUserId }: FeedStreamPr
           try {
             const { data: postWithProfile } = await supabase
               .from('posts')
-              .select('id, author_id, content, created_at, media_urls, cultural_tags, likes_count, comments_count, shares_count, profiles:profiles!posts_author_id_fkey(display_name, username, avatar_url, is_verified)')
+              .select('id, author_id, content, created_at, media_urls, cultural_tags, likes_count, comments_count, shares_count, is_official, is_pinned, official_content_type, profiles:profiles!posts_author_id_fkey(display_name, username, avatar_url, is_verified, is_official)')
               .eq('id', newRow.id)
               .maybeSingle();
 
@@ -232,6 +237,9 @@ export default function FeedStream({ initialPosts, currentUserId }: FeedStreamPr
                 author: profile?.display_name || 'Caribbean Member',
                 handle: profile?.username || 'member',
                 verified: profile?.is_verified ?? true,
+                isOfficial: postWithProfile.is_official || profile?.is_official || false,
+                isPinned: postWithProfile.is_pinned || false,
+                officialContentType: postWithProfile.official_content_type || undefined,
                 location: 'Tukubi Network 🌴',
                 time: 'just now',
                 content: postWithProfile.content || '',
@@ -580,20 +588,30 @@ export default function FeedStream({ initialPosts, currentUserId }: FeedStreamPr
                     />
                   </Link>
                   <div>
-                    <div className="flex items-center gap-1.5">
+                    <div className="flex items-center gap-1.5 flex-wrap">
                       <Link
                         href={`/profile/${post.handle}`}
                         className="font-extrabold text-sm text-brand-sandstone hover:text-brand-caribbeanSea transition-colors"
                       >
                         {post.author}
                       </Link>
-                      {post.verified && <CheckCircle className="w-3.5 h-3.5 text-brand-caribbeanSea fill-brand-caribbeanSea/20" />}
+                      {post.isOfficial ? (
+                        <OfficialBadge size="xs" showLabel={true} label={post.handle.toLowerCase() === 'tukubi' ? 'Official TUKUBI' : 'Official'} />
+                      ) : post.verified ? (
+                        <CheckCircle className="w-3.5 h-3.5 text-brand-caribbeanSea fill-brand-caribbeanSea/20" />
+                      ) : null}
                       <Link
                         href={`/profile/${post.handle}`}
                         className="text-xs text-brand-sandstone/40 hover:text-brand-sandstone/70 transition-colors"
                       >
                         @{post.handle}
                       </Link>
+                      {post.isPinned && (
+                        <span className="inline-flex items-center gap-1 text-[10px] font-bold text-brand-sunriseCoral bg-brand-sunriseCoral/10 px-2 py-0.5 rounded-full border border-brand-sunriseCoral/20">
+                          <Pin className="w-2.5 h-2.5" />
+                          Pinned
+                        </span>
+                      )}
                     </div>
                     <div className="flex items-center gap-2 text-[11px] text-brand-sandstone/60 mt-0.5">
                       {post.location && (
@@ -604,6 +622,14 @@ export default function FeedStream({ initialPosts, currentUserId }: FeedStreamPr
                       )}
                       <span>•</span>
                       <span>{post.time}</span>
+                      {post.officialContentType && (
+                        <>
+                          <span>•</span>
+                          <span className="text-[10px] font-semibold text-brand-caribbeanSea capitalize">
+                            {post.officialContentType.replace('_', ' ')}
+                          </span>
+                        </>
+                      )}
                     </div>
                   </div>
                 </div>

@@ -32,6 +32,7 @@ function relativeTime(iso: string): string {
 }
 
 import MomentsCinemaRail from '../components/moments/moments-cinema-rail';
+import OfficialAccountHeroCard from '../components/official/official-account-hero-card';
 import { fetchActiveStoriesAction } from '../lib/social/actions';
 
 export default async function HomePage() {
@@ -44,11 +45,15 @@ export default async function HomePage() {
   const { stories: liveStories } = await fetchActiveStoriesAction();
 
   let livePosts: FeedPostData[] = [];
+  let officialProfile: any = null;
+  let officialCounts: any = null;
+
   if (supabase) {
-    const [postsRes, liveRes] = await Promise.all([
+    const [postsRes, liveRes, officialProfileRes, officialCountsRes] = await Promise.all([
       supabase
         .from('posts')
-        .select('id, author_id, content, created_at, media_urls, cultural_tags, likes_count, comments_count, shares_count, profiles:profiles!posts_author_id_fkey(display_name, username, avatar_url, is_verified)')
+        .select('id, author_id, content, created_at, media_urls, cultural_tags, likes_count, comments_count, shares_count, is_official, is_pinned, official_content_type, profiles:profiles!posts_author_id_fkey(display_name, username, avatar_url, is_verified, is_official)')
+        .order('is_pinned', { ascending: false })
         .order('created_at', { ascending: false })
         .limit(30),
       supabase
@@ -58,10 +63,22 @@ export default async function HomePage() {
         .order('started_at', { ascending: false })
         .limit(1)
         .maybeSingle(),
+      supabase
+        .from('profiles')
+        .select('id, display_name, username, avatar_url, bio, is_official, is_verified')
+        .ilike('username', 'tukubi')
+        .maybeSingle(),
+      supabase
+        .from('profile_counts')
+        .select('followers_count, following_count, posts_count')
+        .eq('profile_id', 'ff1e8b1f-7796-4424-b341-3b39e1c993bd')
+        .maybeSingle(),
     ]);
 
     const data = postsRes.data;
     const activeLiveStream = liveRes.data;
+    officialProfile = officialProfileRes.data;
+    officialCounts = officialCountsRes.data;
 
     let userLikedPostIds = new Set<string>();
     if (user && data && data.length > 0) {
@@ -88,6 +105,9 @@ export default async function HomePage() {
           handle: profile?.username || 'member',
           avatarUrl: profile?.avatar_url || null,
           verified: profile?.is_verified ?? false,
+          isOfficial: p.is_official || profile?.is_official || false,
+          isPinned: p.is_pinned || false,
+          officialContentType: p.official_content_type || undefined,
           location: 'Tukubi Network 🌴',
           time: relativeTime(p.created_at),
           content: p.content || '',
@@ -118,11 +138,25 @@ export default async function HomePage() {
         />
 
         {/* ────────────────────────────────────────────────────────── */}
+        {/* OFFICIAL TUKUBI PLATFORM IDENTITY SPOTLIGHT HERO CARD     */}
+        {/* ────────────────────────────────────────────────────────── */}
+        <OfficialAccountHeroCard
+          displayName={officialProfile?.display_name || 'TUKUBI'}
+          username={officialProfile?.username || 'tukubi'}
+          avatarUrl={officialProfile?.avatar_url}
+          bio={officialProfile?.bio}
+          postsCount={officialCounts?.posts_count ?? 0}
+          followersCount={officialCounts?.followers_count ?? 0}
+          followingCount={officialCounts?.following_count ?? 0}
+          isOperator={user?.username?.toLowerCase() === 'tukubi' || user?.isOfficial}
+        />
+
+        {/* ────────────────────────────────────────────────────────── */}
         {/* P0: PRIMARY UNIVERSAL INLINE COMPOSER                      */}
         {/* ────────────────────────────────────────────────────────── */}
         <section aria-label="Create Post" className="space-y-4">
           <UniversalComposer
-            displayName={`@${user.username}`}
+            displayName={user.displayName || `@${user.username}`}
             avatarInitials={user.username.slice(0, 2).toUpperCase()}
           />
         </section>

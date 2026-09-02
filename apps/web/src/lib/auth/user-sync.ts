@@ -9,6 +9,7 @@ export interface UserProfileRecord {
   account_type?: string;
   bio?: string | null;
   is_verified?: boolean;
+  is_official?: boolean;
   language_preference?: string | null;
 }
 
@@ -28,7 +29,7 @@ export async function ensureUserProfile(
     try {
       const { data, error } = await client
         .from('profiles')
-        .select('id, username, display_name, avatar_url, account_type, bio, is_verified, language_preference')
+        .select('id, username, display_name, avatar_url, account_type, bio, is_verified, is_official, language_preference')
         .eq('id', user.id)
         .maybeSingle();
 
@@ -48,7 +49,7 @@ export async function ensureUserProfile(
   // Check again with service client to avoid race conditions
   const { data: existing } = await db
     .from('profiles')
-    .select('id, username, display_name, avatar_url, account_type, bio, is_verified, language_preference')
+    .select('id, username, display_name, avatar_url, account_type, bio, is_verified, is_official, language_preference')
     .eq('id', user.id)
     .maybeSingle();
 

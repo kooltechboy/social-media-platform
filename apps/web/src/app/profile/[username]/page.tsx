@@ -17,12 +17,14 @@ import {
   Facebook,
   Video,
   FileText,
+  Pin,
 } from 'lucide-react';
 import Link from 'next/link';
 import { createSupabaseServerClient, getCurrentUser } from '../../../lib/supabase/server';
 import FollowButton from '../../../components/follow-button';
 import ProfileHeaderActions from '../../../components/profile-header-actions';
 import UserAvatar from '../../../components/user-avatar';
+import OfficialBadge from '../../../components/official/official-badge';
 import type { ProfileData } from '../../../components/profile-edit-modal';
 import { RecognitionService } from '../../../lib/recognition/recognition-service';
 import FounderBadge from '../../../components/recognition/founder-badge';
@@ -44,6 +46,9 @@ interface PostRow {
   content: string | null;
   created_at: string;
   media_urls?: string[] | null;
+  is_pinned?: boolean;
+  is_official?: boolean;
+  official_content_type?: string;
 }
 
 function relativeTime(iso: string): string {
@@ -141,6 +146,8 @@ export default async function ProfilePage({
   const profileData = profile as unknown as ProfileData & {
     created_at: string;
     is_verified?: boolean;
+    is_official?: boolean;
+    is_system_account?: boolean;
     is_private?: boolean;
   };
 
@@ -187,8 +194,9 @@ export default async function ProfilePage({
       : Promise.resolve({ data: null }),
     supabase
       .from('posts')
-      .select('id, content, created_at, media_urls')
+      .select('id, content, created_at, media_urls, is_pinned, is_official, official_content_type')
       .eq('author_id', profileData.id)
+      .order('is_pinned', { ascending: false })
       .order('created_at', { ascending: false })
       .limit(20),
     recognitionService.getProfileRecognition(profileData.id),
@@ -287,9 +295,15 @@ export default async function ProfilePage({
                     <h1 className="text-xl sm:text-2xl font-black text-brand-sandstone tracking-tight">
                       {profileData.display_name}
                     </h1>
-                    {profileData.is_verified && (
+                    {profileData.is_official ? (
+                      <OfficialBadge
+                        size="md"
+                        showLabel={true}
+                        label={profileData.username.toLowerCase() === 'tukubi' ? 'Official TUKUBI' : 'Official Platform'}
+                      />
+                    ) : profileData.is_verified ? (
                       <BadgeCheck className="w-5 h-5 text-brand-caribbeanSea" aria-label="Verified Member" />
-                    )}
+                    ) : null}
                     {recognition.founder.is_founder && (
                       <FounderBadge founder={recognition.founder} size="sm" />
                     )}
@@ -647,16 +661,39 @@ export default async function ProfilePage({
             ) : (
               posts.map((post) => (
                 <article key={post.id} className="bg-brand-dusk/60 border border-slate-800 rounded-2xl p-5 hover:border-slate-700 transition-colors">
-                  <div className="flex items-center gap-3 mb-3">
-                    <UserAvatar
-                      src={profileData.avatar_url}
-                      name={profileData.display_name}
-                      size="sm"
-                    />
-                    <div>
-                      <span className="text-xs font-bold text-brand-sandstone block">{profileData.display_name}</span>
-                      <span className="text-[11px] text-brand-sandstone/40">{relativeTime(post.created_at)}</span>
+                  <div className="flex items-center justify-between gap-3 mb-3">
+                    <div className="flex items-center gap-3">
+                      <UserAvatar
+                        src={profileData.avatar_url}
+                        name={profileData.display_name}
+                        size="sm"
+                      />
+                      <div>
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className="text-xs font-bold text-brand-sandstone">{profileData.display_name}</span>
+                          {profileData.is_official && (
+                            <OfficialBadge size="xs" showLabel={false} />
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2 text-[11px] text-brand-sandstone/40">
+                          <span>{relativeTime(post.created_at)}</span>
+                          {post.official_content_type && (
+                            <>
+                              <span>•</span>
+                              <span className="text-brand-caribbeanSea font-semibold capitalize">
+                                {post.official_content_type.replace('_', ' ')}
+                              </span>
+                            </>
+                          )}
+                        </div>
+                      </div>
                     </div>
+                    {post.is_pinned && (
+                      <span className="inline-flex items-center gap-1 text-[10px] font-bold text-brand-sunriseCoral bg-brand-sunriseCoral/10 px-2 py-0.5 rounded-full border border-brand-sunriseCoral/20">
+                        <Pin className="w-2.5 h-2.5" />
+                        Pinned
+                      </span>
+                    )}
                   </div>
                   {post.content && (
                     <p className="text-sm text-slate-200 leading-relaxed whitespace-pre-wrap mb-3">{post.content}</p>

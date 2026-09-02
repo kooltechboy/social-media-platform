@@ -66,13 +66,16 @@ export default function AppSidebar({ currentPath }: AppSidebarProps) {
   const { t } = useTranslation();
   const activePath = currentPath || pathname || '/';
 
-  const personalNav = [
+  const isOfficialUser = user?.isOfficial || user?.username?.toLowerCase() === 'tukubi';
+
+  const personalNav: NavItem[] = [
     { href: '/messages', label: t('nav.messages'), icon: <MessageSquare className="w-4 h-4 text-slate-300" /> },
     { href: '/notifications', label: t('nav.notifications'), icon: <Bell className="w-4 h-4 text-slate-300" /> },
     {
-      href: user ? '/profile' : '/login',
+      href: user ? (isOfficialUser ? '/profile/tukubi' : '/profile') : '/login',
       label: user ? `@${user.username}` : t('nav.sign_in'),
-      icon: <User className="w-4 h-4 text-slate-300" />,
+      icon: isOfficialUser ? <Sparkles className="w-4 h-4 text-brand-caribbeanSea" /> : <User className="w-4 h-4 text-slate-300" />,
+      badge: isOfficialUser ? 'OFFICIAL' : undefined,
     },
     { href: '/settings', label: t('nav.settings'), icon: <Settings className="w-4 h-4 text-slate-300" /> },
   ];
@@ -106,7 +109,9 @@ export default function AppSidebar({ currentPath }: AppSidebarProps) {
             </div>
             {item.badge && (
               <span className={`text-[9px] font-black px-1.5 py-0.5 rounded-full border ${
-                item.badge === 'LIVE'
+                item.badge === 'OFFICIAL'
+                  ? 'bg-brand-caribbeanSea/20 text-[#38BDF8] border-[#0EA5E9]/40 font-black'
+                  : item.badge === 'LIVE'
                   ? 'bg-red-500/20 text-red-400 border-red-500/30 animate-pulse'
                   : item.badge === 'NEW'
                   ? 'bg-brand-sunriseCoral/20 text-brand-sunriseCoral border-brand-sunriseCoral/30'

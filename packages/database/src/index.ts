@@ -17,7 +17,8 @@ export type Table =
   | 'businesses' | 'business_locations' | 'business_reviews'
   | 'products' | 'orders' | 'order_items' | 'events' | 'event_attendees' | 'tickets'
   | 'advertisers' | 'campaigns' | 'ad_sets' | 'ads' | 'ad_impressions' | 'ad_clicks'
-  | 'device_sessions' | 'login_events' | 'audit_logs' | 'security_events';
+  | 'device_sessions' | 'login_events' | 'audit_logs' | 'security_events'
+  | 'official_accounts' | 'official_account_operators' | 'official_post_drafts' | 'reserved_usernames';
 
 export type Visibility = 'public' | 'followers' | 'friends' | 'private';
 
