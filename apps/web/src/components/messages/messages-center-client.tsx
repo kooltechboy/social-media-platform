@@ -277,6 +277,7 @@ export default function MessagesCenterClient({
               initialMessages={threadMessages}
               currentUserId={currentUserId}
               peerName={activeConversation?.displayName || 'Caribbean Member'}
+              peerAvatarUrl={activeConversation?.avatarUrl}
             />
           ) : (
             /* WELCOME MESSAGING HUB (When no chat is selected) */

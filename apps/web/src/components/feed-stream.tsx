@@ -24,6 +24,7 @@ import {
   X,
   AlertCircle,
   Pin,
+  Smile,
 } from 'lucide-react';
 import {
   toggleLikeAction,
@@ -39,6 +40,7 @@ import CreatorTipModal from './creator-tip-modal';
 import ShoppablePostWidget, { type TaggedProduct } from './shoppable-post-widget';
 import UserAvatar from './user-avatar';
 import OfficialBadge from './official/official-badge';
+import EmojiPickerPopover from './emoji/emoji-picker-popover';
 import { useTranslation, LOCALE_DETAILS, LOCALES, Locale } from '@caribbean/localization';
 
 export interface FeedPostData {
@@ -85,6 +87,41 @@ export default function FeedStream({ initialPosts, currentUserId }: FeedStreamPr
   const [isSubmittingReport, setIsSubmittingReport] = useState(false);
   const [savedPostIds, setSavedPostIds] = useState<Set<string>>(new Set());
   const [confirmDeletePostId, setConfirmDeletePostId] = useState<string | null>(null);
+  const [activeEmojiPickerPostId, setActiveEmojiPickerPostId] = useState<string | null>(null);
+  const [activeCommentEmojiPickerPostId, setActiveCommentEmojiPickerPostId] = useState<string | null>(null);
+  const [postReactions, setPostReactions] = useState<
+    Record<string, Array<{ emoji: string; count: number; users: string[] }>>
+  >({});
+
+  function handleReactToPost(postId: string, emoji: string) {
+    setPostReactions((prev) => {
+      const currentList = prev[postId] || [];
+      const existing = currentList.find((r) => r.emoji === emoji);
+
+      let nextList;
+      if (existing) {
+        if (currentUserId && existing.users.includes(currentUserId)) {
+          nextList = currentList
+            .map((r) =>
+              r.emoji === emoji
+                ? { ...r, count: r.count - 1, users: r.users.filter((u) => u !== currentUserId) }
+                : r
+            )
+            .filter((r) => r.count > 0);
+        } else {
+          nextList = currentList.map((r) =>
+            r.emoji === emoji
+              ? { ...r, count: r.count + 1, users: [...r.users, currentUserId || 'anon'] }
+              : r
+          );
+        }
+      } else {
+        nextList = [...currentList, { emoji, count: 1, users: [currentUserId || 'anon'] }];
+      }
+
+      return { ...prev, [postId]: nextList };
+    });
+  }
 
   // Content Translation State with full multilingual target support
   const [postTranslations, setPostTranslations] = useState<
@@ -829,6 +866,23 @@ export default function FeedStream({ initialPosts, currentUserId }: FeedStreamPr
                 <ShoppablePostWidget product={post.taggedProduct} />
               )}
 
+              {/* Emoji Reactions Display */}
+              {postReactions[post.id] && postReactions[post.id].length > 0 && (
+                <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                  {postReactions[post.id].map((r, i) => (
+                    <button
+                      key={`${r.emoji}-${i}`}
+                      type="button"
+                      onClick={() => handleReactToPost(post.id, r.emoji)}
+                      className="px-2.5 py-1 rounded-full bg-white/10 hover:bg-white/20 border border-white/10 text-xs flex items-center gap-1 text-white shadow-sm transition-transform active:scale-95"
+                    >
+                      <span>{r.emoji}</span>
+                      <span className="text-[10px] font-black">{r.count}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+
               {/* Interaction Bar */}
               <div className="flex items-center justify-between pt-3 border-t border-slate-800/70 text-brand-sandstone/60 text-xs">
                 {/* Like Button */}
@@ -843,6 +897,30 @@ export default function FeedStream({ initialPosts, currentUserId }: FeedStreamPr
                   <Heart className={`w-4 h-4 ${post.isUserLiked ? 'fill-rose-500 text-rose-500' : ''}`} />
                   <span>{post.likes}</span>
                 </button>
+
+                {/* Quick Emoji Reaction Trigger */}
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setActiveEmojiPickerPostId(
+                        activeEmojiPickerPostId === post.id ? null : post.id
+                      )
+                    }
+                    className="flex items-center gap-1 hover:text-amber-300 transition-colors px-1 py-0.5 rounded-lg"
+                    title="React with Emoji"
+                  >
+                    <Smile className="w-4 h-4 text-amber-400" />
+                    <span className="hidden sm:inline">React</span>
+                  </button>
+
+                  <EmojiPickerPopover
+                    isOpen={activeEmojiPickerPostId === post.id}
+                    onClose={() => setActiveEmojiPickerPostId(null)}
+                    onSelectEmoji={(emoji) => handleReactToPost(post.id, emoji)}
+                    position="top"
+                  />
+                </div>
 
                 {/* Comments Toggle */}
                 <button
@@ -1009,7 +1087,7 @@ export default function FeedStream({ initialPosts, currentUserId }: FeedStreamPr
                   )}
 
                   {/* Comment Input */}
-                  <form onSubmit={(e) => handleSubmitComment(e, post.id)} className="flex items-center gap-2">
+                  <form onSubmit={(e) => handleSubmitComment(e, post.id)} className="flex items-center gap-2 relative">
                     <input
                       type="text"
                       value={commentInputs[post.id] || ''}
@@ -1019,13 +1097,43 @@ export default function FeedStream({ initialPosts, currentUserId }: FeedStreamPr
                           ? `Write a reply to @${replyingTo[post.id]?.authorName}...`
                           : 'Write a supportive reply or feedback...'
                       }
-                      className="flex-1 bg-white/8 border border-white/10 rounded-xl px-3.5 py-2 text-xs text-white placeholder-white/40 focus:outline-none focus:border-brand-caribbeanSea"
+                      className="flex-1 bg-white/8 border border-white/10 rounded-xl pl-3.5 pr-8 py-2 text-xs text-white placeholder-white/40 focus:outline-none focus:border-brand-caribbeanSea"
                     />
+
+                    {/* Comment Emoji Picker Button */}
+                    <div className="relative">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setActiveCommentEmojiPickerPostId(
+                            activeCommentEmojiPickerPostId === post.id ? null : post.id
+                          )
+                        }
+                        className="p-1.5 text-slate-400 hover:text-amber-300 hover:bg-white/10 rounded-lg transition-colors"
+                        title="Add emoji"
+                      >
+                        <Smile className="w-4 h-4" />
+                      </button>
+
+                      <EmojiPickerPopover
+                        isOpen={activeCommentEmojiPickerPostId === post.id}
+                        onClose={() => setActiveCommentEmojiPickerPostId(null)}
+                        onSelectEmoji={(emoji) => {
+                          setCommentInputs((prev) => ({
+                            ...prev,
+                            [post.id]: (prev[post.id] || '') + emoji,
+                          }));
+                          setActiveCommentEmojiPickerPostId(null);
+                        }}
+                        position="top"
+                      />
+                    </div>
+
                     <button
                       type="submit"
                       aria-label="Submit comment"
                       disabled={isSubmittingComment === post.id || !commentInputs[post.id]?.trim()}
-                      className="bg-brand-caribbeanSea hover:bg-brand-caribbeanSea text-slate-950 font-bold px-3.5 py-2 rounded-xl text-xs flex items-center gap-1 transition-all disabled:opacity-50"
+                      className="bg-brand-caribbeanSea hover:bg-brand-caribbeanSea text-slate-950 font-bold px-3.5 py-2 rounded-xl text-xs flex items-center gap-1 transition-all disabled:opacity-50 cursor-pointer"
                     >
                       {isSubmittingComment === post.id ? (
                         <Loader2 className="w-3.5 h-3.5 animate-spin" />

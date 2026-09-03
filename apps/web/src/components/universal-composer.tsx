@@ -25,12 +25,14 @@ import {
   Shield,
   Loader2,
   ChevronDown,
+  Smile,
 } from 'lucide-react';
 import { createPostAction } from '../lib/social/actions';
 import { createSupabaseBrowserClient } from '../lib/supabase/browser';
 import { useTranslation } from '@caribbean/localization';
 import { generateCreatorContentPlan } from '@caribbean/ai';
 import DeviceMediaCaptureModal, { type CaptureMode } from './media/device-media-capture-modal';
+import EmojiPickerPopover from './emoji/emoji-picker-popover';
 
 export type ComposerMode =
   | 'text'
@@ -87,6 +89,7 @@ export default function UniversalComposer({
   const [mediaList, setMediaList] = useState<UploadedMediaItem[]>([]);
   const [isDragging, setIsDragging] = useState(false);
   const [activeMediaDropdown, setActiveMediaDropdown] = useState<'photo' | 'video' | 'reel' | null>(null);
+  const [isEmojiPickerOpen, setIsEmojiPickerOpen] = useState(false);
 
   // Native / Live Camera modal
   const [cameraModalOpen, setCameraModalOpen] = useState(false);
@@ -1164,6 +1167,32 @@ export default function UniversalComposer({
                   <HeartHandshake className="w-4 h-4 text-rose-400" />
                   <span className="hidden md:inline">Relief</span>
                 </button>
+
+                {/* Emoji Picker */}
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setIsEmojiPickerOpen(!isEmojiPickerOpen)}
+                    title="Insert Emojis"
+                    className={`p-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all ${
+                      isEmojiPickerOpen
+                        ? 'bg-amber-400/20 text-amber-300 border border-amber-400/30'
+                        : 'text-brand-sandstone/70 hover:text-amber-300 hover:bg-brand-twilight'
+                    }`}
+                  >
+                    <Smile className="w-4 h-4 text-amber-400" />
+                    <span className="hidden sm:inline">Emoji</span>
+                  </button>
+
+                  <EmojiPickerPopover
+                    isOpen={isEmojiPickerOpen}
+                    onClose={() => setIsEmojiPickerOpen(false)}
+                    onSelectEmoji={(emoji) => {
+                      setContent((prev) => prev + emoji);
+                    }}
+                    position="top"
+                  />
+                </div>
 
                 {/* AI Creator Assistant */}
                 <button

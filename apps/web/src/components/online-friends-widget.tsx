@@ -263,11 +263,12 @@ export default function OnlineFriendsWidget() {
           displayedFriends.map((friend) => (
             <div
               key={friend.id}
-              className="flex items-center justify-between p-2.5 rounded-2xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/5 hover:border-white/15 transition-all group shadow-sm"
+              className="flex items-center justify-between p-2.5 rounded-2xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/5 hover:border-white/15 transition-all group shadow-sm cursor-pointer"
             >
               <Link
-                href={`/profile/${friend.username}`}
+                href={`/messages?u=${encodeURIComponent(friend.username)}`}
                 className="flex items-center gap-3 flex-1 min-w-0 pr-2"
+                title={`Chat with ${friend.name}`}
               >
                 <div className="relative flex-shrink-0">
                   <UserAvatar
@@ -301,11 +302,10 @@ export default function OnlineFriendsWidget() {
               <Link
                 href={`/messages?u=${encodeURIComponent(friend.username)}`}
                 className="p-2 rounded-xl bg-brand-caribbeanSea/15 hover:bg-brand-caribbeanSea text-brand-caribbeanSea hover:text-slate-950 border border-brand-caribbeanSea/30 hover:border-transparent transition-all shadow-sm flex items-center gap-1 flex-shrink-0"
-                title={`Send direct message to ${friend.name}`}
-                onClick={(e) => e.stopPropagation()}
+                title={`Start chat with ${friend.name}`}
               >
                 <MessageSquare className="w-3.5 h-3.5" />
-                <span className="text-[10px] font-black hidden sm:inline-block">DM</span>
+                <span className="text-[10px] font-black hidden sm:inline-block">Chat</span>
               </Link>
             </div>
           ))
