@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 
 export interface UserAvatarProps {
   src?: string | null;
+  avatarUrl?: string | null;
   name?: string | null;
   size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
   className?: string;
@@ -21,6 +22,7 @@ const SIZE_MAP: Record<'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl', { box: string; 
 
 export default function UserAvatar({
   src,
+  avatarUrl,
   name,
   size = 'md',
   className = '',
@@ -28,9 +30,10 @@ export default function UserAvatar({
 }: UserAvatarProps) {
   const [imgError, setImgError] = useState(false);
 
+  const effectiveSrc = src || avatarUrl || null;
   const displayName = name?.trim() || 'Member';
   const isTukubiBrand = displayName.toUpperCase() === 'TUKUBI' || displayName.toUpperCase() === 'TUKUBI OFFICIAL';
-  const resolvedSrc = src || (isTukubiBrand ? '/brand/tukubi-emblem.png' : null);
+  const resolvedSrc = effectiveSrc || (isTukubiBrand ? '/brand/tukubi-emblem.png' : null);
 
   const initials = displayName
     .split(/\s+/)
@@ -58,7 +61,7 @@ export default function UserAvatar({
           src={resolvedSrc}
           alt={displayName}
           onError={() => setImgError(true)}
-          className={`w-full h-full object-cover rounded-full ${isTukubiBrand && !src ? 'bg-[#110D17] p-1' : ''}`}
+          className={`w-full h-full object-cover rounded-full ${isTukubiBrand && !src && !avatarUrl ? 'bg-[#110D17] p-1' : ''}`}
         />
       ) : (
         <div

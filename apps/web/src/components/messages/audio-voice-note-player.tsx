@@ -3,11 +3,12 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Play, Pause, Volume2, VolumeX, RotateCcw } from 'lucide-react';
 
-interface AudioVoiceNotePlayerProps {
+export interface AudioVoiceNotePlayerProps {
   audioUrl: string;
   durationSeconds?: number;
   senderName?: string;
   isOwn?: boolean;
+  isCurrentUser?: boolean;
 }
 
 export default function AudioVoiceNotePlayer({
@@ -15,6 +16,7 @@ export default function AudioVoiceNotePlayer({
   durationSeconds = 0,
   senderName = 'Caribbean Member',
   isOwn = false,
+  isCurrentUser = false,
 }: AudioVoiceNotePlayerProps) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
@@ -22,6 +24,7 @@ export default function AudioVoiceNotePlayer({
   const [playbackSpeed, setPlaybackSpeed] = useState<1 | 1.5 | 2>(1);
   const [isMuted, setIsMuted] = useState(false);
 
+  const isOwner = isOwn || isCurrentUser;
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
@@ -101,7 +104,7 @@ export default function AudioVoiceNotePlayer({
   return (
     <div
       className={`p-3 rounded-2xl flex flex-col gap-2 min-w-[240px] sm:min-w-[280px] max-w-sm ${
-        isOwn
+        isOwner
           ? 'bg-gradient-to-r from-sky-950/60 to-emerald-950/60 border border-emerald-400/30 text-white'
           : 'bg-[#1C122B]/90 border border-white/15 text-slate-100'
       }`}
@@ -115,7 +118,7 @@ export default function AudioVoiceNotePlayer({
           type="button"
           onClick={togglePlay}
           className={`w-10 h-10 rounded-2xl flex items-center justify-center transition-all transform active:scale-95 shadow-md flex-shrink-0 ${
-            isOwn
+            isOwner
               ? 'bg-gradient-to-tr from-brand-caribbeanSea to-brand-sunriseCoral text-slate-950 hover:brightness-110'
               : 'bg-gradient-to-tr from-brand-caribbeanSea to-brand-sunriseCoral text-slate-950 hover:brightness-110'
           }`}

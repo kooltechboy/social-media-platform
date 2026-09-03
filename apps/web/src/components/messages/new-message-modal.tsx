@@ -25,18 +25,22 @@ export interface NewMessageMember {
   bio?: string | null;
 }
 
-interface NewMessageModalProps {
+export interface NewMessageModalProps {
   isOpen: boolean;
   onClose: () => void;
   onlineFriends?: NewMessageMember[];
+  onlineMembers?: NewMessageMember[];
   currentUserId?: string;
+  onConversationCreated?: (convId: string) => void;
 }
 
 export default function NewMessageModal({
   isOpen,
   onClose,
-  onlineFriends = [],
+  onlineFriends,
+  onlineMembers,
   currentUserId,
+  onConversationCreated,
 }: NewMessageModalProps) {
   const router = useRouter();
   const [search, setSearch] = useState('');
@@ -44,6 +48,8 @@ export default function NewMessageModal({
   const [loading, setLoading] = useState(false);
   const [startingChatWith, setStartingChatWith] = useState<string | null>(null);
   const [, startTransition] = useTransition();
+
+  const membersList = onlineMembers || onlineFriends || [];
 
   const supabase = useMemo(
     () =>
@@ -116,9 +122,22 @@ export default function NewMessageModal({
 
   if (!isOpen) return null;
 
-  const handleSelectUser = (member: NewMessageMember) => {
+  const handleSelectUser = async (member: NewMessageMember) => {
     setStartingChatWith(member.id);
     onClose();
+    if (onConversationCreated) {
+      try {
+        const { data: convId } = await supabase.rpc('get_or_create_direct_conversation', {
+          target_user_id: member.id,
+        });
+        if (convId) {
+          onConversationCreated(convId);
+          return;
+        }
+      } catch (err) {
+        console.warn('RPC direct conversation fallback to query param:', err);
+      }
+    }
     router.push(`/messages?u=${encodeURIComponent(member.username)}`);
   };
 
@@ -209,96 +228,79 @@ export default function NewMessageModal({
                       />
                       <div className="min-w-0">
                         <div className="flex items-center gap-1.5">
-                          <p className="text-sm font-black text-white group-hover:text-brand-caribbeanSea transition-colors truncate">
+                          <span className="text-xs font-black text-white truncate">
                             {member.name}
-                          </p>
+                          </span>
                           {member.isVerified && (
-                            <BadgeCheck className="w-4 h-4 text-brand-caribbeanSea flex-shrink-0" />
+                            <BadgeCheck className="w-3.5 h-3.5 text-brand-caribbeanSea flex-shrink-0" />
                           )}
                         </div>
-                        <p className="text-xs font-semibold text-slate-300 truncate">
+                        <p className="text-[11px] text-slate-400 truncate font-mono">
                           @{member.username}
                         </p>
                       </div>
                     </div>
-
-                    <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-brand-caribbeanSea to-brand-sunriseCoral text-slate-950 font-black text-xs shadow-sm flex-shrink-0">
-                      <span>Message</span>
+                    <div className="flex items-center gap-1 text-xs font-bold text-brand-caribbeanSea opacity-0 group-hover:opacity-100 transition-opacity">
+                      <span>Chat</span>
                       <ArrowRight className="w-3.5 h-3.5" />
                     </div>
                   </button>
                 ))}
               </div>
             ) : (
-              <div className="text-center py-8 rounded-2xl bg-white/[0.02] border border-dashed border-white/10 space-y-2">
-                <Users className="w-7 h-7 text-slate-400 mx-auto" />
-                <p className="text-xs font-bold text-white">No members found matching &quot;{search}&quot;</p>
-                <p className="text-[11px] text-slate-400">
-                  Try checking the spelling or search by their exact @handle.
+              <div className="py-8 text-center space-y-1.5">
+                <p className="text-xs font-bold text-slate-300">No members found</p>
+                <p className="text-[11px] text-slate-500">
+                  Try searching with a different name or @handle.
                 </p>
               </div>
             )
-          ) : (
-            <div className="space-y-3">
-              <div className="flex items-center justify-between px-1">
-                <p className="text-[11px] font-black text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
-                  <Sparkles className="w-3.5 h-3.5 text-brand-caribbeanSea" /> Suggested & Online Members
-                </p>
-                <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
-                  Direct Messaging
-                </span>
-              </div>
-
-              {onlineFriends.length > 0 ? (
-                onlineFriends.slice(0, 8).map((member) => (
-                  <button
-                    key={member.id}
-                    type="button"
-                    onClick={() => handleSelectUser(member)}
-                    disabled={startingChatWith === member.id}
-                    className="w-full text-left flex items-center justify-between p-3 rounded-2xl bg-white/[0.03] hover:bg-white/[0.08] border border-white/5 hover:border-brand-caribbeanSea/40 transition-all group"
-                  >
-                    <div className="flex items-center gap-3 min-w-0 pr-2">
-                      <div className="relative flex-shrink-0">
-                        <UserAvatar
-                          src={member.avatarUrl}
-                          name={member.name}
-                          size="md"
-                        />
-                        {member.isOnline && (
-                          <span className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-emerald-400 border-2 border-[#140C22] shadow-sm" />
+          ) : membersList.length > 0 ? (
+            <div className="space-y-1.5">
+              <p className="text-[11px] font-black text-slate-400 uppercase tracking-wider px-1 flex items-center gap-1.5">
+                <Users className="w-3.5 h-3.5 text-brand-caribbeanSea" /> Suggested Connections
+              </p>
+              {membersList.map((member) => (
+                <button
+                  key={member.id}
+                  type="button"
+                  onClick={() => handleSelectUser(member)}
+                  disabled={startingChatWith === member.id}
+                  className="w-full text-left flex items-center justify-between p-3 rounded-2xl bg-white/[0.03] hover:bg-white/[0.08] border border-white/5 hover:border-brand-caribbeanSea/40 transition-all group"
+                >
+                  <div className="flex items-center gap-3 min-w-0 pr-2">
+                    <UserAvatar
+                      src={member.avatarUrl}
+                      name={member.name}
+                      size="md"
+                    />
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-xs font-black text-white truncate">
+                          {member.name}
+                        </span>
+                        {member.isVerified && (
+                          <BadgeCheck className="w-3.5 h-3.5 text-brand-caribbeanSea flex-shrink-0" />
                         )}
                       </div>
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-1.5">
-                          <p className="text-sm font-black text-white group-hover:text-brand-caribbeanSea transition-colors truncate">
-                            {member.name}
-                          </p>
-                          {member.isVerified && (
-                            <BadgeCheck className="w-4 h-4 text-brand-caribbeanSea flex-shrink-0" />
-                          )}
-                        </div>
-                        <p className="text-xs font-semibold text-slate-300 truncate">
-                          @{member.username}
-                        </p>
-                      </div>
+                      <p className="text-[11px] text-slate-400 truncate font-mono">
+                        @{member.username}
+                      </p>
                     </div>
-
-                    <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-brand-caribbeanSea/20 hover:bg-brand-caribbeanSea text-brand-caribbeanSea hover:text-slate-950 font-black text-xs border border-brand-caribbeanSea/30 transition-all flex-shrink-0">
-                      <span>Chat</span>
-                      <ArrowRight className="w-3 h-3" />
-                    </div>
-                  </button>
-                ))
-              ) : (
-                <div className="text-center py-6 px-4 rounded-2xl bg-white/[0.02] border border-dashed border-white/10 space-y-1.5">
-                  <Users className="w-6 h-6 text-slate-400 mx-auto" />
-                  <p className="text-xs font-bold text-white">Start typing a name above</p>
-                  <p className="text-[11px] text-slate-400">
-                    You can message any verified member or friend across the Caribbean network.
-                  </p>
-                </div>
-              )}
+                  </div>
+                  <div className="flex items-center gap-1 text-xs font-bold text-brand-caribbeanSea opacity-0 group-hover:opacity-100 transition-opacity">
+                    <span>Chat</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </div>
+                </button>
+              ))}
+            </div>
+          ) : (
+            <div className="py-8 text-center space-y-1.5">
+              <p className="text-xs font-bold text-slate-300">Type a name to search</p>
+              <p className="text-[11px] text-slate-500">
+                Discover creators, friends, and Caribbean businesses.
+              </p>
             </div>
           )}
         </div>

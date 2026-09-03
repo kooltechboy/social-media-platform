@@ -11,7 +11,7 @@ export const dynamic = 'force-dynamic';
 export default async function MessagesPage({
   searchParams,
 }: {
-  searchParams: Promise<{ c?: string; u?: string; compose?: string }>;
+  searchParams: Promise<{ c?: string; u?: string; compose?: string; tab?: string }>;
 }) {
   const user = await getCurrentUser();
   const supabase = await createSupabaseServerClient();
@@ -42,59 +42,35 @@ export default async function MessagesPage({
   }
 
   let targetConversationId: string | null = null;
+
+  // Canonical Direct Conversation Routing
   if (params.u) {
+    const cleanUsername = params.u.replace('@', '').trim();
     const { data: targetProfile } = await supabase
       .from('profiles')
       .select('id, display_name, username')
-      .ilike('username', params.u)
+      .ilike('username', cleanUsername)
       .maybeSingle();
 
     if (targetProfile && targetProfile.id !== user.id) {
-      const { data: sharedConversations } = await supabase
-        .from('conversation_members')
-        .select('conversation_id, conversations(id, kind)')
-        .eq('profile_id', user.id);
-
-      const candidateIds = (sharedConversations ?? [])
-        .map((r: any) => r.conversations)
-        .filter((c: any) => c && c.kind === 'direct')
-        .map((c: any) => c.id);
-
-      if (candidateIds.length > 0) {
-        const { data: partnerMatch } = await supabase
-          .from('conversation_members')
-          .select('conversation_id')
-          .eq('profile_id', targetProfile.id)
-          .in('conversation_id', candidateIds)
-          .maybeSingle();
-
-        if (partnerMatch) {
-          targetConversationId = partnerMatch.conversation_id;
+      try {
+        const { data: convId } = await supabase.rpc('get_or_create_direct_conversation', {
+          target_user_id: targetProfile.id,
+        });
+        if (convId) {
+          targetConversationId = convId;
         }
-      }
-
-      if (!targetConversationId) {
-        const { data: newConv } = await supabase
-          .from('conversations')
-          .insert({ kind: 'direct', created_by: user.id })
-          .select('id')
-          .single();
-
-        if (newConv) {
-          await supabase.from('conversation_members').insert([
-            { conversation_id: newConv.id, profile_id: user.id, role: 'member' },
-            { conversation_id: newConv.id, profile_id: targetProfile.id, role: 'member' },
-          ]);
-          targetConversationId = newConv.id;
-        }
+      } catch (err) {
+        console.warn('[MessagesPage] Direct conversation lookup error:', err);
       }
     }
   }
 
-  const [membershipsResult, onlineMembersResult] = await Promise.all([
+  // Load User's Active Memberships & Conversations
+  const [membershipsResult, onlineMembersResult, requestsResult] = await Promise.all([
     supabase
       .from('conversation_members')
-      .select('conversation_id, conversations(id, kind, title, last_message_at)')
+      .select('conversation_id, last_read_sequence, status, conversations(id, kind, title, last_message_at, last_sequence_number)')
       .eq('profile_id', user.id)
       .is('left_at', null)
       .order('last_message_at', { ascending: false, foreignTable: 'conversations' }),
@@ -104,45 +80,66 @@ export default async function MessagesPage({
       .eq('is_private', false)
       .neq('id', user.id)
       .order('updated_at', { ascending: false })
-      .limit(12),
+      .limit(16),
+    supabase
+      .from('message_requests')
+      .select('id, conversation_id, sender_id, status, created_at, sender:profiles!message_requests_sender_id_fkey(display_name, username, avatar_url)')
+      .eq('receiver_id', user.id)
+      .eq('status', 'pending')
+      .order('created_at', { ascending: false }),
   ]);
 
   const rows = (membershipsResult.data ?? []) as unknown as Array<{
     conversation_id: string;
-    conversations: { id: string; kind: 'direct' | 'group'; title: string | null; last_message_at: string | null } | null;
+    last_read_sequence: number;
+    status: string;
+    conversations: {
+      id: string;
+      kind: 'direct' | 'group';
+      title: string | null;
+      last_message_at: string | null;
+      last_sequence_number: number;
+    } | null;
   }>;
-  const conversations = rows
-    .map((row) => row.conversations)
-    .filter((conversation): conversation is NonNullable<typeof conversation> => conversation !== null);
-  const conversationIds = conversations.map((conversation) => conversation.id);
 
-  let membersByConversation = new Map<string, Array<{ profile_id: string; display_name: string; avatar_url?: string | null }>>();
+  const conversations = rows
+    .map((row) => ({
+      ...row.conversations,
+      last_read_sequence: row.last_read_sequence || 0,
+      member_status: row.status || 'active',
+    }))
+    .filter((c): c is NonNullable<typeof c> & { id: string } => c !== null && !!c.id);
+
+  const conversationIds = conversations.map((c) => c.id);
+
+  let membersByConversation = new Map<string, Array<{ profile_id: string; display_name: string; username?: string; avatar_url?: string | null }>>();
   let latestByConversation = new Map<string, string>();
 
   if (conversationIds.length > 0) {
     const [membersResult, messagesResult] = await Promise.all([
       supabase
         .from('conversation_members')
-        .select('conversation_id, profile_id, profiles(display_name, avatar_url)')
+        .select('conversation_id, profile_id, profiles(display_name, username, avatar_url)')
         .in('conversation_id', conversationIds),
       supabase
         .from('messages')
         .select('conversation_id, body, created_at')
         .in('conversation_id', conversationIds)
         .order('created_at', { ascending: false })
-        .limit(100),
+        .limit(150),
     ]);
 
     membersByConversation = new Map();
     for (const member of (membersResult.data ?? []) as unknown as Array<{
       conversation_id: string;
       profile_id: string;
-      profiles: { display_name: string; avatar_url?: string | null } | null;
+      profiles: { display_name: string; username?: string; avatar_url?: string | null } | null;
     }>) {
       const bucket = membersByConversation.get(member.conversation_id) ?? [];
       bucket.push({
         profile_id: member.profile_id,
         display_name: member.profiles?.display_name ?? 'Member',
+        username: member.profiles?.username,
         avatar_url: member.profiles?.avatar_url,
       });
       membersByConversation.set(member.conversation_id, bucket);
@@ -162,28 +159,39 @@ export default async function MessagesPage({
       conversation.kind === 'group'
         ? conversation.title ?? 'Group conversation'
         : others[0]?.display_name ?? 'Conversation';
+
+    const latestSeq = conversation.last_sequence_number || 0;
+    const readSeq = conversation.last_read_sequence || 0;
+    const unreadCount = Math.max(0, latestSeq - readSeq);
+
     return {
       id: conversation.id,
-      kind: conversation.kind,
-      title: conversation.title,
-      last_message_at: conversation.last_message_at,
+      kind: (conversation.kind || 'direct') as 'direct' | 'group',
+      title: conversation.title ?? null,
+      last_message_at: conversation.last_message_at ?? null,
       displayName,
-      avatarUrl: others[0]?.avatar_url,
+      avatarUrl: others[0]?.avatar_url ?? null,
       preview: latestByConversation.get(conversation.id) ?? 'No messages yet',
+      unreadCount,
+      status: conversation.member_status as any,
     };
   });
 
-  const selectedId = targetConversationId || (params.c && conversationIds.includes(params.c) ? params.c : (params.u ? targetConversationId : null));
+  const selectedId = targetConversationId || (params.c && conversationIds.includes(params.c) ? params.c : (params.u ? targetConversationId : (summaries[0]?.id || null)));
 
   let threadMessages: ThreadMessage[] = [];
   if (selectedId) {
     const threadResult = await supabase
       .from('messages')
-      .select('id, sender_id, body, created_at, profiles:profiles!messages_sender_id_fkey(display_name)')
+      .select('id, sender_id, body, created_at, message_kind, client_message_id, sequence_number, reply_to_id, metadata, profiles:profiles!messages_sender_id_fkey(display_name)')
       .eq('conversation_id', selectedId)
       .order('created_at', { ascending: true })
       .limit(100);
+
     threadMessages = (threadResult.data ?? []) as unknown as ThreadMessage[];
+
+    // Mark as read in background
+    void supabase.rpc('mark_conversation_read', { conv_id: selectedId });
   }
 
   const onlineMembers: NewMessageMember[] = (onlineMembersResult.data ?? []).map((p) => ({
@@ -194,6 +202,16 @@ export default async function MessagesPage({
     isVerified: !!p.is_verified,
     isOnline: true,
     bio: p.bio,
+  }));
+
+  const pendingRequests = (requestsResult.data ?? []).map((r: any) => ({
+    id: r.id,
+    conversationId: r.conversation_id,
+    senderId: r.sender_id,
+    senderName: r.sender?.display_name || r.sender?.username || 'Member',
+    senderUsername: r.sender?.username || 'member',
+    senderAvatar: r.sender?.avatar_url,
+    createdAt: r.created_at,
   }));
 
   return (
@@ -233,6 +251,7 @@ export default async function MessagesPage({
           threadMessages={threadMessages}
           currentUserId={user.id}
           onlineMembers={onlineMembers}
+          pendingRequests={pendingRequests}
           initialCompose={params.compose === 'true'}
         />
       </main>

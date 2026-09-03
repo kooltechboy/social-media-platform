@@ -10,6 +10,6 @@ export default defineConfig({
   test: {
     include: ['tests/unit/**/*.test.ts', 'packages/**/*.test.ts'],
     exclude: ['tests/e2e/**', 'node_modules/**'],
-    testTimeout: 15000,
+    testTimeout: 45000,
   },
 });

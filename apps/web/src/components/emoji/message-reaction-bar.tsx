@@ -4,8 +4,9 @@ import React, { useState } from 'react';
 import { Plus, Sparkles } from 'lucide-react';
 import EmojiPickerPopover from './emoji-picker-popover';
 
-interface MessageReactionBarProps {
+export interface MessageReactionBarProps {
   onReact: (emoji: string) => void;
+  messageId?: string;
   reactions?: Array<{ emoji: string; count: number; users: string[] }>;
   currentUserId?: string;
   isOwnMessage?: boolean;
@@ -15,6 +16,7 @@ const DEFAULT_REACTIONS = ['❤️', '🔥', '🌴', '🥥', '👍', '🇯🇲',
 
 export default function MessageReactionBar({
   onReact,
+  messageId,
   reactions = [],
   currentUserId,
   isOwnMessage = false,

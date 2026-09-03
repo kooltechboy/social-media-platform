@@ -14,15 +14,34 @@ import {
   Image as ImageIcon,
   ShieldCheck,
   Radio,
+  ArrowLeft,
+  Reply,
+  Edit2,
+  Trash2,
+  MoreVertical,
+  RotateCcw,
+  WifiOff,
+  CornerDownRight,
+  Flag,
+  UserX,
+  Check,
+  CheckCheck,
 } from 'lucide-react';
 import { createSupabaseBrowserClient } from '../lib/supabase/browser';
-import { sendMessageAction, type MessageActionState } from '../lib/messaging/actions';
+import {
+  sendMessageAction,
+  editMessageAction,
+  deleteMessageAction,
+  toggleMessageReactionAction,
+  type MessageActionState,
+} from '../lib/messaging/actions';
 import EmojiPickerPopover from './emoji/emoji-picker-popover';
 import MessageReactionBar from './emoji/message-reaction-bar';
 import AudioVoiceNotePlayer from './messages/audio-voice-note-player';
 import VoiceNoteRecorder from './messages/voice-note-recorder';
 import CallOverlayModal, { type CallMode } from './calls/call-overlay-modal';
 import UserAvatar from './user-avatar';
+import { generateClientMessageId } from '@caribbean/messaging';
 
 export interface ThreadMessage {
   id: string;
@@ -33,7 +52,14 @@ export interface ThreadMessage {
   audio_url?: string;
   message_kind?: 'text' | 'voice' | 'media' | 'system';
   media_url?: string;
+  client_message_id?: string;
+  sequence_number?: number;
+  reply_to_id?: string;
+  edited_at?: string;
+  deleted_at?: string;
+  status?: 'sending' | 'sent' | 'delivered' | 'read' | 'failed';
   reactions?: Array<{ emoji: string; count: number; users: string[] }>;
+  metadata?: any;
 }
 
 export default function MessageThread({
@@ -42,12 +68,14 @@ export default function MessageThread({
   currentUserId,
   peerName = 'Caribbean Member',
   peerAvatarUrl,
+  onBack,
 }: {
   conversationId: string;
   initialMessages: ThreadMessage[];
   currentUserId: string;
   peerName?: string;
   peerAvatarUrl?: string | null;
+  onBack?: () => void;
 }) {
   const [messages, setMessages] = useState<ThreadMessage[]>(initialMessages);
   const [messageInput, setMessageInput] = useState('');
@@ -66,354 +94,675 @@ export default function MessageThread({
   // Emoji picker state
   const [isEmojiPickerOpen, setIsEmojiPickerOpen] = useState(false);
 
-  // File attachments state
-  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
-  const [filePreviews, setFilePreviews] = useState<string[]>([]);
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  // Reply & Edit state
+  const [replyingTo, setReplyingTo] = useState<ThreadMessage | null>(null);
+  const [editingMessage, setEditingMessage] = useState<ThreadMessage | null>(null);
+  const [editInput, setEditInput] = useState('');
 
-  // Local optimistic reactions mapping: messageId -> reactions
-  const [messageReactions, setMessageReactions] = useState<
-    Record<string, Array<{ emoji: string; count: number; users: string[] }>>
-  >({});
+  // Options dropdown state for a message
+  const [activeMenuMessageId, setActiveMenuMessageId] = useState<string | null>(null);
 
+  // Offline / Network state
+  const [isOffline, setIsOffline] = useState(typeof window !== 'undefined' ? !navigator.onLine : false);
+
+  // Realtime typing indicator state
+  const [typingUsers, setTypingUsers] = useState<string[]>([]);
+  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Scroll to bottom on updates
   useEffect(() => {
-    setMessages(initialMessages);
-  }, [initialMessages]);
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [messages, typingUsers]);
 
+  // Network offline listener
+  useEffect(() => {
+    function handleOnline() {
+      setIsOffline(false);
+    }
+    function handleOffline() {
+      setIsOffline(true);
+    }
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+
+  // Realtime Channel & Broadcast Subscription
   useEffect(() => {
     const supabase = createSupabaseBrowserClient();
     if (!supabase) return;
-    const channel = supabase
-      .channel(`messages-${conversationId}`)
+
+    // 1. Private Postgres Changes Channel
+    const changesChannel = supabase
+      .channel(`conversation:${conversationId}:messages`)
       .on(
         'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'messages', filter: `conversation_id=eq.${conversationId}` },
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'messages',
+          filter: `conversation_id=eq.${conversationId}`,
+        },
         (payload) => {
-          const incoming = payload.new as ThreadMessage;
-          setMessages((current) =>
-            current.some((message) => message.id === incoming.id) ? current : [...current, incoming]
+          const newMsg = payload.new as any;
+          setMessages((prev) => {
+            // Reconcile optimistic message by client_message_id
+            if (newMsg.client_message_id) {
+              const optIndex = prev.findIndex((m) => m.client_message_id === newMsg.client_message_id);
+              if (optIndex >= 0) {
+                const updated = [...prev];
+                updated[optIndex] = {
+                  ...updated[optIndex],
+                  ...newMsg,
+                  status: 'delivered',
+                };
+                return updated;
+              }
+            }
+
+            if (prev.some((m) => m.id === newMsg.id)) return prev;
+
+            return [
+              ...prev,
+              {
+                id: newMsg.id,
+                sender_id: newMsg.sender_id,
+                body: newMsg.body,
+                created_at: newMsg.created_at,
+                audio_url: newMsg.metadata?.audio_url,
+                message_kind: newMsg.message_kind || 'text',
+                client_message_id: newMsg.client_message_id,
+                sequence_number: newMsg.sequence_number,
+                reply_to_id: newMsg.reply_to_id,
+                status: 'delivered',
+                profiles: {
+                  display_name: newMsg.sender_id === currentUserId ? 'You' : peerName,
+                },
+              },
+            ];
+          });
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'messages',
+          filter: `conversation_id=eq.${conversationId}`,
+        },
+        (payload) => {
+          const updated = payload.new as any;
+          setMessages((prev) =>
+            prev.map((m) => (m.id === updated.id ? { ...m, ...updated } : m))
           );
         }
       )
+      .on(
+        'postgres_changes',
+        {
+          event: 'DELETE',
+          schema: 'public',
+          table: 'messages',
+          filter: `conversation_id=eq.${conversationId}`,
+        },
+        (payload) => {
+          const deleted = payload.old as any;
+          setMessages((prev) => prev.filter((m) => m.id !== deleted.id));
+        }
+      )
       .subscribe();
+
+    // 2. Ephemeral Realtime Broadcast Channel for Typing & Presence
+    const broadcastChannel = supabase
+      .channel(`broadcast:${conversationId}`)
+      .on('broadcast', { event: 'typing' }, (payload) => {
+        if (payload.payload?.userId !== currentUserId) {
+          const name = payload.payload?.userName || peerName;
+          setTypingUsers((prev) => (prev.includes(name) ? prev : [...prev, name]));
+          setTimeout(() => {
+            setTypingUsers((prev) => prev.filter((u) => u !== name));
+          }, 3000);
+        }
+      })
+      .subscribe();
+
     return () => {
-      void supabase.removeChannel(channel);
+      supabase.removeChannel(changesChannel);
+      supabase.removeChannel(broadcastChannel);
     };
-  }, [conversationId]);
+  }, [conversationId, currentUserId, peerName]);
 
-  useEffect(() => {
-    scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
-  }, [messages, isRecordingVoice]);
+  // Broadcast typing indicator
+  function handleTyping() {
+    const supabase = createSupabaseBrowserClient();
+    if (!supabase) return;
 
-  // Handle standard text submission
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    if (!messageInput.trim() && selectedFiles.length === 0) return;
+    if (!typingTimeoutRef.current) {
+      supabase.channel(`broadcast:${conversationId}`).send({
+        type: 'broadcast',
+        event: 'typing',
+        payload: { userId: currentUserId, userName: 'User' },
+      });
+      typingTimeoutRef.current = setTimeout(() => {
+        typingTimeoutRef.current = null;
+      }, 2500);
+    }
+  }
 
-    const form = event.currentTarget;
-    const formData = new FormData(form);
-    formData.set('conversationId', conversationId);
-    formData.set('body', messageInput.trim());
-    formData.set('message_kind', selectedFiles.length > 0 ? 'media' : 'text');
+  // Send message handler with idempotency and optimistic rendering
+  function handleSend(e?: React.FormEvent) {
+    if (e) e.preventDefault();
+    if (!messageInput.trim()) return;
 
-    const tempId = `temp-${Date.now()}`;
+    const bodyText = messageInput.trim();
+    const clientMsgId = generateClientMessageId();
+    const replyId = replyingTo?.id;
+
+    // Optimistic Message
     const optimisticMessage: ThreadMessage = {
-      id: tempId,
+      id: clientMsgId,
+      client_message_id: clientMsgId,
       sender_id: currentUserId,
-      body: messageInput.trim(),
+      body: bodyText,
       created_at: new Date().toISOString(),
+      message_kind: 'text',
+      reply_to_id: replyId,
+      status: isOffline ? 'failed' : 'sending',
       profiles: { display_name: 'You' },
-      message_kind: selectedFiles.length > 0 ? 'media' : 'text',
-      media_url: filePreviews[0] || undefined,
     };
 
     setMessages((prev) => [...prev, optimisticMessage]);
     setMessageInput('');
-    setSelectedFiles([]);
-    setFilePreviews([]);
+    setReplyingTo(null);
 
-    startTransition(() => {
-      void sendMessageAction(state, formData).then((next) => {
-        setState(next);
-      });
+    if (isOffline) {
+      setState({ error: 'You are currently offline. Message saved to retry.' });
+      return;
+    }
+
+    startTransition(async () => {
+      const formData = new FormData();
+      formData.set('conversationId', conversationId);
+      formData.set('body', bodyText);
+      formData.set('message_kind', 'text');
+      formData.set('client_message_id', clientMsgId);
+      if (replyId) formData.set('reply_to_id', replyId);
+
+      const res = await sendMessageAction({ error: null }, formData);
+      if (res.error) {
+        setState({ error: res.error });
+        setMessages((prev) =>
+          prev.map((m) => (m.client_message_id === clientMsgId ? { ...m, status: 'failed' } : m))
+        );
+      } else {
+        setState({ error: null });
+        setMessages((prev) =>
+          prev.map((m) =>
+            m.client_message_id === clientMsgId
+              ? { ...m, ...res.message, status: 'sent' }
+              : m
+          )
+        );
+      }
     });
-  };
+  }
 
-  // Handle sending a recorded voice note
-  const handleSendVoiceNote = async (audioBlob: Blob, durationSec: number, audioUrl: string) => {
+  // Retry sending failed message
+  function handleRetry(msg: ThreadMessage) {
+    if (isOffline) return;
+    setMessages((prev) =>
+      prev.map((m) => (m.id === msg.id ? { ...m, status: 'sending' } : m))
+    );
+
+    startTransition(async () => {
+      const formData = new FormData();
+      formData.set('conversationId', conversationId);
+      formData.set('body', msg.body || '');
+      formData.set('message_kind', msg.message_kind || 'text');
+      formData.set('client_message_id', msg.client_message_id || generateClientMessageId());
+      if (msg.reply_to_id) formData.set('reply_to_id', msg.reply_to_id);
+
+      const res = await sendMessageAction({ error: null }, formData);
+      if (res.error) {
+        setMessages((prev) =>
+          prev.map((m) => (m.id === msg.id ? { ...m, status: 'failed' } : m))
+        );
+      } else {
+        setMessages((prev) =>
+          prev.map((m) => (m.id === msg.id ? { ...m, ...res.message, status: 'sent' } : m))
+        );
+      }
+    });
+  }
+
+  // Handle voice note send
+  async function handleSendVoiceNote(audioBlob: Blob, durationSec: number) {
     setIsRecordingVoice(false);
+    const audioUrl = URL.createObjectURL(audioBlob);
+    const clientMsgId = generateClientMessageId();
 
-    const tempId = `temp-voice-${Date.now()}`;
-    const optimisticVoiceMessage: ThreadMessage = {
-      id: tempId,
+    const optimisticMessage: ThreadMessage = {
+      id: clientMsgId,
+      client_message_id: clientMsgId,
       sender_id: currentUserId,
-      body: `🎙️ Voice Note (${Math.floor(durationSec / 60)}:${String(durationSec % 60).padStart(2, '0')})`,
-      created_at: new Date().toISOString(),
-      profiles: { display_name: 'You' },
+      body: `[Voice Note: ${Math.round(durationSec)}s]`,
       audio_url: audioUrl,
       message_kind: 'voice',
+      created_at: new Date().toISOString(),
+      status: 'sending',
+      profiles: { display_name: 'You' },
     };
 
-    setMessages((prev) => [...prev, optimisticVoiceMessage]);
+    setMessages((prev) => [...prev, optimisticMessage]);
 
-    // Send payload to backend
-    const formData = new FormData();
-    formData.set('conversationId', conversationId);
-    formData.set('body', `[VOICE_NOTE:${audioUrl}|${durationSec}]`);
-    formData.set('message_kind', 'voice');
-    formData.set('audio_url', audioUrl);
+    startTransition(async () => {
+      const formData = new FormData();
+      formData.set('conversationId', conversationId);
+      formData.set('body', `[Voice Note: ${Math.round(durationSec)}s]`);
+      formData.set('message_kind', 'voice');
+      formData.set('audio_url', audioUrl);
+      formData.set('client_message_id', clientMsgId);
 
-    startTransition(() => {
-      void sendMessageAction(state, formData).then((next) => {
-        setState(next);
-      });
+      const res = await sendMessageAction({ error: null }, formData);
+      if (res.error) {
+        setState({ error: res.error });
+      }
     });
-  };
-
-  // Handle emoji selection from picker
-  function handleSelectEmoji(emoji: string) {
-    setMessageInput((prev) => prev + emoji);
-    textInputRef.current?.focus();
   }
 
-  // Handle message emoji reaction
-  function handleReactToMessage(messageId: string, emoji: string) {
-    setMessageReactions((prev) => {
-      const currentList = prev[messageId] || [];
-      const existing = currentList.find((r) => r.emoji === emoji);
+  // Handle message edit save
+  async function handleSaveEdit() {
+    if (!editingMessage || !editInput.trim()) return;
+    const msgId = editingMessage.id;
+    const newText = editInput.trim();
 
-      let nextList;
-      if (existing) {
-        if (existing.users.includes(currentUserId)) {
-          // Remove reaction
-          nextList = currentList
-            .map((r) =>
-              r.emoji === emoji
-                ? { ...r, count: r.count - 1, users: r.users.filter((u) => u !== currentUserId) }
-                : r
-            )
-            .filter((r) => r.count > 0);
+    setMessages((prev) =>
+      prev.map((m) => (m.id === msgId ? { ...m, body: newText, edited_at: new Date().toISOString() } : m))
+    );
+    setEditingMessage(null);
+    setEditInput('');
+
+    await editMessageAction(msgId, newText);
+  }
+
+  // Handle message delete
+  async function handleDeleteMessage(msgId: string, deleteType: 'for_everyone' | 'for_me') {
+    setActiveMenuMessageId(null);
+    if (deleteType === 'for_me') {
+      setMessages((prev) => prev.filter((m) => m.id !== msgId));
+    } else {
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.id === msgId
+            ? { ...m, body: 'This message was deleted.', deleted_at: new Date().toISOString() }
+            : m
+        )
+      );
+    }
+    await deleteMessageAction(msgId, deleteType);
+  }
+
+  // Handle emoji reaction toggle
+  async function handleToggleReaction(messageId: string, emoji: string) {
+    setMessages((prev) =>
+      prev.map((m) => {
+        if (m.id !== messageId) return m;
+        const reactions = [...(m.reactions || [])];
+        const existing = reactions.find((r) => r.emoji === emoji);
+        if (existing) {
+          if (existing.users.includes(currentUserId)) {
+            existing.count = Math.max(0, existing.count - 1);
+            existing.users = existing.users.filter((u) => u !== currentUserId);
+          } else {
+            existing.count += 1;
+            existing.users.push(currentUserId);
+          }
         } else {
-          // Add user to reaction
-          nextList = currentList.map((r) =>
-            r.emoji === emoji
-              ? { ...r, count: r.count + 1, users: [...r.users, currentUserId] }
-              : r
-          );
+          reactions.push({ emoji, count: 1, users: [currentUserId] });
         }
-      } else {
-        // Create new reaction
-        nextList = [...currentList, { emoji, count: 1, users: [currentUserId] }];
-      }
+        return { ...m, reactions: reactions.filter((r) => r.count > 0) };
+      })
+    );
 
-      return { ...prev, [messageId]: nextList };
-    });
-  }
-
-  // Handle file picker selection
-  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
-    if (e.target.files && e.target.files.length > 0) {
-      const files = Array.from(e.target.files);
-      setSelectedFiles(files);
-      const urls = files.map((f) => URL.createObjectURL(f));
-      setFilePreviews(urls);
-    }
-  }
-
-  function removeSelectedFile(index: number) {
-    setSelectedFiles((prev) => prev.filter((_, i) => i !== index));
-    setFilePreviews((prev) => {
-      URL.revokeObjectURL(prev[index]);
-      return prev.filter((_, i) => i !== index);
-    });
-  }
-
-  function startCall(mode: CallMode) {
-    setCallMode(mode);
-    setIsCallOpen(true);
-  }
-
-  // Helper to extract voice URL from message body if encoded
-  function extractVoiceInfo(message: ThreadMessage): { isVoice: boolean; url?: string; duration?: number } {
-    if (message.message_kind === 'voice' || message.audio_url) {
-      return { isVoice: true, url: message.audio_url || undefined };
-    }
-    if (message.body && message.body.startsWith('[VOICE_NOTE:')) {
-      const match = message.body.match(/\[VOICE_NOTE:([^|\]]+)(?:\|(\d+))?\]/);
-      if (match) {
-        return {
-          isVoice: true,
-          url: match[1],
-          duration: match[2] ? parseInt(match[2], 10) : undefined,
-        };
-      }
-    }
-    return { isVoice: false };
+    await toggleMessageReactionAction(messageId, emoji);
   }
 
   return (
-    <section className="flex-1 bg-[#120B1E]/95 backdrop-blur-2xl flex flex-col min-h-[75vh] relative overflow-hidden">
-      {/* Active Video & Audio Calling Overlay */}
-      <CallOverlayModal
-        isOpen={isCallOpen}
-        peerName={peerName}
-        peerAvatarUrl={peerAvatarUrl}
-        mode={callMode}
-        onClose={() => setIsCallOpen(false)}
-      />
+    <div className="flex flex-col h-full min-h-[78vh] bg-slate-950/40 relative">
+      {/* 1. Header with Peer Details & Calls */}
+      <div className="p-3.5 sm:p-4 border-b border-white/10 bg-[#0E0818]/90 backdrop-blur-xl flex items-center justify-between gap-3 sticky top-0 z-20">
+        <div className="flex items-center gap-3 min-w-0">
+          {onBack && (
+            <button
+              onClick={onBack}
+              className="p-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 md:hidden transition-all"
+              title="Back to conversation list"
+            >
+              <ArrowLeft className="w-4 h-4" />
+            </button>
+          )}
 
-      {/* Conversation Active Header */}
-      <div className="p-4 border-b border-white/10 flex items-center justify-between bg-white/[0.02]">
-        <div className="flex items-center gap-3">
-          <div className="relative">
-            <UserAvatar name={peerName} src={peerAvatarUrl} size="md" />
-            <span className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-emerald-400 border-2 border-[#120B1E] shadow-sm" />
+          <div className="relative flex-shrink-0">
+            <UserAvatar name={peerName} avatarUrl={peerAvatarUrl} size="md" />
+            <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 border border-[#0E0818]" />
           </div>
-          <div>
-            <h3 className="font-black text-sm text-white flex items-center gap-1.5">
-              {peerName}
-              <CheckCircle className="w-3.5 h-3.5 text-brand-caribbeanSea" />
-            </h3>
-            <span className="text-[10px] text-emerald-400 font-extrabold flex items-center gap-1">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" /> Direct Encrypted Session
-            </span>
+
+          <div className="min-w-0">
+            <div className="flex items-center gap-1.5">
+              <h3 className="text-sm font-black text-white truncate">{peerName}</h3>
+              <span title="256-Bit E2EE Verified">
+                <ShieldCheck className="w-3.5 h-3.5 text-brand-caribbeanSea" />
+              </span>
+            </div>
+            <p className="text-[10px] text-emerald-400 font-bold flex items-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" /> Active now
+            </p>
           </div>
         </div>
 
-        {/* VOICE & VIDEO CALL CONTROLS */}
-        <div className="flex items-center gap-2">
+        {/* Action Controls: Audio / Video Calls */}
+        <div className="flex items-center gap-1.5 sm:gap-2">
           <button
             type="button"
-            onClick={() => startCall('audio')}
-            className="p-2.5 rounded-2xl bg-white/[0.04] hover:bg-brand-sunriseCoral/20 text-slate-300 hover:text-brand-sunriseCoral border border-white/10 hover:border-brand-sunriseCoral/40 transition-all shadow-md flex items-center gap-1.5"
-            title={`Start Audio Call with ${peerName}`}
+            onClick={() => {
+              setCallMode('audio');
+              setIsCallOpen(true);
+            }}
+            title="Start Audio Call"
+            className="p-2 sm:px-3 sm:py-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-slate-200 hover:text-white border border-white/10 text-xs font-bold flex items-center gap-1.5 transition-all shadow-sm"
           >
-            <Phone className="w-4 h-4 text-brand-sunriseCoral" />
-            <span className="text-[11px] font-bold hidden sm:inline">Call</span>
+            <Phone className="w-3.5 h-3.5 text-brand-caribbeanSea" />
+            <span className="hidden sm:inline">Audio</span>
           </button>
 
           <button
             type="button"
-            onClick={() => startCall('video')}
-            className="p-2.5 rounded-2xl bg-white/[0.04] hover:bg-brand-caribbeanSea/20 text-slate-300 hover:text-brand-caribbeanSea border border-white/10 hover:border-brand-caribbeanSea/40 transition-all shadow-md flex items-center gap-1.5"
-            title={`Start Video Call with ${peerName}`}
+            onClick={() => {
+              setCallMode('video');
+              setIsCallOpen(true);
+            }}
+            title="Start HD Video Call"
+            className="p-2 sm:px-3 sm:py-1.5 rounded-xl bg-gradient-to-r from-brand-caribbeanSea/20 to-brand-sunriseCoral/20 hover:from-brand-caribbeanSea/30 hover:to-brand-sunriseCoral/30 text-brand-caribbeanSea border border-brand-caribbeanSea/30 text-xs font-bold flex items-center gap-1.5 transition-all shadow-sm"
           >
-            <Video className="w-4 h-4 text-brand-caribbeanSea" />
-            <span className="text-[11px] font-bold hidden sm:inline">Video</span>
+            <Video className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">Video</span>
           </button>
         </div>
       </div>
 
-      {/* Message History Feed */}
-      <div ref={scrollRef} className="flex-1 p-4 sm:p-6 space-y-4 overflow-y-auto scrollbar-thin scrollbar-thumb-slate-700">
-        {messages.length === 0 && (
-          <div className="text-center py-16 space-y-2">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-brand-caribbeanSea/20 to-brand-sunriseCoral/20 border border-brand-caribbeanSea/30 flex items-center justify-center text-brand-caribbeanSea mx-auto shadow-inner">
+      {/* Offline Banner */}
+      {isOffline && (
+        <div className="bg-amber-500/20 border-b border-amber-500/30 px-4 py-2 flex items-center justify-between text-amber-300 text-xs font-bold animate-fadeIn">
+          <div className="flex items-center gap-2">
+            <WifiOff className="w-4 h-4 text-amber-400" />
+            <span>You are currently offline. Outgoing messages will queue locally.</span>
+          </div>
+        </div>
+      )}
+
+      {/* 2. Messages Stream List */}
+      <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
+        {messages.length === 0 ? (
+          <div className="h-full flex flex-col items-center justify-center text-center p-8 space-y-3">
+            <div className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-brand-caribbeanSea">
               <Sparkles className="w-6 h-6" />
             </div>
-            <p className="text-xs text-white font-bold">Encrypted Pan-Caribbean Direct Message</p>
-            <p className="text-[11px] text-slate-400">Say hello, send a voice note, or collaborate with {peerName}.</p>
+            <h4 className="text-sm font-black text-white">Direct Caribbean Conversation</h4>
+            <p className="text-xs text-slate-400 max-w-xs">
+              Say wah gwaan to {peerName}! All messages, calls, and voice notes are end-to-end encrypted.
+            </p>
           </div>
-        )}
+        ) : (
+          messages.map((msg, index) => {
+            const isMine = msg.sender_id === currentUserId;
+            const isVoice = msg.message_kind === 'voice' || !!msg.audio_url;
+            const isDeleted = !!msg.deleted_at;
+            const repliedMsg = msg.reply_to_id ? messages.find((m) => m.id === msg.reply_to_id) : null;
 
-        {messages.map((message) => {
-          const own = message.sender_id === currentUserId;
-          const voiceInfo = extractVoiceInfo(message);
-          const reactions = messageReactions[message.id] || message.reactions || [];
-
-          return (
-            <div
-              key={message.id}
-              className={`flex flex-col ${own ? 'items-end' : 'items-start'} group/msg relative`}
-            >
-              {/* Message Bubble */}
+            return (
               <div
-                className={`max-w-[85%] sm:max-w-[75%] rounded-3xl p-3.5 shadow-md relative transition-all ${
-                  own
-                    ? 'bg-gradient-to-r from-sky-600 via-brand-caribbeanSea to-emerald-600 text-white rounded-br-none font-medium'
-                    : 'bg-[#201530] text-slate-100 border border-white/15 rounded-bl-none'
-                }`}
+                key={msg.id || index}
+                className={`flex flex-col group relative ${isMine ? 'items-end' : 'items-start'}`}
               >
-                {!own && (
-                  <p className="text-[10px] font-black text-brand-caribbeanSea mb-1">
-                    {message.profiles?.display_name ?? peerName}
-                  </p>
+                {/* Reply Quote Preview */}
+                {repliedMsg && (
+                  <div
+                    className={`flex items-center gap-1 text-[11px] text-slate-400 mb-1 px-2 py-0.5 rounded-lg bg-white/[0.04] border border-white/5 max-w-sm truncate ${
+                      isMine ? 'mr-1' : 'ml-1'
+                    }`}
+                  >
+                    <CornerDownRight className="w-3 h-3 text-brand-caribbeanSea flex-shrink-0" />
+                    <span className="font-bold text-slate-300 truncate">
+                      {repliedMsg.sender_id === currentUserId ? 'You' : peerName}:
+                    </span>
+                    <span className="truncate">{repliedMsg.body}</span>
+                  </div>
                 )}
 
-                {/* Voice Note Rendering */}
-                {voiceInfo.isVoice && voiceInfo.url ? (
-                  <AudioVoiceNotePlayer
-                    audioUrl={voiceInfo.url}
-                    durationSeconds={voiceInfo.duration}
-                    senderName={own ? 'You' : peerName}
-                    isOwn={own}
-                  />
-                ) : (
-                  /* Standard Text or Media Message */
-                  <>
-                    {message.media_url && (
-                      <div className="mb-2 rounded-2xl overflow-hidden max-h-60 bg-black/40">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={message.media_url} alt="Shared media" className="w-full h-full object-cover" />
+                {/* Message Bubble Container */}
+                <div className="flex items-end gap-2 max-w-[85%] sm:max-w-[75%] relative">
+                  {!isMine && (
+                    <div className="flex-shrink-0 mb-1">
+                      <UserAvatar name={peerName} avatarUrl={peerAvatarUrl} size="sm" />
+                    </div>
+                  )}
+
+                  <div className="flex flex-col">
+                    {/* Bubble */}
+                    <div
+                      className={`p-3.5 rounded-2xl text-xs relative transition-all shadow-md ${
+                        isDeleted
+                          ? 'bg-white/5 border border-white/10 text-slate-400 italic'
+                          : isMine
+                          ? 'bg-gradient-to-tr from-brand-caribbeanSea via-teal-500 to-brand-sunriseCoral text-slate-950 font-bold rounded-br-none shadow-brand-caribbeanSea/10'
+                          : 'bg-[#181126] border border-white/10 text-white rounded-bl-none shadow-black/30'
+                      }`}
+                    >
+                      {/* Voice Note Player or Text Content */}
+                      {isVoice && !isDeleted ? (
+                        <div className="min-w-[220px] sm:min-w-[260px]">
+                          <AudioVoiceNotePlayer
+                            audioUrl={msg.audio_url || ''}
+                            isCurrentUser={isMine}
+                          />
+                        </div>
+                      ) : (
+                        <p className="whitespace-pre-wrap break-words leading-relaxed font-semibold">
+                          {msg.body}
+                        </p>
+                      )}
+
+                      {/* Timestamp & Status Metadata */}
+                      <div
+                        className={`flex items-center justify-end gap-1 mt-1 text-[9px] ${
+                          isMine ? 'text-slate-900/80 font-bold' : 'text-slate-400'
+                        }`}
+                      >
+                        {msg.edited_at && <span className="italic mr-0.5">(edited)</span>}
+                        <span>
+                          {new Date(msg.created_at).toLocaleTimeString('en-US', {
+                            hour: 'numeric',
+                            minute: '2-digit',
+                          })}
+                        </span>
+                        {isMine && (
+                          <span>
+                            {msg.status === 'failed' ? (
+                              <button
+                                onClick={() => handleRetry(msg)}
+                                className="text-rose-600 hover:underline flex items-center gap-0.5 font-black"
+                              >
+                                <RotateCcw className="w-2.5 h-2.5" /> Retry
+                              </button>
+                            ) : msg.status === 'sending' ? (
+                              <span className="opacity-70 animate-pulse">…</span>
+                            ) : (
+                              <CheckCheck className="w-3 h-3 text-slate-950" />
+                            )}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Reaction Badges */}
+                    {msg.reactions && msg.reactions.length > 0 && (
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        {msg.reactions.map((r, i) => {
+                          const hasReacted = r.users.includes(currentUserId);
+                          return (
+                            <button
+                              key={i}
+                              onClick={() => handleToggleReaction(msg.id, r.emoji)}
+                              className={`px-2 py-0.5 rounded-full text-[10px] font-bold flex items-center gap-1 border transition-all ${
+                                hasReacted
+                                  ? 'bg-brand-caribbeanSea/20 border-brand-caribbeanSea/40 text-brand-caribbeanSea'
+                                  : 'bg-white/5 border-white/10 text-slate-300 hover:bg-white/10'
+                              }`}
+                            >
+                              <span>{r.emoji}</span>
+                              <span>{r.count}</span>
+                            </button>
+                          );
+                        })}
                       </div>
                     )}
-                    <p className="text-xs leading-relaxed font-medium whitespace-pre-wrap">
-                      {message.body}
-                    </p>
-                  </>
-                )}
+                  </div>
 
-                {/* Timestamp */}
-                <span className={`text-[9px] block mt-1.5 font-mono ${own ? 'text-sky-100 text-right' : 'text-slate-400'}`}>
-                  {new Date(message.created_at).toLocaleTimeString('en-US', {
-                    hour: 'numeric',
-                    minute: '2-digit',
-                  })}
-                </span>
-              </div>
+                  {/* Hover Actions: Reaction Ribbon & More Menu */}
+                  {!isDeleted && (
+                    <div
+                      className={`opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 ${
+                        isMine ? 'order-first' : 'order-last'
+                      }`}
+                    >
+                      <MessageReactionBar
+                        messageId={msg.id}
+                        onReact={(emoji) => handleToggleReaction(msg.id, emoji)}
+                      />
 
-              {/* Message Reactions Bar */}
-              <div className="mt-1">
-                <MessageReactionBar
-                  onReact={(emoji) => handleReactToMessage(message.id, emoji)}
-                  reactions={reactions}
-                  currentUserId={currentUserId}
-                  isOwnMessage={own}
-                />
+                      <button
+                        onClick={() => setReplyingTo(msg)}
+                        title="Reply to message"
+                        className="p-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white border border-white/10 text-xs transition-all"
+                      >
+                        <Reply className="w-3 h-3" />
+                      </button>
+
+                      <div className="relative">
+                        <button
+                          onClick={() =>
+                            setActiveMenuMessageId(activeMenuMessageId === msg.id ? null : msg.id)
+                          }
+                          className="p-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white border border-white/10 text-xs transition-all"
+                        >
+                          <MoreVertical className="w-3 h-3" />
+                        </button>
+
+                        {activeMenuMessageId === msg.id && (
+                          <div className="absolute right-0 bottom-full mb-1 w-36 bg-[#160E24] border border-white/15 rounded-xl shadow-2xl p-1 z-30 space-y-0.5 text-xs font-bold">
+                            {isMine && !isVoice && (
+                              <button
+                                onClick={() => {
+                                  setEditingMessage(msg);
+                                  setEditInput(msg.body || '');
+                                  setActiveMenuMessageId(null);
+                                }}
+                                className="w-full px-2 py-1.5 rounded-lg text-left text-slate-200 hover:bg-white/10 flex items-center gap-2"
+                              >
+                                <Edit2 className="w-3 h-3 text-brand-caribbeanSea" /> Edit
+                              </button>
+                            )}
+
+                            {isMine && (
+                              <button
+                                onClick={() => handleDeleteMessage(msg.id, 'for_everyone')}
+                                className="w-full px-2 py-1.5 rounded-lg text-left text-rose-400 hover:bg-rose-500/10 flex items-center gap-2"
+                              >
+                                <Trash2 className="w-3 h-3" /> Delete All
+                              </button>
+                            )}
+
+                            <button
+                              onClick={() => handleDeleteMessage(msg.id, 'for_me')}
+                              className="w-full px-2 py-1.5 rounded-lg text-left text-slate-300 hover:bg-white/10 flex items-center gap-2"
+                            >
+                              <Trash2 className="w-3 h-3 text-slate-400" /> Delete For Me
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
-          );
-        })}
+            );
+          })
+        )}
+
+        {/* Realtime Typing Indicator */}
+        {typingUsers.length > 0 && (
+          <div className="flex items-center gap-2 text-xs text-brand-caribbeanSea font-bold italic animate-fadeIn">
+            <Radio className="w-3 h-3 animate-pulse" />
+            <span>{typingUsers.join(', ')} is typing…</span>
+          </div>
+        )}
       </div>
 
-      {state.error && (
-        <p role="alert" className="mx-5 mb-2 text-xs text-rose-400 bg-rose-500/10 border border-rose-500/30 rounded-xl px-3 py-2">
-          {state.error}
-        </p>
-      )}
-
-      {/* Attachment Previews Ribbon */}
-      {filePreviews.length > 0 && (
-        <div className="mx-4 p-2 bg-[#1B112B] border border-white/10 rounded-2xl flex items-center gap-2 overflow-x-auto">
-          {filePreviews.map((url, i) => (
-            <div key={i} className="relative w-14 h-14 rounded-xl overflow-hidden border border-white/20 flex-shrink-0">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={url} alt="Attachment preview" className="w-full h-full object-cover" />
-              <button
-                type="button"
-                onClick={() => removeSelectedFile(i)}
-                className="absolute top-1 right-1 p-0.5 rounded-full bg-black/70 text-white hover:bg-rose-600"
-              >
-                <X className="w-3 h-3" />
-              </button>
-            </div>
-          ))}
+      {/* 3. Reply Quote Bar (When replying) */}
+      {replyingTo && (
+        <div className="px-4 py-2 bg-white/[0.04] border-t border-white/10 flex items-center justify-between text-xs animate-fadeIn">
+          <div className="flex items-center gap-2 min-w-0">
+            <Reply className="w-3.5 h-3.5 text-brand-caribbeanSea flex-shrink-0" />
+            <span className="font-bold text-slate-300">
+              Replying to {replyingTo.sender_id === currentUserId ? 'yourself' : peerName}:
+            </span>
+            <span className="text-slate-400 truncate max-w-xs">{replyingTo.body}</span>
+          </div>
+          <button
+            onClick={() => setReplyingTo(null)}
+            className="p-1 rounded-lg text-slate-400 hover:text-white"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
         </div>
       )}
 
-      {/* Voice Note Live Recording Ribbon */}
+      {/* 4. Edit Message Bar (When editing inline) */}
+      {editingMessage && (
+        <div className="p-3 bg-brand-twilight/80 border-t border-white/10 flex items-center gap-2 animate-fadeIn">
+          <Edit2 className="w-4 h-4 text-brand-caribbeanSea flex-shrink-0" />
+          <input
+            type="text"
+            value={editInput}
+            onChange={(e) => setEditInput(e.target.value)}
+            className="flex-1 px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 text-xs text-white focus:outline-none"
+            placeholder="Edit message…"
+            autoFocus
+          />
+          <button
+            onClick={handleSaveEdit}
+            className="px-3 py-1.5 rounded-xl bg-brand-caribbeanSea text-slate-950 text-xs font-black"
+          >
+            Save
+          </button>
+          <button
+            onClick={() => setEditingMessage(null)}
+            className="p-1.5 text-slate-400 hover:text-white"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
+
+      {/* 5. Voice Note Recorder Ribbon */}
       {isRecordingVoice && (
-        <div className="mx-4 mb-2">
+        <div className="p-3 border-t border-white/10 bg-[#140C22] animate-fadeIn">
           <VoiceNoteRecorder
             onSendVoiceNote={handleSendVoiceNote}
             onCancel={() => setIsRecordingVoice(false)}
@@ -421,88 +770,79 @@ export default function MessageThread({
         </div>
       )}
 
-      {/* Message Input Toolbar */}
-      {!isRecordingVoice && (
-        <form onSubmit={handleSubmit} className="p-3 sm:p-4 border-t border-white/10 bg-[#1A1128] flex items-center gap-2 relative">
-          <input type="hidden" name="conversationId" value={conversationId} />
-
-          {/* Voice Note Trigger */}
-          <button
-            type="button"
-            onClick={() => setIsRecordingVoice(true)}
-            className="p-2.5 rounded-full text-slate-400 hover:text-white hover:bg-white/10 transition-all flex-shrink-0"
-            title="Record Voice Note"
-          >
-            <Mic className="w-4 h-4 text-rose-400" />
-          </button>
-
-          {/* Attachment Picker Trigger */}
-          <input
-            ref={fileInputRef}
-            type="file"
-            multiple
-            accept="image/*,video/*,.pdf"
-            className="hidden"
-            onChange={handleFileChange}
-          />
-          <button
-            type="button"
-            onClick={() => fileInputRef.current?.click()}
-            className={`p-2.5 rounded-full transition-all relative flex-shrink-0 ${
-              selectedFiles.length > 0
-                ? 'bg-brand-caribbeanSea/20 text-brand-caribbeanSea'
-                : 'text-slate-400 hover:text-white hover:bg-white/10'
-            }`}
-            title="Attach Image or Media"
-          >
-            <Paperclip className="w-4 h-4" />
-          </button>
-
-          {/* Emoji Picker Popover Trigger */}
-          <div className="relative flex-shrink-0">
+      {/* 6. Composer Input Dock */}
+      {!isRecordingVoice && !editingMessage && (
+        <form
+          onSubmit={handleSend}
+          className="p-3 sm:p-4 border-t border-white/10 bg-[#0E0818]/90 backdrop-blur-xl flex items-center gap-2"
+        >
+          {/* Emoji Popover Trigger */}
+          <div className="relative">
             <button
               type="button"
               onClick={() => setIsEmojiPickerOpen(!isEmojiPickerOpen)}
-              className={`p-2.5 rounded-full transition-all ${
-                isEmojiPickerOpen
-                  ? 'bg-amber-400/20 text-amber-300'
-                  : 'text-slate-400 hover:text-amber-300 hover:bg-white/10'
+              title="Insert Emojis & Diaspora Vibrations"
+              className={`p-2 rounded-xl text-slate-300 hover:text-amber-300 hover:bg-white/5 border border-white/10 transition-all ${
+                isEmojiPickerOpen ? 'bg-amber-400/20 text-amber-300 border-amber-400/30' : ''
               }`}
-              title="Insert Emoji"
             >
-              <Smile className="w-4 h-4" />
+              <Smile className="w-4 h-4 text-amber-400" />
             </button>
 
             <EmojiPickerPopover
               isOpen={isEmojiPickerOpen}
               onClose={() => setIsEmojiPickerOpen(false)}
-              onSelectEmoji={handleSelectEmoji}
+              onSelectEmoji={(emoji) => {
+                setMessageInput((prev) => prev + emoji);
+                if (textInputRef.current) textInputRef.current.focus();
+              }}
               position="top-left"
             />
           </div>
 
-          {/* Main Message Text Input */}
+          {/* Voice Record Button */}
+          <button
+            type="button"
+            onClick={() => setIsRecordingVoice(true)}
+            title="Record Voice Note"
+            className="p-2 rounded-xl text-slate-300 hover:text-brand-caribbeanSea hover:bg-white/5 border border-white/10 transition-all"
+          >
+            <Mic className="w-4 h-4 text-brand-caribbeanSea" />
+          </button>
+
+          {/* Text Input */}
           <input
             ref={textInputRef}
-            name="body"
             type="text"
             value={messageInput}
-            onChange={(e) => setMessageInput(e.target.value)}
-            placeholder={`Message ${peerName}...`}
-            className="flex-1 bg-[#130B1E] border border-white/20 rounded-2xl px-4 py-2.5 text-xs text-white placeholder-slate-400 focus:outline-none focus:border-brand-caribbeanSea transition-colors font-medium min-w-0"
+            onChange={(e) => {
+              setMessageInput(e.target.value);
+              handleTyping();
+            }}
+            placeholder={`Message ${peerName}…`}
+            className="flex-1 px-4 py-2.5 rounded-2xl bg-white/[0.05] border border-white/10 text-xs text-white placeholder:text-slate-400 focus:outline-none focus:border-brand-caribbeanSea/60 transition-all"
           />
 
           {/* Send Button */}
           <button
             type="submit"
-            aria-label="Send message"
-            disabled={pending || (!messageInput.trim() && selectedFiles.length === 0)}
-            className="w-10 h-10 rounded-2xl bg-gradient-to-r from-brand-caribbeanSea to-brand-sunriseCoral hover:from-cyan-400 hover:to-orange-400 disabled:opacity-50 text-slate-950 flex items-center justify-center shadow-md transition-all flex-shrink-0 cursor-pointer"
+            disabled={pending || !messageInput.trim()}
+            className="px-4 py-2.5 rounded-2xl bg-gradient-to-r from-brand-caribbeanSea via-brand-sunriseCoral to-brand-goldenHour text-slate-950 font-black text-xs flex items-center gap-1.5 shadow-lg shadow-brand-caribbeanSea/20 hover:opacity-95 disabled:opacity-30 transition-all cursor-pointer"
           >
-            <Send className="w-4 h-4" />
+            <Send className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">Send</span>
           </button>
         </form>
       )}
-    </section>
+
+      {/* 7. WebRTC Audio & Video Calling Overlay HUD */}
+      <CallOverlayModal
+        isOpen={isCallOpen}
+        onClose={() => setIsCallOpen(false)}
+        peerName={peerName}
+        peerAvatarUrl={peerAvatarUrl}
+        mode={callMode}
+      />
+    </div>
   );
 }

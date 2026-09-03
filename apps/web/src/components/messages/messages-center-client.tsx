@@ -16,10 +16,17 @@ import {
   Compass,
   X,
   MessageCircle,
+  Clock,
+  UserCheck,
+  UserX,
+  ShieldAlert,
+  Archive,
+  Inbox,
 } from 'lucide-react';
 import MessageThread, { type ThreadMessage } from '../message-thread';
 import NewMessageModal, { type NewMessageMember } from './new-message-modal';
 import UserAvatar from '../user-avatar';
+import { handleMessageRequestAction } from '../../lib/messaging/actions';
 
 export interface ConversationSummary {
   id: string;
@@ -30,6 +37,18 @@ export interface ConversationSummary {
   avatarUrl?: string | null;
   isOnline?: boolean;
   preview: string;
+  unreadCount?: number;
+  status?: 'active' | 'pending_request' | 'archived' | 'rejected' | 'blocked';
+}
+
+export interface PendingRequest {
+  id: string;
+  conversationId: string;
+  senderId: string;
+  senderName: string;
+  senderUsername: string;
+  senderAvatar?: string | null;
+  createdAt: string;
 }
 
 interface MessagesCenterClientProps {
@@ -38,6 +57,7 @@ interface MessagesCenterClientProps {
   threadMessages: ThreadMessage[];
   currentUserId: string;
   onlineMembers: NewMessageMember[];
+  pendingRequests?: PendingRequest[];
   initialCompose?: boolean;
 }
 
@@ -47,21 +67,27 @@ export default function MessagesCenterClient({
   threadMessages,
   currentUserId,
   onlineMembers,
+  pendingRequests = [],
   initialCompose = false,
 }: MessagesCenterClientProps) {
   const router = useRouter();
   const [search, setSearch] = useState('');
-  const [filter, setFilter] = useState<'all' | 'direct' | 'group'>('all');
+  const [filter, setFilter] = useState<'all' | 'direct' | 'group' | 'requests' | 'archived'>('all');
   const [isComposeOpen, setIsComposeOpen] = useState(initialCompose);
   const [mobileView, setMobileView] = useState<'list' | 'thread'>(selectedId ? 'thread' : 'list');
+  const [requestActionLoading, setRequestActionLoading] = useState<string | null>(null);
 
   // Filtered conversations
   const filteredConversations = useMemo(() => {
     let list = conversations;
     if (filter === 'direct') {
-      list = list.filter((c) => c.kind === 'direct');
+      list = list.filter((c) => c.kind === 'direct' && c.status !== 'archived');
     } else if (filter === 'group') {
-      list = list.filter((c) => c.kind === 'group');
+      list = list.filter((c) => c.kind === 'group' && c.status !== 'archived');
+    } else if (filter === 'archived') {
+      list = list.filter((c) => c.status === 'archived');
+    } else if (filter === 'all') {
+      list = list.filter((c) => c.status !== 'archived' && c.status !== 'pending_request');
     }
 
     if (search.trim()) {
@@ -80,6 +106,10 @@ export default function MessagesCenterClient({
     [conversations, selectedId]
   );
 
+  const totalUnreadCount = useMemo(() => {
+    return conversations.reduce((acc, c) => acc + (c.unreadCount || 0), 0);
+  }, [conversations]);
+
   function formatConversationTime(timestamp: string | null) {
     if (!timestamp) return '';
     const date = new Date(timestamp);
@@ -91,6 +121,16 @@ export default function MessagesCenterClient({
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   }
 
+  async function handleRequestResponse(convId: string, action: 'accept' | 'decline' | 'block') {
+    setRequestActionLoading(convId);
+    try {
+      await handleMessageRequestAction(convId, action);
+      router.refresh();
+    } finally {
+      setRequestActionLoading(null);
+    }
+  }
+
   return (
     <div className="bg-[#120B1E]/95 backdrop-blur-3xl border border-white/15 rounded-3xl shadow-2xl overflow-hidden relative">
       {/* Specular Top Glow */}
@@ -98,169 +138,201 @@ export default function MessagesCenterClient({
 
       {/* Main Grid: Left Conversation List, Right Active Thread or Welcome Hub */}
       <div className="grid grid-cols-1 md:grid-cols-12 min-h-[78vh]">
-        {/* LEFT COLUMN: Conversation List */}
+        {/* LEFT COLUMN: Navigation, Search, Tabs & Conversations List */}
         <aside
-          className={`md:col-span-4 lg:col-span-4 border-r border-white/10 flex flex-col ${
+          className={`md:col-span-4 lg:col-span-4 border-r border-white/10 flex flex-col bg-[#0D0816]/70 ${
             mobileView === 'thread' && selectedId ? 'hidden md:flex' : 'flex'
           }`}
         >
-          {/* Header & Compose Action */}
-          <div className="p-4 border-b border-white/10 space-y-3 bg-white/[0.02]">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-xl bg-brand-caribbeanSea/20 border border-brand-caribbeanSea/40 flex items-center justify-center text-brand-caribbeanSea">
-                  <MessageSquare className="w-4 h-4" />
-                </div>
-                <h2 className="font-black text-base text-white">Conversations</h2>
-                {conversations.length > 0 && (
-                  <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-white/10 text-slate-300">
-                    {conversations.length}
-                  </span>
-                )}
-              </div>
-
-              {/* Compose New Message Button */}
-              <button
-                type="button"
-                onClick={() => setIsComposeOpen(true)}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-brand-caribbeanSea to-brand-sunriseCoral hover:from-cyan-400 hover:to-orange-400 text-slate-950 font-black text-xs shadow-md shadow-brand-caribbeanSea/20 transition-all cursor-pointer"
-                title="Start a new message"
-              >
-                <Plus className="w-4 h-4" />
-                <span>New Chat</span>
-              </button>
+          {/* Header & New Chat Action */}
+          <div className="p-4 border-b border-white/10 flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <h2 className="text-sm font-black text-white tracking-wide uppercase flex items-center gap-1.5">
+                <Inbox className="w-4 h-4 text-brand-caribbeanSea" /> Chats
+              </h2>
+              {totalUnreadCount > 0 && (
+                <span className="px-2 py-0.5 rounded-full bg-brand-sunriseCoral text-slate-950 text-[10px] font-black animate-pulse">
+                  {totalUnreadCount}
+                </span>
+              )}
             </div>
 
-            {/* Search Input */}
+            <button
+              onClick={() => setIsComposeOpen(true)}
+              className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-brand-caribbeanSea to-brand-sunriseCoral hover:opacity-95 text-slate-950 font-black text-xs flex items-center gap-1.5 shadow-md shadow-brand-caribbeanSea/20 transition-all cursor-pointer"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>New</span>
+            </button>
+          </div>
+
+          {/* Search Bar */}
+          <div className="px-4 pt-3 pb-2">
             <div className="relative">
-              <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-                <Search className="h-3.5 w-3.5 text-slate-400" />
-              </div>
+              <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
               <input
                 type="text"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search chats or messages..."
-                className="w-full bg-[#1B1129] border border-white/15 rounded-xl pl-9 pr-7 py-2 text-xs text-white placeholder-slate-400 focus:outline-none focus:border-brand-caribbeanSea focus:ring-1 focus:ring-brand-caribbeanSea/40 transition-all font-medium"
+                placeholder="Search conversations & people…"
+                className="w-full pl-9 pr-8 py-2 rounded-xl bg-white/[0.05] border border-white/10 text-xs text-white placeholder:text-slate-400 focus:outline-none focus:border-brand-caribbeanSea/60 transition-all"
               />
               {search && (
                 <button
-                  type="button"
                   onClick={() => setSearch('')}
-                  className="absolute inset-y-0 right-2.5 flex items-center text-slate-400 hover:text-white"
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white"
                 >
                   <X className="w-3 h-3" />
                 </button>
               )}
             </div>
-
-            {/* Filter Tabs */}
-            <div className="flex items-center gap-1.5 text-[11px] font-bold">
-              <button
-                type="button"
-                onClick={() => setFilter('all')}
-                className={`px-2.5 py-1 rounded-lg transition-all ${
-                  filter === 'all'
-                    ? 'bg-brand-caribbeanSea text-slate-950 font-black'
-                    : 'text-slate-300 hover:text-white hover:bg-white/5'
-                }`}
-              >
-                All
-              </button>
-              <button
-                type="button"
-                onClick={() => setFilter('direct')}
-                className={`px-2.5 py-1 rounded-lg transition-all ${
-                  filter === 'direct'
-                    ? 'bg-brand-caribbeanSea text-slate-950 font-black'
-                    : 'text-slate-300 hover:text-white hover:bg-white/5'
-                }`}
-              >
-                Direct
-              </button>
-              <button
-                type="button"
-                onClick={() => setFilter('group')}
-                className={`px-2.5 py-1 rounded-lg transition-all ${
-                  filter === 'group'
-                    ? 'bg-brand-caribbeanSea text-slate-950 font-black'
-                    : 'text-slate-300 hover:text-white hover:bg-white/5'
-                }`}
-              >
-                Groups
-              </button>
-            </div>
           </div>
 
-          {/* Conversation List / Feed */}
-          <div className="flex-1 overflow-y-auto p-3 space-y-1.5 scrollbar-thin scrollbar-thumb-slate-700">
-            {conversations.length === 0 ? (
-              <div className="p-6 text-center rounded-2xl bg-white/[0.03] border border-dashed border-white/15 space-y-3.5 my-2">
-                <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-brand-caribbeanSea/20 to-brand-sunriseCoral/20 border border-brand-caribbeanSea/30 flex items-center justify-center text-brand-caribbeanSea mx-auto shadow-inner">
-                  <Sparkles className="w-6 h-6" />
-                </div>
-                <div className="space-y-1">
-                  <h3 className="text-sm font-black text-white">No Conversations Yet</h3>
-                  <p className="text-xs text-slate-300 leading-relaxed">
-                    Connect with Caribbean creators, businesses, and friends across the diaspora.
-                  </p>
-                </div>
+          {/* Filter Tabs */}
+          <div className="px-4 py-2 flex items-center gap-1.5 border-b border-white/5 overflow-x-auto no-scrollbar">
+            {(['all', 'direct', 'group', 'requests', 'archived'] as const).map((tab) => {
+              const isActive = filter === tab;
+              const requestCount = tab === 'requests' ? pendingRequests.length : 0;
+              return (
                 <button
-                  type="button"
-                  onClick={() => setIsComposeOpen(true)}
-                  className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-brand-caribbeanSea to-brand-sunriseCoral text-slate-950 font-black text-xs shadow-md hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
+                  key={tab}
+                  onClick={() => setFilter(tab)}
+                  className={`px-3 py-1 rounded-xl text-xs font-bold capitalize transition-all whitespace-nowrap flex items-center gap-1.5 ${
+                    isActive
+                      ? 'bg-white/15 text-white shadow-sm'
+                      : 'text-slate-400 hover:text-white hover:bg-white/5'
+                  }`}
                 >
-                  <Plus className="w-4 h-4" /> Start a Conversation
+                  <span>{tab}</span>
+                  {requestCount > 0 && (
+                    <span className="px-1.5 py-0.2 rounded-full bg-rose-500 text-white text-[9px] font-black">
+                      {requestCount}
+                    </span>
+                  )}
                 </button>
-              </div>
-            ) : filteredConversations.length > 0 ? (
-              filteredConversations.map((summary) => {
-                const isSelected = summary.id === selectedId;
-                return (
-                  <Link
-                    key={summary.id}
-                    href={`/messages?c=${summary.id}`}
-                    onClick={() => setMobileView('thread')}
-                    className={`block w-full text-left p-3 rounded-2xl border transition-all ${
-                      isSelected
-                        ? 'bg-white/[0.10] border-brand-caribbeanSea/60 shadow-lg'
-                        : 'bg-white/[0.03] hover:bg-white/[0.06] border-white/5 hover:border-white/15'
-                    }`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="relative flex-shrink-0">
-                        <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-brand-caribbeanSea to-brand-sunriseCoral text-slate-950 font-black flex items-center justify-center text-xs shadow-md">
-                          {summary.displayName.slice(0, 2).toUpperCase()}
-                        </div>
-                        {summary.isOnline && (
-                          <span className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-emerald-400 border-2 border-[#120B1E] shadow-sm" />
-                        )}
-                      </div>
+              );
+            })}
+          </div>
 
+          {/* List Area */}
+          <div className="flex-1 overflow-y-auto divide-y divide-white/5">
+            {filter === 'requests' ? (
+              /* Message Requests View */
+              pendingRequests.length === 0 ? (
+                <div className="p-8 text-center text-slate-400 text-xs space-y-2">
+                  <UserCheck className="w-8 h-8 text-slate-600 mx-auto" />
+                  <p className="font-semibold text-slate-300">No Pending Requests</p>
+                  <p className="text-[11px] text-slate-400">Incoming messages from new contacts will appear here.</p>
+                </div>
+              ) : (
+                pendingRequests.map((req) => (
+                  <div key={req.id} className="p-4 bg-white/[0.02] hover:bg-white/[0.04] space-y-3">
+                    <div className="flex items-center gap-3">
+                      <UserAvatar name={req.senderName} avatarUrl={req.senderAvatar} size="md" />
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between gap-1">
-                          <span className="text-xs font-black text-white truncate flex items-center gap-1">
-                            {summary.kind === 'group' && (
-                              <Users className="w-3.5 h-3.5 text-brand-caribbeanSea flex-shrink-0" />
-                            )}
-                            {summary.displayName}
-                          </span>
-                          <span className="text-[10px] text-slate-400 flex-shrink-0">
-                            {formatConversationTime(summary.last_message_at)}
-                          </span>
-                        </div>
-                        <p className="text-[11px] text-slate-300 truncate mt-0.5 font-medium">
-                          {summary.preview}
-                        </p>
+                        <h4 className="text-xs font-bold text-white truncate">{req.senderName}</h4>
+                        <p className="text-[11px] text-slate-400 truncate">@{req.senderUsername}</p>
                       </div>
                     </div>
-                  </Link>
+                    <div className="flex items-center gap-2 pt-1">
+                      <button
+                        onClick={() => handleRequestResponse(req.conversationId, 'accept')}
+                        disabled={requestActionLoading === req.conversationId}
+                        className="flex-1 py-1.5 rounded-xl bg-brand-caribbeanSea/20 hover:bg-brand-caribbeanSea/30 text-brand-caribbeanSea text-xs font-bold border border-brand-caribbeanSea/30 transition-all flex items-center justify-center gap-1"
+                      >
+                        <UserCheck className="w-3 h-3" /> Accept
+                      </button>
+                      <button
+                        onClick={() => handleRequestResponse(req.conversationId, 'decline')}
+                        disabled={requestActionLoading === req.conversationId}
+                        className="flex-1 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 text-xs font-bold border border-white/10 transition-all flex items-center justify-center gap-1"
+                      >
+                        <UserX className="w-3 h-3" /> Decline
+                      </button>
+                      <button
+                        onClick={() => handleRequestResponse(req.conversationId, 'block')}
+                        disabled={requestActionLoading === req.conversationId}
+                        title="Block Sender"
+                        className="p-1.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 transition-all"
+                      >
+                        <ShieldAlert className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                ))
+              )
+            ) : filteredConversations.length === 0 ? (
+              <div className="p-8 text-center text-slate-400 text-xs space-y-3">
+                <MessageSquare className="w-8 h-8 text-slate-600 mx-auto" />
+                <p className="font-semibold text-slate-300">
+                  {search ? 'No matching conversations' : 'No conversations yet'}
+                </p>
+                <p className="text-[11px] text-slate-400">
+                  Start a private chat or group with members of the Caribbean diaspora.
+                </p>
+                <button
+                  onClick={() => setIsComposeOpen(true)}
+                  className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/15 text-white font-bold text-xs inline-flex items-center gap-1.5 transition-all"
+                >
+                  <Plus className="w-3.5 h-3.5 text-brand-caribbeanSea" /> New Conversation
+                </button>
+              </div>
+            ) : (
+              filteredConversations.map((c) => {
+                const isSelected = c.id === selectedId;
+                return (
+                  <button
+                    key={c.id}
+                    onClick={() => {
+                      router.push(`/messages?c=${c.id}`);
+                      setMobileView('thread');
+                    }}
+                    className={`w-full p-3.5 text-left flex items-start gap-3 transition-all relative ${
+                      isSelected
+                        ? 'bg-gradient-to-r from-brand-caribbeanSea/15 via-white/[0.05] to-transparent border-l-2 border-brand-caribbeanSea'
+                        : 'hover:bg-white/[0.04]'
+                    }`}
+                  >
+                    <div className="relative flex-shrink-0">
+                      <UserAvatar
+                        name={c.displayName}
+                        avatarUrl={c.avatarUrl}
+                        size="md"
+                      />
+                      {c.isOnline && (
+                        <span className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-emerald-500 border-2 border-[#0D0816]" />
+                      )}
+                    </div>
+
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between gap-1 mb-1">
+                        <h3 className="text-xs font-black text-white truncate flex items-center gap-1.5">
+                          <span>{c.displayName}</span>
+                          {c.kind === 'group' && (
+                            <span className="px-1.5 py-0.2 rounded bg-brand-twilight text-[9px] text-brand-caribbeanSea font-bold uppercase">
+                              Group
+                            </span>
+                          )}
+                        </h3>
+                        <span className="text-[10px] text-slate-400 font-medium flex-shrink-0">
+                          {formatConversationTime(c.last_message_at)}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="text-[11px] text-slate-300 truncate font-medium">
+                          {c.preview}
+                        </p>
+                        {(c.unreadCount ?? 0) > 0 && (
+                          <span className="px-1.5 py-0.5 rounded-full bg-brand-sunriseCoral text-slate-950 font-black text-[9px] flex-shrink-0">
+                            {c.unreadCount}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </button>
                 );
               })
-            ) : (
-              <div className="text-center py-8 text-xs text-slate-400">
-                No chats matching &quot;{search}&quot;
-              </div>
             )}
           </div>
         </aside>
@@ -278,6 +350,7 @@ export default function MessagesCenterClient({
               currentUserId={currentUserId}
               peerName={activeConversation?.displayName || 'Caribbean Member'}
               peerAvatarUrl={activeConversation?.avatarUrl}
+              onBack={() => setMobileView('list')}
             />
           ) : (
             /* WELCOME MESSAGING HUB (When no chat is selected) */
@@ -289,106 +362,70 @@ export default function MessagesCenterClient({
                 <h3 className="text-xl font-black text-white tracking-tight">
                   TUKUBI Direct Messaging
                 </h3>
-                <p className="text-xs text-slate-300 leading-relaxed font-medium">
-                  Connect, collaborate, and chat securely with Caribbean creators, entrepreneurs, and the diaspora across the globe.
+                <p className="text-xs text-slate-300 leading-relaxed">
+                  End-to-end encrypted direct chats, diaspora voice notes, WebRTC audio/video calls, and group channels.
                 </p>
+              </div>
 
-                <div className="pt-2">
-                  <button
-                    type="button"
-                    onClick={() => setIsComposeOpen(true)}
-                    className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-gradient-to-r from-brand-caribbeanSea via-teal-400 to-brand-sunriseCoral hover:opacity-95 text-slate-950 font-black text-xs shadow-xl shadow-brand-caribbeanSea/30 transition-all transform hover:scale-[1.02]"
-                  >
-                    <Plus className="w-4 h-4" /> Start a New Conversation
-                  </button>
+              {/* Online Community Members Strip */}
+              <div className="w-full max-w-lg bg-white/[0.03] border border-white/10 rounded-2xl p-4 space-y-3 text-left">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-slate-200 flex items-center gap-1.5">
+                    <Radio className="w-3.5 h-3.5 text-emerald-400 animate-pulse" /> Active Members
+                  </span>
+                  <Link href="/friends" className="text-[11px] font-bold text-brand-caribbeanSea hover:underline">
+                    View All
+                  </Link>
                 </div>
-              </div>
 
-              {/* Guarantees & Features Pills */}
-              <div className="flex flex-wrap items-center justify-center gap-2 max-w-lg text-[11px] text-slate-300 font-bold">
-                <span className="px-3 py-1 rounded-full bg-white/[0.05] border border-white/10 flex items-center gap-1.5">
-                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" /> Safe & Encrypted
-                </span>
-                <span className="px-3 py-1 rounded-full bg-white/[0.05] border border-white/10 flex items-center gap-1.5">
-                  <Radio className="w-3.5 h-3.5 text-brand-caribbeanSea" /> Realtime Presence
-                </span>
-                <span className="px-3 py-1 rounded-full bg-white/[0.05] border border-white/10 flex items-center gap-1.5">
-                  <Compass className="w-3.5 h-3.5 text-amber-400" /> Pan-Caribbean Network
-                </span>
-              </div>
-
-              {/* Quick Message Recommendations */}
-              {onlineMembers.length > 0 && (
-                <div className="w-full max-w-xl pt-4 border-t border-white/10 space-y-3 text-left">
-                  <div className="flex items-center justify-between">
-                    <h4 className="text-xs font-black text-white uppercase tracking-wider flex items-center gap-1.5">
-                      <Sparkles className="w-3.5 h-3.5 text-brand-caribbeanSea" /> Quick Chat with Members
-                    </h4>
-                    <Link
-                      href="/members"
-                      className="text-[11px] font-bold text-brand-caribbeanSea hover:underline"
+                <div className="flex items-center gap-3 overflow-x-auto pb-2 no-scrollbar">
+                  {onlineMembers.slice(0, 8).map((member) => (
+                    <button
+                      key={member.id}
+                      onClick={() => {
+                        router.push(`/messages?u=${encodeURIComponent(member.username)}`);
+                        setMobileView('thread');
+                      }}
+                      className="flex flex-col items-center gap-1 min-w-[56px] group cursor-pointer"
                     >
-                      Browse Directory &rarr;
-                    </Link>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                    {onlineMembers.slice(0, 4).map((member) => (
-                      <div
-                        key={member.id}
-                        className="flex items-center justify-between p-3 rounded-2xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 transition-all group"
-                      >
-                        <Link
-                          href={`/profile/${member.username}`}
-                          className="flex items-center gap-2.5 min-w-0 pr-2"
-                        >
-                          <div className="relative flex-shrink-0">
-                            <UserAvatar
-                              src={member.avatarUrl}
-                              name={member.name}
-                              size="sm"
-                            />
-                            {member.isOnline && (
-                              <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-400 border border-[#120B1E]" />
-                            )}
-                          </div>
-                          <div className="min-w-0">
-                            <p className="text-xs font-black text-white group-hover:text-brand-caribbeanSea transition-colors truncate">
-                              {member.name}
-                            </p>
-                            <p className="text-[10px] font-semibold text-slate-300 truncate">
-                              @{member.username}
-                            </p>
-                          </div>
-                        </Link>
-
-                        <button
-                          type="button"
-                          onClick={() => {
-                            router.push(`/messages?u=${encodeURIComponent(member.username)}`);
-                          }}
-                          className="px-2.5 py-1.5 rounded-xl bg-brand-caribbeanSea/20 hover:bg-brand-caribbeanSea text-brand-caribbeanSea hover:text-slate-950 font-black text-[11px] border border-brand-caribbeanSea/40 transition-all flex items-center gap-1 flex-shrink-0"
-                        >
-                          <MessageCircle className="w-3 h-3" />
-                          <span>Chat</span>
-                        </button>
+                      <div className="relative">
+                        <UserAvatar name={member.name} avatarUrl={member.avatarUrl} size="md" />
+                        <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 border border-[#120B1E]" />
                       </div>
-                    ))}
-                  </div>
+                      <span className="text-[10px] text-slate-300 font-bold group-hover:text-brand-caribbeanSea truncate max-w-[56px]">
+                        {member.name.split(' ')[0]}
+                      </span>
+                    </button>
+                  ))}
                 </div>
-              )}
+              </div>
+
+              {/* Action Button */}
+              <button
+                onClick={() => setIsComposeOpen(true)}
+                className="px-6 py-3 rounded-2xl bg-gradient-to-r from-brand-caribbeanSea via-brand-sunriseCoral to-brand-goldenHour text-slate-950 font-black text-xs flex items-center gap-2 shadow-lg shadow-brand-caribbeanSea/20 hover:opacity-95 transition-all cursor-pointer"
+              >
+                <Plus className="w-4 h-4" /> Start a New Chat
+              </button>
             </div>
           )}
         </section>
       </div>
 
-      {/* Interactive New Message Modal */}
-      <NewMessageModal
-        isOpen={isComposeOpen}
-        onClose={() => setIsComposeOpen(false)}
-        onlineFriends={onlineMembers}
-        currentUserId={currentUserId}
-      />
+      {/* New Message / New Group Modal */}
+      {isComposeOpen && (
+        <NewMessageModal
+          isOpen={isComposeOpen}
+          onClose={() => setIsComposeOpen(false)}
+          onlineMembers={onlineMembers}
+          currentUserId={currentUserId}
+          onConversationCreated={(convId) => {
+            setIsComposeOpen(false);
+            router.push(`/messages?c=${convId}`);
+            setMobileView('thread');
+          }}
+        />
+      )}
     </div>
   );
 }
