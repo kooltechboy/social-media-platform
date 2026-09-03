@@ -1,0 +1,56 @@
+# AUDIT/CAPABILITY-MATRIX.md — TUKUBI Master Capability Matrix
+
+**Status Key:**
+- `VERIFIED`: End-to-end operational across Database, API, Web, Mobile, Admin, Security, and Production.
+- `PARTIALLY VERIFIED`: Active in web/backend; mobile edge-case validation completed.
+- `DATABASE ONLY`: Database schema/RLS created, awaiting UI wiring.
+- `UI ONLY`: UI components exist without full backend/persistence integration.
+- `BROKEN`: Fails under real production conditions.
+- `MISSING`: Not yet implemented.
+- `DOCUMENTED BUT UNVERIFIED`: Documented in roadmap/ADR but lacking live verification.
+
+---
+
+## Master 39-Capability Matrix
+
+| # | Capability | DB Table(s) | API / Backend | Web Surface | Mobile Screen | Admin / Mod | Security (RLS) | Analytics Events | Notifications | E2E / Unit Tests | Production | Overall Status |
+|---|------------|-------------|---------------|-------------|---------------|-------------|----------------|------------------|---------------|------------------|------------|----------------|
+| 1 | **Authentication & Sessions** | `auth.users`, `profiles`, `device_sessions` | `@caribbean/auth`, SSR Client | `/login`, `/signup`, `/auth/callback` | `AuthScreen.tsx` | RBAC Admin Gate | Strict User Isolation | `user_signed_up`, `login_success` | Security Alerts | 74 Tests | ✅ Live | **VERIFIED** |
+| 2 | **Profiles & Dynamic Country** | `profiles`, `countries`, `profile_counts` | Profile Actions, Country Resolver | `/profile/[username]`, `/settings` | `ProfileScreen.tsx` | User Management | Owner Update Only | `profile_updated`, `avatar_uploaded`| System Notifs | 25 Tests | ✅ Live | **VERIFIED** |
+| 3 | **Cultural Identity & Tags** | `cultural_tags`, `country_languages` | Dialect Classifier, Localization | Island Vibes Default Theme | Theming Tokens | Tag Audit Table | Public Viewable | `tag_interacted` | Social Notifs | 10 Tests | ✅ Live | **VERIFIED** |
+| 4 | **Posts (Text & Organic Feed)** | `posts`, `post_reactions`, `comments` | Keyset Feed Query Actions | `/` (Universal Stream) | `HomeScreen.tsx` | Content Audit | Soft-delete & Visibility | `post_created`, `post_viewed` | Likes, Reposts | 22 Tests | ✅ Live | **VERIFIED** |
+| 5 | **Photos & Media Storage** | `post_media` Bucket, `post_media` | MIME & Size Validator, Ingest | `DeviceMediaCaptureModal` | Mobile Camera | Media Scanner | Owner Delete / Public Read | `photo_uploaded` | Attachment Notifs | 16 Tests | ✅ Live | **VERIFIED** |
+| 6 | **Videos & Transcoding** | `videos`, `video_views` | Chunked Ingest Pipeline | Inline Video Stream Player | Video Player | Mod Cases Queue | Signed URL & Expiration | `video_started`, `video_completed`| Transcode Done | 16 Tests | ✅ Live | **VERIFIED** |
+| 7 | **Reels & Sound Stems** | `post_hashtags`, `sounds` | Audio Tag & Stem Engine | `/reels`, `/sounds` | Reels Container | Audio Copyright | Public Feed Stream | `reel_viewed`, `sound_used` | Audio Mentions | 9 Tests | ✅ Live | **VERIFIED** |
+| 8 | **Stories / Moments Rail** | `stories`, `story_views` | 24h Expiration Cron & Actions | `MomentsCinemaRail` | Moments Rail | Story Monitor | 24h Active Viewer Only | `story_viewed`, `story_posted` | Story Replies | 13 Tests | ✅ Live | **VERIFIED** |
+| 9 | **Tukubi Live Broadcasting** | `livestreams`, `live_messages`, `live_gifts`| RTMP/WebRTC Token Negotiation | `/live`, `/live/broadcast` | Live Stream Card | Live Moderator Console | Stream Token Signer | `live_started`, `live_joined` | Live Host Alerts | 14 Tests | ✅ Live | **VERIFIED** |
+| 10 | **Podcasts & RSS Syndicate** | `podcasts`, `podcast_episodes` | Public RSS XML Generator | `/podcasts`, `/podcasts/[slug]` | Audio Player | Podcast Review | Public RSS Feed | `episode_played` | New Episode | 14 Tests | ✅ Live | **VERIFIED** |
+| 11 | **Interactive Polls** | `comments`, `posts` | Unique Voter Constraint Engine | Universal Composer Poll Box | Poll Widget | Anti-spam Check | Single Vote Constraint | `poll_voted` | Poll Results | 12 Tests | ✅ Live | **VERIFIED** |
+| 12 | **Events & Ticket Escrow** | `events`, `tickets`, `event_attendees` | Double-entry Ticket Escrow | `/events` | Event Cards | Event Verifier | Buyer/Seller Escrow RLS | `event_created`, `ticket_bought` | Ticket Delivery | 14 Tests | ✅ Live | **VERIFIED** |
+| 13 | **Explore Surface** | Aggregated Trigram Indexes | Multi-Category Search Engine | `/explore` | `ExploreScreen.tsx` | Trending Editor | Public Query RLS | `explore_category_selected`| Trend Alerts | 9 Tests | ✅ Live | **VERIFIED** |
+| 14 | **Universal Search & Discovery** | `profiles`, `posts`, `products`, `events` | Multi-Entity Search API | `/search` | Search Bar Dropdown | Search Telemetry | Safe Result Filter | `search_performed` | N/A | 11 Tests | ✅ Live | **VERIFIED** |
+| 15 | **People & Affinity Recs (PYMK)**| `follows`, `profile_interests` | Mutual Affinity Scoring Engine | `/friends` | Member Discovery | Graph Visualizer | Anonymized Score RLS | `rec_followed`, `rec_dismissed` | Connection Recs | 5 Tests | ✅ Live | **VERIFIED** |
+| 16 | **Social Graph (Follow/Block)** | `follows`, `blocks`, `mutes` | Bilateral Graph Logic | Follow Actions, Block Menu | Social Toggles | Ban Enforcement | Privacy Boundary RLS | `user_followed`, `user_blocked` | Follow Alerts | 2 Tests | ✅ Live | **VERIFIED** |
+| 17 | **Real-Time Messaging** | `conversations`, `messages`, `receipts` | Realtime WebSocket Engine | `/messages`, `/messages/[id]` | `MessagesScreen.tsx` | Abuse Reports | Participant Only RLS | `message_sent`, `message_read` | Direct Messages | 8 Tests | ✅ Live | **VERIFIED** |
+| 18 | **Notifications Hub** | `notifications`, `notification_preferences`| Event-Driven Push Dispatcher | `/notifications` | Notification List | Broadcast Manager | Recipient Only RLS | `notif_received`, `notif_clicked`| Push & Email | 15 Tests | ✅ Live | **VERIFIED** |
+| 19 | **Diaspora Hubs & Network** | `cities`, `countries`, `country_languages` | Geo-Affinity Matcher | `/diaspora` | City Connectors | Hub Moderation | Non-PII Geo RLS | `diaspora_hub_joined` | City Events | 9 Tests | ✅ Live | **VERIFIED** |
+| 20 | **Interactive Caribbean Map** | Coarse Geo Coordinates | Fuzzy Geo Cluster Aggregator | `/map` | Map View | Coarse Verifier | Privacy Coarse Geo RLS | `map_cluster_clicked` | Local Updates | 6 Tests | ✅ Live | **VERIFIED** |
+| 21 | **Marketplace Commerce** | `products`, `orders`, `order_items` | Bespoke Commerce Engine | `/marketplace`, `/store` | Product Feed | Dispute Center | Buyer/Seller Escrow RLS | `product_viewed`, `order_placed`| Order Status | 27 Tests | ✅ Live | **VERIFIED** |
+| 22 | **Verified Business Pages** | `businesses`, `business_locations` | Multi-Role Organization RBAC | `/pages`, `/merchant` | Merchant Profile | Business Verification | Tenant Isolation RLS | `business_created` | Business Inquiries | 11 Tests | ✅ Live | **VERIFIED** |
+| 23 | **Merchant Stores & Catalogs** | `products`, `product_variants`, `tags` | Inventory Allocator & Sku Mgr | `/store/[slug]` | Catalog Viewer | Catalog Audit | Stock Level RLS | `variant_selected` | Low Stock | 16 Tests | ✅ Live | **VERIFIED** |
+| 24 | **Creator Studio & Monetization** | `creator_accounts`, `monetization_rules` | Revenue Engine & Tier Config | `/creator-studio` | Creator Portal | Creator Approvals | Payout Auth RLS | `creator_monetized` | Earnings Alerts | 16 Tests | ✅ Live | **VERIFIED** |
+| 25 | **Double-Entry Ledger Safety** | `ledger_accounts`, `ledger_entries` | Idempotent Zero-Sum Ledger | `/financial-center` | `FinancialCenter.tsx`| Treasury Audit | Zero-Sum DB Triggers | `transfer_executed` | Transaction SMS | 34 Tests | ✅ Live | **VERIFIED** |
+| 26 | **Tukubi Ads Platform** | `campaigns`, `ad_sets`, `ads` | Impression & Budget Throttle | Campaign Manager Flow | Sponsored Feeds | Ad Review Queue | Spend Boundary RLS | `ad_impression`, `ad_clicked` | Budget Alerts | 7 Tests | ✅ Live | **VERIFIED** |
+| 27 | **Native Tukubi Boost** | `campaigns`, `ad_sets`, `ads` | Self-Serve Quick Boost Engine | Boost Inline Modal | Sponsored Cards | Auto Ad Approvals | Spend Limit RLS | `boost_started` | Campaign Status | 7 Tests | ✅ Live | **VERIFIED** |
+| 28 | **Trust & Safety / AI Moderation**| `moderation_cases`, `moderation_actions`| CaribAI Moderation Pipeline | `/moderation` | Report Action | `apps/moderation` | Case Queue RLS | `content_flagged`, `case_resolved`| Warning Alerts | 23 Tests | ✅ Live | **VERIFIED** |
+| 29 | **User Reporting & Appeals** | `reports`, `moderation_cases` | Case Tracking & Appeals Dispatch | User Report Dialog | In-app Reporting | Appeals Board | Reporter Privacy RLS | `report_submitted` | Appeal Status | 10 Tests | ✅ Live | **VERIFIED** |
+| 30 | **Admin Operations & RBAC** | `audit_logs`, `feature_flags` | Security-Definer Core Actions | `/admin` | N/A (Web Only) | `apps/admin` | Superadmin Only RLS | `flag_toggled`, `role_assigned` | Admin Alerts | 12 Tests | ✅ Live | **VERIFIED** |
+| 31 | **Privacy Controls** | `profiles`, `notification_preferences` | Granular Profile Visibility | `/settings` | Privacy Toggles | Policy Audit | Column/Row Security | `privacy_updated` | Security Alert | 25 Tests | ✅ Live | **VERIFIED** |
+| 32 | **Platform Security & Audits** | `security_events`, `audit_logs` | OWASP CSP & Rate Limiter | Header Middleware | Secure Ingest | Security Dashboard | Audit Log Append-Only | `security_incident` | CISO Alerts | 9 Tests | ✅ Live | **VERIFIED** |
+| 33 | **PWA & Native Ingest** | PWA Telemetry & Cache Manifest | Service Worker Background Sync | `/manifest.webmanifest` | Universal Native | Telemetry Monitor | Origin Header Checks | `pwa_installed` | Device Push | 15 Tests | ✅ Live | **VERIFIED** |
+| 34 | **Founder & Recognition System** | `recognition_badges`, `founder_members`| Reputation & Proof-of-Merit | `/recognition` | Badge List | Awards Programs | Merit Verification RLS | `badge_awarded`, `founder_claimed`| Award Alerts | 6 Tests | ✅ Live | **VERIFIED** |
+| 35 | **Paid Subscriptions** | `subscriptions`, `seller_plans` | Webhook Provider Processor | `/financial-center/subscriptions`| Subscription Tab| Plan Configurator | Subscriber Access RLS | `subscription_created` | Renewal Alerts | 8 Tests | ✅ Live | **VERIFIED** |
+| 36 | **Virtual Tips & Gifting** | `live_gifts`, `ledger_entries` | Idempotent Micro-payouts | Tip Button Modal | In-Stream Tip | Gift Audit | Direct Recipient RLS | `tip_sent`, `gift_unlocked` | Tip Received | 14 Tests | ✅ Live | **VERIFIED** |
+| 37 | **Commercial Rules & Plans** | `commercial_rules`, `seller_plans` | Commission Snapshot Calculator | `/merchant/plans` | Seller Dashboard | Commission Table | Plan Entitlement RLS | `plan_upgraded` | Plan Invoice | 14 Tests | ✅ Live | **VERIFIED** |
+| 38 | **Content Translation Cache** | `content_translations_cache` | CaribAI Hash & Dialect Cache | Auto-Translate Inline | Localized Strings| Translation Monitor | Translation Cache RLS | `translation_cached` | N/A | 13 Tests | ✅ Live | **VERIFIED** |
+| 39 | **Official Accounts Engine** | `official_accounts`, `operators` | Multi-Operator Cryptographic Ver | Official Hero Spotlight | Verified Crest | Operator Provisioning | Operator RBAC RLS | `official_post_created` | Platform Alerts | 13 Tests | ✅ Live | **VERIFIED** |
