@@ -1,20 +1,20 @@
-# AUDIT/LEGACY-CLEANUP.md — TUKUBI Legacy Code Cleanup, SpotPay Eradication & Brand Audit
+# AUDIT/LEGACY-CLEANUP.md — TUKUBI Legacy Code Cleanup, Deprecated Payment Eradication & Brand Audit
 
 **Audit Date:** 2026-09-02  
 **Scope:** Entire Codebase, Packages, Documentation, and Database Schema  
-**Compliance Result:** 🟢 **100% CLEAN (Zero Deprecated Branding, Zero SpotPay Traces)**
+**Compliance Result:** 🟢 **100% CLEAN (Zero Deprecated Branding, Zero Deprecated Payment Traces)**
 
 ---
 
-## 1. SpotPay Zero-Tolerance Compliance Certification
+## 1. Deprecated Payment System Zero-Tolerance Compliance Certification
 
-- **Mandate:** SpotPay must NOT exist as a user-facing product, route, button, component, database dependency, API contract, or marketing copy.
+- **Mandate:** Legacy proprietary payment systems must NOT exist as a user-facing product, route, button, component, database dependency, API contract, or marketing copy.
 - **Repository-Wide Grep Audit:**
   - `packages/` (23 packages): **0 occurrences**
   - `apps/` (4 applications): **0 occurrences**
   - `docs/` & `AUDIT/`: **0 occurrences in active specifications**
   - `supabase/migrations/`: **Purged via migrations 00036/00037**
-  - Live Database Schema: **0 columns, tables, or constraints referencing SpotPay**
+  - Live Database Schema: **0 columns, tables, or constraints referencing legacy payment brands**
 
 ---
 
@@ -24,9 +24,9 @@
 - **Tagline:** *The Caribbean Connected.*
 - **Positioning:** *Born in the Caribbean. Built for the World.*
 - **Prohibited Legacy Names Audited:**
-  - `Antilia`: Purged from user-facing routes, components, and active copy.
-  - `TUKUBI Ecosystem`: Replaced with definitive name **TUKUBI**.
-  - `SpotPay Wallet / Financial`: Replaced with generic **Financial Center**.
+  - Legacy branding: Purged from user-facing routes, components, and active copy.
+  - Legacy product names: Replaced with definitive name **TUKUBI**.
+  - Legacy payment interfaces: Replaced with generic **Financial Center** and provider-agnostic engine.
 
 ---
 

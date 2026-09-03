@@ -42,7 +42,7 @@ export default function AdminLoginPage() {
           height={56}
           className="object-contain rounded-lg border border-white/10"
         />
-        <p>&copy; {new Date().getFullYear()} TUKUBI Network Inc. All administrative actions audited.</p>
+        <p>&copy; {new Date().getFullYear()} TUKUBI. All administrative actions audited.</p>
       </footer>
     </div>
   );

@@ -69,7 +69,7 @@ export function AdminFooter({ systemRole = 'Administrator', showDetails = true }
 
       {/* Bottom Sub-row */}
       <div className="max-w-6xl mx-auto mt-8 pt-6 border-t border-slate-800/40 flex flex-col sm:flex-row items-center justify-between gap-3 text-[11px] text-brand-sandstone/40">
-        <p>&copy; {currentYear} TUKUBI Network Inc. All rights reserved. Restrictive access policy.</p>
+        <p>&copy; {currentYear} TUKUBI. All rights reserved. Restrictive access policy.</p>
         <div className="flex items-center gap-4">
           <span className="flex items-center gap-1">
             <Lock className="w-3 h-3 text-brand-goldenHour" /> Role: {systemRole}

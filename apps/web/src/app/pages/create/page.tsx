@@ -147,7 +147,7 @@ export default function CreatePageWizard() {
             {pageName} is Officially Published!
           </h2>
           <p className="text-xs md:text-sm text-brand-sandstone/60 max-w-md">
-            Your verified Caribbean Page is live on the Tukubi network with instant digital storefront and community reach.
+            Your verified Caribbean Page is live on TUKUBI with instant digital storefront and community reach.
           </p>
         </div>
         <div className="flex items-center gap-3">

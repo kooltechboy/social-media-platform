@@ -240,7 +240,7 @@ export default function FeedStream({ initialPosts, currentUserId }: FeedStreamPr
                 isOfficial: postWithProfile.is_official || profile?.is_official || false,
                 isPinned: postWithProfile.is_pinned || false,
                 officialContentType: postWithProfile.official_content_type || undefined,
-                location: 'Tukubi Network 🌴',
+                location: 'Caribbean 🌴',
                 time: 'just now',
                 content: postWithProfile.content || '',
                 mediaUrls: postWithProfile.media_urls || [],
@@ -435,7 +435,7 @@ export default function FeedStream({ initialPosts, currentUserId }: FeedStreamPr
     } else if (shareType === 'facebook') {
       window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(postUrl)}`, '_blank');
     } else if (shareType === 'repost') {
-      setShareToast('Post shared to your Tukubi network!');
+      setShareToast('Post shared to TUKUBI!');
       setTimeout(() => setShareToast(null), 3000);
     }
 

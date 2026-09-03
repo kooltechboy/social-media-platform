@@ -14,6 +14,7 @@
     "test": "turbo run test",
     "test:unit": "vitest run",
     "test:e2e": "playwright test",
+    "check:prohibited": "node scripts/ci/check-prohibited-references.js",
     "format": "prettier --write \"**/*.{ts,tsx,md,json,sql}\""
   },
   "devDependencies": {

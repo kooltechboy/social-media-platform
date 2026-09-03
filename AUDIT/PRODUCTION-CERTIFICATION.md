@@ -24,7 +24,7 @@ The platform has met or exceeded all NASA-grade, Fortune-100 reliability, securi
 | **Database Migrations** | Strict versioned migrations only | 52 migrations applied, 132 tables verified | ✅ **PASS** |
 | **Row Level Security (RLS)** | Mandatory on all client tables | 278 policies verified via adversarial test suite | ✅ **PASS** |
 | **Zero Mock Data** | Zero simulated metrics or fake accounts | Verified 0 fake counts; live DB aggregate bound | ✅ **PASS** |
-| **SpotPay Elimination** | 0 occurrences across monorepo | 0 references found in code, packages, or schema | ✅ **PASS** |
+| **Deprecated Payment Elimination** | 0 occurrences across monorepo | 0 references found in code, packages, or schema | ✅ **PASS** |
 | **Mobile Capability Parity** | First-class mobile app experience | `AuthScreen`, `ProfileScreen`, `HomeScreen` live-bound | ✅ **PASS** |
 | **Performance Budgets** | Shared First Load JS < 150 kB | **103 kB** First Load JS (Web App) | ✅ **PASS** |
 | **Accessibility Standard** | WCAG 2.2 AA Compliance | Complete semantic HTML, ARIA labels, contrast ratio | ✅ **PASS** |

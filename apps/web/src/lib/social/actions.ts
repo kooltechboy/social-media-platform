@@ -147,7 +147,7 @@ export async function createPostAction(_prev: PostActionState, formData: FormDat
     isOfficial: isPostOfficial,
     isPinned: isPostOfficial,
     officialContentType: isPostOfficial ? 'welcome' : undefined,
-    location: 'Tukubi Network 🌴',
+    location: 'Caribbean 🌴',
     time: 'just now',
     content: data.content || '',
     mediaUrls: data.media_urls || [],

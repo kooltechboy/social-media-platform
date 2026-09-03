@@ -13,6 +13,9 @@ import {
   CheckCircle,
   AlertCircle,
   BadgeCheck,
+  Lock,
+  KeyRound,
+  ExternalLink,
 } from 'lucide-react';
 import {
   updateFullProfileAction,
@@ -76,7 +79,7 @@ interface ProfileEditModalProps {
   onProfileUpdated?: (updated: ProfileData) => void;
 }
 
-type TabType = 'identity' | 'about' | 'career' | 'personal' | 'social' | 'privacy';
+type TabType = 'profile' | 'about' | 'social' | 'privacy' | 'account' | 'security';
 
 export default function ProfileEditModal({
   isOpen,
@@ -84,8 +87,8 @@ export default function ProfileEditModal({
   initialProfile,
   onProfileUpdated,
 }: ProfileEditModalProps) {
-  const { refresh } = useAuth();
-  const [activeTab, setActiveTab] = useState<TabType>('identity');
+  const { refresh, user } = useAuth();
+  const [activeTab, setActiveTab] = useState<TabType>('profile');
   const [isPending, startTransition] = useTransition();
   const [feedback, setFeedback] = useState<{ error: string | null; success: string | null }>({
     error: null,
@@ -405,12 +408,12 @@ export default function ProfileEditModal({
         {/* Tab Navigation */}
         <div className="flex border-b border-slate-800 overflow-x-auto px-4 bg-[#181124] scrollbar-none shrink-0">
           {[
-            { id: 'identity', label: 'Identity & Visuals', icon: Camera },
-            { id: 'about', label: 'About & Roots', icon: MapPin },
-            { id: 'career', label: 'Work & School', icon: Briefcase },
-            { id: 'personal', label: 'Personal Details', icon: User },
-            { id: 'social', label: 'Social Links', icon: Share2 },
-            { id: 'privacy', label: 'Privacy Controls', icon: Shield },
+            { id: 'profile', label: 'Profile', icon: Camera },
+            { id: 'about', label: 'About', icon: MapPin },
+            { id: 'social', label: 'Social', icon: Share2 },
+            { id: 'privacy', label: 'Privacy', icon: Shield },
+            { id: 'account', label: 'Account', icon: User },
+            { id: 'security', label: 'Security', icon: Lock },
           ].map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
@@ -451,8 +454,8 @@ export default function ProfileEditModal({
 
         {/* Scrollable Form Body */}
         <div className="p-5 sm:p-6 overflow-y-auto flex-1 space-y-5">
-          {/* TAB: IDENTITY & VISUALS */}
-          {activeTab === 'identity' && (
+          {/* 1. PROFILE SECTION */}
+          {activeTab === 'profile' && (
             <div className="space-y-5">
               {/* Media Upload Section */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 rounded-2xl bg-brand-dusk/50 border border-slate-800">
@@ -563,6 +566,26 @@ export default function ProfileEditModal({
                 </div>
               </div>
 
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <label htmlFor="modal-bio" className="block text-xs font-bold text-brand-sandstone/80">
+                    Bio &amp; Cultural Story
+                  </label>
+                  <span className="text-[10px] text-brand-sandstone/40">
+                    {(form.bio || '').length}/500 chars
+                  </span>
+                </div>
+                <textarea
+                  id="modal-bio"
+                  rows={3}
+                  maxLength={500}
+                  placeholder="Share your Caribbean roots, vibe, creative story, or business mission…"
+                  value={form.bio ?? ''}
+                  onChange={(e) => handleChange('bio', e.target.value)}
+                  className="w-full bg-[#181124] border border-slate-700 rounded-xl px-3 py-2 text-sm text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea resize-none transition-colors"
+                />
+              </div>
+
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label htmlFor="modal-accountType" className="block text-xs font-bold text-brand-sandstone/80 mb-1">
@@ -599,29 +622,9 @@ export default function ProfileEditModal({
             </div>
           )}
 
-          {/* TAB: ABOUT & ROOTS */}
+          {/* 2. ABOUT SECTION */}
           {activeTab === 'about' && (
             <div className="space-y-4">
-              <div>
-                <div className="flex items-center justify-between mb-1">
-                  <label htmlFor="modal-bio" className="block text-xs font-bold text-brand-sandstone/80">
-                    Bio &amp; Cultural Story
-                  </label>
-                  <span className="text-[10px] text-brand-sandstone/40">
-                    {(form.bio || '').length}/500 chars
-                  </span>
-                </div>
-                <textarea
-                  id="modal-bio"
-                  rows={4}
-                  maxLength={500}
-                  placeholder="Share your Caribbean roots, vibe, creative story, or business mission…"
-                  value={form.bio ?? ''}
-                  onChange={(e) => handleChange('bio', e.target.value)}
-                  className="w-full bg-[#181124] border border-slate-700 rounded-xl px-3 py-2 text-sm text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea resize-none transition-colors"
-                />
-              </div>
-
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div>
                   <label htmlFor="modal-island" className="block text-xs font-bold text-brand-sandstone/80 mb-1">
@@ -686,51 +689,12 @@ export default function ProfileEditModal({
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label htmlFor="modal-website" className="block text-xs font-bold text-brand-sandstone/80 mb-1">
-                    Personal / Business Website
-                  </label>
-                  <input
-                    id="modal-website"
-                    type="url"
-                    placeholder="https://yoursite.com"
-                    value={form.website ?? ''}
-                    onChange={(e) => handleChange('website', e.target.value)}
-                    className="w-full bg-[#181124] border border-slate-700 rounded-xl px-3 py-2 text-sm text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea transition-colors"
-                  />
-                </div>
-
-                <div>
-                  <label htmlFor="modal-culturalInterests" className="block text-xs font-bold text-brand-sandstone/80 mb-1">
-                    Cultural Interests &amp; Tags
-                  </label>
-                  <input
-                    id="modal-culturalInterests"
-                    placeholder="e.g. Reggae, Soca, Gastronomy, Carnival, Tech"
-                    value={form.cultural_interests?.join(', ') ?? ''}
-                    onChange={(e) =>
-                      handleChange(
-                        'cultural_interests',
-                        e.target.value.split(',').map((s) => s.trim()).filter(Boolean)
-                      )
-                    }
-                    className="w-full bg-[#181124] border border-slate-700 rounded-xl px-3 py-2 text-sm text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea transition-colors"
-                  />
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* TAB: CAREER & EDUCATION */}
-          {activeTab === 'career' && (
-            <div className="space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
                   <label htmlFor="modal-jobTitle" className="block text-xs font-bold text-brand-sandstone/80 mb-1">
-                    Job Title / Professional Role
+                    Job Title / Occupation
                   </label>
                   <input
                     id="modal-jobTitle"
-                    placeholder="e.g. Creative Director, Sound Engineer"
+                    placeholder="e.g. Creative Director, Engineer, Merchant"
                     value={form.job_title ?? ''}
                     onChange={(e) => handleChange('job_title', e.target.value)}
                     className="w-full bg-[#181124] border border-slate-700 rounded-xl px-3 py-2 text-sm text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea transition-colors"
@@ -739,7 +703,7 @@ export default function ProfileEditModal({
 
                 <div>
                   <label htmlFor="modal-employer" className="block text-xs font-bold text-brand-sandstone/80 mb-1">
-                    Company / Organization / Brand
+                    Employer / Company
                   </label>
                   <input
                     id="modal-employer"
@@ -751,27 +715,14 @@ export default function ProfileEditModal({
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div>
-                  <label htmlFor="modal-industry" className="block text-xs font-bold text-brand-sandstone/80 mb-1">
-                    Industry
-                  </label>
-                  <input
-                    id="modal-industry"
-                    placeholder="e.g. Music, Tourism, FinTech"
-                    value={form.industry ?? ''}
-                    onChange={(e) => handleChange('industry', e.target.value)}
-                    className="w-full bg-[#181124] border border-slate-700 rounded-xl px-3 py-2 text-sm text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea transition-colors"
-                  />
-                </div>
-
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label htmlFor="modal-education" className="block text-xs font-bold text-brand-sandstone/80 mb-1">
-                    Degree / Qualification
+                    Education / Degree
                   </label>
                   <input
                     id="modal-education"
-                    placeholder="e.g. B.A. Digital Media"
+                    placeholder="e.g. B.Sc. Computer Science"
                     value={form.education ?? ''}
                     onChange={(e) => handleChange('education', e.target.value)}
                     className="w-full bg-[#181124] border border-slate-700 rounded-xl px-3 py-2 text-sm text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea transition-colors"
@@ -787,71 +738,6 @@ export default function ProfileEditModal({
                     placeholder="e.g. University of the West Indies"
                     value={form.school ?? ''}
                     onChange={(e) => handleChange('school', e.target.value)}
-                    className="w-full bg-[#181124] border border-slate-700 rounded-xl px-3 py-2 text-sm text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea transition-colors"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label htmlFor="modal-skills" className="block text-xs font-bold text-brand-sandstone/80 mb-1">
-                  Skills &amp; Expertise (Comma-separated)
-                </label>
-                <input
-                  id="modal-skills"
-                  placeholder="e.g. Music Production, Sound Mixing, Event Management, Brand Design"
-                  value={form.skills?.join(', ') ?? ''}
-                  onChange={(e) =>
-                    handleChange(
-                      'skills',
-                      e.target.value.split(',').map((s) => s.trim()).filter(Boolean)
-                    )
-                  }
-                  className="w-full bg-[#181124] border border-slate-700 rounded-xl px-3 py-2 text-sm text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea transition-colors"
-                />
-              </div>
-
-              <div>
-                <label htmlFor="modal-professionalBio" className="block text-xs font-bold text-brand-sandstone/80 mb-1">
-                  Professional Summary
-                </label>
-                <textarea
-                  id="modal-professionalBio"
-                  rows={2}
-                  maxLength={500}
-                  placeholder="Summary of career background, notable projects, or collaborations…"
-                  value={form.professional_bio ?? ''}
-                  onChange={(e) => handleChange('professional_bio', e.target.value)}
-                  className="w-full bg-[#181124] border border-slate-700 rounded-xl px-3 py-2 text-sm text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea resize-none transition-colors"
-                />
-              </div>
-            </div>
-          )}
-
-          {/* TAB: PERSONAL DETAILS */}
-          {activeTab === 'personal' && (
-            <div className="space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label htmlFor="modal-firstName" className="block text-xs font-bold text-brand-sandstone/80 mb-1">
-                    First Name
-                  </label>
-                  <input
-                    id="modal-firstName"
-                    value={form.first_name ?? ''}
-                    onChange={(e) => handleChange('first_name', e.target.value)}
-                    maxLength={100}
-                    className="w-full bg-[#181124] border border-slate-700 rounded-xl px-3 py-2 text-sm text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea transition-colors"
-                  />
-                </div>
-                <div>
-                  <label htmlFor="modal-lastName" className="block text-xs font-bold text-brand-sandstone/80 mb-1">
-                    Last Name
-                  </label>
-                  <input
-                    id="modal-lastName"
-                    value={form.last_name ?? ''}
-                    onChange={(e) => handleChange('last_name', e.target.value)}
-                    maxLength={100}
                     className="w-full bg-[#181124] border border-slate-700 rounded-xl px-3 py-2 text-sm text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea transition-colors"
                   />
                 </div>
@@ -904,39 +790,43 @@ export default function ProfileEditModal({
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label htmlFor="modal-address" className="block text-xs font-bold text-brand-sandstone/80 mb-1">
-                    Address (Private by default)
-                  </label>
-                  <input
-                    id="modal-address"
-                    placeholder="Street or neighborhood"
-                    value={form.address ?? ''}
-                    onChange={(e) => handleChange('address', e.target.value)}
-                    className="w-full bg-[#181124] border border-slate-700 rounded-xl px-3 py-2 text-sm text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea transition-colors"
-                  />
-                </div>
-                <div>
-                  <label htmlFor="modal-phone" className="block text-xs font-bold text-brand-sandstone/80 mb-1">
-                    Phone (Private by default)
-                  </label>
-                  <input
-                    id="modal-phone"
-                    type="tel"
-                    placeholder="+1 (876) 000-0000"
-                    value={form.phone ?? ''}
-                    onChange={(e) => handleChange('phone', e.target.value)}
-                    className="w-full bg-[#181124] border border-slate-700 rounded-xl px-3 py-2 text-sm text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea transition-colors"
-                  />
-                </div>
+              <div>
+                <label htmlFor="modal-culturalInterests" className="block text-xs font-bold text-brand-sandstone/80 mb-1">
+                  Interests &amp; Cultural Tags (Comma-separated)
+                </label>
+                <input
+                  id="modal-culturalInterests"
+                  placeholder="e.g. Reggae, Soca, Gastronomy, Carnival, Tech, Visual Arts"
+                  value={form.cultural_interests?.join(', ') ?? ''}
+                  onChange={(e) =>
+                    handleChange(
+                      'cultural_interests',
+                      e.target.value.split(',').map((s) => s.trim()).filter(Boolean)
+                    )
+                  }
+                  className="w-full bg-[#181124] border border-slate-700 rounded-xl px-3 py-2 text-sm text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea transition-colors"
+                />
               </div>
             </div>
           )}
 
-          {/* TAB: SOCIAL LINKS */}
+          {/* 3. SOCIAL SECTION */}
           {activeTab === 'social' && (
             <div className="space-y-4">
+              <div>
+                <label htmlFor="modal-website" className="block text-xs font-bold text-brand-sandstone/80 mb-1">
+                  Website URL
+                </label>
+                <input
+                  id="modal-website"
+                  type="url"
+                  placeholder="https://yourwebsite.com"
+                  value={form.website ?? ''}
+                  onChange={(e) => handleChange('website', e.target.value)}
+                  className="w-full bg-[#181124] border border-slate-700 rounded-xl px-3 py-2 text-sm text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea transition-colors"
+                />
+              </div>
+
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label htmlFor="modal-instagram" className="block text-xs font-bold text-brand-sandstone/80 mb-1">
@@ -946,7 +836,7 @@ export default function ProfileEditModal({
                     <span className="absolute left-3 top-2 text-xs text-brand-sandstone/40 font-mono">@</span>
                     <input
                       id="modal-instagram"
-                      placeholder="handle"
+                      placeholder="username"
                       value={form.social_links?.instagram ?? ''}
                       onChange={(e) => handleSocialChange('instagram', e.target.value.replace(/^@/, ''))}
                       className="w-full bg-[#181124] border border-slate-700 rounded-xl pl-8 pr-3 py-2 text-sm text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea transition-colors"
@@ -962,7 +852,7 @@ export default function ProfileEditModal({
                     <span className="absolute left-3 top-2 text-xs text-brand-sandstone/40 font-mono">@</span>
                     <input
                       id="modal-twitter"
-                      placeholder="handle"
+                      placeholder="username"
                       value={form.social_links?.twitter ?? ''}
                       onChange={(e) => handleSocialChange('twitter', e.target.value.replace(/^@/, ''))}
                       className="w-full bg-[#181124] border border-slate-700 rounded-xl pl-8 pr-3 py-2 text-sm text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea transition-colors"
@@ -978,7 +868,7 @@ export default function ProfileEditModal({
                     <span className="absolute left-3 top-2 text-xs text-brand-sandstone/40 font-mono">@</span>
                     <input
                       id="modal-tiktok"
-                      placeholder="handle"
+                      placeholder="username"
                       value={form.social_links?.tiktok ?? ''}
                       onChange={(e) => handleSocialChange('tiktok', e.target.value.replace(/^@/, ''))}
                       className="w-full bg-[#181124] border border-slate-700 rounded-xl pl-8 pr-3 py-2 text-sm text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea transition-colors"
@@ -1028,7 +918,7 @@ export default function ProfileEditModal({
             </div>
           )}
 
-          {/* TAB: PRIVACY & VISIBILITY */}
+          {/* 4. PRIVACY SECTION */}
           {activeTab === 'privacy' && (
             <div className="space-y-4">
               <div className="p-4 rounded-2xl bg-brand-dusk/60 border border-slate-800 space-y-2">
@@ -1069,7 +959,7 @@ export default function ProfileEditModal({
 
                 <div className="p-4 rounded-2xl bg-brand-dusk/60 border border-slate-800 space-y-2">
                   <label htmlFor="modal-addressVisibility" className="block text-xs font-bold text-brand-sandstone">
-                    Address Visibility
+                    Location &amp; Address Visibility
                   </label>
                   <select
                     id="modal-addressVisibility"
@@ -1100,6 +990,90 @@ export default function ProfileEditModal({
                   />
                   <div className="w-9 h-5 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-brand-caribbeanSea"></div>
                 </label>
+              </div>
+            </div>
+          )}
+
+          {/* 5. ACCOUNT SECTION */}
+          {activeTab === 'account' && (
+            <div className="space-y-4">
+              <div className="p-4 rounded-2xl bg-brand-dusk/60 border border-slate-800 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <span className="text-xs font-bold text-brand-sandstone block">Primary Email</span>
+                    <span className="text-xs text-brand-sandstone/70 font-mono">
+                      {user?.email || 'Authenticated User'}
+                    </span>
+                  </div>
+                  <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 font-bold flex items-center gap-1">
+                    <CheckCircle className="w-3 h-3" /> Verified
+                  </span>
+                </div>
+              </div>
+
+              <div className="p-4 rounded-2xl bg-brand-dusk/60 border border-slate-800 space-y-3">
+                <h4 className="text-xs font-black text-brand-sandstone uppercase tracking-wider">
+                  Authentication &amp; Password Management
+                </h4>
+                <p className="text-xs text-brand-sandstone/60">
+                  Password changes, linked OAuth providers, and login credentials are fully manageable through the Account Settings hub.
+                </p>
+                <a
+                  href="/settings"
+                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#181124] hover:bg-slate-800 text-brand-caribbeanSea text-xs font-bold border border-brand-caribbeanSea/30 transition-colors"
+                >
+                  <KeyRound className="w-3.5 h-3.5" />
+                  <span>Open Account &amp; Password Settings</span>
+                  <ExternalLink className="w-3 h-3 ml-1" />
+                </a>
+              </div>
+
+              <div className="p-4 rounded-2xl bg-rose-500/5 border border-rose-500/20 space-y-2">
+                <h4 className="text-xs font-black text-rose-400">Account Deletion Safeguards</h4>
+                <p className="text-[11px] text-brand-sandstone/60 leading-relaxed">
+                  Permanent deletion of your TUKUBI identity, posts, ledger history, and media requires explicit verification under the Security &amp; Data Deletion policy in Settings.
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* 6. SECURITY SECTION */}
+          {activeTab === 'security' && (
+            <div className="space-y-4">
+              <div className="p-4 rounded-2xl bg-brand-dusk/60 border border-slate-800 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center">
+                      <Shield className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <span className="text-xs font-black text-brand-sandstone block">Active Session</span>
+                      <span className="text-[11px] text-brand-sandstone/60">
+                        Current authenticated device • Cryptographically verified
+                      </span>
+                    </div>
+                  </div>
+                  <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 font-bold">
+                    Active
+                  </span>
+                </div>
+              </div>
+
+              <div className="p-4 rounded-2xl bg-brand-dusk/60 border border-slate-800 space-y-3">
+                <h4 className="text-xs font-black text-brand-sandstone uppercase tracking-wider">
+                  Two-Factor Authentication (MFA) &amp; Session Invalidation
+                </h4>
+                <p className="text-xs text-brand-sandstone/60">
+                  Protect your Caribbean digital identity with TOTP multi-factor authentication and revoke stale device sessions instantly.
+                </p>
+                <a
+                  href="/settings"
+                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#181124] hover:bg-slate-800 text-brand-goldenHour text-xs font-bold border border-brand-goldenHour/30 transition-colors"
+                >
+                  <Lock className="w-3.5 h-3.5" />
+                  <span>Configure MFA &amp; Manage All Sessions</span>
+                  <ExternalLink className="w-3 h-3 ml-1" />
+                </a>
               </div>
             </div>
           )}

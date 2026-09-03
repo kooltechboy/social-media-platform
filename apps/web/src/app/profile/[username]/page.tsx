@@ -238,7 +238,9 @@ export default async function ProfilePage({
     .filter(Boolean)
     .join(', ');
 
-  const coverUrl = profileData.cover_url || profileData.banner_url;
+  const isOfficialTukubi = profileData.username.toLowerCase() === 'tukubi';
+  const coverUrl = profileData.cover_url || profileData.banner_url || (isOfficialTukubi ? '/backgrounds/island-vibes.jpg' : null);
+  const avatarUrl = profileData.avatar_url || (isOfficialTukubi ? '/brand/tukubi-emblem.png' : null);
 
   return (
     <div className="min-h-screen bg-transparent text-brand-sandstone">
@@ -278,76 +280,76 @@ export default async function ProfilePage({
 
       <main className="max-w-4xl mx-auto p-4 sm:p-6 space-y-6">
         {/* Profile Card Header */}
-        <section className="bg-brand-dusk/70 border border-slate-800 rounded-3xl overflow-hidden shadow-xl">
-          {/* Cover Banner */}
-          <div className="h-36 sm:h-52 relative w-full overflow-hidden bg-gradient-to-r from-sky-950 via-slate-900 to-amber-950/40">
+        <section className="bg-brand-dusk/70 border border-slate-800 rounded-3xl overflow-hidden shadow-2xl">
+          {/* Cover Banner — High-Resolution Responsive Container */}
+          <div className="h-44 sm:h-56 md:h-64 lg:h-72 relative w-full overflow-hidden bg-gradient-to-r from-sky-950 via-slate-900 to-amber-950/40">
             {coverUrl ? (
-              /* eslint-disable-next-line @next/next/no-img-element */
-              <img
-                src={coverUrl}
-                alt={`${profileData.display_name}'s cover`}
-                className="w-full h-full object-cover"
-              />
+              <>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={coverUrl}
+                  alt={`${profileData.display_name}'s cover`}
+                  className="w-full h-full object-cover object-center"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#110D17] via-transparent to-black/20 pointer-events-none" />
+              </>
             ) : (
               <div className="w-full h-full bg-gradient-to-tr from-brand-twilight via-slate-900 to-[#1A2642]" />
             )}
           </div>
 
           {/* Profile Meta & Actions */}
-          <div className="p-5 sm:p-6 -mt-14 sm:-mt-16 relative">
+          <div className="p-5 sm:p-7 -mt-14 sm:-mt-18 relative">
             <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
-              <div className="flex items-end gap-4">
+              <div className="flex flex-col sm:flex-row items-start sm:items-end gap-4">
                 <UserAvatar
-                  src={profileData.avatar_url}
+                  src={avatarUrl}
                   name={profileData.display_name}
                   size="2xl"
-                  className="ring-4 ring-brand-twilight shadow-2xl"
+                  className="ring-4 ring-[#110D17] shadow-2xl shrink-0"
                 />
 
-                <div className="mb-2 space-y-1">
+                <div className="space-y-1">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <h1 className="text-xl sm:text-2xl font-black text-brand-sandstone tracking-tight">
-                      {profileData.display_name}
-                    </h1>
-                    {profileData.is_official || profileData.username.toLowerCase() === 'tukubi' || profileData.is_system_account ? (
-                      <>
+                    <h1 className="text-2xl sm:text-3xl font-black text-brand-sandstone tracking-tight flex items-center gap-2">
+                      <span>{profileData.display_name}</span>
+                      {isOfficialTukubi ? (
                         <OfficialBadge
                           size="md"
                           showLabel={true}
-                          label={profileData.username.toLowerCase() === 'tukubi' ? 'Official TUKUBI' : 'Official Platform'}
+                          label="Official TUKUBI"
                         />
-                        <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-brand-twilight text-brand-goldenHour border border-brand-goldenHour/30 font-bold uppercase tracking-wider">
-                          {profileData.account_type === 'organization'
-                            ? 'Organization'
-                            : profileData.account_type === 'business'
-                            ? 'Business'
-                            : profileData.account_type === 'creator'
-                            ? 'Creator'
-                            : 'Official Platform'}
-                        </span>
-                      </>
-                    ) : (
-                      <>
-                        {profileData.is_verified && (
-                          <BadgeCheck className="w-5 h-5 text-brand-caribbeanSea" aria-label="Verified Member" />
-                        )}
-                        {recognition.founder.is_founder && (
-                          <FounderBadge founder={recognition.founder} size="sm" />
-                        )}
-                        {profileData.account_type && profileData.account_type !== 'personal' && (
-                          <span className="text-[10px] px-2 py-0.5 rounded-full bg-brand-twilight text-brand-goldenHour border border-brand-goldenHour/30 font-bold uppercase tracking-wider">
-                            {profileData.account_type}
-                          </span>
-                        )}
-                        <ReputationIndicator reputation={recognition.reputation} size="sm" />
-                      </>
+                      ) : profileData.is_official || profileData.is_system_account ? (
+                        <OfficialBadge
+                          size="md"
+                          showLabel={true}
+                          label="Official Platform"
+                        />
+                      ) : profileData.is_verified ? (
+                        <BadgeCheck className="w-6 h-6 text-brand-caribbeanSea shrink-0" aria-label="Verified Member" />
+                      ) : null}
+                    </h1>
+
+                    {recognition.founder.is_founder && (
+                      <FounderBadge founder={recognition.founder} size="sm" />
+                    )}
+
+                    {profileData.account_type && profileData.account_type !== 'personal' && (
+                      <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-brand-twilight text-brand-goldenHour border border-brand-goldenHour/30 font-bold uppercase tracking-wider">
+                        {profileData.account_type}
+                      </span>
+                    )}
+
+                    {!isOfficialTukubi && (
+                      <ReputationIndicator reputation={recognition.reputation} size="sm" />
                     )}
                   </div>
+
                   <div className="flex items-center gap-2 flex-wrap">
-                    <p className="text-xs sm:text-sm font-semibold text-brand-sandstone/60">
+                    <p className="text-sm font-semibold text-brand-sandstone/70">
                       @{profileData.username}
                       {profileData.pronouns && (
-                        <span className="ml-2 text-[11px] text-brand-sandstone/40">({profileData.pronouns})</span>
+                        <span className="ml-2 text-xs text-brand-sandstone/40">({profileData.pronouns})</span>
                       )}
                     </p>
                     {/* Top 2 featured badges preview */}
@@ -355,11 +357,17 @@ export default async function ProfilePage({
                       <BadgePill key={b.id} badge={b} size="sm" />
                     ))}
                   </div>
+
+                  {isOfficialTukubi && (
+                    <div className="pt-1 text-xs text-brand-goldenHour font-bold tracking-wide">
+                      The Caribbean Connected. Born in the Caribbean. Built for the World.
+                    </div>
+                  )}
                 </div>
               </div>
 
               {/* Action Buttons */}
-              <div className="flex items-center gap-2 pt-2 sm:pt-0">
+              <div className="flex items-center gap-2 pt-2 sm:pt-0 self-stretch sm:self-auto justify-end">
                 {isOwnProfile ? (
                   <ProfileHeaderActions
                     username={profileData.username}
@@ -376,7 +384,7 @@ export default async function ProfilePage({
                   ) : (
                     <Link
                       href="/login"
-                      className="flex items-center gap-1.5 bg-brand-caribbeanSea text-slate-950 font-bold text-xs px-4 py-2 rounded-full transition-all"
+                      className="flex items-center gap-1.5 bg-brand-caribbeanSea text-slate-950 font-bold text-xs px-4 py-2 rounded-full transition-all hover:brightness-110"
                     >
                       <UserPlus className="w-3.5 h-3.5" /> Sign in to Follow
                     </Link>
@@ -426,15 +434,15 @@ export default async function ProfilePage({
             {/* Real Statistics Counters */}
             <div className="mt-5 pt-4 border-t border-slate-800/80 flex items-center gap-6 text-sm">
               <Link href={`/profile/${profileData.username}?tab=posts`} className="hover:underline">
-                <strong className="text-brand-sandstone">{counts.posts_count.toLocaleString()}</strong>{' '}
+                <strong className="text-brand-sandstone font-black">{counts.posts_count.toLocaleString()}</strong>{' '}
                 <span className="text-brand-sandstone/60">Posts</span>
               </Link>
               <span>
-                <strong className="text-brand-sandstone">{counts.followers_count.toLocaleString()}</strong>{' '}
+                <strong className="text-brand-sandstone font-black">{counts.followers_count.toLocaleString()}</strong>{' '}
                 <span className="text-brand-sandstone/60">Followers</span>
               </span>
               <span>
-                <strong className="text-brand-sandstone">{counts.following_count.toLocaleString()}</strong>{' '}
+                <strong className="text-brand-sandstone font-black">{counts.following_count.toLocaleString()}</strong>{' '}
                 <span className="text-brand-sandstone/60">Following</span>
               </span>
             </div>

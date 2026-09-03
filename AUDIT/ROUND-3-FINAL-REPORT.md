@@ -22,7 +22,7 @@ Over the course of this mission, the entire **TUKUBI** digital ecosystem was tra
 2. **Definitive Brand & Visual Identity:**
    - Brand solidified as **TUKUBI** (*The Caribbean Connected. Born in the Caribbean. Built for the World.*).
    - "Island Vibes" default theme applied consistently across desktop, tablet, mobile web, and mobile app.
-   - 100% elimination of legacy names and SpotPay.
+   - 100% elimination of legacy names and deprecated payment brands.
 
 3. **NASA-Grade Security & Database Integrity:**
    - 132 PostgreSQL tables secured with 278 Row Level Security (RLS) policies.
@@ -50,7 +50,7 @@ All detailed technical audit reports are accessible under `AUDIT/`:
 - [AUDIT/PERFORMANCE-AUDIT.md](file:///c:/Users/Owner/Desktop/social%20media%20platform/AUDIT/PERFORMANCE-AUDIT.md) — Bundle size (~103 kB), TTFB (110ms), and query optimization.
 - [AUDIT/UX-AUDIT.md](file:///c:/Users/Owner/Desktop/social%20media%20platform/AUDIT/UX-AUDIT.md) — Island Vibes theme, responsive design, and WCAG 2.2 AA accessibility.
 - [AUDIT/ARCHITECTURE-AUDIT.md](file:///c:/Users/Owner/Desktop/social%20media%20platform/AUDIT/ARCHITECTURE-AUDIT.md) — 23 domain packages, shared services, and payment orchestration.
-- [AUDIT/LEGACY-CLEANUP.md](file:///c:/Users/Owner/Desktop/social%20media%20platform/AUDIT/LEGACY-CLEANUP.md) — Certification of SpotPay eradication and dead code cleanup.
+- [AUDIT/LEGACY-CLEANUP.md](file:///c:/Users/Owner/Desktop/social%20media%20platform/AUDIT/LEGACY-CLEANUP.md) — Certification of deprecated payment eradication and dead code cleanup.
 - [AUDIT/PRODUCTION-CERTIFICATION.md](file:///c:/Users/Owner/Desktop/social%20media%20platform/AUDIT/PRODUCTION-CERTIFICATION.md) — Formal GO launch certification decision.
 
 ---

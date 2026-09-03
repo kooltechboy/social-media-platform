@@ -49,7 +49,7 @@ export default async function HomePage() {
   let officialCounts: any = null;
 
   if (supabase) {
-    const [postsRes, liveRes, officialProfileRes, officialCountsRes] = await Promise.all([
+    const [postsRes, liveRes, officialProfileRes] = await Promise.all([
       supabase
         .from('posts')
         .select('id, author_id, content, created_at, media_urls, cultural_tags, likes_count, comments_count, shares_count, profiles:profiles!posts_author_id_fkey(display_name, username, avatar_url, is_verified)')
@@ -67,11 +67,6 @@ export default async function HomePage() {
         .select('id, display_name, username, avatar_url, bio, is_verified')
         .ilike('username', 'tukubi')
         .maybeSingle(),
-      supabase
-        .from('profile_counts')
-        .select('followers_count, following_count, posts_count')
-        .eq('profile_id', 'ff1e8b1f-7796-4424-b341-3b39e1c993bd')
-        .maybeSingle(),
     ]);
 
     let data = postsRes.data;
@@ -86,7 +81,15 @@ export default async function HomePage() {
 
     const activeLiveStream = liveRes.data;
     officialProfile = officialProfileRes.data;
-    officialCounts = officialCountsRes.data;
+
+    if (officialProfile?.id) {
+      const { data: counts } = await supabase
+        .from('profile_counts')
+        .select('followers_count, following_count, posts_count, likes_received_count')
+        .eq('profile_id', officialProfile.id)
+        .maybeSingle();
+      officialCounts = counts;
+    }
 
     let userLikedPostIds = new Set<string>();
     if (user && data && data.length > 0) {
@@ -117,7 +120,7 @@ export default async function HomePage() {
           isOfficial: isPostOfficial,
           isPinned: isPostOfficial,
           officialContentType: isPostOfficial ? 'welcome' : undefined,
-          location: 'Tukubi Network 🌴',
+          location: 'Caribbean 🌴',
           time: relativeTime(p.created_at),
           content: p.content || '',
           mediaUrls: p.media_urls || [],
@@ -131,7 +134,7 @@ export default async function HomePage() {
       });
     }
 
-    // Guarantee Authoritative Official Launch Post if not already in live feed
+    // Guarantee official launch post appears on home feed if not yet returned
     const hasOfficialPost = livePosts.some((p) => p.handle?.toLowerCase() === 'tukubi' || p.id === 'd23f3e75-0dfa-47c6-8df9-2c0fa299d7ff');
     if (!hasOfficialPost) {
       const officialLaunchPost: FeedPostData = {
@@ -144,7 +147,7 @@ export default async function HomePage() {
         isOfficial: true,
         isPinned: true,
         officialContentType: 'welcome',
-        location: 'Tukubi Network 🌴',
+        location: 'Caribbean 🌴',
         time: 'Inaugural Launch',
         content: `🌴 Welcome to TUKUBI — The Caribbean Connected.\n\nConnecting Caribbean people, culture, creators, businesses & the global diaspora in one unified digital ecosystem.\n\n🌎 Born in the Caribbean. Built for the World.\n\nJoin conversations across the islands, explore live audio/video broadcasts, discover local creators, support Caribbean merchants, and build the future of our digital heritage together. ☀️🌊🎶`,
         mediaUrls: [],

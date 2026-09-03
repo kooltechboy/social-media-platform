@@ -181,7 +181,7 @@ export default async function AdminDashboardPage() {
                 height={52}
                 className="object-contain rounded-lg border border-white/10"
               />
-              <span>&copy; {new Date().getFullYear()} TUKUBI Network Inc.</span>
+              <span>&copy; {new Date().getFullYear()} TUKUBI. All rights reserved.</span>
             </div>
             <div className="flex items-center gap-3 text-[11px]">
               <span>Role: Administrator</span>

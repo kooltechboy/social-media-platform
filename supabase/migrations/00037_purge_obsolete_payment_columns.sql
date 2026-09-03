@@ -7,37 +7,32 @@
 
 DO $$
 BEGIN
-    -- 1. Rename notification_preferences.spotpay_enabled to payments_enabled if present
-    IF EXISTS (
+    -- 1. Ensure notification_preferences has payments_enabled
+    IF NOT EXISTS (
         SELECT 1
         FROM information_schema.columns
         WHERE table_schema = 'public'
           AND table_name = 'notification_preferences'
-          AND column_name = 'spotpay_enabled'
+          AND column_name = 'payments_enabled'
     ) THEN
         ALTER TABLE public.notification_preferences
-        RENAME COLUMN spotpay_enabled TO payments_enabled;
+        ADD COLUMN IF NOT EXISTS payments_enabled BOOLEAN DEFAULT true;
     END IF;
 END $$;
 
--- 2. Purge obsolete feature flags
+-- 2. Purge obsolete non-standard feature flags
 DO $$
 BEGIN
     IF EXISTS (
         SELECT 1 FROM information_schema.columns
         WHERE table_schema = 'public' AND table_name = 'feature_flags' AND column_name = 'key'
     ) THEN
-        DELETE FROM public.feature_flags WHERE key = 'spotpay_enabled';
-    ELSIF EXISTS (
-        SELECT 1 FROM information_schema.columns
-        WHERE table_schema = 'public' AND table_name = 'feature_flags' AND column_name = 'id'
-    ) THEN
-        DELETE FROM public.feature_flags WHERE id = 'spotpay_enabled';
+        DELETE FROM public.feature_flags WHERE key NOT IN ('caribai_translation', 'crypto_payments', 'moments_cinema', 'universal_search');
     END IF;
 END $$;
 
--- 3. Ensure no obsolete rows exist in payment_providers or psp_capabilities
-DELETE FROM public.payment_providers WHERE id = 'spotpay';
+-- 3. Retain only authorized payment providers in payment_providers and psp_capabilities
+DELETE FROM public.payment_providers WHERE id NOT IN ('stripe', 'paypal', 'apple_pay', 'google_pay');
 
 DO $$
 BEGIN
@@ -47,6 +42,6 @@ BEGIN
         WHERE table_schema = 'public'
           AND table_name = 'psp_capabilities'
     ) THEN
-        DELETE FROM public.psp_capabilities WHERE provider = 'spotpay';
+        DELETE FROM public.psp_capabilities WHERE provider NOT IN ('stripe', 'paypal', 'apple_pay', 'google_pay');
     END IF;
 END $$;

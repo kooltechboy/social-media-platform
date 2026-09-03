@@ -739,38 +739,27 @@ export default function SettingsView({
                   Theme &amp; Appearance
                 </h2>
                 <p className="text-xs text-brand-sandstone/60">
-                  Select your interface theme aesthetic.
+                  TUKUBI is standardized on the unified Island Vibes design system.
                 </p>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {[
-                  { id: 'twilight', name: 'Caribbean Twilight (Default)', desc: 'Deep navy, twilight purple, and vibrant coral highlights.' },
-                  { id: 'dark', name: 'Midnight Obsidian', desc: 'Ultra-dark slate contrast optimized for battery and OLED.' },
-                  { id: 'light', name: 'Sunrise Glow (Light)', desc: 'Warm sandstone and bright tropical gold aesthetics.' },
-                  { id: 'system', name: 'System Preference', desc: 'Sync automatically with your device settings.' },
-                ].map((t) => {
-                  const isSelected = (profile.theme_preference || 'twilight') === t.id;
-                  return (
-                    <button
-                      key={t.id}
-                      type="button"
-                      onClick={() => handleThemeChange(t.id)}
-                      disabled={isPending}
-                      className={`p-4 rounded-2xl border text-left transition-all cursor-pointer ${
-                        isSelected
-                          ? 'bg-brand-caribbeanSea/10 border-brand-caribbeanSea ring-1 ring-brand-caribbeanSea'
-                          : 'bg-[#131D33] border-slate-800 hover:border-slate-700'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="text-xs font-bold text-brand-sandstone">{t.name}</span>
-                        {isSelected && <CheckCircle className="w-4 h-4 text-brand-caribbeanSea" />}
-                      </div>
-                      <p className="text-[11px] text-brand-sandstone/60">{t.desc}</p>
-                    </button>
-                  );
-                })}
+              <div className="bg-[#131D33] border border-brand-caribbeanSea/30 rounded-2xl p-5 space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-sunriseCoral via-brand-goldenHour to-brand-caribbeanSea flex items-center justify-center text-lg shadow-lg">
+                      🌴
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-black text-brand-sandstone">Island Vibes (Default &amp; Standard)</h3>
+                      <p className="text-xs text-brand-sandstone/60">
+                        Caribbean Futurism: Twilight purple, sunset coral, golden hour amber &amp; sea blue.
+                      </p>
+                    </div>
+                  </div>
+                  <span className="flex items-center gap-1.5 text-xs font-bold text-brand-caribbeanSea bg-brand-caribbeanSea/10 px-3 py-1 rounded-full border border-brand-caribbeanSea/30">
+                    <CheckCircle className="w-3.5 h-3.5" /> Active
+                  </span>
+                </div>
               </div>
             </section>
           )}

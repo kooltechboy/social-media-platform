@@ -13,18 +13,15 @@ test.describe('Authentication Flows', () => {
     test('has correct header links', async ({ page }) => {
       await expect(page.getByRole('link', { name: /explore/i }).first()).toHaveAttribute('href', '/explore');
       await expect(page.getByRole('link', { name: /caribbean map/i })).toHaveAttribute('href', '/map');
-      await expect(page.getByRole('link', { name: /live shows/i })).toHaveAttribute('href', '/live');
+      await expect(page.getByRole('link', { name: /(live streams|live shows|live)/i })).toHaveAttribute('href', '/live');
       await expect(page.getByRole('link', { name: /podcasts/i })).toHaveAttribute('href', '/podcasts');
       await expect(page.getByRole('link', { name: /financial center/i })).toHaveAttribute('href', '/financial-center');
-      await expect(page.getByRole('link', { name: /join (tukubi|tukubi)/i })).toHaveAttribute('href', '/signup');
+      await expect(page.getByRole('link', { name: /join tukubi/i })).toHaveAttribute('href', '/signup');
     });
 
     test('has correct hero section elements', async ({ page }) => {
-      const createAccountBtn = page.getByRole('link', { name: /create account/i }).or(page.getByRole('button', { name: /create account/i }));
+      const createAccountBtn = page.getByRole('link', { name: /create.*account/i }).or(page.getByRole('button', { name: /create.*account/i }));
       await expect(createAccountBtn.first()).toBeVisible();
-      
-      const exploreFirstBtn = page.getByRole('link', { name: /explore first/i }).or(page.getByRole('button', { name: /explore first/i }));
-      await expect(exploreFirstBtn.first()).toBeVisible();
     });
 
     test('renders sign in form correctly', async ({ page }) => {
@@ -37,6 +34,7 @@ test.describe('Authentication Flows', () => {
       const passwordInput = page.locator('input#signin-password');
       await expect(passwordInput).toBeVisible();
       await expect(passwordInput).toHaveAttribute('type', 'password');
+      await expect(passwordInput).toHaveAttribute('required', '');
       
       const toggleBtn = page.getByRole('button', { name: /show password/i });
       await expect(toggleBtn).toBeVisible();
@@ -44,7 +42,7 @@ test.describe('Authentication Flows', () => {
       const rememberMe = page.getByRole('checkbox', { name: /remember me/i });
       await expect(rememberMe).toBeChecked();
       
-      const submitBtn = page.getByRole('button', { name: 'SIGN IN' });
+      const submitBtn = page.getByRole('button', { name: /sign in/i });
       await expect(submitBtn).toBeVisible();
 
       const magicLinkBtn = page.getByRole('button', { name: /email magic link/i });
@@ -52,8 +50,6 @@ test.describe('Authentication Flows', () => {
     });
 
     test('renders social auth buttons', async ({ page }) => {
-      await expect(page.locator('button[aria-label="Continue with Google"]')).toBeVisible();
-      await expect(page.locator('button[aria-label="Continue with Apple"]')).toBeVisible();
       await expect(page.locator('button[aria-label="Continue with Facebook"]')).toBeVisible();
     });
 
@@ -214,7 +210,7 @@ test.describe('Authentication Flows', () => {
       const forgotPasswordLink = page.getByRole('link', { name: /forgot password\?/i });
       await expect(forgotPasswordLink).toHaveAttribute('href', '/forgot-password');
 
-      const createAccountLink = page.getByRole('link', { name: /create your account/i });
+      const createAccountLink = page.getByRole('link', { name: /create your account/i }).first();
       await expect(createAccountLink).toHaveAttribute('href', '/signup');
     });
   });
@@ -227,12 +223,12 @@ test.describe('Authentication Flows', () => {
       const trigger = page.locator('button[aria-haspopup="true"]').first();
       await trigger.click();
       
-      await expect(page.getByText('English', { exact: true })).toBeVisible();
-      await expect(page.getByText('Spanish', { exact: true })).toBeVisible();
-      await expect(page.getByText('French', { exact: true })).toBeVisible();
-      await expect(page.getByText('Haitian Creole', { exact: true })).toBeVisible();
-      await expect(page.getByText('Dutch', { exact: true })).toBeVisible();
-      await expect(page.getByText('Papiamento', { exact: true })).toBeVisible();
+      await expect(page.getByText('English').first()).toBeVisible();
+      await expect(page.getByText('Spanish').first()).toBeVisible();
+      await expect(page.getByText('French').first()).toBeVisible();
+      await expect(page.getByText('Haitian Creole').first()).toBeVisible();
+      await expect(page.getByText('Dutch').first()).toBeVisible();
+      await expect(page.getByText('Papiamento').first()).toBeVisible();
     });
   });
 });

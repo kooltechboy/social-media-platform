@@ -171,8 +171,8 @@ CREATE TABLE IF NOT EXISTS public.commercial_rule_audit_logs (
     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
--- 7. Provider Registry Cleanup: Purge obsolete SpotPay row if present
-DELETE FROM public.payment_providers WHERE id = 'spotpay';
+-- 7. Provider Registry Cleanup: Purge obsolete legacy rows if present
+DELETE FROM public.payment_providers WHERE id NOT IN ('stripe', 'paypal', 'apple_pay', 'google_pay');
 
 -- 8. Indexing for High-Performance Queries
 CREATE INDEX IF NOT EXISTS idx_monetization_tiers_cat ON public.monetization_tier_configs(account_category, is_active);
