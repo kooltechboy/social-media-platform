@@ -282,12 +282,20 @@ export class ConversationPolicy {
     return { allowed: true };
   }
 
-  public directConversationKey(a: string, b: string): string {
+  public static directConversationKey(a: string, b: string): string {
     return [a, b].sort().join(':');
   }
 
-  public calculateUnreadCount(lastReadSequence: number, latestSequence: number): number {
+  public directConversationKey(a: string, b: string): string {
+    return ConversationPolicy.directConversationKey(a, b);
+  }
+
+  public static calculateUnreadCount(lastReadSequence: number, latestSequence: number): number {
     return Math.max(0, latestSequence - lastReadSequence);
+  }
+
+  public calculateUnreadCount(lastReadSequence: number, latestSequence: number): number {
+    return ConversationPolicy.calculateUnreadCount(lastReadSequence, latestSequence);
   }
 }
 

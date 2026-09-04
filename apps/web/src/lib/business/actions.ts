@@ -79,7 +79,7 @@ export async function fetchBusinessPageAction(slug: string): Promise<{ business:
 
   const { data: business, error } = await supabase
     .from('businesses')
-    .select('id, name, slug, category, description, is_verified, phone, website, country_iso, created_at, owner_id')
+    .select('id, name, slug, category, description, is_verified, phone, website, country_iso, created_at, owner_id, owner:profiles!businesses_owner_id_fkey(id, username, display_name)')
     .eq('slug', slug)
     .maybeSingle();
 

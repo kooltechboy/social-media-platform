@@ -42,6 +42,7 @@ export default async function MessagesPage({
   }
 
   let targetConversationId: string | null = null;
+  let conversationError: string | null = null;
 
   // Canonical Direct Conversation Routing
   if (params.u) {
@@ -53,16 +54,21 @@ export default async function MessagesPage({
       .maybeSingle();
 
     if (targetProfile && targetProfile.id !== user.id) {
-      try {
-        const { data: convId } = await supabase.rpc('get_or_create_direct_conversation', {
-          target_user_id: targetProfile.id,
-        });
-        if (convId) {
-          targetConversationId = convId;
-        }
-      } catch (err) {
-        console.warn('[MessagesPage] Direct conversation lookup error:', err);
+      // Supabase JS v2 returns { data, error } — it does NOT throw on RPC errors.
+      // We must explicitly check error to surface Postgres-level exceptions (blocks, auth, race conditions).
+      const { data: convId, error: rpcError } = await supabase.rpc('get_or_create_direct_conversation', {
+        target_user_id: targetProfile.id,
+      });
+      if (rpcError) {
+        console.error('[MessagesPage] Direct conversation creation failed:', rpcError.message, rpcError.details);
+        conversationError = rpcError.message?.includes('block')
+          ? 'This user is not available for messaging.'
+          : 'Could not start conversation. Please try again.';
+      } else if (convId) {
+        targetConversationId = convId;
       }
+    } else if (!targetProfile) {
+      conversationError = 'User not found.';
     }
   }
 
@@ -180,7 +186,12 @@ export default async function MessagesPage({
     };
   });
 
-  const selectedId = targetConversationId || (params.c && conversationIds.includes(params.c) ? params.c : (params.u ? targetConversationId : (summaries[0]?.id || null)));
+  // Resolve which conversation to display:
+  // Priority: targetConversationId (from ?u=) > ?c= param > first conversation
+  const selectedId = targetConversationId
+    || (params.c && conversationIds.includes(params.c) ? params.c : null)
+    || summaries[0]?.id
+    || null;
 
   let threadMessages: ThreadMessage[] = [];
   if (selectedId) {
@@ -256,6 +267,7 @@ export default async function MessagesPage({
           onlineMembers={onlineMembers}
           pendingRequests={pendingRequests}
           initialCompose={params.compose === 'true'}
+          conversationError={conversationError}
         />
       </main>
     </div>

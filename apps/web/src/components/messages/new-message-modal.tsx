@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { createBrowserClient } from '@supabase/ssr';
 import UserAvatar from '../user-avatar';
+import { getOrCreateDirectConversationAction } from '../../lib/messaging/actions';
 
 export interface NewMessageMember {
   id: string;
@@ -127,15 +128,13 @@ export default function NewMessageModal({
     onClose();
     if (onConversationCreated) {
       try {
-        const { data: convId } = await supabase.rpc('get_or_create_direct_conversation', {
-          target_user_id: member.id,
-        });
-        if (convId) {
-          onConversationCreated(convId);
+        const result = await getOrCreateDirectConversationAction(member.id);
+        if (result.conversationId) {
+          onConversationCreated(result.conversationId);
           return;
         }
       } catch (err) {
-        console.warn('RPC direct conversation fallback to query param:', err);
+        console.warn('Direct conversation fallback to query param:', err);
       }
     }
     router.push(`/messages?u=${encodeURIComponent(member.username)}`);

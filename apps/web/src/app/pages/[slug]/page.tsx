@@ -37,6 +37,7 @@ interface PageDetails {
   contactEmail: string;
   avatar: string;
   coverGradient: string;
+  ownerUsername?: string;
   products: Array<{
     id: string;
     title: string;
@@ -77,6 +78,7 @@ export default async function ModularPageView({ params }: { params: Promise<{ sl
         contactEmail: 'contact@tukubi.com',
         avatar: '🏪',
         coverGradient: 'from-amber-900/50 via-slate-900 to-[#110D17]',
+        ownerUsername: business.owner?.username || undefined,
         products: (products || []).map((p: any) => ({
           id: p.id,
           title: p.title,
@@ -135,7 +137,7 @@ export default async function ModularPageView({ params }: { params: Promise<{ sl
               Follow ({page.followers})
             </button>
             <Link
-              href="/messages"
+              href={`/messages?u=${encodeURIComponent(page.ownerUsername || page.slug)}`}
               className="bg-brand-dusk hover:bg-slate-700 text-brand-sandstone font-bold px-4 py-2.5 rounded-2xl text-xs border border-slate-700 transition-colors"
             >
               Message

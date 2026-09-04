@@ -60,6 +60,7 @@ interface MessagesCenterClientProps {
   onlineMembers: NewMessageMember[];
   pendingRequests?: PendingRequest[];
   initialCompose?: boolean;
+  conversationError?: string | null;
 }
 
 export default function MessagesCenterClient({
@@ -70,6 +71,7 @@ export default function MessagesCenterClient({
   onlineMembers,
   pendingRequests = [],
   initialCompose = false,
+  conversationError = null,
 }: MessagesCenterClientProps) {
   const router = useRouter();
   const [search, setSearch] = useState('');
@@ -170,6 +172,14 @@ export default function MessagesCenterClient({
               <span>New</span>
             </button>
           </div>
+
+          {/* Conversation Error Banner */}
+          {conversationError && (
+            <div className="mx-4 mt-3 p-3 bg-rose-500/10 border border-rose-500/30 rounded-2xl text-rose-300 text-xs font-semibold flex items-center gap-2">
+              <ShieldAlert className="w-4 h-4 text-rose-400 shrink-0" />
+              <span>{conversationError}</span>
+            </div>
+          )}
 
           {/* Search Bar */}
           <div className="px-4 pt-3 pb-2">
