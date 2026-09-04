@@ -31,6 +31,7 @@ import { handleMessageRequestAction } from '../../lib/messaging/actions';
 export interface ConversationSummary {
   id: string;
   kind: 'direct' | 'group';
+  category?: 'personal' | 'business' | 'marketplace' | 'creator' | 'event' | 'community' | 'support';
   title: string | null;
   last_message_at: string | null;
   displayName: string;
@@ -72,7 +73,7 @@ export default function MessagesCenterClient({
 }: MessagesCenterClientProps) {
   const router = useRouter();
   const [search, setSearch] = useState('');
-  const [filter, setFilter] = useState<'all' | 'direct' | 'group' | 'requests' | 'archived'>('all');
+  const [filter, setFilter] = useState<'all' | 'direct' | 'group' | 'business' | 'marketplace' | 'requests' | 'archived'>('all');
   const [isComposeOpen, setIsComposeOpen] = useState(initialCompose);
   const [mobileView, setMobileView] = useState<'list' | 'thread'>(selectedId ? 'thread' : 'list');
   const [requestActionLoading, setRequestActionLoading] = useState<string | null>(null);
@@ -84,6 +85,10 @@ export default function MessagesCenterClient({
       list = list.filter((c) => c.kind === 'direct' && c.status !== 'archived');
     } else if (filter === 'group') {
       list = list.filter((c) => c.kind === 'group' && c.status !== 'archived');
+    } else if (filter === 'business') {
+      list = list.filter((c) => (c.category === 'business' || c.category === 'support') && c.status !== 'archived');
+    } else if (filter === 'marketplace') {
+      list = list.filter((c) => c.category === 'marketplace' && c.status !== 'archived');
     } else if (filter === 'archived') {
       list = list.filter((c) => c.status === 'archived');
     } else if (filter === 'all') {
@@ -190,7 +195,7 @@ export default function MessagesCenterClient({
 
           {/* Filter Tabs */}
           <div className="px-4 py-2 flex items-center gap-1.5 border-b border-white/5 overflow-x-auto no-scrollbar">
-            {(['all', 'direct', 'group', 'requests', 'archived'] as const).map((tab) => {
+            {(['all', 'direct', 'group', 'business', 'marketplace', 'requests', 'archived'] as const).map((tab) => {
               const isActive = filter === tab;
               const requestCount = tab === 'requests' ? pendingRequests.length : 0;
               return (

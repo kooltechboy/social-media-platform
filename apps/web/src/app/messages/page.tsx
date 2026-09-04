@@ -70,7 +70,7 @@ export default async function MessagesPage({
   const [membershipsResult, onlineMembersResult, requestsResult] = await Promise.all([
     supabase
       .from('conversation_members')
-      .select('conversation_id, last_read_sequence, status, conversations(id, kind, title, last_message_at, last_sequence_number)')
+      .select('conversation_id, last_read_sequence, status, conversations(id, kind, category, title, last_message_at, last_sequence_number)')
       .eq('profile_id', user.id)
       .is('left_at', null)
       .order('last_message_at', { ascending: false, foreignTable: 'conversations' }),
@@ -96,6 +96,7 @@ export default async function MessagesPage({
     conversations: {
       id: string;
       kind: 'direct' | 'group';
+      category?: 'personal' | 'business' | 'marketplace' | 'creator' | 'event' | 'community' | 'support';
       title: string | null;
       last_message_at: string | null;
       last_sequence_number: number;
@@ -105,6 +106,7 @@ export default async function MessagesPage({
   const conversations = rows
     .map((row) => ({
       ...row.conversations,
+      category: row.conversations?.category || 'personal',
       last_read_sequence: row.last_read_sequence || 0,
       member_status: row.status || 'active',
     }))
@@ -167,6 +169,7 @@ export default async function MessagesPage({
     return {
       id: conversation.id,
       kind: (conversation.kind || 'direct') as 'direct' | 'group',
+      category: conversation.category,
       title: conversation.title ?? null,
       last_message_at: conversation.last_message_at ?? null,
       displayName,

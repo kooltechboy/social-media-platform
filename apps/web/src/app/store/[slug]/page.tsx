@@ -50,11 +50,12 @@ export default async function BespokeStorefrontPage({
   // 1. Fetch business by slug
   const { data: business } = await supabase
     .from('businesses')
-    .select('id, name, slug, category, description, is_verified, country_iso, website, phone, owner_id')
+    .select('id, name, slug, category, description, is_verified, country_iso, website, phone, owner_id, owner:profiles!businesses_owner_id_fkey(username, display_name)')
     .eq('slug', slug)
     .maybeSingle();
 
   let sellerId: string | null = business?.owner_id || null;
+  let sellerUsername: string = (business?.owner as any)?.username || slug;
   let storeName: string = business?.name || '';
   let storeCategory: string = business?.category || 'Caribbean Merchant';
   let storeDescription: string = business?.description || 'Authentic Caribbean store on TUKUBI.';
@@ -74,6 +75,7 @@ export default async function BespokeStorefrontPage({
     }
 
     sellerId = profile.id;
+    sellerUsername = profile.username;
     storeName = profile.display_name;
     storeCategory = 'Creator & Artisan Store';
     storeDescription = profile.bio || 'Creator merchandise and digital assets on TUKUBI.';
@@ -201,7 +203,7 @@ export default async function BespokeStorefrontPage({
               <div className="text-base font-black text-white">{products.length} Items</div>
             </div>
             <Link
-              href={`/messages?recipient=${sellerId}`}
+              href={`/messages?u=${encodeURIComponent(sellerUsername)}`}
               className="bg-brand-dusk hover:bg-slate-800 border border-slate-700 text-brand-sandstone font-bold px-4 py-2.5 rounded-2xl text-xs transition-colors"
             >
               Contact Merchant

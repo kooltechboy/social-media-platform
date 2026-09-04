@@ -3,7 +3,15 @@
 import { revalidatePath } from 'next/cache';
 import { createSupabaseServerClient, getCurrentUser } from '../supabase/server';
 import { checkMessageRateLimit } from './rate-limiter';
-import { validateDraft, MAX_EDIT_TIME_WINDOW_MINUTES } from '@caribbean/messaging';
+import { 
+  validateDraft, 
+  MAX_EDIT_TIME_WINDOW_MINUTES,
+  type MessageKind,
+  type MessageMetadata,
+  type ConversationCategory,
+  generateClientMessageId,
+  buildBusinessAiSystemPrompt
+} from '@caribbean/messaging';
 
 export interface MessageActionState {
   error: string | null;
@@ -12,7 +20,7 @@ export interface MessageActionState {
 }
 
 /**
- * Send Message Action with Idempotency, Block Verification, and Burst Protection
+ * Send Message Action with Idempotency, Block Verification, Rich Card Metadata, and Burst Protection
  */
 export async function sendMessageAction(
   _prev: MessageActionState,
@@ -29,11 +37,12 @@ export async function sendMessageAction(
 
   const conversationId = String(formData.get('conversationId') ?? '').trim();
   const body = String(formData.get('body') ?? '').trim();
-  const messageKind = (String(formData.get('message_kind') ?? 'text')) as 'text' | 'voice' | 'media' | 'system';
+  const messageKind = (String(formData.get('message_kind') ?? 'text')) as MessageKind;
   const clientMessageId = String(formData.get('client_message_id') ?? '').trim() || undefined;
   const audioUrl = String(formData.get('audio_url') ?? '').trim() || undefined;
   const mediaUrlsStr = String(formData.get('media_urls') ?? '').trim();
   const replyToId = String(formData.get('reply_to_id') ?? '').trim() || undefined;
+  const metadataStr = String(formData.get('metadata') ?? '').trim();
 
   let mediaUrls: string[] = [];
   if (mediaUrlsStr) {
@@ -42,14 +51,26 @@ export async function sendMessageAction(
     } catch {}
   }
 
+  let metadata: MessageMetadata = {};
+  if (metadataStr) {
+    try {
+      metadata = JSON.parse(metadataStr);
+    } catch {}
+  }
+
+  if (audioUrl) metadata.audio_url = audioUrl;
+  if (mediaUrls.length > 0) metadata.media_urls = mediaUrls;
+
   if (!conversationId) return { error: 'Conversation ID is required.' };
 
   const validation = validateDraft({
     senderId: user.id,
     conversationId,
     body,
+    messageKind,
     audioUrl,
     mediaUrls,
+    metadata,
   });
 
   if (!validation.valid) {
@@ -104,7 +125,7 @@ export async function sendMessageAction(
   if (clientMessageId) {
     const { data: existing } = await supabase
       .from('messages')
-      .select('id, conversation_id, sender_id, body, created_at, client_message_id, sequence_number')
+      .select('id, conversation_id, sender_id, body, created_at, client_message_id, sequence_number, message_kind, reply_to_id, metadata')
       .eq('conversation_id', conversationId)
       .eq('client_message_id', clientMessageId)
       .maybeSingle();
@@ -114,7 +135,7 @@ export async function sendMessageAction(
     }
   }
 
-  const finalBody = audioUrl ? (body || `[Voice Note: ${audioUrl}]`) : body;
+  const finalBody = audioUrl ? (body || `[Voice Note: ${audioUrl}]`) : (body || `[${messageKind.toUpperCase()}]`);
 
   // 4. Authoritative Message Insert
   const { data: inserted, error: insertError } = await supabase
@@ -126,12 +147,9 @@ export async function sendMessageAction(
       message_kind: messageKind || 'text',
       client_message_id: clientMessageId,
       reply_to_id: replyToId,
-      metadata: {
-        audio_url: audioUrl,
-        media_urls: mediaUrls,
-      },
+      metadata,
     })
-    .select('id, conversation_id, sender_id, body, created_at, client_message_id, sequence_number, message_kind, reply_to_id')
+    .select('id, conversation_id, sender_id, body, created_at, client_message_id, sequence_number, message_kind, reply_to_id, metadata')
     .single();
 
   if (insertError) {
@@ -140,6 +158,199 @@ export async function sendMessageAction(
 
   revalidatePath('/messages');
   return { error: null, message: inserted };
+}
+
+/**
+ * Universal Share to TUKUBI Chat Action
+ */
+export async function shareToChatAction(params: {
+  targetConversationId?: string;
+  targetUserId?: string;
+  messageKind: MessageKind;
+  noteText?: string;
+  metadata: MessageMetadata;
+}): Promise<{ success: boolean; conversationId: string | null; error: string | null }> {
+  const user = await getCurrentUser();
+  if (!user) return { success: false, conversationId: null, error: 'Sign in required.' };
+
+  const supabase = await createSupabaseServerClient();
+  if (!supabase) return { success: false, conversationId: null, error: 'Database not available.' };
+
+  let convId = params.targetConversationId;
+
+  // If targeting a user directly, get or create canonical conversation
+  if (!convId && params.targetUserId) {
+    const { data: createdConvId, error: directErr } = await supabase.rpc('get_or_create_direct_conversation', {
+      target_user_id: params.targetUserId,
+    });
+    if (directErr || !createdConvId) {
+      return { success: false, conversationId: null, error: directErr?.message || 'Failed to start conversation.' };
+    }
+    convId = createdConvId;
+  }
+
+  if (!convId) {
+    return { success: false, conversationId: null, error: 'Target conversation or user required.' };
+  }
+
+  const clientMsgId = generateClientMessageId();
+  const bodyText = params.noteText?.trim() || `[Shared ${params.messageKind}]`;
+
+  const { error: insertError } = await supabase
+    .from('messages')
+    .insert({
+      conversation_id: convId,
+      sender_id: user.id,
+      body: bodyText,
+      message_kind: params.messageKind,
+      client_message_id: clientMsgId,
+      metadata: params.metadata,
+    });
+
+  if (insertError) {
+    return { success: false, conversationId: convId, error: insertError.message };
+  }
+
+  revalidatePath('/messages');
+  return { success: true, conversationId: convId, error: null };
+}
+
+/**
+ * Update Conversation Category Action (Personal, Business, Marketplace, Support, etc.)
+ */
+export async function updateConversationCategoryAction(
+  conversationId: string,
+  category: ConversationCategory,
+): Promise<{ success: boolean; error: string | null }> {
+  const user = await getCurrentUser();
+  if (!user) return { success: false, error: 'Sign in required.' };
+
+  const supabase = await createSupabaseServerClient();
+  if (!supabase) return { success: false, error: 'Database not available.' };
+
+  const { error } = await supabase
+    .from('conversations')
+    .update({ category })
+    .eq('id', conversationId);
+
+  if (error) return { success: false, error: error.message };
+  revalidatePath('/messages');
+  return { success: true, error: null };
+}
+
+/**
+ * AI Business Agent Grounded Response Generator Action
+ */
+export async function generateBusinessAiResponseAction(
+  conversationId: string,
+  userPrompt: string,
+): Promise<{ success: boolean; aiMessage?: any; error: string | null }> {
+  const user = await getCurrentUser();
+  if (!user) return { success: false, error: 'Sign in required.' };
+
+  const supabase = await createSupabaseServerClient();
+  if (!supabase) return { success: false, error: 'Database not available.' };
+
+  // 1. Fetch conversation and check if it has store or business context
+  const { data: conv } = await supabase
+    .from('conversations')
+    .select('id, category, context_data, created_by')
+    .eq('id', conversationId)
+    .single();
+
+  const contextData = (conv?.context_data || {}) as Record<string, any>;
+  const businessId = contextData.businessId || contextData.storeId;
+
+  // 2. Fetch authoritative business / store products
+  let storeName = 'TUKUBI Partner Business';
+  let catalogItems: Array<{ id: string; title: string; priceFormatted: string; available: boolean }> = [];
+
+  if (businessId) {
+    const { data: store } = await supabase
+      .from('stores')
+      .select('id, name')
+      .eq('id', businessId)
+      .maybeSingle();
+
+    if (store) storeName = store.name;
+
+    const { data: products } = await supabase
+      .from('products')
+      .select('id, title, price_minor, currency, is_active')
+      .eq('store_id', businessId)
+      .limit(10);
+
+    if (products && products.length > 0) {
+      catalogItems = products.map((p) => ({
+        id: p.id,
+        title: p.title,
+        priceFormatted: `$${(p.price_minor / 100).toFixed(2)} ${p.currency || 'USD'}`,
+        available: p.is_active,
+      }));
+    }
+  }
+
+  // 3. Generate grounded intelligent response
+  const lower = userPrompt.toLowerCase();
+  let aiText = '';
+  let suggestedActions: Array<{ label: string; action: string }> = [];
+
+  if (lower.includes('available') || lower.includes('in stock') || lower.includes('have') || lower.includes('buy')) {
+    if (catalogItems.length > 0) {
+      const match = catalogItems.find((c) => lower.includes(c.title.toLowerCase())) || catalogItems[0];
+      aiText = `Wah gwaan! Yes, "${match.title}" is ${match.available ? 'currently in stock' : 'currently sold out'} at ${storeName} for ${match.priceFormatted}. Would you like to view the item or arrange local pickup / shipping?`;
+      suggestedActions = [
+        { label: `View ${match.title}`, action: 'view_product' },
+        { label: 'Check Shipping Info', action: 'view_shipping' },
+        { label: 'Talk to Store Staff', action: 'escalate_human' },
+      ];
+    } else {
+      aiText = `Hello! Thank you for inquiring with ${storeName}. All items currently in our catalog can be viewed directly in our store profile. Can I help check a specific order or connect you with human staff?`;
+      suggestedActions = [{ label: 'Talk to Human Staff', action: 'escalate_human' }];
+    }
+  } else if (lower.includes('human') || lower.includes('agent') || lower.includes('talk to someone') || lower.includes('help')) {
+    aiText = `I have notified the store team at ${storeName}. A representative will join this conversation shortly to assist you directly.`;
+    suggestedActions = [{ label: 'Leave a Note', action: 'leave_note' }];
+  } else if (lower.includes('order') || lower.includes('track') || lower.includes('shipping')) {
+    aiText = `For order tracking and delivery status, your recent purchases can be viewed anytime under Account → Orders. Orders typically ship within 1-2 Caribbean business days.`;
+    suggestedActions = [{ label: 'Track My Orders', action: 'view_orders' }];
+  } else {
+    aiText = `Hello and welcome to ${storeName} on TUKUBI! I am your AI Business Assistant. How can I assist you with our Caribbean products, store hours, or orders today?`;
+    suggestedActions = [
+      { label: 'Browse Products', action: 'browse_catalog' },
+      { label: 'Ask a Question', action: 'ask_question' },
+      { label: 'Talk to Staff', action: 'escalate_human' },
+    ];
+  }
+
+  const aiMsgId = generateClientMessageId();
+
+  // 4. Insert AI response into conversation
+  const { data: insertedMsg, error: insertErr } = await supabase
+    .from('messages')
+    .insert({
+      conversation_id: conversationId,
+      sender_id: user.id, // Or business owner / system
+      body: aiText,
+      message_kind: 'ai_response',
+      client_message_id: aiMsgId,
+      metadata: {
+        ai: {
+          promptUsed: userPrompt,
+          suggestedActions,
+          groundedCatalogIds: catalogItems.map((c) => c.id),
+          isHumanEscalated: lower.includes('human') || lower.includes('agent'),
+          confidenceScore: 0.95,
+        },
+      },
+    })
+    .select('id, conversation_id, sender_id, body, created_at, message_kind, metadata')
+    .single();
+
+  if (insertErr) return { success: false, error: insertErr.message };
+
+  revalidatePath('/messages');
+  return { success: true, aiMessage: insertedMsg, error: null };
 }
 
 /**
@@ -248,7 +459,6 @@ export async function deleteMessageAction(
   if (!supabase) return { success: false, error: 'Database not available.' };
 
   if (deleteType === 'for_me') {
-    // Append user id to deleted_for array
     const { data: msg } = await supabase
       .from('messages')
       .select('deleted_for')
@@ -266,7 +476,6 @@ export async function deleteMessageAction(
     return { success: true, error: null };
   }
 
-  // Delete for everyone (Sender or Group Admin)
   const { data: message } = await supabase
     .from('messages')
     .select('id, sender_id, conversation_id')

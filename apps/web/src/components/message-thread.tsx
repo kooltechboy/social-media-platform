@@ -26,6 +26,7 @@ import {
   UserX,
   Check,
   CheckCheck,
+  Bot,
 } from 'lucide-react';
 import { createSupabaseBrowserClient } from '../lib/supabase/browser';
 import {
@@ -33,6 +34,7 @@ import {
   editMessageAction,
   deleteMessageAction,
   toggleMessageReactionAction,
+  generateBusinessAiResponseAction,
   type MessageActionState,
 } from '../lib/messaging/actions';
 import EmojiPickerPopover from './emoji/emoji-picker-popover';
@@ -40,8 +42,9 @@ import MessageReactionBar from './emoji/message-reaction-bar';
 import AudioVoiceNotePlayer from './messages/audio-voice-note-player';
 import VoiceNoteRecorder from './messages/voice-note-recorder';
 import CallOverlayModal, { type CallMode } from './calls/call-overlay-modal';
+import MessageContextCard from './messages/cards/message-context-card';
 import UserAvatar from './user-avatar';
-import { generateClientMessageId } from '@caribbean/messaging';
+import { generateClientMessageId, type MessageKind, type MessageMetadata } from '@caribbean/messaging';
 
 export interface ThreadMessage {
   id: string;
@@ -50,7 +53,7 @@ export interface ThreadMessage {
   created_at: string;
   profiles: { display_name: string } | null;
   audio_url?: string;
-  message_kind?: 'text' | 'voice' | 'media' | 'system';
+  message_kind?: MessageKind;
   media_url?: string;
   client_message_id?: string;
   sequence_number?: number;
@@ -59,7 +62,7 @@ export interface ThreadMessage {
   deleted_at?: string;
   status?: 'sending' | 'sent' | 'delivered' | 'read' | 'failed';
   reactions?: Array<{ emoji: string; count: number; users: string[] }>;
-  metadata?: any;
+  metadata?: MessageMetadata;
 }
 
 export default function MessageThread({
@@ -81,6 +84,7 @@ export default function MessageThread({
   const [messageInput, setMessageInput] = useState('');
   const [state, setState] = useState<MessageActionState>({ error: null });
   const [pending, startTransition] = useTransition();
+  const [isAiResponding, setIsAiResponding] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const textInputRef = useRef<HTMLInputElement>(null);
 
@@ -179,9 +183,10 @@ export default function MessageThread({
                 client_message_id: newMsg.client_message_id,
                 sequence_number: newMsg.sequence_number,
                 reply_to_id: newMsg.reply_to_id,
+                metadata: newMsg.metadata,
                 status: 'delivered',
                 profiles: {
-                  display_name: newMsg.sender_id === currentUserId ? 'You' : peerName,
+                  display_name: newMsg.sender_id === currentUserId ? 'You' : (newMsg.message_kind === 'ai_response' ? 'TUKUBI Business AI' : peerName),
                 },
               },
             ];
@@ -311,6 +316,42 @@ export default function MessageThread({
         );
       }
     });
+  }
+
+  // Handle asking AI Assistant
+  async function handleAskAiAssistant() {
+    if (!messageInput.trim()) return;
+    const prompt = messageInput.trim();
+    setMessageInput('');
+    setIsAiResponding(true);
+
+    try {
+      const userMsgId = generateClientMessageId();
+      const userMsg: ThreadMessage = {
+        id: userMsgId,
+        client_message_id: userMsgId,
+        sender_id: currentUserId,
+        body: prompt,
+        created_at: new Date().toISOString(),
+        message_kind: 'text',
+        status: 'sent',
+        profiles: { display_name: 'You' },
+      };
+      setMessages((prev) => [...prev, userMsg]);
+
+      const aiRes = await generateBusinessAiResponseAction(conversationId, prompt);
+      if (aiRes.aiMessage) {
+        setMessages((prev) => [
+          ...prev,
+          {
+            ...aiRes.aiMessage,
+            profiles: { display_name: 'TUKUBI Business AI' },
+          },
+        ]);
+      }
+    } finally {
+      setIsAiResponding(false);
+    }
   }
 
   // Retry sending failed message
@@ -524,6 +565,9 @@ export default function MessageThread({
             const isVoice = msg.message_kind === 'voice' || !!msg.audio_url;
             const isDeleted = !!msg.deleted_at;
             const repliedMsg = msg.reply_to_id ? messages.find((m) => m.id === msg.reply_to_id) : null;
+            const isRichCard = [
+              'product', 'order', 'event', 'livestream', 'store', 'community', 'profile', 'ai_response'
+            ].includes(msg.message_kind || '');
 
             return (
               <div
@@ -546,7 +590,7 @@ export default function MessageThread({
                 )}
 
                 {/* Message Bubble Container */}
-                <div className="flex items-end gap-2 max-w-[85%] sm:max-w-[75%] relative">
+                <div className="flex items-end gap-2 max-w-[88%] sm:max-w-[78%] relative">
                   {!isMine && (
                     <div className="flex-shrink-0 mb-1">
                       <UserAvatar name={peerName} avatarUrl={peerAvatarUrl} size="sm" />
@@ -554,61 +598,90 @@ export default function MessageThread({
                   )}
 
                   <div className="flex flex-col">
-                    {/* Bubble */}
-                    <div
-                      className={`p-3.5 rounded-2xl text-xs relative transition-all shadow-md ${
-                        isDeleted
-                          ? 'bg-white/5 border border-white/10 text-slate-400 italic'
-                          : isMine
-                          ? 'bg-gradient-to-tr from-brand-caribbeanSea via-teal-500 to-brand-sunriseCoral text-slate-950 font-bold rounded-br-none shadow-brand-caribbeanSea/10'
-                          : 'bg-[#181126] border border-white/10 text-white rounded-bl-none shadow-black/30'
-                      }`}
-                    >
-                      {/* Voice Note Player or Text Content */}
-                      {isVoice && !isDeleted ? (
-                        <div className="min-w-[220px] sm:min-w-[260px]">
-                          <AudioVoiceNotePlayer
-                            audioUrl={msg.audio_url || ''}
-                            isCurrentUser={isMine}
-                          />
-                        </div>
-                      ) : (
-                        <p className="whitespace-pre-wrap break-words leading-relaxed font-semibold">
-                          {msg.body}
-                        </p>
-                      )}
-
-                      {/* Timestamp & Status Metadata */}
-                      <div
-                        className={`flex items-center justify-end gap-1 mt-1 text-[9px] ${
-                          isMine ? 'text-slate-900/80 font-bold' : 'text-slate-400'
-                        }`}
-                      >
-                        {msg.edited_at && <span className="italic mr-0.5">(edited)</span>}
-                        <span>
-                          {new Date(msg.created_at).toLocaleTimeString('en-US', {
-                            hour: 'numeric',
-                            minute: '2-digit',
-                          })}
-                        </span>
-                        {isMine && (
-                          <span>
-                            {msg.status === 'failed' ? (
-                              <button
-                                onClick={() => handleRetry(msg)}
-                                className="text-rose-600 hover:underline flex items-center gap-0.5 font-black"
-                              >
-                                <RotateCcw className="w-2.5 h-2.5" /> Retry
-                              </button>
-                            ) : msg.status === 'sending' ? (
-                              <span className="opacity-70 animate-pulse">…</span>
-                            ) : (
-                              <CheckCheck className="w-3 h-3 text-slate-950" />
-                            )}
-                          </span>
+                    {/* Rich Context Card (Product, Order, Event, Store, Live, AI) */}
+                    {isRichCard && !isDeleted ? (
+                      <div className="space-y-2">
+                        <MessageContextCard
+                          kind={msg.message_kind!}
+                          metadata={msg.metadata}
+                          isMine={isMine}
+                          onActionClick={(act) => {
+                            if (act === 'escalate_human') {
+                              setMessageInput('I would like to speak with human staff.');
+                            } else if (act === 'ask_question') {
+                              setMessageInput('Do you ship across the Caribbean?');
+                            }
+                          }}
+                        />
+                        {msg.body && !msg.body.startsWith('[') && (
+                          <div
+                            className={`p-3 rounded-2xl text-xs ${
+                              isMine
+                                ? 'bg-gradient-to-tr from-brand-caribbeanSea via-teal-500 to-brand-sunriseCoral text-slate-950 font-bold'
+                                : 'bg-[#181126] border border-white/10 text-white'
+                            }`}
+                          >
+                            <p className="whitespace-pre-wrap break-words leading-relaxed">{msg.body}</p>
+                          </div>
                         )}
                       </div>
-                    </div>
+                    ) : (
+                      /* Bubble */
+                      <div
+                        className={`p-3.5 rounded-2xl text-xs relative transition-all shadow-md ${
+                          isDeleted
+                            ? 'bg-white/5 border border-white/10 text-slate-400 italic'
+                            : isMine
+                            ? 'bg-gradient-to-tr from-brand-caribbeanSea via-teal-500 to-brand-sunriseCoral text-slate-950 font-bold rounded-br-none shadow-brand-caribbeanSea/10'
+                            : 'bg-[#181126] border border-white/10 text-white rounded-bl-none shadow-black/30'
+                        }`}
+                      >
+                        {/* Voice Note Player or Text Content */}
+                        {isVoice && !isDeleted ? (
+                          <div className="min-w-[220px] sm:min-w-[260px]">
+                            <AudioVoiceNotePlayer
+                              audioUrl={msg.audio_url || ''}
+                              isCurrentUser={isMine}
+                            />
+                          </div>
+                        ) : (
+                          <p className="whitespace-pre-wrap break-words leading-relaxed font-semibold">
+                            {msg.body}
+                          </p>
+                        )}
+
+                        {/* Timestamp & Status Metadata */}
+                        <div
+                          className={`flex items-center justify-end gap-1 mt-1 text-[9px] ${
+                            isMine ? 'text-slate-900/80 font-bold' : 'text-slate-400'
+                          }`}
+                        >
+                          {msg.edited_at && <span className="italic mr-0.5">(edited)</span>}
+                          <span>
+                            {new Date(msg.created_at).toLocaleTimeString('en-US', {
+                              hour: 'numeric',
+                              minute: '2-digit',
+                            })}
+                          </span>
+                          {isMine && (
+                            <span>
+                              {msg.status === 'failed' ? (
+                                <button
+                                  onClick={() => handleRetry(msg)}
+                                  className="text-rose-600 hover:underline flex items-center gap-0.5 font-black"
+                                >
+                                  <RotateCcw className="w-2.5 h-2.5" /> Retry
+                                </button>
+                              ) : msg.status === 'sending' ? (
+                                <span className="opacity-70 animate-pulse">…</span>
+                              ) : (
+                                <CheckCheck className="w-3 h-3 text-slate-950" />
+                              )}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    )}
 
                     {/* Reaction Badges */}
                     {msg.reactions && msg.reactions.length > 0 && (
@@ -799,6 +872,17 @@ export default function MessageThread({
               position="top-left"
             />
           </div>
+
+          {/* Ask AI Trigger Button */}
+          <button
+            type="button"
+            onClick={handleAskAiAssistant}
+            title="Ask TUKUBI Business AI"
+            disabled={!messageInput.trim() || isAiResponding}
+            className="p-2 rounded-xl text-brand-goldenHour hover:bg-brand-goldenHour/10 border border-brand-goldenHour/30 disabled:opacity-30 transition-all cursor-pointer"
+          >
+            <Bot className="w-4 h-4" />
+          </button>
 
           {/* Voice Record Button */}
           <button
