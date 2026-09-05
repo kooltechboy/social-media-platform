@@ -1,10 +1,22 @@
 import React from 'react';
+import type { Metadata } from 'next';
 import { Mic, Radio } from 'lucide-react';
 import Link from 'next/link';
 import { createSupabaseServerClient, getCurrentUser } from '../../lib/supabase/server';
 import PodcastNetworkFeed, { type PodcastShowItem } from '../../components/podcasts/podcast-network-feed';
 
 export const dynamic = 'force-dynamic';
+
+export const metadata: Metadata = {
+  title: 'TUKUBI Podcasts — Caribbean Voices, Culture & Audio Shows',
+  description: 'Stream original Caribbean podcasts, music documentaries, and dialect stories with RSS syndication.',
+  openGraph: {
+    title: 'TUKUBI Podcasts — Caribbean Audio Network',
+    description: 'Stream original Caribbean podcasts, music documentaries, and dialect stories.',
+    url: 'https://tukubi.com/podcasts',
+    siteName: 'TUKUBI',
+  },
+};
 
 const PODCAST_CATEGORIES = [
   'All Shows',

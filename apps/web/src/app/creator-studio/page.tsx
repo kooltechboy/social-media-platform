@@ -12,6 +12,7 @@ import {
   Tv,
 } from "lucide-react";
 import Link from "next/link";
+import type { Metadata } from "next";
 import {
   createSupabaseServerClient,
   getCurrentUser,
@@ -33,6 +34,17 @@ import CreatorContentManager, {
 import type { CreatorDraftItem } from "../../lib/creator/draft-actions";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: "TUKUBI Creator Studio — Analytics, Content Management & Monetization",
+  description: "Manage Caribbean podcasts, video series, live stream broadcasts, and track earnings.",
+  openGraph: {
+    title: "TUKUBI Creator Studio",
+    description: "Manage Caribbean podcasts, video series, live stream broadcasts, and track earnings.",
+    url: "https://tukubi.com/creator-studio",
+    siteName: "TUKUBI",
+  },
+};
 
 interface CreatorAccount {
   id: string;

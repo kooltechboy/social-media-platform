@@ -1,9 +1,15 @@
 import React from 'react';
+import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { getCurrentUser } from '../../lib/supabase/server';
 import CreateHubClient from '../../components/create-hub-client';
 
 export const dynamic = 'force-dynamic';
+
+export const metadata: Metadata = {
+  title: 'TUKUBI Create Hub — Universal Caribbean Content Creation',
+  description: 'Publish stories, videos, podcasts, and broadcast live across the Caribbean ecosystem.',
+};
 
 export default async function CreateHubPage() {
   const user = await getCurrentUser();

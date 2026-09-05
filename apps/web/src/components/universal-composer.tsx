@@ -269,20 +269,22 @@ export default function UniversalComposer({
               upsert: false,
             });
 
-          if (!uploadError) {
-            const { data: pubData } = supabase.storage.from('post-media').getPublicUrl(filePath);
-            if (pubData && pubData.publicUrl) {
-              uploadedUrls.push(pubData.publicUrl);
-              continue;
-            }
+          if (uploadError) {
+            throw new Error(`Media upload failed: ${uploadError.message}`);
+          }
+
+          const { data: pubData } = supabase.storage.from('post-media').getPublicUrl(filePath);
+          if (pubData && pubData.publicUrl) {
+            uploadedUrls.push(pubData.publicUrl);
+          } else {
+            throw new Error('Failed to resolve public URL for uploaded media.');
           }
         } catch (err) {
-          console.error('Storage upload error:', err);
+          throw err instanceof Error ? err : new Error('Storage media upload failed.');
         }
+      } else {
+        throw new Error('Storage client is unavailable.');
       }
-
-      // Fallback data preview URL for offline or test sandbox
-      uploadedUrls.push(item.previewUrl);
     }
 
     return uploadedUrls;

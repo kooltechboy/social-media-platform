@@ -27,6 +27,7 @@ import {
 import UniversalComposer, { type ComposerMode } from './universal-composer';
 import CreatePodcastModal from './podcasts/create-podcast-modal';
 import { getCreatorDraftsAction, type CreatorDraftItem } from '../lib/creator/draft-actions';
+import { createSupabaseBrowserClient } from '../lib/supabase/browser';
 
 interface CreateHubClientProps {
   user: {
@@ -188,12 +189,13 @@ export default function CreateHubClient({ user }: CreateHubClientProps) {
   const [activeFilter, setActiveFilter] = useState('all');
   const [hasDraft, setHasDraft] = useState(false);
   const [serverDrafts, setServerDrafts] = useState<CreatorDraftItem[]>([]);
+  const [creatorPodcasts, setCreatorPodcasts] = useState<Array<{ id: string; title: string; slug: string }>>([]);
   const [isPodcastModalOpen, setIsPodcastModalOpen] = useState(false);
   const [publishedPostId, setPublishedPostId] = useState<string | null>(null);
   const [composerMode, setComposerMode] = useState<ComposerMode>('text');
   const composerSectionRef = useRef<HTMLDivElement>(null);
 
-  // Check for saved drafts on mount (local + server)
+  // Check for saved drafts and existing creator podcasts on mount
   useEffect(() => {
     try {
       const draft = localStorage.getItem('tukubi_composer_draft_v3') || localStorage.getItem('tukubi_composer_draft_v2');
@@ -213,6 +215,19 @@ export default function CreateHubClient({ user }: CreateHubClientProps) {
           setServerDrafts(res.drafts);
         }
       });
+
+      const supabase = createSupabaseBrowserClient();
+      if (supabase) {
+        void supabase
+          .from('podcasts')
+          .select('id, title, slug')
+          .eq('creator_id', user.id)
+          .then(({ data }) => {
+            if (data && data.length > 0) {
+              setCreatorPodcasts(data as any);
+            }
+          });
+      }
     }
   }, [user?.id]);
 
@@ -378,6 +393,41 @@ export default function CreateHubClient({ user }: CreateHubClientProps) {
         {/* Tools Cards Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredTools.map((tool) => {
+            if (tool.id === 'podcast') {
+              return (
+                <button
+                  key={tool.id}
+                  type="button"
+                  onClick={() => setIsPodcastModalOpen(true)}
+                  className="surface-card surface-card-interactive rounded-2xl p-5 flex flex-col justify-between group text-left w-full cursor-pointer min-h-[190px]"
+                >
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div className="p-3 rounded-xl bg-white/5 border border-white/10 text-white shadow-sm">
+                        {tool.icon}
+                      </div>
+                      <span className="text-[10px] font-black px-2.5 py-1 rounded-full bg-purple-500/15 text-purple-300 border border-purple-500/30">
+                        STUDIO UPLOAD
+                      </span>
+                    </div>
+                    <div>
+                      <h3 className="font-black text-sm sm:text-base text-white group-hover:text-purple-300 transition-colors">
+                        {tool.title}
+                      </h3>
+                      <p className="text-xs sm:text-sm text-brand-sandstone/80 mt-1 leading-relaxed">
+                        {tool.description}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="pt-4 mt-3 flex items-center justify-between text-xs font-bold text-purple-300 border-t border-white/10 w-full">
+                    <span>Create &amp; Publish Episode</span>
+                    <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                  </div>
+                </button>
+              );
+            }
+
             const isDirectLink = Boolean(tool.directHref);
 
             if (isDirectLink && tool.directHref) {
@@ -459,7 +509,7 @@ export default function CreateHubClient({ user }: CreateHubClientProps) {
         isOpen={isPodcastModalOpen}
         onClose={() => setIsPodcastModalOpen(false)}
         user={user}
-        existingPodcasts={[]}
+        existingPodcasts={creatorPodcasts}
       />
     </div>
   );

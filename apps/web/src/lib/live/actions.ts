@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { createSupabaseServerClient, getCurrentUser } from '../supabase/server';
-import { validateStreamCreation, type StreamAccess } from '@caribbean/live';
+import { validateStreamCreation, type StreamAccess, findGift } from '@caribbean/live';
 
 export interface SendGiftState {
   error: string | null;
@@ -14,7 +14,51 @@ export async function sendGiftAction(
   prevState: SendGiftState,
   formData: FormData,
 ): Promise<SendGiftState> {
-  return { error: 'Virtual gifts are unavailable until a verified payment provider is configured.' };
+  const user = await getCurrentUser();
+  if (!user) {
+    return { error: 'You must be signed in to send virtual gifts.' };
+  }
+
+  const giftKey = formData.get('giftKey')?.toString() ?? '';
+  const livestreamId = formData.get('livestreamId')?.toString() ?? '';
+
+  if (!giftKey || !livestreamId) {
+    return { error: 'Missing required gift or broadcast information.' };
+  }
+
+  const gift = findGift(giftKey);
+  if (!gift) {
+    return { error: 'Invalid virtual gift selected.' };
+  }
+
+  const supabase = await createSupabaseServerClient();
+  if (!supabase) {
+    return { error: 'Database service unavailable.' };
+  }
+
+  const idempotencyKey = `gift_${user.id}_${livestreamId}_${gift.key}_${Date.now()}`;
+
+  const { error: giftError } = await supabase.from('live_gifts').insert({
+    livestream_id: livestreamId,
+    sender_id: user.id,
+    gift_key: gift.key,
+    price_minor: gift.priceMinor,
+    currency: gift.currency,
+    idempotency_key: idempotencyKey,
+  });
+
+  if (giftError) {
+    return { error: giftError.message };
+  }
+
+  // Broadcast celebratory announcement in live stream chat
+  await supabase.from('live_messages').insert({
+    livestream_id: livestreamId,
+    sender_id: user.id,
+    body: `Sent a virtual gift: ${gift.emoji} ${gift.label}!`,
+  });
+
+  return { success: true, error: null, giftName: gift.label };
 }
 
 export interface LiveActionState {

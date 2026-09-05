@@ -1,4 +1,5 @@
 import React, { Suspense } from 'react';
+import type { Metadata } from 'next';
 import { Tv, Radio, Users, Sparkles } from 'lucide-react';
 import Link from 'next/link';
 import { createSupabaseServerClient, getCurrentUser } from '../../lib/supabase/server';
@@ -6,6 +7,17 @@ import LiveViewerPlayer, { type LivestreamViewItem } from '../../components/live
 import { LIVE_CATEGORIES } from '@caribbean/live';
 
 export const dynamic = 'force-dynamic';
+
+export const metadata: Metadata = {
+  title: 'TUKUBI Live — Real-time Caribbean Broadcasts & Music Streams',
+  description: 'Experience live music festivals, dub sessions, carnival fetes, and cultural broadcasts live from the Caribbean and Diaspora.',
+  openGraph: {
+    title: 'TUKUBI Live — Real-time Caribbean Broadcasts',
+    description: 'Experience live music festivals, dub sessions, carnival fetes, and cultural broadcasts.',
+    url: 'https://tukubi.com/live',
+    siteName: 'TUKUBI',
+  },
+};
 
 export default async function LivePage({
   searchParams,

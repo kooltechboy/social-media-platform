@@ -317,4 +317,87 @@ describe('TUKUBI Creator Platform — Production Certification Suite', () => {
       expect(migrationCode).toContain('CREATE OR REPLACE FUNCTION public.decrement_podcast_followers');
     });
   });
+
+  describe('6. SECOND-PASS AUDIT & PRODUCTION HARDENING', () => {
+    it('verifies migration 00058 hardens live gifts RLS for stream participants and archives', () => {
+      const mig00058 = readFileSync(
+        resolve(__dirname, '../../supabase/migrations/00058_creator_platform_second_pass.sql'),
+        'utf-8'
+      );
+      expect(mig00058).toContain('CREATE POLICY "Stream participants read gifts" ON public.live_gifts');
+      expect(mig00058).toContain("state IN ('live', 'ended')");
+      expect(mig00058).toContain('CREATE POLICY "Creator and sender delete chat" ON public.live_messages');
+      expect(mig00058).toContain('CREATE OR REPLACE FUNCTION public.get_creator_gift_earnings');
+    });
+
+    it('verifies virtual live gifts catalog lookup and valid pricing in USD minor units', () => {
+      expect(GIFT_CATALOG.length).toBeGreaterThanOrEqual(4);
+      const rose = findGift('island_rose');
+      expect(rose).toBeDefined();
+      expect(rose?.priceMinor).toBe(99);
+      expect(rose?.currency).toBe('USD');
+
+      const crown = findGift('carnival_crown');
+      expect(crown).toBeDefined();
+      expect(crown?.priceMinor).toBe(999);
+
+      const nonExistent = findGift('unknown_gift_xyz');
+      expect(nonExistent).toBeUndefined();
+    });
+
+    it('verifies universal composer enforces real storage uploads with zero blob URL fallbacks', () => {
+      const composerCode = readFileSync(
+        resolve(__dirname, '../../apps/web/src/components/universal-composer.tsx'),
+        'utf-8'
+      );
+      expect(composerCode).not.toContain('uploadedUrls.push(item.previewUrl)');
+      expect(composerCode).toContain('Storage client is unavailable');
+    });
+
+    it('verifies podcasts slug page exports dynamic OpenGraph metadata and queries full episodes', () => {
+      const slugPageCode = readFileSync(
+        resolve(__dirname, '../../apps/web/src/app/podcasts/[slug]/page.tsx'),
+        'utf-8'
+      );
+      expect(slugPageCode).toContain('export async function generateMetadata');
+      expect(slugPageCode).toContain('podcast_episodes(');
+      expect(slugPageCode).toContain('audio_path');
+      expect(slugPageCode).toContain('chapters');
+      expect(slugPageCode).toContain('show_notes');
+    });
+
+    it('verifies OpenGraph metadata is exported across all primary creator routes', () => {
+      const livePageCode = readFileSync(
+        resolve(__dirname, '../../apps/web/src/app/live/page.tsx'),
+        'utf-8'
+      );
+      const podcastsPageCode = readFileSync(
+        resolve(__dirname, '../../apps/web/src/app/podcasts/page.tsx'),
+        'utf-8'
+      );
+      const createPageCode = readFileSync(
+        resolve(__dirname, '../../apps/web/src/app/create/page.tsx'),
+        'utf-8'
+      );
+      const studioPageCode = readFileSync(
+        resolve(__dirname, '../../apps/web/src/app/creator-studio/page.tsx'),
+        'utf-8'
+      );
+
+      expect(livePageCode).toContain('export const metadata: Metadata');
+      expect(podcastsPageCode).toContain('export const metadata: Metadata');
+      expect(createPageCode).toContain('export const metadata: Metadata');
+      expect(studioPageCode).toContain('export const metadata: Metadata');
+    });
+
+    it('verifies create-hub triggers in-app podcast creator modal and passes creator shows', () => {
+      const hubCode = readFileSync(
+        resolve(__dirname, '../../apps/web/src/components/create-hub-client.tsx'),
+        'utf-8'
+      );
+      expect(hubCode).toContain("tool.id === 'podcast'");
+      expect(hubCode).toContain('setIsPodcastModalOpen(true)');
+      expect(hubCode).toContain('existingPodcasts={creatorPodcasts}');
+    });
+  });
 });
