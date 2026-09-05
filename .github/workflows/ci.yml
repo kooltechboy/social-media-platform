@@ -29,6 +29,9 @@ jobs:
       - name: Type check
         run: pnpm run typecheck
 
+      - name: Inviolable Prohibited References Gate
+        run: pnpm run check:prohibited
+
       - name: Unit & domain tests
         run: pnpm run test:unit
 
