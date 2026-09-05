@@ -7,6 +7,7 @@ export interface PayPalAdapterConfig {
   clientSecret?: string;
   environment?: 'sandbox' | 'live';
   webhookVerifier?: WebhookVerifier;
+  webhookId?: string;
 }
 
 export class PayPalAdapter implements PSPAdapter {
@@ -16,11 +17,14 @@ export class PayPalAdapter implements PSPAdapter {
   private environment: 'sandbox' | 'live';
   private webhookVerifier?: WebhookVerifier;
 
+  private webhookId: string;
+
   constructor(config: PayPalAdapterConfig = {}) {
     this.clientId = config.clientId || (typeof process !== 'undefined' ? process.env?.PAYPAL_CLIENT_ID : '') || '';
     this.clientSecret = config.clientSecret || (typeof process !== 'undefined' ? process.env?.PAYPAL_CLIENT_SECRET : '') || '';
     this.environment = config.environment || (process.env?.NODE_ENV === 'production' ? 'live' : 'sandbox');
     this.webhookVerifier = config.webhookVerifier;
+    this.webhookId = config.webhookId || (typeof process !== 'undefined' ? process.env?.PAYPAL_WEBHOOK_ID : '') || '';
   }
 
   get isConfigured(): boolean {
@@ -174,7 +178,74 @@ export class PayPalAdapter implements PSPAdapter {
     }
   }
 
-  verifyWebhook(payload: string, signature: string, secret?: string): boolean {
-    return Boolean(this.webhookVerifier && signature?.trim() && this.webhookVerifier(payload, signature, secret));
+  private async getAccessToken(): Promise<string> {
+    const baseUrl = this.environment === 'live' ? 'https://api-m.paypal.com' : 'https://api-m.sandbox.paypal.com';
+    const auth = Buffer.from(`${this.clientId}:${this.clientSecret}`).toString('base64');
+    const tokenRes = await fetch(`${baseUrl}/v1/oauth2/token`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Basic ${auth}`,
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: 'grant_type=client_credentials',
+    });
+
+    if (!tokenRes.ok) {
+      throw new Error(`PayPal auth failed with status ${tokenRes.status}`);
+    }
+
+    const tokenData = (await tokenRes.json()) as any;
+    return tokenData.access_token;
+  }
+
+  async captureOrder(orderId: string): Promise<any> {
+    if (!this.isConfigured) throw new Error('PayPal credentials are unavailable');
+    const baseUrl = this.environment === 'live' ? 'https://api-m.paypal.com' : 'https://api-m.sandbox.paypal.com';
+    const accessToken = await this.getAccessToken();
+
+    const res = await fetch(`${baseUrl}/v2/checkout/orders/${orderId}/capture`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+    });
+    
+    if (!res.ok) {
+      const data = (await res.json().catch(() => ({}))) as any;
+      throw new Error(data.message || `PayPal capture failed with status ${res.status}`);
+    }
+    
+    return res.json();
+  }
+
+  async verifyWebhook(payload: string, headers: any): Promise<boolean> {
+    try {
+      const token = await this.getAccessToken();
+      const baseUrl = this.environment === 'live' ? 'https://api-m.paypal.com' : 'https://api-m.sandbox.paypal.com';
+      
+      const response = await fetch(`${baseUrl}/v1/notifications/verify-webhook-signature`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          auth_algo: headers['paypal-auth-algo'] ?? headers['PAYPAL-AUTH-ALGO'],
+          cert_url: headers['paypal-cert-url'] ?? headers['PAYPAL-CERT-URL'],
+          transmission_id: headers['paypal-transmission-id'] ?? headers['PAYPAL-TRANSMISSION-ID'],
+          transmission_sig: headers['paypal-transmission-sig'] ?? headers['PAYPAL-TRANSMISSION-SIG'],
+          transmission_time: headers['paypal-transmission-time'] ?? headers['PAYPAL-TRANSMISSION-TIME'],
+          webhook_id: this.webhookId,
+          webhook_event: JSON.parse(payload),
+        }),
+      });
+      
+      if (!response.ok) return false;
+      const data = (await response.json()) as { verification_status: string };
+      return data.verification_status === 'SUCCESS';
+    } catch {
+      return false;
+    }
   }
 }

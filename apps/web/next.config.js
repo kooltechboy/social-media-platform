@@ -1,3 +1,5 @@
+const { withSentryConfig } = require('@sentry/nextjs');
+
 /** @type {import('next').NextConfig} */
 
 // CSP: tightly scoped to TUKUBI's actual third-party dependencies.
@@ -13,8 +15,8 @@ const TUKUBI_CSP = [
   "img-src 'self' data: blob: https://*.supabase.co https://*.supabase.in https://images.unsplash.com https://*.unsplash.com https://www.paypalobjects.com https://www.gstatic.com",
   // Fonts: self + Google Fonts
   "font-src 'self' https://fonts.gstatic.com",
-  // API/WebSocket connections: Supabase, Stripe, PayPal, self
-  "connect-src 'self' https://*.supabase.co https://*.supabase.in wss://*.supabase.co https://api.stripe.com https://www.paypal.com https://api.paypal.com https://openrouter.ai https://api.openrouter.ai",
+  // API/WebSocket connections: Supabase, Stripe, PayPal, self, Sentry
+  "connect-src 'self' https://*.supabase.co https://*.supabase.in wss://*.supabase.co https://api.stripe.com https://www.paypal.com https://api.paypal.com https://openrouter.ai https://api.openrouter.ai https://*.sentry.io",
   // Frames: Stripe hosted payment UI, PayPal Smart Buttons
   "frame-src 'self' https://js.stripe.com https://hooks.stripe.com https://www.paypal.com https://www.sandbox.paypal.com",
   // Media: self + Supabase Storage for audio/video
@@ -94,5 +96,13 @@ const nextConfig = {
   },
 };
 
-module.exports = nextConfig;
-
+module.exports = withSentryConfig(nextConfig, {
+  silent: true,
+  org: process.env.SENTRY_ORG,
+  project: process.env.SENTRY_PROJECT,
+  authToken: process.env.SENTRY_AUTH_TOKEN,
+  widenClientFileUpload: true,
+  tunnelRoute: '/monitoring',
+  hideSourceMaps: true,
+  disableLogger: true,
+});

@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { createSupabaseBrowserClient } from '../../lib/supabase/browser';
 import {
   MessageSquare,
   Users,
@@ -22,11 +23,21 @@ import {
   ShieldAlert,
   Archive,
   Inbox,
+  Store,
+  Briefcase,
+  Bot,
+  Filter,
+  CheckCircle2,
+  Trash2,
+  MoreVertical,
+  ChevronDown
 } from 'lucide-react';
 import MessageThread, { type ThreadMessage } from '../message-thread';
 import NewMessageModal, { type NewMessageMember } from './new-message-modal';
 import UserAvatar from '../user-avatar';
 import { handleMessageRequestAction } from '../../lib/messaging/actions';
+import { Button } from '@caribbean/ui';
+
 
 export interface ConversationSummary {
   id: string;
@@ -80,9 +91,130 @@ export default function MessagesCenterClient({
   const [mobileView, setMobileView] = useState<'list' | 'thread'>(selectedId ? 'thread' : 'list');
   const [requestActionLoading, setRequestActionLoading] = useState<string | null>(null);
 
-  // Filtered conversations
+  async function handleRequestResponse(convId: string, action: 'accept' | 'decline' | 'block') {
+    setRequestActionLoading(convId);
+    try {
+      await handleMessageRequestAction(convId, action);
+      router.refresh();
+    } finally {
+      setRequestActionLoading(null);
+    }
+  }
+
+  // Local state to hold conversations and requests so we can update them in real-time
+  const [localConversations, setLocalConversations] = useState<ConversationSummary[]>(conversations);
+  const [localPendingRequests, setLocalPendingRequests] = useState<PendingRequest[]>(pendingRequests);
+
+  // Sync with props if they change (e.g. from router.refresh())
+  useEffect(() => {
+    setLocalConversations(conversations);
+  }, [conversations]);
+
+  useEffect(() => {
+    setLocalPendingRequests(pendingRequests);
+  }, [pendingRequests]);
+
+  // Realtime subscriptions
+  useEffect(() => {
+    const supabase = createSupabaseBrowserClient();
+    if (!supabase) return;
+
+    // 1. Subscribe to conversation_members
+    const convMembersChannel = supabase
+      .channel(`public:conversation_members:profile_id=eq.${currentUserId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'conversation_members',
+          filter: `profile_id=eq.${currentUserId}`,
+        },
+        () => {
+          // On insert, just refresh to get full joined details
+          router.refresh();
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'conversation_members',
+          filter: `profile_id=eq.${currentUserId}`,
+        },
+        (payload: any) => {
+          const updated = payload.new as any;
+          setLocalConversations((prev) =>
+            prev.map((c) => {
+              if (c.id === updated.conversation_id) {
+                // If last_sequence_number was fetched somehow, we'd use it, 
+                // but since we only have last_read_sequence here, we will just force a refresh
+                // to get the correct unread count computed from the server.
+                router.refresh();
+                return c;
+              }
+              return c;
+            })
+          );
+        }
+      )
+      .subscribe();
+
+    // 2. Subscribe to message_requests
+    const msgRequestsChannel = supabase
+      .channel(`public:message_requests:receiver_id=eq.${currentUserId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'message_requests',
+          filter: `receiver_id=eq.${currentUserId}`,
+        },
+        () => {
+          router.refresh();
+        }
+      )
+      .subscribe();
+
+    // 3. Subscribe to ALL messages to update unread counts (since RLS filters for us)
+    const messagesChannel = supabase
+      .channel('public:messages:all')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'messages',
+        },
+        (payload) => {
+          const newMsg = payload.new as any;
+          setLocalConversations((prev) => {
+            const exists = prev.find(c => c.id === newMsg.conversation_id);
+            if (exists) {
+              return prev.map(c => 
+                c.id === newMsg.conversation_id 
+                  ? { ...c, unreadCount: (c.unreadCount || 0) + 1, preview: newMsg.body || 'New message', last_message_at: newMsg.created_at }
+                  : c
+              );
+            }
+            return prev;
+          });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(convMembersChannel);
+      supabase.removeChannel(msgRequestsChannel);
+      supabase.removeChannel(messagesChannel);
+    };
+  }, [currentUserId, router]);
+
+  // Use local state for rendering
   const filteredConversations = useMemo(() => {
-    let list = conversations;
+    let list = localConversations;
     if (filter === 'direct') {
       list = list.filter((c) => c.kind === 'direct' && c.status !== 'archived');
     } else if (filter === 'group') {
@@ -106,16 +238,16 @@ export default function MessagesCenterClient({
       );
     }
     return list;
-  }, [conversations, filter, search]);
+  }, [localConversations, filter, search]);
 
   const activeConversation = useMemo(
-    () => conversations.find((c) => c.id === selectedId),
-    [conversations, selectedId]
+    () => localConversations.find((c) => c.id === selectedId),
+    [localConversations, selectedId]
   );
 
   const totalUnreadCount = useMemo(() => {
-    return conversations.reduce((acc, c) => acc + (c.unreadCount || 0), 0);
-  }, [conversations]);
+    return localConversations.reduce((acc, c) => acc + (c.unreadCount || 0), 0);
+  }, [localConversations]);
 
   function formatConversationTime(timestamp: string | null) {
     if (!timestamp) return '';
@@ -126,16 +258,6 @@ export default function MessagesCenterClient({
       return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
     }
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-  }
-
-  async function handleRequestResponse(convId: string, action: 'accept' | 'decline' | 'block') {
-    setRequestActionLoading(convId);
-    try {
-      await handleMessageRequestAction(convId, action);
-      router.refresh();
-    } finally {
-      setRequestActionLoading(null);
-    }
   }
 
   return (
@@ -207,7 +329,7 @@ export default function MessagesCenterClient({
           <div className="px-4 py-2 flex items-center gap-1.5 border-b border-white/5 overflow-x-auto no-scrollbar">
             {(['all', 'direct', 'group', 'business', 'marketplace', 'requests', 'archived'] as const).map((tab) => {
               const isActive = filter === tab;
-              const requestCount = tab === 'requests' ? pendingRequests.length : 0;
+              const requestCount = tab === 'requests' ? localPendingRequests.length : 0;
               return (
                 <button
                   key={tab}
@@ -233,14 +355,14 @@ export default function MessagesCenterClient({
           <div className="flex-1 overflow-y-auto divide-y divide-white/5">
             {filter === 'requests' ? (
               /* Message Requests View */
-              pendingRequests.length === 0 ? (
+              localPendingRequests.length === 0 ? (
                 <div className="p-8 text-center text-slate-400 text-xs space-y-2">
                   <UserCheck className="w-8 h-8 text-slate-600 mx-auto" />
                   <p className="font-semibold text-slate-300">No Pending Requests</p>
                   <p className="text-[11px] text-slate-400">Incoming messages from new contacts will appear here.</p>
                 </div>
               ) : (
-                pendingRequests.map((req) => (
+                localPendingRequests.map((req) => (
                   <div key={req.id} className="p-4 bg-white/[0.02] hover:bg-white/[0.04] space-y-3">
                     <div className="flex items-center gap-3">
                       <UserAvatar name={req.senderName} avatarUrl={req.senderAvatar} size="md" />

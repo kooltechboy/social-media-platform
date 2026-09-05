@@ -14,6 +14,9 @@ import {
 } from '@caribbean/localization';
 
 import { PwaProvider } from '../components/pwa/pwa-provider';
+import { NotificationsRealtimeProvider } from '../components/notifications-realtime-provider';
+import { createSupabaseServerClient } from '../lib/supabase/server';
+import { PostHogProvider } from '../components/posthog-provider';
 
 export const metadata: Metadata = {
   title: 'TUKUBI — The Caribbean Connected.',
@@ -57,6 +60,19 @@ export default async function RootLayout({
   const activeLocale: Locale = isLocale(rawLocale) ? rawLocale : DEFAULT_LOCALE;
   const dir = LOCALE_DETAILS[activeLocale]?.dir || 'ltr';
 
+  let unreadNotificationsCount = 0;
+  if (user) {
+    const supabase = await createSupabaseServerClient();
+    if (supabase) {
+      const { count } = await supabase
+        .from('notifications')
+        .select('*', { count: 'exact', head: true })
+        .eq('recipient_id', user.id)
+        .is('read_at', null);
+      unreadNotificationsCount = count || 0;
+    }
+  }
+
   return (
     <html lang={activeLocale} dir={dir} className="dark" suppressHydrationWarning>
       <body
@@ -70,8 +86,12 @@ export default async function RootLayout({
         <I18nProvider initialLocale={activeLocale}>
           <AuthProvider initialUser={user}>
             <PwaProvider>
-              {/* App shell with gateway page isolation */}
-              <AppShell>{children}</AppShell>
+              <NotificationsRealtimeProvider initialUnreadCount={unreadNotificationsCount}>
+                <PostHogProvider>
+                  {/* App shell with gateway page isolation */}
+                  <AppShell>{children}</AppShell>
+                </PostHogProvider>
+              </NotificationsRealtimeProvider>
             </PwaProvider>
           </AuthProvider>
         </I18nProvider>

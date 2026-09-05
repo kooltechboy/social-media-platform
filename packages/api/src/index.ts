@@ -9,26 +9,22 @@ export interface PostInput {
   mediaUrls: string[];
 }
 
-export class APIClient {
-  public static async createPost(input: PostInput) {
-    if (!input.content && input.mediaUrls.length === 0) {
-      throw new Error("Post must contain text content or media.");
+/**
+ * @deprecated This package is not used. Real data operations are performed via
+ * Next.js Server Actions in apps/web/src/lib/ which call Supabase directly.
+ * This package is scheduled for removal in Phase 2 cleanup.
+ */
+export const APIClient = {
+  fetchFeed: async () => {
+    if (process.env.NODE_ENV === 'development') {
+      console.warn('[APIClient] fetchFeed() is a stub. Use server actions instead.');
     }
-
-    return {
-      id: `post_${Date.now()}`,
-      ...input,
-      likesCount: 0,
-      commentsCount: 0,
-      createdAt: new Date().toISOString(),
-    };
-  }
-
-  public static async fetchFeed(
-    mode: 'for_you' | 'following' | 'friends' | 'caribbean' | 'local',
-    countryIso?: string
-  ) {
-    // Production typed signature: returns empty feed if no backend query is bound
     return [];
-  }
-}
+  },
+  createPost: async () => {
+    if (process.env.NODE_ENV === 'development') {
+      console.warn('[APIClient] createPost() is a stub. Use createPostAction() instead.');
+    }
+    return null;
+  },
+};

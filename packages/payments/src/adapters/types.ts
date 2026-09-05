@@ -45,7 +45,7 @@ export interface PSPAdapter {
 
   charge(params: PSPChargeParams): Promise<PSPChargeResult>;
   refund(params: PSPRefundParams): Promise<PSPRefundResult>;
-  verifyWebhook(payload: string, signature: string, secret?: string): boolean;
+  verifyWebhook(payload: string, signature: any, secret?: string): boolean | Promise<boolean>;
 }
 
-export type WebhookVerifier = (payload: string, signature: string, secret?: string) => boolean;
+export type WebhookVerifier = (payload: string, signature: string, secret?: string) => boolean | Promise<boolean>;

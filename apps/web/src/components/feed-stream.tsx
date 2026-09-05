@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import {
   Heart,
   Repeat,
@@ -70,11 +71,13 @@ export interface FeedPostData {
 interface FeedStreamProps {
   initialPosts: FeedPostData[];
   currentUserId?: string;
+  mode?: string;
+  nextCursor?: string;
 }
 
-export default function FeedStream({ initialPosts, currentUserId }: FeedStreamProps) {
+export default function FeedStream({ initialPosts, currentUserId, mode = 'for_you', nextCursor }: FeedStreamProps) {
+  const router = useRouter();
   const { t, locale } = useTranslation();
-  const [activeTab, setActiveTab] = useState<'caribbean' | 'foryou' | 'diaspora' | 'creator'>('caribbean');
   const [posts, setPosts] = useState<FeedPostData[]>(initialPosts);
   const [expandedCommentsPostId, setExpandedCommentsPostId] = useState<string | null>(null);
   const [commentInputs, setCommentInputs] = useState<Record<string, string>>({});
@@ -248,14 +251,42 @@ export default function FeedStream({ initialPosts, currentUserId }: FeedStreamPr
     const supabase = createSupabaseBrowserClient();
     if (!supabase) return;
 
-    const channel = supabase
-      .channel('feed_realtime_posts')
-      .on(
-        'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'posts' },
-        async (payload) => {
-          const newRow = payload.new as any;
-          if (!newRow || !newRow.id) return;
+    let filterStr = '';
+    
+    // Self-executing async function to setup realtime correctly based on mode
+    (async () => {
+      if (currentUserId && (mode === 'following' || mode === 'for_you')) {
+        const { data: follows } = await supabase.from('follows').select('following_id').eq('follower_id', currentUserId);
+        const followedIds = follows?.map((f: any) => f.following_id) || [];
+        if (followedIds.length > 0) {
+           filterStr = `author_id=in.(${followedIds.join(',')})`;
+        } else {
+           // Follows nobody, unfiltered fallback (though for_you we might want only caribbean fallback, but prompt says: "If followedIds is empty... fall back to unfiltered")
+        }
+      }
+
+      let channelOpts: any = { event: 'INSERT', schema: 'public', table: 'posts' };
+      if (filterStr) {
+         channelOpts.filter = filterStr;
+      }
+
+      let lastInjectTime = 0;
+
+      const channel = supabase
+        .channel('feed_realtime_posts')
+        .on(
+          'postgres_changes',
+          channelOpts,
+          async (payload) => {
+            const newRow = payload.new as any;
+            if (!newRow || !newRow.id) return;
+            
+            // Rate limit for unfiltered modes
+            if (!filterStr && (mode === 'caribbean' || mode === 'latest')) {
+               const now = Date.now();
+               if (now - lastInjectTime < 5000) return; // skip
+               lastInjectTime = now;
+            }
 
           try {
             const { data: postWithProfile } = await supabase
@@ -309,11 +340,12 @@ export default function FeedStream({ initialPosts, currentUserId }: FeedStreamPr
         }
       )
       .subscribe();
+    })();
 
     return () => {
-      supabase.removeChannel(channel);
+      supabase.getChannels().forEach(ch => supabase.removeChannel(ch));
     };
-  }, []);
+  }, [currentUserId, mode]);
 
   async function handleToggleLike(postId: string) {
     // Optimistic UI update
@@ -528,52 +560,26 @@ export default function FeedStream({ initialPosts, currentUserId }: FeedStreamPr
     }
   }
 
-  // Filter posts based on active tab
-  const displayedPosts = posts.filter((p) => {
-    if (activeTab === 'caribbean') return true;
-    if (activeTab === 'foryou') {
-      return p.likes > 200 || p.verified || (currentUserId && p.authorId === currentUserId);
-    }
-    if (activeTab === 'diaspora') {
-      return (
-        p.location?.includes('US') ||
-        p.location?.includes('CA') ||
-        p.location?.includes('UK') ||
-        p.location?.includes('Diaspora') ||
-        p.category === 'diaspora' ||
-        p.culturalTags?.includes('diaspora')
-      );
-    }
-    if (activeTab === 'creator') {
-      return (
-        p.tag?.includes('Vibes') ||
-        p.tag?.includes('Soca') ||
-        p.tag?.includes('Sound') ||
-        p.category === 'creator' ||
-        p.culturalTags?.includes('creator') ||
-        p.culturalTags?.includes('music')
-      );
-    }
-    return true;
-  });
+  // Posts are already filtered by the server based on mode
+  const displayedPosts = posts;
 
   return (
     <div className="space-y-6">
       {/* Feed Filter Tab Bar */}
       <div className="flex gap-2 sm:gap-4 border-b border-slate-800 pb-2 overflow-x-auto scrollbar-none" role="tablist">
         {[
+          { id: 'for_you', label: t('feed.for_you') },
+          { id: 'following', label: 'Following' },
           { id: 'caribbean', label: t('feed.caribbean') },
-          { id: 'foryou', label: t('feed.for_you') },
-          { id: 'diaspora', label: t('nav.communities') },
-          { id: 'creator', label: t('nav.creator_studio') },
+          { id: 'communities', label: t('nav.communities') },
         ].map((tab) => {
-          const isActive = activeTab === tab.id;
+          const isActive = mode === tab.id;
           return (
             <button
               key={tab.id}
               role="tab"
               aria-selected={isActive}
-              onClick={() => setActiveTab(tab.id as typeof activeTab)}
+              onClick={() => router.replace(`/?mode=${tab.id}`)}
               className={`pb-2 whitespace-nowrap text-xs font-black transition-all relative focus-visible:outline-none px-1 ${
                 isActive ? 'text-brand-caribbeanSea' : 'text-brand-sandstone/60 hover:text-slate-200'
               }`}
@@ -1359,6 +1365,18 @@ export default function FeedStream({ initialPosts, currentUserId }: FeedStreamPr
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Load More */}
+      {nextCursor && (
+        <div className="pt-4 pb-8 flex justify-center">
+          <button
+            onClick={() => router.push(`/?mode=${mode}&cursor=${nextCursor}`)}
+            className="px-6 py-2 rounded-full glass hover:bg-white/10 transition-colors text-sm font-bold text-slate-200"
+          >
+            Load more
+          </button>
         </div>
       )}
     </div>

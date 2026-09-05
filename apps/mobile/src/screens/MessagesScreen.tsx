@@ -56,9 +56,11 @@ export function MessagesScreen() {
   const [draft, setDraft] = useState('');
   const [sending, setSending] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [typingUsers, setTypingUsers] = useState<string[]>([]);
 
   const flatListRef = useRef<FlatList>(null);
   const realtimeChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
+  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // ── Load current user ──────────────────────────────────────────────────────
   useEffect(() => {
@@ -147,13 +149,45 @@ export function MessagesScreen() {
         (payload) => {
           const newMsg = payload.new as MessageItem;
           setMessages((prev) => {
-            // Deduplicate by id
             if (prev.some((m) => m.id === newMsg.id)) return prev;
             return [...prev, newMsg];
           });
           setTimeout(() => flatListRef.current?.scrollToEnd({ animated: true }), 100);
         }
       )
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'messages', filter: `conversation_id=eq.${item.id}` },
+        (payload) => {
+          const updated = payload.new as MessageItem;
+          setMessages((prev) =>
+            prev.map((m) => (m.id === updated.id ? { ...m, ...updated } : m))
+          );
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: 'DELETE', schema: 'public', table: 'messages', filter: `conversation_id=eq.${item.id}` },
+        (payload) => {
+          const deleted = payload.old as { id: string };
+          setMessages((prev) =>
+            prev.map((m) =>
+              m.id === deleted.id
+                ? { ...m, content: 'This message was deleted.', deleted_at: new Date().toISOString() } as any
+                : m
+            )
+          );
+        }
+      )
+      .on('broadcast', { event: 'typing' }, (payload) => {
+        if (payload.payload?.userId !== currentUserId) {
+          const name = payload.payload?.userName || item.name;
+          setTypingUsers((prev) => (prev.includes(name) ? prev : [...prev, name]));
+          setTimeout(() => {
+            setTypingUsers((prev) => prev.filter((u) => u !== name));
+          }, 3000);
+        }
+      })
       .subscribe();
 
     realtimeChannelRef.current = channel;
@@ -283,6 +317,14 @@ export function MessagesScreen() {
           />
         )}
 
+        {typingUsers.length > 0 && (
+          <View style={{ paddingHorizontal: 16, paddingBottom: 8 }}>
+            <Text style={{ color: TOKENS.action, fontSize: 12, fontStyle: 'italic', fontWeight: 'bold' }}>
+              {typingUsers.join(', ')} is typing…
+            </Text>
+          </View>
+        )}
+
         {/* Composer */}
         <View style={styles.composerBar}>
           <TextInput
@@ -290,7 +332,19 @@ export function MessagesScreen() {
             placeholder="Write a message…"
             placeholderTextColor={TOKENS.textMuted}
             value={draft}
-            onChangeText={setDraft}
+            onChangeText={(text) => {
+              setDraft(text);
+              if (realtimeChannelRef.current && !typingTimeoutRef.current) {
+                realtimeChannelRef.current.send({
+                  type: 'broadcast',
+                  event: 'typing',
+                  payload: { userId: currentUserId, userName: 'User' },
+                });
+                typingTimeoutRef.current = setTimeout(() => {
+                  typingTimeoutRef.current = null;
+                }, 2500);
+              }
+            }}
             multiline
             maxLength={2000}
             onSubmitEditing={handleSend}

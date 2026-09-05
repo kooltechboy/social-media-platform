@@ -157,6 +157,10 @@ export async function sendMessageAction(
   }
 
   revalidatePath('/messages');
+  
+  const { track } = await import('../monitoring/analytics');
+  track('message_sent', { messageKind }, user.id);
+  
   return { error: null, message: inserted };
 }
 

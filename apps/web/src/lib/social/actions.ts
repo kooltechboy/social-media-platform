@@ -88,16 +88,25 @@ export async function createPostAction(_prev: PostActionState, formData: FormDat
     return { error: validation.errors[0] };
   }
 
-  // AI Content Safety Guard
+  // AI Content Safety Guard (defense-in-depth layer; degraded availability is
+  // logged for asynchronous moderation review rather than silently ignored)
   if (content) {
     try {
       const caribAI = new CaribAIEngine();
       const risk = await caribAI.classifyContentRisk(content);
-      if (risk.score >= 0.85) {
+      if (risk.degraded) {
+        console.error('[TrustSafety] CaribAI content screening degraded (service unavailable); post accepted for asynchronous review', {
+          authorId: user.id,
+          flagReason: risk.flagReason,
+        });
+      } else if (risk.score >= 0.85) {
         return { error: 'CaribAI flagged this content for safety review before publishing. Please revise it.' };
       }
-    } catch {
-      // Allow fallback if AI service is temporarily offline
+    } catch (err) {
+      console.error('[TrustSafety] CaribAI content screening failed open; post accepted for asynchronous review', {
+        authorId: user.id,
+        error: err instanceof Error ? err.message : 'unknown',
+      });
     }
   }
 
@@ -160,6 +169,10 @@ export async function createPostAction(_prev: PostActionState, formData: FormDat
 
   revalidatePath('/');
   revalidatePath('/create');
+  
+  const { track } = await import('../monitoring/analytics');
+  track('post_created', { postId: data.id, visibility }, user.id);
+  
   return { error: null, postId: data.id, post: normalizedPost };
 }
 

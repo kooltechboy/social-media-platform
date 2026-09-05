@@ -30,7 +30,7 @@ Text: "${text}"`;
   /**
    * Assesses content for spam, toxicity, and fraud risk score (0.0 to 1.0)
    */
-  public async classifyContentRisk(text: string): Promise<{ score: number; flagReason?: string }> {
+  public async classifyContentRisk(text: string): Promise<{ score: number; flagReason?: string; degraded?: boolean }> {
     const prompt = `Analyze this Caribbean social platform post for toxicity, hate speech, spam, or scam indicators. 
 Return JSON in format {"score": number, "flagReason": string} where score is between 0.0 (safe) and 1.0 (extremely harmful).
 
@@ -39,16 +39,19 @@ Text: "${text}"`;
     try {
       const response = await this.callOpenRouter(prompt);
       const parsed = JSON.parse(response);
-      return { score: parsed.score || 0, flagReason: parsed.flagReason };
+      const score = typeof parsed.score === 'number' ? parsed.score : Number(parsed.score);
+      if (!Number.isFinite(score)) {
+        return { score: 0, flagReason: 'safety_service_unavailable', degraded: true };
+      }
+      return { score: Math.min(Math.max(score, 0), 1), flagReason: parsed.flagReason };
     } catch {
-      return { score: 0.1 };
+      return { score: 0, flagReason: 'safety_service_unavailable', degraded: true };
     }
   }
 
   private async callOpenRouter(prompt: string): Promise<string> {
     if (!this.apiKey) {
-      // Mock graceful fallback if API key is pending configuration
-      return `[CaribAI Processing via ${this.defaultModel}]: ${prompt.slice(0, 100)}...`;
+      throw new Error('CARIBAI_NOT_CONFIGURED');
     }
 
     const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
@@ -191,23 +194,33 @@ export class BusinessAIAssistant {
     // 1. Inquiries about Opening Hours / Location
     if (/\b(hours|open|closed|when|timing|schedule)\b/i.test(normalized)) {
       groundedFacts.push(`Operating location: ${context.location}`);
-      const hoursText = context.hours || 'Standard Caribbean business hours (Mon-Sat 9:00 AM - 6:00 PM AST)';
+      if (context.hours) {
+        return {
+          answer: `${context.businessName} is located in ${context.location}. Operating hours: ${context.hours}.`,
+          confidence: 'high',
+          groundedFacts,
+        };
+      }
       return {
-        answer: `${context.businessName} is located in ${context.location}. Operating hours: ${hoursText}.`,
-        confidence: 'high',
+        answer: `${context.businessName} is located in ${context.location}. Opening hours have not been published yet — please contact the business directly for their schedule.`,
+        confidence: 'fallback',
         groundedFacts,
       };
     }
 
     // 2. Inquiries about Delivery / Shipping
     if (/\b(deliver|delivery|ship|shipping|dispatch|international)\b/i.test(normalized)) {
-      const policy =
-        context.deliveryPolicies ||
-        'We ship across the Caribbean, USA, Canada, and UK via verified logistics with tracking.';
-      groundedFacts.push('Delivery policy verified');
+      if (context.deliveryPolicies) {
+        groundedFacts.push('Delivery policy verified');
+        return {
+          answer: `Delivery information for ${context.businessName}: ${context.deliveryPolicies}`,
+          confidence: 'high',
+          groundedFacts,
+        };
+      }
       return {
-        answer: `Delivery information for ${context.businessName}: ${policy}`,
-        confidence: 'high',
+        answer: `${context.businessName} has not published a delivery policy yet. Please ask the business directly about shipping options.`,
+        confidence: 'fallback',
         groundedFacts,
       };
     }

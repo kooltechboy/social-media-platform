@@ -4,6 +4,7 @@ export const CREATOR_FREE_ACCESS_START = '2026-08-30T00:00:00Z';
 export const CREATOR_FREE_ACCESS_END = '2026-10-31T23:59:59Z';
 export const CREATOR_PAID_TIERS_START = '2026-11-01T00:00:00Z';
 export const MARKETPLACE_COMMERCE_START = '2026-09-30T00:00:00Z';
+export const PAYMENTS_UI_ENABLED = false;
 
 export type LaunchPhase =
   | 'PHASE_1_CREATOR_FREE_MERCHANT_CATALOG'
@@ -21,6 +22,7 @@ export interface LaunchConfigSnapshot {
   isCreatorFree: boolean;
   isCreatorPaidActive: boolean;
   isMarketplaceCommerceActive: boolean;
+  isPaymentsUiEnabled: boolean;
 }
 
 export function isCreatorFreeAccessActive(now: Date = new Date()): boolean {
@@ -40,6 +42,10 @@ export function isMarketplaceCommerceActive(now: Date = new Date()): boolean {
   const t = now.getTime();
   const start = new Date(MARKETPLACE_COMMERCE_START).getTime();
   return t >= start;
+}
+
+export function isPaymentsUiEnabled(): boolean {
+  return PAYMENTS_UI_ENABLED;
 }
 
 export function getCurrentLaunchPhase(now: Date = new Date()): LaunchPhase {
@@ -138,5 +144,6 @@ export function getLaunchConfigSnapshot(now: Date = new Date()): LaunchConfigSna
     isCreatorFree: isCreatorFreeAccessActive(now),
     isCreatorPaidActive: isCreatorPaidTiersActive(now),
     isMarketplaceCommerceActive: isMarketplaceCommerceActive(now),
+    isPaymentsUiEnabled: isPaymentsUiEnabled(),
   };
 }

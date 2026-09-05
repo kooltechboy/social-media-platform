@@ -68,14 +68,18 @@ export async function POST(req: NextRequest) {
 
     switch (event.type) {
       case 'payment_intent.succeeded': {
+        let buyerId = object.metadata?.buyerId || object.metadata?.userId;
         if (orderId) {
-          await supabase.from('orders').update({ status: 'paid' }).eq('id', orderId);
+          const { data: orderData } = await supabase.from('orders').update({ status: 'paid' }).eq('id', orderId).select('buyer_id').maybeSingle();
+          if (orderData?.buyer_id) buyerId = orderData.buyer_id;
         }
         if (paymentIntentId) {
           await supabase.from('payment_intents').update({ status: 'succeeded' }).eq('id', paymentIntentId);
         } else if (orderId) {
           await supabase.from('payment_intents').update({ status: 'succeeded' }).eq('reference_id', orderId);
         }
+        const { track } = await import('../../../../lib/monitoring/analytics');
+        track('payment_completed', { amount: object.amount ?? null }, buyerId);
         break;
       }
       case 'payment_intent.payment_failed': {

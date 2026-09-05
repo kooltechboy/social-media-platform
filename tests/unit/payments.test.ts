@@ -301,12 +301,12 @@ describe('Provider Connection State Machine', () => {
 });
 
 describe('PSP Adapters (Stripe, PayPal, CX Pay, WiPay, Cash App)', () => {
-  it('fails closed when webhook verification credentials or verifier are unavailable', () => {
-    expect(new StripeAdapter().verifyWebhook('{}', 'unsigned')).toBe(false);
-    expect(new PayPalAdapter({ clientId: 'client', clientSecret: 'secret' }).verifyWebhook('{}', '')).toBe(false);
-    expect(new CXPayAdapter({ merchantId: 'merchant', apiKey: 'key' }).verifyWebhook('{}', 'signed')).toBe(false);
-    expect(new WiPayAdapter({ accountNumber: 'account', apiKey: 'key' }).verifyWebhook('{}', 'signed')).toBe(false);
-    expect(new CashAppAdapter().verifyWebhook('{}', 'signed')).toBe(false);
+  it('fails closed when webhook verification credentials or verifier are unavailable', async () => {
+    expect(await new StripeAdapter().verifyWebhook('{}', 'unsigned')).toBe(false);
+    expect(await new PayPalAdapter({ clientId: 'client', clientSecret: 'secret' }).verifyWebhook('{}', '')).toBe(false);
+    expect(await new CXPayAdapter({ merchantId: 'merchant', apiKey: 'key' }).verifyWebhook('{}', 'signed')).toBe(false);
+    expect(await new WiPayAdapter({ accountNumber: 'account', apiKey: 'key' }).verifyWebhook('{}', 'signed')).toBe(false);
+    expect(await new CashAppAdapter().verifyWebhook('{}', 'signed')).toBe(false);
   });
 
   it('does not claim successful charges when provider credentials are unavailable', async () => {

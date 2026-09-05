@@ -33,18 +33,14 @@ export default function AskBusinessAIModal({
   businessSlug,
   category,
   location,
-  products = [
-    { title: 'Signature Whole Bean Coffee (16oz)', priceFormatted: '$38.00 USD', kind: 'physical', inStock: true },
-    { title: 'Artisanal Organic Cacao & Rum Nibs', priceFormatted: '$24.00 USD', kind: 'physical', inStock: true },
-    { title: 'Carnival VIP Experience Pass', priceFormatted: '$50.00 USD', kind: 'service', inStock: true },
-  ],
+  products = [],
 }: AskBusinessAIModalProps) {
   const [messages, setMessages] = useState<Message[]>([
     {
       sender: 'ai',
-      text: `Hello! I am the verified AI Business Assistant for ${businessName}. How can I help you today? You can ask about our products, store hours in ${location}, delivery across the Caribbean and diaspora, or place an order via Tukubi Checkout.`,
+      text: `Hello! I am the AI Business Assistant for ${businessName}. How can I help you today? You can ask about our products, store hours in ${location}, or delivery options.`,
       timestamp: 'Just now',
-      groundedFacts: ['Verified Business Profile', 'Tukubi Escrow Active'],
+      groundedFacts: ['Verified Business Profile'],
     },
   ]);
   const [input, setInput] = useState('');
@@ -75,9 +71,6 @@ export default function AskBusinessAIModal({
         businessName,
         category,
         location,
-        hours: 'Monday through Saturday from 8:30 AM to 8:00 PM AST',
-        deliveryPolicies:
-          'Worldwide dispatch across the Caribbean, USA (NYC, Miami), Canada (Toronto, Montreal), and UK (London) with certified tracking and customs clearance.',
         products,
       });
 
@@ -111,7 +104,7 @@ export default function AskBusinessAIModal({
                 </span>
               </div>
               <p className="text-[11px] text-slate-400 flex items-center gap-1 mt-0.5">
-                <MapPin className="w-3 h-3 text-brand-sunriseCoral" /> {location} &bull; Escrow Protected
+                <MapPin className="w-3 h-3 text-brand-sunriseCoral" /> {location} &bull; Grounded answers only
               </p>
             </div>
           </div>

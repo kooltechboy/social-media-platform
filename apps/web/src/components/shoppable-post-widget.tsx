@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { ShoppingBag, Sparkles, X, ShieldCheck, CheckCircle, Loader2, ArrowRight, Star } from 'lucide-react';
 import { createOrderAction, type MarketplaceActionState } from '../lib/marketplace/actions';
+import { ComingSoonButton } from './ui/coming-soon-badge';
 
 export interface TaggedProduct {
   id: string;
@@ -80,14 +81,7 @@ export default function ShoppablePostWidget({ product }: ShoppablePostWidgetProp
           </div>
         </div>
 
-        <button
-          type="button"
-          onClick={() => setIsOpen(true)}
-          className="shrink-0 px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-brand-sunriseCoral to-brand-goldenHour hover:opacity-90 font-black text-white text-xs shadow-md shadow-brand-sunriseCoral/20 transition-all hover:scale-105 flex items-center gap-1"
-        >
-          <span>Buy Now</span>
-          <ArrowRight className="w-3.5 h-3.5" />
-        </button>
+        <ComingSoonButton label="Coming Soon" className="shrink-0" />
       </div>
 
       {/* 1-Click Instant Checkout Modal */}

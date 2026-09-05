@@ -20,7 +20,7 @@ class InMemoryWebhookEventStore implements WebhookEventStore {
 
 export class WebhookProcessor {
   public constructor(
-    private readonly verifySignature: (payload: string, signature: string, secret?: string) => boolean,
+    private readonly verifySignature: (payload: string, signature: string, secret?: string) => boolean | Promise<boolean>,
     private readonly eventStore: WebhookEventStore = new InMemoryWebhookEventStore()
   ) {}
 
@@ -33,7 +33,7 @@ export class WebhookProcessor {
       return { accepted: false, reason: 'Missing webhook signature', duplicate: false };
     }
 
-    if (!this.verifySignature(event.payload, event.signature, secret)) {
+    if (!(await this.verifySignature(event.payload, event.signature, secret))) {
       return { accepted: false, reason: 'Signature verification failed', duplicate: false };
     }
 

@@ -11,6 +11,7 @@ import UserAvatar from './user-avatar';
 import { useTranslation } from '@caribbean/localization';
 import { TukubiLogo } from './brand/tukubi-logo';
 import { LanguageDropdown } from './gateway/LanguageDropdown';
+import { useUnreadNotificationsCount } from './notifications-realtime-provider';
 
 interface SearchResultUser {
   id: string;
@@ -26,6 +27,7 @@ interface SearchResultUser {
 export default function AppHeader() {
   const router = useRouter();
   const { t } = useTranslation();
+  const unreadCount = useUnreadNotificationsCount();
   const [query, setQuery] = useState('');
   const [isOpen, setIsOpen] = useState(false);
   const [livePeople, setLivePeople] = useState<SearchResultUser[]>([]);
@@ -269,7 +271,9 @@ export default function AppHeader() {
           aria-label={t('nav.notifications')}
         >
           <Bell className="w-4.5 h-4.5" aria-hidden="true" />
-          <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-brand-goldenHour rounded-full animate-pulse shadow-[0_0_8px_rgba(255,179,71,0.9)]" />
+          {unreadCount > 0 && (
+            <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-brand-goldenHour rounded-full animate-pulse shadow-[0_0_8px_rgba(255,179,71,0.9)]" />
+          )}
         </Link>
 
         <Link

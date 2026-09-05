@@ -14,35 +14,34 @@ describe('CaribAIEngine', () => {
   });
 
   describe('translation capabilities', () => {
-    it('should translate English to Spanish', async () => {
-      const result = await engine.translateContent('Hello world', 'es');
-      expect(result).toBeDefined();
-      expect(typeof result).toBe('string');
+    it('rejects explicitly when the engine has no API key (no fabricated output)', async () => {
+      const unconfigured = new CaribAIEngine({ apiKey: '' });
+      await expect(unconfigured.translateContent('Hello world', 'es')).rejects.toThrow(
+        'CARIBAI_NOT_CONFIGURED'
+      );
     });
 
-    it('should handle Caribbean dialects', async () => {
-      const result = await engine.translateContent('How you doing?', 'ht');
-      expect(result).toBeDefined();
-      expect(typeof result).toBe('string');
-    });
-
-    it('should preserve cultural context', async () => {
-      const result = await engine.translateContent('Thank you very much', 'en');
-      expect(result).toBeDefined();
+    it('rejects for Caribbean dialect targets too when unconfigured', async () => {
+      const unconfigured = new CaribAIEngine({ apiKey: '' });
+      await expect(unconfigured.translateContent('How you doing?', 'ht')).rejects.toThrow(
+        'CARIBAI_NOT_CONFIGURED'
+      );
     });
   });
 
   describe('risk assessment', () => {
-    it('should classify safe content with low risk', async () => {
-      const result = await engine.classifyContentRisk('This is a normal post');
-      expect(result.score).toBeGreaterThanOrEqual(0);
-      expect(result.score).toBeLessThanOrEqual(1.0);
+    it('marks the result degraded (never silently safe) when the service is unconfigured', async () => {
+      const unconfigured = new CaribAIEngine({ apiKey: '' });
+      const result = await unconfigured.classifyContentRisk('This is a normal post');
+      expect(result.degraded).toBe(true);
+      expect(result.flagReason).toBe('safety_service_unavailable');
+      expect(result.score).toBe(0);
     });
 
-    it('should detect potentially harmful content', async () => {
-      const result = await engine.classifyContentRisk('I will harm you');
-      expect(result.score).toBeGreaterThanOrEqual(0);
-      expect(result.score).toBeLessThanOrEqual(1.0);
+    it('clamps provider scores into the [0, 1] range', async () => {
+      const clamped = await engine.classifyContentRisk('Test content');
+      expect(clamped.score).toBeGreaterThanOrEqual(0);
+      expect(clamped.score).toBeLessThanOrEqual(1.0);
     });
 
     it('should return structured response', async () => {
@@ -89,6 +88,31 @@ describe('CaribAIEngine', () => {
       expect(res.answer).toContain('Kingston, Jamaica');
       expect(res.answer).toContain('Mon-Sat 8am-8pm');
       expect(res.groundedFacts.length).toBeGreaterThan(0);
+    });
+
+    it('never invents opening hours when the business has not published them', async () => {
+      const { BusinessAIAssistant } = await import('./index');
+      const assistant = new BusinessAIAssistant();
+      const res = assistant.answerCustomerQuery('What are your hours?', {
+        businessName: 'Island Grill',
+        category: 'Restaurant',
+        location: 'Bridgetown, Barbados',
+      });
+      expect(res.confidence).toBe('fallback');
+      expect(res.answer).not.toContain('Mon-Sat');
+      expect(res.answer).toContain('not been published');
+    });
+
+    it('never invents a delivery policy when none is provided', async () => {
+      const { BusinessAIAssistant } = await import('./index');
+      const assistant = new BusinessAIAssistant();
+      const res = assistant.answerCustomerQuery('Do you deliver?', {
+        businessName: 'Island Grill',
+        category: 'Restaurant',
+        location: 'Bridgetown, Barbados',
+      });
+      expect(res.confidence).toBe('fallback');
+      expect(res.answer).not.toContain('verified logistics');
     });
 
     it('answers catalog pricing questions from live product list', async () => {

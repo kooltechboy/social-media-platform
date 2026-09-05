@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { Money, isMarketplaceCommerceActive } from '@caribbean/payments';
 import { createOrderAction, type MarketplaceActionState } from '../lib/marketplace/actions';
+import { ComingSoonButton } from './ui/coming-soon-badge';
 
 export interface UnifiedCheckoutModalProps {
   isOpen: boolean;
@@ -336,21 +337,7 @@ export default function UnifiedCheckoutModal({
             </div>
 
             {canTransact ? (
-              <button
-                type="submit"
-                disabled={isPending}
-                className="w-full bg-gradient-to-r from-brand-sunriseCoral via-brand-goldenHour to-brand-sunriseCoral hover:opacity-95 text-slate-950 font-black py-3 rounded-2xl text-xs flex items-center justify-center gap-2 transition-all shadow-xl shadow-brand-sunriseCoral/20 disabled:opacity-50 cursor-pointer"
-              >
-                {isPending ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" /> Authorizing Payment...
-                  </>
-                ) : (
-                  <>
-                    Pay {total.format()} via {selectedMethod.toUpperCase()} <ArrowRight className="w-4 h-4" />
-                  </>
-                )}
-              </button>
+              <ComingSoonButton label="Payments Coming Soon" className="w-full" />
             ) : (
               <button
                 type="button"

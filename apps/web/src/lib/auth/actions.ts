@@ -124,6 +124,9 @@ export async function completeFullRegistrationAction(payload: CompleteRegistrati
     }
   }
 
+  const { track } = await import('../monitoring/analytics');
+  track('user_registered', { accountType: validDbAccountType }, data.user?.id);
+
   return { success: true, user: data.user };
 }
 

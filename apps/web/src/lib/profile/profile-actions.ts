@@ -723,6 +723,9 @@ export async function updateFullProfileAction(
   revalidatePath(`/profile/${user.username}`);
   revalidatePath('/settings');
 
+  const { track } = await import('../monitoring/analytics');
+  track('profile_completed', { accountType: requestedAccountType }, user.id);
+
   return {
     success: true,
     message: 'Profile updated successfully!',

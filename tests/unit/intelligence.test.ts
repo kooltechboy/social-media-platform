@@ -48,8 +48,7 @@ describe('Grounded answers', () => {
 describe('CaribAI engine fallback', () => {
   it('degrades gracefully without an API key', async () => {
     const engine = new CaribAIEngine({ apiKey: '' });
-    const result = await engine.translateContent('Hello', 'es');
-    expect(result).toContain('CaribAI Processing');
+    await expect(engine.translateContent('Hello', 'es')).rejects.toThrow('CARIBAI_NOT_CONFIGURED');
   });
 });
 

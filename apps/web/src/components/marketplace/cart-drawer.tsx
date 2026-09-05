@@ -20,6 +20,7 @@ import {
 } from '@caribbean/marketplace';
 import { Money, isMarketplaceCommerceActive } from '@caribbean/payments';
 import Link from 'next/link';
+import { ComingSoonButton } from '../ui/coming-soon-badge';
 
 interface CartDrawerProps {
   isOpen: boolean;
@@ -218,14 +219,7 @@ export default function CartDrawer({
               </div>
 
               {canTransact ? (
-                <button
-                  type="button"
-                  onClick={onProceedToCheckout}
-                  className="w-full bg-gradient-to-r from-orange-500 to-brand-goldenHour hover:from-orange-400 hover:to-brand-goldenHour text-slate-950 font-black py-3 rounded-2xl text-xs flex items-center justify-center gap-2 transition-all shadow-md shadow-orange-500/20 cursor-pointer"
-                >
-                  <span>Proceed to Checkout</span>
-                  <ArrowRight className="w-4 h-4" />
-                </button>
+                <ComingSoonButton label="Payments Coming Soon" className="w-full" />
               ) : (
                 <button
                   type="button"
