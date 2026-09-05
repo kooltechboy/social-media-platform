@@ -23,6 +23,7 @@ import {
   Shield,
   EyeOff,
   ArrowRight,
+  MessageSquare,
 } from 'lucide-react';
 import UserAvatar from '../user-avatar';
 import {
@@ -578,6 +579,14 @@ export default function SocialSearchClient({
                           >
                             {isFollowing ? 'Following' : 'Follow'}
                           </button>
+
+                          {/* Message Button */}
+                          <Link
+                            href={`/messages?u=${encodeURIComponent(person.username)}`}
+                            className="text-[10px] font-bold px-2.5 py-1.5 rounded-xl bg-brand-dusk text-brand-sandstone border border-slate-700 hover:bg-slate-800 transition-colors flex items-center gap-1"
+                          >
+                            <MessageSquare className="w-3 h-3 text-brand-caribbeanSea" /> Msg
+                          </Link>
                         </div>
                       )}
                     </div>
@@ -628,17 +637,25 @@ export default function SocialSearchClient({
                       </Link>
 
                       {!isSelf && (
-                        <button
-                          type="button"
-                          onClick={() => handleToggleFollow(creator.id)}
-                          className={`text-[11px] font-bold px-3.5 py-1.5 rounded-xl transition-all ${
-                            isFollowing
-                              ? 'bg-brand-dusk text-slate-300 border border-slate-700'
-                              : 'bg-brand-goldenHour text-slate-950 shadow-md shadow-brand-goldenHour/20'
-                          }`}
-                        >
-                          {isFollowing ? 'Following' : 'Follow'}
-                        </button>
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          <Link
+                            href={`/messages?u=${encodeURIComponent(creator.username)}`}
+                            className="text-[11px] font-bold px-2.5 py-1.5 rounded-xl bg-brand-dusk text-brand-sandstone border border-slate-700 hover:bg-slate-800 transition-colors flex items-center gap-1"
+                          >
+                            <MessageSquare className="w-3.5 h-3.5 text-brand-caribbeanSea" /> Msg
+                          </Link>
+                          <button
+                            type="button"
+                            onClick={() => handleToggleFollow(creator.id)}
+                            className={`text-[11px] font-bold px-3.5 py-1.5 rounded-xl transition-all ${
+                              isFollowing
+                                ? 'bg-brand-dusk text-slate-300 border border-slate-700'
+                                : 'bg-brand-goldenHour text-slate-950 shadow-md shadow-brand-goldenHour/20'
+                            }`}
+                          >
+                            {isFollowing ? 'Following' : 'Follow'}
+                          </button>
+                        </div>
                       )}
                     </div>
                   );

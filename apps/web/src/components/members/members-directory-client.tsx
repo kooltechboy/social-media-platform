@@ -16,6 +16,7 @@ import {
   Loader2,
   X,
   Filter,
+  MessageSquare,
 } from 'lucide-react';
 import UserAvatar from '../user-avatar';
 import {
@@ -462,6 +463,14 @@ export default function MembersDirectoryClient({
                     >
                       {isFollowing ? 'Following' : 'Follow'}
                     </button>
+
+                    {/* Message Button */}
+                    <Link
+                      href={`/messages?u=${encodeURIComponent(member.username)}`}
+                      className="text-[11px] font-bold px-3.5 py-1.5 rounded-xl bg-brand-dusk hover:bg-slate-800 text-brand-sandstone border border-slate-700 transition-colors flex items-center gap-1"
+                    >
+                      <MessageSquare className="w-3.5 h-3.5 text-brand-caribbeanSea" /> Message
+                    </Link>
                   </div>
                 )}
               </div>
