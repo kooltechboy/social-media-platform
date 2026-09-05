@@ -149,40 +149,40 @@ export default function SoundsDirectoryClient({
       )}
 
       {/* Top Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-6">
+      <div className="surface-header rounded-3xl p-6 sm:p-8 flex flex-col md:flex-row md:items-center justify-between gap-4 border border-rose-500/30 shadow-xl">
         <div>
-          <h1 className="text-2xl md:text-3xl font-black text-brand-sandstone flex items-center gap-3">
-            <Music className="w-8 h-8 text-rose-500" /> Caribbean Sounds &amp; Rhythm Stems
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-black text-white flex items-center gap-3">
+            <Music className="w-7 h-7 sm:w-8 sm:h-8 text-rose-500" /> Caribbean Sounds &amp; Rhythm Stems
           </h1>
-          <p className="text-xs md:text-sm text-brand-sandstone/60 mt-1">
+          <p className="text-xs sm:text-sm text-brand-sandstone/80 mt-1 leading-relaxed">
             Official stems, soca riddims, dancehall beats, and regional music for short videos and remixes.
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <Link
             href="/reels"
-            className="bg-brand-dusk border border-slate-800 hover:text-white text-brand-sandstone/80 font-bold px-4 py-2 rounded-2xl text-xs flex items-center gap-2 transition-colors"
+            className="bg-white/10 hover:bg-white/15 border border-white/20 hover:text-white text-white font-bold px-4 py-2.5 rounded-xl text-xs flex items-center justify-center gap-2 transition-colors min-h-[44px]"
           >
             ← Back to Reels
           </Link>
           <button
             onClick={() => setCreateWithSoundId(activeSound?.id || null)}
-            className="bg-gradient-to-r from-rose-500 to-brand-goldenHour text-slate-950 font-black px-4 py-2 rounded-2xl text-xs flex items-center gap-2 shadow-md shadow-rose-500/20 cursor-pointer"
+            className="bg-rose-500 hover:brightness-110 text-slate-950 font-black px-5 py-2.5 rounded-xl text-xs flex items-center justify-center gap-2 shadow-md shadow-rose-500/20 cursor-pointer min-h-[44px]"
           >
-            <Plus className="w-4 h-4" /> Create with Current Sound
+            <Plus className="w-4 h-4 stroke-[3]" /> Create with Current Sound
           </button>
         </div>
       </div>
 
       {/* Active Featured Audio Deck */}
       {activeSound && (
-        <div className="bg-gradient-to-br from-slate-900 via-[#0D1322] to-rose-950/40 border border-rose-500/30 rounded-3xl p-6 shadow-2xl relative overflow-hidden">
+        <div className="surface-card rounded-3xl p-6 sm:p-8 border border-rose-500/40 shadow-2xl relative overflow-hidden">
           <div className="flex flex-col md:flex-row items-center gap-6 z-10 relative">
             {/* Spinning Vinyl Visual */}
             <div
               onClick={() => handlePlaySound(activeSound)}
-              className="w-24 h-24 md:w-28 md:h-28 rounded-3xl bg-brand-twilight border border-rose-500/40 flex items-center justify-center flex-shrink-0 cursor-pointer shadow-xl group relative overflow-hidden"
+              className="w-24 h-24 sm:w-28 sm:h-28 rounded-3xl bg-slate-950 border border-rose-500/40 flex items-center justify-center flex-shrink-0 cursor-pointer shadow-xl group relative overflow-hidden"
             >
               <div className={`absolute inset-0 bg-gradient-to-t ${activeSound.coverGradient}`} />
               <Disc
@@ -191,7 +191,7 @@ export default function SoundsDirectoryClient({
                 }`}
                 style={{ animationDuration: '4s' }}
               />
-              <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-20">
+              <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-20">
                 {isPlaying ? (
                   <Pause className="w-8 h-8 text-white fill-current" />
                 ) : (
@@ -201,26 +201,26 @@ export default function SoundsDirectoryClient({
             </div>
 
             {/* Sound Metadata & Player Controls */}
-            <div className="flex-1 min-w-0 space-y-3 text-center md:text-left">
+            <div className="flex-1 min-w-0 space-y-3 text-center md:text-left w-full">
               <div className="flex flex-wrap items-center justify-center md:justify-start gap-2">
-                <span className="text-[10px] font-black px-2.5 py-0.5 rounded-full bg-rose-500/20 text-rose-400 border border-rose-500/40 uppercase">
+                <span className="text-[10px] font-black px-2.5 py-1 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/40 uppercase">
                   {activeSound.genre}
                 </span>
-                <span className="text-xs text-brand-sandstone/60 font-semibold">
+                <span className="text-xs text-brand-sandstone/80 font-bold">
                   {activeSound.flag} {activeSound.countryName}
                 </span>
-                <span className="text-xs text-brand-goldenHour font-bold">
+                <span className="text-xs text-brand-goldenHour font-black">
                   🔥 {activeSound.usageCountFormatted} Reels
                 </span>
               </div>
 
               <div>
-                <h2 className="text-lg md:text-xl font-black text-brand-sandstone">{activeSound.title}</h2>
-                <p className="text-xs text-slate-300 font-semibold mt-0.5">
+                <h2 className="text-lg sm:text-xl md:text-2xl font-black text-white">{activeSound.title}</h2>
+                <p className="text-xs sm:text-sm text-brand-sandstone/90 font-bold mt-0.5">
                   {activeSound.artist} · @{activeSound.artistHandle}
                 </p>
                 {activeSound.sampleLyrics && (
-                  <p className="text-[11px] text-brand-sandstone/60 italic mt-1 font-serif">
+                  <p className="text-xs text-brand-sandstone/70 italic mt-1 font-serif">
                     “{activeSound.sampleLyrics}”
                   </p>
                 )}
@@ -235,9 +235,9 @@ export default function SoundsDirectoryClient({
                   step={0.1}
                   value={currentTime}
                   onChange={handleSeek}
-                  className="w-full accent-rose-500 h-1.5 bg-slate-800 rounded-lg cursor-pointer"
+                  className="w-full accent-rose-500 h-2 bg-slate-800 rounded-lg cursor-pointer"
                 />
-                <div className="flex items-center justify-between text-[11px] text-brand-sandstone/40">
+                <div className="flex items-center justify-between text-xs text-brand-sandstone/60">
                   <span>{formatTime(currentTime)}</span>
                   <span>{formatTime(duration)}</span>
                 </div>
@@ -248,7 +248,7 @@ export default function SoundsDirectoryClient({
             <div className="flex flex-row md:flex-col items-center gap-3 w-full md:w-auto justify-center">
               <button
                 onClick={() => setCreateWithSoundId(activeSound.id)}
-                className="flex-1 md:flex-initial bg-rose-500 hover:bg-rose-400 text-slate-950 font-black px-5 py-2.5 rounded-2xl text-xs flex items-center justify-center gap-2 shadow-lg cursor-pointer"
+                className="flex-1 md:flex-initial bg-rose-500 hover:brightness-110 text-slate-950 font-black px-6 py-3 rounded-2xl text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg cursor-pointer min-h-[44px]"
               >
                 <Sparkles className="w-4 h-4" /> Use This Sound
               </button>
@@ -256,17 +256,17 @@ export default function SoundsDirectoryClient({
               <div className="flex items-center gap-2">
                 <button
                   onClick={toggleMute}
-                  className="p-2.5 rounded-xl bg-brand-twilight border border-slate-800 text-slate-300 hover:text-white"
+                  className="p-3 rounded-xl bg-white/5 border border-white/10 text-white hover:bg-white/10 min-h-[44px] min-w-[44px] flex items-center justify-center"
                   title="Mute / Unmute"
                 >
                   {isMuted ? <VolumeX className="w-4 h-4 text-rose-400" /> : <Volume2 className="w-4 h-4 text-emerald-400" />}
                 </button>
                 <button
                   onClick={() => toggleFavorite(activeSound.id)}
-                  className={`p-2.5 rounded-xl border transition-colors ${
+                  className={`p-3 rounded-xl border transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center ${
                     savedFavorites[activeSound.id]
                       ? 'bg-rose-500/20 border-rose-500 text-rose-400'
-                      : 'bg-brand-twilight border-slate-800 text-slate-300 hover:text-rose-400'
+                      : 'bg-white/5 border-white/10 text-brand-sandstone/80 hover:text-rose-400'
                   }`}
                   title="Save Sound"
                 >
@@ -274,7 +274,7 @@ export default function SoundsDirectoryClient({
                 </button>
                 <button
                   onClick={() => handleShareSound(activeSound)}
-                  className="p-2.5 rounded-xl bg-brand-twilight border border-slate-800 text-slate-300 hover:text-brand-sunriseCoral"
+                  className="p-3 rounded-xl bg-white/5 border border-white/10 text-brand-sandstone/80 hover:text-brand-sunriseCoral min-h-[44px] min-w-[44px] flex items-center justify-center"
                   title="Share Sound"
                 >
                   {copiedSoundId === activeSound.id ? <Check className="w-4 h-4 text-emerald-400" /> : <Share2 className="w-4 h-4" />}
@@ -288,13 +288,13 @@ export default function SoundsDirectoryClient({
       {/* Search & Genre Chips Bar */}
       <div className="space-y-4">
         <div className="relative">
-          <Search className="w-4 h-4 text-brand-sandstone/40 absolute left-4 top-1/2 -translate-y-1/2" />
+          <Search className="w-4 h-4 text-brand-caribbeanSea absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
           <input
             type="text"
             placeholder="Search Caribbean sounds, soca riddims, dancehall beats, artists..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-brand-dusk border border-slate-800 rounded-2xl pl-11 pr-4 py-3 text-xs text-brand-sandstone focus:outline-none focus:border-rose-500 transition-colors shadow-inner"
+            className="w-full bg-slate-950/80 border border-white/20 hover:border-brand-caribbeanSea/60 rounded-2xl pl-11 pr-4 py-3 text-xs sm:text-sm text-white placeholder-brand-sandstone/50 focus:outline-none focus:border-brand-caribbeanSea focus:ring-2 focus:ring-brand-caribbeanSea/30 transition-all shadow-inner"
           />
         </div>
 
@@ -307,10 +307,10 @@ export default function SoundsDirectoryClient({
                 key={genre}
                 type="button"
                 onClick={() => setSelectedGenre(genre)}
-                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all cursor-pointer ${
+                className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all cursor-pointer min-h-[38px] ${
                   isSelected
-                    ? 'bg-rose-500 text-slate-950 shadow-md shadow-rose-500/20'
-                    : 'bg-brand-dusk border border-slate-800 text-brand-sandstone/60 hover:text-slate-200 hover:border-slate-700'
+                    ? 'bg-rose-500 text-slate-950 font-black shadow-md shadow-rose-500/20'
+                    : 'bg-white/5 border border-white/10 text-brand-sandstone/80 hover:text-white hover:bg-white/10'
                 }`}
               >
                 {genre}
@@ -328,20 +328,20 @@ export default function SoundsDirectoryClient({
           return (
             <div
               key={sound.id}
-              className={`p-4 rounded-2xl border transition-all flex flex-col justify-between space-y-4 ${
+              className={`surface-card rounded-2xl p-4 sm:p-5 border transition-all flex flex-col justify-between space-y-4 ${
                 isCurrentActive
-                  ? 'bg-brand-dusk/90 border-rose-500/50 shadow-xl'
-                  : 'bg-brand-dusk/60 hover:bg-brand-dusk/80 border-slate-800 hover:border-slate-700'
+                  ? 'border-rose-500/60 ring-2 ring-rose-500/30 shadow-xl'
+                  : 'surface-card-interactive'
               }`}
             >
               <div className="flex items-start gap-3.5">
                 {/* Play Button Icon */}
                 <button
                   onClick={() => handlePlaySound(sound)}
-                  className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 transition-transform active:scale-95 shadow-md ${
+                  className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 transition-transform active:scale-95 shadow-md min-h-[44px] min-w-[44px] ${
                     isCurrentlyPlaying
                       ? 'bg-rose-500 text-slate-950'
-                      : 'bg-brand-twilight border border-slate-700 text-slate-200 hover:text-rose-400'
+                      : 'bg-white/10 border border-white/15 text-white hover:text-rose-400 hover:bg-white/15'
                   }`}
                 >
                   {isCurrentlyPlaying ? (
@@ -354,35 +354,35 @@ export default function SoundsDirectoryClient({
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-1.5">
                     <span>{sound.flag}</span>
-                    <span className="text-[10px] font-black uppercase text-rose-400 bg-rose-500/10 px-1.5 py-0.5 rounded">
+                    <span className="text-[10px] font-black uppercase text-rose-300 bg-rose-500/20 border border-rose-500/30 px-1.5 py-0.5 rounded">
                       {sound.genre}
                     </span>
                     {sound.isTrending && (
                       <span className="text-[10px] font-bold text-brand-goldenHour flex items-center gap-0.5">
-                        <Flame className="w-3 h-3 fill-current" />
+                        <Flame className="w-3.5 h-3.5 fill-current" />
                       </span>
                     )}
                   </div>
-                  <h4 className="text-xs font-black text-brand-sandstone mt-1 truncate">{sound.title}</h4>
-                  <p className="text-[11px] text-brand-sandstone/60 truncate">
+                  <h4 className="text-sm font-black text-white mt-1 truncate">{sound.title}</h4>
+                  <p className="text-xs text-brand-sandstone/80 truncate mt-0.5">
                     {sound.artist} • {sound.durationFormatted}
                   </p>
                 </div>
               </div>
 
               {/* Bottom Actions */}
-              <div className="pt-2 border-t border-slate-800/80 flex items-center justify-between text-xs">
-                <span className="text-[11px] font-bold text-slate-400">
+              <div className="pt-3 border-t border-white/10 flex items-center justify-between text-xs">
+                <span className="text-xs font-bold text-brand-sandstone/70">
                   {sound.usageCountFormatted} videos
                 </span>
 
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => toggleFavorite(sound.id)}
-                    className={`p-1.5 rounded-lg border transition-colors ${
+                    className={`p-2 rounded-xl border transition-colors min-h-[38px] min-w-[38px] flex items-center justify-center ${
                       savedFavorites[sound.id]
                         ? 'bg-rose-500/20 border-rose-500 text-rose-400'
-                        : 'bg-brand-twilight border-slate-800 text-slate-400 hover:text-rose-400'
+                        : 'bg-white/5 border-white/10 text-brand-sandstone/70 hover:text-rose-400'
                     }`}
                     title="Save"
                   >
@@ -391,7 +391,7 @@ export default function SoundsDirectoryClient({
 
                   <button
                     onClick={() => handleShareSound(sound)}
-                    className="p-1.5 rounded-lg bg-brand-twilight border border-slate-800 text-slate-400 hover:text-brand-sunriseCoral"
+                    className="p-2 rounded-xl bg-white/5 border border-white/10 text-brand-sandstone/70 hover:text-brand-sunriseCoral min-h-[38px] min-w-[38px] flex items-center justify-center"
                     title="Share Link"
                   >
                     {copiedSoundId === sound.id ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Share2 className="w-3.5 h-3.5" />}
@@ -399,7 +399,7 @@ export default function SoundsDirectoryClient({
 
                   <button
                     onClick={() => setCreateWithSoundId(sound.id)}
-                    className="bg-rose-500/20 hover:bg-rose-500 text-rose-300 hover:text-slate-950 border border-rose-500/40 font-black px-3 py-1 rounded-xl text-[11px] transition-all cursor-pointer"
+                    className="bg-rose-500 hover:brightness-110 text-slate-950 font-black px-3.5 py-1.5 rounded-xl text-xs transition-all cursor-pointer min-h-[38px]"
                   >
                     Use Sound
                   </button>

@@ -68,6 +68,61 @@ body {
   border-color: rgba(0, 180, 216, 0.35);
 }
 
+/* ─── TUKUBI High-Readability Surface Architecture ─── */
+/* Surface Card: Specially formulated for 94% opacity to eliminate background image interference while preserving atmospheric depth */
+.surface-card {
+  background: rgba(22, 16, 34, 0.94);
+  backdrop-filter: blur(24px) saturate(160%);
+  -webkit-backdrop-filter: blur(24px) saturate(160%);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.65), inset 0 1px 0 0 rgba(255, 255, 255, 0.12);
+}
+
+.surface-card:hover {
+  border-color: rgba(255, 255, 255, 0.20);
+}
+
+.surface-card-interactive {
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.surface-card-interactive:hover {
+  transform: translateY(-2px);
+  border-color: rgba(0, 180, 216, 0.40);
+  box-shadow: 0 14px 35px -10px rgba(0, 0, 0, 0.75), 0 0 25px -5px rgba(0, 180, 216, 0.25), inset 0 1px 0 0 rgba(255, 255, 255, 0.20);
+}
+
+/* Surface Opaque: 100% solid surface for maximum readability in high-information cards, forms, and tables */
+.surface-opaque {
+  background: #181126;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.7);
+}
+
+/* Surface Header: High-contrast header surface for page banners, sticky bars, and filter strips */
+.surface-header {
+  background: linear-gradient(135deg, rgba(29, 20, 41, 0.95) 0%, rgba(17, 13, 23, 0.98) 100%);
+  backdrop-filter: blur(32px) saturate(180%);
+  -webkit-backdrop-filter: blur(32px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 8px 25px -8px rgba(0, 0, 0, 0.6), inset 0 1px 0 0 rgba(255, 255, 255, 0.14);
+}
+
+/* Surface Empty State: Solid protective container for empty states preventing visual distraction */
+.surface-empty {
+  background: rgba(24, 17, 38, 0.95);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px dashed rgba(139, 92, 246, 0.35);
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.6);
+}
+
+/* Touch Target Standards: Minimum 44px hit target for accessibility */
+.touch-target {
+  min-height: 44px;
+  min-width: 44px;
+}
+
 /* ─── Smooth animations ─── */
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(6px); }

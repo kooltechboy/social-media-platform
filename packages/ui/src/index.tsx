@@ -46,7 +46,7 @@ export interface CardProps {
 
 export const Card: React.FC<CardProps> = ({ children, className = '' }: CardProps) => {
   return (
-    <div className={`bg-brand-twilight/90 border border-brand-dusk backdrop-blur-sm rounded-2xl p-5 ${className}`}>
+    <div className={`bg-[#161022]/94 border border-white/12 backdrop-blur-md rounded-2xl p-5 shadow-lg ${className}`}>
       {children}
     </div>
   );
@@ -162,11 +162,163 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
   action,
 }: EmptyStateProps) => {
   return (
-    <div className="bg-brand-twilight border border-dashed border-brand-sunsetPurple/40 rounded-3xl p-10 text-center space-y-3">
-      {icon && <div className="mx-auto text-brand-goldenHour flex justify-center">{icon}</div>}
-      <h3 className="text-base font-bold text-brand-sandstone">{title}</h3>
-      <p className="text-xs text-brand-sandstone/60 max-w-sm mx-auto leading-relaxed">{description}</p>
+    <div className="bg-[#181126]/95 border border-dashed border-brand-sunsetPurple/40 rounded-3xl p-8 sm:p-12 text-center space-y-3.5 shadow-xl max-w-xl mx-auto">
+      {icon && <div className="mx-auto text-brand-goldenHour flex justify-center text-3xl sm:text-4xl">{icon}</div>}
+      <h3 className="text-base sm:text-lg font-black text-white">{title}</h3>
+      <p className="text-xs sm:text-sm text-brand-sandstone/80 max-w-md mx-auto leading-relaxed">{description}</p>
       {action && <div className="pt-2">{action}</div>}
+    </div>
+  );
+};
+
+export interface PageHeaderProps {
+  title: string;
+  subtitle?: string;
+  icon?: React.ReactNode;
+  backHref?: string;
+  backLabel?: string;
+  badge?: React.ReactNode;
+  actions?: React.ReactNode;
+  searchSlot?: React.ReactNode;
+  className?: string;
+}
+
+export const PageHeader: React.FC<PageHeaderProps> = ({
+  title,
+  subtitle,
+  icon,
+  backHref,
+  backLabel = 'Back',
+  badge,
+  actions,
+  searchSlot,
+  className = '',
+}) => {
+  return (
+    <header className={`space-y-4 ${className}`} role="region" aria-label={title}>
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-white/10 pb-5">
+        <div className="flex items-start sm:items-center gap-3.5 min-w-0">
+          {backHref && (
+            <a
+              href={backHref}
+              className="mt-1 sm:mt-0 p-2 sm:px-3 sm:py-2 rounded-xl bg-white/5 hover:bg-white/10 text-brand-sandstone/80 hover:text-white border border-white/10 transition-colors inline-flex items-center gap-1.5 text-xs font-bold shrink-0 min-h-[38px]"
+              aria-label={backLabel}
+            >
+              <span>←</span>
+              <span className="hidden sm:inline">{backLabel}</span>
+            </a>
+          )}
+          <div className="min-w-0">
+            <div className="flex items-center gap-2.5 flex-wrap">
+              {icon && <span className="shrink-0 flex items-center justify-center">{icon}</span>}
+              <h1 className="text-xl sm:text-2xl lg:text-3xl font-black text-white tracking-tight leading-tight">
+                {title}
+              </h1>
+              {badge && <span className="shrink-0">{badge}</span>}
+            </div>
+            {subtitle && (
+              <p className="text-xs sm:text-sm text-brand-sandstone/70 mt-1 leading-relaxed max-w-3xl">
+                {subtitle}
+              </p>
+            )}
+          </div>
+        </div>
+
+        {actions && (
+          <div className="flex items-center gap-2.5 flex-wrap self-start md:self-auto shrink-0">
+            {actions}
+          </div>
+        )}
+      </div>
+
+      {searchSlot && (
+        <div className="w-full">
+          {searchSlot}
+        </div>
+      )}
+    </header>
+  );
+};
+
+export interface ContentSurfaceProps {
+  children: React.ReactNode;
+  className?: string;
+  variant?: 'card' | 'opaque' | 'elevated' | 'empty';
+}
+
+export const ContentSurface: React.FC<ContentSurfaceProps> = ({
+  children,
+  className = '',
+  variant = 'card',
+}) => {
+  const variantStyles = {
+    card: 'bg-[#161022]/94 backdrop-blur-xl border border-white/12 shadow-[0_10px_30px_-10px_rgba(0,0,0,0.65)]',
+    opaque: 'bg-[#181126] border border-white/12 shadow-xl',
+    elevated: 'bg-[#1D1429] border border-white/14 shadow-2xl',
+    empty: 'bg-[#181126]/95 border border-dashed border-brand-sunsetPurple/40 shadow-xl',
+  };
+
+  return (
+    <div className={`rounded-3xl p-4 sm:p-6 ${variantStyles[variant]} ${className}`}>
+      {children}
+    </div>
+  );
+};
+
+export interface TabItem {
+  id: string;
+  label: string;
+  count?: number;
+  badge?: string;
+  icon?: React.ReactNode;
+}
+
+export interface ResponsiveTabsProps {
+  tabs: TabItem[];
+  activeTab: string;
+  onTabChange: (id: string) => void;
+  className?: string;
+}
+
+export const ResponsiveTabs: React.FC<ResponsiveTabsProps> = ({
+  tabs,
+  activeTab,
+  onTabChange,
+  className = '',
+}) => {
+  return (
+    <div className={`flex gap-1.5 sm:gap-2 border-b border-white/10 pb-2 overflow-x-auto scrollbar-none ${className}`} role="tablist">
+      {tabs.map((tab) => {
+        const isActive = activeTab === tab.id;
+        return (
+          <button
+            key={tab.id}
+            role="tab"
+            aria-selected={isActive}
+            onClick={() => onTabChange(tab.id)}
+            className={`px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all relative flex items-center gap-2 whitespace-nowrap min-h-[40px] ${
+              isActive
+                ? 'bg-white/15 text-brand-caribbeanSea border border-brand-caribbeanSea/40 shadow-sm'
+                : 'text-brand-sandstone/70 hover:text-white hover:bg-white/5 border border-transparent'
+            }`}
+          >
+            {tab.icon && <span className="w-4 h-4">{tab.icon}</span>}
+            <span>{tab.label}</span>
+            {tab.count !== undefined && (
+              <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
+                isActive ? 'bg-brand-caribbeanSea/20 text-brand-caribbeanSea border border-brand-caribbeanSea/30' : 'bg-white/10 text-brand-sandstone/60'
+              }`}>
+                {tab.count}
+              </span>
+            )}
+            {tab.badge && (
+              <span className="text-[9px] font-black px-1.5 py-0.5 rounded-full bg-brand-sunriseCoral text-slate-950">
+                {tab.badge}
+              </span>
+            )}
+          </button>
+        );
+      })}
     </div>
   );
 };

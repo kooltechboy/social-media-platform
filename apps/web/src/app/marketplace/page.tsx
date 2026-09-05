@@ -105,46 +105,46 @@ export default async function MarketplacePage({
   const launchMessaging = getMarketplaceLaunchMessaging();
 
   return (
-    <div className="min-h-screen bg-transparent text-brand-sandstone p-4 md:p-6 max-w-7xl mx-auto space-y-8 animate-fadeIn">
+    <div className="min-h-screen bg-transparent text-brand-sandstone px-4 sm:px-6 lg:px-8 py-6 sm:py-8 max-w-7xl mx-auto space-y-8 animate-fadeIn">
       {/* Top Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-6">
+      <div className="surface-header rounded-3xl p-6 sm:p-8 flex flex-col md:flex-row md:items-center justify-between gap-4 border border-orange-500/30 shadow-xl">
         <div>
           <div className="flex items-center gap-2.5">
             <span className="w-3 h-3 rounded-full bg-orange-500 animate-ping" />
-            <h1 className="text-2xl md:text-3xl font-black text-white flex items-center gap-3">
-              <ShoppingBag className="w-8 h-8 text-orange-400" /> Shop the Caribbean
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-black text-white flex items-center gap-3">
+              <ShoppingBag className="w-7 h-7 sm:w-8 sm:h-8 text-orange-400" /> Shop the Caribbean
             </h1>
           </div>
-          <p className="text-xs md:text-sm text-brand-sandstone/60 mt-1">
+          <p className="text-xs sm:text-sm text-brand-sandstone/80 mt-1 leading-relaxed">
             Authentic island goods, artisan craft, food, coffee, and digital audio — protected with 30-day dispute settlement.
           </p>
         </div>
 
         {user ? (
-          <div className="flex items-center gap-2 self-start md:self-auto">
+          <div className="flex flex-wrap items-center gap-2.5 self-start md:self-auto">
             <Link
               href="/merchant"
-              className="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 font-bold px-4 py-2.5 rounded-2xl text-xs flex items-center gap-2 transition-all"
+              className="bg-white/10 hover:bg-white/15 border border-white/15 text-white font-bold px-4 py-2.5 rounded-xl text-xs flex items-center justify-center gap-2 transition-all min-h-[44px]"
             >
               <Store className="w-4 h-4 text-brand-goldenHour" /> Merchant Hub
             </Link>
             <Link
               href="/marketplace/orders"
-              className="bg-brand-dusk hover:bg-slate-800 border border-slate-700 text-brand-sandstone font-bold px-4 py-2.5 rounded-2xl text-xs flex items-center gap-2 transition-all"
+              className="bg-white/10 hover:bg-white/15 border border-white/15 text-white font-bold px-4 py-2.5 rounded-xl text-xs flex items-center justify-center gap-2 transition-all min-h-[44px]"
             >
               <ShoppingBag className="w-4 h-4 text-orange-400" /> My Purchases
             </Link>
             <Link
               href="/pages/create"
-              className="bg-orange-500 hover:bg-orange-400 text-slate-950 font-extrabold px-4 py-2.5 rounded-2xl text-xs flex items-center gap-2 transition-all shadow-md shadow-orange-500/20"
+              className="bg-orange-500 hover:brightness-110 text-slate-950 font-black px-5 py-2.5 rounded-xl text-xs sm:text-sm flex items-center justify-center gap-2 transition-all shadow-md shadow-orange-500/20 min-h-[44px]"
             >
-              <Plus className="w-4 h-4" /> Open Store / Sell
+              <Plus className="w-4 h-4 stroke-[3]" /> Open Store / Sell
             </Link>
           </div>
         ) : (
           <Link
             href="/login?redirect=/marketplace"
-            className="bg-orange-500/20 text-orange-300 border border-orange-500/40 font-extrabold px-5 py-2.5 rounded-2xl text-xs flex items-center gap-2 hover:bg-orange-500/30 transition-all self-start md:self-auto"
+            className="bg-orange-500/20 text-orange-300 border border-orange-500/40 font-black px-5 py-2.5 rounded-xl text-xs flex items-center justify-center gap-2 hover:bg-orange-500/30 transition-all self-start md:self-auto min-h-[44px]"
           >
             Sign in to Sell
           </Link>
@@ -152,16 +152,16 @@ export default async function MarketplacePage({
       </div>
 
       {/* Phased Launch Banner (Directive 10 & 46) */}
-      <div className="bg-gradient-to-r from-orange-950/40 via-slate-900 to-amber-950/30 border border-orange-500/30 rounded-3xl p-5 shadow-lg space-y-1.5">
-        <div className="flex items-center gap-2">
-          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-orange-500/20 text-orange-400 border border-orange-500/30">
+      <div className="surface-card border border-orange-500/30 rounded-3xl p-5 sm:p-6 shadow-lg space-y-2">
+        <div className="flex items-center gap-2.5">
+          <span className="px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-orange-500/20 text-orange-300 border border-orange-500/40">
             {launchMessaging.badge}
           </span>
-          <h2 className="text-sm md:text-base font-black text-brand-sandstone">
+          <h2 className="text-sm md:text-base font-black text-white">
             {launchMessaging.bannerTitle}
           </h2>
         </div>
-        <p className="text-xs text-brand-sandstone/70 leading-relaxed font-medium">
+        <p className="text-xs sm:text-sm text-brand-sandstone/85 leading-relaxed font-medium">
           {launchMessaging.bannerBody}
         </p>
       </div>
@@ -171,13 +171,13 @@ export default async function MarketplacePage({
         {/* Search Bar & Quick Filters */}
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
           <form className="relative flex-1 max-w-lg">
-            <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+            <Search className="w-4 h-4 text-brand-caribbeanSea absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
             <input
               type="text"
               name="q"
               defaultValue={queryText}
               placeholder="Search Caribbean goods, coffee, art, music, or services..."
-              className="w-full bg-brand-dusk border border-slate-800 rounded-2xl pl-9 pr-4 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-orange-500"
+              className="w-full bg-slate-950/80 border border-white/20 rounded-xl pl-10 pr-4 py-2.5 text-xs sm:text-sm text-white placeholder-brand-sandstone/50 focus:outline-none focus:border-orange-500 min-h-[40px]"
             />
           </form>
 
@@ -192,10 +192,10 @@ export default async function MarketplacePage({
               <Link
                 key={k.id}
                 href={`/marketplace?kind=${k.id}${queryText ? `&q=${encodeURIComponent(queryText)}` : ''}`}
-                className={`px-3 py-1.5 rounded-xl font-bold transition-colors whitespace-nowrap ${
+                className={`px-3.5 py-2 rounded-xl font-bold transition-colors whitespace-nowrap min-h-[38px] flex items-center ${
                   filterKind === k.id
-                    ? 'bg-slate-800 text-orange-400 border border-orange-500/40'
-                    : 'bg-brand-dusk text-slate-400 hover:text-white border border-slate-800'
+                    ? 'bg-orange-500/20 text-orange-300 border border-orange-500/50 font-black'
+                    : 'bg-white/5 text-brand-sandstone/80 hover:text-white border border-white/10'
                 }`}
               >
                 {k.label}
@@ -205,17 +205,17 @@ export default async function MarketplacePage({
         </div>
 
         {/* Categories Tab Rail */}
-        <div className="flex gap-2.5 overflow-x-auto pb-2 scrollbar-none">
+        <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-none">
           {MARKETPLACE_TABS.map((tab) => {
             const isActive = tab === activeCategory;
             return (
               <Link
                 key={tab}
                 href={tab === 'All Products' ? '/marketplace' : `/marketplace?category=${encodeURIComponent(tab)}`}
-                className={`px-4 py-1.5 rounded-2xl text-xs font-black whitespace-nowrap transition-all ${
+                className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all min-h-[38px] flex items-center ${
                   isActive
-                    ? 'bg-orange-500 text-slate-950 shadow-md shadow-orange-500/20'
-                    : 'bg-brand-dusk text-brand-sandstone/60 hover:text-brand-sandstone border border-slate-800'
+                    ? 'bg-orange-500 text-slate-950 shadow-md shadow-orange-500/20 font-black'
+                    : 'bg-white/5 text-brand-sandstone/80 hover:text-white hover:bg-white/10 border border-white/10'
                 }`}
               >
                 {tab}
@@ -226,34 +226,34 @@ export default async function MarketplacePage({
       </div>
 
       {/* Trust & Guarantee Banner */}
-      <div className="bg-gradient-to-r from-slate-900 via-orange-950/20 to-slate-900 border border-orange-500/20 rounded-3xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-lg text-xs">
+      <div className="surface-card border border-white/10 rounded-3xl p-5 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-lg text-xs">
         <div className="flex items-center gap-3">
           <ShieldCheck className="w-5 h-5 text-brand-sunriseCoral flex-shrink-0" />
-          <p className="text-slate-300">
-            <strong className="text-brand-sandstone">TUKUBI Buyer &amp; Seller Protection:</strong> Every purchase is backed by automated dispute settlement and escrow resolution via authorized Caribbean and international payment processors.
+          <p className="text-brand-sandstone/90 leading-relaxed">
+            <strong className="text-white font-bold">TUKUBI Buyer &amp; Seller Protection:</strong> Every purchase is backed by automated dispute settlement and escrow resolution via authorized Caribbean and international payment processors.
           </p>
         </div>
-        <div className="flex items-center gap-4 text-[11px] text-brand-sandstone/60 flex-shrink-0">
-          <span className="flex items-center gap-1"><Truck className="w-3.5 h-3.5 text-brand-caribbeanSea" /> Global Island Shipping</span>
-          <span className="flex items-center gap-1"><CheckCircle className="w-3.5 h-3.5 text-brand-sunriseCoral" /> Verified Sellers</span>
+        <div className="flex items-center gap-4 text-xs text-brand-sandstone/70 flex-shrink-0">
+          <span className="flex items-center gap-1.5"><Truck className="w-4 h-4 text-brand-caribbeanSea" /> Global Island Shipping</span>
+          <span className="flex items-center gap-1.5"><CheckCircle className="w-4 h-4 text-brand-sunriseCoral" /> Verified Sellers</span>
         </div>
       </div>
 
       {/* Products Catalog Grid */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-base font-black text-white flex items-center gap-2">
+          <h2 className="text-base sm:text-lg font-black text-white flex items-center gap-2">
             <Compass className="w-4 h-4 text-orange-400" />
             <span>{activeCategory}</span>
-            <span className="text-xs font-normal text-slate-400">({products.length} items)</span>
+            <span className="text-xs font-normal text-brand-sandstone/60">({products.length} items)</span>
           </h2>
         </div>
 
         {products.length === 0 ? (
-          <div className="p-12 rounded-3xl bg-brand-dusk/60 border border-dashed border-slate-800 text-center space-y-3">
-            <ShoppingBag className="w-10 h-10 text-slate-600 mx-auto" />
-            <h3 className="text-base font-bold text-white">No products found</h3>
-            <p className="text-xs text-brand-sandstone/60 max-w-sm mx-auto">
+          <div className="surface-card rounded-3xl p-12 text-center space-y-3 border border-white/10 max-w-md mx-auto">
+            <ShoppingBag className="w-10 h-10 text-white/40 mx-auto" />
+            <h3 className="text-base font-black text-white">No products found</h3>
+            <p className="text-xs text-brand-sandstone/70 max-w-sm mx-auto leading-relaxed">
               No Caribbean merchandise matches this search query or category filter yet.
             </p>
           </div>
@@ -267,22 +267,22 @@ export default async function MarketplacePage({
               return (
                 <div
                   key={p.id}
-                  className="bg-brand-dusk border border-slate-800/80 hover:border-orange-500/40 rounded-3xl p-4 flex flex-col justify-between transition-all group shadow-lg"
+                  className="surface-card surface-card-interactive border border-white/10 rounded-3xl p-5 flex flex-col justify-between transition-all group shadow-lg"
                 >
                   <div className="space-y-3">
                     <Link
                       href={`/marketplace/${p.id}`}
-                      className="aspect-square bg-gradient-to-br from-slate-900 to-slate-950 border border-slate-800 rounded-2xl flex items-center justify-center relative overflow-hidden group-hover:scale-[1.02] transition-transform"
+                      className="aspect-square bg-slate-950/80 border border-white/10 rounded-2xl flex items-center justify-center relative overflow-hidden group-hover:scale-[1.02] transition-transform"
                     >
                       <span className="text-5xl">
                         {p.product_kind === 'service' ? '🤝' : p.product_kind === 'digital' ? '🎧' : '📦'}
                       </span>
-                      <span className={`absolute top-2.5 right-2.5 text-[9px] font-black px-2 py-0.5 rounded-full border uppercase ${
+                      <span className={`absolute top-2.5 right-2.5 text-[10px] font-black px-2.5 py-1 rounded-full border uppercase ${
                         p.product_kind === 'physical'
-                          ? 'bg-orange-500/10 text-orange-400 border-orange-500/30'
+                          ? 'bg-orange-500/20 text-orange-300 border-orange-500/40'
                           : p.product_kind === 'digital'
-                          ? 'bg-sky-500/10 text-sky-400 border-sky-500/30'
-                          : 'bg-purple-500/10 text-purple-400 border-purple-500/30'
+                          ? 'bg-sky-500/20 text-sky-300 border-sky-500/40'
+                          : 'bg-purple-500/20 text-purple-300 border-purple-500/40'
                       }`}>
                         {p.product_kind}
                       </span>
@@ -292,35 +292,35 @@ export default async function MarketplacePage({
                       {sellerSlug ? (
                         <Link
                           href={`/store/${sellerSlug}`}
-                          className="text-[11px] font-bold text-orange-400 hover:underline block truncate"
+                          className="text-xs font-black text-orange-400 hover:underline block truncate"
                         >
                           {sellerName}
                         </Link>
                       ) : (
-                        <div className="text-[11px] font-bold text-slate-400 truncate">{sellerName}</div>
+                        <div className="text-xs font-bold text-brand-sandstone/70 truncate">{sellerName}</div>
                       )}
                       <Link
                         href={`/marketplace/${p.id}`}
-                        className="font-bold text-sm text-white hover:text-orange-400 line-clamp-1 transition-colors mt-0.5"
+                        className="font-black text-sm sm:text-base text-white hover:text-orange-400 line-clamp-1 transition-colors mt-0.5"
                       >
                         {p.title}
                       </Link>
-                      <p className="text-xs text-brand-sandstone/60 line-clamp-2 mt-1 min-h-[32px]">
+                      <p className="text-xs text-brand-sandstone/80 line-clamp-2 mt-1 min-h-[32px] leading-relaxed">
                         {p.description || 'Authentic Caribbean offering with guaranteed fulfillment.'}
                       </p>
                     </div>
 
-                    <div className="pt-2 border-t border-slate-800/60 flex items-center justify-between">
-                      <span className="text-base font-black text-white">{price.format()}</span>
+                    <div className="pt-2 border-t border-white/10 flex items-center justify-between">
+                      <span className="text-lg font-black text-brand-goldenHour">{price.format()}</span>
                       {p.inventory_count !== null && (
-                        <span className="text-[10px] text-brand-sandstone/50">
+                        <span className="text-xs text-brand-sandstone/60">
                           {p.inventory_count > 0 ? `${p.inventory_count} in stock` : 'Sold out'}
                         </span>
                       )}
                     </div>
                   </div>
 
-                  <div className="pt-3">
+                  <div className="pt-4">
                     <OrderButton
                       productId={p.id}
                       isAuthenticated={!!user}

@@ -239,9 +239,9 @@ export default function FriendsCenterClient({
   return (
     <div className="space-y-6">
       {/* Search Input Bar & Tabs */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="surface-header rounded-2xl p-3 sm:p-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
         {/* Tab Navigation */}
-        <div className="flex gap-2 border-b border-slate-800 pb-2 overflow-x-auto scrollbar-none" role="tablist">
+        <div className="flex gap-2 overflow-x-auto scrollbar-none pb-1 md:pb-0" role="tablist">
           {tabs.map((tab) => {
             const isActive = activeTab === tab.id;
             return (
@@ -250,12 +250,16 @@ export default function FriendsCenterClient({
                 role="tab"
                 aria-selected={isActive}
                 onClick={() => setActiveTab(tab.id as typeof activeTab)}
-                className={`pb-2 whitespace-nowrap text-xs sm:text-sm font-bold transition-all relative px-2.5 flex items-center gap-1.5 ${
-                  isActive ? 'text-brand-caribbeanSea' : 'text-brand-sandstone/60 hover:text-slate-200'
+                className={`px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all relative flex items-center gap-2 whitespace-nowrap min-h-[40px] ${
+                  isActive
+                    ? 'bg-white/15 text-brand-caribbeanSea border border-brand-caribbeanSea/40 shadow-sm'
+                    : 'text-brand-sandstone/70 hover:text-white hover:bg-white/5 border border-transparent'
                 }`}
               >
                 <span>{tab.label}</span>
-                <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-brand-dusk border border-slate-800 text-brand-sandstone/80">
+                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                  isActive ? 'bg-brand-caribbeanSea/25 text-brand-caribbeanSea border border-brand-caribbeanSea/40' : 'bg-white/10 text-brand-sandstone/70'
+                }`}>
                   {tab.count}
                 </span>
                 {tab.badge && (
@@ -263,23 +267,20 @@ export default function FriendsCenterClient({
                     {tab.badge}
                   </span>
                 )}
-                {isActive && (
-                  <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-brand-caribbeanSea via-brand-sunriseCoral to-brand-goldenHour rounded-full" />
-                )}
               </button>
             );
           })}
         </div>
 
         {/* Live Filter Bar */}
-        <div className="relative w-full md:w-64 shrink-0">
-          <Search className="absolute left-3.5 top-2.5 w-4 h-4 text-brand-sandstone/50 pointer-events-none" />
+        <div className="relative w-full md:w-72 shrink-0">
+          <Search className="absolute left-3.5 top-2.5 w-4 h-4 text-brand-sandstone/60 pointer-events-none" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Filter by name, @..."
-            className="w-full bg-brand-twilight/80 border border-slate-700/80 rounded-full pl-9 pr-4 py-2 text-xs text-brand-sandstone placeholder-brand-sandstone/50 focus:outline-none focus:border-brand-caribbeanSea focus:ring-1 focus:ring-brand-caribbeanSea/40 transition-all"
+            className="w-full bg-[#181126]/95 border border-white/15 rounded-full pl-10 pr-4 py-2 text-xs sm:text-sm text-white placeholder-brand-sandstone/50 focus:outline-none focus:border-brand-caribbeanSea focus:ring-2 focus:ring-brand-caribbeanSea/30 transition-all min-h-[40px]"
           />
         </div>
       </div>
@@ -290,33 +291,33 @@ export default function FriendsCenterClient({
       {activeTab === 'friends' && (
         <div className="space-y-4">
           {filteredFriends.length === 0 ? (
-            <div className="bg-brand-dusk/60 border border-slate-800 rounded-3xl p-10 text-center space-y-3">
-              <Users className="w-10 h-10 text-brand-caribbeanSea/60 mx-auto" />
-              <h3 className="text-sm font-bold text-slate-200">
+            <div className="surface-empty rounded-3xl p-8 sm:p-12 text-center space-y-3.5 max-w-xl mx-auto">
+              <Users className="w-12 h-12 text-brand-caribbeanSea mx-auto" />
+              <h3 className="text-base sm:text-lg font-black text-white">
                 {searchQuery ? `No friends found matching "${searchQuery}"` : 'No friends connected yet'}
               </h3>
-              <p className="text-xs text-brand-sandstone/60 max-w-sm mx-auto">
+              <p className="text-xs sm:text-sm text-brand-sandstone/80 max-w-md mx-auto leading-relaxed">
                 Explore Caribbean members, send friend requests, and grow your diaspora network.
               </p>
               <button
                 type="button"
                 onClick={() => setActiveTab('pymk')}
-                className="inline-flex items-center gap-1.5 text-xs font-bold px-4 py-2 rounded-xl bg-gradient-to-r from-brand-caribbeanSea to-brand-sunriseCoral text-slate-950 shadow-md shadow-brand-caribbeanSea/20"
+                className="inline-flex items-center gap-2 text-xs sm:text-sm font-black px-5 py-2.5 rounded-xl bg-gradient-to-r from-brand-caribbeanSea to-brand-sunriseCoral text-slate-950 shadow-md shadow-brand-caribbeanSea/20 hover:brightness-110 transition-all min-h-[42px]"
               >
-                <Sparkles className="w-3.5 h-3.5" /> View Suggested Members
+                <Sparkles className="w-4 h-4" /> View Suggested Members
               </button>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
               {filteredFriends.map((friend) => (
                 <div
                   key={friend.id}
-                  className="glass rounded-2xl p-4 flex flex-col justify-between space-y-3 hover:border-brand-caribbeanSea/40 transition-all group relative"
+                  className="surface-card surface-card-interactive rounded-2xl p-4 sm:p-5 flex flex-col justify-between space-y-3.5 group relative"
                 >
                   <div className="flex items-start justify-between gap-3">
                     <Link
                       href={`/profile/${friend.username}`}
-                      className="flex items-center gap-3 min-w-0 flex-1"
+                      className="flex items-center gap-3.5 min-w-0 flex-1"
                     >
                       <UserAvatar
                         src={friend.avatar_url}
@@ -324,16 +325,16 @@ export default function FriendsCenterClient({
                         size="md"
                       />
                       <div className="min-w-0">
-                        <h4 className="text-xs font-extrabold text-brand-sandstone truncate group-hover:text-brand-caribbeanSea transition-colors flex items-center gap-1">
+                        <h4 className="text-sm font-extrabold text-white truncate group-hover:text-brand-caribbeanSea transition-colors flex items-center gap-1.5">
                           {friend.display_name}
                           {friend.is_verified && (
                             <Check className="w-3.5 h-3.5 text-brand-caribbeanSea shrink-0" />
                           )}
                         </h4>
-                        <p className="text-[11px] text-brand-sandstone/60 truncate">@{friend.username}</p>
+                        <p className="text-xs text-brand-sandstone/70 truncate">@{friend.username}</p>
                         {friend.country_name && (
-                          <span className="text-[10px] text-brand-sunriseCoral flex items-center gap-0.5 mt-0.5">
-                            <MapPin className="w-2.5 h-2.5" /> {friend.country_name}
+                          <span className="text-xs text-brand-sunriseCoral flex items-center gap-1 mt-0.5 font-semibold">
+                            <MapPin className="w-3 h-3 shrink-0" /> {friend.country_name}
                           </span>
                         )}
                       </div>
@@ -344,42 +345,43 @@ export default function FriendsCenterClient({
                       <button
                         type="button"
                         onClick={() => setActiveMenuId(activeMenuId === friend.id ? null : friend.id)}
-                        className="p-1.5 rounded-lg text-brand-sandstone/50 hover:text-brand-sandstone hover:bg-slate-800 transition-colors"
+                        className="p-2 rounded-xl text-brand-sandstone/60 hover:text-white hover:bg-white/10 transition-colors min-h-[36px] min-w-[36px] flex items-center justify-center"
+                        aria-label="More actions"
                       >
                         <MoreVertical className="w-4 h-4" />
                       </button>
 
                       {activeMenuId === friend.id && (
-                        <div className="absolute right-0 top-8 w-40 bg-brand-dusk border border-slate-700 rounded-2xl p-1.5 shadow-2xl z-30 space-y-1 text-xs">
+                        <div className="absolute right-0 top-10 w-44 bg-[#1D1429] border border-white/15 rounded-2xl p-1.5 shadow-2xl z-30 space-y-1 text-xs">
                           <button
                             type="button"
                             onClick={() => handleUnfriend(friend.id)}
-                            className="w-full text-left px-3 py-1.5 rounded-xl hover:bg-rose-500/20 text-rose-400 font-semibold flex items-center gap-2"
+                            className="w-full text-left px-3 py-2 rounded-xl hover:bg-rose-500/20 text-rose-400 font-bold flex items-center gap-2"
                           >
-                            <UserMinus className="w-3.5 h-3.5" /> Unfriend
+                            <UserMinus className="w-4 h-4" /> Unfriend
                           </button>
                           <button
                             type="button"
                             onClick={() => handleBlock(friend.id)}
-                            className="w-full text-left px-3 py-1.5 rounded-xl hover:bg-slate-800 text-brand-sandstone/80 font-semibold flex items-center gap-2"
+                            className="w-full text-left px-3 py-2 rounded-xl hover:bg-white/10 text-brand-sandstone font-bold flex items-center gap-2"
                           >
-                            <Shield className="w-3.5 h-3.5" /> Block
+                            <Shield className="w-4 h-4" /> Block
                           </button>
                         </div>
                       )}
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2 pt-2 border-t border-slate-800/80">
+                  <div className="flex items-center gap-2.5 pt-3 border-t border-white/10">
                     <Link
                       href={`/messages?u=${encodeURIComponent(friend.username)}`}
-                      className="flex-1 flex items-center justify-center gap-1.5 text-[11px] font-bold py-1.5 rounded-xl bg-brand-dusk hover:bg-slate-800 text-brand-sandstone border border-slate-700 transition-colors"
+                      className="flex-1 flex items-center justify-center gap-1.5 text-xs font-bold py-2 px-3 rounded-xl bg-white/10 hover:bg-white/15 text-white border border-white/10 transition-colors min-h-[38px]"
                     >
                       <MessageSquare className="w-3.5 h-3.5 text-brand-caribbeanSea" /> Message
                     </Link>
                     <Link
                       href={`/profile/${friend.username}`}
-                      className="text-[11px] font-bold px-3 py-1.5 rounded-xl bg-brand-twilight hover:bg-slate-800 text-brand-sandstone/80 border border-slate-800 transition-colors"
+                      className="text-xs font-bold px-3.5 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-brand-sandstone/90 border border-white/10 transition-colors min-h-[38px] flex items-center justify-center"
                     >
                       Profile
                     </Link>
@@ -398,20 +400,20 @@ export default function FriendsCenterClient({
         <div className="space-y-6">
           {/* Incoming Requests */}
           <div className="space-y-3">
-            <h3 className="text-xs font-black uppercase tracking-wider text-brand-caribbeanSea flex items-center gap-1.5">
-              <UserPlus className="w-3.5 h-3.5" /> Incoming Requests ({filteredIncoming.length})
+            <h3 className="text-xs sm:text-sm font-black uppercase tracking-wider text-brand-caribbeanSea flex items-center gap-2">
+              <UserPlus className="w-4 h-4" /> Incoming Requests ({filteredIncoming.length})
             </h3>
 
             {filteredIncoming.length === 0 ? (
-              <div className="bg-brand-dusk/40 border border-slate-800/80 rounded-2xl p-6 text-center text-xs text-brand-sandstone/50">
+              <div className="surface-card rounded-2xl p-6 text-center text-xs sm:text-sm text-brand-sandstone/70">
                 No incoming friend requests at this time.
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                 {filteredIncoming.map((req) => (
                   <div
                     key={req.id}
-                    className="glass rounded-2xl p-4 flex items-center justify-between gap-3 hover:border-brand-caribbeanSea/30 transition-all"
+                    className="surface-card surface-card-interactive rounded-2xl p-4 flex items-center justify-between gap-3"
                   >
                     <Link
                       href={`/profile/${req.username}`}
@@ -423,10 +425,10 @@ export default function FriendsCenterClient({
                         size="md"
                       />
                       <div className="min-w-0">
-                        <h4 className="text-xs font-extrabold text-brand-sandstone truncate">
+                        <h4 className="text-sm font-extrabold text-white truncate">
                           {req.display_name}
                         </h4>
-                        <p className="text-[11px] text-brand-sandstone/60 truncate">@{req.username}</p>
+                        <p className="text-xs text-brand-sandstone/70 truncate">@{req.username}</p>
                       </div>
                     </Link>
 
@@ -435,23 +437,29 @@ export default function FriendsCenterClient({
                         type="button"
                         disabled={pendingActionId === req.id}
                         onClick={() => handleAcceptRequest(req)}
-                        className="p-2 rounded-xl bg-brand-caribbeanSea text-slate-950 font-bold hover:bg-emerald-400 transition-all disabled:opacity-50"
+                        className="p-2 sm:px-3 sm:py-2 rounded-xl bg-brand-caribbeanSea text-slate-950 font-black hover:brightness-110 transition-all disabled:opacity-50 min-h-[38px] min-w-[38px] flex items-center justify-center gap-1 text-xs"
                         title="Accept Friend Request"
+                        aria-label={`Accept friend request from ${req.display_name}`}
                       >
                         {pendingActionId === req.id ? (
                           <Loader2 className="w-4 h-4 animate-spin" />
                         ) : (
-                          <Check className="w-4 h-4" />
+                          <>
+                            <Check className="w-4 h-4" />
+                            <span className="hidden sm:inline">Accept</span>
+                          </>
                         )}
                       </button>
                       <button
                         type="button"
                         disabled={pendingActionId === req.id}
                         onClick={() => handleDeclineRequest(req.id)}
-                        className="p-2 rounded-xl bg-brand-dusk text-rose-400 border border-slate-700 hover:bg-rose-500/20 transition-all disabled:opacity-50"
+                        className="p-2 sm:px-3 sm:py-2 rounded-xl bg-white/10 text-rose-300 border border-white/15 hover:bg-rose-500/20 transition-all disabled:opacity-50 min-h-[38px] min-w-[38px] flex items-center justify-center gap-1 text-xs font-bold"
                         title="Decline Friend Request"
+                        aria-label={`Decline friend request from ${req.display_name}`}
                       >
                         <X className="w-4 h-4" />
+                        <span className="hidden sm:inline">Decline</span>
                       </button>
                     </div>
                   </div>
@@ -461,21 +469,21 @@ export default function FriendsCenterClient({
           </div>
 
           {/* Outgoing Pending Requests */}
-          <div className="space-y-3 pt-4 border-t border-slate-800">
-            <h3 className="text-xs font-black uppercase tracking-wider text-brand-goldenHour flex items-center gap-1.5">
-              <Clock className="w-3.5 h-3.5" /> Sent Requests ({filteredOutgoing.length})
+          <div className="space-y-3 pt-6 border-t border-white/10">
+            <h3 className="text-xs sm:text-sm font-black uppercase tracking-wider text-brand-goldenHour flex items-center gap-2">
+              <Clock className="w-4 h-4" /> Sent Requests ({filteredOutgoing.length})
             </h3>
 
             {filteredOutgoing.length === 0 ? (
-              <div className="bg-brand-dusk/40 border border-slate-800/80 rounded-2xl p-6 text-center text-xs text-brand-sandstone/50">
+              <div className="surface-card rounded-2xl p-6 text-center text-xs sm:text-sm text-brand-sandstone/70">
                 No outgoing pending requests.
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                 {filteredOutgoing.map((req) => (
                   <div
                     key={req.id}
-                    className="glass rounded-2xl p-4 flex items-center justify-between gap-3"
+                    className="surface-card rounded-2xl p-4 flex items-center justify-between gap-3"
                   >
                     <Link
                       href={`/profile/${req.username}`}
@@ -487,10 +495,10 @@ export default function FriendsCenterClient({
                         size="md"
                       />
                       <div className="min-w-0">
-                        <h4 className="text-xs font-extrabold text-brand-sandstone truncate">
+                        <h4 className="text-sm font-extrabold text-white truncate">
                           {req.display_name}
                         </h4>
-                        <p className="text-[11px] text-brand-sandstone/60 truncate">@{req.username}</p>
+                        <p className="text-xs text-brand-sandstone/70 truncate">@{req.username}</p>
                       </div>
                     </Link>
 
@@ -498,7 +506,7 @@ export default function FriendsCenterClient({
                       type="button"
                       disabled={pendingActionId === req.id}
                       onClick={() => handleCancelRequest(req.id)}
-                      className="text-[10px] font-bold px-3 py-1.5 rounded-xl bg-brand-dusk text-slate-300 border border-slate-700 hover:bg-slate-800 hover:text-rose-400 transition-all"
+                      className="text-xs font-bold px-3 py-1.5 rounded-xl bg-white/10 text-brand-sandstone hover:text-rose-400 border border-white/15 hover:bg-white/15 transition-all min-h-[36px]"
                     >
                       {pendingActionId === req.id ? '…' : 'Cancel'}
                     </button>
@@ -516,27 +524,27 @@ export default function FriendsCenterClient({
       {activeTab === 'pymk' && (
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="text-xs font-black uppercase tracking-wider text-brand-caribbeanSea flex items-center gap-1.5">
-              <Sparkles className="w-3.5 h-3.5 text-brand-goldenHour" /> Caribbean Members You May Know ({filteredPymk.length})
+            <h3 className="text-xs sm:text-sm font-black uppercase tracking-wider text-brand-caribbeanSea flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-brand-goldenHour" /> Caribbean Members You May Know ({filteredPymk.length})
             </h3>
           </div>
 
           {filteredPymk.length === 0 ? (
-            <div className="bg-brand-dusk/60 border border-slate-800 rounded-3xl p-10 text-center space-y-3">
-              <Sparkles className="w-10 h-10 text-brand-goldenHour/60 mx-auto" />
-              <h3 className="text-sm font-bold text-slate-200">No suggestions right now</h3>
-              <p className="text-xs text-brand-sandstone/60 max-w-sm mx-auto">
+            <div className="surface-empty rounded-3xl p-8 sm:p-12 text-center space-y-3.5 max-w-xl mx-auto">
+              <Sparkles className="w-12 h-12 text-brand-goldenHour mx-auto" />
+              <h3 className="text-base sm:text-lg font-black text-white">No suggestions right now</h3>
+              <p className="text-xs sm:text-sm text-brand-sandstone/80 max-w-md mx-auto leading-relaxed">
                 Explore the Members Directory or Caribbean Hubs to connect with members across the diaspora.
               </p>
               <Link
                 href="/members"
-                className="inline-flex items-center gap-1.5 text-xs font-bold px-4 py-2 rounded-xl bg-brand-caribbeanSea text-slate-950"
+                className="inline-flex items-center gap-2 text-xs sm:text-sm font-black px-5 py-2.5 rounded-xl bg-brand-caribbeanSea text-slate-950 hover:brightness-110 transition-all min-h-[42px]"
               >
-                Browse All Members <ArrowRight className="w-3.5 h-3.5" />
+                Browse All Members <ArrowRight className="w-4 h-4" />
               </Link>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
               {filteredPymk.map((person) => {
                 const fStatus = friendshipStatusMap[person.id] || person.relationship?.friendshipStatus || 'none';
                 const isFollowing = !!followingMap[person.id] || !!person.relationship?.isFollowing;
@@ -545,12 +553,12 @@ export default function FriendsCenterClient({
                 return (
                   <div
                     key={person.id}
-                    className="glass rounded-2xl p-4 flex flex-col justify-between space-y-3 hover:border-brand-caribbeanSea/40 transition-all group relative"
+                    className="surface-card surface-card-interactive rounded-2xl p-4 sm:p-5 flex flex-col justify-between space-y-3.5 group relative"
                   >
                     <div className="flex items-start justify-between gap-3">
                       <Link
                         href={`/profile/${person.username}`}
-                        className="flex items-center gap-3 min-w-0 flex-1"
+                        className="flex items-center gap-3.5 min-w-0 flex-1"
                       >
                         <UserAvatar
                           src={person.avatar_url}
@@ -558,15 +566,15 @@ export default function FriendsCenterClient({
                           size="md"
                         />
                         <div className="min-w-0">
-                          <h4 className="text-xs font-extrabold text-brand-sandstone truncate group-hover:text-brand-caribbeanSea transition-colors flex items-center gap-1">
+                          <h4 className="text-sm font-extrabold text-white truncate group-hover:text-brand-caribbeanSea transition-colors flex items-center gap-1.5">
                             {person.display_name}
                             {person.is_verified && (
                               <Check className="w-3.5 h-3.5 text-brand-caribbeanSea shrink-0" />
                             )}
                           </h4>
-                          <p className="text-[11px] text-brand-sandstone/60 truncate">@{person.username}</p>
+                          <p className="text-xs text-brand-sandstone/70 truncate">@{person.username}</p>
                           {person.recommendationReason && (
-                            <span className="text-[10px] font-bold text-brand-caribbeanSea block mt-0.5 truncate">
+                            <span className="text-xs font-bold text-brand-caribbeanSea block mt-0.5 truncate">
                               {person.recommendationReason}
                             </span>
                           )}
@@ -578,26 +586,27 @@ export default function FriendsCenterClient({
                         <button
                           type="button"
                           onClick={() => setActiveMenuId(activeMenuId === person.id ? null : person.id)}
-                          className="p-1.5 rounded-lg text-brand-sandstone/50 hover:text-brand-sandstone hover:bg-slate-800 transition-colors"
+                          className="p-2 rounded-xl text-brand-sandstone/60 hover:text-white hover:bg-white/10 transition-colors min-h-[36px] min-w-[36px] flex items-center justify-center"
+                          aria-label="More actions"
                         >
                           <MoreVertical className="w-4 h-4" />
                         </button>
 
                         {activeMenuId === person.id && (
-                          <div className="absolute right-0 top-8 w-44 bg-brand-dusk border border-slate-700 rounded-2xl p-1.5 shadow-2xl z-30 space-y-1 text-xs">
+                          <div className="absolute right-0 top-10 w-44 bg-[#1D1429] border border-white/15 rounded-2xl p-1.5 shadow-2xl z-30 space-y-1 text-xs">
                             <button
                               type="button"
                               onClick={() => handleDismissRecommendation(person.id)}
-                              className="w-full text-left px-3 py-1.5 rounded-xl hover:bg-slate-800 text-brand-sandstone/80 font-semibold flex items-center gap-2"
+                              className="w-full text-left px-3 py-2 rounded-xl hover:bg-white/10 text-brand-sandstone font-bold flex items-center gap-2"
                             >
-                              <EyeOff className="w-3.5 h-3.5" /> Not interested
+                              <EyeOff className="w-4 h-4" /> Not interested
                             </button>
                             <button
                               type="button"
                               onClick={() => handleBlock(person.id)}
-                              className="w-full text-left px-3 py-1.5 rounded-xl hover:bg-rose-500/20 text-rose-400 font-semibold flex items-center gap-2"
+                              className="w-full text-left px-3 py-2 rounded-xl hover:bg-rose-500/20 text-rose-400 font-bold flex items-center gap-2"
                             >
-                              <Shield className="w-3.5 h-3.5" /> Block
+                              <Shield className="w-4 h-4" /> Block
                             </button>
                           </div>
                         )}
@@ -605,22 +614,22 @@ export default function FriendsCenterClient({
                     </div>
 
                     {!isSelf && (
-                      <div className="flex items-center gap-2 pt-2 border-t border-slate-800/80">
+                      <div className="flex items-center gap-2 pt-3 border-t border-white/10">
                         {/* Friend Action */}
                         {fStatus === 'accepted' ? (
-                          <span className="flex-1 text-center text-[10px] font-bold py-1.5 rounded-xl bg-brand-dusk text-brand-caribbeanSea border border-brand-caribbeanSea/30 flex items-center justify-center gap-1">
-                            <UserCheck className="w-3 h-3" /> Friends
+                          <span className="flex-1 text-center text-xs font-bold py-2 rounded-xl bg-white/10 text-brand-caribbeanSea border border-brand-caribbeanSea/30 flex items-center justify-center gap-1.5 min-h-[38px]">
+                            <UserCheck className="w-3.5 h-3.5" /> Friends
                           </span>
                         ) : fStatus === 'pending_sent' ? (
-                          <span className="flex-1 text-center text-[10px] font-bold py-1.5 rounded-xl bg-brand-dusk text-slate-400 border border-slate-700 flex items-center justify-center gap-1">
-                            <Clock className="w-3 h-3" /> Request Sent
+                          <span className="flex-1 text-center text-xs font-bold py-2 rounded-xl bg-white/5 text-brand-sandstone/70 border border-white/10 flex items-center justify-center gap-1.5 min-h-[38px]">
+                            <Clock className="w-3.5 h-3.5" /> Request Sent
                           </span>
                         ) : (
                           <button
                             type="button"
                             disabled={pendingActionId === person.id}
                             onClick={() => handleSendFriendRequest(person.id)}
-                            className="flex-1 flex items-center justify-center gap-1 text-[11px] font-bold py-1.5 rounded-xl bg-brand-caribbeanSea hover:bg-emerald-400 text-slate-950 transition-all shadow-sm"
+                            className="flex-1 flex items-center justify-center gap-1.5 text-xs font-black py-2 rounded-xl bg-brand-caribbeanSea hover:brightness-110 text-slate-950 transition-all shadow-sm min-h-[38px]"
                           >
                             <UserPlus className="w-3.5 h-3.5" /> Add Friend
                           </button>
@@ -631,10 +640,10 @@ export default function FriendsCenterClient({
                           type="button"
                           disabled={pendingActionId === person.id}
                           onClick={() => handleToggleFollow(person.id)}
-                          className={`text-[11px] font-bold px-3 py-1.5 rounded-xl transition-all ${
+                          className={`text-xs font-bold px-3 py-2 rounded-xl transition-all min-h-[38px] ${
                             isFollowing
-                              ? 'bg-brand-dusk text-slate-300 border border-slate-700 hover:bg-rose-500/20 hover:text-rose-400'
-                              : 'bg-brand-sunriseCoral hover:bg-brand-sunriseCoral text-slate-950'
+                              ? 'bg-white/10 text-brand-sandstone border border-white/15 hover:bg-rose-500/20 hover:text-rose-300'
+                              : 'bg-brand-sunriseCoral hover:brightness-110 text-slate-950'
                           }`}
                         >
                           {isFollowing ? 'Following' : 'Follow'}
@@ -643,7 +652,7 @@ export default function FriendsCenterClient({
                         {/* Message Button */}
                         <Link
                           href={`/messages?u=${encodeURIComponent(person.username)}`}
-                          className="text-[11px] font-bold px-2.5 py-1.5 rounded-xl bg-brand-dusk text-brand-sandstone border border-slate-700 hover:bg-slate-800 transition-colors flex items-center gap-1"
+                          className="text-xs font-bold px-3 py-2 rounded-xl bg-white/5 text-brand-sandstone border border-white/10 hover:bg-white/10 transition-colors flex items-center gap-1 min-h-[38px]"
                         >
                           <MessageSquare className="w-3.5 h-3.5 text-brand-caribbeanSea" /> Msg
                         </Link>
@@ -663,19 +672,19 @@ export default function FriendsCenterClient({
       {activeTab === 'following' && (
         <div className="space-y-4">
           {filteredFollowing.length === 0 ? (
-            <div className="bg-brand-dusk/60 border border-slate-800 rounded-3xl p-10 text-center space-y-3">
-              <Users className="w-10 h-10 text-brand-caribbeanSea/60 mx-auto" />
-              <h3 className="text-sm font-bold text-slate-200">You are not following anyone yet</h3>
-              <p className="text-xs text-brand-sandstone/60 max-w-sm mx-auto">
+            <div className="surface-empty rounded-3xl p-8 sm:p-12 text-center space-y-3.5 max-w-xl mx-auto">
+              <Users className="w-12 h-12 text-brand-caribbeanSea mx-auto" />
+              <h3 className="text-base sm:text-lg font-black text-white">You are not following anyone yet</h3>
+              <p className="text-xs sm:text-sm text-brand-sandstone/80 max-w-md mx-auto leading-relaxed">
                 Follow creators, businesses, and friends to customize your home feed.
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
               {filteredFollowing.map((person) => (
                 <div
                   key={person.id}
-                  className="glass rounded-2xl p-4 flex items-center justify-between gap-3"
+                  className="surface-card surface-card-interactive rounded-2xl p-4 flex items-center justify-between gap-3"
                 >
                   <Link
                     href={`/profile/${person.username}`}
@@ -687,24 +696,24 @@ export default function FriendsCenterClient({
                       size="md"
                     />
                     <div className="min-w-0">
-                      <h4 className="text-xs font-extrabold text-brand-sandstone truncate">
+                      <h4 className="text-sm font-extrabold text-white truncate">
                         {person.display_name}
                       </h4>
-                      <p className="text-[11px] text-brand-sandstone/60 truncate">@{person.username}</p>
+                      <p className="text-xs text-brand-sandstone/70 truncate">@{person.username}</p>
                     </div>
                   </Link>
 
-                  <div className="flex items-center gap-1.5 shrink-0">
+                  <div className="flex items-center gap-2 shrink-0">
                     <Link
                       href={`/messages?u=${encodeURIComponent(person.username)}`}
-                      className="text-[11px] font-bold px-2.5 py-1.5 rounded-xl bg-brand-dusk text-brand-sandstone border border-slate-700 hover:bg-slate-800 transition-colors flex items-center gap-1"
+                      className="text-xs font-bold px-3 py-2 rounded-xl bg-white/10 text-white border border-white/10 hover:bg-white/15 transition-colors flex items-center gap-1 min-h-[38px]"
                     >
                       <MessageSquare className="w-3.5 h-3.5 text-brand-caribbeanSea" /> Msg
                     </Link>
                     <button
                       type="button"
                       onClick={() => handleToggleFollow(person.id)}
-                      className="text-[11px] font-bold px-3 py-1.5 rounded-xl bg-brand-dusk text-slate-300 border border-slate-700 hover:bg-rose-500/20 hover:text-rose-400 transition-all"
+                      className="text-xs font-bold px-3 py-2 rounded-xl bg-white/10 text-brand-sandstone border border-white/15 hover:bg-rose-500/20 hover:text-rose-300 transition-all min-h-[38px]"
                     >
                       Following
                     </button>
@@ -722,21 +731,21 @@ export default function FriendsCenterClient({
       {activeTab === 'followers' && (
         <div className="space-y-4">
           {filteredFollowers.length === 0 ? (
-            <div className="bg-brand-dusk/60 border border-slate-800 rounded-3xl p-10 text-center space-y-3">
-              <Users className="w-10 h-10 text-brand-caribbeanSea/60 mx-auto" />
-              <h3 className="text-sm font-bold text-slate-200">No followers yet</h3>
-              <p className="text-xs text-brand-sandstone/60 max-w-sm mx-auto">
+            <div className="surface-empty rounded-3xl p-8 sm:p-12 text-center space-y-3.5 max-w-xl mx-auto">
+              <Users className="w-12 h-12 text-brand-caribbeanSea mx-auto" />
+              <h3 className="text-base sm:text-lg font-black text-white">No followers yet</h3>
+              <p className="text-xs sm:text-sm text-brand-sandstone/80 max-w-md mx-auto leading-relaxed">
                 Share posts, join diaspora hubs, and engage with creator content to build your following.
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
               {filteredFollowers.map((person) => {
                 const isFollowing = !!followingMap[person.id];
                 return (
                   <div
                     key={person.id}
-                    className="glass rounded-2xl p-4 flex items-center justify-between gap-3"
+                    className="surface-card surface-card-interactive rounded-2xl p-4 flex items-center justify-between gap-3"
                   >
                     <Link
                       href={`/profile/${person.username}`}
@@ -748,28 +757,28 @@ export default function FriendsCenterClient({
                         size="md"
                       />
                       <div className="min-w-0">
-                        <h4 className="text-xs font-extrabold text-brand-sandstone truncate">
+                        <h4 className="text-sm font-extrabold text-white truncate">
                           {person.display_name}
                         </h4>
-                        <p className="text-[11px] text-brand-sandstone/60 truncate">@{person.username}</p>
+                        <p className="text-xs text-brand-sandstone/70 truncate">@{person.username}</p>
                       </div>
                     </Link>
 
                     {currentUserId !== person.id && (
-                      <div className="flex items-center gap-1.5 shrink-0">
+                      <div className="flex items-center gap-2 shrink-0">
                         <Link
                           href={`/messages?u=${encodeURIComponent(person.username)}`}
-                          className="text-[11px] font-bold px-2.5 py-1.5 rounded-xl bg-brand-dusk text-brand-sandstone border border-slate-700 hover:bg-slate-800 transition-colors flex items-center gap-1"
+                          className="text-xs font-bold px-3 py-2 rounded-xl bg-white/10 text-white border border-white/10 hover:bg-white/15 transition-colors flex items-center gap-1 min-h-[38px]"
                         >
                           <MessageSquare className="w-3.5 h-3.5 text-brand-caribbeanSea" /> Msg
                         </Link>
                         <button
                           type="button"
                           onClick={() => handleToggleFollow(person.id)}
-                          className={`text-[11px] font-bold px-3 py-1.5 rounded-xl transition-all ${
+                          className={`text-xs font-bold px-3 py-2 rounded-xl transition-all min-h-[38px] ${
                             isFollowing
-                              ? 'bg-brand-dusk text-slate-300 border border-slate-700'
-                              : 'bg-brand-sunriseCoral text-slate-950'
+                              ? 'bg-white/10 text-brand-sandstone border border-white/15'
+                              : 'bg-brand-sunriseCoral text-slate-950 hover:brightness-110 font-black'
                           }`}
                         >
                           {isFollowing ? 'Following' : 'Follow Back'}

@@ -176,102 +176,111 @@ export default async function CreatorStudioPage() {
   const creatorLaunch = getCreatorLaunchMessaging();
 
   return (
-    <div className="min-h-screen bg-transparent text-brand-sandstone p-4 md:p-6 max-w-6xl mx-auto space-y-8">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-6">
-        <div>
-          <h1 className="text-2xl md:text-3xl font-black text-brand-sandstone flex items-center gap-3">
-            <Radio className="w-8 h-8 text-brand-caribbeanSea" /> Creator Studio
+    <div className="min-h-screen bg-transparent text-brand-sandstone p-4 md:p-6 lg:p-8 max-w-6xl mx-auto space-y-8">
+      {/* Surface Header */}
+      <div className="surface-header p-6 sm:p-8 rounded-3xl flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div className="space-y-2 max-w-xl">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-orange-500/10 border border-orange-500/30 text-orange-300 text-xs font-black uppercase tracking-wider">
+            <Radio className="w-3.5 h-3.5" /> Creator Dashboard
+          </div>
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black text-white tracking-tight flex items-center gap-3">
+            Creator Studio
           </h1>
-          <p className="text-sm text-brand-sandstone/60 mt-1">
-            {user.displayName} ·{" "}
-            {account.is_verified
-              ? "✓ Verified Creator"
-              : `KYC: ${account.kyc_status}`}
+          <p className="text-xs sm:text-sm text-brand-sandstone/80">
+            <span className="font-bold text-white">{user.displayName}</span> ·{" "}
+            {account.is_verified ? (
+              <span className="text-emerald-400 font-black">✓ Verified Creator</span>
+            ) : (
+              <span className="text-orange-400 font-bold">KYC: {account.kyc_status}</span>
+            )}
             {account.category && ` · ${account.category}`}
           </p>
         </div>
+
         <div className="flex flex-wrap items-center gap-3">
           <CreatorStudioActions displayName={user.displayName} />
           <Link
             href="/podcasts"
-            className="bg-brand-goldenHour hover:bg-brand-goldenHour text-slate-950 font-bold px-4 py-2 rounded-xl text-xs flex items-center gap-2 transition-colors"
+            className="bg-white/10 hover:bg-white/20 text-white font-black px-4 py-2.5 rounded-xl text-xs flex items-center gap-2 transition-all min-h-[44px] border border-white/15"
           >
-            <Mic className="w-4 h-4" /> Manage Podcasts
+            <Mic className="w-4 h-4 text-orange-400" /> Manage Podcasts
           </Link>
           <Link
             href="/live/broadcast"
-            className="bg-red-600 hover:bg-red-500 text-brand-sandstone font-bold px-4 py-2 rounded-xl text-xs flex items-center gap-2 transition-colors shadow-md shadow-red-600/20"
+            className="bg-red-600 hover:bg-red-500 text-white font-black px-5 py-2.5 rounded-xl text-xs flex items-center gap-2 transition-all shadow-md shadow-red-600/30 min-h-[44px]"
           >
             <Video className="w-4 h-4" /> Go Live
           </Link>
         </div>
       </div>
 
-      {/* Phased Creator Launch Promo Banner (Directives 3, 4, 46) */}
-      <div className="bg-gradient-to-r from-purple-950/50 via-slate-900 to-indigo-950/40 border border-purple-500/30 rounded-3xl p-5 shadow-lg space-y-1.5">
-        <div className="flex items-center gap-2">
-          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-purple-500/20 text-purple-300 border border-purple-500/40">
+      {/* Phased Creator Launch Promo Banner */}
+      <div className="surface-card border border-purple-500/40 rounded-3xl p-6 shadow-xl space-y-2 bg-gradient-to-r from-purple-950/40 via-slate-900/60 to-indigo-950/40">
+        <div className="flex items-center gap-2.5">
+          <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-purple-500/20 text-purple-200 border border-purple-500/40">
             {creatorLaunch.badge}
           </span>
-          <h2 className="text-sm md:text-base font-black text-brand-sandstone">
+          <h2 className="text-base sm:text-lg font-black text-white">
             {creatorLaunch.bannerTitle}
           </h2>
         </div>
-        <p className="text-xs text-brand-sandstone/70 leading-relaxed font-medium">
+        <p className="text-xs sm:text-sm text-brand-sandstone/85 leading-relaxed font-medium">
           {creatorLaunch.bannerBody}
         </p>
       </div>
 
-      {/* Metric Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
-        <div className="bg-brand-dusk/80 border border-slate-800 rounded-2xl p-5 space-y-2">
-          <span className="text-xs font-bold text-brand-caribbeanSea uppercase tracking-wider flex items-center gap-1.5">
-            <Users className="w-3.5 h-3.5" /> Active Subscribers
+      {/* Metric Cards Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        <div className="surface-card surface-card-interactive rounded-3xl p-6 space-y-3">
+          <span className="text-xs font-black text-orange-400 uppercase tracking-wider flex items-center gap-1.5">
+            <Users className="w-4 h-4" /> Active Subscribers
           </span>
-          <div className="text-2xl font-black text-brand-sandstone">
+          <div className="text-3xl sm:text-4xl font-black text-white tracking-tight">
             {activeSubscriptions.length.toLocaleString()}
           </div>
-          <span className="text-[11px] text-brand-sandstone/60">
+          <span className="text-xs text-brand-sandstone/70 font-medium block">
             {subscriptions.length} total subscriptions
           </span>
         </div>
 
-        <div className="bg-brand-dusk/80 border border-slate-800 rounded-2xl p-5 space-y-2">
-          <span className="text-xs font-bold text-brand-sunriseCoral uppercase tracking-wider flex items-center gap-1.5">
-            <DollarSign className="w-3.5 h-3.5" /> Pending Balance
+        <div className="surface-card surface-card-interactive rounded-3xl p-6 space-y-3">
+          <span className="text-xs font-black text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
+            <DollarSign className="w-4 h-4" /> Pending Balance
           </span>
-          <div className="text-2xl font-black text-brand-sandstone">
+          <div className="text-3xl sm:text-4xl font-black text-white tracking-tight">
             {new Money(Math.abs(pendingBalanceMinor), currency).format()}
           </div>
           <span
-            className={`text-[11px] font-semibold ${payoutEligibility.eligible ? "text-brand-sunriseCoral" : "text-brand-goldenHour"}`}
+            className={`text-xs font-bold block ${
+              payoutEligibility.eligible ? "text-emerald-400" : "text-amber-300"
+            }`}
           >
             {payoutEligibility.eligible
-              ? "Eligible for payout"
+              ? "✓ Eligible for payout"
               : (payoutEligibility.reasons[0] ?? "Pending review")}
           </span>
         </div>
 
-        <div className="bg-brand-dusk/80 border border-slate-800 rounded-2xl p-5 space-y-2">
-          <span className="text-xs font-bold text-brand-goldenHour uppercase tracking-wider flex items-center gap-1.5">
-            <TrendingUp className="w-3.5 h-3.5" /> Video Views
+        <div className="surface-card surface-card-interactive rounded-3xl p-6 space-y-3">
+          <span className="text-xs font-black text-emerald-400 uppercase tracking-wider flex items-center gap-1.5">
+            <TrendingUp className="w-4 h-4" /> Video Views
           </span>
-          <div className="text-2xl font-black text-brand-sandstone">
+          <div className="text-3xl sm:text-4xl font-black text-white tracking-tight">
             {totalVideoViews.toLocaleString()}
           </div>
-          <span className="text-[11px] text-brand-goldenHour font-semibold">
+          <span className="text-xs text-brand-sandstone/70 font-medium block">
             Across {videos.length} video{videos.length !== 1 ? "s" : ""}
           </span>
         </div>
 
-        <div className="bg-brand-dusk/80 border border-slate-800 rounded-2xl p-5 space-y-2">
-          <span className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
-            <Mic className="w-3.5 h-3.5" /> Podcasts
+        <div className="surface-card surface-card-interactive rounded-3xl p-6 space-y-3">
+          <span className="text-xs font-black text-purple-400 uppercase tracking-wider flex items-center gap-1.5">
+            <Mic className="w-4 h-4" /> Podcasts
           </span>
-          <div className="text-2xl font-black text-brand-sandstone">
+          <div className="text-3xl sm:text-4xl font-black text-white tracking-tight">
             {podcasts.length}
           </div>
-          <span className="text-[11px] text-brand-sandstone/60">
+          <span className="text-xs text-brand-sandstone/70 font-medium block">
             {totalEpisodes} episode{totalEpisodes !== 1 ? "s" : ""} total
           </span>
         </div>
@@ -279,33 +288,32 @@ export default async function CreatorStudioPage() {
 
       {/* Monthly revenue breakdown */}
       {feeResult && (
-        <div className="bg-brand-dusk/60 border border-slate-800 rounded-2xl p-6">
-          <h3 className="text-sm font-bold text-brand-sandstone mb-4 flex items-center gap-2">
-            <BarChart2 className="w-4 h-4 text-brand-caribbeanSea" /> Monthly
-            Fan Subscription Breakdown
+        <div className="surface-card rounded-3xl p-6 sm:p-8 space-y-5 border border-white/15">
+          <h3 className="text-base sm:text-lg font-black text-white flex items-center gap-2">
+            <BarChart2 className="w-5 h-5 text-orange-400" /> Monthly Fan Subscription Breakdown
           </h3>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-xs">
-            <div>
-              <p className="text-brand-sandstone/60 mb-1">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 text-xs">
+            <div className="p-4 rounded-2xl bg-white/5 border border-white/10 space-y-1">
+              <p className="text-brand-sandstone/70 font-bold uppercase tracking-wider">
                 Gross Subscriptions
               </p>
-              <p className="text-lg font-black text-brand-sandstone">
+              <p className="text-2xl font-black text-white">
                 {new Money(feeResult.grossMinor, "USD").format()}
               </p>
             </div>
-            <div>
-              <p className="text-brand-sandstone/60 mb-1">
+            <div className="p-4 rounded-2xl bg-white/5 border border-white/10 space-y-1">
+              <p className="text-brand-sandstone/70 font-bold uppercase tracking-wider">
                 Estimated Processing (PSP)
               </p>
-              <p className="text-lg font-black text-rose-400">
+              <p className="text-2xl font-black text-rose-400">
                 −{new Money(feeResult.processingFeeMinor, "USD").format()}
               </p>
             </div>
-            <div>
-              <p className="text-brand-sandstone/60 mb-1">
+            <div className="p-4 rounded-2xl bg-white/5 border border-white/10 space-y-1">
+              <p className="text-brand-sandstone/70 font-bold uppercase tracking-wider">
                 Net Creator Balance
               </p>
-              <p className="text-lg font-black text-brand-sunriseCoral">
+              <p className="text-2xl font-black text-emerald-400">
                 {new Money(
                   feeResult.grossMinor - feeResult.processingFeeMinor,
                   "USD",
@@ -314,7 +322,7 @@ export default async function CreatorStudioPage() {
             </div>
           </div>
 
-          <div className="mt-5 pt-4 border-t border-slate-800">
+          <div className="pt-5 border-t border-white/10">
             <PayoutRequestButton
               eligible={payoutEligibility.eligible}
               ineligibleReason={payoutEligibility.reasons[0]}
@@ -326,34 +334,32 @@ export default async function CreatorStudioPage() {
 
       {/* Recent Videos */}
       {videos.length > 0 && (
-        <div className="bg-brand-dusk/60 border border-slate-800 rounded-2xl p-6 space-y-3">
+        <div className="surface-card rounded-3xl p-6 sm:p-8 space-y-4 border border-white/15">
           <div className="flex items-center justify-between">
-            <h3 className="text-sm font-bold text-brand-sandstone flex items-center gap-2">
-              <Video className="w-4 h-4 text-brand-caribbeanSea" /> Recent
-              Videos
+            <h3 className="text-base font-black text-white flex items-center gap-2">
+              <Video className="w-5 h-5 text-orange-400" /> Recent Videos
             </h3>
             {videos.length >= 10 && (
               <Link
                 href="/creator-studio/videos"
-                className="text-[11px] font-black uppercase tracking-wider text-brand-caribbeanSea hover:text-brand-caribbeanSea transition-colors"
+                className="text-xs font-black uppercase tracking-wider text-orange-400 hover:text-orange-300 transition-colors"
               >
-                View All
+                View All →
               </Link>
             )}
           </div>
-          <div className="space-y-2">
+          <div className="space-y-3">
             {videos.map((video) => (
               <div
                 key={video.id}
-                className="flex items-center justify-between bg-brand-twilight border border-slate-800 rounded-xl px-4 py-3"
+                className="surface-card surface-card-interactive rounded-2xl p-4 flex items-center justify-between gap-4"
               >
-                <div>
-                  <p className="text-sm font-semibold text-brand-sandstone truncate max-w-xs">
+                <div className="min-w-0">
+                  <p className="text-sm sm:text-base font-black text-white truncate">
                     {video.title}
                   </p>
-                  <p className="text-[11px] text-brand-sandstone/60">
-                    {video.video_kind} · {video.view_count.toLocaleString()}{" "}
-                    views
+                  <p className="text-xs text-brand-sandstone/70 mt-0.5">
+                    {video.video_kind} · {video.view_count.toLocaleString()} views
                   </p>
                 </div>
               </div>
@@ -363,10 +369,13 @@ export default async function CreatorStudioPage() {
       )}
 
       {videos.length === 0 && podcasts.length === 0 && (
-        <div className="bg-brand-dusk/60 border border-dashed border-slate-800 rounded-2xl p-10 text-center">
-          <Plus className="w-8 h-8 text-slate-600 mx-auto mb-2" />
-          <p className="text-sm text-brand-sandstone/60">
-            No content yet. Start by going live or hosting a podcast.
+        <div className="surface-card rounded-3xl p-12 text-center space-y-3 border border-white/10 max-w-md mx-auto">
+          <div className="w-14 h-14 rounded-2xl bg-white/5 border border-white/15 flex items-center justify-center mx-auto text-brand-sandstone/60">
+            <Plus className="w-7 h-7" />
+          </div>
+          <h3 className="text-base font-black text-white">No content published yet</h3>
+          <p className="text-xs sm:text-sm text-brand-sandstone/70 leading-relaxed">
+            Start by publishing your first podcast, scheduling an event, or going live to your fans!
           </p>
         </div>
       )}
@@ -383,16 +392,23 @@ function CreatorOnboarding({
 }) {
   return (
     <div className="min-h-screen bg-transparent text-brand-sandstone flex items-center justify-center p-6">
-      <div className="bg-brand-dusk/70 border border-slate-800 rounded-2xl p-8 max-w-md w-full text-center space-y-5">
-        <Radio className="w-10 h-10 text-brand-caribbeanSea mx-auto" />
-        <h1 className="text-xl font-extrabold text-brand-sandstone">
-          Become a Creator
-        </h1>
-        <p className="text-sm text-brand-sandstone/60">
-          You can create and publish your content for free through October 31, 2026. Enjoy full access to Creator Hub, Podcasting and Creator Studio during our launch period.
-        </p>
-        <BecomeCreatorClientButton />
+      <div className="surface-card rounded-3xl p-8 sm:p-10 max-w-md w-full text-center space-y-6 border border-white/15 shadow-2xl">
+        <div className="w-16 h-16 rounded-2xl bg-orange-500/10 border border-orange-500/30 flex items-center justify-center mx-auto text-orange-400">
+          <Radio className="w-8 h-8" />
+        </div>
+        <div className="space-y-2">
+          <h1 className="text-2xl font-black text-white">
+            Become a Creator
+          </h1>
+          <p className="text-sm text-brand-sandstone/80 leading-relaxed">
+            You can create and publish your content for free through October 31, 2026. Enjoy full access to Creator Hub, Podcasting and Creator Studio during our launch period.
+          </p>
+        </div>
+        <div className="pt-2">
+          <BecomeCreatorClientButton />
+        </div>
       </div>
     </div>
   );
 }
+

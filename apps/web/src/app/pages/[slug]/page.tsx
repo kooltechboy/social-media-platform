@@ -99,29 +99,30 @@ export default async function ModularPageView({ params }: { params: Promise<{ sl
   const page = dbPage;
 
   return (
-    <div className="min-h-screen bg-transparent text-brand-sandstone p-4 md:p-6 max-w-7xl mx-auto space-y-8">
+    <div className="min-h-screen bg-transparent text-brand-sandstone p-4 md:p-6 lg:p-8 max-w-7xl mx-auto space-y-8">
       {/* Page Header & Cover */}
-      <div className="bg-brand-dusk border border-slate-800 rounded-3xl overflow-hidden shadow-2xl relative">
+      <div className="surface-header border border-white/15 rounded-3xl overflow-hidden shadow-2xl relative">
         {/* Cover Banner */}
         <div className={`h-48 md:h-64 bg-gradient-to-r ${page.coverGradient} relative`}>
-          <div className="absolute top-4 right-4 flex items-center gap-2">
+          <div className="absolute inset-0 bg-black/40" />
+          <div className="absolute top-4 right-4 flex items-center gap-2 z-10">
             <VerificationBadge level={page.verification} showLabel={true} />
           </div>
         </div>
 
         {/* Profile Info Bar */}
-        <div className="p-6 pt-0 relative flex flex-col md:flex-row items-start md:items-end justify-between gap-4 -mt-16">
-          <div className="flex flex-col md:flex-row items-start md:items-end gap-4">
-            <div className="w-28 h-28 rounded-3xl bg-brand-twilight border-4 border-slate-900 flex items-center justify-center text-5xl shadow-2xl">
+        <div className="p-6 pt-0 relative flex flex-col md:flex-row items-start md:items-end justify-between gap-6 -mt-16 z-10">
+          <div className="flex flex-col md:flex-row items-start md:items-end gap-5">
+            <div className="w-28 h-28 rounded-3xl bg-slate-900 border-4 border-slate-950 flex items-center justify-center text-5xl shadow-2xl shrink-0">
               {page.avatar}
             </div>
-            <div className="space-y-1">
-              <h1 className="text-2xl md:text-3xl font-black text-brand-sandstone leading-tight flex items-center gap-2">
+            <div className="space-y-1.5">
+              <h1 className="text-2xl md:text-3xl lg:text-4xl font-black text-white leading-tight flex items-center gap-2">
                 {page.name}
               </h1>
-              <p className="text-xs font-bold text-brand-sandstone/60">{page.category}</p>
-              <p className="text-xs text-brand-sunriseCoral font-semibold flex items-center gap-1.5">
-                <MapPin className="w-3.5 h-3.5 text-brand-sunriseCoral" /> {page.location}
+              <p className="text-xs sm:text-sm font-bold text-brand-sandstone/80">{page.category}</p>
+              <p className="text-xs text-orange-400 font-bold flex items-center gap-1.5">
+                <MapPin className="w-3.5 h-3.5 text-orange-400 shrink-0" /> {page.location}
               </p>
             </div>
           </div>
@@ -133,12 +134,12 @@ export default async function ModularPageView({ params }: { params: Promise<{ sl
               category={page.category}
               location={page.location}
             />
-            <button className="flex-1 md:flex-initial bg-gradient-to-r from-brand-caribbeanSea to-brand-sunriseCoral hover:from-brand-caribbeanSea hover:to-brand-sunriseCoral text-slate-950 font-black px-5 py-2.5 rounded-2xl text-xs transition-all shadow-md shadow-brand-caribbeanSea/20">
+            <button className="flex-1 md:flex-initial bg-gradient-to-r from-orange-500 via-amber-500 to-emerald-400 hover:brightness-110 text-slate-950 font-black px-6 py-3 rounded-2xl text-xs sm:text-sm transition-all shadow-md shadow-orange-500/20 min-h-[44px] flex items-center justify-center">
               Follow ({page.followers})
             </button>
             <Link
               href={`/messages?u=${encodeURIComponent(page.ownerUsername || page.slug)}`}
-              className="bg-brand-dusk hover:bg-slate-700 text-brand-sandstone font-bold px-4 py-2.5 rounded-2xl text-xs border border-slate-700 transition-colors"
+              className="bg-white/10 hover:bg-white/20 text-white font-black px-5 py-3 rounded-2xl text-xs sm:text-sm border border-white/15 transition-colors min-h-[44px] flex items-center justify-center"
             >
               Message
             </Link>
@@ -146,22 +147,22 @@ export default async function ModularPageView({ params }: { params: Promise<{ sl
         </div>
 
         {/* Tab Navigation Rail */}
-        <div className="px-6 border-t border-slate-800 flex gap-6 overflow-x-auto scrollbar-none text-xs font-black text-brand-sandstone/60">
-          <button className="py-3 text-brand-caribbeanSea border-b-2 border-brand-caribbeanSea whitespace-nowrap">
+        <div className="px-6 border-t border-white/10 flex gap-6 overflow-x-auto scrollbar-none text-xs font-black text-brand-sandstone/70">
+          <button className="py-3 text-orange-400 border-b-2 border-orange-400 whitespace-nowrap">
             Overview &amp; Feed
           </button>
           {page.products.length > 0 && (
             <Link
               href={`/store/${page.slug}`}
-              className="py-3 text-orange-400 hover:text-orange-300 whitespace-nowrap flex items-center gap-1.5 transition-colors"
+              className="py-3 text-brand-sandstone/80 hover:text-white whitespace-nowrap flex items-center gap-1.5 transition-colors"
             >
-              <ShoppingBag className="w-3.5 h-3.5" /> Shop &amp; Storefront ({page.products.length})
+              <ShoppingBag className="w-3.5 h-3.5 text-orange-400" /> Shop &amp; Storefront ({page.products.length})
             </Link>
           )}
-          <button className="py-3 hover:text-brand-sandstone whitespace-nowrap">
+          <button className="py-3 hover:text-white whitespace-nowrap">
             Events &amp; Notices
           </button>
-          <button className="py-3 hover:text-brand-sandstone whitespace-nowrap">
+          <button className="py-3 hover:text-white whitespace-nowrap">
             About &amp; Verified Info
           </button>
         </div>
@@ -175,8 +176,8 @@ export default async function ModularPageView({ params }: { params: Promise<{ sl
           {page.products.length > 0 && (
             <section className="space-y-4">
               <div className="flex items-center justify-between">
-                <h3 className="text-sm font-extrabold text-brand-sandstone flex items-center gap-2 uppercase tracking-wider">
-                  <ShoppingBag className="w-4 h-4 text-brand-sunriseCoral" /> Verified Storefront
+                <h3 className="text-sm font-black text-white flex items-center gap-2 uppercase tracking-wider">
+                  <ShoppingBag className="w-4 h-4 text-orange-400" /> Verified Storefront
                 </h3>
                 <Link
                   href={`/store/${page.slug}`}
@@ -190,16 +191,16 @@ export default async function ModularPageView({ params }: { params: Promise<{ sl
                 {page.products.map((prod) => (
                   <div
                     key={prod.id}
-                    className="bg-brand-dusk/80 border border-slate-800 rounded-3xl p-5 space-y-3 flex flex-col justify-between"
+                    className="surface-card surface-card-interactive rounded-3xl p-5 space-y-4 flex flex-col justify-between"
                   >
                     <div>
                       <div className="flex items-center justify-between">
-                        <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-brand-sunriseCoral/10 text-brand-sunriseCoral border border-brand-sunriseCoral/20 uppercase">
+                        <span className="text-[10px] font-black px-2.5 py-0.5 rounded-full bg-orange-500/10 text-orange-300 border border-orange-500/25 uppercase">
                           {prod.kind}
                         </span>
                       </div>
-                      <h4 className="font-extrabold text-sm text-brand-sandstone mt-2 leading-snug">{prod.title}</h4>
-                      <p className="text-lg font-black text-brand-sunriseCoral mt-1">{prod.price}</p>
+                      <h4 className="font-black text-base text-white mt-2 leading-snug">{prod.title}</h4>
+                      <p className="text-xl font-black text-orange-400 mt-1">{prod.price}</p>
                     </div>
 
                     <OrderButton
@@ -216,41 +217,41 @@ export default async function ModularPageView({ params }: { params: Promise<{ sl
 
           {/* Posts & Announcements */}
           <section className="space-y-4">
-            <h3 className="text-sm font-extrabold text-brand-sandstone uppercase tracking-wider">
+            <h3 className="text-sm font-black text-white uppercase tracking-wider">
               Official Updates &amp; Announcements
             </h3>
 
             {page.posts.length === 0 ? (
-              <div className="bg-brand-dusk/50 border border-dashed border-slate-800 rounded-3xl p-8 text-center space-y-2">
-                <p className="text-xs text-brand-sandstone/60">No official announcements posted yet.</p>
+              <div className="surface-card rounded-3xl p-8 text-center space-y-2 border border-white/10">
+                <p className="text-sm text-brand-sandstone/70">No official announcements posted yet.</p>
               </div>
             ) : (
               page.posts.map((post) => (
                 <article
                   key={post.id}
-                  className="bg-brand-dusk/80 border border-slate-800 rounded-3xl p-6 space-y-3 shadow-xl"
+                  className="surface-card surface-card-interactive rounded-3xl p-6 space-y-4 shadow-xl"
                 >
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2.5">
+                    <div className="flex items-center gap-3">
                       <span className="text-2xl">{page.avatar}</span>
                       <div>
-                        <h4 className="font-extrabold text-sm text-brand-sandstone">{page.name}</h4>
-                        <time className="text-[11px] text-brand-sandstone/40">{post.time}</time>
+                        <h4 className="font-black text-sm text-white">{page.name}</h4>
+                        <time className="text-[11px] text-brand-sandstone/50">{post.time}</time>
                       </div>
                     </div>
                   </div>
 
-                  <h4 className="font-extrabold text-base text-brand-caribbeanSea leading-snug">{post.title}</h4>
-                  <p className="text-sm text-slate-200 leading-relaxed font-medium">{post.content}</p>
+                  <h4 className="font-black text-base sm:text-lg text-white leading-snug">{post.title}</h4>
+                  <p className="text-sm text-brand-sandstone/85 leading-relaxed font-medium">{post.content}</p>
 
-                  <div className="flex items-center gap-6 pt-3 border-t border-slate-800 text-brand-sandstone/60 text-xs">
-                    <button className="flex items-center gap-1.5 hover:text-rose-400 transition-colors">
+                  <div className="flex items-center gap-6 pt-3 border-t border-white/10 text-brand-sandstone/70 text-xs font-bold">
+                    <button className="flex items-center gap-1.5 hover:text-rose-400 transition-colors min-h-[36px]">
                       <Heart className="w-4 h-4" /> <span>{post.likes}</span>
                     </button>
-                    <button className="flex items-center gap-1.5 hover:text-brand-caribbeanSea transition-colors">
+                    <button className="flex items-center gap-1.5 hover:text-orange-400 transition-colors min-h-[36px]">
                       <MessageCircle className="w-4 h-4" /> <span>Discuss</span>
                     </button>
-                    <button className="flex items-center gap-1.5 hover:text-brand-sunriseCoral transition-colors">
+                    <button className="flex items-center gap-1.5 hover:text-emerald-400 transition-colors min-h-[36px]">
                       <Share2 className="w-4 h-4" /> <span>Share</span>
                     </button>
                   </div>
@@ -262,33 +263,33 @@ export default async function ModularPageView({ params }: { params: Promise<{ sl
 
         {/* Right Info Box (Col 4) */}
         <div className="lg:col-span-4 space-y-5">
-          <div className="bg-brand-dusk/80 border border-slate-800 rounded-3xl p-6 space-y-4 shadow-xl">
-            <h3 className="font-extrabold text-sm text-brand-sandstone uppercase tracking-wider">
+          <div className="surface-card rounded-3xl p-6 space-y-4 shadow-xl">
+            <h3 className="font-black text-sm text-white uppercase tracking-wider">
               Verified Information
             </h3>
-            <p className="text-xs text-slate-300 leading-relaxed font-medium">
+            <p className="text-xs sm:text-sm text-brand-sandstone/80 leading-relaxed font-medium">
               {page.description}
             </p>
 
-            <div className="space-y-2 pt-2 border-t border-slate-800 text-xs">
-              <p className="flex items-center gap-2 text-brand-sandstone/60">
-                <Globe className="w-3.5 h-3.5 text-brand-caribbeanSea" />
-                <a href={page.website} target="_blank" rel="noopener noreferrer" className="text-brand-caribbeanSea hover:underline">
+            <div className="space-y-3 pt-3 border-t border-white/10 text-xs">
+              <p className="flex items-center gap-2.5 text-brand-sandstone/75">
+                <Globe className="w-4 h-4 text-orange-400 shrink-0" />
+                <a href={page.website} target="_blank" rel="noopener noreferrer" className="text-orange-300 hover:underline font-bold">
                   {page.website.replace('https://', '')}
                 </a>
               </p>
-              <p className="flex items-center gap-2 text-brand-sandstone/60">
-                <Mail className="w-3.5 h-3.5 text-brand-sunriseCoral" />
-                <span>{page.contactEmail}</span>
+              <p className="flex items-center gap-2.5 text-brand-sandstone/75">
+                <Mail className="w-4 h-4 text-orange-400 shrink-0" />
+                <span className="font-medium">{page.contactEmail}</span>
               </p>
             </div>
           </div>
 
-          <div className="bg-gradient-to-br from-slate-900 via-slate-900 to-emerald-950/40 border border-brand-sunriseCoral/30 rounded-3xl p-5 space-y-2.5 shadow-lg">
-            <div className="flex items-center gap-1.5 text-xs font-black text-brand-sunriseCoral uppercase tracking-wider">
-              <ShieldCheck className="w-4 h-4" /> Escrow Protected
+          <div className="surface-card border border-orange-500/30 rounded-3xl p-6 space-y-2.5 shadow-lg bg-orange-950/20">
+            <div className="flex items-center gap-2 text-xs font-black text-orange-300 uppercase tracking-wider">
+              <ShieldCheck className="w-4 h-4 text-orange-400" /> Escrow Protected
             </div>
-            <p className="text-xs text-slate-300">
+            <p className="text-xs text-brand-sandstone/80 leading-relaxed">
               Orders and contracts placed on this Page are protected with direct double-entry ledger settlement.
             </p>
           </div>

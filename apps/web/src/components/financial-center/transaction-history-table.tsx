@@ -51,79 +51,84 @@ function accountTypeLabel(type: string): string {
 
 export default function TransactionHistoryTable({ entries }: TransactionHistoryTableProps) {
   return (
-    <div className="space-y-4 animate-fadeIn">
-      <div className="flex items-center justify-between">
+    <div className="space-y-5 animate-fadeIn">
+      <div className="surface-header p-6 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h2 className="text-xl font-black text-white">Financial Transactions</h2>
-          <p className="text-xs text-slate-400">
-            Immutable double-entry ledger records. Every monetary transaction is cryptographic and balanced.
+          <h2 className="text-xl sm:text-2xl font-black text-white">Financial Transactions</h2>
+          <p className="text-xs sm:text-sm text-brand-sandstone/80 mt-1">
+            Immutable double-entry ledger records. Every monetary transaction is cryptographic, idempotent, and balanced.
           </p>
         </div>
       </div>
 
       {entries.length === 0 ? (
-        <div className="text-center py-12 bg-brand-dusk/40 border border-slate-800 rounded-2xl space-y-2">
-          <Receipt className="w-8 h-8 text-slate-500 mx-auto" />
-          <h3 className="text-sm font-bold text-white">No Transactions Yet</h3>
-          <p className="text-xs text-slate-400">
-            Transactions will appear here after your first order, subscription, or creator payout.
+        <div className="surface-card text-center py-16 p-6 rounded-3xl space-y-3 max-w-lg mx-auto border border-white/10">
+          <div className="w-14 h-14 rounded-2xl bg-white/5 border border-white/15 flex items-center justify-center mx-auto text-brand-sandstone/60">
+            <Receipt className="w-7 h-7" />
+          </div>
+          <h3 className="text-base font-black text-white">No Transactions Yet</h3>
+          <p className="text-xs sm:text-sm text-brand-sandstone/70 leading-relaxed">
+            Transactions will appear here after your first order, subscription, creator tip, or payout.
           </p>
         </div>
       ) : (
-        <div className="overflow-x-auto rounded-2xl border border-slate-800 bg-brand-dusk/60">
-          <table className="w-full text-left text-xs text-slate-300">
-            <thead className="bg-slate-900/80 text-slate-400 uppercase text-[10px] tracking-wider border-b border-slate-800">
-              <tr>
-                <th className="p-3.5">Tx Reference</th>
-                <th className="p-3.5">Account</th>
-                <th className="p-3.5">Description</th>
-                <th className="p-3.5">Type</th>
-                <th className="p-3.5">Amount</th>
-                <th className="p-3.5">Time</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-800/60">
-              {entries.map((entry) => {
-                const money = new Money(Math.abs(entry.amountMinor), entry.currency);
+        <div className="surface-card rounded-2xl overflow-hidden border border-white/15">
+          <div className="overflow-x-auto scrollbar-none">
+            <table className="w-full text-left text-xs text-brand-sandstone/90">
+              <thead className="bg-black/40 text-brand-sandstone/70 uppercase text-[11px] font-black tracking-wider border-b border-white/10">
+                <tr>
+                  <th className="p-4">Tx Reference</th>
+                  <th className="p-4">Account</th>
+                  <th className="p-4">Description</th>
+                  <th className="p-4">Type</th>
+                  <th className="p-4">Amount</th>
+                  <th className="p-4">Time</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-white/10">
+                {entries.map((entry) => {
+                  const money = new Money(Math.abs(entry.amountMinor), entry.currency);
 
-                return (
-                  <tr key={entry.id} className="hover:bg-slate-800/30 transition-colors">
-                    <td className="p-3.5 font-mono text-[10px] text-slate-400">
-                      {entry.transactionId.slice(0, 8)}…
-                    </td>
-                    <td className="p-3.5 text-slate-300 font-medium capitalize">
-                      {accountTypeLabel(entry.accountType)}
-                    </td>
-                    <td className="p-3.5 text-white font-medium max-w-[240px] truncate">
-                      {entry.description || 'Commerce Settlement'}
-                    </td>
-                    <td className="p-3.5">
-                      <span
-                        className={`text-[10px] font-bold px-2 py-0.5 rounded border ${
-                          entry.entryType === 'CREDIT'
-                            ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
-                            : 'bg-slate-800 text-slate-300 border-slate-700'
+                  return (
+                    <tr key={entry.id} className="hover:bg-white/5 transition-colors">
+                      <td className="p-4 font-mono text-[11px] text-brand-sandstone/60">
+                        {entry.transactionId.slice(0, 8)}…
+                      </td>
+                      <td className="p-4 text-white font-bold capitalize">
+                        {accountTypeLabel(entry.accountType)}
+                      </td>
+                      <td className="p-4 text-white font-medium max-w-[240px] truncate">
+                        {entry.description || 'Commerce Settlement'}
+                      </td>
+                      <td className="p-4">
+                        <span
+                          className={`text-[10px] font-black px-2.5 py-0.5 rounded-full border ${
+                            entry.entryType === 'CREDIT'
+                              ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
+                              : 'bg-white/10 text-white border-white/20'
+                          }`}
+                        >
+                          {entry.entryType}
+                        </span>
+                      </td>
+                      <td
+                        className={`p-4 font-black text-sm ${
+                          entry.entryType === 'CREDIT' ? 'text-emerald-400' : 'text-white'
                         }`}
                       >
-                        {entry.entryType}
-                      </span>
-                    </td>
-                    <td
-                      className={`p-3.5 font-bold ${
-                        entry.entryType === 'CREDIT' ? 'text-emerald-400' : 'text-slate-200'
-                      }`}
-                    >
-                      {entry.entryType === 'CREDIT' ? '+' : '-'}
-                      {money.format()}
-                    </td>
-                    <td className="p-3.5 text-slate-400">{relativeTime(entry.createdAt)}</td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+                        {entry.entryType === 'CREDIT' ? '+' : '-'}
+                        {money.format()}
+                      </td>
+                      <td className="p-4 text-brand-sandstone/60 font-medium">{relativeTime(entry.createdAt)}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
     </div>
   );
 }
+

@@ -223,34 +223,34 @@ export default function CreateHubClient({ user }: CreateHubClientProps) {
   return (
     <div className="space-y-8 animate-fadeIn">
       {/* Hero Action Banner */}
-      <div className="bg-gradient-to-br from-brand-caribbeanSea/20 via-brand-dusk to-brand-twilight border border-brand-caribbeanSea/30 rounded-3xl p-6 md:p-8 shadow-2xl relative overflow-hidden">
+      <div className="surface-header rounded-3xl p-6 sm:p-8 md:p-10 shadow-2xl relative overflow-hidden border border-brand-caribbeanSea/30">
         <div className="absolute right-0 top-0 w-96 h-96 bg-brand-caribbeanSea/10 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20" />
         
         <div className="relative z-10 space-y-4 max-w-2xl">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-caribbeanSea/10 border border-brand-caribbeanSea/30 text-brand-caribbeanSea text-[11px] font-black tracking-wide uppercase">
-            <Sparkles className="w-3.5 h-3.5" /> Tukubi Creator Engine
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-brand-caribbeanSea/15 border border-brand-caribbeanSea/40 text-brand-caribbeanSea text-xs font-black tracking-wide uppercase">
+            <Sparkles className="w-3.5 h-3.5 text-brand-goldenHour" /> Tukubi Creator Engine
           </div>
 
-          <h1 className="text-2xl md:text-4xl font-black text-brand-sandstone tracking-tight leading-tight">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-white tracking-tight leading-tight">
             Create, Publish &amp; Monetize Across the Caribbean
           </h1>
 
-          <p className="text-xs md:text-sm text-brand-sandstone/70 leading-relaxed">
+          <p className="text-xs sm:text-sm text-brand-sandstone/85 leading-relaxed">
             Publish feed posts, upload short reels with Caribbean Sounds, stream live events, launch verified business pages, or sell artisanal products directly to global customers.
           </p>
 
-          <div className="pt-2 flex flex-wrap items-center gap-3">
+          <div className="pt-3 flex flex-wrap items-center gap-3">
             <button
               type="button"
               onClick={() => handleStartCreating('text')}
-              className="bg-gradient-to-r from-brand-caribbeanSea to-brand-sunriseCoral hover:from-brand-caribbeanSea hover:to-brand-sunriseCoral text-slate-950 font-black px-6 py-3 rounded-2xl text-xs md:text-sm flex items-center gap-2 transition-all shadow-lg shadow-brand-caribbeanSea/20 hover:scale-105 active:scale-95"
+              className="bg-brand-sunriseCoral hover:brightness-110 text-slate-950 font-black px-6 py-3 rounded-2xl text-xs sm:text-sm flex items-center justify-center gap-2 transition-all shadow-lg shadow-brand-sunriseCoral/20 hover:scale-[1.02] active:scale-95 min-h-[44px]"
             >
               <Plus className="w-4 h-4 stroke-[3]" /> Start Creating Now
             </button>
 
             <Link
               href="/creator-studio"
-              className="bg-brand-dusk/90 hover:bg-slate-800 text-slate-200 font-bold px-5 py-3 rounded-2xl text-xs border border-slate-700/80 flex items-center gap-2 transition-all"
+              className="bg-white/10 hover:bg-white/15 text-white font-bold px-5 py-3 rounded-2xl text-xs sm:text-sm border border-white/20 flex items-center justify-center gap-2 transition-all min-h-[44px]"
             >
               <Compass className="w-4 h-4 text-brand-goldenHour" /> Creator Studio Hub
             </Link>
@@ -260,16 +260,16 @@ export default function CreateHubClient({ user }: CreateHubClientProps) {
 
       {/* Published Post Success Banner */}
       {publishedPostId && (
-        <div className="p-4 rounded-2xl bg-emerald-950/40 border border-emerald-500/40 text-emerald-300 text-xs font-bold flex items-center justify-between animate-fadeIn">
-          <div className="flex items-center gap-2">
+        <div className="p-4 sm:p-5 rounded-2xl bg-emerald-950/80 border border-emerald-500/50 text-emerald-200 text-xs sm:text-sm font-bold flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 animate-fadeIn">
+          <div className="flex items-center gap-2.5">
             <CheckCircle2 className="w-5 h-5 text-emerald-400 flex-shrink-0" />
             <span>Your creation is officially published and live in the ecosystem!</span>
           </div>
-          <div className="flex items-center gap-2">
-            <Link href="/" className="px-3 py-1 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-200 transition-colors">
-              View in Home Feed →
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            <Link href="/" className="flex-1 sm:flex-initial text-center px-4 py-2 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-200 border border-emerald-500/30 transition-colors min-h-[38px] flex items-center justify-center">
+              View in Feed →
             </Link>
-            <Link href="/profile" className="px-3 py-1 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 transition-colors">
+            <Link href="/profile" className="flex-1 sm:flex-initial text-center px-4 py-2 rounded-xl bg-white/10 hover:bg-white/15 text-white border border-white/15 transition-colors min-h-[38px] flex items-center justify-center">
               My Profile
             </Link>
           </div>
@@ -278,15 +278,15 @@ export default function CreateHubClient({ user }: CreateHubClientProps) {
 
       {/* Draft Resume Indicator */}
       {hasDraft && !publishedPostId && (
-        <div className="p-4 rounded-2xl bg-amber-950/30 border border-amber-500/30 text-amber-300 text-xs font-semibold flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Clock className="w-4 h-4 text-amber-400" />
+        <div className="p-4 sm:p-5 rounded-2xl bg-amber-950/80 border border-amber-500/50 text-amber-200 text-xs sm:text-sm font-semibold flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-2.5">
+            <Clock className="w-5 h-5 text-amber-400 flex-shrink-0" />
             <span>You have an unposted draft saved in your local workspace.</span>
           </div>
           <button
             type="button"
             onClick={() => handleStartCreating('text')}
-            className="text-amber-200 underline font-bold hover:text-white"
+            className="text-amber-300 underline font-black hover:text-white min-h-[38px] flex items-center"
           >
             Resume Draft →
           </button>
@@ -296,11 +296,11 @@ export default function CreateHubClient({ user }: CreateHubClientProps) {
       {/* Primary Creation Workspace */}
       <section ref={composerSectionRef} id="composer" className="space-y-3 pt-2">
         <div className="flex items-center justify-between px-1">
-          <h2 className="text-xs font-black text-brand-sandstone/60 uppercase tracking-widest flex items-center gap-2">
+          <h2 className="text-xs sm:text-sm font-black text-brand-caribbeanSea uppercase tracking-widest flex items-center gap-2">
             <Layers className="w-4 h-4 text-brand-caribbeanSea" />
             Active Creation Workspace
           </h2>
-          <span className="text-[11px] text-brand-sandstone/40">Auto-saves to offline drafts</span>
+          <span className="text-xs text-brand-sandstone/60">Auto-saves to offline drafts</span>
         </div>
 
         <UniversalComposer
@@ -317,13 +317,13 @@ export default function CreateHubClient({ user }: CreateHubClientProps) {
       </section>
 
       {/* Creation Tools Directory */}
-      <section className="space-y-5 pt-6 border-t border-slate-800">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <section className="space-y-6 pt-8 border-t border-white/10">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h2 className="text-base md:text-lg font-black text-brand-sandstone">
+            <h2 className="text-lg sm:text-xl font-black text-white">
               Ecosystem Creation Suites
             </h2>
-            <p className="text-xs text-brand-sandstone/60">
+            <p className="text-xs sm:text-sm text-brand-sandstone/70 mt-0.5">
               Select a specialized creation tool to start publishing immediately.
             </p>
           </div>
@@ -335,10 +335,10 @@ export default function CreateHubClient({ user }: CreateHubClientProps) {
                 key={tab.id}
                 type="button"
                 onClick={() => setActiveFilter(tab.id)}
-                className={`px-3.5 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all ${
+                className={`px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all min-h-[38px] ${
                   activeFilter === tab.id
                     ? 'bg-brand-caribbeanSea text-slate-950 font-black shadow-md shadow-brand-caribbeanSea/20'
-                    : 'bg-brand-dusk/70 text-brand-sandstone/60 hover:text-brand-sandstone border border-slate-800'
+                    : 'bg-white/5 hover:bg-white/10 text-brand-sandstone/80 border border-white/10'
                 }`}
               >
                 {tab.label}
@@ -357,30 +357,30 @@ export default function CreateHubClient({ user }: CreateHubClientProps) {
                 <Link
                   key={tool.id}
                   href={tool.directHref}
-                  className={`bg-gradient-to-br ${tool.color} bg-brand-dusk/80 border rounded-3xl p-5 flex flex-col justify-between hover:scale-[1.02] hover:border-white/20 transition-all shadow-xl group`}
+                  className="surface-card surface-card-interactive rounded-2xl p-5 flex flex-col justify-between group min-h-[190px]"
                 >
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
-                      <div className="p-3 rounded-2xl bg-brand-twilight/80 border border-slate-800 shadow-md">
+                      <div className="p-3 rounded-xl bg-white/5 border border-white/10 text-white shadow-sm">
                         {tool.icon}
                       </div>
                       {tool.badge && (
-                        <span className="text-[9px] font-black px-2 py-0.5 rounded-full bg-brand-twilight/80 text-brand-sandstone border border-slate-700">
+                        <span className="text-[10px] font-black px-2.5 py-1 rounded-full bg-brand-caribbeanSea/15 text-brand-caribbeanSea border border-brand-caribbeanSea/30">
                           {tool.badge}
                         </span>
                       )}
                     </div>
                     <div>
-                      <h3 className="font-black text-sm text-brand-sandstone group-hover:text-brand-caribbeanSea transition-colors">
+                      <h3 className="font-black text-sm sm:text-base text-white group-hover:text-brand-caribbeanSea transition-colors">
                         {tool.title}
                       </h3>
-                      <p className="text-xs text-slate-300 mt-1 leading-relaxed">
+                      <p className="text-xs sm:text-sm text-brand-sandstone/80 mt-1 leading-relaxed">
                         {tool.description}
                       </p>
                     </div>
                   </div>
 
-                  <div className="pt-4 mt-2 flex items-center justify-between text-xs font-bold text-brand-caribbeanSea border-t border-slate-800/60">
+                  <div className="pt-4 mt-3 flex items-center justify-between text-xs font-bold text-brand-caribbeanSea border-t border-white/10">
                     <span>Open Suite</span>
                     <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                   </div>
@@ -393,30 +393,30 @@ export default function CreateHubClient({ user }: CreateHubClientProps) {
                 key={tool.id}
                 type="button"
                 onClick={() => handleStartCreating(tool.mode || 'text')}
-                className={`bg-gradient-to-br ${tool.color} bg-brand-dusk/80 border rounded-3xl p-5 flex flex-col justify-between hover:scale-[1.02] hover:border-white/20 transition-all shadow-xl group text-left w-full cursor-pointer`}
+                className="surface-card surface-card-interactive rounded-2xl p-5 flex flex-col justify-between group text-left w-full cursor-pointer min-h-[190px]"
               >
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <div className="p-3 rounded-2xl bg-brand-twilight/80 border border-slate-800 shadow-md">
+                    <div className="p-3 rounded-xl bg-white/5 border border-white/10 text-white shadow-sm">
                       {tool.icon}
                     </div>
                     {tool.badge && (
-                      <span className="text-[9px] font-black px-2 py-0.5 rounded-full bg-brand-twilight/80 text-brand-sandstone border border-slate-700">
+                      <span className="text-[10px] font-black px-2.5 py-1 rounded-full bg-brand-caribbeanSea/15 text-brand-caribbeanSea border border-brand-caribbeanSea/30">
                         {tool.badge}
                       </span>
                     )}
                   </div>
                   <div>
-                    <h3 className="font-black text-sm text-brand-sandstone group-hover:text-brand-caribbeanSea transition-colors">
+                    <h3 className="font-black text-sm sm:text-base text-white group-hover:text-brand-caribbeanSea transition-colors">
                       {tool.title}
                     </h3>
-                    <p className="text-xs text-slate-300 mt-1 leading-relaxed">
+                    <p className="text-xs sm:text-sm text-brand-sandstone/80 mt-1 leading-relaxed">
                       {tool.description}
                     </p>
                   </div>
                 </div>
 
-                <div className="pt-4 mt-2 flex items-center justify-between text-xs font-bold text-brand-caribbeanSea border-t border-slate-800/60 w-full">
+                <div className="pt-4 mt-3 flex items-center justify-between text-xs font-bold text-brand-caribbeanSea border-t border-white/10 w-full">
                   <span>Start Creating</span>
                   <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                 </div>

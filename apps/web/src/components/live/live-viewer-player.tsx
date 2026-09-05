@@ -433,7 +433,7 @@ function ActiveLivePlayer({
           </div>
 
           {/* Broadcaster Profile & Engagement Bar */}
-          <div className="p-5 bg-brand-dusk border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="p-5 surface-card border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-3.5">
               <Link
                 href={`/profile/${stream.profiles?.username ?? 'creator'}`}
@@ -443,9 +443,9 @@ function ActiveLivePlayer({
               </Link>
               <div>
                 <div className="flex items-center gap-2">
-                  <h4 className="text-sm font-black text-brand-sandstone leading-snug">{stream.title}</h4>
+                  <h4 className="text-sm sm:text-base font-black text-white leading-snug">{stream.title}</h4>
                 </div>
-                <p className="text-xs text-brand-sandstone/60">
+                <p className="text-xs text-brand-sandstone/80 font-bold mt-0.5">
                   {stream.profiles?.display_name ?? 'Caribbean Host'} · @{stream.profiles?.username ?? 'creator'}
                 </p>
               </div>
@@ -457,10 +457,10 @@ function ActiveLivePlayer({
                   type="button"
                   disabled={followingPending}
                   onClick={toggleFollow}
-                  className={`px-4 py-2 rounded-xl text-xs font-bold transition-all disabled:opacity-50 cursor-pointer ${
+                  className={`px-5 py-2.5 rounded-xl text-xs font-black transition-all disabled:opacity-50 cursor-pointer min-h-[44px] flex items-center justify-center ${
                     isFollowing
-                      ? 'bg-brand-twilight text-slate-300 border border-slate-700'
-                      : 'bg-brand-caribbeanSea hover:bg-brand-caribbeanSea/90 text-slate-950 shadow-md'
+                      ? 'bg-white/10 text-white border border-white/20 hover:bg-white/15'
+                      : 'bg-brand-caribbeanSea hover:brightness-110 text-slate-950 shadow-md'
                   }`}
                 >
                   {isFollowing ? 'Following ✓' : '+ Follow Host'}
@@ -475,14 +475,14 @@ function ActiveLivePlayer({
       </div>
 
       {/* Live Chat Column (Col 4) */}
-      <div className="lg:col-span-4 bg-brand-dusk border border-slate-800 rounded-3xl p-5 flex flex-col justify-between shadow-2xl h-[560px]">
+      <div className="lg:col-span-4 surface-card border border-white/10 rounded-3xl p-5 flex flex-col justify-between shadow-2xl h-[560px]">
         {/* Chat Header */}
-        <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+        <div className="flex items-center justify-between pb-3 border-b border-white/10">
           <div className="flex items-center gap-2">
             <MessageSquare className="w-4 h-4 text-brand-caribbeanSea" />
-            <h3 className="text-xs font-black uppercase text-brand-sandstone">Live Chat</h3>
+            <h3 className="text-xs font-black uppercase text-white tracking-wider">Live Chat</h3>
           </div>
-          <span className="text-[10px] font-bold text-brand-sandstone/60">
+          <span className="text-[10px] font-bold text-brand-sandstone/70">
             {isLive ? 'Realtime Active' : 'Chat Closed'}
           </span>
         </div>
@@ -490,30 +490,30 @@ function ActiveLivePlayer({
         {/* Messages Feed */}
         <div className="flex-1 overflow-y-auto space-y-3 py-3 pr-1">
           {messages.length === 0 ? (
-            <div className="h-full flex flex-col items-center justify-center text-center p-4 text-brand-sandstone/50 space-y-2">
-              <MessageSquare className="w-8 h-8 text-slate-600 mx-auto" />
-              <p className="text-xs font-semibold text-brand-sandstone/70">No messages yet</p>
-              <p className="text-[11px] text-brand-sandstone/50">Be the first to say hello to the broadcaster and community!</p>
+            <div className="h-full flex flex-col items-center justify-center text-center p-4 text-brand-sandstone/60 space-y-2">
+              <MessageSquare className="w-8 h-8 text-white/30 mx-auto" />
+              <p className="text-xs font-bold text-white">No messages yet</p>
+              <p className="text-[11px] text-brand-sandstone/70">Be the first to say hello to the broadcaster and community!</p>
             </div>
           ) : (
             messages.map((msg) => (
               <div
                 key={msg.id}
-                className={`p-2.5 rounded-2xl text-xs space-y-0.5 ${
+                className={`p-3 rounded-2xl text-xs space-y-1 ${
                   msg.isHost
-                    ? 'bg-red-500/10 border border-red-500/30'
-                    : 'bg-brand-twilight border border-slate-800'
+                    ? 'bg-red-500/15 border border-red-500/40 text-white'
+                    : 'bg-white/5 border border-white/10 text-brand-sandstone/90'
                 }`}
               >
                 <div className="flex items-center justify-between">
-                  <span className={`font-bold ${msg.isHost ? 'text-red-400' : 'text-brand-caribbeanSea'}`}>
+                  <span className={`font-black ${msg.isHost ? 'text-red-300' : 'text-brand-caribbeanSea'}`}>
                     {msg.display_name}
                   </span>
-                  <span className="text-[10px] text-brand-sandstone/40">
+                  <span className="text-[10px] text-brand-sandstone/50">
                     {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   </span>
                 </div>
-                <p className="text-slate-200 leading-relaxed break-words">{msg.body}</p>
+                <p className="text-white leading-relaxed break-words">{msg.body}</p>
               </div>
             ))
           )}
@@ -521,14 +521,14 @@ function ActiveLivePlayer({
         </div>
 
         {/* Reaction Cannon Bar */}
-        <div className="py-2 border-t border-slate-800/80 flex items-center justify-between">
+        <div className="py-2 border-t border-white/10 flex items-center justify-between">
           <div className="flex items-center gap-1.5">
             {['❤️', '🔥', '🌴', '👑', '🎉', '🇯🇲', '🇹🇹', '🇩🇴'].map((emoji) => (
               <button
                 key={emoji}
                 type="button"
                 onClick={() => triggerReaction(emoji)}
-                className="p-1 rounded-lg hover:bg-white/10 text-base transition-transform active:scale-125 cursor-pointer"
+                className="p-1.5 rounded-lg hover:bg-white/10 text-base transition-transform active:scale-125 cursor-pointer"
                 title={`Send ${emoji}`}
               >
                 {emoji}
@@ -539,27 +539,27 @@ function ActiveLivePlayer({
 
         {/* Chat Input */}
         {user ? (
-          <form onSubmit={handleSendMessage} className="pt-2 border-t border-slate-800 flex gap-2">
+          <form onSubmit={handleSendMessage} className="pt-2 border-t border-white/10 flex gap-2">
             <input
               type="text"
               value={chatInput}
               onChange={(e) => setChatInput(e.target.value)}
               placeholder="Send a message in live chat…"
-              className="flex-1 bg-brand-twilight border border-slate-700 rounded-2xl px-3.5 py-2 text-xs text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea"
+              className="flex-1 bg-slate-950/80 border border-white/20 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-brand-sandstone/50 focus:outline-none focus:border-brand-caribbeanSea min-h-[40px]"
             />
             <button
               type="submit"
               disabled={!chatInput.trim()}
-              className="bg-brand-caribbeanSea hover:bg-brand-caribbeanSea/90 text-slate-950 font-bold p-2.5 rounded-2xl text-xs transition-colors cursor-pointer shadow-md disabled:opacity-50"
+              className="bg-brand-caribbeanSea hover:brightness-110 text-slate-950 font-black p-2.5 rounded-xl text-xs transition-colors cursor-pointer shadow-md disabled:opacity-50 min-h-[40px] min-w-[40px] flex items-center justify-center"
             >
-              <Send className="w-3.5 h-3.5" />
+              <Send className="w-4 h-4" />
             </button>
           </form>
         ) : (
-          <div className="pt-2 border-t border-slate-800 text-center">
+          <div className="pt-2 border-t border-white/10 text-center">
             <Link
               href="/login?redirect=/live"
-              className="block bg-brand-twilight hover:bg-slate-800 border border-slate-700 text-brand-caribbeanSea font-bold py-2 rounded-2xl text-xs transition-colors"
+              className="block bg-white/10 hover:bg-white/15 border border-white/20 text-brand-caribbeanSea font-black py-2.5 rounded-xl text-xs transition-colors min-h-[40px] flex items-center justify-center"
             >
               Sign in to Chat &amp; React
             </Link>

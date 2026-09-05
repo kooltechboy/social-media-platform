@@ -39,29 +39,32 @@ export default function FinancialNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="space-y-1 bg-brand-dusk/60 border border-slate-800/80 rounded-2xl p-2 md:p-3">
-      <div className="px-3 py-2 text-[10px] font-black uppercase tracking-wider text-slate-400">
+    <nav className="surface-card p-3 rounded-2xl">
+      <div className="hidden lg:block px-3 py-2 text-[11px] font-black uppercase tracking-wider text-orange-400 border-b border-white/10 mb-2">
         Financial Center
       </div>
-      {NAV_ITEMS.map((item) => {
-        const Icon = item.icon;
-        const isActive = item.exact ? pathname === item.href : pathname.startsWith(item.href);
+      <div className="flex lg:flex-col gap-1.5 overflow-x-auto lg:overflow-visible scrollbar-none pb-1 lg:pb-0">
+        {NAV_ITEMS.map((item) => {
+          const Icon = item.icon;
+          const isActive = item.exact ? pathname === item.href : pathname.startsWith(item.href);
 
-        return (
-          <Link
-            key={item.href}
-            href={item.href}
-            className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all ${
-              isActive
-                ? 'bg-gradient-to-r from-brand-sunriseCoral to-brand-goldenHour text-slate-950 shadow-md shadow-brand-sunriseCoral/20'
-                : 'text-slate-300 hover:text-white hover:bg-slate-800/60'
-            }`}
-          >
-            <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-slate-950' : 'text-slate-400'}`} />
-            <span>{item.label}</span>
-          </Link>
-        );
-      })}
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap min-h-[44px] shrink-0 ${
+                isActive
+                  ? 'bg-gradient-to-r from-orange-500 via-amber-500 to-emerald-400 text-slate-950 font-black shadow-md shadow-orange-500/20'
+                  : 'text-brand-sandstone/80 hover:text-white hover:bg-white/10'
+              }`}
+            >
+              <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-slate-950' : 'text-orange-400'}`} />
+              <span>{item.label}</span>
+            </Link>
+          );
+        })}
+      </div>
     </nav>
   );
 }
+

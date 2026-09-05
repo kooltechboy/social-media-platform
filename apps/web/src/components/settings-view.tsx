@@ -205,29 +205,29 @@ export default function SettingsView({
   ];
 
   return (
-    <div className="max-w-5xl mx-auto p-4 sm:p-6">
-      <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-4">
-        <div>
-          <h1 className="text-xl sm:text-2xl font-black text-brand-sandstone tracking-tight">
+    <div className="max-w-5xl mx-auto p-4 sm:p-6 space-y-6">
+      <div className="surface-header p-6 sm:p-8 rounded-3xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="space-y-1">
+          <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
             Settings &amp; Preferences
           </h1>
-          <p className="text-xs text-brand-sandstone/60">
+          <p className="text-xs sm:text-sm text-brand-sandstone/80">
             Manage your Tukubi account credentials, privacy boundaries, and notifications.
           </p>
         </div>
         <Link
           href={`/profile/${profile.username}`}
-          className="text-xs font-bold text-brand-caribbeanSea hover:underline flex items-center gap-1"
+          className="bg-white/10 hover:bg-white/20 text-white text-xs sm:text-sm font-black px-4 py-2.5 rounded-xl border border-white/15 flex items-center gap-1.5 transition-all self-start sm:self-auto min-h-[40px]"
         >
           <span>View Public Profile</span>
-          <ChevronRight className="w-3.5 h-3.5" />
+          <ChevronRight className="w-4 h-4" />
         </Link>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         {/* Navigation Sidebar */}
-        <aside className="md:col-span-1 space-y-1">
-          <nav className="bg-brand-dusk/60 border border-slate-800 rounded-2xl p-2 space-y-1" aria-label="Settings categories">
+        <aside className="md:col-span-1 space-y-3">
+          <nav className="surface-card p-2.5 rounded-2xl flex md:flex-col overflow-x-auto md:overflow-visible scrollbar-none gap-1.5 border border-white/15" aria-label="Settings categories">
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive = activeSection === item.id;
@@ -239,24 +239,24 @@ export default function SettingsView({
                     setActiveSection(item.id);
                     setFeedback({ error: null, success: null });
                   }}
-                  className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all text-left cursor-pointer ${
+                  className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all text-left cursor-pointer whitespace-nowrap min-h-[44px] shrink-0 ${
                     isActive
-                      ? 'bg-brand-caribbeanSea text-slate-950 shadow-md font-black'
-                      : 'text-brand-sandstone/70 hover:text-brand-sandstone hover:bg-slate-800/60'
+                      ? 'bg-gradient-to-r from-orange-500 via-amber-500 to-emerald-400 text-slate-950 font-black shadow-md shadow-orange-500/20'
+                      : 'text-brand-sandstone/80 hover:text-white hover:bg-white/10'
                   }`}
                 >
-                  <Icon className="w-4 h-4 shrink-0" />
+                  <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-slate-950' : 'text-orange-400'}`} />
                   <span className="truncate">{item.label}</span>
                 </button>
               );
             })}
           </nav>
 
-          <div className="p-3 bg-brand-dusk/40 border border-slate-800 rounded-2xl">
-            <span className="text-[11px] text-brand-sandstone/40 block font-semibold">Financial Settings</span>
+          <div className="surface-card p-4 rounded-2xl border border-white/15 space-y-1">
+            <span className="text-[11px] text-brand-sandstone/60 block font-bold uppercase tracking-wider">Financial Settings</span>
             <Link
               href="/financial-center"
-              className="text-xs font-bold text-brand-goldenHour hover:underline block mt-1"
+              className="text-xs font-black text-orange-400 hover:text-orange-300 block pt-0.5"
             >
               TUKUBI Financial Center →
             </Link>
@@ -264,7 +264,7 @@ export default function SettingsView({
         </aside>
 
         {/* Content Area */}
-        <div className="md:col-span-3 space-y-6">
+        <div className="md:col-span-3 space-y-6 min-w-0">
           {/* Feedback banner */}
           {feedback.error && (
             <div className="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs flex items-center gap-2">
@@ -281,7 +281,7 @@ export default function SettingsView({
 
           {/* 1. ACCOUNT */}
           {activeSection === 'account' && (
-            <section className="bg-brand-dusk/70 border border-slate-800 rounded-3xl p-6 space-y-6">
+            <section className="surface-card rounded-3xl p-6 sm:p-8 space-y-6 border border-white/15">
               <div>
                 <h2 className="text-sm font-black uppercase tracking-wider text-brand-caribbeanSea">
                   Account Details
@@ -367,7 +367,7 @@ export default function SettingsView({
 
           {/* 2. EDIT PROFILE */}
           {activeSection === 'profile' && (
-            <section className="bg-brand-dusk/70 border border-slate-800 rounded-3xl p-6 space-y-6">
+            <section className="surface-card rounded-3xl p-6 sm:p-8 space-y-6 border border-white/15">
               <div>
                 <h2 className="text-sm font-black uppercase tracking-wider text-brand-caribbeanSea">
                   Profile Photos &amp; Information
@@ -463,7 +463,7 @@ export default function SettingsView({
 
           {/* 3. PRIVACY & SAFETY */}
           {activeSection === 'privacy' && (
-            <section className="bg-brand-dusk/70 border border-slate-800 rounded-3xl p-6 space-y-6">
+            <section className="surface-card rounded-3xl p-6 sm:p-8 space-y-6 border border-white/15">
               <div>
                 <h2 className="text-sm font-black uppercase tracking-wider text-brand-caribbeanSea">
                   Privacy Boundaries
@@ -562,7 +562,7 @@ export default function SettingsView({
 
           {/* 4. NOTIFICATIONS */}
           {activeSection === 'notifications' && (
-            <section className="bg-brand-dusk/70 border border-slate-800 rounded-3xl p-6 space-y-6">
+            <section className="surface-card rounded-3xl p-6 sm:p-8 space-y-6 border border-white/15">
               <div>
                 <h2 className="text-sm font-black uppercase tracking-wider text-brand-caribbeanSea">
                   Notification Preferences
@@ -652,7 +652,7 @@ export default function SettingsView({
 
           {/* 5. SECURITY */}
           {activeSection === 'security' && (
-            <section className="bg-brand-dusk/70 border border-slate-800 rounded-3xl p-6 space-y-6">
+            <section className="surface-card rounded-3xl p-6 sm:p-8 space-y-6 border border-white/15">
               <div>
                 <h2 className="text-sm font-black uppercase tracking-wider text-brand-caribbeanSea">
                   Security &amp; Password
@@ -733,7 +733,7 @@ export default function SettingsView({
 
           {/* 6. APPEARANCE */}
           {activeSection === 'appearance' && (
-            <section className="bg-brand-dusk/70 border border-slate-800 rounded-3xl p-6 space-y-6">
+            <section className="surface-card rounded-3xl p-6 sm:p-8 space-y-6 border border-white/15">
               <div>
                 <h2 className="text-sm font-black uppercase tracking-wider text-brand-caribbeanSea">
                   Theme &amp; Appearance
@@ -766,7 +766,7 @@ export default function SettingsView({
 
           {/* 7. LANGUAGE */}
           {activeSection === 'language' && (
-            <section className="bg-brand-dusk/70 border border-slate-800 rounded-3xl p-6 space-y-6">
+            <section className="surface-card rounded-3xl p-6 sm:p-8 space-y-6 border border-white/15">
               <div>
                 <h2 className="text-sm font-black uppercase tracking-wider text-brand-caribbeanSea">
                   {t('settings.language_title')}
@@ -809,7 +809,7 @@ export default function SettingsView({
 
           {/* INSTALL TUKUBI (PWA) */}
           {activeSection === 'install' && (
-            <section className="bg-brand-dusk/70 border border-slate-800 rounded-3xl p-6 space-y-6">
+            <section className="surface-card rounded-3xl p-6 sm:p-8 space-y-6 border border-white/15">
               <div>
                 <h2 className="text-sm font-black uppercase tracking-wider text-brand-caribbeanSea flex items-center gap-2">
                   <Smartphone className="w-4 h-4 text-brand-caribbeanSea" /> Install TUKUBI Application
@@ -920,7 +920,7 @@ export default function SettingsView({
 
           {/* 8. YOUR DATA */}
           {activeSection === 'data' && (
-            <section className="bg-brand-dusk/70 border border-slate-800 rounded-3xl p-6 space-y-6">
+            <section className="surface-card rounded-3xl p-6 sm:p-8 space-y-6 border border-white/15">
               <div>
                 <h2 className="text-sm font-black uppercase tracking-wider text-brand-caribbeanSea">
                   Download Account Data
@@ -962,7 +962,7 @@ export default function SettingsView({
 
           {/* 9. ACCOUNT MANAGEMENT */}
           {activeSection === 'management' && (
-            <section className="bg-brand-dusk/70 border border-slate-800 rounded-3xl p-6 space-y-6">
+            <section className="surface-card rounded-3xl p-6 sm:p-8 space-y-6 border border-white/15">
               <div>
                 <h2 className="text-sm font-black uppercase tracking-wider text-rose-400">
                   Account Management

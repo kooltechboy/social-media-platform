@@ -66,16 +66,16 @@ export default async function SettingsPage() {
     : defaultNotifPrefs;
 
   return (
-    <div className="min-h-screen bg-transparent text-brand-sandstone">
-      <header className="sticky top-0 z-40 bg-[#0F172A]/90 backdrop-blur-md border-b border-slate-800 px-4 py-3 flex items-center justify-between gap-4">
+    <div className="min-h-screen bg-transparent text-brand-sandstone pb-12">
+      <header className="sticky top-0 z-40 surface-header backdrop-blur-xl border-b border-white/15 px-4 sm:px-6 py-3.5 flex items-center justify-between gap-4 shadow-xl">
         <Link
           href={`/profile/${profile.username}`}
-          className="flex items-center gap-2 text-slate-300 hover:text-brand-sandstone text-xs font-bold transition-colors"
+          className="flex items-center gap-2 text-brand-sandstone/70 hover:text-white text-xs sm:text-sm font-bold transition-colors min-h-[36px] px-2"
         >
           <ArrowLeft className="w-4 h-4" /> Back to Profile
         </Link>
-        <div className="flex items-center gap-2 text-xs font-black text-brand-sandstone">
-          <Settings className="w-4 h-4 text-brand-caribbeanSea" />
+        <div className="flex items-center gap-2 text-xs sm:text-sm font-black text-white">
+          <Settings className="w-4 h-4 text-orange-400" />
           <span>Account Settings</span>
         </div>
       </header>
@@ -90,3 +90,4 @@ export default async function SettingsPage() {
     </div>
   );
 }
+

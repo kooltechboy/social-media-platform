@@ -70,13 +70,24 @@ export default async function NotificationsPage() {
   if (!user) {
     return (
       <div className="min-h-screen bg-transparent text-brand-sandstone flex items-center justify-center p-6">
-        <div className="bg-brand-dusk/70 border border-slate-800 rounded-2xl p-8 text-center max-w-sm">
-          <Bell className="w-8 h-8 text-brand-caribbeanSea mx-auto mb-3" />
-          <h1 className="text-lg font-bold text-brand-sandstone mb-2">Notifications</h1>
-          <p className="text-sm text-brand-sandstone/60 mb-4">Sign in to see your notifications.</p>
-          <Link href="/login?next=/notifications" className="inline-block bg-brand-caribbeanSea hover:bg-brand-caribbeanSea text-slate-950 font-bold px-5 py-2 rounded-full text-xs transition-colors">
-            Sign In
-          </Link>
+        <div className="surface-card rounded-3xl p-8 sm:p-10 text-center max-w-sm w-full space-y-5 border border-white/15 shadow-2xl">
+          <div className="w-16 h-16 rounded-2xl bg-orange-500/10 border border-orange-500/30 flex items-center justify-center mx-auto text-orange-400">
+            <Bell className="w-8 h-8" />
+          </div>
+          <div className="space-y-2">
+            <h1 className="text-xl font-black text-white">Notifications</h1>
+            <p className="text-sm text-brand-sandstone/80 leading-relaxed">
+              Sign in to see your updates, mentions, tips, orders, and Caribbean community reactions.
+            </p>
+          </div>
+          <div className="pt-2">
+            <Link
+              href="/login?next=/notifications"
+              className="w-full inline-flex items-center justify-center bg-gradient-to-r from-orange-500 via-amber-500 to-emerald-400 hover:brightness-110 text-slate-950 font-black px-6 py-3 rounded-2xl text-sm transition-all shadow-md shadow-orange-500/20 min-h-[44px]"
+            >
+              Sign In
+            </Link>
+          </div>
         </div>
       </div>
     );
@@ -99,77 +110,106 @@ export default async function NotificationsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-transparent text-brand-sandstone">
-      <header className="sticky top-0 z-50 bg-[#0F172A]/90 backdrop-blur-md border-b border-slate-800 px-4 py-3 flex items-center gap-4">
-        <Link href="/" className="flex items-center gap-2 text-slate-300 hover:text-brand-sandstone text-sm font-semibold">
-          <ArrowLeft className="w-4 h-4" /> Back
-        </Link>
-        <h1 className="text-lg font-extrabold text-brand-sandstone flex items-center gap-2">
-          <Bell className="w-5 h-5 text-brand-caribbeanSea" /> Notifications
-          {unreadCount > 0 && (
-            <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-brand-caribbeanSea/20 text-brand-caribbeanSea border border-brand-caribbeanSea/40">
-              {unreadCount} new
-            </span>
-          )}
-        </h1>
-        {unreadCount > 0 && (
-          <div className="ml-auto">
-            <NotificationMarkRead mode="all" />
+    <div className="min-h-screen bg-transparent text-brand-sandstone pb-12">
+      {/* Sticky Surface Header */}
+      <header className="sticky top-0 z-50 surface-header backdrop-blur-xl border-b border-white/15 px-4 sm:px-6 py-4 shadow-xl">
+        <div className="max-w-3xl mx-auto flex items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <Link
+              href="/"
+              className="flex items-center gap-2 text-brand-sandstone/70 hover:text-white text-sm font-bold transition-colors min-h-[40px] px-2"
+            >
+              <ArrowLeft className="w-4 h-4" /> Back
+            </Link>
+            <h1 className="text-lg sm:text-xl font-black text-white flex items-center gap-2.5">
+              <Bell className="w-5 h-5 text-orange-400" /> Notifications
+              {unreadCount > 0 && (
+                <span className="text-[11px] font-black px-2.5 py-0.5 rounded-full bg-orange-500/20 text-orange-300 border border-orange-500/40">
+                  {unreadCount} new
+                </span>
+              )}
+            </h1>
           </div>
-        )}
+
+          {unreadCount > 0 && (
+            <div className="shrink-0">
+              <NotificationMarkRead mode="all" />
+            </div>
+          )}
+        </div>
       </header>
 
-      <main className="max-w-2xl mx-auto p-4 space-y-2">
+      <main className="max-w-3xl mx-auto p-4 sm:p-6 space-y-3">
         {notifications.length === 0 ? (
-          <div className="bg-brand-dusk/60 border border-dashed border-slate-800 rounded-2xl p-10 text-center mt-6">
-            <Bell className="w-8 h-8 text-slate-600 mx-auto mb-2" />
-            <p className="text-sm text-brand-sandstone/60">No notifications yet.</p>
-            <p className="text-xs text-brand-sandstone/40 mt-1">When people interact with your content, you will see it here.</p>
+          <div className="surface-card rounded-3xl p-12 text-center space-y-4 max-w-md mx-auto mt-8 border border-white/10">
+            <div className="w-16 h-16 rounded-2xl bg-white/5 border border-white/15 flex items-center justify-center mx-auto text-brand-sandstone/60">
+              <Bell className="w-8 h-8" />
+            </div>
+            <div className="space-y-1">
+              <h3 className="text-lg font-black text-white">No notifications yet</h3>
+              <p className="text-sm text-brand-sandstone/70 leading-relaxed">
+                When Caribbean creators and friends interact with your content, tips, or orders, they'll appear here.
+              </p>
+            </div>
           </div>
         ) : (
           notifications.map((notification) => (
             <div
               key={notification.id}
-              className={`flex items-start gap-3 bg-brand-dusk/70 border rounded-2xl p-4 transition-colors ${
-                !notification.read_at ? 'border-sky-600/40' : 'border-slate-800'
+              className={`surface-card surface-card-interactive rounded-2xl p-4 sm:p-5 flex items-start gap-4 transition-all ${
+                !notification.read_at
+                  ? 'border-orange-500/40 bg-orange-950/10'
+                  : 'border-white/10'
               }`}
             >
-              <div className="w-9 h-9 rounded-xl bg-brand-dusk flex items-center justify-center flex-shrink-0">
+              <div className="w-11 h-11 rounded-2xl bg-slate-900 border border-white/15 flex items-center justify-center flex-shrink-0 shadow-inner">
                 <NotificationIcon kind={notification.kind} />
               </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm text-slate-200 leading-snug">
+              <div className="flex-1 min-w-0 space-y-1">
+                <p className="text-sm sm:text-base text-brand-sandstone/90 leading-snug">
                   {notification.actor ? (
-                    <Link href={`/profile/${notification.actor.username}`} className="font-bold text-brand-sandstone hover:underline">
+                    <Link
+                      href={`/profile/${notification.actor.username}`}
+                      className="font-black text-white hover:text-orange-400 transition-colors"
+                    >
                       {notification.actor.display_name}
                     </Link>
                   ) : (
-                    <span className="font-bold text-brand-sandstone">System</span>
+                    <span className="font-black text-white">System</span>
                   )}{' '}
-                  {notificationActionText(notification)}
+                  <span className="font-medium">{notificationActionText(notification)}</span>
                 </p>
                 {notification.payload?.post_id && (
-                  <Link href={`/?post=${notification.payload.post_id}`} className="text-[11px] font-bold text-brand-caribbeanSea hover:underline block mt-1">
+                  <Link
+                    href={`/?post=${notification.payload.post_id}`}
+                    className="inline-flex items-center gap-1 text-xs font-black text-orange-400 hover:text-orange-300 mt-1 min-h-[36px]"
+                  >
                     View Post →
                   </Link>
                 )}
                 {notification.payload?.event_id && (
-                  <Link href="/events" className="text-[11px] font-bold text-yellow-400 hover:underline block mt-1">
+                  <Link
+                    href="/events"
+                    className="inline-flex items-center gap-1 text-xs font-black text-amber-400 hover:text-amber-300 mt-1 min-h-[36px]"
+                  >
                     View Event Details →
                   </Link>
                 )}
                 {notification.payload?.stream_id && (
-                  <Link href={`/live?id=${notification.payload.stream_id}`} className="text-[11px] font-bold text-rose-400 hover:underline block mt-1">
+                  <Link
+                    href={`/live?id=${notification.payload.stream_id}`}
+                    className="inline-flex items-center gap-1 text-xs font-black text-rose-400 hover:text-rose-300 mt-1 min-h-[36px]"
+                  >
                     Join Live Stream →
                   </Link>
                 )}
-                <span className="text-[11px] text-brand-sandstone/40 mt-1 block">
+                <span className="text-xs text-brand-sandstone/50 font-medium block pt-0.5">
                   {relativeTime(notification.created_at)}
                 </span>
               </div>
               {!notification.read_at && (
-                <div className="flex items-center gap-2 flex-shrink-0">
-                  <span className="w-2 h-2 bg-brand-caribbeanSea rounded-full" aria-label="Unread" />
+                <div className="flex items-center gap-2.5 flex-shrink-0 pt-1">
+                  <span className="w-2.5 h-2.5 bg-orange-400 rounded-full animate-pulse" aria-label="Unread" />
                   <NotificationMarkRead mode="single" notificationId={notification.id} />
                 </div>
               )}
@@ -177,7 +217,7 @@ export default async function NotificationsPage() {
           ))
         )}
         {notifications.length > 0 && (
-          <p className="text-center text-xs text-brand-sandstone/40 py-6">
+          <p className="text-center text-xs text-brand-sandstone/50 py-6 font-medium">
             Showing last {notifications.length} notification{notifications.length !== 1 ? 's' : ''}.
           </p>
         )}
@@ -185,3 +225,4 @@ export default async function NotificationsPage() {
     </div>
   );
 }
+

@@ -9,9 +9,9 @@ export const ISLAND_VIBES_THEME = {
   fallbackUrl: 'https://images.unsplash.com/photo-1531761535209-180857e963b9?auto=format&fit=crop&w=2400&q=90',
   description: 'Tropical beach gathering, warm festive energy, and vibrant Caribbean culture',
   overlayGradient: `linear-gradient(to bottom,
-    rgba(24, 10, 36, 0.35) 0%,
-    rgba(24, 10, 36, 0.10) 25%,
-    rgba(24, 10, 36, 0.25) 60%,
+    rgba(17, 13, 23, 0.60) 0%,
+    rgba(24, 10, 36, 0.50) 25%,
+    rgba(24, 10, 36, 0.60) 60%,
     rgba(17, 13, 23, 0.75) 100%
   )`,
 };
@@ -34,7 +34,7 @@ export default function CaribbeanSunsetBackground() {
           alt="Caribbean Backdrop"
           className="w-full h-full object-cover object-center transition-opacity duration-700"
           style={{
-            filter: 'saturate(1.15) brightness(1.05)',
+            filter: 'saturate(1.05) brightness(0.85)',
           }}
           onError={() => {
             if (imgSrc !== ISLAND_VIBES_THEME.fallbackUrl) {
