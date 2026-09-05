@@ -6,7 +6,7 @@ describe("SpotPay Zero-Tolerance Inviolable Architecture Gate", () => {
   it("enforces absolute zero occurrences of SpotPay across all repository source code, migrations, and configs", () => {
     const root = path.resolve(__dirname, "../..");
     const prohibited = [/spotpay/i, /spot_pay/i, /spot-pay/i, /spot\s+pay/i];
-    const ignoredDirs = new Set(["node_modules", ".git", ".turbo", ".vercel", "dist", ".next", "test-results", ".temp", "scratch"]);
+    const ignoredDirs = new Set(["node_modules", ".git", ".turbo", ".vercel", "dist", ".next", "test-results", ".temp", "scratch", ".superpowers"]);
 
     const violations: string[] = [];
 

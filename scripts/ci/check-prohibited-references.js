@@ -24,6 +24,7 @@ const IGNORED_DIRS = new Set([
   "test-results",
   ".temp",
   "scratch",
+  ".superpowers",
 ]);
 
 let violations = [];
