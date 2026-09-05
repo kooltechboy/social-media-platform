@@ -1,4 +1,3 @@
-import React from 'react';
 import { redirect } from 'next/navigation';
 import { getCurrentUser } from '../../lib/supabase/server';
 import FinancialNav from '../../components/financial-center/financial-nav';

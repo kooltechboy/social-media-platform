@@ -1,4 +1,3 @@
-import React from 'react';
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { getCurrentUser } from '../../lib/supabase/server';
@@ -17,7 +16,11 @@ export const metadata: Metadata = {
  * via getAuthorizedUser(['admin', 'management', 'superadmin']).
  * This layout guard ensures the admin chrome never renders for unauthenticated visitors.
  */
-export default async function AdminLayout({ children }: { children: React.ReactNode }) {
+export default async function AdminLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const user = await getCurrentUser();
   if (!user) {
     redirect('/login?next=/admin');
