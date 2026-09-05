@@ -59,7 +59,7 @@ export async function GET(
     published_at: string;
   }>;
 
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://caribbeanone.app';
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://tukubi.com';
   const podcastUrl = `${baseUrl}/podcasts/${pod.slug}`;
   const feedUrl = `${baseUrl}/api/v1/podcasts/${pod.id}/rss`;
 

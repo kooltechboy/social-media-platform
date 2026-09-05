@@ -87,6 +87,7 @@ export interface CreateStreamParams {
   title: string;
   accessLevel?: StreamAccess;
   scheduledFor?: string | null;
+  streamUrl?: string | null;
 }
 
 export async function createLivestreamAction(
@@ -112,15 +113,20 @@ export async function createLivestreamAction(
     return { error: 'Database service unavailable.' };
   }
 
+  const isScheduled = Boolean(params.scheduledFor && new Date(params.scheduledFor).getTime() > Date.now());
+
   const { data, error } = await supabase
     .from('livestreams')
     .insert({
       creator_id: user.id,
       title: params.title.trim(),
       access_level: params.accessLevel || 'public',
-      state: 'live',
-      started_at: new Date().toISOString(),
-      peak_viewers: 1,
+      state: isScheduled ? 'scheduled' : 'live',
+      scheduled_for: isScheduled && params.scheduledFor ? new Date(params.scheduledFor).toISOString() : null,
+      started_at: isScheduled ? null : new Date().toISOString(),
+      peak_viewers: 0,
+      stream_url: params.streamUrl?.trim() || null,
+      playback_path: params.streamUrl?.trim() || null,
     })
     .select('id')
     .single();
@@ -130,12 +136,38 @@ export async function createLivestreamAction(
   }
 
   revalidatePath('/live');
+  revalidatePath('/creator-studio');
   return { streamId: data.id };
+}
+
+export async function startScheduledLivestreamAction(
+  livestreamId: string,
+): Promise<{ success: boolean; error?: string }> {
+  const user = await getCurrentUser();
+  if (!user) return { success: false, error: 'Unauthorized.' };
+
+  const supabase = await createSupabaseServerClient();
+  if (!supabase) return { success: false, error: 'Database unavailable.' };
+
+  const { error } = await supabase
+    .from('livestreams')
+    .update({
+      state: 'live',
+      started_at: new Date().toISOString(),
+    })
+    .eq('id', livestreamId)
+    .eq('creator_id', user.id);
+
+  if (error) return { success: false, error: error.message };
+
+  revalidatePath('/live');
+  revalidatePath('/creator-studio');
+  return { success: true };
 }
 
 export async function endLivestreamAction(
   livestreamId: string,
-  peakViewers: number = 1,
+  peakViewers: number = 0,
 ): Promise<{ success: boolean; error?: string }> {
   const user = await getCurrentUser();
   if (!user) {
@@ -152,7 +184,7 @@ export async function endLivestreamAction(
     .update({
       state: 'ended',
       ended_at: new Date().toISOString(),
-      peak_viewers: Math.max(1, peakViewers),
+      peak_viewers: Math.max(0, peakViewers),
     })
     .eq('id', livestreamId)
     .eq('creator_id', user.id);
@@ -162,5 +194,28 @@ export async function endLivestreamAction(
   }
 
   revalidatePath('/live');
+  revalidatePath('/creator-studio');
+  return { success: true };
+}
+
+export async function deleteLivestreamAction(
+  livestreamId: string,
+): Promise<{ success: boolean; error?: string }> {
+  const user = await getCurrentUser();
+  if (!user) return { success: false, error: 'Unauthorized.' };
+
+  const supabase = await createSupabaseServerClient();
+  if (!supabase) return { success: false, error: 'Database unavailable.' };
+
+  const { error } = await supabase
+    .from('livestreams')
+    .delete()
+    .eq('id', livestreamId)
+    .eq('creator_id', user.id);
+
+  if (error) return { success: false, error: error.message };
+
+  revalidatePath('/live');
+  revalidatePath('/creator-studio');
   return { success: true };
 }

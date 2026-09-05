@@ -25,6 +25,8 @@ import {
   Music,
 } from 'lucide-react';
 import UniversalComposer, { type ComposerMode } from './universal-composer';
+import CreatePodcastModal from './podcasts/create-podcast-modal';
+import { getCreatorDraftsAction, type CreatorDraftItem } from '../lib/creator/draft-actions';
 
 interface CreateHubClientProps {
   user: {
@@ -185,11 +187,13 @@ const FILTER_TABS = [
 export default function CreateHubClient({ user }: CreateHubClientProps) {
   const [activeFilter, setActiveFilter] = useState('all');
   const [hasDraft, setHasDraft] = useState(false);
+  const [serverDrafts, setServerDrafts] = useState<CreatorDraftItem[]>([]);
+  const [isPodcastModalOpen, setIsPodcastModalOpen] = useState(false);
   const [publishedPostId, setPublishedPostId] = useState<string | null>(null);
   const [composerMode, setComposerMode] = useState<ComposerMode>('text');
   const composerSectionRef = useRef<HTMLDivElement>(null);
 
-  // Check for saved draft on mount
+  // Check for saved drafts on mount (local + server)
   useEffect(() => {
     try {
       const draft = localStorage.getItem('tukubi_composer_draft_v3') || localStorage.getItem('tukubi_composer_draft_v2');
@@ -202,7 +206,15 @@ export default function CreateHubClient({ user }: CreateHubClientProps) {
     } catch {
       // Ignore
     }
-  }, []);
+
+    if (user?.id) {
+      void getCreatorDraftsAction().then((res) => {
+        if (res.drafts && res.drafts.length > 0) {
+          setServerDrafts(res.drafts);
+        }
+      });
+    }
+  }, [user?.id]);
 
   function handleStartCreating(mode: ComposerMode = 'text') {
     setComposerMode(mode);
@@ -276,20 +288,36 @@ export default function CreateHubClient({ user }: CreateHubClientProps) {
         </div>
       )}
 
-      {/* Draft Resume Indicator */}
-      {hasDraft && !publishedPostId && (
-        <div className="p-4 sm:p-5 rounded-2xl bg-amber-950/80 border border-amber-500/50 text-amber-200 text-xs sm:text-sm font-semibold flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+      {/* Draft Resume Indicator (Local + Cloud Synced) */}
+      {(hasDraft || serverDrafts.length > 0) && !publishedPostId && (
+        <div className="p-4 sm:p-5 rounded-2xl bg-amber-950/80 border border-amber-500/50 text-amber-200 text-xs sm:text-sm font-semibold flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 animate-fadeIn">
           <div className="flex items-center gap-2.5">
             <Clock className="w-5 h-5 text-amber-400 flex-shrink-0" />
-            <span>You have an unposted draft saved in your local workspace.</span>
+            <span>
+              {serverDrafts.length > 0
+                ? `You have ${serverDrafts.length} draft${serverDrafts.length === 1 ? '' : 's'} saved across your creator devices.`
+                : 'You have an unposted draft saved in your local workspace.'}
+            </span>
           </div>
-          <button
-            type="button"
-            onClick={() => handleStartCreating('text')}
-            className="text-amber-300 underline font-black hover:text-white min-h-[38px] flex items-center"
-          >
-            Resume Draft →
-          </button>
+          <div className="flex items-center gap-3">
+            {hasDraft && (
+              <button
+                type="button"
+                onClick={() => handleStartCreating('text')}
+                className="text-amber-300 underline font-black hover:text-white min-h-[38px] flex items-center cursor-pointer"
+              >
+                Resume Local Draft →
+              </button>
+            )}
+            {serverDrafts.length > 0 && (
+              <Link
+                href="/creator-studio?tab=drafts"
+                className="px-3.5 py-1.5 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-200 border border-amber-500/30 font-black text-xs flex items-center"
+              >
+                Manage in Studio →
+              </Link>
+            )}
+          </div>
         </div>
       )}
 
@@ -425,6 +453,14 @@ export default function CreateHubClient({ user }: CreateHubClientProps) {
           })}
         </div>
       </section>
+
+      {/* Quick Podcast Publisher Modal */}
+      <CreatePodcastModal
+        isOpen={isPodcastModalOpen}
+        onClose={() => setIsPodcastModalOpen(false)}
+        user={user}
+        existingPodcasts={[]}
+      />
     </div>
   );
 }

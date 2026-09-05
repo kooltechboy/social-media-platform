@@ -104,13 +104,15 @@ export default function PodcastNetworkFeed({ podcasts, user }: PodcastNetworkFee
         title: activePodcast.latestEpisodeTitle || activePodcast.title,
         artist: activePodcast.profiles?.display_name || 'Caribbean Creator',
         album: activePodcast.title,
-        artwork: [
-          {
-            src: 'https://images.unsplash.com/photo-1590602847861-f357a9332bbc?w=512&auto=format&fit=crop&q=80',
-            sizes: '512x512',
-            type: 'image/jpeg',
-          },
-        ],
+        artwork: activePodcast.cover_path
+          ? [
+              {
+                src: activePodcast.cover_path,
+                sizes: '512x512',
+                type: 'image/jpeg',
+              },
+            ]
+          : [],
       });
 
       navigator.mediaSession.setActionHandler('play', () => {
@@ -170,6 +172,10 @@ export default function PodcastNetworkFeed({ podcasts, user }: PodcastNetworkFee
   }, [sleepTimerSeconds]);
 
   function handleTogglePlay(podcast: PodcastShowItem) {
+    if (!podcast.audioUrl) {
+      alert('No audio file has been published for this podcast episode yet.');
+      return;
+    }
     if (activePodcast?.id === podcast.id) {
       if (isPlaying) {
         audioRef.current?.pause();
@@ -248,11 +254,11 @@ export default function PodcastNetworkFeed({ podcasts, user }: PodcastNetworkFee
 
   return (
     <div className="space-y-8 pb-32">
-      {/* Hidden Audio Player */}
-      {activePodcast && (
+      {/* Audio Player (Real Media Only) */}
+      {activePodcast?.audioUrl && (
         <audio
           ref={audioRef}
-          src={activePodcast.audioUrl || 'https://assets.mixkit.co/active_storage/sfx/2874/2874-preview.mp3'}
+          src={activePodcast.audioUrl}
           onTimeUpdate={handleTimeUpdate}
           onEnded={() => {
             if (sleepTimerSeconds === -1) setSleepTimerSeconds(0);

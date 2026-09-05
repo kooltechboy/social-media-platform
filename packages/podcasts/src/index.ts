@@ -115,8 +115,8 @@ export interface RssFeedInput {
 }
 
 export function buildRssFeed(input: RssFeedInput): string {
-  const author = escapeXml(input.authorName || 'Caribbean Creators Network');
-  const ownerEmail = escapeXml(input.ownerEmail || 'podcasts@caribbeanone.app');
+  const author = escapeXml(input.authorName || 'Tukubi Creators Network');
+  const ownerEmail = escapeXml(input.ownerEmail || 'podcasts@tukubi.com');
   const category = escapeXml(input.category || 'Society & Culture');
   const explicit = input.isExplicit ? 'yes' : 'no';
 

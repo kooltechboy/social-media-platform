@@ -99,13 +99,11 @@ export default function LiveHostStudio({ user }: LiveHostStudioProps) {
 
   // Live Metrics
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
-  const [viewerCount, setViewerCount] = useState(1);
-  const [peakViewers, setPeakViewers] = useState(1);
+  const [viewerCount, setViewerCount] = useState(0);
+  const [peakViewers, setPeakViewers] = useState(0);
 
   // Chat & Reactions
-  const [chatMessages, setChatMessages] = useState<HostChatMessage[]>([
-    { id: '1', sender_name: 'Tukubi System', body: 'Studio ready. Click "Go Live Now" to broadcast.', isHost: false, time: 'Just now' },
-  ]);
+  const [chatMessages, setChatMessages] = useState<HostChatMessage[]>([]);
   const [chatInput, setChatInput] = useState('');
   const [reactions, setReactions] = useState<FloatingReaction[]>([]);
   const [copiedLink, setCopiedLink] = useState(false);
@@ -249,7 +247,7 @@ export default function LiveHostStudio({ user }: LiveHostStudioProps) {
       })
       .on('presence', { event: 'sync' }, () => {
         const state = channel.presenceState();
-        const activeViewers = Math.max(1, Object.keys(state).length);
+        const activeViewers = Math.max(0, Object.keys(state).length);
         setViewerCount(activeViewers);
         setPeakViewers((peak) => Math.max(peak, activeViewers));
       })
@@ -362,8 +360,8 @@ export default function LiveHostStudio({ user }: LiveHostStudioProps) {
       setLivestreamId(res.streamId || 'stream-active');
       setIsLive(true);
       setElapsedSeconds(0);
-      setViewerCount(1);
-      setPeakViewers(1);
+      setViewerCount(0);
+      setPeakViewers(0);
       setChatMessages([
         {
           id: 'welcome',

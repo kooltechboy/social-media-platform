@@ -21,7 +21,7 @@ export default async function LivePage({
   if (supabase) {
     let query = supabase
       .from('livestreams')
-      .select('id, title, state, access_level, peak_viewers, started_at, creator_id, stream_url, profiles(display_name, username)')
+      .select('id, title, state, access_level, peak_viewers, started_at, creator_id, stream_url, playback_path, profiles(display_name, username)')
       .order('started_at', { ascending: false })
       .limit(15);
 
@@ -48,7 +48,7 @@ export default async function LivePage({
         category: 'Live Broadcast',
         location: 'Caribbean & Diaspora 🌴',
         profiles: d.profiles,
-        videoUrl: d.stream_url ?? '',
+        videoUrl: d.stream_url || d.playback_path || '',
       }));
     }
   }

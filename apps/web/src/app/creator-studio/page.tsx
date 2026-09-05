@@ -9,6 +9,7 @@ import {
   TrendingUp,
   BarChart2,
   Plus,
+  Tv,
 } from "lucide-react";
 import Link from "next/link";
 import {
@@ -24,6 +25,12 @@ import {
 import { Money, sumLedgerMinorUnits, getCreatorLaunchMessaging } from "@caribbean/payments";
 import BecomeCreatorClientButton from "../../components/become-creator-button";
 import CreatorStudioActions from "../../components/creator-studio-actions";
+import CreatorContentManager, {
+  type CreatorVideoItem,
+  type CreatorPodcastItem,
+  type CreatorLivestreamItem,
+} from "../../components/creator/creator-content-manager";
+import type { CreatorDraftItem } from "../../lib/creator/draft-actions";
 
 export const dynamic = "force-dynamic";
 
@@ -44,33 +51,20 @@ interface SubscriptionRow {
   currency: string;
 }
 
-interface VideoRow {
-  id: string;
-  title: string;
-  video_kind: string;
-  view_count: number;
-  created_at: string;
-}
-
-interface PodcastRow {
-  id: string;
-  title: string;
-  follower_count: number;
-  podcast_episodes: Array<{ id: string }>;
-}
-
-interface LedgerEntry {
-  amount: number;
-  entry_type: "DEBIT" | "CREDIT";
-}
-
 interface LedgerAccount {
   id: string;
   account_type: string;
   currency: string;
 }
 
-export default async function CreatorStudioPage() {
+export default async function CreatorStudioPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ tab?: string }>;
+}) {
+  const resolvedParams = searchParams ? await searchParams : {};
+  const currentTab = (resolvedParams.tab as any) || 'all';
+
   const user = await getCurrentUser();
   if (!user) redirect("/login?next=/creator-studio");
 
@@ -100,6 +94,8 @@ export default async function CreatorStudioPage() {
     subscriptionsResult,
     videosResult,
     podcastsResult,
+    livestreamsResult,
+    draftsResult,
     ledgerAccountResult,
   ] = await Promise.all([
     supabase
@@ -108,14 +104,28 @@ export default async function CreatorStudioPage() {
       .eq("creator_account_id", account.id),
     supabase
       .from("videos")
-      .select("id, title, video_kind, view_count, created_at")
+      .select("id, title, video_kind, view_count, visibility, created_at")
       .eq("creator_id", user.id)
       .order("created_at", { ascending: false })
-      .limit(10),
+      .limit(50),
     supabase
       .from("podcasts")
-      .select("id, title, follower_count, podcast_episodes(id)")
-      .eq("creator_id", user.id),
+      .select(
+        "id, title, slug, follower_count, podcast_episodes(id, title, season_number, episode_number, duration_seconds, published_at, scheduled_for, is_subscriber_only, audio_path)"
+      )
+      .eq("creator_id", user.id)
+      .order("created_at", { ascending: false }),
+    supabase
+      .from("livestreams")
+      .select("id, title, state, access_level, peak_viewers, scheduled_for, started_at, ended_at, stream_url")
+      .eq("creator_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(50),
+    supabase
+      .from("creator_content_drafts")
+      .select("*")
+      .eq("creator_id", user.id)
+      .order("updated_at", { ascending: false }),
     supabase
       .from("ledger_accounts")
       .select("id, account_type, currency")
@@ -125,9 +135,64 @@ export default async function CreatorStudioPage() {
   ]);
 
   const subscriptions = (subscriptionsResult.data ?? []) as SubscriptionRow[];
-  const videos = (videosResult.data ?? []) as VideoRow[];
-  const podcasts = (podcastsResult.data ?? []) as unknown as PodcastRow[];
+  const rawVideos = (videosResult.data ?? []) as any[];
+  const rawPodcasts = (podcastsResult.data ?? []) as any[];
+  const rawLivestreams = (livestreamsResult.data ?? []) as any[];
+  const rawDrafts = (draftsResult.data ?? []) as any[];
   const ledgerAccount = ledgerAccountResult.data as LedgerAccount | null;
+
+  // Format data
+  const videos: CreatorVideoItem[] = rawVideos.map((v) => ({
+    id: v.id,
+    title: v.title,
+    video_kind: v.video_kind,
+    view_count: v.view_count || 0,
+    visibility: v.visibility || 'public',
+    created_at: v.created_at,
+  }));
+
+  const podcasts: CreatorPodcastItem[] = rawPodcasts.map((p) => ({
+    id: p.id,
+    title: p.title,
+    slug: p.slug,
+    follower_count: p.follower_count || 0,
+    episodes: (p.podcast_episodes || []).map((ep: any) => ({
+      id: ep.id,
+      title: ep.title,
+      season_number: ep.season_number,
+      episode_number: ep.episode_number,
+      duration_seconds: ep.duration_seconds,
+      published_at: ep.published_at,
+      scheduled_for: ep.scheduled_for,
+      is_subscriber_only: ep.is_subscriber_only,
+      audio_path: ep.audio_path,
+    })),
+  }));
+
+  const livestreams: CreatorLivestreamItem[] = rawLivestreams.map((l) => ({
+    id: l.id,
+    title: l.title,
+    state: l.state,
+    access_level: l.access_level,
+    peak_viewers: l.peak_viewers || 0,
+    scheduled_for: l.scheduled_for,
+    started_at: l.started_at,
+    ended_at: l.ended_at,
+    stream_url: l.stream_url,
+  }));
+
+  const drafts: CreatorDraftItem[] = rawDrafts.map((d) => ({
+    id: d.id,
+    creator_id: d.creator_id,
+    content_type: d.content_type,
+    title: d.title,
+    body: d.body,
+    media_urls: d.media_urls || [],
+    metadata: d.metadata || {},
+    scheduled_for: d.scheduled_for,
+    created_at: d.created_at,
+    updated_at: d.updated_at,
+  }));
 
   // Compute active subscription count and monthly revenue
   const activeSubscriptions = subscriptions.filter((s) =>
@@ -168,7 +233,7 @@ export default async function CreatorStudioPage() {
     0,
   );
   const totalEpisodes = podcasts.reduce(
-    (sum, p) => sum + (p.podcast_episodes?.length ?? 0),
+    (sum, p) => sum + p.episodes.length,
     0,
   );
   const currency = ledgerAccount?.currency ?? "USD";
@@ -176,12 +241,12 @@ export default async function CreatorStudioPage() {
   const creatorLaunch = getCreatorLaunchMessaging();
 
   return (
-    <div className="min-h-screen bg-transparent text-brand-sandstone p-4 md:p-6 lg:p-8 max-w-6xl mx-auto space-y-8">
+    <div className="min-h-screen bg-transparent text-brand-sandstone p-4 md:p-6 lg:p-8 max-w-7xl mx-auto space-y-8">
       {/* Surface Header */}
-      <div className="surface-header p-6 sm:p-8 rounded-3xl flex flex-col md:flex-row md:items-center justify-between gap-6">
+      <div className="surface-header p-6 sm:p-8 rounded-3xl flex flex-col md:flex-row md:items-center justify-between gap-6 border border-white/15 shadow-2xl">
         <div className="space-y-2 max-w-xl">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-orange-500/10 border border-orange-500/30 text-orange-300 text-xs font-black uppercase tracking-wider">
-            <Radio className="w-3.5 h-3.5" /> Creator Dashboard
+            <Radio className="w-3.5 h-3.5" /> Creator Studio Command Center
           </div>
           <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black text-white tracking-tight flex items-center gap-3">
             Creator Studio
@@ -200,10 +265,10 @@ export default async function CreatorStudioPage() {
         <div className="flex flex-wrap items-center gap-3">
           <CreatorStudioActions displayName={user.displayName} />
           <Link
-            href="/podcasts"
-            className="bg-white/10 hover:bg-white/20 text-white font-black px-4 py-2.5 rounded-xl text-xs flex items-center gap-2 transition-all min-h-[44px] border border-white/15"
+            href="/create"
+            className="bg-brand-sunriseCoral hover:brightness-110 text-slate-950 font-black px-4 py-2.5 rounded-xl text-xs flex items-center gap-2 transition-all shadow-md shadow-brand-sunriseCoral/20 min-h-[44px]"
           >
-            <Mic className="w-4 h-4 text-orange-400" /> Manage Podcasts
+            <Plus className="w-4 h-4 stroke-[3]" /> Create Hub
           </Link>
           <Link
             href="/live/broadcast"
@@ -230,28 +295,28 @@ export default async function CreatorStudioPage() {
       </div>
 
       {/* Metric Cards Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-        <div className="surface-card surface-card-interactive rounded-3xl p-6 space-y-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+        <div className="surface-card surface-card-interactive rounded-3xl p-5 space-y-2">
           <span className="text-xs font-black text-orange-400 uppercase tracking-wider flex items-center gap-1.5">
-            <Users className="w-4 h-4" /> Active Subscribers
+            <Users className="w-4 h-4" /> Subscribers
           </span>
-          <div className="text-3xl sm:text-4xl font-black text-white tracking-tight">
+          <div className="text-2xl sm:text-3xl font-black text-white tracking-tight">
             {activeSubscriptions.length.toLocaleString()}
           </div>
-          <span className="text-xs text-brand-sandstone/70 font-medium block">
-            {subscriptions.length} total subscriptions
+          <span className="text-[11px] text-brand-sandstone/70 font-medium block">
+            {subscriptions.length} total memberships
           </span>
         </div>
 
-        <div className="surface-card surface-card-interactive rounded-3xl p-6 space-y-3">
+        <div className="surface-card surface-card-interactive rounded-3xl p-5 space-y-2">
           <span className="text-xs font-black text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
-            <DollarSign className="w-4 h-4" /> Pending Balance
+            <DollarSign className="w-4 h-4" /> Balance
           </span>
-          <div className="text-3xl sm:text-4xl font-black text-white tracking-tight">
+          <div className="text-2xl sm:text-3xl font-black text-white tracking-tight">
             {new Money(Math.abs(pendingBalanceMinor), currency).format()}
           </div>
           <span
-            className={`text-xs font-bold block ${
+            className={`text-[11px] font-bold block ${
               payoutEligibility.eligible ? "text-emerald-400" : "text-amber-300"
             }`}
           >
@@ -261,32 +326,44 @@ export default async function CreatorStudioPage() {
           </span>
         </div>
 
-        <div className="surface-card surface-card-interactive rounded-3xl p-6 space-y-3">
+        <div className="surface-card surface-card-interactive rounded-3xl p-5 space-y-2">
           <span className="text-xs font-black text-emerald-400 uppercase tracking-wider flex items-center gap-1.5">
             <TrendingUp className="w-4 h-4" /> Video Views
           </span>
-          <div className="text-3xl sm:text-4xl font-black text-white tracking-tight">
+          <div className="text-2xl sm:text-3xl font-black text-white tracking-tight">
             {totalVideoViews.toLocaleString()}
           </div>
-          <span className="text-xs text-brand-sandstone/70 font-medium block">
+          <span className="text-[11px] text-brand-sandstone/70 font-medium block">
             Across {videos.length} video{videos.length !== 1 ? "s" : ""}
           </span>
         </div>
 
-        <div className="surface-card surface-card-interactive rounded-3xl p-6 space-y-3">
+        <div className="surface-card surface-card-interactive rounded-3xl p-5 space-y-2">
           <span className="text-xs font-black text-purple-400 uppercase tracking-wider flex items-center gap-1.5">
             <Mic className="w-4 h-4" /> Podcasts
           </span>
-          <div className="text-3xl sm:text-4xl font-black text-white tracking-tight">
+          <div className="text-2xl sm:text-3xl font-black text-white tracking-tight">
             {podcasts.length}
           </div>
-          <span className="text-xs text-brand-sandstone/70 font-medium block">
+          <span className="text-[11px] text-brand-sandstone/70 font-medium block">
             {totalEpisodes} episode{totalEpisodes !== 1 ? "s" : ""} total
+          </span>
+        </div>
+
+        <div className="surface-card surface-card-interactive rounded-3xl p-5 space-y-2">
+          <span className="text-xs font-black text-red-400 uppercase tracking-wider flex items-center gap-1.5">
+            <Tv className="w-4 h-4" /> Live Streams
+          </span>
+          <div className="text-2xl sm:text-3xl font-black text-white tracking-tight">
+            {livestreams.length}
+          </div>
+          <span className="text-[11px] text-brand-sandstone/70 font-medium block">
+            {livestreams.filter(l => l.state === 'live').length} currently live
           </span>
         </div>
       </div>
 
-      {/* Monthly revenue breakdown */}
+      {/* Monthly revenue breakdown (if gross > 0) */}
       {feeResult && (
         <div className="surface-card rounded-3xl p-6 sm:p-8 space-y-5 border border-white/15">
           <h3 className="text-base sm:text-lg font-black text-white flex items-center gap-2">
@@ -332,53 +409,15 @@ export default async function CreatorStudioPage() {
         </div>
       )}
 
-      {/* Recent Videos */}
-      {videos.length > 0 && (
-        <div className="surface-card rounded-3xl p-6 sm:p-8 space-y-4 border border-white/15">
-          <div className="flex items-center justify-between">
-            <h3 className="text-base font-black text-white flex items-center gap-2">
-              <Video className="w-5 h-5 text-orange-400" /> Recent Videos
-            </h3>
-            {videos.length >= 10 && (
-              <Link
-                href="/creator-studio/videos"
-                className="text-xs font-black uppercase tracking-wider text-orange-400 hover:text-orange-300 transition-colors"
-              >
-                View All →
-              </Link>
-            )}
-          </div>
-          <div className="space-y-3">
-            {videos.map((video) => (
-              <div
-                key={video.id}
-                className="surface-card surface-card-interactive rounded-2xl p-4 flex items-center justify-between gap-4"
-              >
-                <div className="min-w-0">
-                  <p className="text-sm sm:text-base font-black text-white truncate">
-                    {video.title}
-                  </p>
-                  <p className="text-xs text-brand-sandstone/70 mt-0.5">
-                    {video.video_kind} · {video.view_count.toLocaleString()} views
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {videos.length === 0 && podcasts.length === 0 && (
-        <div className="surface-card rounded-3xl p-12 text-center space-y-3 border border-white/10 max-w-md mx-auto">
-          <div className="w-14 h-14 rounded-2xl bg-white/5 border border-white/15 flex items-center justify-center mx-auto text-brand-sandstone/60">
-            <Plus className="w-7 h-7" />
-          </div>
-          <h3 className="text-base font-black text-white">No content published yet</h3>
-          <p className="text-xs sm:text-sm text-brand-sandstone/70 leading-relaxed">
-            Start by publishing your first podcast, scheduling an event, or going live to your fans!
-          </p>
-        </div>
-      )}
+      {/* Interactive Content Management Command Center */}
+      <CreatorContentManager
+        user={{ id: user.id, displayName: user.displayName, username: user.username }}
+        videos={videos}
+        podcasts={podcasts}
+        livestreams={livestreams}
+        drafts={drafts}
+        initialTab={currentTab}
+      />
     </div>
   );
 }
@@ -411,4 +450,3 @@ function CreatorOnboarding({
     </div>
   );
 }
-

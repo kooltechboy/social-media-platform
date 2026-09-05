@@ -2,25 +2,9 @@ import React from 'react';
 import { Mic, Radio } from 'lucide-react';
 import Link from 'next/link';
 import { createSupabaseServerClient, getCurrentUser } from '../../lib/supabase/server';
-import PodcastNetworkFeed from '../../components/podcasts/podcast-network-feed';
+import PodcastNetworkFeed, { type PodcastShowItem } from '../../components/podcasts/podcast-network-feed';
 
 export const dynamic = 'force-dynamic';
-
-interface Podcast {
-  id: string;
-  title: string;
-  slug: string;
-  description: string | null;
-  is_paid: boolean;
-  follower_count: number;
-  language: string | null;
-  cover_path: string | null;
-  creator_id: string;
-  profiles: { display_name: string; username: string } | null;
-  podcast_episodes: Array<{ id: string }>;
-  category?: string;
-  episodesCount?: number;
-}
 
 const PODCAST_CATEGORIES = [
   'All Shows',
@@ -42,13 +26,14 @@ export default async function PodcastsPage({
 
   const [user, supabase] = await Promise.all([getCurrentUser(), createSupabaseServerClient()]);
 
-  let podcasts: Podcast[] = [];
-  let followingSet = new Set<string>();
+  let podcasts: PodcastShowItem[] = [];
 
   if (supabase) {
     let query = supabase
       .from('podcasts')
-      .select('id, title, slug, description, is_paid, follower_count, language, cover_path, creator_id, profiles:profiles!podcasts_creator_id_fkey(display_name, username), podcast_episodes(id)')
+      .select(
+        'id, title, slug, description, is_paid, follower_count, language, cover_path, creator_id, profiles:profiles!podcasts_creator_id_fkey(display_name, username), podcast_episodes(id, title, audio_path, duration_seconds, show_notes, transcript, chapters, published_at, season_number, episode_number, is_subscriber_only)'
+      )
       .order('follower_count', { ascending: false })
       .limit(24);
 
@@ -66,7 +51,59 @@ export default async function PodcastsPage({
 
     const { data } = await query;
     if (data && data.length > 0) {
-      podcasts = data as unknown as Podcast[];
+      podcasts = data.map((d: any) => {
+        const episodes = (d.podcast_episodes || []) as any[];
+        // Find latest published episode
+        const publishedEps = episodes
+          .filter((ep) => ep.published_at !== null)
+          .sort((a, b) => new Date(b.published_at).getTime() - new Date(a.published_at).getTime());
+
+        const activeEp = publishedEps[0] || episodes[0] || null;
+
+        let audioUrl: string | undefined = undefined;
+        if (activeEp?.audio_path) {
+          if (activeEp.audio_path.startsWith('http')) {
+            audioUrl = activeEp.audio_path;
+          } else {
+            const { data: pubData } = supabase.storage
+              .from('podcast-audio')
+              .getPublicUrl(activeEp.audio_path);
+            audioUrl = pubData?.publicUrl;
+          }
+        }
+
+        let coverUrl: string | null = null;
+        if (d.cover_path) {
+          if (d.cover_path.startsWith('http')) {
+            coverUrl = d.cover_path;
+          } else {
+            const { data: pubData } = supabase.storage
+              .from('post-media')
+              .getPublicUrl(d.cover_path);
+            coverUrl = pubData?.publicUrl;
+          }
+        }
+
+        return {
+          id: d.id,
+          title: d.title,
+          slug: d.slug,
+          description: d.description,
+          is_paid: d.is_paid,
+          follower_count: d.follower_count || 0,
+          language: d.language,
+          cover_path: coverUrl || d.cover_path,
+          creator_id: d.creator_id,
+          category: activeCategory !== 'All Shows' ? activeCategory : 'Caribbean Voice',
+          episodesCount: episodes.length,
+          podcast_episodes: episodes,
+          audioUrl: audioUrl,
+          latestEpisodeTitle: activeEp?.title,
+          chapters: activeEp?.chapters || [],
+          transcript: activeEp?.transcript || undefined,
+          profiles: d.profiles,
+        };
+      });
     }
   }
 
@@ -125,7 +162,7 @@ export default async function PodcastsPage({
 
       {/* Podcasts Grid with Live Audio Player */}
       <PodcastNetworkFeed
-        podcasts={podcasts as any}
+        podcasts={podcasts}
         user={
           user
             ? {

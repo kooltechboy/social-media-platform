@@ -66,9 +66,6 @@ interface FloatingReaction {
   left: number;
 }
 
-const DEFAULT_STREAM_VIDEO =
-  'https://assets.mixkit.co/videos/preview/mixkit-caribbean-tropical-beach-with-turquoise-water-41221-large.mp4';
-
 export default function LiveViewerPlayer({ stream, user }: LiveViewerPlayerProps) {
   if (!stream) {
     return (
@@ -322,16 +319,33 @@ function ActiveLivePlayer({
           {/* Main Video Viewport */}
           <div className="aspect-video relative overflow-hidden flex items-center justify-center">
             {isLive ? (
-              <video
-                ref={videoRef}
-                src={stream.videoUrl || DEFAULT_STREAM_VIDEO}
-                autoPlay
-                playsInline
-                loop
-                muted={isMuted}
-                className="w-full h-full object-cover cursor-pointer"
-                onClick={togglePlay}
-              />
+              stream.videoUrl ? (
+                <video
+                  ref={videoRef}
+                  src={stream.videoUrl}
+                  autoPlay
+                  playsInline
+                  loop
+                  muted={isMuted}
+                  className="w-full h-full object-cover cursor-pointer"
+                  onClick={togglePlay}
+                />
+              ) : (
+                <div className="absolute inset-0 bg-gradient-to-br from-slate-950 via-slate-900 to-red-950/40 flex flex-col items-center justify-center p-6 text-center space-y-4">
+                  <div className="relative">
+                    <span className="w-16 h-16 rounded-full bg-red-600/30 animate-ping absolute inset-0" />
+                    <div className="w-16 h-16 rounded-2xl bg-red-600/20 border border-red-500/50 flex items-center justify-center text-red-400 relative z-10">
+                      <Radio className="w-8 h-8 animate-pulse" />
+                    </div>
+                  </div>
+                  <div className="space-y-1">
+                    <h3 className="text-base font-black text-white">Live Broadcast Active</h3>
+                    <p className="text-xs text-brand-sandstone/75 max-w-sm">
+                      Host is transmitting live from the Caribbean. Audio &amp; live chat are connected.
+                    </p>
+                  </div>
+                </div>
+              )
             ) : (
               <div className="absolute inset-0 bg-slate-950 flex flex-col items-center justify-center p-6 text-center space-y-3 z-10">
                 <div className="w-16 h-16 rounded-3xl bg-brand-twilight border border-slate-800 flex items-center justify-center text-3xl">

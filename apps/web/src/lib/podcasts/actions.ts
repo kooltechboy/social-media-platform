@@ -23,6 +23,7 @@ export async function createPodcastAction(
   const description = String(formData.get('description') ?? '').trim();
   const languageIso = String(formData.get('languageIso') ?? '').trim() || null;
   const isPaid = formData.get('isPaid') === 'true';
+  const coverPath = String(formData.get('coverPath') ?? '').trim() || null;
 
   if (!title || title.length < 2) {
     return { error: 'Podcast title must be at least 2 characters.', success: null };
@@ -42,13 +43,16 @@ export async function createPodcastAction(
     title,
     slug,
     description: description || null,
+    cover_path: coverPath,
     language: languageIso,
     is_paid: isPaid,
+    follower_count: 0,
   });
 
   if (error) return { error: error.message, success: null };
 
   revalidatePath('/podcasts');
+  revalidatePath('/creator-studio');
   return { error: null, success: 'Podcast show successfully created!', podcastSlug: slug };
 }
 
@@ -63,11 +67,13 @@ export interface PublishEpisodeParams {
   transcript?: string;
   chapters?: Chapter[];
   isSubscriberOnly?: boolean;
+  isDraft?: boolean;
+  scheduledFor?: string | null;
 }
 
 export async function publishEpisodeAction(
   params: PublishEpisodeParams,
-): Promise<{ success: boolean; error?: string }> {
+): Promise<{ success: boolean; error?: string; episodeId?: string }> {
   const user = await getCurrentUser();
   if (!user) return { success: false, error: 'Sign in to publish episodes.' };
 
@@ -95,23 +101,103 @@ export async function publishEpisodeAction(
   const supabase = await createSupabaseServerClient();
   if (!supabase) return { success: false, error: 'Service unavailable.' };
 
-  const { error } = await supabase.from('podcast_episodes').insert({
-    podcast_id: params.podcastId,
-    season_number: params.seasonNumber,
-    episode_number: params.episodeNumber,
-    title: params.title.trim(),
-    audio_path: params.audioPath,
-    duration_seconds: params.durationSeconds,
-    show_notes: params.showNotes || null,
-    transcript: params.transcript || null,
-    chapters: params.chapters || [],
-    is_subscriber_only: Boolean(params.isSubscriberOnly),
-    published_at: new Date().toISOString(),
-  });
+  const isDraft = Boolean(params.isDraft);
+  const isScheduled = Boolean(params.scheduledFor && new Date(params.scheduledFor).getTime() > Date.now());
+
+  const publishedAt = isDraft || isScheduled ? null : new Date().toISOString();
+  const scheduledFor = isScheduled && params.scheduledFor ? new Date(params.scheduledFor).toISOString() : null;
+
+  const { data, error } = await supabase
+    .from('podcast_episodes')
+    .insert({
+      podcast_id: params.podcastId,
+      season_number: params.seasonNumber,
+      episode_number: params.episodeNumber,
+      title: params.title.trim(),
+      audio_path: params.audioPath,
+      duration_seconds: params.durationSeconds,
+      show_notes: params.showNotes || null,
+      transcript: params.transcript || null,
+      chapters: params.chapters || [],
+      is_subscriber_only: Boolean(params.isSubscriberOnly),
+      published_at: publishedAt,
+      scheduled_for: scheduledFor,
+    })
+    .select('id')
+    .single();
 
   if (error) return { success: false, error: error.message };
 
   revalidatePath('/podcasts');
+  revalidatePath('/creator-studio');
+  return { success: true, episodeId: data?.id };
+}
+
+export async function deletePodcastAction(
+  podcastId: string,
+): Promise<{ success: boolean; error?: string }> {
+  const user = await getCurrentUser();
+  if (!user) return { success: false, error: 'Unauthorized.' };
+
+  const supabase = await createSupabaseServerClient();
+  if (!supabase) return { success: false, error: 'Service unavailable.' };
+
+  const { error } = await supabase
+    .from('podcasts')
+    .delete()
+    .eq('id', podcastId)
+    .eq('creator_id', user.id);
+
+  if (error) return { success: false, error: error.message };
+
+  revalidatePath('/podcasts');
+  revalidatePath('/creator-studio');
+  return { success: true };
+}
+
+export async function deletePodcastEpisodeAction(
+  episodeId: string,
+): Promise<{ success: boolean; error?: string }> {
+  const user = await getCurrentUser();
+  if (!user) return { success: false, error: 'Unauthorized.' };
+
+  const supabase = await createSupabaseServerClient();
+  if (!supabase) return { success: false, error: 'Service unavailable.' };
+
+  // Delete will be allowed by the updated RLS policy if creator owns the parent podcast
+  const { error } = await supabase
+    .from('podcast_episodes')
+    .delete()
+    .eq('id', episodeId);
+
+  if (error) return { success: false, error: error.message };
+
+  revalidatePath('/podcasts');
+  revalidatePath('/creator-studio');
+  return { success: true };
+}
+
+export async function publishDraftEpisodeAction(
+  episodeId: string,
+): Promise<{ success: boolean; error?: string }> {
+  const user = await getCurrentUser();
+  if (!user) return { success: false, error: 'Unauthorized.' };
+
+  const supabase = await createSupabaseServerClient();
+  if (!supabase) return { success: false, error: 'Service unavailable.' };
+
+  const { error } = await supabase
+    .from('podcast_episodes')
+    .update({
+      published_at: new Date().toISOString(),
+      scheduled_for: null,
+    })
+    .eq('id', episodeId);
+
+  if (error) return { success: false, error: error.message };
+
+  revalidatePath('/podcasts');
+  revalidatePath('/creator-studio');
   return { success: true };
 }
 
@@ -128,7 +214,12 @@ export async function followPodcastAction(podcastId: string): Promise<PodcastAct
 
   if (error) return { error: error.message, success: null };
 
-  await supabase.rpc('increment_podcast_followers', { p_podcast_id: podcastId });
+  // Trigger trg_podcast_follower_count handles the counter, with RPC fallback
+  try {
+    await supabase.rpc('increment_podcast_followers', { p_podcast_id: podcastId });
+  } catch {
+    // Ignore RPC failure if trigger already executed
+  }
 
   revalidatePath('/podcasts');
   return { error: null, success: 'Following.' };
@@ -148,6 +239,12 @@ export async function unfollowPodcastAction(podcastId: string): Promise<PodcastA
     .eq('profile_id', user.id);
 
   if (error) return { error: error.message, success: null };
+
+  try {
+    await supabase.rpc('decrement_podcast_followers', { p_podcast_id: podcastId });
+  } catch {
+    // Ignore RPC failure if trigger already executed
+  }
 
   revalidatePath('/podcasts');
   return { error: null, success: 'Unfollowed.' };
