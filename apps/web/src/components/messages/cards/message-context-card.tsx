@@ -67,6 +67,7 @@ export default function MessageContextCard({
 
         <div className="flex gap-3 items-center">
           {product.imageUrl ? (
+            /* eslint-disable-next-line @next/next/no-img-element */
             <img
               src={product.imageUrl}
               alt={product.title}
@@ -146,6 +147,7 @@ export default function MessageContextCard({
 
         <div className="flex gap-3 items-center">
           {event.coverUrl ? (
+            /* eslint-disable-next-line @next/next/no-img-element */
             <img
               src={event.coverUrl}
               alt={event.title}
@@ -222,6 +224,7 @@ export default function MessageContextCard({
 
         <div className="flex gap-3 items-center">
           {store.logoUrl ? (
+            /* eslint-disable-next-line @next/next/no-img-element */
             <img
               src={store.logoUrl}
               alt={store.name}
@@ -295,6 +298,7 @@ export default function MessageContextCard({
 
         <div className="flex gap-3 items-center">
           {prof.avatarUrl ? (
+            /* eslint-disable-next-line @next/next/no-img-element */
             <img
               src={prof.avatarUrl}
               alt={prof.displayName}

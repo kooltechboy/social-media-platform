@@ -148,7 +148,7 @@ export default async function NotificationsPage() {
             <div className="space-y-1">
               <h3 className="text-lg font-black text-white">No notifications yet</h3>
               <p className="text-sm text-brand-sandstone/70 leading-relaxed">
-                When Caribbean creators and friends interact with your content, tips, or orders, they'll appear here.
+                When Caribbean creators and friends interact with your content, tips, or orders, they&apos;ll appear here.
               </p>
             </div>
           </div>
