@@ -19,11 +19,11 @@ setup('authenticate', async ({ page }) => {
         origin: 'http://localhost:3100',
         localStorage: [
           {
-            name: 'caribbean_one_user_session',
+            name: 'tukubi_user_session',
             value: JSON.stringify({
               id: 'usr_playwright_test_01',
-              email: 'testuser@caribbeanone.app',
-              username: 'caribbean_tester',
+              email: 'testuser@tukubi.com',
+              username: 'tukubi_tester',
               displayName: 'Tukubi Tester',
               role: 'user',
             }),

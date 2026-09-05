@@ -210,7 +210,7 @@ export default function SoundsDirectoryClient({
                   {activeSound.flag} {activeSound.countryName}
                 </span>
                 <span className="text-xs text-brand-goldenHour font-black">
-                  🔥 {activeSound.usageCountFormatted} Reels
+                  {activeSound.usageCount > 0 ? `🔥 ${activeSound.usageCountFormatted} Reels` : 'Official Sound Stem'}
                 </span>
               </div>
 
@@ -373,7 +373,7 @@ export default function SoundsDirectoryClient({
               {/* Bottom Actions */}
               <div className="pt-3 border-t border-white/10 flex items-center justify-between text-xs">
                 <span className="text-xs font-bold text-brand-sandstone/70">
-                  {sound.usageCountFormatted} videos
+                  {sound.usageCount > 0 ? `${sound.usageCountFormatted} videos` : 'Audio Stem'}
                 </span>
 
                 <div className="flex items-center gap-2">
