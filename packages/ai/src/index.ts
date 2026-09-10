@@ -49,6 +49,10 @@ Text: "${text}"`;
     }
   }
 
+  public async complete(prompt: string): Promise<string> {
+    return this.callOpenRouter(prompt);
+  }
+
   private async callOpenRouter(prompt: string): Promise<string> {
     if (!this.apiKey) {
       throw new Error('CARIBAI_NOT_CONFIGURED');

@@ -1,30 +1,11 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import Link from 'next/link';
+import { useRouter, useSearchParams } from 'next/navigation';
 import {
-  Video,
-  Music,
-  Heart,
-  MessageCircle,
-  Share2,
-  Wallet,
-  Play,
-  Pause,
-  Volume2,
-  VolumeX,
-  Sparkles,
-  Flame,
-  ChevronUp,
-  ChevronDown,
-  Plus,
-  Send,
-  X,
-  Copy,
-  Check,
-  UserPlus,
-  UserCheck,
-  Disc,
+  Video, Music, Heart, MessageCircle, Share2, Wallet, Play, Pause,
+  Volume2, VolumeX, Plus, Send, X, Copy, Check, UserPlus, UserCheck, Disc, Bookmark
 } from 'lucide-react';
 import {
   toggleReelLikeAction,
@@ -71,151 +52,283 @@ interface ReelsFeedViewerProps {
   } | null;
 }
 
-export default function ReelsFeedViewer({ initialReels, user }: ReelsFeedViewerProps) {
-  const [reels, setReels] = useState<ReelItem[]>(initialReels);
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [isPlaying, setIsPlaying] = useState(true);
-  const [isMuted, setIsMuted] = useState(true);
+function ReelCard({
+  reel,
+  isActive,
+  isNext,
+  isMuted,
+  toggleMute,
+  user,
+  likesState,
+  setLikesState,
+  followingState,
+  setFollowingState,
+  onOpenComments,
+  onOpenShare,
+}: {
+  reel: ReelItem;
+  isActive: boolean;
+  isNext: boolean;
+  isMuted: boolean;
+  toggleMute: () => void;
+  user: any;
+  likesState: Record<string, { count: number; liked: boolean }>;
+  setLikesState: React.Dispatch<React.SetStateAction<Record<string, { count: number; liked: boolean }>>>;
+  followingState: Record<string, boolean>;
+  setFollowingState: React.Dispatch<React.SetStateAction<Record<string, boolean>>>;
+  onOpenComments: (reelId: string) => void;
+  onOpenShare: (reelId: string) => void;
+}) {
+  const videoRef = useRef<HTMLVideoElement>(null);
   const [progress, setProgress] = useState(0);
-  const [currentTime, setCurrentTime] = useState('0:00');
-  const [durationTime, setDurationTime] = useState('0:30');
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [isSaved, setIsSaved] = useState(false);
+  const [isCaptionExpanded, setIsCaptionExpanded] = useState(false);
 
-  // Engagement States per Reel
+  useEffect(() => {
+    if (isActive) {
+      if (videoRef.current) {
+        videoRef.current.currentTime = 0;
+        const playPromise = videoRef.current.play();
+        if (playPromise !== undefined) {
+          playPromise.then(() => setIsPlaying(true)).catch(() => setIsPlaying(false));
+        }
+      }
+    } else {
+      if (videoRef.current) {
+        videoRef.current.pause();
+        setIsPlaying(false);
+      }
+    }
+  }, [isActive]);
+
+  const handleTimeUpdate = () => {
+    if (videoRef.current) {
+      const cur = videoRef.current.currentTime;
+      const dur = videoRef.current.duration || 1;
+      setProgress((cur / dur) * 100);
+    }
+  };
+
+  const handleTogglePlay = () => {
+    if (!videoRef.current) return;
+    if (isPlaying) {
+      videoRef.current.pause();
+      setIsPlaying(false);
+    } else {
+      videoRef.current.play().then(() => setIsPlaying(true)).catch(() => {});
+    }
+  };
+
+  const handleToggleLike = async () => {
+    const current = likesState[reel.id] || { count: 0, liked: false };
+    const nextLiked = !current.liked;
+    const nextCount = nextLiked ? current.count + 1 : Math.max(0, current.count - 1);
+    setLikesState(prev => ({ ...prev, [reel.id]: { count: nextCount, liked: nextLiked } }));
+    await toggleReelLikeAction(reel.id);
+  };
+
+  const handleToggleFollow = async () => {
+    const isFollowed = followingState[reel.handle] ?? false;
+    const nextFollow = !isFollowed;
+    setFollowingState(prev => ({ ...prev, [reel.handle]: nextFollow }));
+    if (reel.creatorId) {
+      if (nextFollow) await followAction(reel.creatorId);
+      else await unfollowAction(reel.creatorId);
+    }
+  };
+
+  const currentLike = likesState[reel.id] || { count: parseInt(reel.likes.replace(/[^0-9]/g, ''), 10) || 0, liked: reel.initialLiked || false };
+  const isFollowed = followingState[reel.handle] ?? false;
+
+  const preloadState = isActive || isNext ? 'auto' : 'none';
+  const displayUrl = reel.videoUrl?.startsWith('http') ? reel.videoUrl : reel.videoUrl ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/${reel.videoUrl}` : undefined;
+
+  return (
+    <div className="h-full w-full snap-start snap-always relative overflow-hidden bg-black reel-container" data-reel-id={reel.id}>
+      {/* Video or Fallback */}
+      <div onClick={handleTogglePlay} className="absolute inset-0 cursor-pointer flex items-center justify-center">
+        {displayUrl ? (
+          <video
+            ref={videoRef}
+            src={displayUrl}
+            preload={preloadState}
+            playsInline
+            loop
+            muted={isMuted}
+            onTimeUpdate={handleTimeUpdate}
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <div className={`absolute inset-0 bg-gradient-to-t ${reel.gradient} flex items-center justify-center`}>
+             <div className="w-20 h-20 rounded-full bg-black/40 flex items-center justify-center text-white">
+                <Play className="w-8 h-8 fill-current translate-x-1" />
+             </div>
+          </div>
+        )}
+      </div>
+
+      {/* Progress Bar */}
+      <div className="absolute top-0 left-0 w-full h-1 bg-white/20 z-20">
+        <div className="h-full bg-brand-sunriseCoral transition-all duration-100 ease-linear" style={{ width: `${progress}%` }} />
+      </div>
+
+      {/* Mute Button */}
+      <button 
+        onClick={toggleMute} 
+        aria-label={isMuted ? 'Unmute' : 'Mute'}
+        className="absolute top-4 right-4 z-20 w-10 h-10 rounded-full bg-black/40 backdrop-blur-md flex items-center justify-center text-white border border-white/10"
+      >
+        {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
+      </button>
+
+      {/* Right Action Rail */}
+      <div className="absolute right-4 bottom-24 flex flex-col items-center gap-6 z-20">
+        <button onClick={handleToggleLike} aria-label="Like" className="flex flex-col items-center gap-1 group">
+          <div className={`w-12 h-12 rounded-full flex items-center justify-center backdrop-blur-md transition-transform active:scale-90 ${currentLike.liked ? 'bg-rose-500 text-white' : 'bg-black/40 text-white'}`}>
+            <Heart className={`w-6 h-6 ${currentLike.liked ? 'fill-current scale-110' : ''}`} />
+          </div>
+          <span className="text-xs font-bold text-white shadow-black drop-shadow-md">
+            {currentLike.count >= 1000 ? `${(currentLike.count / 1000).toFixed(1)}K` : currentLike.count}
+          </span>
+        </button>
+
+        <button onClick={() => onOpenComments(reel.id)} aria-label="Comments" className="flex flex-col items-center gap-1 group active:scale-90 transition-transform">
+          <div className="w-12 h-12 rounded-full bg-black/40 flex items-center justify-center backdrop-blur-md text-white">
+            <MessageCircle className="w-6 h-6" />
+          </div>
+          <span className="text-xs font-bold text-white shadow-black drop-shadow-md">{reel.comments}</span>
+        </button>
+
+        <button onClick={() => setIsSaved(!isSaved)} aria-label="Save" className="flex flex-col items-center gap-1 group active:scale-90 transition-transform">
+          <div className="w-12 h-12 rounded-full bg-black/40 flex items-center justify-center backdrop-blur-md text-white">
+            <Bookmark className={`w-6 h-6 ${isSaved ? 'fill-current text-brand-goldenHour' : ''}`} />
+          </div>
+          <span className="text-xs font-bold text-white shadow-black drop-shadow-md">Save</span>
+        </button>
+
+        <button onClick={() => onOpenShare(reel.id)} aria-label="Share" className="flex flex-col items-center gap-1 group active:scale-90 transition-transform">
+          <div className="w-12 h-12 rounded-full bg-black/40 flex items-center justify-center backdrop-blur-md text-white">
+            <Share2 className="w-6 h-6" />
+          </div>
+          <span className="text-xs font-bold text-white shadow-black drop-shadow-md">Share</span>
+        </button>
+
+        <div className="relative mt-2">
+          <Link href={`/profile/${reel.handle}`} aria-label="Creator Profile">
+            <div className="w-12 h-12 rounded-full border-2 border-white overflow-hidden bg-brand-twilight flex items-center justify-center">
+              <span className="text-lg">🌴</span>
+            </div>
+          </Link>
+          <button 
+            onClick={handleToggleFollow} 
+            aria-label={isFollowed ? 'Unfollow' : 'Follow'}
+            className={`absolute -bottom-2 left-1/2 -translate-x-1/2 w-6 h-6 rounded-full flex items-center justify-center text-white border-2 border-black ${isFollowed ? 'bg-brand-caribbeanSea' : 'bg-rose-500'}`}
+          >
+            {isFollowed ? <Check className="w-3 h-3" /> : <Plus className="w-3 h-3" />}
+          </button>
+        </div>
+      </div>
+
+      {/* Bottom Left Info */}
+      <div className="absolute left-4 bottom-6 right-20 z-20 flex flex-col gap-2">
+        <Link href={`/profile/${reel.handle}`} className="flex items-center gap-2">
+          <span className="text-base font-bold text-white drop-shadow-md">{reel.creator}</span>
+          <span className="text-sm font-medium text-white/80 drop-shadow-md">@{reel.handle}</span>
+        </Link>
+        
+        <div className="text-sm text-white drop-shadow-md cursor-pointer" onClick={() => setIsCaptionExpanded(!isCaptionExpanded)}>
+          <p className={isCaptionExpanded ? '' : 'line-clamp-2'}>{reel.title}</p>
+        </div>
+        
+        {reel.location && (
+          <div className="flex flex-wrap gap-2 mt-1">
+            <span className="px-2 py-1 bg-black/40 backdrop-blur-md rounded-lg text-xs font-medium text-white border border-white/10">
+              📍 {reel.location}
+            </span>
+            <span className="px-2 py-1 bg-black/40 backdrop-blur-md rounded-lg text-xs font-medium text-brand-goldenHour border border-white/10">
+              Caribbean Culture
+            </span>
+          </div>
+        )}
+        
+        <div className="flex items-center gap-2 mt-2">
+          <Disc className="w-5 h-5 text-white animate-spin" style={{ animationDuration: '4s' }} />
+          <span className="text-sm font-medium text-white drop-shadow-md truncate">{reel.sound}</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default function ReelsFeedViewer({ initialReels, user }: ReelsFeedViewerProps) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const currentTab = searchParams?.get('tab') || 'for_you';
+  
+  const [reels, setReels] = useState<ReelItem[]>(initialReels);
+  const [isMuted, setIsMuted] = useState(true);
+  const [activeReelId, setActiveReelId] = useState<string | null>(initialReels[0]?.id || null);
+
   const [likesState, setLikesState] = useState<Record<string, { count: number; liked: boolean }>>(() => {
     const initial: Record<string, { count: number; liked: boolean }> = {};
     for (const r of initialReels) {
-      const numeric = parseInt(r.likes.replace(/[^0-9]/g, ''), 10) * (r.likes.includes('K') ? 1000 : 1) || 0;
+      const numeric = parseInt(r.likes.replace(/[^0-9]/g, ''), 10) || 0;
       initial[r.id] = { count: numeric, liked: r.initialLiked ?? false };
     }
     return initial;
   });
-
   const [followingState, setFollowingState] = useState<Record<string, boolean>>({});
 
-  // Slide-over sheets & Modals
   const [isCommentsOpen, setIsCommentsOpen] = useState(false);
+  const [activeCommentsReelId, setActiveCommentsReelId] = useState<string | null>(null);
   const [commentsByReel, setCommentsByReel] = useState<Record<string, CommentItem[]>>({});
   const [newCommentText, setNewCommentText] = useState('');
   const [isPostingComment, setIsPostingComment] = useState(false);
 
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+  const [activeShareReelId, setActiveShareReelId] = useState<string | null>(null);
   const [copiedLink, setCopiedLink] = useState(false);
 
-  const [isTipModalOpen, setIsTipModalOpen] = useState(false);
-  const [tipAmount, setTipAmount] = useState('5.00');
-  const [tipSuccess, setTipSuccess] = useState(false);
-
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const activeReel = reels[currentIndex] || reels[0];
-
-  // Auto record view on reel switch
   useEffect(() => {
-    if (activeReel?.id) {
-      void recordReelViewAction(activeReel.id, 3);
-    }
-    setProgress(0);
-    setIsPlaying(true);
-  }, [currentIndex, activeReel?.id]);
+    const options = { root: null, rootMargin: '0px', threshold: 0.6 };
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          const id = entry.target.getAttribute('data-reel-id');
+          if (id) {
+            setActiveReelId(id);
+            void recordReelViewAction(id, 3);
+          }
+        }
+      });
+    }, options);
+    const elements = document.querySelectorAll('.reel-container');
+    elements.forEach((el) => observer.observe(el));
+    return () => observer.disconnect();
+  }, [reels]);
 
-  // Video progress timeupdate
-  function handleTimeUpdate() {
-    if (videoRef.current) {
-      const cur = videoRef.current.currentTime;
-      const dur = videoRef.current.duration || 30;
-      setProgress((cur / dur) * 100);
+  const toggleMute = useCallback(() => setIsMuted(prev => !prev), []);
 
-      const mins = Math.floor(cur / 60);
-      const secs = Math.floor(cur % 60);
-      setCurrentTime(`${mins}:${secs < 10 ? '0' : ''}${secs}`);
+  const handleTabChange = (tab: string) => {
+    const params = new URLSearchParams(searchParams?.toString());
+    params.set('tab', tab);
+    router.push(`?${params.toString()}`);
+  };
 
-      const dMins = Math.floor(dur / 60);
-      const dSecs = Math.floor(dur % 60);
-      setDurationTime(`${dMins}:${dSecs < 10 ? '0' : ''}${dSecs}`);
-    }
-  }
+  const handleOpenComments = (reelId: string) => {
+    setActiveCommentsReelId(reelId);
+    setIsCommentsOpen(true);
+  };
 
-  function handleVideoEnded() {
-    if (videoRef.current) {
-      videoRef.current.currentTime = 0;
-      void videoRef.current.play();
-    }
-  }
+  const handleOpenShare = (reelId: string) => {
+    setActiveShareReelId(reelId);
+    setIsShareModalOpen(true);
+  };
 
-  function togglePlayPause() {
-    if (videoRef.current) {
-      if (isPlaying) {
-        videoRef.current.pause();
-        setIsPlaying(false);
-      } else {
-        void videoRef.current.play();
-        setIsPlaying(true);
-      }
-    } else {
-      setIsPlaying(!isPlaying);
-    }
-  }
-
-  function toggleMute() {
-    if (videoRef.current) {
-      videoRef.current.muted = !isMuted;
-    }
-    setIsMuted(!isMuted);
-  }
-
-  function handleNextReel() {
-    if (currentIndex < reels.length - 1) {
-      setCurrentIndex(currentIndex + 1);
-    } else {
-      setCurrentIndex(0); // loop around
-    }
-  }
-
-  function handlePrevReel() {
-    if (currentIndex > 0) {
-      setCurrentIndex(currentIndex - 1);
-    } else {
-      setCurrentIndex(reels.length - 1);
-    }
-  }
-
-  async function handleToggleLike() {
-    const current = likesState[activeReel.id] || { count: 1200, liked: false };
-    const nextLiked = !current.liked;
-    const nextCount = nextLiked ? current.count + 1 : Math.max(0, current.count - 1);
-
-    // Optimistic UI update
-    setLikesState((prev) => ({
-      ...prev,
-      [activeReel.id]: { count: nextCount, liked: nextLiked },
-    }));
-
-    await toggleReelLikeAction(activeReel.id);
-  }
-
-  async function handleToggleFollow() {
-    const isFollowed = followingState[activeReel.handle] ?? false;
-    const nextFollow = !isFollowed;
-
-    setFollowingState((prev) => ({
-      ...prev,
-      [activeReel.handle]: nextFollow,
-    }));
-
-    if (activeReel.creatorId) {
-      if (nextFollow) {
-        await followAction(activeReel.creatorId);
-      } else {
-        await unfollowAction(activeReel.creatorId);
-      }
-    }
-  }
-
-  async function handlePostComment(e: React.FormEvent) {
+  const handlePostComment = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newCommentText.trim()) return;
-
+    if (!newCommentText.trim() || !activeCommentsReelId) return;
     setIsPostingComment(true);
     const newComment: CommentItem = {
       id: `c_${Date.now()}`,
@@ -225,426 +338,85 @@ export default function ReelsFeedViewer({ initialReels, user }: ReelsFeedViewerP
       text: newCommentText.trim(),
       time: 'Just now',
     };
-
-    setCommentsByReel((prev) => ({
+    setCommentsByReel(prev => ({
       ...prev,
-      [activeReel.id]: [newComment, ...(prev[activeReel.id] ?? [])],
+      [activeCommentsReelId]: [newComment, ...(prev[activeCommentsReelId] ?? [])],
     }));
-
     setNewCommentText('');
-    await postReelCommentAction(activeReel.id, newComment.text);
+    await postReelCommentAction(activeCommentsReelId, newComment.text);
     setIsPostingComment(false);
-  }
+  };
 
-  function handleCopyShareLink() {
-    const url = typeof window !== 'undefined' ? `${window.location.origin}/reels?id=${activeReel.id}` : '';
+  const handleCopyShareLink = () => {
+    const url = typeof window !== 'undefined' && activeShareReelId ? `${window.location.origin}/reels?id=${activeShareReelId}` : '';
     if (navigator.clipboard) {
       void navigator.clipboard.writeText(url);
       setCopiedLink(true);
       setTimeout(() => setCopiedLink(false), 2000);
     }
-    void recordReelShareAction(activeReel.id, 'copy_link');
-  }
+    if (activeShareReelId) void recordReelShareAction(activeShareReelId, 'copy_link');
+  };
 
-  function handleNativeShare() {
-    const url = typeof window !== 'undefined' ? `${window.location.origin}/reels?id=${activeReel.id}` : '';
-    if (navigator.share) {
-      navigator
-        .share({
-          title: activeReel.title,
-          text: `Check out this Caribbean reel from @${activeReel.handle} on Tukubi!`,
-          url,
-        })
-        .then(() => recordReelShareAction(activeReel.id, 'native_share'))
-        .catch(() => {});
-    } else {
-      handleCopyShareLink();
-    }
-  }
-
-  function handleSendTip() {
-    setTipSuccess(true);
-    setTimeout(() => {
-      setTipSuccess(false);
-      setIsTipModalOpen(false);
-    }, 1500);
-  }
-
-  if (!activeReel) {
+  if (reels.length === 0) {
     return (
-      <div className="w-full flex flex-col items-center gap-6">
-        {/* Action Navigation Header */}
-        <div className="w-full flex items-center justify-between border-b border-slate-800 pb-4">
-          <div>
-            <h1 className="text-xl md:text-2xl font-black text-brand-sandstone flex items-center gap-2.5">
-              <Video className="w-6 h-6 text-rose-500" /> Caribbean Reels &amp; Shorts
-            </h1>
-            <p className="text-xs text-brand-sandstone/60 mt-1">
-              Immersive Caribbean short video stream, rhythm stems, and creator monetization.
-            </p>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <Link
-              href="/sounds"
-              className="hidden sm:flex items-center gap-1.5 px-3.5 py-2 rounded-2xl bg-brand-dusk border border-slate-800 text-xs font-bold text-slate-300 hover:text-white transition-colors"
-            >
-              <Music className="w-4 h-4 text-rose-400" /> Browse Sounds
-            </Link>
-            <button
-              onClick={() => setIsCreateModalOpen(true)}
-              className="bg-gradient-to-r from-rose-500 to-brand-goldenHour hover:from-rose-400 hover:to-brand-goldenHour text-slate-950 font-black px-4 py-2 rounded-2xl text-xs transition-all shadow-md shadow-rose-500/20 flex items-center gap-1.5 cursor-pointer"
-            >
-              <Plus className="w-4 h-4" /> Create Reel
-            </button>
-          </div>
-        </div>
-
-        {/* Empty State */}
-        <div className="glass rounded-3xl p-12 text-center max-w-lg mx-auto space-y-4 border border-rose-500/20 my-12">
-          <div className="w-16 h-16 rounded-2xl bg-rose-500/10 border border-rose-500/30 flex items-center justify-center mx-auto text-rose-400">
-            <Video className="w-8 h-8" />
-          </div>
-          <h3 className="text-lg font-black text-white">No Reels Published Yet</h3>
-          <p className="text-xs text-brand-sandstone/70 leading-relaxed">
-            Be the first creator to share your Caribbean rhythm, carnival mas, or island short video!
-          </p>
-          <button
-            onClick={() => setIsCreateModalOpen(true)}
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-rose-500 to-brand-goldenHour text-slate-950 font-bold text-xs hover:opacity-90 transition-opacity"
-          >
-            <Plus className="w-4 h-4" /> Create the First Reel
-          </button>
-        </div>
-
-        {/* Create Reel Modal */}
-        {isCreateModalOpen && (
-          <CreateReelModal
-            isOpen={isCreateModalOpen}
-            onClose={() => setIsCreateModalOpen(false)}
-            user={user}
-          />
-        )}
+      <div className="h-full w-full flex flex-col items-center justify-center bg-black p-4 text-center">
+        <Video className="w-12 h-12 text-brand-sunriseCoral mb-4" />
+        <h2 className="text-xl font-bold text-white mb-2">No Reels yet. Be the first Caribbean creator! 🌴</h2>
+        <Link href="/create?mode=reel" className="mt-4 px-6 py-3 bg-brand-sunriseCoral text-black font-bold rounded-full hover:opacity-90">
+          Create Reel
+        </Link>
       </div>
     );
   }
 
-  const currentLike = likesState[activeReel.id] || { count: 0, liked: false };
-  const currentComments = commentsByReel[activeReel.id] ?? [];
-  const isFollowing = followingState[activeReel.handle] ?? false;
+  const currentComments = activeCommentsReelId ? (commentsByReel[activeCommentsReelId] ?? []) : [];
+  const tabs = [
+    { id: 'for_you', label: 'For You' },
+    { id: 'following', label: 'Following' },
+    { id: 'caribbean', label: 'Caribbean' },
+    { id: 'trending', label: 'Trending' },
+    { id: 'sounds', label: 'Sounds' },
+  ];
 
   return (
-    <div className="w-full flex flex-col items-center gap-6">
-      {/* Action Navigation Header */}
-      <div className="w-full flex items-center justify-between border-b border-slate-800 pb-4">
-        <div>
-          <h1 className="text-xl md:text-2xl font-black text-brand-sandstone flex items-center gap-2.5">
-            <Video className="w-6 h-6 text-rose-500" /> Caribbean Reels &amp; Shorts
-          </h1>
-          <p className="text-xs text-brand-sandstone/60 mt-1">
-            Immersive Caribbean short video stream, rhythm stems, and creator monetization.
-          </p>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <Link
-            href="/sounds"
-            className="hidden sm:flex items-center gap-1.5 px-3.5 py-2 rounded-2xl bg-brand-dusk border border-slate-800 text-xs font-bold text-slate-300 hover:text-white transition-colors"
-          >
-            <Music className="w-4 h-4 text-rose-400" /> Browse Sounds
-          </Link>
+    <div className="flex flex-col h-[100dvh] w-full bg-black relative">
+      {/* Top Nav Tabs */}
+      <div className="flex-none h-16 w-full flex items-center justify-center gap-6 z-30 px-4 bg-gradient-to-b from-black/80 to-transparent absolute top-0 left-0 right-0">
+        {tabs.map(tab => (
           <button
-            onClick={() => setIsCreateModalOpen(true)}
-            className="bg-gradient-to-r from-rose-500 to-brand-goldenHour hover:from-rose-400 hover:to-brand-goldenHour text-slate-950 font-black px-4 py-2 rounded-2xl text-xs transition-all shadow-md shadow-rose-500/20 flex items-center gap-1.5 cursor-pointer"
+            key={tab.id}
+            onClick={() => handleTabChange(tab.id)}
+            aria-label={`Tab ${tab.label}`}
+            className={`text-sm font-bold transition-colors ${currentTab === tab.id ? 'text-white border-b-2 border-brand-sunriseCoral pb-1' : 'text-white/60 hover:text-white'}`}
           >
-            <Plus className="w-4 h-4" /> Create Reel
+            {tab.label}
           </button>
-        </div>
+        ))}
       </div>
 
-      <div className="w-full grid grid-cols-1 lg:grid-cols-12 gap-8 items-start justify-center">
-        {/* Main Reel Viewport Container (Col 7) */}
-        <div className="lg:col-span-7 flex flex-col items-center relative">
-          <div className="w-full max-w-sm bg-black border border-slate-800 rounded-3xl overflow-hidden shadow-2xl relative h-[680px] flex flex-col justify-between select-none">
-            {/* Background Simulated Video or Actual Video Stream */}
-            <div
-              onClick={togglePlayPause}
-              className={`absolute inset-0 bg-gradient-to-t ${activeReel.gradient} cursor-pointer flex items-center justify-center`}
-            >
-              {activeReel.videoUrl ? (
-                <video
-                  ref={videoRef}
-                  src={activeReel.videoUrl}
-                  playsInline
-                  autoPlay
-                  loop
-                  muted={isMuted}
-                  onTimeUpdate={handleTimeUpdate}
-                  onEnded={handleVideoEnded}
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                /* Cinematic Visual Wave Overlay */
-                <div className="text-center space-y-4 px-6 relative z-0">
-                  <div className="w-20 h-20 rounded-full bg-rose-500/20 border border-rose-500/40 flex items-center justify-center mx-auto text-brand-sandstone shadow-2xl shadow-rose-500/20 backdrop-blur-md">
-                    <Disc className="w-10 h-10 text-rose-400 animate-spin" style={{ animationDuration: '6s' }} />
-                  </div>
-                  <div className="space-y-1">
-                    <span className="text-[11px] font-bold text-brand-caribbeanSea uppercase tracking-wider block">
-                      {activeReel.location}
-                    </span>
-                    <p className="text-xs font-semibold text-slate-300 line-clamp-2">{activeReel.title}</p>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Tap to Play/Pause indicator flash */}
-            {!isPlaying && (
-              <div
-                onClick={togglePlayPause}
-                className="absolute inset-0 bg-black/40 flex items-center justify-center z-10 cursor-pointer"
-              >
-                <div className="w-16 h-16 rounded-full bg-rose-500/80 text-slate-950 flex items-center justify-center shadow-xl">
-                  <Play className="w-8 h-8 fill-current translate-x-0.5" />
-                </div>
-              </div>
-            )}
-
-            {/* Top Bar Controls */}
-            <div className="p-4 flex items-center justify-between z-20 relative bg-gradient-to-b from-black/80 to-transparent">
-              <span className="text-[11px] font-black px-3 py-1 rounded-full bg-brand-twilight/80 text-rose-400 border border-rose-500/30 flex items-center gap-1.5 backdrop-blur-md">
-                <Flame className="w-3.5 h-3.5 fill-current" /> CARIBBEAN REELS
-              </span>
-
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={toggleMute}
-                  className="w-8 h-8 rounded-full bg-black/60 backdrop-blur-md text-white border border-slate-700/60 flex items-center justify-center hover:bg-black/80 transition-colors"
-                >
-                  {isMuted ? <VolumeX className="w-4 h-4 text-rose-400" /> : <Volume2 className="w-4 h-4 text-emerald-400" />}
-                </button>
-                <span className="text-xs font-bold text-slate-300 bg-black/60 px-2.5 py-1 rounded-full backdrop-blur-md border border-slate-700/60">
-                  {activeReel.views}
-                </span>
-              </div>
-            </div>
-
-            {/* Up/Down Scroll Navigation Arrows Floating */}
-            <div className="absolute left-3 top-1/2 -translate-y-1/2 flex flex-col gap-2 z-20">
-              <button
-                onClick={handlePrevReel}
-                title="Previous Reel"
-                className="w-9 h-9 rounded-full bg-black/60 hover:bg-rose-500 hover:text-slate-950 text-white border border-slate-700/60 flex items-center justify-center backdrop-blur-md transition-all shadow-lg"
-              >
-                <ChevronUp className="w-5 h-5" />
-              </button>
-              <button
-                onClick={handleNextReel}
-                title="Next Reel"
-                className="w-9 h-9 rounded-full bg-black/60 hover:bg-rose-500 hover:text-slate-950 text-white border border-slate-700/60 flex items-center justify-center backdrop-blur-md transition-all shadow-lg"
-              >
-                <ChevronDown className="w-5 h-5" />
-              </button>
-            </div>
-
-            {/* Right Action Rail */}
-            <div className="absolute right-4 bottom-20 flex flex-col items-center gap-4 z-20">
-              {/* Like Button */}
-              <button
-                onClick={handleToggleLike}
-                className="flex flex-col items-center gap-1 text-slate-200 group transition-transform active:scale-90"
-              >
-                <div
-                  className={`w-11 h-11 rounded-full border flex items-center justify-center backdrop-blur-md transition-all ${
-                    currentLike.liked
-                      ? 'bg-rose-500 border-rose-400 text-slate-950 shadow-lg shadow-rose-500/40 scale-110'
-                      : 'bg-black/60 border-slate-700/80 text-rose-500 hover:scale-105'
-                  }`}
-                >
-                  <Heart className={`w-5 h-5 ${currentLike.liked ? 'fill-current' : 'fill-rose-500/20'}`} />
-                </div>
-                <span className="text-[11px] font-bold text-slate-200">
-                  {currentLike.count >= 1000 ? `${(currentLike.count / 1000).toFixed(1)}K` : currentLike.count}
-                </span>
-              </button>
-
-              {/* Comments Button */}
-              <button
-                onClick={() => setIsCommentsOpen(true)}
-                className="flex flex-col items-center gap-1 text-slate-200 hover:text-brand-caribbeanSea transition-colors group"
-              >
-                <div className="w-11 h-11 rounded-full bg-black/60 border border-slate-700/80 flex items-center justify-center backdrop-blur-md group-hover:scale-105 transition-transform">
-                  <MessageCircle className="w-5 h-5 text-brand-caribbeanSea" />
-                </div>
-                <span className="text-[11px] font-bold text-slate-200">{currentComments.length}</span>
-              </button>
-
-              {/* Share Button */}
-              <button
-                onClick={() => setIsShareModalOpen(true)}
-                className="flex flex-col items-center gap-1 text-slate-200 hover:text-brand-sunriseCoral transition-colors group"
-              >
-                <div className="w-11 h-11 rounded-full bg-black/60 border border-slate-700/80 flex items-center justify-center backdrop-blur-md group-hover:scale-105 transition-transform">
-                  <Share2 className="w-5 h-5 text-brand-sunriseCoral" />
-                </div>
-                <span className="text-[11px] font-bold text-slate-200">Share</span>
-              </button>
-
-              {/* Creator Tip Button */}
-              <button
-                onClick={() => setIsTipModalOpen(true)}
-                className="flex flex-col items-center gap-1 text-brand-goldenHour hover:text-brand-goldenHour transition-colors group"
-              >
-                <div className="w-11 h-11 rounded-full bg-brand-goldenHour/20 border border-brand-goldenHour/50 flex items-center justify-center backdrop-blur-md group-hover:scale-110 transition-transform shadow-lg shadow-brand-goldenHour/20">
-                  <Wallet className="w-5 h-5 text-brand-goldenHour" />
-                </div>
-                <span className="text-[10px] font-black uppercase text-brand-goldenHour">Tip</span>
-              </button>
-            </div>
-
-            {/* Bottom Caption & Sound Attribution Overlay */}
-            <div className="p-4 z-20 relative space-y-2 bg-gradient-to-t from-black via-black/80 to-transparent max-w-[80%]">
-              {/* Creator info & Follow */}
-              <div className="flex items-center gap-2">
-                <Link
-                  href={`/profile/${activeReel.handle}`}
-                  className="text-sm font-black text-brand-sandstone hover:underline"
-                >
-                  @{activeReel.handle}
-                </Link>
-                <button
-                  onClick={handleToggleFollow}
-                  className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full transition-all flex items-center gap-1 ${
-                    isFollowing
-                      ? 'bg-brand-twilight text-brand-caribbeanSea border border-brand-caribbeanSea/40'
-                      : 'bg-white hover:bg-slate-200 text-slate-950'
-                  }`}
-                >
-                  {isFollowing ? <UserCheck className="w-3 h-3" /> : <UserPlus className="w-3 h-3" />}
-                  {isFollowing ? 'Following' : 'Follow'}
-                </button>
-              </div>
-
-              {/* Caption */}
-              <p className="text-xs text-slate-200 leading-snug font-medium line-clamp-2">
-                {activeReel.title}
-              </p>
-
-              {/* Sound Badge with Deep Link */}
-              <Link
-                href={`/sounds?search=${encodeURIComponent(activeReel.sound)}`}
-                className="inline-flex items-center gap-1.5 text-xs text-rose-300 hover:text-rose-200 bg-rose-500/10 border border-rose-500/30 px-2.5 py-1 rounded-full backdrop-blur-md transition-colors"
-              >
-                <Music className="w-3.5 h-3.5 text-rose-400" />
-                <span className="font-semibold truncate max-w-[200px]">{activeReel.sound}</span>
-              </Link>
-            </div>
-
-            {/* Video Progress Scrubber Line */}
-            <div className="w-full h-1 bg-slate-800 relative z-30">
-              <div
-                className="h-full bg-gradient-to-r from-rose-500 to-brand-goldenHour transition-all duration-150"
-                style={{ width: `${progress}%` }}
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* Up Next & Trending Sounds (Col 5) */}
-        <div className="lg:col-span-5 space-y-6">
-          {/* Reel Playlist Queue */}
-          <div className="bg-brand-dusk/80 border border-slate-800 rounded-3xl p-5 space-y-4 shadow-xl">
-            <h3 className="font-extrabold text-sm text-brand-sandstone flex items-center justify-between uppercase tracking-wide">
-              <span className="flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-brand-goldenHour" /> Caribbean Feed Queue
-              </span>
-              <span className="text-xs text-brand-sandstone/40 font-normal">
-                {currentIndex + 1} of {reels.length}
-              </span>
-            </h3>
-
-            <div className="space-y-2.5 max-h-[300px] overflow-y-auto pr-1">
-              {reels.map((reel, idx) => {
-                const isActive = idx === currentIndex;
-                return (
-                  <div
-                    key={reel.id}
-                    onClick={() => setCurrentIndex(idx)}
-                    className={`flex items-center gap-3 p-2.5 rounded-2xl border transition-all cursor-pointer group ${
-                      isActive
-                        ? 'bg-rose-500/15 border-rose-500/50 shadow-md'
-                        : 'bg-brand-twilight/60 hover:bg-brand-dusk/90 border-slate-800/60'
-                    }`}
-                  >
-                    <div className="w-14 h-16 rounded-xl bg-brand-dusk border border-slate-700 flex items-center justify-center flex-shrink-0 relative overflow-hidden">
-                      <div className={`absolute inset-0 bg-gradient-to-t ${reel.gradient}`} />
-                      <Play
-                        className={`w-4 h-4 z-10 fill-current group-hover:scale-110 transition-transform ${
-                          isActive ? 'text-rose-400' : 'text-brand-sandstone'
-                        }`}
-                      />
-                    </div>
-                    <div className="flex-1 min-w-0 space-y-0.5">
-                      <span className="text-[10px] font-bold text-brand-caribbeanSea block">{reel.location}</span>
-                      <h4
-                        className={`text-xs font-bold transition-colors line-clamp-1 ${
-                          isActive ? 'text-rose-300' : 'text-slate-200 group-hover:text-rose-400'
-                        }`}
-                      >
-                        {reel.title}
-                      </h4>
-                      <p className="text-[11px] text-brand-sandstone/40 truncate">
-                        @{reel.handle} • {reel.views} views
-                      </p>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Quick Sound Hub Preview */}
-          <div className="bg-gradient-to-br from-slate-900 via-slate-900 to-rose-950/30 border border-rose-500/20 rounded-3xl p-5 space-y-3 shadow-lg">
-            <div className="flex items-center justify-between">
-              <h4 className="text-xs font-black text-rose-400 uppercase tracking-wider flex items-center gap-2">
-                <Music className="w-4 h-4" /> Trending Sounds
-              </h4>
-              <Link href="/sounds" className="text-[11px] font-black text-rose-400 hover:underline">
-                View All
-              </Link>
-            </div>
-            <p className="text-xs text-slate-300">
-              Use official stems and riddim tracks from Caribbean artists in your short videos.
-            </p>
-            <div className="space-y-2 pt-1">
-              {[
-                { id: 'sound-soca-01', track: 'Soca Monarch Anthem', artist: 'Machel & Kes', flag: '🇹🇹', genre: 'Soca' },
-                { id: 'sound-dancehall-02', track: 'Dutty Bass Riddim', artist: 'Shenseea', flag: '🇯🇲', genre: 'Dancehall' },
-                { id: 'sound-kompa-03', track: 'Gouyad Nuits d’Été', artist: 'Kai & Enposib', flag: '🇭🇹', genre: 'Kompa' },
-              ].map((s) => (
-                <div
-                  key={s.id}
-                  className="flex items-center justify-between p-2.5 rounded-xl bg-brand-twilight/60 text-xs border border-slate-800/60"
-                >
-                  <div className="flex items-center gap-2">
-                    <span>{s.flag}</span>
-                    <div>
-                      <p className="font-bold text-slate-200">{s.track}</p>
-                      <p className="text-[10px] text-brand-sandstone/40">{s.artist} • {s.genre}</p>
-                    </div>
-                  </div>
-                  <Link
-                    href={`/sounds?id=${s.id}`}
-                    className="text-[10px] font-black text-rose-400 hover:bg-rose-500/20 px-2 py-1 rounded-lg border border-rose-500/30 transition-colors"
-                  >
-                    Use Sound
-                  </Link>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
+      {/* Snap Scroll Container */}
+      <div className="flex-1 w-full h-full overflow-y-scroll snap-y snap-mandatory overscroll-none scrollbar-hide" style={{ touchAction: 'pan-y' }}>
+        {reels.map((reel, idx) => {
+          const isActive = activeReelId === reel.id;
+          const isNext = reels[idx - 1]?.id === activeReelId || reels[idx + 1]?.id === activeReelId;
+          return (
+            <ReelCard
+              key={reel.id}
+              reel={reel}
+              isActive={isActive}
+              isNext={isNext}
+              isMuted={isMuted}
+              toggleMute={toggleMute}
+              user={user}
+              likesState={likesState}
+              setLikesState={setLikesState}
+              followingState={followingState}
+              setFollowingState={setFollowingState}
+              onOpenComments={handleOpenComments}
+              onOpenShare={handleOpenShare}
+            />
+          );
+        })}
       </div>
 
       {/* Slide-over Comments Drawer */}
@@ -657,13 +429,12 @@ export default function ReelsFeedViewer({ initialReels, user }: ReelsFeedViewerP
               </h3>
               <button
                 onClick={() => setIsCommentsOpen(false)}
+                aria-label="Close Comments"
                 className="w-7 h-7 rounded-full bg-brand-dusk border border-slate-800 flex items-center justify-center text-brand-sandstone/60 hover:text-white"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
-
-            {/* Comments List */}
             <div className="flex-1 overflow-y-auto py-4 space-y-3">
               {currentComments.length === 0 ? (
                 <p className="text-xs text-brand-sandstone/40 text-center py-10">No comments yet. Start the conversation!</p>
@@ -682,18 +453,18 @@ export default function ReelsFeedViewer({ initialReels, user }: ReelsFeedViewerP
                 ))
               )}
             </div>
-
-            {/* Post Comment Input */}
             <form onSubmit={handlePostComment} className="pt-3 border-t border-slate-800 flex items-center gap-2">
               <input
                 type="text"
                 value={newCommentText}
                 onChange={(e) => setNewCommentText(e.target.value)}
                 placeholder="Add a Caribbean comment..."
+                aria-label="Comment input"
                 className="flex-1 bg-brand-twilight border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-rose-500"
               />
               <button
                 type="submit"
+                aria-label="Send Comment"
                 disabled={isPostingComment || !newCommentText.trim()}
                 className="bg-rose-500 hover:bg-rose-400 disabled:opacity-50 text-slate-950 p-2 rounded-xl transition-colors cursor-pointer"
               >
@@ -714,24 +485,17 @@ export default function ReelsFeedViewer({ initialReels, user }: ReelsFeedViewerP
               </h3>
               <button
                 onClick={() => setIsShareModalOpen(false)}
+                aria-label="Close Share Modal"
                 className="w-7 h-7 rounded-full bg-brand-dusk border border-slate-800 flex items-center justify-center text-brand-sandstone/60 hover:text-white"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
-
             <p className="text-xs text-slate-300">Share this short moment with diaspora communities and friends.</p>
-
             <div className="space-y-2">
               <button
-                onClick={handleNativeShare}
-                className="w-full bg-gradient-to-r from-rose-500 to-brand-sunriseCoral text-slate-950 font-black p-2.5 rounded-xl text-xs flex items-center justify-center gap-2 cursor-pointer shadow-md"
-              >
-                <Share2 className="w-4 h-4" /> Share via Apps
-              </button>
-
-              <button
                 onClick={handleCopyShareLink}
+                aria-label="Copy Link"
                 className="w-full bg-brand-twilight border border-slate-700 hover:border-slate-500 text-slate-200 font-bold p-2.5 rounded-xl text-xs flex items-center justify-center gap-2 transition-colors cursor-pointer"
               >
                 {copiedLink ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
@@ -741,72 +505,6 @@ export default function ReelsFeedViewer({ initialReels, user }: ReelsFeedViewerP
           </div>
         </div>
       )}
-
-      {/* Creator Tip Modal */}
-      {isTipModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-[#0D1322] border border-slate-800 rounded-3xl p-6 max-w-sm w-full space-y-4 shadow-2xl">
-            <div className="flex items-center justify-between">
-              <h3 className="text-sm font-black text-brand-sandstone flex items-center gap-2">
-                <Wallet className="w-4 h-4 text-brand-goldenHour" /> Tip @{activeReel.handle}
-              </h3>
-              <button
-                onClick={() => setIsTipModalOpen(false)}
-                className="w-7 h-7 rounded-full bg-brand-dusk border border-slate-800 flex items-center justify-center text-brand-sandstone/60 hover:text-white"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            {tipSuccess ? (
-              <div className="p-4 bg-emerald-500/10 border border-emerald-500/30 rounded-2xl text-center space-y-2">
-                <p className="text-sm font-bold text-emerald-400">🎉 Tip Sent Successfully!</p>
-                <p className="text-xs text-brand-sandstone/60">
-                  ${tipAmount} USD transferred to @{activeReel.handle} via TUKUBI Ledger.
-                </p>
-              </div>
-            ) : (
-              <>
-                <p className="text-xs text-slate-300">
-                  Direct double-entry ledger tip to support this Caribbean creator.
-                </p>
-
-                <div className="grid grid-cols-4 gap-2">
-                  {['1.00', '5.00', '10.00', '25.00'].map((amt) => (
-                    <button
-                      key={amt}
-                      type="button"
-                      onClick={() => setTipAmount(amt)}
-                      className={`p-2 rounded-xl text-xs font-black border transition-all ${
-                        tipAmount === amt
-                          ? 'bg-brand-goldenHour text-slate-950 border-brand-goldenHour'
-                          : 'bg-brand-twilight text-slate-300 border-slate-700 hover:border-slate-500'
-                      }`}
-                    >
-                      ${amt}
-                    </button>
-                  ))}
-                </div>
-
-                <button
-                  type="button"
-                  onClick={handleSendTip}
-                  className="w-full bg-gradient-to-r from-brand-goldenHour to-brand-sunriseCoral text-slate-950 font-black p-2.5 rounded-xl text-xs flex items-center justify-center gap-2 shadow-lg cursor-pointer"
-                >
-                  <Wallet className="w-4 h-4" /> Send ${tipAmount} USD Tip
-                </button>
-              </>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Create Reel Modal */}
-      <CreateReelModal
-        isOpen={isCreateModalOpen}
-        onClose={() => setIsCreateModalOpen(false)}
-        user={user}
-      />
     </div>
   );
 }

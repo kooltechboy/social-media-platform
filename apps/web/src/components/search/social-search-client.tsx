@@ -103,11 +103,15 @@ export default function SocialSearchClient({
   const [pendingActionId, setPendingActionId] = useState<string | null>(null);
   const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
 
+  const [isAiMode, setIsAiMode] = useState(false);
+  const [aiResult, setAiResult] = useState<any>(null);
+
   // Debounced live search
   useEffect(() => {
     const trimmed = query.trim();
     if (!trimmed) {
       setSearchData(null);
+      setAiResult(null);
       setIsLoading(false);
       return;
     }
@@ -116,27 +120,36 @@ export default function SocialSearchClient({
       setIsLoading(true);
       setErrorMessage(null);
       try {
-        const res = await universalSearchAction({
-          term: trimmed,
-          category: activeTab === 'all' ? undefined : activeTab,
-          limit: 30,
-        });
-        setSearchData(res);
+        if (isAiMode) {
+          const res = await fetch(`/api/discovery/ai-search?q=${encodeURIComponent(trimmed)}`);
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.error || 'AI Search failed');
+          setAiResult(data);
+          setSearchData(null);
+        } else {
+          setAiResult(null);
+          const res = await universalSearchAction({
+            term: trimmed,
+            category: activeTab === 'all' ? undefined : activeTab,
+            limit: 30,
+          });
+          setSearchData(res);
+        }
       } catch (err: any) {
         console.error('Search query error:', err);
         setErrorMessage("We couldn't complete your search. Please try again.");
       } finally {
         setIsLoading(false);
       }
-    }, 250);
+    }, 400);
 
     return () => clearTimeout(timer);
-  }, [query, activeTab]);
+  }, [query, activeTab, isAiMode]);
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (query.trim()) {
-      router.push(`/search?q=${encodeURIComponent(query.trim())}&category=${activeTab}`);
+      router.push(`/search?q=${encodeURIComponent(query.trim())}&category=${activeTab}&ai=${isAiMode}`);
     }
   };
 
@@ -220,7 +233,7 @@ export default function SocialSearchClient({
     products.length +
     posts.length;
 
-  const hasResults = totalHits > 0;
+  const hasResults = totalHits > 0 || !!aiResult;
 
   const entityTabs = [
     { id: 'all', label: 'All Results', count: totalHits },
@@ -235,6 +248,22 @@ export default function SocialSearchClient({
 
   return (
     <div className="space-y-6">
+      {/* AI Toggle */}
+      <div className="flex items-center justify-end gap-2 mb-2">
+        <button
+          onClick={() => setIsAiMode(false)}
+          className={`px-3 py-1 text-xs font-bold rounded-l-full border border-slate-700 ${!isAiMode ? 'bg-brand-caribbeanSea/20 text-brand-caribbeanSea border-brand-caribbeanSea' : 'bg-brand-dusk text-slate-400'}`}
+        >
+          🔍 Standard Search
+        </button>
+        <button
+          onClick={() => setIsAiMode(true)}
+          className={`px-3 py-1 text-xs font-bold rounded-r-full border border-slate-700 ${isAiMode ? 'bg-brand-goldenHour/20 text-brand-goldenHour border-brand-goldenHour' : 'bg-brand-dusk text-slate-400'}`}
+        >
+          🤖 AI Search
+        </button>
+      </div>
+
       {/* ────────────────────────────────────────────────────────── */}
       {/* 1. SEARCH INPUT BAR                                        */}
       {/* ────────────────────────────────────────────────────────── */}
@@ -295,6 +324,29 @@ export default function SocialSearchClient({
         <div className="flex items-center justify-center p-12 text-brand-sandstone/60 text-xs gap-2">
           <Loader2 className="w-5 h-5 animate-spin text-brand-caribbeanSea" />
           <span>Searching TUKUBI universal index...</span>
+        </div>
+      )}
+
+      {/* AI Search Result */}
+      {!isLoading && aiResult && (
+        <div className="bg-brand-goldenHour/10 border border-brand-goldenHour/30 p-6 rounded-2xl space-y-4">
+          <h3 className="text-sm font-black text-brand-goldenHour flex items-center gap-2">
+            <Sparkles className="w-4 h-4" /> ✨ AI Results
+          </h3>
+          <p className="text-sm text-slate-200 leading-relaxed whitespace-pre-wrap">{aiResult.answer}</p>
+          
+          {aiResult.citations && aiResult.citations.length > 0 && (
+            <div className="pt-4 border-t border-brand-goldenHour/20 space-y-2">
+              <h4 className="text-xs font-bold text-brand-goldenHour/80">Sources & Related Entities:</h4>
+              <div className="flex flex-wrap gap-2">
+                {aiResult.citations.map((c: any, i: number) => (
+                  <span key={i} className="px-2 py-1 bg-brand-goldenHour/5 border border-brand-goldenHour/20 rounded text-[11px] text-brand-sandstone">
+                    {c.title || c.entityId} ({c.entityType})
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
 

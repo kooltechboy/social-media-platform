@@ -31,11 +31,18 @@
         "RECORD_AUDIO",
         "ACCESS_FINE_LOCATION",
         "USE_BIOMETRIC"
+      ],
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "data": { "scheme": "tukubi" },
+          "category": ["BROWSABLE", "DEFAULT"]
+        }
       ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
-    "scheme": "caribbeanone"
+    "scheme": "tukubi"
   }
 }

@@ -1,16 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, SafeAreaView, StatusBar, View, ActivityIndicator } from 'react-native';
-import { NavigationContainer } from '@react-navigation/native';
+import { StyleSheet, SafeAreaView, StatusBar, View, ActivityIndicator, TouchableOpacity, Text, Alert } from 'react-native';
+import { NavigationContainer, DefaultTheme } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { TOKENS } from './src/theme/tokens';
 import { Header } from './src/components/Header';
 import { HomeScreen } from './src/screens/HomeScreen';
 import { ExploreScreen } from './src/screens/ExploreScreen';
-import { CommunitiesScreen } from './src/screens/CommunitiesScreen';
 import { MessagesScreen } from './src/screens/MessagesScreen';
-import { FinancialCenterScreen } from './src/screens/FinancialCenterScreen';
 import { ProfileScreen } from './src/screens/ProfileScreen';
 import { AuthScreen } from './src/screens/AuthScreen';
+import { ReelsScreen } from './src/screens/ReelsScreen';
+import { CreateScreen } from './src/screens/CreateScreen';
+import { NotificationsScreen } from './src/screens/NotificationsScreen';
+import { CommunitiesScreen } from './src/screens/CommunitiesScreen';
+import { FinancialCenterScreen } from './src/screens/FinancialCenterScreen';
 import { supabase } from './src/lib/supabase';
 
 const Tab = createBottomTabNavigator();
@@ -18,18 +21,57 @@ const Navigation = NavigationContainer as React.ComponentType<any>;
 const Navigator = Tab.Navigator as React.ComponentType<any>;
 const Screen = Tab.Screen as React.ComponentType<any>;
 
+// Create Tab Button Component
+const CreateTabButton = ({ children, onPress }: any) => (
+  <TouchableOpacity
+    style={{
+      top: -15,
+      justifyContent: 'center',
+      alignItems: 'center',
+    }}
+    onPress={onPress}
+  >
+    <View style={{
+      width: 56,
+      height: 56,
+      borderRadius: 28,
+      backgroundColor: TOKENS.action,
+      justifyContent: 'center',
+      alignItems: 'center',
+      shadowColor: TOKENS.action,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.4,
+      shadowRadius: 8,
+      elevation: 5,
+    }}>
+      <Text style={{ fontSize: 32, color: '#FFF', fontWeight: '900', marginTop: -4 }}>+</Text>
+    </View>
+  </TouchableOpacity>
+);
+
 export default function App() {
   const [session, setSession] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
+  // Deep linking configuration
+  const linking = {
+    prefixes: ['tukubi://'],
+    config: {
+      screens: {
+        Home: 'home',
+        Explore: 'explore',
+        Messages: 'messages',
+        Profile: 'profile',
+      },
+    },
+  };
+
   useEffect(() => {
-    // 1. Check existing auth session
     supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
       setSession(currentSession);
       setLoading(false);
     });
 
-    // 2. Subscribe to auth state transitions
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, currentSession) => {
       setSession(currentSession);
     });
@@ -57,12 +99,20 @@ export default function App() {
     );
   }
 
+  const MyTheme = {
+    ...DefaultTheme,
+    colors: {
+      ...DefaultTheme.colors,
+      background: TOKENS.canvas,
+    },
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor={TOKENS.canvas} />
-      <Navigation>
+      <Navigation linking={linking} theme={MyTheme}>
         <Navigator
-          screenOptions={{
+          screenOptions={({ route }: any) => ({
             header: () => <Header onWalletPress={() => {}} />,
             tabBarStyle: {
               backgroundColor: TOKENS.surface,
@@ -76,16 +126,71 @@ export default function App() {
               fontWeight: '700',
               fontSize: 11,
             },
-          }}
+            tabBarIcon: ({ focused, color }: any) => {
+              let iconStr = '🏠';
+              if (route.name === 'Home') iconStr = '🏠';
+              else if (route.name === 'Explore') iconStr = '🧭';
+              else if (route.name === 'Messages') iconStr = '💬';
+              else if (route.name === 'Profile') iconStr = '👤';
+              
+              return <Text style={{ fontSize: 20, opacity: focused ? 1 : 0.5 }}>{iconStr}</Text>;
+            },
+          })}
         >
           <Screen name="Home" component={HomeScreen} />
           <Screen name="Explore" component={ExploreScreen} />
-          <Screen name="Communities" component={CommunitiesScreen} />
+          <Screen 
+            name="Create" 
+            component={CreateScreen}
+            options={{
+              tabBarIcon: () => null,
+              tabBarLabel: () => null,
+              tabBarButton: (props: any) => (
+                <CreateTabButton 
+                  {...props} 
+                  onPress={() => {
+                    Alert.alert(
+                      'Create',
+                      'What would you like to share?',
+                      [
+                        { text: 'Post', onPress: () => props.onPress && props.onPress(new Event('press')) },
+                        { text: 'Story', onPress: () => Alert.alert('Coming soon in next update 🌴') },
+                        { text: 'Reel', onPress: () => Alert.alert('Coming soon in next update 🌴') },
+                        { text: 'Live', onPress: () => Alert.alert('Coming soon in next update 🌴') },
+                        { text: 'Event', onPress: () => Alert.alert('Coming soon in next update 🌴') },
+                        { text: 'Cancel', style: 'cancel' }
+                      ]
+                    );
+                  }}
+                />
+              ),
+            }}
+          />
           <Screen name="Messages" component={MessagesScreen} />
-          <Screen name="Finance" component={FinancialCenterScreen} />
           <Screen
             name="Profile"
-            children={() => <ProfileScreen onLogout={() => setSession(null)} />}
+            children={(props: any) => <ProfileScreen {...props} onLogout={() => setSession(null)} />}
+          />
+          {/* Hidden screens in the tab navigator */}
+          <Screen 
+            name="Communities" 
+            component={CommunitiesScreen} 
+            options={{ tabBarButton: () => null }} 
+          />
+          <Screen 
+            name="Finance" 
+            component={FinancialCenterScreen} 
+            options={{ tabBarButton: () => null }} 
+          />
+          <Screen 
+            name="Reels" 
+            component={ReelsScreen} 
+            options={{ tabBarButton: () => null }} 
+          />
+          <Screen 
+            name="Notifications" 
+            component={NotificationsScreen} 
+            options={{ tabBarButton: () => null }} 
           />
         </Navigator>
       </Navigation>

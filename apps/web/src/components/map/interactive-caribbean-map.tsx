@@ -41,6 +41,7 @@ import {
   type CaribbeanGeoEntity,
   type CaribbeanClassification,
 } from '../../lib/constants/caribbean-geography';
+import TerritoryDiscoveryPanel from './territory-discovery-panel';
 
 const REGIONS = [
   'All Regions',
@@ -96,8 +97,8 @@ export default function InteractiveCaribbeanMap() {
     const url = new URL(window.location.href);
     url.searchParams.set('selected', iso);
     url.searchParams.set('view', view);
-    window.history.pushState({}, '', url.toString());
-  }, []);
+    router.replace(`${url.pathname}${url.search}`, { scroll: false });
+  }, [router]);
 
   // Handle territory selection
   const handleSelectEntity = useCallback(
@@ -720,137 +721,8 @@ export default function InteractiveCaribbeanMap() {
         </div>
 
         {/* Right Column (Desktop Inspector Drawer): Col 4 */}
-        <div className="hidden lg:block lg:col-span-4 space-y-5">
-          <div className="bg-brand-dusk/95 border border-slate-800 rounded-3xl p-6 shadow-2xl space-y-5 relative overflow-hidden">
-            <div className="absolute top-0 right-0 left-0 h-1 bg-gradient-to-r from-brand-caribbeanSea via-brand-goldenHour to-brand-sunriseCoral" />
-
-            <div className="flex items-center justify-between pt-1">
-              <span className="text-5xl drop-shadow-md">{selectedEntity.flag}</span>
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={handleShareEntity}
-                  aria-label="Share territory link"
-                  className="p-2 rounded-xl bg-brand-twilight border border-slate-800 text-slate-300 hover:text-white transition-colors"
-                >
-                  {copiedLink ? <Check className="w-4 h-4 text-emerald-400" /> : <Share2 className="w-4 h-4" />}
-                </button>
-                <span className={`text-[10px] font-black px-2.5 py-1 rounded-full border uppercase tracking-wider ${classificationStyle.bg} ${classificationStyle.text} ${classificationStyle.border}`}>
-                  {selectedEntity.classification}
-                </span>
-                <span className="text-[10px] font-black px-2.5 py-1 rounded-full bg-brand-caribbeanSea/20 text-brand-caribbeanSea border border-brand-caribbeanSea/30 uppercase tracking-wider">
-                  {selectedEntity.iso}
-                </span>
-              </div>
-            </div>
-
-            <div>
-              <div className="flex items-center gap-2">
-                <h2 className="text-xl font-black text-brand-sandstone">{selectedEntity.name}</h2>
-              </div>
-              {selectedEntity.officialName && (
-                <p className="text-[11px] text-brand-sandstone/50 italic mt-0.5">
-                  {selectedEntity.officialName}
-                </p>
-              )}
-              <p className="text-xs text-brand-sandstone/70 mt-1">
-                Capital: <span className="text-slate-200 font-semibold">{selectedEntity.capital}</span> • {selectedEntity.region}
-              </p>
-
-              {/* Metadata chips */}
-              <div className="flex flex-wrap gap-2 mt-2 pt-1">
-                {selectedEntity.languages && selectedEntity.languages.length > 0 && (
-                  <span className="text-[10.5px] px-2 py-0.5 rounded-lg bg-brand-twilight text-slate-300 border border-slate-800 flex items-center gap-1">
-                    <BookOpen className="w-3 h-3 text-brand-caribbeanSea" /> {selectedEntity.languages.join(', ')}
-                  </span>
-                )}
-                {selectedEntity.currency && (
-                  <span className="text-[10.5px] px-2 py-0.5 rounded-lg bg-brand-twilight text-slate-300 border border-slate-800 flex items-center gap-1">
-                    <Coins className="w-3 h-3 text-brand-goldenHour" /> {selectedEntity.currency}
-                  </span>
-                )}
-                {selectedEntity.timezone && (
-                  <span className="text-[10.5px] px-2 py-0.5 rounded-lg bg-brand-twilight text-slate-300 border border-slate-800 flex items-center gap-1">
-                    <Clock className="w-3 h-3 text-emerald-400" /> {selectedEntity.timezone}
-                  </span>
-                )}
-              </div>
-
-              <span className="inline-block text-xs font-bold text-brand-goldenHour mt-2.5">
-                {selectedEntity.trendingTag}
-              </span>
-              <p className="text-xs text-slate-300 mt-2 leading-relaxed font-medium">
-                {selectedEntity.summary}
-              </p>
-            </div>
-
-            {/* Live Metrics Grid */}
-            <div className="grid grid-cols-2 gap-3 pt-1">
-              <div className="p-3 rounded-2xl bg-brand-twilight border border-slate-800 space-y-0.5">
-                <span className="text-[10px] font-bold text-brand-sandstone/60 flex items-center gap-1">
-                  <Users className="w-3 h-3 text-brand-caribbeanSea" /> Members
-                </span>
-                <p className="text-base font-black text-brand-sandstone">
-                  {geoStats.loading ? '…' : geoStats.creators.toLocaleString()}
-                </p>
-              </div>
-
-              <div className="p-3 rounded-2xl bg-brand-twilight border border-slate-800 space-y-0.5">
-                <span className="text-[10px] font-bold text-brand-sandstone/60 flex items-center gap-1">
-                  <Building2 className="w-3 h-3 text-brand-sunriseCoral" /> Businesses
-                </span>
-                <p className="text-base font-black text-brand-sandstone">
-                  {geoStats.loading ? '…' : geoStats.businesses.toLocaleString()}
-                </p>
-              </div>
-
-              <div className="p-3 rounded-2xl bg-brand-twilight border border-slate-800 space-y-0.5">
-                <span className="text-[10px] font-bold text-brand-sandstone/60 flex items-center gap-1">
-                  <Calendar className="w-3 h-3 text-yellow-400" /> Guilds &amp; Hubs
-                </span>
-                <p className="text-base font-black text-brand-sandstone">
-                  {geoStats.loading ? '…' : geoStats.communities.toLocaleString()}
-                </p>
-              </div>
-
-              <div className="p-3 rounded-2xl bg-brand-twilight border border-slate-800 space-y-0.5">
-                <span className="text-[10px] font-bold text-brand-sandstone/60 flex items-center gap-1">
-                  <Tv className="w-3 h-3 text-red-400" /> Live Ingest
-                </span>
-                <p className="text-base font-black text-red-400">
-                  {geoStats.loading ? '…' : `${geoStats.live} Active`}
-                </p>
-              </div>
-            </div>
-
-            {/* Deep-link Action Buttons (Discovery Architecture) */}
-            <div className="space-y-2 pt-2">
-              <Link
-                href={`/explore?country=${selectedEntity.iso}`}
-                className="w-full block bg-gradient-to-r from-brand-caribbeanSea to-brand-sunriseCoral text-slate-950 font-black py-2.5 rounded-2xl text-xs text-center transition-all shadow-md shadow-brand-caribbeanSea/20 hover:brightness-110"
-              >
-                Explore {selectedEntity.shortName} Feed →
-              </Link>
-              <Link
-                href={`/events?city=${encodeURIComponent(selectedEntity.shortName)}`}
-                className="w-full block bg-brand-twilight hover:bg-slate-800 text-slate-200 font-bold py-2 rounded-2xl text-xs text-center border border-slate-700/80 transition-colors"
-              >
-                View Cultural Fetes &amp; Events
-              </Link>
-              <Link
-                href={`/communities?country=${selectedEntity.iso}`}
-                className="w-full block bg-brand-twilight hover:bg-slate-800 text-brand-caribbeanSea font-bold py-2 rounded-2xl text-xs text-center border border-slate-700/80 transition-colors"
-              >
-                Join {selectedEntity.shortName} Hubs &amp; Guilds
-              </Link>
-              <Link
-                href="/marketplace?category=All%20Products"
-                className="w-full block bg-brand-twilight hover:bg-slate-800 text-brand-goldenHour font-bold py-2 rounded-2xl text-xs text-center border border-slate-700/80 transition-colors"
-              >
-                Browse Marketplace Artisans
-              </Link>
-            </div>
-          </div>
+        <div className="hidden lg:block lg:col-span-4 h-[580px] md:h-[620px]">
+          <TerritoryDiscoveryPanel entity={selectedEntity} />
         </div>
       </div>
 
@@ -862,104 +734,13 @@ export default function InteractiveCaribbeanMap() {
           aria-modal="true"
           aria-label={`${selectedEntity.name} Discovery Hub`}
         >
-          <div className="w-full max-h-[85vh] overflow-y-auto bg-[#0C1322] border-t border-slate-800 rounded-t-3xl p-5 space-y-4 shadow-2xl animate-slideUp">
-            {/* Sheet Handle and Header */}
-            <div className="flex flex-col items-center">
-              <div className="w-12 h-1.5 rounded-full bg-slate-700/80 mb-3" />
+          <div className="w-full max-h-[85vh] h-[85vh] bg-[#0C1322] border-t border-slate-800 rounded-t-3xl shadow-2xl animate-slideUp flex flex-col">
+            {/* Sheet Handle */}
+            <div className="flex flex-col items-center pt-3 pb-1 shrink-0">
+              <div className="w-12 h-1.5 rounded-full bg-slate-700/80 mb-1" />
             </div>
-
-            <div className="flex items-center justify-between pb-1">
-              <div className="flex items-center gap-3">
-                <span className="text-4xl">{selectedEntity.flag}</span>
-                <div>
-                  <h2 className="text-lg font-black text-white leading-tight">
-                    {selectedEntity.name}
-                  </h2>
-                  <p className="text-xs text-brand-sandstone/60">
-                    {selectedEntity.capital} • {selectedEntity.region}
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={handleShareEntity}
-                  aria-label="Share territory"
-                  className="p-2 rounded-xl bg-slate-800 text-slate-300 hover:text-white"
-                >
-                  {copiedLink ? <Check className="w-4 h-4 text-emerald-400" /> : <Share2 className="w-4 h-4" />}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setIsMobileSheetOpen(false)}
-                  aria-label="Close sheet"
-                  className="p-2 rounded-xl bg-slate-800 text-slate-400 hover:text-white"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <span className={`text-[10px] font-black px-2.5 py-0.5 rounded-full border ${classificationStyle.bg} ${classificationStyle.text} ${classificationStyle.border}`}>
-                {selectedEntity.classification}
-              </span>
-              <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-brand-twilight text-brand-caribbeanSea border border-slate-800">
-                {selectedEntity.iso}
-              </span>
-              <span className="text-[11px] font-bold text-brand-goldenHour ml-auto">
-                {selectedEntity.trendingTag}
-              </span>
-            </div>
-
-            <p className="text-xs text-slate-300 leading-relaxed font-medium">
-              {selectedEntity.summary}
-            </p>
-
-            {/* Quick Metrics */}
-            <div className="grid grid-cols-2 gap-2.5">
-              <div className="p-2.5 rounded-xl bg-slate-800/60 border border-slate-700/60">
-                <span className="text-[10px] font-bold text-brand-sandstone/60 flex items-center gap-1">
-                  <Users className="w-3 h-3 text-brand-caribbeanSea" /> Members
-                </span>
-                <p className="text-sm font-black text-white">
-                  {geoStats.loading ? '…' : geoStats.creators.toLocaleString()}
-                </p>
-              </div>
-              <div className="p-2.5 rounded-xl bg-slate-800/60 border border-slate-700/60">
-                <span className="text-[10px] font-bold text-brand-sandstone/60 flex items-center gap-1">
-                  <Building2 className="w-3 h-3 text-brand-sunriseCoral" /> Businesses
-                </span>
-                <p className="text-sm font-black text-white">
-                  {geoStats.loading ? '…' : geoStats.businesses.toLocaleString()}
-                </p>
-              </div>
-            </div>
-
-            {/* Mobile Actions */}
-            <div className="space-y-2 pt-2 pb-4">
-              <Link
-                href={`/explore?country=${selectedEntity.iso}`}
-                onClick={() => setIsMobileSheetOpen(false)}
-                className="w-full block bg-gradient-to-r from-brand-caribbeanSea to-brand-sunriseCoral text-slate-950 font-black py-3 rounded-2xl text-xs text-center transition-all shadow-md min-h-[44px] flex items-center justify-center"
-              >
-                Explore {selectedEntity.shortName} Feed →
-              </Link>
-              <Link
-                href={`/events?city=${encodeURIComponent(selectedEntity.shortName)}`}
-                onClick={() => setIsMobileSheetOpen(false)}
-                className="w-full block bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold py-2.5 rounded-2xl text-xs text-center border border-slate-700/80 transition-colors min-h-[44px] flex items-center justify-center"
-              >
-                View Cultural Fetes &amp; Events
-              </Link>
-              <Link
-                href={`/communities?country=${selectedEntity.iso}`}
-                onClick={() => setIsMobileSheetOpen(false)}
-                className="w-full block bg-slate-800 hover:bg-slate-700 text-brand-caribbeanSea font-bold py-2.5 rounded-2xl text-xs text-center border border-slate-700/80 transition-colors min-h-[44px] flex items-center justify-center"
-              >
-                Join {selectedEntity.shortName} Hubs &amp; Guilds
-              </Link>
+            <div className="flex-1 overflow-hidden">
+              <TerritoryDiscoveryPanel entity={selectedEntity} onClose={() => setIsMobileSheetOpen(false)} />
             </div>
           </div>
         </div>

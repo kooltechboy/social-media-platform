@@ -26,8 +26,10 @@ import {
   Loader2,
   ChevronDown,
   Smile,
+  Hash,
 } from 'lucide-react';
 import { createPostAction } from '../lib/social/actions';
+import { generateCaptionAction, generateHashtagsAction } from '../lib/ai/creation-actions';
 import { createSupabaseBrowserClient } from '../lib/supabase/browser';
 import { useTranslation } from '@caribbean/localization';
 import { generateCreatorContentPlan } from '@caribbean/ai';
@@ -126,6 +128,12 @@ export default function UniversalComposer({
   const [uploadProgressText, setUploadProgressText] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
+  const [isGeneratingCaptions, setIsGeneratingCaptions] = useState(false);
+  const [isGeneratingHashtags, setIsGeneratingHashtags] = useState(false);
+  const [captionSuggestions, setCaptionSuggestions] = useState<string[]>([]);
+  const [hashtagSuggestions, setHashtagSuggestions] = useState<string[]>([]);
+  const [aiTooltip, setAiTooltip] = useState<string | null>(null);
 
   const firstName = displayName.split(' ')[0]?.replace('@', '') || 'Friend';
 
@@ -445,19 +453,52 @@ export default function UniversalComposer({
     setActiveMediaDropdown(null);
   }
 
-  function handleAiAssist() {
-    const topic = content.trim() || 'Caribbean culture, community, and diaspora connection';
-    const plan = generateCreatorContentPlan({
-      topic,
-      category: 'social',
-      dialect: 'standard_english',
-    });
-    if (!content.trim() && plan.captions.length > 0) {
-      setContent(`${plan.captions[0]}\n\n${plan.hashtags.join(' ')}`);
-    } else {
-      setContent((prev) => `${prev.trim()}\n\n${plan.hashtags.join(' ')}`);
+  async function handleGenerateCaptions() {
+    if (content.length <= 10) {
+      setAiTooltip("Write something first, then let AI help!");
+      setTimeout(() => setAiTooltip(null), 3000);
+      return;
     }
-    setIsExpanded(true);
+    setIsGeneratingCaptions(true);
+    setCaptionSuggestions([]);
+    try {
+      const res = await generateCaptionAction(content);
+      if (res.captions && res.captions.length > 0) {
+        setCaptionSuggestions(res.captions);
+      } else if (res.error) {
+        setErrorMessage(res.error);
+        setTimeout(() => setErrorMessage(null), 3000);
+      }
+    } catch {
+      setErrorMessage("Failed to generate captions.");
+      setTimeout(() => setErrorMessage(null), 3000);
+    } finally {
+      setIsGeneratingCaptions(false);
+    }
+  }
+
+  async function handleGenerateHashtags() {
+    if (content.length <= 10) {
+      setAiTooltip("Write something first, then let AI help!");
+      setTimeout(() => setAiTooltip(null), 3000);
+      return;
+    }
+    setIsGeneratingHashtags(true);
+    setHashtagSuggestions([]);
+    try {
+      const res = await generateHashtagsAction(content);
+      if (res.hashtags && res.hashtags.length > 0) {
+        setHashtagSuggestions(res.hashtags);
+      } else if (res.error) {
+        setErrorMessage(res.error);
+        setTimeout(() => setErrorMessage(null), 3000);
+      }
+    } catch {
+      setErrorMessage("Failed to generate hashtags.");
+      setTimeout(() => setErrorMessage(null), 3000);
+    } finally {
+      setIsGeneratingHashtags(false);
+    }
   }
 
   return (
@@ -656,12 +697,12 @@ export default function UniversalComposer({
               {/* AI Creator Assist Trigger */}
               <button
                 type="button"
-                onClick={handleAiAssist}
+                onClick={() => { setIsExpanded(true); setTimeout(() => handleGenerateCaptions(), 500); }}
                 className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold text-brand-goldenHour bg-brand-goldenHour/10 hover:bg-brand-goldenHour/20 border border-brand-goldenHour/30 transition-all whitespace-nowrap"
                 title="AI Creator Assistant"
               >
                 <Sparkles className="w-4 h-4 text-brand-goldenHour" />
-                <span className="hidden md:inline">AI Assist</span>
+                <span className="hidden md:inline">✨ AI</span>
               </button>
             </div>
           </div>
@@ -1196,17 +1237,82 @@ export default function UniversalComposer({
                   />
                 </div>
 
-                {/* AI Creator Assistant */}
+                {/* AI Captions */}
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={handleGenerateCaptions}
+                    disabled={isGeneratingCaptions}
+                    title="Generate Captions with AI"
+                    className="p-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all text-brand-goldenHour bg-brand-goldenHour/10 border border-brand-goldenHour/30 hover:bg-brand-goldenHour/20 disabled:opacity-50"
+                  >
+                    {isGeneratingCaptions ? <Loader2 className="w-4 h-4 text-brand-goldenHour animate-spin" /> : <Sparkles className="w-4 h-4 text-brand-goldenHour" />}
+                    <span className="hidden lg:inline">✨ AI</span>
+                  </button>
+                  {aiTooltip && (
+                    <div className="absolute bottom-full mb-2 bg-black text-white text-xs p-2 rounded w-48 shadow-lg">
+                      {aiTooltip}
+                    </div>
+                  )}
+                </div>
+
+                {/* Hashtags */}
                 <button
                   type="button"
-                  onClick={handleAiAssist}
-                  title="AI Creator Assistant: Polish & Add Hashtags"
-                  className="p-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all text-brand-goldenHour bg-brand-goldenHour/10 border border-brand-goldenHour/30 hover:bg-brand-goldenHour/20"
+                  onClick={handleGenerateHashtags}
+                  disabled={isGeneratingHashtags}
+                  title="Generate Hashtags with AI"
+                  className="p-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all text-brand-caribbeanSea bg-brand-caribbeanSea/10 border border-brand-caribbeanSea/30 hover:bg-brand-caribbeanSea/20 disabled:opacity-50"
                 >
-                  <Sparkles className="w-4 h-4 text-brand-goldenHour" />
-                  <span className="hidden lg:inline">AI Assist</span>
+                  {isGeneratingHashtags ? <Loader2 className="w-4 h-4 text-brand-caribbeanSea animate-spin" /> : <Hash className="w-4 h-4 text-brand-caribbeanSea" />}
+                  <span className="hidden lg:inline"># Hashtags</span>
                 </button>
               </div>
+
+              {/* AI Suggestions Display */}
+              {(captionSuggestions.length > 0 || hashtagSuggestions.length > 0) && (
+                <div className="w-full bg-brand-twilight/50 border border-slate-700/50 rounded-xl p-3 mt-3 animate-fadeIn text-xs space-y-2">
+                  {captionSuggestions.length > 0 && (
+                    <div className="space-y-1">
+                      <p className="text-brand-sandstone/70 font-bold mb-1">Select an AI Caption to append:</p>
+                      {captionSuggestions.map((cap, i) => (
+                        <button
+                          key={i}
+                          type="button"
+                          onClick={() => {
+                            setContent(prev => prev.trim() ? prev + '\n\n' + cap : cap);
+                            setCaptionSuggestions([]);
+                          }}
+                          className="block w-full text-left p-2 rounded bg-black/30 hover:bg-brand-caribbeanSea/20 border border-transparent hover:border-brand-caribbeanSea/40 transition-colors text-slate-300"
+                        >
+                          {cap}
+                        </button>
+                      ))}
+                      <button type="button" onClick={() => setCaptionSuggestions([])} className="text-brand-sandstone/50 hover:text-white mt-1 underline">Cancel</button>
+                    </div>
+                  )}
+                  {hashtagSuggestions.length > 0 && (
+                    <div>
+                      <p className="text-brand-sandstone/70 font-bold mb-1">Click hashtags to append:</p>
+                      <div className="flex flex-wrap gap-1.5">
+                        {hashtagSuggestions.map((tag, i) => (
+                          <button
+                            key={i}
+                            type="button"
+                            onClick={() => {
+                              setContent(prev => prev.trim() ? prev + ' ' + tag : tag);
+                            }}
+                            className="px-2 py-1 rounded-full bg-brand-caribbeanSea/10 hover:bg-brand-caribbeanSea/30 border border-brand-caribbeanSea/40 text-brand-caribbeanSea transition-colors"
+                          >
+                            {tag}
+                          </button>
+                        ))}
+                      </div>
+                      <button type="button" onClick={() => setHashtagSuggestions([])} className="text-brand-sandstone/50 hover:text-white mt-1 underline block">Done</button>
+                    </div>
+                  )}
+                </div>
+              )}
 
               {/* Submit Button */}
               <div className="flex items-center gap-2 w-full sm:w-auto">

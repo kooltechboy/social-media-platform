@@ -68,10 +68,10 @@ export default async function ReelsPage({
   }
 
   return (
-    <div className="min-h-screen bg-transparent text-brand-sandstone flex flex-col items-center justify-start p-4 gap-6 max-w-5xl mx-auto">
+    <div className="h-[100dvh] overflow-hidden">
       <Suspense
         fallback={
-          <div className="w-full flex items-center justify-center p-20">
+          <div className="w-full h-full flex items-center justify-center p-20 bg-black">
             <div className="w-8 h-8 border-2 border-rose-500 border-t-transparent rounded-full animate-spin" />
           </div>
         }

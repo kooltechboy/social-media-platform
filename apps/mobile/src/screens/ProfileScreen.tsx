@@ -15,9 +15,10 @@ import { supabase } from '../lib/supabase';
 
 interface ProfileScreenProps {
   onLogout: () => void;
+  navigation: any;
 }
 
-export function ProfileScreen({ onLogout }: ProfileScreenProps) {
+export function ProfileScreen({ onLogout, navigation }: ProfileScreenProps) {
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<any>(null);
   const [isEditing, setIsEditing] = useState(false);
@@ -181,6 +182,25 @@ export function ProfileScreen({ onLogout }: ProfileScreenProps) {
               <Text style={styles.logoutButtonText}>Sign Out</Text>
             </TouchableOpacity>
           </View>
+
+          {/* New App Links */}
+          <View style={styles.navLinksRow}>
+            <TouchableOpacity 
+              style={styles.navLinkBtn}
+              onPress={() => navigation.navigate('Communities')}
+            >
+              <Text style={styles.navLinkIcon}>👥</Text>
+              <Text style={styles.navLinkText}>Communities</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity 
+              style={styles.navLinkBtn}
+              onPress={() => navigation.navigate('Finance')}
+            >
+              <Text style={styles.navLinkIcon}>💰</Text>
+              <Text style={styles.navLinkText}>Financial Center</Text>
+            </TouchableOpacity>
+          </View>
         </View>
 
         {/* Edit Form Modal/Drawer in-place */}
@@ -341,6 +361,21 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   logoutButtonText: { color: TOKENS.danger, fontSize: 13, fontWeight: '800' },
+  navLinksRow: { flexDirection: 'row', gap: 12, marginTop: 16, width: '100%' },
+  navLinkBtn: {
+    flex: 1,
+    backgroundColor: TOKENS.surface,
+    borderColor: TOKENS.border,
+    borderWidth: 1,
+    paddingVertical: 14,
+    borderRadius: 14,
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  navLinkIcon: { fontSize: 16 },
+  navLinkText: { color: TOKENS.textPrimary, fontSize: 13, fontWeight: '700' },
   editCard: {
     backgroundColor: TOKENS.surface,
     marginHorizontal: 20,

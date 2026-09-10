@@ -34,6 +34,8 @@ export interface FullProfileUpdatePayload {
   country?: string;
   island?: string;
   city?: string;
+  originCountryId?: string;
+  currentCity?: string;
   culturalInterests?: string[];
 
   // Professional & Education
@@ -668,6 +670,8 @@ export async function updateFullProfileAction(
     country: payload.country ? payload.country.trim() : null,
     island: payload.island ? payload.island.trim() : null,
     city: payload.city ? payload.city.trim() : null,
+    origin_country_id: payload.originCountryId ? payload.originCountryId.trim() : null,
+    current_city: payload.currentCity ? payload.currentCity.trim() : null,
     address: payload.address ? payload.address.trim() : null,
     phone: payload.phone ? payload.phone.trim() : null,
     job_title: payload.jobTitle ? payload.jobTitle.trim() : null,

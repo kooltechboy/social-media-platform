@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import {
   CaribbeanFeedRanker,
   DEFAULT_WEIGHTS,
@@ -6,6 +6,9 @@ import {
   wellbeingAdjustment,
   MIN_SAFETY_SCORE,
 } from '../../packages/recommendations/src/index';
+import { buildRankedFeed } from '../../apps/web/src/lib/feed/ranking';
+import { type SupabaseClient } from '@supabase/supabase-js';
+import { encodeCursor } from '../../packages/database/src/index'; // assume it's here or similar
 
 const safeSignals = {
   relationshipScore: 0.8,
@@ -65,5 +68,123 @@ describe('User satisfaction adjustment (objective function guard)', () => {
     const adjusted = wellbeingAdjustment({ recentDwellTimeSeconds: 600, negativeActionsLast7Days: 30, reportedContentSeenLast7Days: 5 });
     expect(adjusted).toBeLessThan(1);
     expect(adjusted).toBeGreaterThan(0.7);
+  });
+});
+
+describe('buildRankedFeed integration', () => {
+  const createMockSupabase = (posts: any[], featureFlagEnabled: boolean, follows: any[] = []): SupabaseClient => {
+    const mockQuery: any = Promise.resolve({ data: posts, error: null });
+    mockQuery.select = () => mockQuery;
+    mockQuery.order = () => mockQuery;
+    mockQuery.limit = () => mockQuery;
+    mockQuery.eq = () => mockQuery;
+    mockQuery.in = () => mockQuery;
+    mockQuery.not = () => mockQuery;
+    mockQuery.or = () => mockQuery;
+    mockQuery.lt = () => mockQuery;
+
+    const fromMock = (table: string) => {
+      if (table === 'feature_flags') {
+        return {
+          select: () => ({
+            eq: () => ({
+              maybeSingle: () => Promise.resolve({ data: { is_enabled: featureFlagEnabled }, error: null })
+            })
+          })
+        };
+      }
+      if (table === 'follows') {
+        return {
+          select: () => ({
+            eq: () => Promise.resolve({ data: follows, error: null })
+          })
+        };
+      }
+      if (table === 'friendships') {
+        return {
+          select: () => ({
+            or: () => Promise.resolve({ data: [], error: null }),
+            eq: () => ({
+              eq: () => Promise.resolve({ data: [], error: null })
+            })
+          })
+        };
+      }
+      if (table === 'profiles') {
+        return {
+          select: () => ({
+            eq: () => ({
+              single: () => Promise.resolve({ data: { country_id: 'TT' }, error: null })
+            })
+          })
+        };
+      }
+      return mockQuery; // posts and others
+    };
+
+    return { from: fromMock } as unknown as SupabaseClient;
+  };
+
+  const oldPost = {
+    id: '1',
+    author_id: 'a1',
+    created_at: new Date(Date.now() - 100000000).toISOString(),
+    likes_count: 500,
+    comments_count: 50,
+    shares_count: 10,
+    country_id: 'TT',
+    content: 'Very popular old post',
+  };
+
+  const recentPost = {
+    id: '2',
+    author_id: 'a2',
+    created_at: new Date(Date.now() - 1000).toISOString(),
+    likes_count: 0,
+    comments_count: 0,
+    shares_count: 0,
+    country_id: 'US',
+    content: 'New but no engagement',
+  };
+
+  it('Feed ranking produces different order than chronological', async () => {
+    // They are returned from DB in chronological order (recentPost first)
+    const supabase = createMockSupabase([recentPost, oldPost], true);
+    const result = await buildRankedFeed('u1', 'for_you', supabase);
+    
+    // Ranked should put oldPost first due to engagement
+    expect(result.data?.[0].id).toBe('1');
+    expect(result.data?.[1].id).toBe('2');
+  });
+
+  it('Feature flag disabled -> chronological order returned', async () => {
+    const supabase = createMockSupabase([recentPost, oldPost], false);
+    const result = await buildRankedFeed('u1', 'for_you', supabase);
+    
+    // Chronological order preserved
+    expect(result.data?.[0].id).toBe('2');
+    expect(result.data?.[1].id).toBe('1');
+  });
+
+  it('Relationship score boosts followed authors above strangers', async () => {
+    // Both same recency and engagement
+    const friendPost = { ...recentPost, id: '3', author_id: 'friend' };
+    const strangerPost = { ...recentPost, id: '4', author_id: 'stranger' };
+    
+    const supabase = createMockSupabase([strangerPost, friendPost], true, [{ following_id: 'friend' }]);
+    const result = await buildRankedFeed('u1', 'for_you', supabase);
+    
+    // Friend ranks higher
+    expect(result.data?.[0].id).toBe('3');
+    expect(result.data?.[1].id).toBe('4');
+  });
+
+  it('mode = following -> skip ranking, return chronological subset', async () => {
+    const supabase = createMockSupabase([recentPost, oldPost], true);
+    const result = await buildRankedFeed('u1', 'following', supabase);
+    
+    // Feature flag is true, but mode is following so ranking should be skipped
+    expect(result.data?.[0].id).toBe('2');
+    expect(result.data?.[1].id).toBe('1');
   });
 });

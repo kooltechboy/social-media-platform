@@ -29,6 +29,7 @@ import { DIASPORA_COUNTRIES } from '../lib/constants/diaspora-hubs';
 import UserAvatar from './user-avatar';
 import OfficialBadge from './official/official-badge';
 import { useAuth } from './auth-provider';
+import { createSupabaseBrowserClient } from '../lib/supabase/browser';
 
 export interface ProfileData {
   id: string;
@@ -49,6 +50,8 @@ export interface ProfileData {
   country?: string | null;
   island?: string | null;
   city?: string | null;
+  origin_country_id?: string | null;
+  current_city?: string | null;
   address?: string | null;
   phone?: string | null;
   cultural_interests?: string[] | null;
@@ -101,6 +104,17 @@ export default function ProfileEditModal({
 
   // Form State
   const [form, setForm] = useState<ProfileData>(initialProfile);
+  const [countries, setCountries] = useState<{ id: string; name: string }[]>([]);
+
+  useEffect(() => {
+    async function loadCountries() {
+      const supabase = createSupabaseBrowserClient();
+      if (!supabase) return;
+      const { data } = await supabase.from('countries').select('id, name').order('name');
+      if (data) setCountries(data);
+    }
+    loadCountries();
+  }, []);
 
   useEffect(() => {
     setForm(initialProfile);
@@ -656,6 +670,38 @@ export default function ProfileEditModal({
                     placeholder="e.g. Kingston, Port of Spain, Miami"
                     value={form.city ?? ''}
                     onChange={(e) => handleChange('city', e.target.value)}
+                    className="w-full bg-[#181124] border border-slate-700 rounded-xl px-3 py-2 text-sm text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea transition-colors"
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="modal-origin-country" className="block text-xs font-bold text-brand-sandstone/80 mb-1">
+                    Origin Country
+                  </label>
+                  <select
+                    id="modal-origin-country"
+                    value={form.origin_country_id ?? ''}
+                    onChange={(e) => handleChange('origin_country_id', e.target.value)}
+                    className="w-full bg-[#181124] border border-slate-700 rounded-xl px-3 py-2 text-sm text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea transition-colors"
+                  >
+                    <option value="">Select origin country...</option>
+                    {countries.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                
+                <div>
+                  <label htmlFor="modal-current-city" className="block text-xs font-bold text-brand-sandstone/80 mb-1">
+                    Current City
+                  </label>
+                  <input
+                    id="modal-current-city"
+                    placeholder="e.g. New York, Toronto, London"
+                    value={form.current_city ?? ''}
+                    onChange={(e) => handleChange('current_city', e.target.value)}
                     className="w-full bg-[#181124] border border-slate-700 rounded-xl px-3 py-2 text-sm text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea transition-colors"
                   />
                 </div>

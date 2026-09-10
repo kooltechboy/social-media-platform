@@ -32,6 +32,7 @@ import CreatorContentManager, {
   type CreatorLivestreamItem,
 } from "../../components/creator/creator-content-manager";
 import type { CreatorDraftItem } from "../../lib/creator/draft-actions";
+import CreatorAiInsightsPanel from "../../components/creator/creator-ai-insights-panel";
 
 export const dynamic = "force-dynamic";
 
@@ -277,6 +278,12 @@ export default async function CreatorStudioPage({
         <div className="flex flex-wrap items-center gap-3">
           <CreatorStudioActions displayName={user.displayName} />
           <Link
+            href="/creator-studio/repurpose"
+            className="bg-purple-600/20 hover:bg-purple-600/30 text-purple-300 border border-purple-500/30 font-black px-4 py-2.5 rounded-xl text-xs flex items-center gap-2 transition-all min-h-[44px]"
+          >
+            <Mic className="w-4 h-4" /> Repurpose Content
+          </Link>
+          <Link
             href="/create"
             className="bg-brand-sunriseCoral hover:brightness-110 text-slate-950 font-black px-4 py-2.5 rounded-xl text-xs flex items-center gap-2 transition-all shadow-md shadow-brand-sunriseCoral/20 min-h-[44px]"
           >
@@ -429,6 +436,15 @@ export default async function CreatorStudioPage({
         livestreams={livestreams}
         drafts={drafts}
         initialTab={currentTab}
+      />
+
+      {/* Creator AI Insights Panel */}
+      <CreatorAiInsightsPanel
+        stats={{
+          postsCount: videos.length + podcasts.length + livestreams.length,
+          followersCount: activeSubscriptions.length, // approximation for now
+          recentEngagement: 5.4, // placeholder
+        }}
       />
     </div>
   );

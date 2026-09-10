@@ -28,3 +28,6 @@ export const APIClient = {
     return null;
   },
 };
+
+// Forge Integration Architecture
+export * from './forge';

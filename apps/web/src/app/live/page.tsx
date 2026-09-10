@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { createSupabaseServerClient, getCurrentUser } from '../../lib/supabase/server';
 import LiveViewerPlayer, { type LivestreamViewItem } from '../../components/live/live-viewer-player';
 import { LIVE_CATEGORIES } from '@caribbean/live';
+import GoLivePanel from '../../components/live/go-live-panel';
 
 export const dynamic = 'force-dynamic';
 
@@ -93,15 +94,10 @@ export default async function LivePage({
         </div>
 
         {user ? (
-          <Link
-            href="/live/broadcast"
-            className="bg-red-600 hover:bg-red-500 text-white font-black px-6 py-3 rounded-xl text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg shadow-red-600/30 transition-all self-start md:self-auto min-h-[44px]"
-          >
-            🔴 Go Live / Broadcast
-          </Link>
+          <GoLivePanel creatorId={user.id} />
         ) : (
           <Link
-            href="/login?redirect=/live/broadcast"
+            href="/login?redirect=/live"
             className="bg-red-600/20 text-red-300 border border-red-500/40 font-black px-5 py-2.5 rounded-xl text-xs flex items-center justify-center gap-2 hover:bg-red-600/30 transition-all self-start md:self-auto min-h-[44px]"
           >
             Sign in to Stream

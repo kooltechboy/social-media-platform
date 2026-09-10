@@ -10,8 +10,10 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@caribbean/advertising": "workspace:^",
     "@caribbean/ai": "workspace:*",
     "@caribbean/analytics": "workspace:^",
+    "@caribbean/api": "workspace:*",
     "@caribbean/business": "workspace:*",
     "@caribbean/communities": "workspace:*",
     "@caribbean/creator": "workspace:*",

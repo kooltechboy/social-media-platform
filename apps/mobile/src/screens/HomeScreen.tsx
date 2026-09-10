@@ -22,21 +22,33 @@ export function HomeScreen() {
     try {
       const { data, error } = await supabase
         .from('posts')
-        .select('*')
+        .select(`
+          *,
+          profiles!author_id (
+            id,
+            display_name,
+            username,
+            avatar_url,
+            is_verified
+          )
+        `)
         .order('created_at', { ascending: false })
-        .limit(20);
+        .limit(30);
 
       if (data && !error) {
         const formatted = data.map((item: any) => ({
           id: item.id,
-          author: item.profiles?.display_name || 'Caribbean Member',
-          location: item.profiles?.home_location || 'Caribbean',
+          author: item.profiles?.display_name || item.profiles?.username || 'Caribbean Member',
+          authorHandle: item.profiles?.username ? `@${item.profiles.username}` : '@caribbean',
+          authorAvatar: item.profiles?.avatar_url || null,
+          isVerified: item.profiles?.is_verified || false,
+          location: item.location_name || 'Caribbean',
           time: new Date(item.created_at).toLocaleDateString(),
           body: item.content || '',
           likes: item.likes_count || 0,
           comments: item.comments_count || 0,
         }));
-        setPosts(formatted);
+        setPosts(formatted as any);
       }
     } catch (err) {
       console.warn('Could not fetch posts', err);

@@ -3,8 +3,8 @@
 import React, { useState } from 'react';
 import { Plus, Sparkles, Radio } from 'lucide-react';
 import { type StoryData } from '../../lib/social/actions';
-import CreateMomentModal from './create-moment-modal';
-import MomentViewerModal from './moment-viewer-modal';
+import StoryCreatorModal from './story-creator-modal';
+import StoryViewerModal from './story-viewer-modal';
 
 export interface MomentsCinemaRailProps {
   initialStories: StoryData[];
@@ -137,25 +137,32 @@ export default function MomentsCinemaRail({
       </div>
 
       {/* Creation Modal */}
-      <CreateMomentModal
+      <StoryCreatorModal
         isOpen={isCreateOpen}
         onClose={() => setIsCreateOpen(false)}
-        onStoryCreated={handleStoryCreated}
-        currentUserId={currentUserId}
+        onStoryCreated={() => {
+          // You could trigger a refresh or let server actions handle it.
+        }}
       />
 
       {/* Story Viewer Modal */}
       {activeStoryIndex !== null && (
-        <MomentViewerModal
-          isOpen={activeStoryIndex !== null}
-          stories={stories}
+        <StoryViewerModal
           initialIndex={activeStoryIndex}
           onClose={() => setActiveStoryIndex(null)}
-          onStoryDeleted={handleStoryDeleted}
-          currentUserId={currentUserId}
+          stories={stories.map(s => ({
+            id: s.id,
+            mediaUrl: s.mediaUrl,
+            mediaType: s.mediaKind === 'video' ? 'video' : 'photo',
+            textContent: s.caption,
+            creatorId: s.authorId,
+            creatorName: s.authorName,
+            creatorHandle: s.authorHandle,
+            creatorAvatar: s.authorAvatar,
+            createdAt: s.createdAt,
+          }))}
         />
       )}
     </section>
   );
 }
-

@@ -36,6 +36,7 @@ import {
   incrementPostShareAction,
   reportPostAction,
 } from '../lib/social/actions';
+import { translatePostAction } from '../lib/social/translate-actions';
 import { createSupabaseBrowserClient } from '../lib/supabase/browser';
 import CreatorTipModal from './creator-tip-modal';
 import ShoppablePostWidget, { type TaggedProduct } from './shoppable-post-widget';
@@ -131,7 +132,7 @@ export default function FeedStream({ initialPosts, currentUserId, mode = 'for_yo
     Record<
       string,
       {
-        translatedText?: string;
+        translatedText?: string | null;
         sourceLang?: string;
         targetLang?: Locale;
         isTranslating?: boolean;
@@ -153,22 +154,13 @@ export default function FeedStream({ initialPosts, currentUserId, mode = 'for_yo
     }));
 
     try {
-      const res = await fetch('/api/translate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          text: content,
-          targetLang,
-          postId,
-        }),
-      });
-      const data = await res.json();
-      if (data.success && data.translatedText && data.translatedText.trim() !== content.trim()) {
+      const data = await translatePostAction(postId, content, targetLang);
+      if (data.translation && data.translation.trim() !== content.trim()) {
         setPostTranslations((prev) => ({
           ...prev,
           [postId]: {
-            translatedText: data.translatedText,
-            sourceLang: data.sourceLang,
+            translatedText: data.translation || undefined,
+            sourceLang: 'auto',
             targetLang,
             isTranslating: false,
             isShowingOriginal: false,

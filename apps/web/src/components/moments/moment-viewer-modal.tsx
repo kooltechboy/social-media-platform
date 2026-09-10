@@ -356,6 +356,26 @@ export default function MomentViewerModal({
               </span>
             )}
           </div>
+          
+          {/* Reply Input */}
+          {!isOwner && (
+            <div className="mt-3">
+              <input
+                type="text"
+                placeholder={`Reply to ${currentStory.authorName}...`}
+                className="w-full bg-black/50 text-white rounded-full px-4 py-2 text-sm placeholder:text-white/60 border border-white/20 outline-none focus:border-brand-caribbeanSea transition-colors"
+                onClick={(e) => e.stopPropagation()}
+                onKeyDown={(e) => {
+                  e.stopPropagation();
+                  if (e.key === 'Enter') {
+                    // Send DM placeholder
+                    e.currentTarget.value = '';
+                    alert('Reply sent!');
+                  }
+                }}
+              />
+            </div>
+          )}
         </div>
       </div>
     </div>

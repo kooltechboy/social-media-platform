@@ -89,3 +89,51 @@ export type AllowedTargetingKey = (typeof ALLOWED_TARGETING_KEYS)[number];
 export function isPrivacyAwareTargeting(key: string): key is AllowedTargetingKey {
   return (ALLOWED_TARGETING_KEYS as readonly string[]).includes(key);
 }
+
+export type ExtendedCampaignObjective = 
+  | 'awareness' | 'reach' | 'traffic' | 'engagement' 
+  | 'video_views' | 'leads' | 'messages' | 'marketplace_sales' 
+  | 'creator_promotion' | 'app_installs';
+
+export type AdPlacement = 
+  | 'feed' | 'reels' | 'stories' | 'explore' 
+  | 'marketplace' | 'communities' | 'video' | 'live';
+
+export type AdCreativeType = 
+  | 'single_image' | 'video' | 'reel' | 'story' 
+  | 'carousel' | 'collection' | 'product' | 'creator_partnership';
+
+export interface AdSetConfig {
+  placements: AdPlacement[];
+  targetingCountries: string[]; // ISO codes
+  targetingLanguages: string[];
+  targetingInterests: string[];
+  targetingCommunityIds: string[];
+}
+
+export interface AIAdBrief {
+  businessDescription: string;
+  targetAudience?: string;
+  callToAction?: string;
+  tone?: 'professional' | 'casual' | 'playful' | 'urgent';
+}
+
+export interface GeneratedAdCopy {
+  headline: string;
+  primaryText: string;
+  cta: string;
+  hashtags: string[];
+}
+
+export function generateAdCopyPrompt(brief: AIAdBrief): string {
+  return `You are TUKUBI's Caribbean advertising AI. Generate compelling ad copy for a Caribbean social platform ad.
+Business: ${brief.businessDescription}
+Target audience: ${brief.targetAudience || 'Caribbean community and diaspora'}
+Desired CTA: ${brief.callToAction || 'Learn More'}
+Tone: ${brief.tone || 'professional'}
+
+Return JSON with this exact structure:
+{"headline": string, "primaryText": string, "cta": string, "hashtags": string[]}
+
+Headline: max 40 chars. primaryText: max 150 chars. cta: max 20 chars. hashtags: 5 items.`;
+}

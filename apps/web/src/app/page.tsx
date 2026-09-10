@@ -20,6 +20,7 @@ import { decodeCursor, encodeCursor } from '@caribbean/database';
 import UniversalComposer from '../components/universal-composer';
 import FeedStream, { type FeedPostData } from '../components/feed-stream';
 import TukubiLiveSidebar from '../components/caribbean-now-sidebar';
+import { buildRankedFeed } from '../lib/feed/ranking';
 
 export const dynamic = 'force-dynamic';
 
@@ -57,53 +58,8 @@ export default async function HomePage(props: { searchParams?: Promise<{ mode?: 
   let nextCursor: string | undefined = undefined;
 
   if (supabase) {
-    let postQuery = supabase
-      .from('posts')
-      .select('id, author_id, content, created_at, media_urls, cultural_tags, likes_count, comments_count, shares_count, country_id, profiles:profiles!posts_author_id_fkey(display_name, username, avatar_url, is_verified)')
-      .order('created_at', { ascending: false })
-      .limit(30);
-
-    if (cursor) {
-      const decoded = decodeCursor(cursor);
-      postQuery = postQuery.lt('created_at', decoded.sortKey);
-    }
-
-    if (mode === 'following') {
-      const { data: follows } = await supabase.from('follows').select('following_id').eq('follower_id', user.id);
-      const followingIds = follows?.map((f: any) => f.following_id) || [];
-      if (followingIds.length > 0) postQuery = postQuery.in('author_id', followingIds);
-      else postQuery = postQuery.in('author_id', ['00000000-0000-0000-0000-000000000000']);
-    } else if (mode === 'friends') {
-      const { data: f1 } = await supabase.from('friendships').select('addressee_id').eq('requester_id', user.id).eq('status', 'accepted');
-      const { data: f2 } = await supabase.from('friendships').select('requester_id').eq('addressee_id', user.id).eq('status', 'accepted');
-      const friendIds = [...(f1?.map((f: any) => f.addressee_id) || []), ...(f2?.map((f: any) => f.requester_id) || [])];
-      if (friendIds.length > 0) postQuery = postQuery.in('author_id', friendIds);
-      else postQuery = postQuery.in('author_id', ['00000000-0000-0000-0000-000000000000']);
-    } else if (mode === 'caribbean') {
-      postQuery = postQuery.not('country_id', 'is', null);
-    } else if (mode === 'communities') {
-      const { data: memberships } = await supabase.from('community_members').select('community_id').eq('profile_id', user.id).eq('membership_status', 'active');
-      const communityIds = memberships?.map((m: any) => m.community_id) || [];
-      if (communityIds.length > 0) {
-        const { data: communityMembers } = await supabase.from('community_members').select('profile_id').in('community_id', communityIds);
-        const memberIds = communityMembers?.map((m: any) => m.profile_id) || [];
-        if (memberIds.length > 0) postQuery = postQuery.in('author_id', memberIds);
-        else postQuery = postQuery.in('author_id', ['00000000-0000-0000-0000-000000000000']);
-      } else {
-        postQuery = postQuery.in('author_id', ['00000000-0000-0000-0000-000000000000']);
-      }
-    } else if (mode === 'for_you') {
-      const { data: follows } = await supabase.from('follows').select('following_id').eq('follower_id', user.id);
-      const followingIds = follows?.map((f: any) => f.following_id) || [];
-      if (followingIds.length > 0) {
-        postQuery = postQuery.or(`author_id.in.(${followingIds.join(',')}),country_id.not.is.null`);
-      } else {
-        postQuery = postQuery.not('country_id', 'is', null);
-      }
-    }
-
     const [postsRes, liveRes, officialProfileRes] = await Promise.all([
-      postQuery,
+      buildRankedFeed(user.id, mode, supabase, cursor),
       supabase
         .from('livestreams')
         .select('id, title, peak_viewers, profiles(display_name)')
@@ -122,13 +78,15 @@ export default async function HomePage(props: { searchParams?: Promise<{ mode?: 
     if (!data && postsRes.error) {
       const fallbackPosts = await supabase
         .from('posts')
-        .select('id, author_id, content, created_at, media_urls, cultural_tags, likes_count, comments_count, shares_count, country_id, profiles(display_name, username, avatar_url, is_verified)')
+        .select('id, author_id, content, created_at, media_urls, cultural_tags, likes_count, comments_count, shares_count, country_id, profiles:profiles!posts_author_id_fkey(display_name, username, avatar_url, is_verified)')
         .order('created_at', { ascending: false })
         .limit(30);
       data = fallbackPosts.data as any;
     }
 
-    if (data && data.length === 30) {
+    if (postsRes.nextCursor) {
+      nextCursor = postsRes.nextCursor;
+    } else if (data && data.length === 30) {
       const lastPost = data[data.length - 1];
       nextCursor = encodeCursor({ sortKey: lastPost.created_at, id: lastPost.id });
     }

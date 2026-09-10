@@ -7,6 +7,37 @@ import { VIBE_CATEGORIES, type VibeCategory, type ExploreQueryResult } from './c
 
 export type { VibeCategory, ExploreQueryResult };
 
+export type TrendingSignal = {
+  id: string;
+  territory_iso: string | null;
+  signal_type: string;
+  entity_id: string;
+  entity_label: string;
+  entity_avatar_url: string | null;
+  score: number;
+  post_count_last_2h: number;
+  post_count_last_24h: number;
+};
+
+export async function fetchTrendingSignalsAction(): Promise<TrendingSignal[]> {
+  const supabase = await createSupabaseServerClient();
+  if (!supabase) return [];
+  try {
+    const { data } = await supabase
+      .from('trending_signals')
+      .select('*')
+      .eq('signal_type', 'hashtag')
+      .is('territory_iso', null)
+      .gt('expires_at', new Date().toISOString())
+      .order('score', { ascending: false })
+      .limit(10);
+    return data || [];
+  } catch (err) {
+    console.error('fetchTrendingSignalsAction error:', err);
+    return [];
+  }
+}
+
 export async function fetchExploreDataAction(params: {
   vibe?: string;
   country?: string;

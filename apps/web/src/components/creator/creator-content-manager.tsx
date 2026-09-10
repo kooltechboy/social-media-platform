@@ -32,6 +32,7 @@ import {
 } from '../../lib/live/actions';
 import { deleteDraftAction, type CreatorDraftItem } from '../../lib/creator/draft-actions';
 import CreatePodcastModal from '../podcasts/create-podcast-modal';
+import CreatorAnalyticsTab from './creator-analytics-tab';
 
 export interface CreatorVideoItem {
   id: string;
@@ -80,7 +81,7 @@ interface CreatorContentManagerProps {
   podcasts: CreatorPodcastItem[];
   livestreams: CreatorLivestreamItem[];
   drafts: CreatorDraftItem[];
-  initialTab?: 'all' | 'videos' | 'podcasts' | 'livestreams' | 'drafts';
+  initialTab?: 'all' | 'videos' | 'podcasts' | 'livestreams' | 'drafts' | 'analytics';
 }
 
 export default function CreatorContentManager({
@@ -91,7 +92,7 @@ export default function CreatorContentManager({
   drafts,
   initialTab = 'all',
 }: CreatorContentManagerProps) {
-  const [activeTab, setActiveTab] = useState<'all' | 'videos' | 'podcasts' | 'livestreams' | 'drafts'>(initialTab);
+  const [activeTab, setActiveTab] = useState<'all' | 'videos' | 'podcasts' | 'livestreams' | 'drafts' | 'analytics'>(initialTab);
   const [statusFilter, setStatusFilter] = useState<'all' | 'published' | 'draft' | 'scheduled'>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [isPending, startTransition] = useTransition();
@@ -251,6 +252,7 @@ export default function CreatorContentManager({
             { id: 'podcasts', label: 'Podcasts & Episodes', count: podcasts.length },
             { id: 'livestreams', label: 'Live Broadcasts', count: livestreams.length },
             { id: 'drafts', label: 'Drafts', count: drafts.length },
+            { id: 'analytics', label: 'Analytics' },
           ].map((tab) => (
             <button
               key={tab.id}
@@ -263,13 +265,15 @@ export default function CreatorContentManager({
               }`}
             >
               <span>{tab.label}</span>
-              <span
-                className={`text-[10px] px-1.5 py-0.2 rounded-full ${
-                  activeTab === tab.id ? 'bg-slate-900 text-white' : 'bg-white/10 text-brand-sandstone/70'
-                }`}
-              >
-                {tab.count}
-              </span>
+              {tab.count !== undefined && (
+                <span
+                  className={`text-[10px] px-1.5 py-0.2 rounded-full ${
+                    activeTab === tab.id ? 'bg-slate-900 text-white' : 'bg-white/10 text-brand-sandstone/70'
+                  }`}
+                >
+                  {tab.count}
+                </span>
+              )}
             </button>
           ))}
         </div>
@@ -603,6 +607,9 @@ export default function CreatorContentManager({
             )}
           </div>
         )}
+
+        {/* ANALYTICS SECTION */}
+        {activeTab === 'analytics' && <CreatorAnalyticsTab />}
       </div>
 
       {/* Podcast Creation Modal */}

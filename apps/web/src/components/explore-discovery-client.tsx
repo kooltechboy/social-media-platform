@@ -31,8 +31,11 @@ import { VIBE_CATEGORIES, type VibeCategory, type ExploreQueryResult } from '../
 import { CARIBBEAN_TERRITORIES, type CaribbeanTerritory } from '../lib/constants/caribbean-territories';
 import { DIASPORA_CITY_HUBS, type DiasporaCityHub } from '../lib/constants/diaspora-hubs';
 
+import type { TrendingSignal } from '../lib/explore/actions';
+
 interface ExploreDiscoveryClientProps {
   initialResult: ExploreQueryResult;
+  trendingSignals?: TrendingSignal[];
   activeVibeKey?: string | null;
   activeCountryKey?: string | null;
   activeHubKey?: string | null;
@@ -41,6 +44,7 @@ interface ExploreDiscoveryClientProps {
 
 export default function ExploreDiscoveryClient({
   initialResult,
+  trendingSignals = [],
   activeVibeKey,
   activeCountryKey,
   activeHubKey,
@@ -248,6 +252,39 @@ export default function ExploreDiscoveryClient({
             Clear All Filters
           </button>
         </div>
+      )}
+
+      {/* ────────────────────────────────────────────────────────── */}
+      {/* TRENDING SIGNALS (NEW)                                     */}
+      {/* ────────────────────────────────────────────────────────── */}
+      {trendingSignals && trendingSignals.length > 0 && (
+        <section className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-sm font-extrabold text-white flex items-center gap-2 uppercase tracking-wider">
+              <Flame className="w-4 h-4 text-brand-sunriseCoral" /> Trending Now
+            </h2>
+            <span className="text-xs text-brand-sandstone/60">Top hashtags across the Caribbean</span>
+          </div>
+
+          <div className="flex flex-wrap gap-3">
+            {trendingSignals.map((signal) => (
+              <Link
+                key={signal.id}
+                href={`/search?q=${encodeURIComponent(signal.entity_label)}`}
+                className="surface-card surface-card-interactive rounded-xl px-4 py-2 flex items-center gap-2 border border-white/10 hover:border-brand-sunriseCoral/50 group"
+              >
+                <div className="text-xs font-black text-white group-hover:text-brand-sunriseCoral transition-colors">
+                  {signal.entity_label}
+                </div>
+                {signal.post_count_last_24h > 0 && (
+                  <div className="text-[10px] text-brand-sandstone/70">
+                    {signal.post_count_last_24h} posts
+                  </div>
+                )}
+              </Link>
+            ))}
+          </div>
+        </section>
       )}
 
       {/* ────────────────────────────────────────────────────────── */}

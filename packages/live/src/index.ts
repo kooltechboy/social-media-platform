@@ -136,3 +136,7 @@ export function formatLiveDuration(seconds: number): string {
   }
   return `${minutes}:${secs < 10 ? '0' : ''}${secs}`;
 }
+
+// Cloudflare Stream CDN integration
+export { CloudflareStreamClient, createCloudflareStreamClient } from './cloudflare-stream';
+export type { CloudflareStreamLiveInput, CfStreamConfig } from './cloudflare-stream';
