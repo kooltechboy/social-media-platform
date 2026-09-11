@@ -26,7 +26,6 @@ export async function fetchTrendingSignalsAction(): Promise<TrendingSignal[]> {
     const { data } = await supabase
       .from('trending_signals')
       .select('*')
-      .eq('signal_type', 'hashtag')
       .is('territory_iso', null)
       .gt('expires_at', new Date().toISOString())
       .order('score', { ascending: false })
