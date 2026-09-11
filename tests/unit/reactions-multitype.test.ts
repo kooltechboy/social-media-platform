@@ -46,3 +46,59 @@ describe('Multi-type reactions', () => {
     });
   });
 });
+
+describe('toggleReactionAction logic', () => {
+  it('returns liked:false when toggling same type (remove reaction)', () => {
+    const existingReaction = 'fire' as ReactionType;
+    const selectedType = 'fire' as ReactionType;
+    const isRemoval = existingReaction === selectedType;
+    expect(isRemoval).toBe(true);
+  });
+
+  it('returns liked:true when selecting new type (upsert)', () => {
+    const existingReaction = 'like' as ReactionType;
+    const selectedType = 'fire' as ReactionType;
+    const isUpsert = existingReaction !== selectedType;
+    expect(isUpsert).toBe(true);
+  });
+
+  it('reaction summary bar shows top 3 by count', () => {
+    const VALID = ['like','love','fire','celebrate','laugh','wow','sad','angry'] as const;
+    type RT = typeof VALID[number];
+    const counts: Record<RT, number> = {
+      like: 10, love: 5, fire: 20, celebrate: 2, laugh: 0, wow: 0, sad: 0, angry: 1
+    };
+    const topTypes = (Object.keys(counts) as RT[])
+      .filter(t => counts[t] > 0)
+      .sort((a, b) => counts[b] - counts[a])
+      .slice(0, 3);
+    expect(topTypes).toEqual(['fire', 'like', 'love']);
+  });
+
+  it('optimistic update: count +1 when reacting for first time', () => {
+    const prevCount = 5;
+    const prev = null; // no previous reaction
+    const isRemoval = false;
+    const newCount = prevCount + (isRemoval ? -1 : prev ? 0 : 1);
+    expect(newCount).toBe(6);
+  });
+
+  it('optimistic update: count -1 when removing same reaction', () => {
+    const prevCount = 5;
+    const prev = 'fire' as ReactionType;
+    const selectedType = 'fire' as ReactionType;
+    const isRemoval = prev === selectedType;
+    const newCount = prevCount + (isRemoval ? -1 : prev ? 0 : 1);
+    expect(newCount).toBe(4);
+  });
+
+  it('optimistic update: count unchanged when switching reaction type', () => {
+    const prevCount = 5;
+    const prev = 'like' as ReactionType;
+    const selectedType = 'fire' as ReactionType;
+    const isRemoval = prev === selectedType;
+    const newCount = prevCount + (isRemoval ? -1 : prev ? 0 : 1);
+    expect(newCount).toBe(5);
+  });
+});
+

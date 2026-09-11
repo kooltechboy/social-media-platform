@@ -613,3 +613,111 @@ export async function reportPostAction(postId: string, reason: string, details?:
 
   return { success: true, error: null };
 }
+
+// ===== MULTI-TYPE REACTIONS =====
+// Note: ReactionType and REACTION_EMOJI_MAP are defined here (server-side source of truth)
+// The client component in components/reactions/reaction-picker.tsx re-exports compatible types
+
+export type ReactionType = 'like' | 'love' | 'fire' | 'celebrate' | 'laugh' | 'wow' | 'sad' | 'angry';
+
+export const REACTION_EMOJI_MAP: Record<ReactionType, { emoji: string; label: string; color: string }> = {
+  like:      { emoji: '🤍', label: 'Like',      color: 'text-slate-300' },
+  love:      { emoji: '❤️', label: 'Love',      color: 'text-rose-400' },
+  fire:      { emoji: '🔥', label: 'Fire',      color: 'text-orange-400' },
+  celebrate: { emoji: '🎉', label: 'Celebrate', color: 'text-yellow-400' },
+  laugh:     { emoji: '😂', label: 'Laugh',     color: 'text-amber-400' },
+  wow:       { emoji: '😮', label: 'Wow',       color: 'text-sky-400' },
+  sad:       { emoji: '😢', label: 'Sad',       color: 'text-blue-400' },
+  angry:     { emoji: '😠', label: 'Angry',     color: 'text-red-500' },
+};
+
+export const VALID_REACTION_TYPES: ReactionType[] = ['like','love','fire','celebrate','laugh','wow','sad','angry'];
+
+export interface ReactionToggleResult {
+  liked: boolean;
+  reactionType: ReactionType;
+  error?: string;
+}
+
+export async function toggleReactionAction(
+  postId: string,
+  reactionType: ReactionType
+): Promise<ReactionToggleResult> {
+  const user = await getCurrentUser();
+  if (!user) return { liked: false, reactionType, error: 'Please sign in to react.' };
+
+  const supabase = await createSupabaseServerClient();
+  if (!supabase) return { liked: false, reactionType, error: 'Database unavailable.' };
+
+  if (!VALID_REACTION_TYPES.includes(reactionType)) {
+    return { liked: false, reactionType, error: 'Invalid reaction type.' };
+  }
+
+  await ensureUserProfile(supabase, {
+    id: user.id,
+    email: user.email,
+    user_metadata: { username: user.username, display_name: user.displayName, avatar_url: user.avatarUrl },
+  });
+
+  const { data: existing } = await supabase
+    .from('post_reactions')
+    .select('reaction_type')
+    .eq('post_id', postId)
+    .eq('user_id', user.id)
+    .maybeSingle();
+
+  if (existing?.reaction_type === reactionType) {
+    const { error } = await supabase
+      .from('post_reactions')
+      .delete()
+      .eq('post_id', postId)
+      .eq('user_id', user.id);
+    if (error) return { liked: false, reactionType, error: error.message };
+    revalidatePath('/');
+    return { liked: false, reactionType };
+  } else {
+    const { error } = await supabase
+      .from('post_reactions')
+      .upsert(
+        { post_id: postId, user_id: user.id, reaction_type: reactionType },
+        { onConflict: 'post_id,user_id' }
+      );
+    if (error) return { liked: false, reactionType, error: error.message };
+    revalidatePath('/');
+    return { liked: true, reactionType };
+  }
+}
+
+export interface ReactionSummary {
+  counts: Record<ReactionType, number>;
+  total: number;
+  userReaction: ReactionType | null;
+}
+
+export async function fetchPostReactionSummaryAction(postId: string): Promise<ReactionSummary> {
+  const user = await getCurrentUser();
+  const supabase = await createSupabaseServerClient();
+
+  const emptyCounts = Object.fromEntries(VALID_REACTION_TYPES.map(t => [t, 0])) as Record<ReactionType, number>;
+
+  if (!supabase) return { counts: emptyCounts, total: 0, userReaction: null };
+
+  const { data: rows } = await supabase
+    .from('post_reactions')
+    .select('reaction_type, user_id')
+    .eq('post_id', postId);
+
+  if (!rows) return { counts: emptyCounts, total: 0, userReaction: null };
+
+  const counts = { ...emptyCounts };
+  let userReaction: ReactionType | null = null;
+
+  for (const row of rows) {
+    const t = row.reaction_type as ReactionType;
+    if (VALID_REACTION_TYPES.includes(t)) counts[t]++;
+    if (user && (row as any).user_id === user.id) userReaction = t;
+  }
+
+  return { counts, total: rows.length, userReaction };
+}
+

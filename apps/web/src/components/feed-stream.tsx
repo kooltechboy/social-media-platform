@@ -44,6 +44,10 @@ import UserAvatar from './user-avatar';
 import OfficialBadge from './official/official-badge';
 import EmojiPickerPopover from './emoji/emoji-picker-popover';
 import { useTranslation, LOCALE_DETAILS, LOCALES, Locale } from '@caribbean/localization';
+import ReactionPicker from './reactions/reaction-picker';
+import type { ReactionType } from './reactions/reaction-picker';
+import { toggleReactionAction } from '../lib/social/actions';
+
 
 export interface FeedPostData {
   id: string;
@@ -93,12 +97,34 @@ export default function FeedStream({ initialPosts, currentUserId, mode = 'for_yo
   const [confirmDeletePostId, setConfirmDeletePostId] = useState<string | null>(null);
   const [activeEmojiPickerPostId, setActiveEmojiPickerPostId] = useState<string | null>(null);
   const [activeCommentEmojiPickerPostId, setActiveCommentEmojiPickerPostId] = useState<string | null>(null);
-  const [postReactions, setPostReactions] = useState<
+  const [customEmojiReactions, setCustomEmojiReactions] = useState<
     Record<string, Array<{ emoji: string; count: number; users: string[] }>>
   >({});
 
+  const [postReactions, setPostReactions] = useState<Record<string, ReactionType | null>>(
+    () => Object.fromEntries(initialPosts.map(p => [p.id, p.isUserLiked ? 'like' as ReactionType : null]))
+  );
+  const [postLikeCounts, setPostLikeCounts] = useState<Record<string, number>>(
+    () => Object.fromEntries(initialPosts.map(p => [p.id, p.likes]))
+  );
+
+  const handleReaction = async (postId: string, type: ReactionType) => {
+    const prev = postReactions[postId];
+    const isRemoval = prev === type;
+    setPostReactions(r => ({ ...r, [postId]: isRemoval ? null : type }));
+    setPostLikeCounts(c => ({
+      ...c,
+      [postId]: (c[postId] || 0) + (isRemoval ? -1 : prev ? 0 : 1)
+    }));
+    const result = await toggleReactionAction(postId, type);
+    if (result.error) {
+      setPostReactions(r => ({ ...r, [postId]: prev ?? null }));
+      setPostLikeCounts(c => ({ ...c, [postId]: (c[postId] || 0) + (isRemoval ? 1 : prev ? 0 : -1) }));
+    }
+  };
+
   function handleReactToPost(postId: string, emoji: string) {
-    setPostReactions((prev) => {
+    setCustomEmojiReactions((prev) => {
       const currentList = prev[postId] || [];
       const existing = currentList.find((r) => r.emoji === emoji);
 
@@ -865,9 +891,9 @@ export default function FeedStream({ initialPosts, currentUserId, mode = 'for_yo
               )}
 
               {/* Emoji Reactions Display */}
-              {postReactions[post.id] && postReactions[post.id].length > 0 && (
+              {customEmojiReactions[post.id] && customEmojiReactions[post.id].length > 0 && (
                 <div className="flex flex-wrap items-center gap-1.5 pt-1">
-                  {postReactions[post.id].map((r, i) => (
+                  {customEmojiReactions[post.id].map((r, i) => (
                     <button
                       key={`${r.emoji}-${i}`}
                       type="button"
@@ -883,18 +909,14 @@ export default function FeedStream({ initialPosts, currentUserId, mode = 'for_yo
 
               {/* Interaction Bar */}
               <div className="flex items-center justify-between pt-3 border-t border-slate-800/70 text-brand-sandstone/60 text-xs">
-                {/* Like Button */}
-                <button
-                  type="button"
-                  aria-label={post.isUserLiked ? 'Unlike post' : 'Like post'}
-                  onClick={() => handleToggleLike(post.id)}
-                  className={`flex items-center gap-1.5 transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-rose-400 rounded-lg px-1 ${
-                    post.isUserLiked ? 'text-rose-400 font-bold' : 'hover:text-rose-400'
-                  }`}
-                >
-                  <Heart className={`w-4 h-4 ${post.isUserLiked ? 'fill-rose-500 text-rose-500' : ''}`} />
-                  <span>{post.likes}</span>
-                </button>
+                {/* Reaction Picker & Counter */}
+                <div className="flex items-center gap-1">
+                  <ReactionPicker
+                    currentReaction={postReactions[post.id]}
+                    onSelect={(type) => handleReaction(post.id, type)}
+                  />
+                  <span className="text-xs text-slate-400 tabular-nums">{postLikeCounts[post.id] || 0}</span>
+                </div>
 
                 {/* Quick Emoji Reaction Trigger */}
                 <div className="relative">

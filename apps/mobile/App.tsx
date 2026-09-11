@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, SafeAreaView, StatusBar, View, ActivityIndicator, TouchableOpacity, Text, Alert } from 'react-native';
-import { NavigationContainer, DefaultTheme } from '@react-navigation/native';
+import { NavigationContainer, DefaultTheme, createNavigationContainerRef } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { TOKENS } from './src/theme/tokens';
 import { Header } from './src/components/Header';
@@ -15,6 +15,8 @@ import { NotificationsScreen } from './src/screens/NotificationsScreen';
 import { CommunitiesScreen } from './src/screens/CommunitiesScreen';
 import { FinancialCenterScreen } from './src/screens/FinancialCenterScreen';
 import { supabase } from './src/lib/supabase';
+
+export const navigationRef = createNavigationContainerRef<any>();
 
 const Tab = createBottomTabNavigator();
 const Navigation = NavigationContainer as React.ComponentType<any>;
@@ -110,10 +112,15 @@ export default function App() {
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor={TOKENS.canvas} />
-      <Navigation linking={linking} theme={MyTheme}>
+      <Navigation ref={navigationRef} linking={linking} theme={MyTheme}>
         <Navigator
           screenOptions={({ route }: any) => ({
-            header: () => <Header onWalletPress={() => {}} />,
+            header: () => (
+              <Header 
+                onWalletPress={() => navigationRef.isReady() && navigationRef.navigate('Finance')}
+                onNotificationsPress={() => navigationRef.isReady() && navigationRef.navigate('Notifications')}
+              />
+            ),
             tabBarStyle: {
               backgroundColor: TOKENS.surface,
               borderTopColor: TOKENS.border,
@@ -150,14 +157,14 @@ export default function App() {
                   {...props} 
                   onPress={() => {
                     Alert.alert(
-                      'Create',
-                      'What would you like to share?',
+                      'Create & Share',
+                      'What would you like to share on TUKUBI?',
                       [
-                        { text: 'Post', onPress: () => props.onPress && props.onPress(new Event('press')) },
-                        { text: 'Story', onPress: () => Alert.alert('Coming soon in next update 🌴') },
-                        { text: 'Reel', onPress: () => Alert.alert('Coming soon in next update 🌴') },
-                        { text: 'Live', onPress: () => Alert.alert('Coming soon in next update 🌴') },
-                        { text: 'Event', onPress: () => Alert.alert('Coming soon in next update 🌴') },
+                        { text: 'New Post', onPress: () => navigationRef.isReady() && navigationRef.navigate('Create') },
+                        { text: 'Watch Reels', onPress: () => navigationRef.isReady() && navigationRef.navigate('Reels') },
+                        { text: 'Communities', onPress: () => navigationRef.isReady() && navigationRef.navigate('Communities') },
+                        { text: 'Wallet', onPress: () => navigationRef.isReady() && navigationRef.navigate('Finance') },
+                        { text: 'Notifications', onPress: () => navigationRef.isReady() && navigationRef.navigate('Notifications') },
                         { text: 'Cancel', style: 'cancel' }
                       ]
                     );

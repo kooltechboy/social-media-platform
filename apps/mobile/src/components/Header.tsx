@@ -2,7 +2,12 @@ import React from 'react';
 import { StyleSheet, Text, View, TouchableOpacity, Image } from 'react-native';
 import { TOKENS } from '../theme/tokens';
 
-export function Header({ onWalletPress }: { onWalletPress?: () => void }) {
+export interface HeaderProps {
+  onWalletPress?: () => void;
+  onNotificationsPress?: () => void;
+}
+
+export function Header({ onWalletPress, onNotificationsPress }: HeaderProps) {
   return (
     <View style={styles.header}>
       <View style={styles.brandContainer}>
@@ -16,14 +21,24 @@ export function Header({ onWalletPress }: { onWalletPress?: () => void }) {
           <Text style={styles.headerTagline}>The Caribbean Connected.</Text>
         </View>
       </View>
-      <TouchableOpacity
-        accessibilityRole="button"
-        accessibilityLabel="Financial Center"
-        style={styles.walletBadge}
-        onPress={onWalletPress}
-      >
-        <Text style={styles.walletText}>Financial Center</Text>
-      </TouchableOpacity>
+      <View style={styles.rightActions}>
+        <TouchableOpacity
+          accessibilityRole="button"
+          accessibilityLabel="Notifications"
+          style={styles.notifBadge}
+          onPress={onNotificationsPress}
+        >
+          <Text style={styles.notifText}>🔔</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          accessibilityRole="button"
+          accessibilityLabel="Financial Center"
+          style={styles.walletBadge}
+          onPress={onWalletPress}
+        >
+          <Text style={styles.walletText}>Financial Center</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 }
@@ -60,6 +75,21 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: TOKENS.textMuted,
     letterSpacing: 0.2,
+  },
+  rightActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  notifBadge: {
+    minWidth: 44,
+    minHeight: 44,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 6,
+  },
+  notifText: {
+    fontSize: 18,
   },
   walletBadge: {
     backgroundColor: 'rgba(255, 122, 89, 0.15)',
