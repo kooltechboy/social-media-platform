@@ -12,8 +12,11 @@ import {
   postReelCommentAction,
   recordReelShareAction,
   recordReelViewAction,
+  saveReelAction,
+  unsaveReelAction,
 } from '../../lib/media/reel-actions';
 import { followAction, unfollowAction } from '../../lib/social/profile-actions';
+import UseThisSoundButton from '../sounds/use-this-sound-button';
 import CreateReelModal from './create-reel-modal';
 
 export interface ReelItem {
@@ -65,6 +68,8 @@ function ReelCard({
   setFollowingState,
   onOpenComments,
   onOpenShare,
+  isSaved,
+  onSave,
 }: {
   reel: ReelItem;
   isActive: boolean;
@@ -78,11 +83,12 @@ function ReelCard({
   setFollowingState: React.Dispatch<React.SetStateAction<Record<string, boolean>>>;
   onOpenComments: (reelId: string) => void;
   onOpenShare: (reelId: string) => void;
+  isSaved: boolean;
+  onSave: (reelId: string) => void;
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [progress, setProgress] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [isSaved, setIsSaved] = useState(false);
   const [isCaptionExpanded, setIsCaptionExpanded] = useState(false);
 
   useEffect(() => {
@@ -200,11 +206,16 @@ function ReelCard({
           <span className="text-xs font-bold text-white shadow-black drop-shadow-md">{reel.comments}</span>
         </button>
 
-        <button onClick={() => setIsSaved(!isSaved)} aria-label="Save" className="flex flex-col items-center gap-1 group active:scale-90 transition-transform">
-          <div className="w-12 h-12 rounded-full bg-black/40 flex items-center justify-center backdrop-blur-md text-white">
-            <Bookmark className={`w-6 h-6 ${isSaved ? 'fill-current text-brand-goldenHour' : ''}`} />
+        <button
+          type="button"
+          onClick={() => onSave(reel.id)}
+          className={`flex flex-col items-center gap-1 group active:scale-90 transition-transform ${isSaved ? 'text-brand-caribbeanSea' : 'text-white'}`}
+          aria-label={isSaved ? 'Unsave reel' : 'Save reel'}
+        >
+          <div className={`w-12 h-12 rounded-full flex items-center justify-center backdrop-blur-md transition-colors ${isSaved ? 'bg-brand-caribbeanSea/20 text-brand-caribbeanSea border border-brand-caribbeanSea/40' : 'bg-black/40 text-white'}`}>
+            <Bookmark className={`w-6 h-6 ${isSaved ? 'fill-brand-caribbeanSea' : ''}`} />
           </div>
-          <span className="text-xs font-bold text-white shadow-black drop-shadow-md">Save</span>
+          <span className="text-[10px] font-medium shadow-black drop-shadow-md">{isSaved ? 'Saved' : 'Save'}</span>
         </button>
 
         <button onClick={() => onOpenShare(reel.id)} aria-label="Share" className="flex flex-col items-center gap-1 group active:scale-90 transition-transform">
@@ -256,6 +267,9 @@ function ReelCard({
           <Disc className="w-5 h-5 text-white animate-spin" style={{ animationDuration: '4s' }} />
           <span className="text-sm font-medium text-white drop-shadow-md truncate">{reel.sound}</span>
         </div>
+        {reel.sound && (
+          <UseThisSoundButton soundId={reel.soundId} soundTitle={reel.sound} className="mt-1" />
+        )}
       </div>
     </div>
   );
@@ -279,6 +293,21 @@ export default function ReelsFeedViewer({ initialReels, user }: ReelsFeedViewerP
     return initial;
   });
   const [followingState, setFollowingState] = useState<Record<string, boolean>>({});
+  const [savedReels, setSavedReels] = useState<Set<string>>(new Set());
+
+  const handleSaveReel = async (reelId: string) => {
+    const isSaved = savedReels.has(reelId);
+    setSavedReels(prev => {
+      const next = new Set(prev);
+      if (isSaved) next.delete(reelId); else next.add(reelId);
+      return next;
+    });
+    if (isSaved) {
+      await unsaveReelAction(reelId);
+    } else {
+      await saveReelAction(reelId);
+    }
+  };
 
   const [isCommentsOpen, setIsCommentsOpen] = useState(false);
   const [activeCommentsReelId, setActiveCommentsReelId] = useState<string | null>(null);
@@ -414,6 +443,8 @@ export default function ReelsFeedViewer({ initialReels, user }: ReelsFeedViewerP
               setFollowingState={setFollowingState}
               onOpenComments={handleOpenComments}
               onOpenShare={handleOpenShare}
+              isSaved={savedReels.has(reel.id)}
+              onSave={handleSaveReel}
             />
           );
         })}

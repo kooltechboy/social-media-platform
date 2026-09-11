@@ -156,3 +156,42 @@ export async function publishReelAction(formData: FormData): Promise<ReelActionR
   revalidatePath('/creator-studio/videos');
   return { success: true, data };
 }
+
+// ===== REEL SAVE / BOOKMARK =====
+
+export async function saveReelAction(reelId: string): Promise<ReelActionResult> {
+  const user = await getCurrentUser();
+  if (!user) return { success: false, error: 'Sign in to save reels.' };
+
+  const supabase = await createSupabaseServerClient();
+  if (!supabase) return { success: false, error: 'Database unavailable.' };
+
+  // Reels are stored in `videos` table; bookmarked via saved_posts using their UUID
+  const { error } = await supabase
+    .from('saved_posts')
+    .upsert(
+      { profile_id: user.id, post_id: reelId },
+      { onConflict: 'profile_id,post_id' }
+    );
+
+  if (error) return { success: false, error: error.message };
+  return { success: true, data: { saved: true } };
+}
+
+export async function unsaveReelAction(reelId: string): Promise<ReelActionResult> {
+  const user = await getCurrentUser();
+  if (!user) return { success: false, error: 'Sign in.' };
+
+  const supabase = await createSupabaseServerClient();
+  if (!supabase) return { success: false, error: 'Database unavailable.' };
+
+  const { error } = await supabase
+    .from('saved_posts')
+    .delete()
+    .eq('profile_id', user.id)
+    .eq('post_id', reelId);
+
+  if (error) return { success: false, error: error.message };
+  return { success: true, data: { saved: false } };
+}
+
