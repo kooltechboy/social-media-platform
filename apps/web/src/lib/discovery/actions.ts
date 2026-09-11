@@ -95,6 +95,44 @@ export interface DiscoverPost {
 }
 
 /**
+ * Safely resolves country information from profile database fields
+ * Supports existing database columns (country, island, city) and future origin_country_iso
+ */
+export function resolveProfileCountry(p: {
+  country?: string | null;
+  island?: string | null;
+  city?: string | null;
+  origin_country_iso?: string | null;
+}): { iso: string | null; name: string | null } {
+  if (p.origin_country_iso) {
+    const info = CARIBBEAN_TERRITORIES_BY_ISO[p.origin_country_iso.toUpperCase()];
+    return {
+      iso: p.origin_country_iso.toUpperCase(),
+      name: info?.name || p.origin_country_iso,
+    };
+  }
+
+  const raw = (p.country || p.island || '').trim();
+  if (!raw) return { iso: null, name: null };
+
+  if (raw.length === 3 && CARIBBEAN_TERRITORIES_BY_ISO[raw.toUpperCase()]) {
+    return {
+      iso: raw.toUpperCase(),
+      name: CARIBBEAN_TERRITORIES_BY_ISO[raw.toUpperCase()].name,
+    };
+  }
+
+  const match = Object.values(CARIBBEAN_TERRITORIES_BY_ISO).find(
+    (t) => t.name.toLowerCase() === raw.toLowerCase()
+  );
+  if (match) {
+    return { iso: match.iso, name: match.name };
+  }
+
+  return { iso: null, name: raw };
+}
+
+/**
  * Universal multi-entity search across TUKUBI
  */
 export async function universalSearchAction(params: {
@@ -153,15 +191,11 @@ export async function universalSearchAction(params: {
     // 1. Profiles Search (People, Creators)
     let profileQuery = supabase
       .from('profiles')
-      .select('id, display_name, username, avatar_url, bio, origin_country_iso, is_verified, account_type, status, is_private')
+      .select('id, display_name, username, avatar_url, bio, country, island, city, is_verified, account_type, status, is_private')
       .eq('is_private', false)
       .neq('status', 'suspended')
       .or(`display_name.ilike.${termFilter},username.ilike.${termFilter},first_name.ilike.${termFilter},last_name.ilike.${termFilter}`)
       .limit(limit);
-
-    if (params.countryIso) {
-      profileQuery = profileQuery.eq('origin_country_iso', params.countryIso.toUpperCase());
-    }
 
     // 2. Businesses Search
     let businessQuery = supabase
@@ -235,15 +269,15 @@ export async function universalSearchAction(params: {
     const relationshipMap = user ? await getRelationshipBatchAction(profileIds) : {};
 
     const profilesData: DiscoverProfile[] = rawProfiles.map((p) => {
-      const countryInfo = p.origin_country_iso ? CARIBBEAN_TERRITORIES_BY_ISO[p.origin_country_iso.toUpperCase()] : null;
+      const countryInfo = resolveProfileCountry(p);
       return {
         id: p.id,
         display_name: p.display_name,
         username: p.username,
         avatar_url: p.avatar_url,
         bio: p.bio,
-        origin_country_iso: p.origin_country_iso,
-        country_name: countryInfo?.name || null,
+        origin_country_iso: countryInfo.iso,
+        country_name: countryInfo.name,
         is_verified: !!p.is_verified,
         is_official: p.username?.toLowerCase() === 'tukubi' || !!(p as any).is_official,
         account_type: p.account_type,
@@ -460,17 +494,13 @@ export async function fetchPeopleYouMayKnowAction(params?: {
     // 2. Query candidate profiles
     let query = supabase
       .from('profiles')
-      .select('id, display_name, username, avatar_url, bio, origin_country_iso, is_verified, account_type, status, is_private')
+      .select('id, display_name, username, avatar_url, bio, country, island, city, is_verified, account_type, status, is_private')
       .eq('is_private', false)
       .neq('status', 'suspended')
       .limit(50);
 
     if (user) {
       query = query.neq('id', user.id);
-    }
-
-    if (params?.countryIso) {
-      query = query.eq('origin_country_iso', params.countryIso.toUpperCase());
     }
 
     const { data: candidates } = await query;
@@ -486,15 +516,15 @@ export async function fetchPeopleYouMayKnowAction(params?: {
     const scoredList: ScoredRecommendation<DiscoverProfile>[] = [];
 
     for (const c of eligible) {
-      const countryInfo = c.origin_country_iso ? CARIBBEAN_TERRITORIES_BY_ISO[c.origin_country_iso.toUpperCase()] : null;
+      const countryInfo = resolveProfileCountry(c);
       const prof: DiscoverProfile = {
         id: c.id,
         display_name: c.display_name,
         username: c.username,
         avatar_url: c.avatar_url,
         bio: c.bio,
-        origin_country_iso: c.origin_country_iso,
-        country_name: countryInfo?.name || null,
+        origin_country_iso: countryInfo.iso,
+        country_name: countryInfo.name,
         is_verified: !!c.is_verified,
         is_official: c.username?.toLowerCase() === 'tukubi' || !!(c as any).is_official,
         account_type: c.account_type,
@@ -506,8 +536,8 @@ export async function fetchPeopleYouMayKnowAction(params?: {
           id: c.id,
           entityType: c.account_type === 'creator' ? 'creator' : 'profile',
           data: prof,
-          originCountryIso: c.origin_country_iso,
-          countryName: countryInfo?.name || null,
+          originCountryIso: countryInfo.iso || undefined,
+          countryName: countryInfo.name || undefined,
           isVerified: !!c.is_verified,
           isOfficial: c.username?.toLowerCase() === 'tukubi' || !!(c as any).is_official,
         },
@@ -635,21 +665,21 @@ export async function fetchFriendsOverviewAction(params?: {
     if (allProfileIds.length > 0) {
       const { data: profilesData } = await supabase
         .from('profiles')
-        .select('id, display_name, username, avatar_url, bio, origin_country_iso, is_verified, account_type')
+        .select('id, display_name, username, avatar_url, bio, country, island, city, is_verified, account_type')
         .in('id', allProfileIds);
 
       const relationshipBatch = await getRelationshipBatchAction(allProfileIds);
 
       (profilesData || []).forEach((p) => {
-        const countryInfo = p.origin_country_iso ? CARIBBEAN_TERRITORIES_BY_ISO[p.origin_country_iso.toUpperCase()] : null;
+        const countryInfo = resolveProfileCountry(p);
         profilesMap[p.id] = {
           id: p.id,
           display_name: p.display_name,
           username: p.username,
           avatar_url: p.avatar_url,
           bio: p.bio,
-          origin_country_iso: p.origin_country_iso,
-          country_name: countryInfo?.name || null,
+          origin_country_iso: countryInfo.iso,
+          country_name: countryInfo.name,
           is_verified: !!p.is_verified,
           is_official: p.username?.toLowerCase() === 'tukubi' || !!(p as any).is_official,
           account_type: p.account_type,
@@ -724,16 +754,12 @@ export async function fetchMembersDirectoryAction(params?: {
   try {
     let query = supabase
       .from('profiles')
-      .select('id, display_name, username, avatar_url, bio, origin_country_iso, is_verified, account_type, status, is_private, updated_at', { count: 'exact' })
+      .select('id, display_name, username, avatar_url, bio, country, island, city, is_verified, account_type, status, is_private, updated_at', { count: 'exact' })
       .eq('is_private', false)
       .neq('status', 'suspended')
       .order('is_verified', { ascending: false })
       .order('updated_at', { ascending: false })
       .range(offset, offset + limit - 1);
-
-    if (params?.countryIso && params.countryIso !== 'ALL') {
-      query = query.eq('origin_country_iso', params.countryIso.toUpperCase());
-    }
 
     if (params?.category && params.category !== 'all') {
       query = query.eq('account_type', params.category);
@@ -751,15 +777,15 @@ export async function fetchMembersDirectoryAction(params?: {
     const relationshipMap = user ? await getRelationshipBatchAction(memberIds) : {};
 
     const members: DiscoverProfile[] = data.map((d) => {
-      const countryInfo = d.origin_country_iso ? CARIBBEAN_TERRITORIES_BY_ISO[d.origin_country_iso.toUpperCase()] : null;
+      const countryInfo = resolveProfileCountry(d);
       return {
         id: d.id,
         display_name: d.display_name,
         username: d.username,
         avatar_url: d.avatar_url,
         bio: d.bio,
-        origin_country_iso: d.origin_country_iso,
-        country_name: countryInfo?.name || null,
+        origin_country_iso: countryInfo.iso,
+        country_name: countryInfo.name,
         is_verified: !!d.is_verified,
         is_official: d.username?.toLowerCase() === 'tukubi' || !!(d as any).is_official,
         account_type: d.account_type,

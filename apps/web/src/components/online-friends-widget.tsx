@@ -1,10 +1,11 @@
 'use client';
 
 import React, { useState, useEffect, useMemo, useTransition } from 'react';
-import { Search, MessageSquare, BadgeCheck, Users, Compass, ArrowRight, Loader2, X, Sparkles, MessageCircle } from 'lucide-react';
+import { Search, MessageSquare, BadgeCheck, Users, Compass, ArrowRight, Loader2, X, Sparkles, MessageCircle, UserCheck, UserPlus } from 'lucide-react';
 import Link from 'next/link';
 import { createBrowserClient } from '@supabase/ssr';
 import UserAvatar from './user-avatar';
+import { followUserAction, unfollowUserAction } from '../lib/social/relationship-actions';
 
 interface FriendMember {
   id: string;
@@ -21,6 +22,9 @@ export default function OnlineFriendsWidget() {
   const [activeFilter, setActiveFilter] = useState<'all' | 'online'>('all');
   const [friends, setFriends] = useState<FriendMember[]>([]);
   const [onlineUserIds, setOnlineUserIds] = useState<Set<string>>(new Set());
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [followingUserIds, setFollowingUserIds] = useState<Set<string>>(new Set());
+  const [followLoadingId, setFollowLoadingId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [, startTransition] = useTransition();
 
@@ -41,6 +45,16 @@ export default function OnlineFriendsWidget() {
       try {
         setLoading(true);
         const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          setCurrentUserId(user.id);
+          const { data: followsData } = await supabase
+            .from('follows')
+            .select('following_id')
+            .eq('follower_id', user.id);
+          if (followsData) {
+            setFollowingUserIds(new Set(followsData.map((f: any) => f.following_id)));
+          }
+        }
 
         let query = supabase
           .from('profiles')
@@ -148,6 +162,43 @@ export default function OnlineFriendsWidget() {
 
     return () => clearTimeout(timer);
   }, [search, onlineUserIds, supabase]);
+
+  async function handleToggleFollow(targetId: string) {
+    if (!currentUserId || targetId === currentUserId) return;
+    const isCurrentlyFollowing = followingUserIds.has(targetId);
+
+    setFollowingUserIds((prev) => {
+      const next = new Set(prev);
+      if (isCurrentlyFollowing) {
+        next.delete(targetId);
+      } else {
+        next.add(targetId);
+      }
+      return next;
+    });
+
+    setFollowLoadingId(targetId);
+    try {
+      if (isCurrentlyFollowing) {
+        await unfollowUserAction(targetId);
+      } else {
+        await followUserAction(targetId);
+      }
+    } catch (err) {
+      console.error('[OnlineFriendsWidget] Follow error:', err);
+      setFollowingUserIds((prev) => {
+        const next = new Set(prev);
+        if (isCurrentlyFollowing) {
+          next.add(targetId);
+        } else {
+          next.delete(targetId);
+        }
+        return next;
+      });
+    } finally {
+      setFollowLoadingId(null);
+    }
+  }
 
   const onlineCount = onlineUserIds.size > 0 ? onlineUserIds.size : friends.filter((f) => onlineUserIds.has(f.id)).length;
 
@@ -298,15 +349,47 @@ export default function OnlineFriendsWidget() {
                 </div>
               </Link>
 
-              {/* Direct Message Action Button */}
-              <Link
-                href={`/messages?u=${encodeURIComponent(friend.username)}`}
-                className="p-2 rounded-xl bg-brand-caribbeanSea/15 hover:bg-brand-caribbeanSea text-brand-caribbeanSea hover:text-slate-950 border border-brand-caribbeanSea/30 hover:border-transparent transition-all shadow-sm flex items-center gap-1 flex-shrink-0"
-                title={`Start chat with ${friend.name}`}
-              >
-                <MessageSquare className="w-3.5 h-3.5" />
-                <span className="text-[10px] font-black hidden sm:inline-block">Chat</span>
-              </Link>
+              {/* Actions: Follow and Direct Message */}
+              <div className="flex items-center gap-1.5 flex-shrink-0">
+                {currentUserId && currentUserId !== friend.id && (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      handleToggleFollow(friend.id);
+                    }}
+                    disabled={followLoadingId === friend.id}
+                    className={`px-2 py-1.5 rounded-xl text-[10px] font-black border transition-all flex items-center gap-1 shadow-sm ${
+                      followingUserIds.has(friend.id)
+                        ? 'bg-white/10 hover:bg-rose-500/20 text-slate-300 hover:text-rose-300 border-white/15 hover:border-rose-500/30'
+                        : 'bg-brand-sunriseCoral/20 hover:bg-brand-sunriseCoral text-brand-sunriseCoral hover:text-slate-950 border-brand-sunriseCoral/40 hover:border-transparent'
+                    }`}
+                    title={followingUserIds.has(friend.id) ? `Unfollow ${friend.name}` : `Follow ${friend.name}`}
+                  >
+                    {followingUserIds.has(friend.id) ? (
+                      <>
+                        <UserCheck className="w-3 h-3 text-emerald-400" />
+                        <span className="hidden sm:inline">Following</span>
+                      </>
+                    ) : (
+                      <>
+                        <UserPlus className="w-3 h-3" />
+                        <span className="hidden sm:inline">Follow</span>
+                      </>
+                    )}
+                  </button>
+                )}
+
+                <Link
+                  href={`/messages?u=${encodeURIComponent(friend.username)}`}
+                  className="p-1.5 sm:px-2.5 sm:py-1.5 rounded-xl bg-brand-caribbeanSea/15 hover:bg-brand-caribbeanSea text-brand-caribbeanSea hover:text-slate-950 border border-brand-caribbeanSea/30 hover:border-transparent transition-all shadow-sm flex items-center gap-1 flex-shrink-0"
+                  title={`Start chat with ${friend.name}`}
+                >
+                  <MessageSquare className="w-3.5 h-3.5" />
+                  <span className="text-[10px] font-black hidden sm:inline-block">Chat</span>
+                </Link>
+              </div>
             </div>
           ))
         ) : (

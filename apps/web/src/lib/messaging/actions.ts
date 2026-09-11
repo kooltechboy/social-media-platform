@@ -81,13 +81,27 @@ export async function sendMessageAction(
   if (!supabase) return { error: 'Database is not configured.' };
 
   // 1. Verify Active Membership
-  const { data: membership } = await supabase
+  let membership: any = null;
+  const { data: memWithStatus, error: memErr } = await supabase
     .from('conversation_members')
     .select('conversation_id, role, status')
     .eq('conversation_id', conversationId)
     .eq('profile_id', user.id)
     .is('left_at', null)
     .maybeSingle();
+
+  if (!memErr && memWithStatus) {
+    membership = memWithStatus;
+  } else {
+    const { data: baseMem } = await supabase
+      .from('conversation_members')
+      .select('conversation_id, role')
+      .eq('conversation_id', conversationId)
+      .eq('profile_id', user.id)
+      .is('left_at', null)
+      .maybeSingle();
+    membership = baseMem;
+  }
 
   if (!membership || membership.status === 'blocked') {
     return { error: 'You are not an active member of this conversation.' };
@@ -121,24 +135,29 @@ export async function sendMessageAction(
     }
   }
 
-  // 3. Idempotency Check
+  // 3. Idempotency Check (optional, ignore if column not present)
   if (clientMessageId) {
-    const { data: existing } = await supabase
-      .from('messages')
-      .select('id, conversation_id, sender_id, body, created_at, client_message_id, sequence_number, message_kind, reply_to_id, metadata')
-      .eq('conversation_id', conversationId)
-      .eq('client_message_id', clientMessageId)
-      .maybeSingle();
+    try {
+      const { data: existing } = await supabase
+        .from('messages')
+        .select('id, conversation_id, sender_id, body, created_at, message_kind, reply_to_id')
+        .eq('conversation_id', conversationId)
+        .eq('client_message_id', clientMessageId)
+        .maybeSingle();
 
-    if (existing) {
-      return { error: null, message: existing };
+      if (existing) {
+        return { error: null, message: existing };
+      }
+    } catch {
+      // Column might not exist in database, continue
     }
   }
 
   const finalBody = audioUrl ? (body || `[Voice Note: ${audioUrl}]`) : (body || `[${messageKind.toUpperCase()}]`);
 
-  // 4. Authoritative Message Insert
-  const { data: inserted, error: insertError } = await supabase
+  // 4. Authoritative Message Insert with graceful fallback
+  let inserted: any = null;
+  const { data: fullInsert, error: insertError } = await supabase
     .from('messages')
     .insert({
       conversation_id: conversationId,
@@ -150,10 +169,27 @@ export async function sendMessageAction(
       metadata,
     })
     .select('id, conversation_id, sender_id, body, created_at, client_message_id, sequence_number, message_kind, reply_to_id, metadata')
-    .single();
+    .maybeSingle();
 
-  if (insertError) {
-    return { error: insertError.message };
+  if (!insertError && fullInsert) {
+    inserted = fullInsert;
+  } else {
+    const { data: baseInsert, error: baseError } = await supabase
+      .from('messages')
+      .insert({
+        conversation_id: conversationId,
+        sender_id: user.id,
+        body: finalBody,
+        message_kind: messageKind || 'text',
+        reply_to_id: replyToId || null,
+      })
+      .select('id, conversation_id, sender_id, body, created_at, message_kind, reply_to_id')
+      .single();
+
+    if (baseError) {
+      return { error: baseError.message };
+    }
+    inserted = baseInsert;
   }
 
   revalidatePath('/messages');
@@ -364,24 +400,12 @@ export async function getOrCreateDirectConversationAction(targetUserId: string):
   conversationId: string | null;
   error: string | null;
 }> {
-  const user = await getCurrentUser();
-  if (!user) return { conversationId: null, error: 'Sign in required.' };
-  if (user.id === targetUserId) return { conversationId: null, error: 'Cannot chat with yourself.' };
-
-  const supabase = await createSupabaseServerClient();
-  if (!supabase) return { conversationId: null, error: 'Database not available.' };
-
-  try {
-    const { data: convId, error } = await supabase.rpc('get_or_create_direct_conversation', {
-      target_user_id: targetUserId,
-    });
-
-    if (error) return { conversationId: null, error: error.message };
+  const { getOrCreateDirectConversation } = await import('./direct-conversations');
+  const result = await getOrCreateDirectConversation(targetUserId);
+  if (result.conversationId) {
     revalidatePath('/messages');
-    return { conversationId: convId, error: null };
-  } catch (err: any) {
-    return { conversationId: null, error: err.message || 'Error creating direct conversation.' };
   }
+  return result;
 }
 
 /**

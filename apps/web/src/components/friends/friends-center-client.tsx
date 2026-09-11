@@ -291,21 +291,131 @@ export default function FriendsCenterClient({
       {activeTab === 'friends' && (
         <div className="space-y-4">
           {filteredFriends.length === 0 ? (
-            <div className="surface-empty rounded-3xl p-8 sm:p-12 text-center space-y-3.5 max-w-xl mx-auto">
-              <Users className="w-12 h-12 text-brand-caribbeanSea mx-auto" />
-              <h3 className="text-base sm:text-lg font-black text-white">
-                {searchQuery ? `No friends found matching "${searchQuery}"` : 'No friends connected yet'}
-              </h3>
-              <p className="text-xs sm:text-sm text-brand-sandstone/80 max-w-md mx-auto leading-relaxed">
-                Explore Caribbean members, send friend requests, and grow your diaspora network.
-              </p>
-              <button
-                type="button"
-                onClick={() => setActiveTab('pymk')}
-                className="inline-flex items-center gap-2 text-xs sm:text-sm font-black px-5 py-2.5 rounded-xl bg-gradient-to-r from-brand-caribbeanSea to-brand-sunriseCoral text-slate-950 shadow-md shadow-brand-caribbeanSea/20 hover:brightness-110 transition-all min-h-[42px]"
-              >
-                <Sparkles className="w-4 h-4" /> View Suggested Members
-              </button>
+            <div className="space-y-6 max-w-5xl mx-auto">
+              <div className="surface-empty rounded-3xl p-8 sm:p-10 text-center space-y-3.5 max-w-xl mx-auto">
+                <Users className="w-12 h-12 text-brand-caribbeanSea mx-auto" />
+                <h3 className="text-base sm:text-lg font-black text-white">
+                  {searchQuery ? `No friends found matching "${searchQuery}"` : 'No friends connected yet'}
+                </h3>
+                <p className="text-xs sm:text-sm text-brand-sandstone/80 max-w-md mx-auto leading-relaxed">
+                  Connect with Caribbean diaspora members below, send friend requests, or follow them to build your social network.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('pymk')}
+                  className="inline-flex items-center gap-2 text-xs sm:text-sm font-black px-5 py-2.5 rounded-xl bg-gradient-to-r from-brand-caribbeanSea to-brand-sunriseCoral text-slate-950 shadow-md shadow-brand-caribbeanSea/20 hover:brightness-110 transition-all min-h-[42px]"
+                >
+                  <Sparkles className="w-4 h-4" /> View All Suggested Members ({pymkList.length})
+                </button>
+              </div>
+
+              {/* Immediate Suggested Members to Follow or Chat With */}
+              {filteredPymk.length > 0 && (
+                <div className="space-y-3 pt-2">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-xs sm:text-sm font-black uppercase tracking-wider text-brand-caribbeanSea flex items-center gap-2">
+                      <Sparkles className="w-4 h-4 text-brand-goldenHour" />
+                      <span>{searchQuery ? `Suggested Members Matching "${searchQuery}"` : 'Suggested Caribbean Members to Connect With'}</span>
+                    </h3>
+                    <button
+                      type="button"
+                      onClick={() => setActiveTab('pymk')}
+                      className="text-xs font-bold text-brand-caribbeanSea hover:underline flex items-center gap-1"
+                    >
+                      See all <ArrowRight className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {filteredPymk.slice(0, 6).map((person) => {
+                      const fStatus = friendshipStatusMap[person.id] || person.relationship?.friendshipStatus || 'none';
+                      const isFollowing = !!followingMap[person.id] || !!person.relationship?.isFollowing;
+                      const isSelf = currentUserId === person.id;
+
+                      return (
+                        <div
+                          key={person.id}
+                          className="surface-card surface-card-interactive rounded-2xl p-4 flex flex-col justify-between space-y-3 group"
+                        >
+                          <div className="flex items-start justify-between gap-3">
+                            <Link
+                              href={`/profile/${person.username}`}
+                              className="flex items-center gap-3 min-w-0 flex-1"
+                            >
+                              <UserAvatar
+                                src={person.avatar_url}
+                                name={person.display_name}
+                                size="md"
+                              />
+                              <div className="min-w-0">
+                                <h4 className="text-sm font-extrabold text-white truncate group-hover:text-brand-caribbeanSea transition-colors flex items-center gap-1.5">
+                                  {person.display_name}
+                                  {person.is_verified && (
+                                    <Check className="w-3.5 h-3.5 text-brand-caribbeanSea shrink-0" />
+                                  )}
+                                </h4>
+                                <p className="text-xs text-brand-sandstone/70 truncate">@{person.username}</p>
+                                {person.country_name && (
+                                  <span className="text-[11px] text-brand-sunriseCoral flex items-center gap-1 mt-0.5 font-semibold truncate">
+                                    <MapPin className="w-3 h-3 shrink-0" /> {person.country_name}
+                                  </span>
+                                )}
+                              </div>
+                            </Link>
+                          </div>
+
+                          {!isSelf && (
+                            <div className="flex items-center gap-2 pt-2 border-t border-white/10">
+                              {/* Friend Action */}
+                              {fStatus === 'accepted' ? (
+                                <span className="flex-1 text-center text-xs font-bold py-1.5 rounded-xl bg-white/10 text-brand-caribbeanSea border border-brand-caribbeanSea/30 flex items-center justify-center gap-1 min-h-[36px]">
+                                  <UserCheck className="w-3.5 h-3.5" /> Friends
+                                </span>
+                              ) : fStatus === 'pending_sent' ? (
+                                <span className="flex-1 text-center text-xs font-bold py-1.5 rounded-xl bg-white/5 text-brand-sandstone/70 border border-white/10 flex items-center justify-center gap-1 min-h-[36px]">
+                                  <Clock className="w-3.5 h-3.5" /> Sent
+                                </span>
+                              ) : (
+                                <button
+                                  type="button"
+                                  disabled={pendingActionId === person.id}
+                                  onClick={() => handleSendFriendRequest(person.id)}
+                                  className="flex-1 flex items-center justify-center gap-1 text-xs font-black py-1.5 rounded-xl bg-brand-caribbeanSea hover:brightness-110 text-slate-950 transition-all shadow-sm min-h-[36px]"
+                                >
+                                  <UserPlus className="w-3.5 h-3.5" /> Add
+                                </button>
+                              )}
+
+                              {/* Follow Toggle */}
+                              <button
+                                type="button"
+                                disabled={pendingActionId === person.id}
+                                onClick={() => handleToggleFollow(person.id)}
+                                className={`text-xs font-bold px-3 py-1.5 rounded-xl transition-all min-h-[36px] ${
+                                  isFollowing
+                                    ? 'bg-white/10 text-brand-sandstone border border-white/15 hover:bg-rose-500/20 hover:text-rose-300'
+                                    : 'bg-brand-sunriseCoral hover:brightness-110 text-slate-950 font-black'
+                                }`}
+                              >
+                                {isFollowing ? 'Following' : 'Follow'}
+                              </button>
+
+                              {/* Direct Message Link */}
+                              <Link
+                                href={`/messages?u=${encodeURIComponent(person.username)}`}
+                                className="text-xs font-bold px-3 py-1.5 rounded-xl bg-white/10 text-white border border-white/15 hover:bg-brand-caribbeanSea/20 hover:border-brand-caribbeanSea/40 transition-colors flex items-center gap-1 min-h-[36px]"
+                                title={`Message ${person.display_name}`}
+                              >
+                                <MessageSquare className="w-3.5 h-3.5 text-brand-caribbeanSea" /> Chat
+                              </Link>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">

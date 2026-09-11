@@ -54,18 +54,12 @@ export default async function MessagesPage({
       .maybeSingle();
 
     if (targetProfile && targetProfile.id !== user.id) {
-      // Supabase JS v2 returns { data, error } — it does NOT throw on RPC errors.
-      // We must explicitly check error to surface Postgres-level exceptions (blocks, auth, race conditions).
-      const { data: convId, error: rpcError } = await supabase.rpc('get_or_create_direct_conversation', {
-        target_user_id: targetProfile.id,
-      });
-      if (rpcError) {
-        console.error('[MessagesPage] Direct conversation creation failed:', rpcError.message, rpcError.details);
-        conversationError = rpcError.message?.includes('block')
-          ? 'This user is not available for messaging.'
-          : 'Could not start conversation. Please try again.';
-      } else if (convId) {
-        targetConversationId = convId;
+      const { getOrCreateDirectConversation } = await import('../../lib/messaging/direct-conversations');
+      const convResult = await getOrCreateDirectConversation(targetProfile.id, user.id);
+      if (convResult.error) {
+        conversationError = convResult.error;
+      } else if (convResult.conversationId) {
+        targetConversationId = convResult.conversationId;
       }
     } else if (!targetProfile) {
       conversationError = 'User not found.';
@@ -76,7 +70,7 @@ export default async function MessagesPage({
   const [membershipsResult, onlineMembersResult, requestsResult] = await Promise.all([
     supabase
       .from('conversation_members')
-      .select('conversation_id, last_read_sequence, status, conversations(id, kind, category, title, last_message_at, last_sequence_number)')
+      .select('conversation_id, conversations(id, kind, title, last_message_at)')
       .eq('profile_id', user.id)
       .is('left_at', null)
       .order('last_message_at', { ascending: false, foreignTable: 'conversations' }),
@@ -87,25 +81,32 @@ export default async function MessagesPage({
       .neq('id', user.id)
       .order('updated_at', { ascending: false })
       .limit(16),
-    supabase
-      .from('message_requests')
-      .select('id, conversation_id, sender_id, status, created_at, sender:profiles!message_requests_sender_id_fkey(display_name, username, avatar_url)')
-      .eq('receiver_id', user.id)
-      .eq('status', 'pending')
-      .order('created_at', { ascending: false }),
+    (async () => {
+      try {
+        const res = await supabase
+          .from('message_requests')
+          .select('id, conversation_id, sender_id, status, created_at, sender:profiles!message_requests_sender_id_fkey(display_name, username, avatar_url)')
+          .eq('receiver_id', user.id)
+          .eq('status', 'pending')
+          .order('created_at', { ascending: false });
+        return res;
+      } catch {
+        return { data: [] };
+      }
+    })(),
   ]);
 
   const rows = (membershipsResult.data ?? []) as unknown as Array<{
     conversation_id: string;
-    last_read_sequence: number;
-    status: string;
+    last_read_sequence?: number;
+    status?: string;
     conversations: {
       id: string;
       kind: 'direct' | 'group';
       category?: 'personal' | 'business' | 'marketplace' | 'creator' | 'event' | 'community' | 'support';
       title: string | null;
       last_message_at: string | null;
-      last_sequence_number: number;
+      last_sequence_number?: number;
     } | null;
   }>;
 
@@ -197,18 +198,31 @@ export default async function MessagesPage({
   if (selectedId) {
     const threadResult = await supabase
       .from('messages')
-      .select('id, sender_id, body, created_at, message_kind, client_message_id, sequence_number, reply_to_id, metadata, profiles:profiles!messages_sender_id_fkey(display_name)')
+      .select('id, sender_id, body, created_at, message_kind, reply_to_id, profiles:profiles!messages_sender_id_fkey(display_name)')
       .eq('conversation_id', selectedId)
       .order('created_at', { ascending: true })
       .limit(100);
 
-    threadMessages = (threadResult.data ?? []) as unknown as ThreadMessage[];
+    threadMessages = ((threadResult.data ?? []) as any[]).map((m) => ({
+      id: m.id,
+      sender_id: m.sender_id,
+      body: m.body,
+      created_at: m.created_at,
+      message_kind: m.message_kind || 'text',
+      reply_to_id: m.reply_to_id || undefined,
+      client_message_id: m.client_message_id || undefined,
+      sequence_number: m.sequence_number || 0,
+      metadata: m.metadata || {},
+      profiles: m.profiles || null,
+    }));
 
-    // Mark as read in background
-    void supabase.rpc('mark_conversation_read', { conv_id: selectedId });
+    // Mark as read in background if function exists
+    try {
+      void supabase.rpc('mark_conversation_read', { conv_id: selectedId });
+    } catch {}
   }
 
-  const onlineMembers: NewMessageMember[] = (onlineMembersResult.data ?? []).map((p) => ({
+  const onlineMembers: NewMessageMember[] = (onlineMembersResult.data ?? []).map((p: any) => ({
     id: p.id,
     name: p.display_name || p.username || 'Caribbean Member',
     username: p.username || p.id.slice(0, 8),
