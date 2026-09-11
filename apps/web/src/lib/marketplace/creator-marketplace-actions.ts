@@ -19,73 +19,139 @@ export async function fetchCreatorMarketplaceListingsAction(filters: { category?
   return { listings: data || [] };
 }
 
-export async function upsertCreatorMarketplaceProfileAction(payload: any) {
-  const supabase = await createSupabaseServerClient();
+// ===== TYPES =====
+export interface BriefData {
+  title: string;
+  description: string;
+  budget_range_cents_min: number;
+  budget_range_cents_max: number;
+  content_types: string[];
+  target_islands: string[];
+  target_diaspora_cities: string[];
+  deadline: string;
+}
+
+export interface MarketplaceProfileData {
+  categories: string[];
+  min_collaboration_budget_cents: number;
+  typical_turnaround_days: number;
+  languages: string[];
+  collaboration_types: string[];
+  media_kit_url?: string;
+  is_available: boolean;
+}
+
+// ---- Upsert creator marketplace profile ----
+export async function upsertCreatorMarketplaceProfileAction(
+  data: MarketplaceProfileData
+): Promise<{ error?: string }> {
   const user = await getCurrentUser();
-  if (!user || !supabase) return { error: 'Unauthorized' };
+  if (!user) return { error: 'Sign in to manage your creator profile.' };
+
+  const supabase = await createSupabaseServerClient();
+  if (!supabase) return { error: 'Database unavailable.' };
 
   const { error } = await supabase
     .from('creator_marketplace_profiles')
-    .upsert({
-      creator_id: user.id,
-      categories: payload.categories || [],
-      min_collaboration_budget_cents: payload.minBudgetCents || 0,
-      typical_turnaround_days: payload.turnaroundDays || 7,
-      languages: payload.languages || ['en'],
-      collaboration_types: payload.collaborationTypes || [],
-      media_kit_url: payload.mediaKitUrl,
-      portfolio_urls: payload.portfolioUrls || [],
-      is_available: payload.isAvailable ?? true,
-      updated_at: new Date().toISOString()
-    }, { onConflict: 'creator_id' });
+    .upsert(
+      { creator_id: user.id, ...data, updated_at: new Date().toISOString() },
+      { onConflict: 'creator_id' }
+    );
 
   if (error) return { error: error.message };
   revalidatePath('/creator-marketplace');
-  return { success: true };
+  return {};
 }
 
-export async function createBriefAction(payload: any) {
-  const supabase = await createSupabaseServerClient();
+// ---- Create brand campaign brief ----
+export async function createBriefAction(data: BriefData): Promise<{ id?: string; error?: string }> {
   const user = await getCurrentUser();
-  if (!user || !supabase) return { briefId: null, error: 'Unauthorized' };
+  if (!user) return { error: 'Sign in to post a brief.' };
 
-  const { data, error } = await supabase
+  const supabase = await createSupabaseServerClient();
+  if (!supabase) return { error: 'Database unavailable.' };
+
+  if (!data.title.trim()) return { error: 'Brief title is required.' };
+  if (!data.description.trim()) return { error: 'Brief description is required.' };
+  if (data.budget_range_cents_min > data.budget_range_cents_max) {
+    return { error: 'Minimum budget cannot exceed maximum budget.' };
+  }
+
+  const { data: row, error } = await supabase
     .from('brand_campaign_briefs')
-    .insert({
-      business_id: user.id,
-      title: payload.title,
-      description: payload.description,
-      budget_range_cents_min: payload.budgetMin,
-      budget_range_cents_max: payload.budgetMax,
-      content_types: payload.contentTypes || [],
-      target_islands: payload.targetIslands || [],
-      target_diaspora_cities: payload.targetCities || [],
-      deadline: payload.deadline,
-      status: 'open'
-    })
-    .select()
+    .insert({ business_id: user.id, ...data, status: 'open' })
+    .select('id')
     .single();
 
-  if (error) return { briefId: null, error: error.message };
+  if (error) return { error: error.message };
   revalidatePath('/creator-marketplace');
-  return { briefId: data.id };
+  return { id: row.id };
 }
 
-export async function applyToBriefAction(briefId: string, proposal: string, rateCents: number) {
-  const supabase = await createSupabaseServerClient();
-  const user = await getCurrentUser();
-  if (!user || !supabase) return { error: 'Unauthorized' };
+// ---- Apply to a brief ----
+export interface ApplicationData {
+  briefId: string;
+  proposal: string;
+  rateCents: number;
+}
 
-  const { error } = await supabase
+export async function applyToBriefAction(input: ApplicationData): Promise<{ id?: string; error?: string }> {
+  const user = await getCurrentUser();
+  if (!user) return { error: 'Sign in to apply to campaigns.' };
+
+  const supabase = await createSupabaseServerClient();
+  if (!supabase) return { error: 'Database unavailable.' };
+
+  if (!input.proposal.trim()) return { error: 'Proposal is required.' };
+  if (input.rateCents <= 0) return { error: 'Rate must be greater than zero.' };
+
+  const { data: row, error } = await supabase
     .from('creator_applications')
     .insert({
-      brief_id: briefId,
+      brief_id: input.briefId,
       creator_id: user.id,
-      proposal,
-      rate_cents: rateCents,
-      status: 'pending'
-    });
+      proposal: input.proposal.trim(),
+      rate_cents: input.rateCents,
+      status: 'pending',
+    })
+    .select('id')
+    .single();
 
   if (error) return { error: error.message };
-  return { success: true };
+  revalidatePath('/creator-marketplace');
+  return { id: row.id };
+}
+
+// ---- Fetch my applications (as creator) ----
+export async function fetchMyApplicationsAction(): Promise<{ applications: any[] }> {
+  const user = await getCurrentUser();
+  if (!user) return { applications: [] };
+
+  const supabase = await createSupabaseServerClient();
+  if (!supabase) return { applications: [] };
+
+  const { data } = await supabase
+    .from('creator_applications')
+    .select('*, brand_campaign_briefs(id, title, deadline, budget_range_cents_max)')
+    .eq('creator_id', user.id)
+    .order('created_at', { ascending: false });
+
+  return { applications: data || [] };
+}
+
+// ---- Fetch my creator marketplace profile ----
+export async function fetchMyCreatorMarketplaceProfileAction(): Promise<{ profile: any | null }> {
+  const user = await getCurrentUser();
+  if (!user) return { profile: null };
+
+  const supabase = await createSupabaseServerClient();
+  if (!supabase) return { profile: null };
+
+  const { data } = await supabase
+    .from('creator_marketplace_profiles')
+    .select('*')
+    .eq('creator_id', user.id)
+    .maybeSingle();
+
+  return { profile: data };
 }
