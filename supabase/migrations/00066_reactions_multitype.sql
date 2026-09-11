@@ -28,10 +28,26 @@ ALTER TABLE public.post_reactions
   ADD CONSTRAINT post_reactions_reaction_type_check
   CHECK (reaction_type IN ('like','love','fire','celebrate','laugh','wow','sad','angry'));
 
--- 4. Ensure unique-per-user-per-post index exists (enables ON CONFLICT upsert in application layer)
+-- 4. Ensure profile_id exists or mirrors user_id for backward/forward compatibility
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_schema = 'public' AND table_name = 'post_reactions' AND column_name = 'user_id'
+  ) AND NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_schema = 'public' AND table_name = 'post_reactions' AND column_name = 'profile_id'
+  ) THEN
+    ALTER TABLE public.post_reactions ADD COLUMN profile_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE;
+    UPDATE public.post_reactions SET profile_id = user_id WHERE profile_id IS NULL;
+  END IF;
+END;
+$$;
+
+-- Ensure unique-per-user-per-post index exists (enables ON CONFLICT upsert in application layer)
 DROP INDEX IF EXISTS public.idx_post_reactions_unique_user;
-CREATE UNIQUE INDEX idx_post_reactions_unique_user
-  ON public.post_reactions(post_id, profile_id);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_post_reactions_unique_user
+  ON public.post_reactions(post_id, user_id);
 
 -- 5. Add index for reaction type aggregation queries
 CREATE INDEX IF NOT EXISTS idx_post_reactions_type
@@ -41,3 +57,4 @@ CREATE INDEX IF NOT EXISTS idx_post_reactions_type
 
 COMMENT ON COLUMN public.post_reactions.reaction_type IS
   'Caribbean reaction types: like | love | fire | celebrate | laugh | wow | sad | angry';
+
