@@ -35,6 +35,9 @@ import {
   deleteCommentAction,
   incrementPostShareAction,
   reportPostAction,
+  savePostAction,
+  unsavePostAction,
+  getSavedPostIdsAction,
 } from '../lib/social/actions';
 import { translatePostAction } from '../lib/social/translate-actions';
 import { createSupabaseBrowserClient } from '../lib/supabase/browser';
@@ -93,7 +96,39 @@ export default function FeedStream({ initialPosts, currentUserId, mode = 'for_yo
   const [reportModalPostId, setReportModalPostId] = useState<string | null>(null);
   const [reportReason, setReportReason] = useState<string>('spam');
   const [isSubmittingReport, setIsSubmittingReport] = useState(false);
-  const [savedPostIds, setSavedPostIds] = useState<Set<string>>(new Set());
+  const [savedPosts, setSavedPosts] = useState<Set<string>>(
+    () => new Set(mode === 'saved' ? initialPosts.map((p) => p.id) : [])
+  );
+
+  useEffect(() => {
+    if (currentUserId && mode !== 'saved') {
+      getSavedPostIdsAction()
+        .then((ids) => {
+          if (ids && ids.length > 0) {
+            setSavedPosts(new Set(ids));
+          }
+        })
+        .catch(() => {});
+    }
+  }, [currentUserId, mode]);
+
+  const handleSavePost = async (postId: string) => {
+    const isSaved = savedPosts.has(postId);
+    setSavedPosts((prev) => {
+      const next = new Set(prev);
+      if (isSaved) next.delete(postId);
+      else next.add(postId);
+      return next;
+    });
+    if (isSaved) {
+      setShareToast('Post removed from saved bookmarks.');
+      await unsavePostAction(postId);
+    } else {
+      setShareToast('Post saved to bookmarks!');
+      await savePostAction(postId);
+    }
+    setTimeout(() => setShareToast(null), 3000);
+  };
   const [confirmDeletePostId, setConfirmDeletePostId] = useState<string | null>(null);
   const [activeEmojiPickerPostId, setActiveEmojiPickerPostId] = useState<string | null>(null);
   const [activeCommentEmojiPickerPostId, setActiveCommentEmojiPickerPostId] = useState<string | null>(null);
@@ -541,20 +576,9 @@ export default function FeedStream({ initialPosts, currentUserId, mode = 'for_yo
     }
   }
 
-  function handleToggleSave(postId: string) {
-    setSavedPostIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(postId)) {
-        next.delete(postId);
-        setShareToast('Post removed from saved bookmarks.');
-      } else {
-        next.add(postId);
-        setShareToast('Post saved to bookmarks!');
-      }
-      return next;
-    });
+  async function handleToggleSave(postId: string) {
     setActiveMenuPostId(null);
-    setTimeout(() => setShareToast(null), 3000);
+    await handleSavePost(postId);
   }
 
   async function handleReportSubmit(e: React.FormEvent) {
@@ -738,8 +762,8 @@ export default function FeedStream({ initialPosts, currentUserId, mode = 'for_yo
                         onClick={() => handleToggleSave(post.id)}
                         className="w-full text-left px-3 py-2 rounded-xl text-slate-200 hover:bg-white/10 flex items-center gap-2 font-semibold transition-colors"
                       >
-                        <Bookmark className={`w-3.5 h-3.5 ${savedPostIds.has(post.id) ? 'fill-brand-goldenHour text-brand-goldenHour' : 'text-slate-400'}`} />
-                        <span>{savedPostIds.has(post.id) ? 'Saved' : 'Save Post'}</span>
+                        <Bookmark className={`w-3.5 h-3.5 ${savedPosts.has(post.id) ? 'fill-brand-caribbeanSea text-brand-caribbeanSea' : 'text-slate-400'}`} />
+                        <span>{savedPosts.has(post.id) ? 'Saved' : 'Save Post'}</span>
                       </button>
 
                       {currentUserId && post.authorId === currentUserId ? (
@@ -964,6 +988,19 @@ export default function FeedStream({ initialPosts, currentUserId, mode = 'for_yo
                 >
                   <Share2 className="w-4 h-4" />
                   <span>{post.reposts > 0 ? post.reposts : 'Share'}</span>
+                </button>
+
+                {/* Bookmark Button */}
+                <button
+                  type="button"
+                  onClick={() => handleSavePost(post.id)}
+                  className={`p-1.5 rounded-lg transition-colors ${
+                    savedPosts.has(post.id) ? 'text-brand-caribbeanSea' : 'text-slate-500 hover:text-slate-300'
+                  }`}
+                  title={savedPosts.has(post.id) ? 'Unsave post' : 'Save post'}
+                  aria-label={savedPosts.has(post.id) ? 'Unsave post' : 'Save post'}
+                >
+                  <Bookmark className={`w-4 h-4 ${savedPosts.has(post.id) ? 'fill-brand-caribbeanSea' : ''}`} />
                 </button>
 
                 {/* Creator Tip Trigger */}

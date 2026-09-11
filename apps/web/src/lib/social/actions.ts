@@ -721,3 +721,58 @@ export async function fetchPostReactionSummaryAction(postId: string): Promise<Re
   return { counts, total: rows.length, userReaction };
 }
 
+// ===== POST SAVES / BOOKMARKS =====
+
+export interface SavePostResult {
+  saved: boolean;
+  error?: string;
+}
+
+export async function savePostAction(postId: string): Promise<SavePostResult> {
+  const user = await getCurrentUser();
+  if (!user) return { saved: false, error: 'Please sign in to save posts.' };
+
+  const supabase = await createSupabaseServerClient();
+  if (!supabase) return { saved: false, error: 'Database unavailable.' };
+
+  const { error } = await supabase
+    .from('saved_posts')
+    .upsert({ profile_id: user.id, post_id: postId }, { onConflict: 'profile_id,post_id' });
+
+  if (error) return { saved: false, error: error.message };
+  return { saved: true };
+}
+
+export async function unsavePostAction(postId: string): Promise<SavePostResult> {
+  const user = await getCurrentUser();
+  if (!user) return { saved: true, error: 'Please sign in.' };
+
+  const supabase = await createSupabaseServerClient();
+  if (!supabase) return { saved: true, error: 'Database unavailable.' };
+
+  const { error } = await supabase
+    .from('saved_posts')
+    .delete()
+    .eq('profile_id', user.id)
+    .eq('post_id', postId);
+
+  if (error) return { saved: true, error: error.message };
+  return { saved: false };
+}
+
+export async function getSavedPostIdsAction(): Promise<string[]> {
+  const user = await getCurrentUser();
+  if (!user) return [];
+
+  const supabase = await createSupabaseServerClient();
+  if (!supabase) return [];
+
+  const { data } = await supabase
+    .from('saved_posts')
+    .select('post_id')
+    .eq('profile_id', user.id)
+    .order('created_at', { ascending: false });
+
+  return (data || []).map((r: any) => r.post_id as string);
+}
+
