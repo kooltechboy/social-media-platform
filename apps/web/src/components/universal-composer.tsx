@@ -86,6 +86,7 @@ export default function UniversalComposer({
   const [content, setContent] = useState('');
   const [audience, setAudience] = useState<AudienceSelection>('everyone');
   const [isReel, setIsReel] = useState(initialMode === 'reel');
+  const [scheduledAt, setScheduledAt] = useState<string | null>(null);
 
   // Media files
   const [mediaList, setMediaList] = useState<UploadedMediaItem[]>([]);
@@ -394,6 +395,9 @@ export default function UniversalComposer({
       formData.set('visibility', backendVisibility);
       formData.set('media_urls', JSON.stringify(uploadedMediaUrls));
       formData.set('cultural_tags', JSON.stringify(culturalTags));
+      if (scheduledAt) {
+        formData.set('scheduled_at', scheduledAt);
+      }
 
       const result = await createPostAction({ error: null }, formData);
 
@@ -407,6 +411,7 @@ export default function UniversalComposer({
       setMediaList([]);
       setMode('text');
       setIsReel(false);
+      setScheduledAt(null);
       setPollQuestion('');
       setPollOptions(['', '']);
       setProductTitle('');
@@ -425,7 +430,7 @@ export default function UniversalComposer({
         // Ignore
       }
 
-      setSuccessMessage('Published! Your post is live on the feed.');
+      setSuccessMessage(scheduledAt ? 'Scheduled! Your post will be published automatically.' : 'Published! Your post is live on the feed.');
       setTimeout(() => setSuccessMessage(null), 4000);
 
       // Dispatch global window event for instant feed update
@@ -711,6 +716,7 @@ export default function UniversalComposer({
           /* 2. EXPANDED FULL-FEATURED COMPOSER WORKSPACE               */
           /* ────────────────────────────────────────────────────────── */
           <form onSubmit={handlePublish} className="p-5 space-y-4">
+            {scheduledAt && <input type="hidden" name="scheduled_at" value={scheduledAt} />}
             {/* Header: Author, Audience & Mode Badge */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-800/80">
               <div className="flex items-center gap-3">
@@ -796,6 +802,31 @@ export default function UniversalComposer({
                 {content.length}/3000
               </div>
             </div>
+
+            {/* Post Scheduling (creator/business accounts only) */}
+            {(accountType === 'creator' || accountType === 'business') && (
+              <div className="flex items-center gap-2 flex-wrap">
+                <label className="text-xs text-slate-400 shrink-0 flex items-center gap-1">
+                  <span>📅</span> Schedule:
+                </label>
+                <input
+                  type="datetime-local"
+                  min={new Date(Date.now() + 5 * 60000).toISOString().slice(0, 16)}
+                  value={scheduledAt || ''}
+                  onChange={(e) => setScheduledAt(e.target.value || null)}
+                  className="text-xs bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-brand-sandstone focus:border-brand-caribbeanSea outline-none"
+                />
+                {scheduledAt && (
+                  <button
+                    type="button"
+                    onClick={() => setScheduledAt(null)}
+                    className="text-slate-500 hover:text-slate-300 text-xs"
+                  >
+                    ✕ Post now instead
+                  </button>
+                )}
+              </div>
+            )}
 
             {/* ────────────────────────────────────────────────────────── */}
             {/* ATTACHMENT PANELS FOR SPECIALIZED MODES                    */}
@@ -1332,12 +1363,12 @@ export default function UniversalComposer({
                   {isSubmitting ? (
                     <>
                       <Loader2 className="w-4 h-4 animate-spin text-slate-950" />
-                      <span>{uploadProgressText || 'Publishing...'}</span>
+                      <span>{uploadProgressText || (scheduledAt ? 'Scheduling...' : 'Publishing...')}</span>
                     </>
                   ) : (
                     <>
                       <Send className="w-3.5 h-3.5" />
-                      <span>Post</span>
+                      <span>{scheduledAt ? 'Schedule' : 'Post'}</span>
                     </>
                   )}
                 </button>

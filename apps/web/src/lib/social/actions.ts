@@ -124,6 +124,17 @@ export async function createPostAction(_prev: PostActionState, formData: FormDat
     },
   });
 
+  // Post scheduling (creator/business accounts only)
+  const scheduledAtRaw = formData.get('scheduled_at');
+  let scheduledAt: string | null = null;
+  if (typeof scheduledAtRaw === 'string' && scheduledAtRaw.trim()) {
+    const scheduledDate = new Date(scheduledAtRaw);
+    if (!isNaN(scheduledDate.getTime()) && scheduledDate > new Date()) {
+      scheduledAt = scheduledDate.toISOString();
+    }
+  }
+  const postStatus = scheduledAt ? 'scheduled' : 'published';
+
   const { data, error } = await supabase
     .from('posts')
     .insert({
@@ -132,6 +143,8 @@ export async function createPostAction(_prev: PostActionState, formData: FormDat
       visibility,
       media_urls: mediaUrls,
       cultural_tags: culturalTags,
+      scheduled_at: scheduledAt,
+      post_status: postStatus,
     })
     .select('id, content, created_at, media_urls, cultural_tags, likes_count, comments_count, shares_count, visibility, profiles:profiles!posts_author_id_fkey(display_name, username, avatar_url, is_verified)')
     .single();

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useTransition } from 'react';
+import React, { useState, useTransition, useEffect } from 'react';
 import Link from 'next/link';
 import {
   Film,
@@ -33,6 +33,7 @@ import {
 import { deleteDraftAction, type CreatorDraftItem } from '../../lib/creator/draft-actions';
 import CreatePodcastModal from '../podcasts/create-podcast-modal';
 import CreatorAnalyticsTab from './creator-analytics-tab';
+import { createSupabaseBrowserClient } from '../../lib/supabase/browser';
 
 export interface CreatorVideoItem {
   id: string;
@@ -81,7 +82,14 @@ interface CreatorContentManagerProps {
   podcasts: CreatorPodcastItem[];
   livestreams: CreatorLivestreamItem[];
   drafts: CreatorDraftItem[];
-  initialTab?: 'all' | 'videos' | 'podcasts' | 'livestreams' | 'drafts' | 'analytics';
+  initialTab?: 'all' | 'videos' | 'podcasts' | 'livestreams' | 'drafts' | 'scheduled' | 'analytics';
+}
+
+export interface ScheduledPostItem {
+  id: string;
+  content: string | null;
+  scheduled_at: string;
+  created_at: string;
 }
 
 export default function CreatorContentManager({
@@ -92,12 +100,44 @@ export default function CreatorContentManager({
   drafts,
   initialTab = 'all',
 }: CreatorContentManagerProps) {
-  const [activeTab, setActiveTab] = useState<'all' | 'videos' | 'podcasts' | 'livestreams' | 'drafts' | 'analytics'>(initialTab);
+  const [activeTab, setActiveTab] = useState<'all' | 'videos' | 'podcasts' | 'livestreams' | 'drafts' | 'scheduled' | 'analytics'>(initialTab);
   const [statusFilter, setStatusFilter] = useState<'all' | 'published' | 'draft' | 'scheduled'>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [isPending, startTransition] = useTransition();
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const [isPodcastModalOpen, setIsPodcastModalOpen] = useState(false);
+  const [scheduledItems, setScheduledItems] = useState<ScheduledPostItem[]>([]);
+  const [isLoadingScheduled, setIsLoadingScheduled] = useState(false);
+
+  const loadScheduledPosts = async () => {
+    const supabase = createSupabaseBrowserClient();
+    if (!supabase) return;
+    setIsLoadingScheduled(true);
+    try {
+      const { data } = await supabase
+        .from('posts')
+        .select('id, content, scheduled_at, created_at')
+        .eq('author_id', user.id)
+        .eq('post_status', 'scheduled')
+        .order('scheduled_at', { ascending: true })
+        .limit(50);
+      setScheduledItems((data as ScheduledPostItem[]) || []);
+    } catch (err) {
+      console.error('[CreatorContentManager] Error loading scheduled posts:', err);
+    } finally {
+      setIsLoadingScheduled(false);
+    }
+  };
+
+  useEffect(() => {
+    loadScheduledPosts();
+  }, [user.id]);
+
+  useEffect(() => {
+    if (activeTab === 'scheduled') {
+      loadScheduledPosts();
+    }
+  }, [activeTab]);
 
   function clearFeedback() {
     setFeedback(null);
@@ -252,6 +292,7 @@ export default function CreatorContentManager({
             { id: 'podcasts', label: 'Podcasts & Episodes', count: podcasts.length },
             { id: 'livestreams', label: 'Live Broadcasts', count: livestreams.length },
             { id: 'drafts', label: 'Drafts', count: drafts.length },
+            { id: 'scheduled', label: 'Scheduled', count: scheduledItems.length },
             { id: 'analytics', label: 'Analytics' },
           ].map((tab) => (
             <button
@@ -604,6 +645,41 @@ export default function CreatorContentManager({
                   </div>
                 ))}
               </div>
+            )}
+          </div>
+        )}
+
+        {/* SCHEDULED POSTS SECTION */}
+        {activeTab === 'scheduled' && (
+          <div className="space-y-3">
+            {isLoadingScheduled ? (
+              <div className="p-8 text-center text-slate-400 flex items-center justify-center gap-2">
+                <Loader2 className="w-5 h-5 animate-spin text-brand-caribbeanSea" />
+                <span className="text-xs">Loading scheduled posts...</span>
+              </div>
+            ) : scheduledItems.length === 0 ? (
+              <div className="p-8 text-center text-slate-400 bg-brand-dusk/40 border border-slate-800 rounded-2xl">
+                <p className="text-2xl mb-2">📅</p>
+                <p className="font-medium">No scheduled posts.</p>
+                <p className="text-xs mt-1">Schedule a post from the composer to see it here.</p>
+              </div>
+            ) : (
+              scheduledItems.map((post) => (
+                <div
+                  key={post.id}
+                  className="p-4 border border-slate-800 rounded-2xl bg-brand-dusk/60 flex items-start justify-between gap-3"
+                >
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm text-brand-sandstone line-clamp-2">{post.content || '(Media post)'}</p>
+                    <p className="text-xs text-brand-caribbeanSea mt-1">
+                      📅 Scheduled for: {new Date(post.scheduled_at).toLocaleString()}
+                    </p>
+                  </div>
+                  <span className="shrink-0 px-2 py-0.5 rounded-full bg-brand-twilight/50 text-[10px] font-bold text-brand-sandstone border border-brand-twilight">
+                    Scheduled
+                  </span>
+                </div>
+              ))
             )}
           </div>
         )}
