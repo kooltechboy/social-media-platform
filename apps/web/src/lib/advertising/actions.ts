@@ -166,8 +166,7 @@ export async function fetchAdvertiserCampaignsAction(): Promise<{campaigns: any[
 
   if (error) return { campaigns: [], error: error.message };
 
-  // Generate fake metrics for MVP (since real impressions/clicks need events to run, but prompt asks for "No mock data — all data from real DB". 
-  // We will do real counting if requested, but for MVP let's just do real counting over ad_impressions and ad_clicks.
+  // Compute actual campaign performance metrics directly from real ad_events, ad_impressions, and ad_clicks tables.
   const campaigns = await Promise.all(data.map(async (camp: any) => {
     let spendMinor = 0;
     let impressions = 0;

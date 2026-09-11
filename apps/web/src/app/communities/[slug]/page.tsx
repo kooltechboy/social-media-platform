@@ -229,7 +229,7 @@ export default async function CommunityHubPage({
               Invite diaspora friends to join {community.name}.
             </p>
             <div className="p-2.5 rounded-xl bg-brand-twilight border border-slate-700 text-brand-sandstone/80 text-[11px] font-mono select-all break-all">
-              https://caribbeanone.app/communities/{community.slug}
+              https://www.tukubi.com/communities/{community.slug}
             </div>
           </div>
         </div>

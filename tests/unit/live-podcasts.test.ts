@@ -151,9 +151,9 @@ describe('Podcasting 2.0 & iTunes RSS feed generation', () => {
       podcastTitle: 'Caribbean Creators "Network"',
       podcastDescription: 'Stories & sounds of the diaspora',
       language: 'en',
-      siteUrl: 'https://caribbeanone.app/podcasts/creators',
-      feedUrl: 'https://caribbeanone.app/podcasts/creators/rss',
-      coverUrl: 'https://cdn.caribbeanone.app/cover.jpg',
+      siteUrl: 'https://tukubi.com/podcasts/creators',
+      feedUrl: 'https://tukubi.com/podcasts/creators/rss',
+      coverUrl: 'https://cdn.tukubi.com/cover.jpg',
       authorName: 'Tukubi Studio',
       category: 'Society & Culture',
       episodes: [
@@ -161,12 +161,12 @@ describe('Podcasting 2.0 & iTunes RSS feed generation', () => {
           guid: 'ep-14',
           title: 'Sound System Culture',
           description: 'Dancehall evolution',
-          audioUrl: 'https://cdn.caribbeanone.app/ep14.mp3',
+          audioUrl: 'https://cdn.tukubi.com/ep14.mp3',
           durationSeconds: 2520,
           publishedAt: '2026-08-01T10:00:00Z',
           seasonNumber: 1,
           episodeNumber: 14,
-          transcriptUrl: 'https://cdn.caribbeanone.app/podcasts/ep14-transcript.txt',
+          transcriptUrl: 'https://cdn.tukubi.com/podcasts/ep14-transcript.txt',
         },
       ],
     });
@@ -177,9 +177,9 @@ describe('Podcasting 2.0 & iTunes RSS feed generation', () => {
     expect(xml).toContain('Caribbean Creators &quot;Network&quot;');
     expect(xml).toContain('<itunes:season>1</itunes:season>');
     expect(xml).toContain('<itunes:episode>14</itunes:episode>');
-    expect(xml).toContain('<enclosure url="https://cdn.caribbeanone.app/ep14.mp3"');
+    expect(xml).toContain('<enclosure url="https://cdn.tukubi.com/ep14.mp3"');
     expect(xml).toContain('<itunes:duration>42:00</itunes:duration>');
-    expect(xml).toContain('<podcast:transcript url="https://cdn.caribbeanone.app/podcasts/ep14-transcript.txt"');
+    expect(xml).toContain('<podcast:transcript url="https://cdn.tukubi.com/podcasts/ep14-transcript.txt"');
   });
 
   it('slugifies podcast titles', () => {

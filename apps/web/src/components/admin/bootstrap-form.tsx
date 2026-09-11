@@ -101,7 +101,7 @@ export default function BootstrapForm() {
                   type="email"
                   name="email"
                   required
-                  placeholder="admin@caribbeanone.app"
+                  placeholder="admin@tukubi.com"
                   className="w-full bg-[#0F172A] border border-slate-700 rounded-xl pl-9 pr-3.5 py-2.5 text-sm text-brand-sandstone placeholder:text-slate-600 focus:outline-none focus:border-brand-caribbeanSea"
                 />
               </div>

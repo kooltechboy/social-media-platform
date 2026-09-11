@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { AskCaribbeanPlanner, CaribAIEngine } from '@caribbean/ai';
 import { cookies } from 'next/headers';
+import { askCaribbean } from '../../../../lib/ai/ask-caribbean';
 
 const rateLimits = new Map<string, number>();
 
@@ -24,29 +25,48 @@ export async function GET(request: Request) {
     }
     rateLimits.set(`${sessionId}-search`, now);
 
-    const planner = new AskCaribbeanPlanner();
-    const plan = planner.plan(q);
+    const searchResponse = await askCaribbean(q);
+    const results = searchResponse.results;
+    const plan = searchResponse.plan;
+
+    if (results.length === 0) {
+      return NextResponse.json({
+        answer: `No matching content, creators, or events found for "${q}" on Tukubi at this time.`,
+        citations: [],
+        plan,
+      });
+    }
 
     const aiEngine = new CaribAIEngine();
-    
-    // Simulate grounded retrieval based on the plan
-    const prompt = `You are an AI assistant for a Caribbean social platform. 
-User query: "${q}"
-Plan: ${JSON.stringify(plan)}
-Please provide a helpful, concise answer based on this query. If the query asks for events, creators, or businesses, invent a few realistic examples for the Caribbean context. Return a JSON object with 'answer' and 'citations' (array of {entityType, entityId, title}).`;
+    let answerText = `Found ${results.length} verified item(s) on Tukubi for "${q}".`;
+    const citations = results.slice(0, 5).map((r) => ({
+      entityType: r.entityType,
+      entityId: r.entityId,
+      title: r.title,
+    }));
 
-    const res = await aiEngine.complete(prompt);
-    let parsed: any;
     try {
+      const prompt = `You are CaribAI, an intelligent assistant for TUKUBI — The Caribbean Connected.
+User query: "${q}"
+Retrieved Database Context:
+${JSON.stringify(results.slice(0, 6), null, 2)}
+
+Provide a concise, helpful summary directly based on the verified records above. Do NOT invent people, places, or events not present in the context. Return JSON with 'answer': string.`;
+
+      const res = await aiEngine.complete(prompt);
       const jsonStr = res.substring(res.indexOf('{'), res.lastIndexOf('}') + 1);
-      parsed = JSON.parse(jsonStr);
+      const parsed = JSON.parse(jsonStr);
+      if (parsed.answer) {
+        answerText = parsed.answer;
+      }
     } catch {
-      parsed = { answer: 'AI is thinking...', citations: [] };
+      // Fallback to honest deterministic summary if AI provider is unconfigured or rate-limited
+      answerText = `Here are the top matches found on Tukubi for "${q}": ${results.slice(0, 3).map((r) => r.title).join(', ')}.`;
     }
 
     return NextResponse.json({
-      answer: parsed.answer || 'No answer generated.',
-      citations: parsed.citations || [],
+      answer: answerText,
+      citations,
       plan,
     });
   } catch (error) {

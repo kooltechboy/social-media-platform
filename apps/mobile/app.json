@@ -25,7 +25,7 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#110D17"
       },
-      "package": "com.caribbeanone.app",
+      "package": "com.tukubi.app",
       "permissions": [
         "CAMERA",
         "RECORD_AUDIO",

@@ -18,9 +18,9 @@ BEGIN
   INSERT INTO auth.users (id, email, encrypted_password, email_confirmed_at, created_at, updated_at,
                           raw_app_meta_data, raw_user_meta_data, aud, role)
   VALUES
-    (owner_id, 'rls_owner@test.caribbeanone.app', 'x', now(), now(), now(),
+    (owner_id, 'rls_owner@test.tukubi.com', 'x', now(), now(), now(),
      '{"provider":"email","providers":["email"]}', '{}', 'authenticated', 'authenticated'),
-    (other_id, 'rls_other@test.caribbeanone.app', 'x', now(), now(), now(),
+    (other_id, 'rls_other@test.tukubi.com', 'x', now(), now(), now(),
      '{"provider":"email","providers":["email"]}', '{}', 'authenticated', 'authenticated')
   ON CONFLICT (id) DO NOTHING;
 

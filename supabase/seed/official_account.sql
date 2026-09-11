@@ -10,14 +10,14 @@ BEGIN
     -- Official platform identity
     INSERT INTO auth.users (id, email, encrypted_password, email_confirmed_at, created_at, updated_at,
                             raw_app_meta_data, raw_user_meta_data, aud, role)
-    VALUES (official_id, 'hello@caribbeanone.app',
+    VALUES (official_id, 'hello@tukubi.com',
             '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy',
             now(), now(), now(),
             '{"provider":"email","providers":["email"]}', '{"official":true}', 'authenticated', 'authenticated')
     ON CONFLICT (id) DO NOTHING;
 
     INSERT INTO public.profiles (id, username, display_name, bio)
-    VALUES (official_id, 'caribbean_one', 'TUKUBI',
+    VALUES (official_id, 'tukubi', 'TUKUBI',
             'The digital home of the Caribbean and its global diaspora. Social, creators, businesses, events and commerce — one ecosystem.')
     ON CONFLICT (id) DO NOTHING;
 

@@ -12,8 +12,6 @@ export async function fetchCreatorAnalyticsAction() {
   const supabase = await createSupabaseServerClient();
   if (!supabase) return { success: false, error: "Database client error" };
 
-  if (!supabase) return null;
-
   try {
     const [
       profileCountsResult,

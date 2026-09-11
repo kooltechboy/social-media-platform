@@ -91,7 +91,7 @@ export default function LoginPage() {
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="moderator@caribbeanone.com"
+              placeholder="moderator@tukubi.com"
               disabled={loading}
               className="w-full bg-brand-dusk border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-brand-sandstone placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-brand-caribbeanSea focus:border-transparent disabled:opacity-50 transition-colors"
             />
