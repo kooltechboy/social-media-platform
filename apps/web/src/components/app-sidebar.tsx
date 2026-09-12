@@ -24,6 +24,8 @@ import {
   PlusCircle,
   Music,
   UserPlus,
+  Radio,
+  ArrowRight,
 } from 'lucide-react';
 
 import { useTranslation, TranslationKey } from '@caribbean/localization';
@@ -56,7 +58,8 @@ const COMMERCE_NAV: NavItem[] = [
   { href: '/events', labelKey: 'nav.cultural_events', fallbackLabel: 'Cultural Events', icon: <Calendar className="w-4 h-4 text-yellow-400" /> },
   { href: '/pages', labelKey: 'nav.pages_stores', fallbackLabel: 'Pages & Stores', icon: <Building2 className="w-4 h-4 text-brand-sunriseCoral" />, badge: 'VERIFIED' },
   { href: '/financial-center', labelKey: 'nav.financial_center', fallbackLabel: 'Financial Center', icon: <Wallet className="w-4 h-4 text-brand-sunriseCoral" /> },
-  { href: '/creator-studio', labelKey: 'nav.creator_studio', fallbackLabel: 'Creator Studio', icon: <Sparkles className="w-4 h-4 text-brand-caribbeanSea" /> },
+  { href: '/creator-hub', fallbackLabel: 'Creator Hub', icon: <Sparkles className="w-4 h-4 text-brand-goldenHour" />, badge: 'HUB' },
+  { href: '/creator-studio', labelKey: 'nav.creator_studio', fallbackLabel: 'Creator Studio', icon: <Radio className="w-4 h-4 text-brand-caribbeanSea" /> },
 ];
 
 interface AppSidebarProps {
@@ -180,20 +183,41 @@ export default function AppSidebar({ currentPath }: AppSidebarProps) {
         {renderNavGroup(personalNav, t('settings.account'))}
       </div>
 
-      {/* Creator Studio Action Card */}
-      <div className="glass rounded-2xl p-4 text-center space-y-2.5">
+      {/* Creator Ecosystem Action Card */}
+      <div className="glass rounded-2xl p-4 space-y-3">
         <div className="flex items-center justify-center gap-1.5 text-xs font-black text-brand-caribbeanSea uppercase tracking-wide">
-          <Sparkles className="w-3.5 h-3.5 text-brand-goldenHour" /> Caribbean Creator Hub
+          <Sparkles className="w-3.5 h-3.5 text-brand-goldenHour" /> Caribbean Creator Ecosystem
         </div>
-        <p className="text-[11px] text-slate-300 leading-relaxed">
-          Access professional studio tools, Live HD broadcasts, podcast hosting, and direct fan memberships with <strong className="text-brand-sunriseCoral">Creator Tiers</strong>.
+        <p className="text-[11px] text-slate-300 leading-relaxed text-center">
+          Grow your presence, connect with fans, and operate your media business on TUKUBI.
         </p>
-        <Link
-          href="/creator-studio"
-          className="w-full block bg-gradient-to-r from-brand-caribbeanSea to-brand-sunriseCoral hover:from-brand-caribbeanSea hover:to-brand-sunriseCoral text-slate-950 font-black text-xs py-2.5 rounded-2xl transition-all shadow-md shadow-brand-caribbeanSea/20 text-center"
-        >
-          Open Creator Studio
-        </Link>
+
+        <div className="space-y-2 pt-1">
+          <Link
+            href="/creator-hub"
+            className="w-full flex items-center justify-between p-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 transition-all text-left group"
+          >
+            <div>
+              <p className="text-xs font-black text-brand-goldenHour flex items-center gap-1.5">
+                <Sparkles className="w-3.5 h-3.5" /> Creator Hub
+              </p>
+              <p className="text-[10px] text-brand-sandstone/70">
+                Your home base, audience &amp; business
+              </p>
+            </div>
+            <ArrowRight className="w-3.5 h-3.5 text-brand-goldenHour opacity-0 group-hover:opacity-100 transition-opacity" />
+          </Link>
+
+          <Link
+            href="/creator-studio"
+            className="w-full block bg-gradient-to-r from-brand-caribbeanSea to-brand-sunriseCoral hover:brightness-110 text-slate-950 font-black text-xs py-2.5 rounded-xl transition-all shadow-md shadow-brand-caribbeanSea/20 text-center"
+          >
+            Open Creator Studio
+          </Link>
+          <p className="text-[10px] text-center text-brand-sandstone/60">
+            Create, manage, analyze &amp; monetize content
+          </p>
+        </div>
       </div>
     </aside>
   );

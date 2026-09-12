@@ -278,3 +278,30 @@ export function hasCreatorEntitlement(
   return tier.entitlements.includes(entitlement);
 }
 
+// ---------------------------------------------------------------------------
+// Creator Studio Team Collaboration & Delegation Engine
+// ---------------------------------------------------------------------------
+
+export type CreatorTeamRole = 'admin' | 'editor' | 'publisher' | 'analyst' | 'moderator';
+
+export interface CreatorTeamMember {
+  id: string;
+  creatorId: string;
+  memberId: string;
+  role: CreatorTeamRole;
+  createdAt: string;
+}
+
+export const ROLE_PERMISSIONS: Record<CreatorTeamRole, readonly string[]> = {
+  admin: ['manage_content', 'publish_content', 'view_analytics', 'manage_team', 'manage_monetization', 'moderate_chat'],
+  editor: ['manage_content', 'view_analytics'],
+  publisher: ['manage_content', 'publish_content', 'view_analytics'],
+  analyst: ['view_analytics'],
+  moderator: ['moderate_chat', 'view_analytics'],
+};
+
+export function canTeamRolePerform(role: CreatorTeamRole, action: string): boolean {
+  return ROLE_PERMISSIONS[role]?.includes(action) ?? false;
+}
+
+

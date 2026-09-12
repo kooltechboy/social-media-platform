@@ -201,6 +201,33 @@ export function ProfileScreen({ onLogout, navigation }: ProfileScreenProps) {
               <Text style={styles.navLinkText}>Financial Center</Text>
             </TouchableOpacity>
           </View>
+
+          {/* Creator Ecosystem Hub Card */}
+          <View style={styles.creatorCard}>
+            <View style={styles.creatorCardHeader}>
+              <Text style={styles.creatorBadge}>🌴 CARIBBEAN CREATOR ECOSYSTEM</Text>
+            </View>
+            <Text style={styles.creatorTitle}>Creator Hub &amp; Studio</Text>
+            <Text style={styles.creatorSubtitle}>
+              Produce podcasts, go live, manage fan memberships, and track creator earnings.
+            </Text>
+            <View style={styles.creatorActionsRow}>
+              <TouchableOpacity
+                style={styles.creatorStudioBtn}
+                onPress={() => navigation.navigate('Create')}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.creatorStudioBtnText}>✨ Create &amp; Studio</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.creatorFinanceBtn}
+                onPress={() => navigation.navigate('Finance')}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.creatorFinanceBtnText}>💰 Payouts &amp; Balance</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
         </View>
 
         {/* Edit Form Modal/Drawer in-place */}
@@ -444,4 +471,66 @@ const styles = StyleSheet.create({
   },
   infoTitle: { color: TOKENS.action, fontSize: 12, fontWeight: '800', marginBottom: 4 },
   infoText: { color: TOKENS.textMuted, fontSize: 11, lineHeight: 16, fontWeight: '500' },
+  creatorCard: {
+    backgroundColor: '#0F172A',
+    borderColor: '#38BDF840',
+    borderWidth: 1,
+    borderRadius: 20,
+    padding: 16,
+    marginTop: 14,
+    width: '100%',
+  },
+  creatorCardHeader: {
+    flexDirection: 'row',
+    marginBottom: 6,
+  },
+  creatorBadge: {
+    color: '#38BDF8',
+    fontSize: 10,
+    fontWeight: '900',
+    letterSpacing: 1,
+    textTransform: 'uppercase',
+  },
+  creatorTitle: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '800',
+    marginBottom: 4,
+  },
+  creatorSubtitle: {
+    color: TOKENS.textMuted,
+    fontSize: 12,
+    lineHeight: 16,
+    marginBottom: 12,
+  },
+  creatorActionsRow: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  creatorStudioBtn: {
+    flex: 1,
+    backgroundColor: '#FB923C',
+    paddingVertical: 10,
+    borderRadius: 12,
+    alignItems: 'center',
+  },
+  creatorStudioBtnText: {
+    color: '#090D1A',
+    fontSize: 12,
+    fontWeight: '900',
+  },
+  creatorFinanceBtn: {
+    flex: 1,
+    backgroundColor: '#FFFFFF15',
+    borderWidth: 1,
+    borderColor: '#FFFFFF20',
+    paddingVertical: 10,
+    borderRadius: 12,
+    alignItems: 'center',
+  },
+  creatorFinanceBtnText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '700',
+  },
 });

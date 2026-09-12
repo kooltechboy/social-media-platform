@@ -16,6 +16,7 @@ export async function fetchCreatorAnalyticsAction() {
     const [
       profileCountsResult,
       postsResult,
+      videosResult,
       ledgerAccountsResult,
       followsResult
     ] = await Promise.all([
@@ -29,6 +30,12 @@ export async function fetchCreatorAnalyticsAction() {
         .select("id, content, comments_count, likes_count, created_at")
         .eq("author_id", user.id)
         .order("created_at", { ascending: false }),
+      supabase
+        .from("videos")
+        .select("id, title, video_kind, view_count, created_at")
+        .eq("creator_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(10),
       supabase
         .from("ledger_accounts")
         .select("id")
@@ -48,15 +55,30 @@ export async function fetchCreatorAnalyticsAction() {
     };
 
     const posts = postsResult.data || [];
+    const videos = (videosResult?.data || []) as any[];
     const totalComments = posts.reduce((sum, p) => sum + (p.comments_count || 0), 0);
-    const recentContent = posts.slice(0, 5).map(p => ({
-      id: p.id,
-      title: p.content ? (p.content.length > 50 ? p.content.slice(0, 50) + "..." : p.content) : "Untitled Post",
-      type: "post",
-      views: 0,
-      engagement: p.comments_count || 0,
-      publishedAt: p.created_at,
-    }));
+
+    // Merge posts and videos for realistic content performance analytics
+    const combinedContent = [
+      ...videos.map(v => ({
+        id: v.id,
+        title: v.title || "Untitled Video",
+        type: v.video_kind || "video",
+        views: v.view_count || 0,
+        engagement: v.view_count || 0,
+        publishedAt: v.created_at,
+      })),
+      ...posts.map(p => ({
+        id: p.id,
+        title: p.content ? (p.content.length > 50 ? p.content.slice(0, 50) + "..." : p.content) : "Untitled Post",
+        type: "post",
+        views: (p.likes_count || 0) + (p.comments_count || 0),
+        engagement: (p.comments_count || 0) + (p.likes_count || 0),
+        publishedAt: p.created_at,
+      }))
+    ].sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime());
+
+    const recentContent = combinedContent.slice(0, 5);
 
     let monthlyRevenue = 0;
     if (ledgerAccountsResult.data?.id) {

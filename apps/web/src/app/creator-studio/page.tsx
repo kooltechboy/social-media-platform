@@ -10,6 +10,7 @@ import {
   BarChart2,
   Plus,
   Tv,
+  Sparkles,
 } from "lucide-react";
 import Link from "next/link";
 import type { Metadata } from "next";
@@ -110,6 +111,7 @@ export default async function CreatorStudioPage({
     livestreamsResult,
     draftsResult,
     ledgerAccountResult,
+    profileCountsResult,
   ] = await Promise.all([
     supabase
       .from("subscriptions")
@@ -145,6 +147,11 @@ export default async function CreatorStudioPage({
       .eq("owner_id", user.id)
       .eq("account_type", "creator_pending")
       .maybeSingle(),
+    supabase
+      .from("profile_counts")
+      .select("followers_count, likes_received_count, posts_count")
+      .eq("profile_id", user.id)
+      .maybeSingle(),
   ]);
 
   const subscriptions = (subscriptionsResult.data ?? []) as SubscriptionRow[];
@@ -153,6 +160,7 @@ export default async function CreatorStudioPage({
   const rawLivestreams = (livestreamsResult.data ?? []) as any[];
   const rawDrafts = (draftsResult.data ?? []) as any[];
   const ledgerAccount = ledgerAccountResult.data as LedgerAccount | null;
+  const profileCounts = profileCountsResult.data;
 
   // Format data
   const videos: CreatorVideoItem[] = rawVideos.map((v) => ({
@@ -277,6 +285,12 @@ export default async function CreatorStudioPage({
 
         <div className="flex flex-wrap items-center gap-3">
           <CreatorStudioActions displayName={user.displayName} />
+          <Link
+            href="/creator-hub"
+            className="bg-brand-goldenHour/15 hover:bg-brand-goldenHour/25 text-brand-goldenHour border border-brand-goldenHour/30 font-black px-4 py-2.5 rounded-xl text-xs flex items-center gap-2 transition-all min-h-[44px]"
+          >
+            <Sparkles className="w-4 h-4" /> Creator Hub
+          </Link>
           <Link
             href="/creator-studio/repurpose"
             className="bg-purple-600/20 hover:bg-purple-600/30 text-purple-300 border border-purple-500/30 font-black px-4 py-2.5 rounded-xl text-xs flex items-center gap-2 transition-all min-h-[44px]"
@@ -442,8 +456,15 @@ export default async function CreatorStudioPage({
       <CreatorAiInsightsPanel
         stats={{
           postsCount: videos.length + podcasts.length + livestreams.length,
-          followersCount: activeSubscriptions.length, // approximation for now
-          recentEngagement: 5.4, // placeholder
+          followersCount: (profileCounts?.followers_count || 0) || activeSubscriptions.length,
+          recentEngagement: (() => {
+            const fans = (profileCounts?.followers_count || 0) || activeSubscriptions.length;
+            const totalInteractions = (profileCounts?.likes_received_count || 0) + totalVideoViews;
+            if (fans > 0) {
+              return Number(((totalInteractions / fans) * 10).toFixed(1));
+            }
+            return totalInteractions > 0 ? 5.0 : 0;
+          })(),
         }}
       />
     </div>
