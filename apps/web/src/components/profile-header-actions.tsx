@@ -62,6 +62,7 @@ export default function ProfileHeaderActions({
         {!isOwnProfile && isAuthenticated && (
           <Link
             href={`/messages?u=${encodeURIComponent(username)}`}
+            title={profileData?.messaging_permission === 'no_one' ? "This member isn't accepting new messages right now" : `Message @${username}`}
             className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-brand-caribbeanSea/20 hover:bg-brand-caribbeanSea text-brand-caribbeanSea hover:text-slate-950 border border-brand-caribbeanSea/30 text-xs font-bold transition-all"
           >
             <MessageSquare className="w-3.5 h-3.5" />

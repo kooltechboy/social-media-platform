@@ -29,7 +29,12 @@ export async function getOrCreateDirectConversation(
     return { conversationId: null, targetProfile: null, error: 'Sign in to start messaging.' };
   }
 
-  // 1. Resolve canonical target user
+  // 1. Early self-message guard
+  if (currentUserId === targetIdentifier) {
+    return { conversationId: null, targetProfile: null, error: 'Cannot start conversation with yourself.' };
+  }
+
+  // 2. Resolve canonical target user
   const { user: targetProfile, error: resolveErr } = await resolveUserForMessaging(targetIdentifier, client);
   if (resolveErr || !targetProfile) {
     return { conversationId: null, targetProfile: null, error: resolveErr || 'User not found.' };
@@ -37,7 +42,7 @@ export async function getOrCreateDirectConversation(
 
   const targetUserId = targetProfile.id;
 
-  // 2. Self-message guard
+  // 3. Self-message guard after resolution
   if (currentUserId === targetUserId) {
     return { conversationId: null, targetProfile, error: 'Cannot start conversation with yourself.' };
   }
@@ -74,7 +79,13 @@ export async function getOrCreateDirectConversation(
 
     if (rpcError) {
       const msg = rpcError.message?.toLowerCase() || '';
-      if (msg.includes('block')) {
+      if (msg.includes('friends_only')) {
+        return { conversationId: null, targetProfile, error: 'This member only receives messages from friends.' };
+      }
+      if (msg.includes('messaging_disabled')) {
+        return { conversationId: null, targetProfile, error: "This member isn't accepting new messages right now." };
+      }
+      if (msg.includes('block') || msg.includes('user_blocked')) {
         return { conversationId: null, targetProfile, error: 'This user is not available for messaging.' };
       }
       if (msg.includes('cannot_message_self')) {
@@ -82,6 +93,9 @@ export async function getOrCreateDirectConversation(
       }
       if (msg.includes('target_user_not_found')) {
         return { conversationId: null, targetProfile, error: 'Target user could not be located.' };
+      }
+      if (msg.includes('authentication_required')) {
+        return { conversationId: null, targetProfile, error: 'Sign in to start messaging.' };
       }
       console.warn('[DirectConversation] RPC error, falling back to direct operations:', rpcError.message);
     }

@@ -633,7 +633,7 @@ export async function reportPostAction(postId: string, reason: string, details?:
 
 export type ReactionType = 'like' | 'love' | 'fire' | 'celebrate' | 'laugh' | 'wow' | 'sad' | 'angry';
 
-export const REACTION_EMOJI_MAP: Record<ReactionType, { emoji: string; label: string; color: string }> = {
+const REACTION_EMOJI_MAP: Record<ReactionType, { emoji: string; label: string; color: string }> = {
   like:      { emoji: '🤍', label: 'Like',      color: 'text-slate-300' },
   love:      { emoji: '❤️', label: 'Love',      color: 'text-rose-400' },
   fire:      { emoji: '🔥', label: 'Fire',      color: 'text-orange-400' },
@@ -644,7 +644,7 @@ export const REACTION_EMOJI_MAP: Record<ReactionType, { emoji: string; label: st
   angry:     { emoji: '😠', label: 'Angry',     color: 'text-red-500' },
 };
 
-export const VALID_REACTION_TYPES: ReactionType[] = ['like','love','fire','celebrate','laugh','wow','sad','angry'];
+const VALID_REACTION_TYPES: ReactionType[] = ['like','love','fire','celebrate','laugh','wow','sad','angry'];
 
 export interface ReactionToggleResult {
   liked: boolean;

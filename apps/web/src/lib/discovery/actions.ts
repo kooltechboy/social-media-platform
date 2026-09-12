@@ -98,7 +98,7 @@ export interface DiscoverPost {
  * Safely resolves country information from profile database fields
  * Supports existing database columns (country, island, city) and future origin_country_iso
  */
-export function resolveProfileCountry(p: {
+function resolveProfileCountry(p: {
   country?: string | null;
   island?: string | null;
   city?: string | null;
