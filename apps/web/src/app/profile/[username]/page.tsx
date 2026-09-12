@@ -18,6 +18,7 @@ import {
   Video,
   FileText,
   Pin,
+  MessageSquare,
 } from 'lucide-react';
 import Link from 'next/link';
 import { createSupabaseServerClient, getCurrentUser } from '../../../lib/supabase/server';
@@ -376,19 +377,29 @@ export default async function ProfilePage({
                     profileData={profileData}
                   />
                 ) : (
-                  currentUser ? (
-                    <FollowButton
-                      targetUserId={profileData.id}
-                      isFollowing={isFollowing}
-                    />
-                  ) : (
+                  <div className="flex items-center gap-2">
+                    {currentUser ? (
+                      <FollowButton
+                        targetUserId={profileData.id}
+                        isFollowing={isFollowing}
+                      />
+                    ) : (
+                      <Link
+                        href="/login"
+                        className="flex items-center gap-1.5 bg-gradient-to-r from-orange-500 via-amber-500 to-emerald-400 hover:brightness-110 text-slate-950 font-black text-xs sm:text-sm px-5 py-2.5 rounded-2xl transition-all shadow-md min-h-[44px]"
+                      >
+                        <UserPlus className="w-4 h-4" /> Sign in to Follow
+                      </Link>
+                    )}
+
                     <Link
-                      href="/login"
-                      className="flex items-center gap-1.5 bg-gradient-to-r from-orange-500 via-amber-500 to-emerald-400 hover:brightness-110 text-slate-950 font-black text-xs sm:text-sm px-5 py-2.5 rounded-2xl transition-all shadow-md min-h-[44px]"
+                      href={currentUser ? `/messages?u=${encodeURIComponent(profileData.username)}` : `/login?next=/messages?u=${encodeURIComponent(profileData.username)}`}
+                      className="flex items-center gap-1.5 bg-white/10 hover:bg-white/20 text-white font-bold text-xs sm:text-sm px-5 py-2.5 rounded-2xl border border-white/15 transition-all shadow-md min-h-[44px]"
                     >
-                      <UserPlus className="w-4 h-4" /> Sign in to Follow
+                      <MessageSquare className="w-4 h-4 text-brand-caribbeanSea" />
+                      <span>Message</span>
                     </Link>
-                  )
+                  </div>
                 )}
               </div>
             </div>

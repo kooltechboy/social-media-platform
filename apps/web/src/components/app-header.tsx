@@ -11,7 +11,7 @@ import UserAvatar from './user-avatar';
 import { useTranslation } from '@caribbean/localization';
 import { TukubiLogo } from './brand/tukubi-logo';
 import { LanguageDropdown } from './gateway/LanguageDropdown';
-import { useUnreadNotificationsCount } from './notifications-realtime-provider';
+import { useUnreadNotificationsCount, useUnreadMessagesCount } from './notifications-realtime-provider';
 
 interface SearchResultUser {
   id: string;
@@ -28,6 +28,7 @@ export default function AppHeader() {
   const router = useRouter();
   const { t } = useTranslation();
   const unreadCount = useUnreadNotificationsCount();
+  const unreadMessagesCount = useUnreadMessagesCount();
   const [query, setQuery] = useState('');
   const [isOpen, setIsOpen] = useState(false);
   const [livePeople, setLivePeople] = useState<SearchResultUser[]>([]);
@@ -278,10 +279,13 @@ export default function AppHeader() {
 
         <Link
           href="/messages"
-          className="hidden md:flex p-2 text-white/70 hover:text-white rounded-full hover:bg-white/10 transition-colors"
+          className="hidden md:flex p-2 text-white/70 hover:text-white rounded-full hover:bg-white/10 relative transition-colors"
           aria-label={t('nav.messages')}
         >
           <MessageSquare className="w-4.5 h-4.5" aria-hidden="true" />
+          {unreadMessagesCount > 0 && (
+            <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-brand-caribbeanSea rounded-full animate-pulse shadow-[0_0_8px_rgba(0,168,150,0.9)]" />
+          )}
         </Link>
 
         <SessionWidget />

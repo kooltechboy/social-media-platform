@@ -27,7 +27,8 @@ interface ConversationItem {
 interface MessageItem {
   id: string;
   sender_id: string;
-  content: string;
+  body: string;
+  content?: string;
   created_at: string;
   sequence_number?: number;
 }
@@ -111,14 +112,19 @@ export function MessagesScreen() {
     try {
       const { data, error } = await supabase
         .from('messages')
-        .select('id, sender_id, content, created_at, sequence_number')
+        .select('id, sender_id, body, created_at, sequence_number')
         .eq('conversation_id', conversationId)
         .is('deleted_at', null)
         .order('sequence_number', { ascending: true })
         .limit(50);
 
       if (error) throw error;
-      setMessages(data || []);
+      const normalized: MessageItem[] = (data || []).map((m: any) => ({
+        ...m,
+        body: m.body || m.content || '',
+        content: m.body || m.content || '',
+      }));
+      setMessages(normalized);
       // Scroll to bottom
       setTimeout(() => flatListRef.current?.scrollToEnd({ animated: false }), 100);
     } catch (err) {
@@ -195,7 +201,7 @@ export function MessagesScreen() {
     // Mark conversation as read
     supabase.auth.getUser().then(({ data: { user } }) => {
       if (!user) return;
-      Promise.resolve(supabase.rpc('mark_conversation_read', { p_conversation_id: item.id })).catch(() => {});
+      Promise.resolve(supabase.rpc('mark_conversation_read', { conv_id: item.id })).catch(() => {});
     });
   }, [loadMessages]);
 
@@ -221,6 +227,7 @@ export function MessagesScreen() {
     const optimistic: MessageItem = {
       id: clientMessageId,
       sender_id: currentUserId,
+      body: text,
       content: text,
       created_at: new Date().toISOString(),
     };
@@ -233,7 +240,7 @@ export function MessagesScreen() {
         .insert({
           conversation_id: selectedId,
           sender_id: currentUserId,
-          content: text,
+          body: text,
           client_message_id: clientMessageId,
         });
 
@@ -307,7 +314,7 @@ export function MessagesScreen() {
                 <View style={[styles.bubbleRow, isMine && styles.bubbleRowMine]}>
                   <View style={[styles.bubble, isMine ? styles.bubbleMine : styles.bubbleTheirs]}>
                     <Text style={[styles.bubbleText, isMine && styles.bubbleTextMine]}>
-                      {item.content}
+                      {item.body || item.content}
                     </Text>
                     <Text style={styles.bubbleTime}>{formatTime(item.created_at)}</Text>
                   </View>

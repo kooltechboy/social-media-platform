@@ -1,5 +1,5 @@
 import React from 'react';
-import { Bell, Heart, MessageCircle, UserPlus, Calendar, Wallet, ShieldCheck, ArrowLeft } from 'lucide-react';
+import { Bell, Heart, MessageCircle, MessageSquare, UserPlus, Calendar, Wallet, ShieldCheck, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import { createSupabaseServerClient, getCurrentUser } from '../../lib/supabase/server';
 import NotificationMarkRead from '../../components/notification-mark-read';
@@ -9,6 +9,7 @@ export const dynamic = 'force-dynamic';
 interface DBNotification {
   id: string;
   kind: string;
+  entity_id?: string;
   payload: Record<string, string>;
   read_at: string | null;
   created_at: string;
@@ -27,6 +28,7 @@ function relativeTime(iso: string): string {
 
 function NotificationIcon({ kind }: { kind: string }) {
   const cls = 'w-4 h-4';
+  if (kind === 'message') return <MessageSquare className={`${cls} text-brand-caribbeanSea`} />;
   if (kind === 'reaction' || kind === 'post_reaction') return <Heart className={`${cls} text-brand-goldenHour`} />;
   if (kind === 'comment') return <MessageCircle className={`${cls} text-brand-caribbeanSea`} />;
   if (kind === 'follow') return <UserPlus className={`${cls} text-brand-sunriseCoral`} />;
@@ -38,6 +40,8 @@ function NotificationIcon({ kind }: { kind: string }) {
 
 function notificationActionText(n: DBNotification): string {
   switch (n.kind) {
+    case 'message':
+      return n.payload?.preview ? `sent you a message: "${n.payload.preview}"` : 'sent you a direct message';
     case 'reaction':
     case 'post_reaction':
       return 'reacted to your post';
@@ -100,7 +104,7 @@ export default async function NotificationsPage() {
   if (supabase) {
     const { data } = await supabase
       .from('notifications')
-      .select('id, kind, payload, read_at, created_at, actor:actor_id(display_name, username)')
+      .select('id, kind, entity_id, payload, read_at, created_at, actor:actor_id(display_name, username)')
       .eq('recipient_id', user.id)
       .order('created_at', { ascending: false })
       .limit(50);
@@ -201,6 +205,14 @@ export default async function NotificationsPage() {
                     className="inline-flex items-center gap-1 text-xs font-black text-rose-400 hover:text-rose-300 mt-1 min-h-[36px]"
                   >
                     Join Live Stream →
+                  </Link>
+                )}
+                {(notification.kind === 'message' || notification.payload?.conversation_id) && (
+                  <Link
+                    href={`/messages?c=${notification.payload?.conversation_id || notification.entity_id || ''}`}
+                    className="inline-flex items-center gap-1 text-xs font-black text-brand-caribbeanSea hover:underline mt-1 min-h-[36px]"
+                  >
+                    Open Conversation →
                   </Link>
                 )}
                 <span className="text-xs text-brand-sandstone/50 font-medium block pt-0.5">

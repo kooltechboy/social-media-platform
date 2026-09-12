@@ -113,6 +113,12 @@ export default function MessageThread({
   const [typingUsers, setTypingUsers] = useState<string[]>([]);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
+  // Focus input and sync messages on conversationId change
+  useEffect(() => {
+    setMessages(initialMessages);
+    textInputRef.current?.focus();
+  }, [conversationId, initialMessages]);
+
   // Scroll to bottom on updates
   useEffect(() => {
     if (scrollRef.current) {
@@ -898,6 +904,7 @@ export default function MessageThread({
           <input
             ref={textInputRef}
             type="text"
+            autoFocus
             value={messageInput}
             onChange={(e) => {
               setMessageInput(e.target.value);

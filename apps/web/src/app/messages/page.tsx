@@ -42,27 +42,18 @@ export default async function MessagesPage({
   }
 
   let targetConversationId: string | null = null;
+  let targetResolvedProfile: { id: string; displayName: string; username: string; avatarUrl: string | null } | null = null;
   let conversationError: string | null = null;
 
-  // Canonical Direct Conversation Routing
+  // Authoritative Canonical Direct Conversation Resolution
   if (params.u) {
-    const cleanUsername = params.u.replace('@', '').trim();
-    const { data: targetProfile } = await supabase
-      .from('profiles')
-      .select('id, display_name, username')
-      .ilike('username', cleanUsername)
-      .maybeSingle();
-
-    if (targetProfile && targetProfile.id !== user.id) {
-      const { getOrCreateDirectConversation } = await import('../../lib/messaging/direct-conversations');
-      const convResult = await getOrCreateDirectConversation(targetProfile.id, user.id);
-      if (convResult.error) {
-        conversationError = convResult.error;
-      } else if (convResult.conversationId) {
-        targetConversationId = convResult.conversationId;
-      }
-    } else if (!targetProfile) {
-      conversationError = 'User not found.';
+    const { getOrCreateDirectConversation } = await import('../../lib/messaging/direct-conversations');
+    const convResult = await getOrCreateDirectConversation(params.u, user.id);
+    if (convResult.error) {
+      conversationError = convResult.error;
+    } else if (convResult.conversationId) {
+      targetConversationId = convResult.conversationId;
+      targetResolvedProfile = convResult.targetProfile || null;
     }
   }
 
@@ -70,17 +61,16 @@ export default async function MessagesPage({
   const [membershipsResult, onlineMembersResult, requestsResult] = await Promise.all([
     supabase
       .from('conversation_members')
-      .select('conversation_id, conversations(id, kind, title, last_message_at)')
+      .select('conversation_id, last_read_sequence, status, conversations(id, kind, category, title, last_message_at, last_sequence_number)')
       .eq('profile_id', user.id)
       .is('left_at', null)
       .order('last_message_at', { ascending: false, foreignTable: 'conversations' }),
     supabase
       .from('profiles')
       .select('id, display_name, username, avatar_url, is_verified, bio')
-      .eq('is_private', false)
       .neq('id', user.id)
       .order('updated_at', { ascending: false })
-      .limit(16),
+      .limit(20),
     (async () => {
       try {
         const res = await supabase
@@ -187,42 +177,44 @@ export default async function MessagesPage({
     };
   });
 
+  // If a direct chat was resolved via ?u= and is not yet in the loaded memberships, prepend it
+  if (targetConversationId && !summaries.some((s) => s.id === targetConversationId)) {
+    summaries.unshift({
+      id: targetConversationId,
+      kind: 'direct',
+      category: 'personal',
+      title: null,
+      last_message_at: null,
+      displayName: targetResolvedProfile?.displayName || 'Direct Conversation',
+      avatarUrl: targetResolvedProfile?.avatarUrl || null,
+      preview: 'Say wah gwaan to start the conversation!',
+      unreadCount: 0,
+      status: 'active',
+    });
+  }
+
   // Resolve which conversation to display:
-  // Priority: targetConversationId (from ?u=) > ?c= param > first conversation
+  // Priority: targetConversationId (from ?u=) > ?c= param > null (inbox view)
   const selectedId = targetConversationId
-    || (params.c && conversationIds.includes(params.c) ? params.c : null)
-    || summaries[0]?.id
+    || (params.c && (conversationIds.includes(params.c) || summaries.some((s) => s.id === params.c)) ? params.c : null)
     || null;
 
   let threadMessages: ThreadMessage[] = [];
   if (selectedId) {
     const threadResult = await supabase
       .from('messages')
-      .select('id, sender_id, body, created_at, message_kind, reply_to_id, profiles:profiles!messages_sender_id_fkey(display_name)')
+      .select('id, sender_id, body, created_at, message_kind, client_message_id, sequence_number, reply_to_id, metadata, profiles:profiles!messages_sender_id_fkey(display_name)')
       .eq('conversation_id', selectedId)
       .order('created_at', { ascending: true })
       .limit(100);
 
-    threadMessages = ((threadResult.data ?? []) as any[]).map((m) => ({
-      id: m.id,
-      sender_id: m.sender_id,
-      body: m.body,
-      created_at: m.created_at,
-      message_kind: m.message_kind || 'text',
-      reply_to_id: m.reply_to_id || undefined,
-      client_message_id: m.client_message_id || undefined,
-      sequence_number: m.sequence_number || 0,
-      metadata: m.metadata || {},
-      profiles: m.profiles || null,
-    }));
+    threadMessages = (threadResult.data ?? []) as unknown as ThreadMessage[];
 
-    // Mark as read in background if function exists
-    try {
-      void supabase.rpc('mark_conversation_read', { conv_id: selectedId });
-    } catch {}
+    // Mark as read in background
+    void supabase.rpc('mark_conversation_read', { conv_id: selectedId });
   }
 
-  const onlineMembers: NewMessageMember[] = (onlineMembersResult.data ?? []).map((p: any) => ({
+  const onlineMembers: NewMessageMember[] = (onlineMembersResult.data ?? []).map((p) => ({
     id: p.id,
     name: p.display_name || p.username || 'Caribbean Member',
     username: p.username || p.id.slice(0, 8),
@@ -282,6 +274,7 @@ export default async function MessagesPage({
           pendingRequests={pendingRequests}
           initialCompose={params.compose === 'true'}
           conversationError={conversationError}
+          initialPeerProfile={targetResolvedProfile}
         />
       </main>
     </div>

@@ -61,15 +61,25 @@ export default async function RootLayout({
   const dir = LOCALE_DETAILS[activeLocale]?.dir || 'ltr';
 
   let unreadNotificationsCount = 0;
+  let unreadMessagesCount = 0;
   if (user) {
     const supabase = await createSupabaseServerClient();
     if (supabase) {
-      const { count } = await supabase
-        .from('notifications')
-        .select('*', { count: 'exact', head: true })
-        .eq('recipient_id', user.id)
-        .is('read_at', null);
-      unreadNotificationsCount = count || 0;
+      const [allRes, msgRes] = await Promise.all([
+        supabase
+          .from('notifications')
+          .select('*', { count: 'exact', head: true })
+          .eq('recipient_id', user.id)
+          .is('read_at', null),
+        supabase
+          .from('notifications')
+          .select('*', { count: 'exact', head: true })
+          .eq('recipient_id', user.id)
+          .eq('kind', 'message')
+          .is('read_at', null),
+      ]);
+      unreadNotificationsCount = allRes.count || 0;
+      unreadMessagesCount = msgRes.count || 0;
     }
   }
 
@@ -86,7 +96,10 @@ export default async function RootLayout({
         <I18nProvider initialLocale={activeLocale}>
           <AuthProvider initialUser={user}>
             <PwaProvider>
-              <NotificationsRealtimeProvider initialUnreadCount={unreadNotificationsCount}>
+              <NotificationsRealtimeProvider
+                initialUnreadCount={unreadNotificationsCount}
+                initialUnreadMessagesCount={unreadMessagesCount}
+              >
                 <PostHogProvider>
                   {/* App shell with gateway page isolation */}
                   <AppShell>{children}</AppShell>

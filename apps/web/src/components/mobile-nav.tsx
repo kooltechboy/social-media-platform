@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation';
 import { Home, Compass, PlusCircle, MessageSquare, User, Settings, LogOut, X } from 'lucide-react';
 import { useAuth } from './auth-provider';
 import UserAvatar from './user-avatar';
+import { useUnreadMessagesCount } from './notifications-realtime-provider';
 
 import { useTranslation, TranslationKey } from '@caribbean/localization';
 
@@ -28,6 +29,7 @@ export default function MobileNav() {
   const pathname = usePathname();
   const { t } = useTranslation();
   const { user, signOut, loading } = useAuth();
+  const unreadMessagesCount = useUnreadMessagesCount();
   const [isProfileSheetOpen, setIsProfileSheetOpen] = useState(false);
   const sheetRef = useRef<HTMLDivElement>(null);
 
@@ -174,7 +176,12 @@ export default function MobileNav() {
                       <Icon className="w-6 h-6 text-slate-950" />
                     </span>
                   ) : (
-                    <Icon className="w-5 h-5" />
+                    <div className="relative">
+                      <Icon className="w-5 h-5" />
+                      {tab.href === '/messages' && unreadMessagesCount > 0 && (
+                        <span className="absolute -top-1 -right-1 w-2 h-2 bg-brand-caribbeanSea rounded-full animate-pulse shadow-[0_0_6px_rgba(0,168,150,0.9)]" />
+                      )}
+                    </div>
                   )}
                   <span
                     className={`text-[10px] font-bold ${

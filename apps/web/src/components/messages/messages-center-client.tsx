@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { createSupabaseBrowserClient } from '../../lib/supabase/browser';
@@ -30,14 +30,15 @@ import {
   CheckCircle2,
   Trash2,
   MoreVertical,
-  ChevronDown
+  ChevronDown,
+  Loader2,
+  BadgeCheck,
 } from 'lucide-react';
 import MessageThread, { type ThreadMessage } from '../message-thread';
 import NewMessageModal, { type NewMessageMember } from './new-message-modal';
 import UserAvatar from '../user-avatar';
-import { handleMessageRequestAction } from '../../lib/messaging/actions';
+import { handleMessageRequestAction, getOrCreateDirectConversationAction } from '../../lib/messaging/actions';
 import { Button } from '@caribbean/ui';
-
 
 export interface ConversationSummary {
   id: string;
@@ -72,6 +73,7 @@ interface MessagesCenterClientProps {
   pendingRequests?: PendingRequest[];
   initialCompose?: boolean;
   conversationError?: string | null;
+  initialPeerProfile?: { id: string; displayName: string; username: string; avatarUrl: string | null } | null;
 }
 
 export default function MessagesCenterClient({
@@ -83,6 +85,7 @@ export default function MessagesCenterClient({
   pendingRequests = [],
   initialCompose = false,
   conversationError = null,
+  initialPeerProfile = null,
 }: MessagesCenterClientProps) {
   const router = useRouter();
   const [search, setSearch] = useState('');
@@ -90,6 +93,11 @@ export default function MessagesCenterClient({
   const [isComposeOpen, setIsComposeOpen] = useState(initialCompose);
   const [mobileView, setMobileView] = useState<'list' | 'thread'>(selectedId ? 'thread' : 'list');
   const [requestActionLoading, setRequestActionLoading] = useState<string | null>(null);
+  const [startingChatWithId, setStartingChatWithId] = useState<string | null>(null);
+
+  // People search state (searching registered users in real time)
+  const [searchedPeople, setSearchedPeople] = useState<NewMessageMember[]>([]);
+  const [isSearchingPeople, setIsSearchingPeople] = useState(false);
 
   async function handleRequestResponse(convId: string, action: 'accept' | 'decline' | 'block') {
     setRequestActionLoading(convId);
@@ -105,7 +113,7 @@ export default function MessagesCenterClient({
   const [localConversations, setLocalConversations] = useState<ConversationSummary[]>(conversations);
   const [localPendingRequests, setLocalPendingRequests] = useState<PendingRequest[]>(pendingRequests);
 
-  // Sync with props if they change (e.g. from router.refresh())
+  // Sync with props if they change
   useEffect(() => {
     setLocalConversations(conversations);
   }, [conversations]);
@@ -114,49 +122,75 @@ export default function MessagesCenterClient({
     setLocalPendingRequests(pendingRequests);
   }, [pendingRequests]);
 
+  useEffect(() => {
+    if (selectedId) {
+      setMobileView('thread');
+    }
+  }, [selectedId]);
+
+  // Realtime search for people from `profiles`
+  useEffect(() => {
+    const query = search.trim();
+    if (!query) {
+      setSearchedPeople([]);
+      setIsSearchingPeople(false);
+      return;
+    }
+
+    setIsSearchingPeople(true);
+    const timer = setTimeout(async () => {
+      try {
+        const supabase = createSupabaseBrowserClient();
+        if (!supabase) return;
+
+        const clean = query.replace(/^@/, '');
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('id, display_name, username, avatar_url, is_verified, bio')
+          .or(`display_name.ilike.%${clean}%,username.ilike.%${clean}%`)
+          .neq('id', currentUserId)
+          .limit(8);
+
+        if (!error && data) {
+          setSearchedPeople(
+            data.map((p) => ({
+              id: p.id,
+              name: p.display_name || p.username || 'Caribbean Member',
+              username: p.username || p.id.slice(0, 8),
+              avatarUrl: p.avatar_url,
+              isVerified: !!p.is_verified,
+              bio: p.bio,
+            }))
+          );
+        }
+      } catch (err) {
+        console.error('[MessagesCenterClient] People search error:', err);
+      } finally {
+        setIsSearchingPeople(false);
+      }
+    }, 250);
+
+    return () => clearTimeout(timer);
+  }, [search, currentUserId]);
+
   // Realtime subscriptions
   useEffect(() => {
     const supabase = createSupabaseBrowserClient();
     if (!supabase) return;
 
-    // 1. Subscribe to conversation_members
+    // 1. Subscribe to conversation_members changes
     const convMembersChannel = supabase
       .channel(`public:conversation_members:profile_id=eq.${currentUserId}`)
       .on(
         'postgres_changes',
         {
-          event: 'INSERT',
+          event: '*',
           schema: 'public',
           table: 'conversation_members',
           filter: `profile_id=eq.${currentUserId}`,
         },
         () => {
-          // On insert, just refresh to get full joined details
           router.refresh();
-        }
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'conversation_members',
-          filter: `profile_id=eq.${currentUserId}`,
-        },
-        (payload: any) => {
-          const updated = payload.new as any;
-          setLocalConversations((prev) =>
-            prev.map((c) => {
-              if (c.id === updated.conversation_id) {
-                // If last_sequence_number was fetched somehow, we'd use it, 
-                // but since we only have last_read_sequence here, we will just force a refresh
-                // to get the correct unread count computed from the server.
-                router.refresh();
-                return c;
-              }
-              return c;
-            })
-          );
         }
       )
       .subscribe();
@@ -167,7 +201,7 @@ export default function MessagesCenterClient({
       .on(
         'postgres_changes',
         {
-          event: 'INSERT',
+          event: '*',
           schema: 'public',
           table: 'message_requests',
           filter: `receiver_id=eq.${currentUserId}`,
@@ -178,7 +212,7 @@ export default function MessagesCenterClient({
       )
       .subscribe();
 
-    // 3. Subscribe to ALL messages to update unread counts (since RLS filters for us)
+    // 3. Subscribe to all messages for live conversation updates & preview synchronization
     const messagesChannel = supabase
       .channel('public:messages:all')
       .on(
@@ -191,15 +225,29 @@ export default function MessagesCenterClient({
         (payload) => {
           const newMsg = payload.new as any;
           setLocalConversations((prev) => {
-            const exists = prev.find(c => c.id === newMsg.conversation_id);
+            const exists = prev.find((c) => c.id === newMsg.conversation_id);
             if (exists) {
-              return prev.map(c => 
-                c.id === newMsg.conversation_id 
-                  ? { ...c, unreadCount: (c.unreadCount || 0) + 1, preview: newMsg.body || 'New message', last_message_at: newMsg.created_at }
-                  : c
-              );
+              return prev
+                .map((c) =>
+                  c.id === newMsg.conversation_id
+                    ? {
+                        ...c,
+                        unreadCount: c.id === selectedId ? 0 : (c.unreadCount || 0) + 1,
+                        preview: newMsg.body || 'New message',
+                        last_message_at: newMsg.created_at,
+                      }
+                    : c
+                )
+                .sort((a, b) => {
+                  const timeA = a.last_message_at ? new Date(a.last_message_at).getTime() : 0;
+                  const timeB = b.last_message_at ? new Date(b.last_message_at).getTime() : 0;
+                  return timeB - timeA;
+                });
+            } else {
+              // Refresh to pick up joined conversation info
+              router.refresh();
+              return prev;
             }
-            return prev;
           });
         }
       )
@@ -210,9 +258,30 @@ export default function MessagesCenterClient({
       supabase.removeChannel(msgRequestsChannel);
       supabase.removeChannel(messagesChannel);
     };
-  }, [currentUserId, router]);
+  }, [currentUserId, router, selectedId]);
 
-  // Use local state for rendering
+  // Open direct chat with selected user
+  const handleStartChatWithUser = async (person: NewMessageMember) => {
+    setStartingChatWithId(person.id);
+    try {
+      const res = await getOrCreateDirectConversationAction(person.id);
+      if (res.conversationId) {
+        setSearch('');
+        router.push(`/messages?c=${res.conversationId}`);
+        setMobileView('thread');
+      } else {
+        router.push(`/messages?u=${encodeURIComponent(person.username)}`);
+        setMobileView('thread');
+      }
+    } catch {
+      router.push(`/messages?u=${encodeURIComponent(person.username)}`);
+      setMobileView('thread');
+    } finally {
+      setStartingChatWithId(null);
+    }
+  };
+
+  // Filter conversations
   const filteredConversations = useMemo(() => {
     let list = localConversations;
     if (filter === 'direct') {
@@ -260,6 +329,16 @@ export default function MessagesCenterClient({
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   }
 
+  const resolvedPeerName =
+    activeConversation?.displayName ||
+    initialPeerProfile?.displayName ||
+    'Caribbean Member';
+
+  const resolvedPeerAvatar =
+    activeConversation?.avatarUrl ||
+    initialPeerProfile?.avatarUrl ||
+    null;
+
   return (
     <div className="bg-[#120B1E]/95 backdrop-blur-3xl border border-white/15 rounded-3xl shadow-2xl overflow-hidden relative">
       {/* Specular Top Glow */}
@@ -270,7 +349,7 @@ export default function MessagesCenterClient({
         {/* LEFT COLUMN: Navigation, Search, Tabs & Conversations List */}
         <aside
           className={`md:col-span-4 lg:col-span-4 border-r border-white/10 flex flex-col bg-[#0D0816]/70 ${
-            mobileView === 'thread' && selectedId ? 'hidden md:flex' : 'flex'
+            mobileView === 'thread' ? 'hidden md:flex' : 'flex'
           }`}
         >
           {/* Header & New Chat Action */}
@@ -303,7 +382,7 @@ export default function MessagesCenterClient({
             </div>
           )}
 
-          {/* Search Bar */}
+          {/* Search Bar — Searches People or Conversations */}
           <div className="px-4 pt-3 pb-2">
             <div className="relative">
               <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
@@ -311,7 +390,7 @@ export default function MessagesCenterClient({
                 type="text"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search conversations & people…"
+                placeholder="Search people or conversations…"
                 className="w-full pl-9 pr-8 py-2 rounded-xl bg-white/[0.05] border border-white/10 text-xs text-white placeholder:text-slate-400 focus:outline-none focus:border-brand-caribbeanSea/60 transition-all"
               />
               {search && (
@@ -326,34 +405,118 @@ export default function MessagesCenterClient({
           </div>
 
           {/* Filter Tabs */}
-          <div className="px-4 py-2 flex items-center gap-1.5 border-b border-white/5 overflow-x-auto no-scrollbar">
-            {(['all', 'direct', 'group', 'business', 'marketplace', 'requests', 'archived'] as const).map((tab) => {
-              const isActive = filter === tab;
-              const requestCount = tab === 'requests' ? localPendingRequests.length : 0;
-              return (
-                <button
-                  key={tab}
-                  onClick={() => setFilter(tab)}
-                  className={`px-3 py-1 rounded-xl text-xs font-bold capitalize transition-all whitespace-nowrap flex items-center gap-1.5 ${
-                    isActive
-                      ? 'bg-white/15 text-white shadow-sm'
-                      : 'text-slate-400 hover:text-white hover:bg-white/5'
-                  }`}
-                >
-                  <span>{tab}</span>
-                  {requestCount > 0 && (
-                    <span className="px-1.5 py-0.2 rounded-full bg-rose-500 text-white text-[9px] font-black">
-                      {requestCount}
-                    </span>
-                  )}
-                </button>
-              );
-            })}
-          </div>
+          {!search && (
+            <div className="px-4 py-2 flex items-center gap-1.5 border-b border-white/5 overflow-x-auto no-scrollbar">
+              {(['all', 'direct', 'group', 'business', 'marketplace', 'requests', 'archived'] as const).map((tab) => {
+                const isActive = filter === tab;
+                const requestCount = tab === 'requests' ? localPendingRequests.length : 0;
+                return (
+                  <button
+                    key={tab}
+                    onClick={() => setFilter(tab)}
+                    className={`px-3 py-1 rounded-xl text-xs font-bold capitalize transition-all whitespace-nowrap flex items-center gap-1.5 ${
+                      isActive
+                        ? 'bg-white/15 text-white shadow-sm'
+                        : 'text-slate-400 hover:text-white hover:bg-white/5'
+                    }`}
+                  >
+                    <span>{tab}</span>
+                    {requestCount > 0 && (
+                      <span className="px-1.5 py-0.2 rounded-full bg-rose-500 text-white text-[9px] font-black">
+                        {requestCount}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          )}
 
           {/* List Area */}
           <div className="flex-1 overflow-y-auto divide-y divide-white/5">
-            {filter === 'requests' ? (
+            {/* When Searching: Show Real Registered People Section + Conversations Section */}
+            {search.trim() ? (
+              <div className="divide-y divide-white/5">
+                {/* 1. People Section */}
+                <div className="p-2 space-y-1">
+                  <div className="px-3 py-1.5 flex items-center justify-between">
+                    <span className="text-[10px] font-black uppercase tracking-wider text-brand-caribbeanSea flex items-center gap-1">
+                      <Users className="w-3 h-3" /> People
+                    </span>
+                    {isSearchingPeople && <Loader2 className="w-3 h-3 text-slate-400 animate-spin" />}
+                  </div>
+
+                  {searchedPeople.length === 0 && !isSearchingPeople ? (
+                    <p className="px-3 py-2 text-xs text-slate-400 italic">No members matching &quot;{search}&quot;</p>
+                  ) : (
+                    searchedPeople.map((person) => (
+                      <button
+                        key={person.id}
+                        onClick={() => handleStartChatWithUser(person)}
+                        disabled={startingChatWithId === person.id}
+                        className="w-full p-2.5 rounded-2xl hover:bg-white/[0.06] transition-all flex items-center justify-between gap-3 text-left group"
+                      >
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <UserAvatar name={person.name} avatarUrl={person.avatarUrl} size="sm" />
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-1">
+                              <span className="text-xs font-bold text-white group-hover:text-brand-caribbeanSea truncate">
+                                {person.name}
+                              </span>
+                              {person.isVerified && <BadgeCheck className="w-3 h-3 text-brand-goldenHour shrink-0" />}
+                            </div>
+                            <span className="text-[11px] text-slate-400 block truncate">@{person.username}</span>
+                          </div>
+                        </div>
+                        <span className="px-3 py-1 rounded-xl bg-brand-caribbeanSea/20 group-hover:bg-brand-caribbeanSea text-brand-caribbeanSea group-hover:text-slate-950 text-[11px] font-bold border border-brand-caribbeanSea/30 transition-all shrink-0">
+                          {startingChatWithId === person.id ? 'Opening…' : 'Message'}
+                        </span>
+                      </button>
+                    ))
+                  )}
+                </div>
+
+                {/* 2. Conversations Section */}
+                <div className="p-2 space-y-1">
+                  <div className="px-3 py-1.5">
+                    <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 flex items-center gap-1">
+                      <MessageSquare className="w-3 h-3" /> Conversations
+                    </span>
+                  </div>
+
+                  {filteredConversations.length === 0 ? (
+                    <p className="px-3 py-2 text-xs text-slate-400 italic">No existing chats match &quot;{search}&quot;</p>
+                  ) : (
+                    filteredConversations.map((c) => {
+                      const isSelected = c.id === selectedId;
+                      return (
+                        <button
+                          key={c.id}
+                          onClick={() => {
+                            router.push(`/messages?c=${c.id}`);
+                            setMobileView('thread');
+                          }}
+                          className={`w-full p-2.5 rounded-2xl text-left flex items-start gap-3 transition-all relative ${
+                            isSelected
+                              ? 'bg-gradient-to-r from-brand-caribbeanSea/15 via-white/[0.05] to-transparent border-l-2 border-brand-caribbeanSea'
+                              : 'hover:bg-white/[0.04]'
+                          }`}
+                        >
+                          <UserAvatar name={c.displayName} avatarUrl={c.avatarUrl} size="sm" />
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center justify-between gap-1">
+                              <h3 className="text-xs font-bold text-white truncate">{c.displayName}</h3>
+                              <span className="text-[10px] text-slate-400">{formatConversationTime(c.last_message_at)}</span>
+                            </div>
+                            <p className="text-[11px] text-slate-300 truncate">{c.preview}</p>
+                          </div>
+                        </button>
+                      );
+                    })
+                  )}
+                </div>
+              </div>
+            ) : filter === 'requests' ? (
               /* Message Requests View */
               localPendingRequests.length === 0 ? (
                 <div className="p-8 text-center text-slate-400 text-xs space-y-2">
@@ -401,15 +564,13 @@ export default function MessagesCenterClient({
             ) : filteredConversations.length === 0 ? (
               <div className="p-8 text-center text-slate-400 text-xs space-y-3">
                 <MessageSquare className="w-8 h-8 text-slate-600 mx-auto" />
-                <p className="font-semibold text-slate-300">
-                  {search ? 'No matching conversations' : 'No conversations yet'}
-                </p>
+                <p className="font-semibold text-slate-300">No conversations yet</p>
                 <p className="text-[11px] text-slate-400">
-                  Start a private chat or group with members of the Caribbean diaspora.
+                  Start a private chat with members of the Caribbean diaspora.
                 </p>
                 <button
                   onClick={() => setIsComposeOpen(true)}
-                  className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/15 text-white font-bold text-xs inline-flex items-center gap-1.5 transition-all"
+                  className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/15 text-white font-bold text-xs inline-flex items-center gap-1.5 transition-all cursor-pointer"
                 >
                   <Plus className="w-3.5 h-3.5 text-brand-caribbeanSea" /> New Conversation
                 </button>
@@ -477,7 +638,7 @@ export default function MessagesCenterClient({
         {/* RIGHT COLUMN: Active Thread or Caribbean Messaging Welcome Hub */}
         <section
           className={`md:col-span-8 lg:col-span-8 flex flex-col bg-slate-950/40 ${
-            mobileView === 'list' && !selectedId ? 'hidden md:flex' : 'flex'
+            mobileView === 'list' ? 'hidden md:flex' : 'flex'
           }`}
         >
           {selectedId ? (
@@ -485,9 +646,12 @@ export default function MessagesCenterClient({
               conversationId={selectedId}
               initialMessages={threadMessages}
               currentUserId={currentUserId}
-              peerName={activeConversation?.displayName || 'Caribbean Member'}
-              peerAvatarUrl={activeConversation?.avatarUrl}
-              onBack={() => setMobileView('list')}
+              peerName={resolvedPeerName}
+              peerAvatarUrl={resolvedPeerAvatar}
+              onBack={() => {
+                setMobileView('list');
+                router.push('/messages');
+              }}
             />
           ) : (
             /* WELCOME MESSAGING HUB (When no chat is selected) */
@@ -519,10 +683,7 @@ export default function MessagesCenterClient({
                   {onlineMembers.slice(0, 8).map((member) => (
                     <button
                       key={member.id}
-                      onClick={() => {
-                        router.push(`/messages?u=${encodeURIComponent(member.username)}`);
-                        setMobileView('thread');
-                      }}
+                      onClick={() => handleStartChatWithUser(member)}
                       className="flex flex-col items-center gap-1 min-w-[56px] group cursor-pointer"
                     >
                       <div className="relative">

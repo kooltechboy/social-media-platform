@@ -7,6 +7,7 @@ import { usePathname } from 'next/navigation';
 
 interface NotificationsContextValue {
   unreadCount: number;
+  unreadMessagesCount: number;
 }
 
 const NotificationsContext = createContext<NotificationsContextValue | null>(null);
@@ -14,22 +15,31 @@ const NotificationsContext = createContext<NotificationsContextValue | null>(nul
 export function NotificationsRealtimeProvider({
   children,
   initialUnreadCount,
+  initialUnreadMessagesCount = 0,
 }: {
   children: React.ReactNode;
   initialUnreadCount: number;
+  initialUnreadMessagesCount?: number;
 }) {
   const [unreadCount, setUnreadCount] = useState(initialUnreadCount);
+  const [unreadMessagesCount, setUnreadMessagesCount] = useState(initialUnreadMessagesCount);
   const { user } = useAuth();
   const pathname = usePathname();
 
   useEffect(() => {
-    // Reset to initial count on mount and when it changes from server
     setUnreadCount(initialUnreadCount);
   }, [initialUnreadCount]);
 
   useEffect(() => {
+    setUnreadMessagesCount(initialUnreadMessagesCount);
+  }, [initialUnreadMessagesCount]);
+
+  useEffect(() => {
     if (pathname === '/notifications') {
       setUnreadCount(0);
+    }
+    if (pathname?.startsWith('/messages')) {
+      setUnreadMessagesCount(0);
     }
   }, [pathname]);
 
@@ -49,9 +59,12 @@ export function NotificationsRealtimeProvider({
           table: 'notifications',
           filter: `recipient_id=eq.${user.id}`,
         },
-        () => {
+        (payload: { new?: { kind?: string } }) => {
           if (pathname !== '/notifications') {
             setUnreadCount((prev) => prev + 1);
+          }
+          if (payload.new?.kind === 'message' && !pathname?.startsWith('/messages')) {
+            setUnreadMessagesCount((prev) => prev + 1);
           }
         }
       )
@@ -63,7 +76,7 @@ export function NotificationsRealtimeProvider({
   }, [user, pathname]);
 
   return (
-    <NotificationsContext.Provider value={{ unreadCount }}>
+    <NotificationsContext.Provider value={{ unreadCount, unreadMessagesCount }}>
       {children}
     </NotificationsContext.Provider>
   );
@@ -76,3 +89,12 @@ export function useUnreadNotificationsCount() {
   }
   return context.unreadCount;
 }
+
+export function useUnreadMessagesCount() {
+  const context = useContext(NotificationsContext);
+  if (!context) {
+    return 0;
+  }
+  return context.unreadMessagesCount;
+}
+

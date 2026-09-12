@@ -26,6 +26,7 @@ import {
   AlertCircle,
   Pin,
   Smile,
+  MessageSquare,
 } from 'lucide-react';
 import {
   toggleLikeAction,
@@ -766,6 +767,17 @@ export default function FeedStream({ initialPosts, currentUserId, mode = 'for_yo
                         <span>{savedPosts.has(post.id) ? 'Saved' : 'Save Post'}</span>
                       </button>
 
+                      {currentUserId !== post.authorId && post.handle && (
+                        <Link
+                          href={`/messages?u=${encodeURIComponent(post.handle)}`}
+                          onClick={() => setActiveMenuPostId(null)}
+                          className="w-full text-left px-3 py-2 rounded-xl text-slate-200 hover:bg-white/10 flex items-center gap-2 font-semibold transition-colors"
+                        >
+                          <MessageSquare className="w-3.5 h-3.5 text-brand-caribbeanSea" />
+                          <span>Message Author</span>
+                        </Link>
+                      )}
+
                       {currentUserId && post.authorId === currentUserId ? (
                         <button
                           type="button"
@@ -1060,6 +1072,16 @@ export default function FeedStream({ initialPosts, currentUserId, mode = 'for_yo
                                     >
                                       Reply
                                     </button>
+                                    {!isCommentAuthor && c.profiles?.username && (
+                                      <Link
+                                        href={`/messages?u=${encodeURIComponent(c.profiles.username)}`}
+                                        className="text-[10px] text-slate-400 hover:text-brand-caribbeanSea font-semibold flex items-center gap-0.5"
+                                        title="Direct message author"
+                                      >
+                                        <MessageSquare className="w-2.5 h-2.5 text-brand-caribbeanSea" />
+                                        <span>Msg</span>
+                                      </Link>
+                                    )}
                                     <span className="text-[10px] text-brand-sandstone/40">just now</span>
                                     {isCommentAuthor && (
                                       <button
@@ -1101,6 +1123,16 @@ export default function FeedStream({ initialPosts, currentUserId, mode = 'for_yo
                                             </span>
                                           )}
                                           <div className="flex items-center gap-2">
+                                            {!isReplyAuthor && r.profiles?.username && (
+                                              <Link
+                                                href={`/messages?u=${encodeURIComponent(r.profiles.username)}`}
+                                                className="text-[9px] text-slate-400 hover:text-brand-caribbeanSea font-semibold flex items-center gap-0.5"
+                                                title="Direct message author"
+                                              >
+                                                <MessageSquare className="w-2.5 h-2.5 text-brand-caribbeanSea" />
+                                                <span>Msg</span>
+                                              </Link>
+                                            )}
                                             <span className="text-[9px] text-brand-sandstone/40">reply</span>
                                             {isReplyAuthor && (
                                               <button

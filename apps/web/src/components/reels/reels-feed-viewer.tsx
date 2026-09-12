@@ -4,7 +4,7 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
-  Video, Music, Heart, MessageCircle, Share2, Wallet, Play, Pause,
+  Video, Music, Heart, MessageCircle, MessageSquare, Share2, Wallet, Play, Pause,
   Volume2, VolumeX, Plus, Send, X, Copy, Check, UserPlus, UserCheck, Disc, Bookmark
 } from 'lucide-react';
 import {
@@ -224,6 +224,17 @@ function ReelCard({
           </div>
           <span className="text-xs font-bold text-white shadow-black drop-shadow-md">Share</span>
         </button>
+
+        <Link
+          href={`/messages?u=${encodeURIComponent(reel.handle)}`}
+          aria-label={`Message ${reel.creator}`}
+          className="flex flex-col items-center gap-1 group active:scale-90 transition-transform"
+        >
+          <div className="w-12 h-12 rounded-full bg-black/40 flex items-center justify-center backdrop-blur-md text-white hover:bg-brand-caribbeanSea/30 hover:text-brand-caribbeanSea transition-colors">
+            <MessageSquare className="w-6 h-6" />
+          </div>
+          <span className="text-xs font-bold text-white shadow-black drop-shadow-md">Message</span>
+        </Link>
 
         <div className="relative mt-2">
           <Link href={`/profile/${reel.handle}`} aria-label="Creator Profile">
@@ -532,6 +543,20 @@ export default function ReelsFeedViewer({ initialReels, user }: ReelsFeedViewerP
                 {copiedLink ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
                 {copiedLink ? 'Link Copied to Clipboard!' : 'Copy Reel Link'}
               </button>
+
+              {(() => {
+                const targetReel = reels.find((r) => r.id === activeShareReelId);
+                if (!targetReel?.handle) return null;
+                return (
+                  <Link
+                    href={`/messages?u=${encodeURIComponent(targetReel.handle)}`}
+                    className="w-full bg-brand-caribbeanSea/20 border border-brand-caribbeanSea/40 hover:bg-brand-caribbeanSea/30 text-brand-caribbeanSea font-bold p-2.5 rounded-xl text-xs flex items-center justify-center gap-2 transition-colors cursor-pointer"
+                  >
+                    <MessageSquare className="w-4 h-4" />
+                    Message @{targetReel.handle}
+                  </Link>
+                );
+              })()}
             </div>
           </div>
         </div>

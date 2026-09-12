@@ -17,6 +17,7 @@ import {
   Store,
   Clock,
   MessageCircle,
+  MessageSquare,
 } from 'lucide-react';
 import { Money, isMarketplaceCommerceActive } from '@caribbean/payments';
 import { createSupabaseServerClient, getCurrentUser } from '../../../lib/supabase/server';
@@ -273,6 +274,16 @@ export default async function ProductDetailPage({
                 productKind: product.product_kind,
               }}
             />
+
+            {user?.id !== product.seller_id && (
+              <Link
+                href={`/messages?u=${encodeURIComponent(sellerSlug || product.seller_id)}`}
+                className="w-full bg-white/10 hover:bg-white/15 text-brand-sandstone hover:text-white font-bold py-3 px-4 rounded-2xl text-xs flex items-center justify-center gap-2 border border-white/10 transition-all cursor-pointer"
+              >
+                <MessageSquare className="w-4 h-4 text-brand-caribbeanSea" />
+                <span>Message Seller</span>
+              </Link>
+            )}
 
             <div className="flex items-center justify-between text-[11px] text-brand-sandstone/50 pt-2 border-t border-slate-800">
               <span className="flex items-center gap-1.5">
