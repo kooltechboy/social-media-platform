@@ -5,6 +5,7 @@ import { Plus, Sparkles, Radio } from 'lucide-react';
 import { type StoryData } from '../../lib/social/actions';
 import StoryCreatorModal from './story-creator-modal';
 import StoryViewerModal from './story-viewer-modal';
+import TukubiImage from '../ui/tukubi-image';
 
 export interface MomentsCinemaRailProps {
   initialStories: StoryData[];
@@ -61,10 +62,11 @@ export default function MomentsCinemaRail({
           <div className="w-13 h-13 rounded-2xl bg-gradient-to-tr from-brand-caribbeanSea via-brand-sunriseCoral to-brand-goldenHour p-[2px] mb-2.5 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-lg shadow-brand-caribbeanSea/25 z-10">
             <div className="w-full h-full bg-[#0A1024] rounded-2xl flex items-center justify-center text-brand-caribbeanSea font-black overflow-hidden">
               {myStory ? (
-                /* eslint-disable-next-line @next/next/no-img-element */
-                <img
+                <TukubiImage
                   src={myStory.mediaUrl}
                   alt="Your Moment"
+                  fill
+                  sizes="64px"
                   className="w-full h-full object-cover"
                 />
               ) : (
@@ -99,10 +101,11 @@ export default function MomentsCinemaRail({
             >
               {/* Background Media / Gradient */}
               {story.mediaUrl ? (
-                /* eslint-disable-next-line @next/next/no-img-element */
-                <img
+                <TukubiImage
                   src={story.mediaUrl}
                   alt={story.authorName}
+                  fill
+                  sizes="128px"
                   className="absolute inset-0 w-full h-full object-cover group-hover:scale-108 transition-transform duration-500 ease-out"
                 />
               ) : (

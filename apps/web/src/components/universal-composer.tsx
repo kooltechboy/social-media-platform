@@ -35,6 +35,7 @@ import { useTranslation } from '@caribbean/localization';
 import { generateCreatorContentPlan } from '@caribbean/ai';
 import DeviceMediaCaptureModal, { type CaptureMode } from './media/device-media-capture-modal';
 import EmojiPickerPopover from './emoji/emoji-picker-popover';
+import { createPollAction } from '../lib/polls/actions';
 
 export type ComposerMode =
   | 'text'
@@ -404,6 +405,18 @@ export default function UniversalComposer({
       if (result.error) {
         setErrorMessage(result.error);
         return;
+      }
+
+      // If poll mode, attach structured poll to the new post
+      if (mode === 'poll' && pollQuestion.trim() && result.post?.id) {
+        const validOptions = pollOptions.filter((o) => o.trim());
+        if (validOptions.length >= 2) {
+          await createPollAction({
+            postId: result.post.id,
+            question: pollQuestion.trim(),
+            options: validOptions,
+          });
+        }
       }
 
       // Reset state on successful publish

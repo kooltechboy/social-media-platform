@@ -1,0 +1,126 @@
+# =============================================================================
+# TUKUBI Enterprise Multi-Service Orchestration
+# Local Development, Integration Testing & Staging Environment
+# =============================================================================
+
+version: '3.9'
+
+networks:
+  tukubi-net:
+    driver: bridge
+
+volumes:
+  pgdata:
+    driver: local
+  redisdata:
+    driver: local
+
+services:
+  # ---------------------------------------------------------------------------
+  # 1. PostgreSQL 16 Database with Vector & Time-Series Support
+  # ---------------------------------------------------------------------------
+  db:
+    image: postgres:16-alpine
+    container_name: tukubi-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: tukubi
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres_dev_secret_change_me
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./supabase/migrations:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d tukubi"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - tukubi-net
+
+  # ---------------------------------------------------------------------------
+  # 2. Redis 7 High-Throughput In-Memory Datastore & Job Queue
+  # ---------------------------------------------------------------------------
+  redis:
+    image: redis:7-alpine
+    container_name: tukubi-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes --requirepass redis_dev_secret_change_me
+    ports:
+      - "6379:6379"
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "redis_dev_secret_change_me", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - tukubi-net
+
+  # ---------------------------------------------------------------------------
+  # 3. TUKUBI Main Web Platform (Next.js 15)
+  # ---------------------------------------------------------------------------
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runner
+    container_name: tukubi-web
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      DATABASE_URL: postgresql://postgres:postgres_dev_secret_change_me@db:5432/tukubi
+      REDIS_URL: redis://:redis_dev_secret_change_me@redis:6379
+    ports:
+      - "3000:3000"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - tukubi-net
+
+  # ---------------------------------------------------------------------------
+  # 4. TUKUBI Creator Studio (Next.js 15)
+  # ---------------------------------------------------------------------------
+  creator-studio:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runner
+    container_name: tukubi-creator-studio
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 3002
+    ports:
+      - "3002:3002"
+    depends_on:
+      - web
+    networks:
+      - tukubi-net
+
+  # ---------------------------------------------------------------------------
+  # 5. TUKUBI Business Studio (Next.js 15)
+  # ---------------------------------------------------------------------------
+  business-studio:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runner
+    container_name: tukubi-business-studio
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 3003
+    ports:
+      - "3003:3003"
+    depends_on:
+      - web
+    networks:
+      - tukubi-net

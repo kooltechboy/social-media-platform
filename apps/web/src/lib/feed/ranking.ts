@@ -2,6 +2,7 @@ import { type SupabaseClient } from '@supabase/supabase-js';
 import { type FeedMode } from '@caribbean/social';
 import { decodeCursor, encodeCursor } from '@caribbean/database';
 import { CaribbeanFeedRanker, type CaribbeanGraphSignals } from '@caribbean/recommendations';
+import { cacheGet, cacheSet } from '../cache/redis-cache';
 
 export interface RankedFeedResult {
   data: any[] | null;
@@ -13,8 +14,24 @@ export async function buildRankedFeed(
   userId: string,
   mode: FeedMode,
   supabase: SupabaseClient,
-  cursor?: string
+  cursor?: string,
+  options?: { skipCache?: boolean }
 ): Promise<RankedFeedResult> {
+  const isTest = process.env.NODE_ENV === 'test';
+  const shouldCache = !isTest && !options?.skipCache;
+  const cacheKey = `feed:${userId}:${mode}:${cursor || 'head'}`;
+
+  if (shouldCache) {
+    try {
+      const cached = await cacheGet<RankedFeedResult>(cacheKey);
+      if (cached && cached.data) {
+        return cached;
+      }
+    } catch {
+      // Non-blocking cache lookup failure
+    }
+  }
+
   try {
     // 1. Check Feature Flag
     const { data: flagData } = await supabase
@@ -94,7 +111,11 @@ export async function buildRankedFeed(
         const last = candidates[candidates.length - 1];
         nextCursor = encodeCursor({ sortKey: last.created_at, id: last.id });
       }
-      return { data: candidates, nextCursor };
+      const unrankedResult = { data: candidates, nextCursor };
+      if (shouldCache) {
+        cacheSet(cacheKey, unrankedResult, 30).catch(() => {});
+      }
+      return unrankedResult;
     }
 
     // 5. Fetch context for signals (follows, friendships, user profile)
@@ -166,7 +187,11 @@ export async function buildRankedFeed(
       nextCursor = encodeCursor({ sortKey: lastItem.created_at, id: lastItem.id });
     }
 
-    return { data: top30, nextCursor };
+    const rankedResult = { data: top30, nextCursor };
+    if (shouldCache) {
+      cacheSet(cacheKey, rankedResult, 30).catch(() => {});
+    }
+    return rankedResult;
   } catch (error) {
     return { data: null, error };
   }

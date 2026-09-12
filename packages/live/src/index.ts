@@ -140,3 +140,7 @@ export function formatLiveDuration(seconds: number): string {
 // Cloudflare Stream CDN integration
 export { CloudflareStreamClient, createCloudflareStreamClient } from './cloudflare-stream';
 export type { CloudflareStreamLiveInput, CfStreamConfig } from './cloudflare-stream';
+
+// Caribbean Audio Spaces ("Tukubi Sound Lounge")
+export * from './sound-lounge';
+

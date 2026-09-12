@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { Shield, Sparkles, ArrowRight } from 'lucide-react';
 import OfficialBadge from './official-badge';
 
+import TukubiImage from '../ui/tukubi-image';
+
 export interface OfficialAccountHeroCardProps {
   displayName?: string;
   username?: string;
@@ -52,10 +54,11 @@ export default function OfficialAccountHeroCard({
               <div className="w-14 h-14 sm:w-16 sm:h-16 md:w-18 md:h-18 rounded-2xl bg-gradient-to-tr from-brand-sunriseCoral via-brand-goldenHour to-brand-caribbeanSea p-[2px] shadow-xl shadow-brand-caribbeanSea/20 transition-transform duration-200 group-hover/avatar:scale-105">
                 <div className="w-full h-full rounded-[14px] bg-[#0A1024] flex items-center justify-center overflow-hidden text-lg sm:text-xl font-black text-brand-sandstone tracking-wider">
                   {avatarUrl ? (
-                    /* eslint-disable-next-line @next/next/no-img-element */
-                    <img
+                    <TukubiImage
                       src={avatarUrl}
                       alt={displayName}
+                      fill
+                      sizes="72px"
                       className="w-full h-full object-cover"
                     />
                   ) : (

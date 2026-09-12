@@ -11,16 +11,16 @@ const TUKUBI_CSP = [
   "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://www.paypal.com https://www.paypalobjects.com https://accounts.google.com",
   // Styles: self + inline (Tailwind injects inline styles)
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-  // Images: self + Supabase Storage + Unsplash + data URIs + common CDNs
-  "img-src 'self' data: blob: https://*.supabase.co https://*.supabase.in https://images.unsplash.com https://*.unsplash.com https://www.paypalobjects.com https://www.gstatic.com",
+  // Images: self + Supabase Storage + Unsplash + Mux + Cloudflare + Cloudinary + data URIs
+  "img-src 'self' data: blob: https://*.supabase.co https://*.supabase.in https://images.unsplash.com https://*.unsplash.com https://image.mux.com https://imagedelivery.net https://res.cloudinary.com https://www.paypalobjects.com https://www.gstatic.com",
   // Fonts: self + Google Fonts
   "font-src 'self' https://fonts.gstatic.com",
-  // API/WebSocket connections: Supabase, Stripe, PayPal, self, Sentry
-  "connect-src 'self' https://*.supabase.co https://*.supabase.in wss://*.supabase.co https://api.stripe.com https://www.paypal.com https://api.paypal.com https://openrouter.ai https://api.openrouter.ai https://*.sentry.io",
+  // API/WebSocket connections: Supabase, Stripe, PayPal, self, Sentry, Mux, Cloudflare
+  "connect-src 'self' https://*.supabase.co https://*.supabase.in wss://*.supabase.co https://api.stripe.com https://www.paypal.com https://api.paypal.com https://openrouter.ai https://api.openrouter.ai https://*.sentry.io https://stream.mux.com https://videodelivery.net",
   // Frames: Stripe hosted payment UI, PayPal Smart Buttons
   "frame-src 'self' https://js.stripe.com https://hooks.stripe.com https://www.paypal.com https://www.sandbox.paypal.com",
-  // Media: self + Supabase Storage for audio/video
-  "media-src 'self' blob: https://*.supabase.co https://*.supabase.in",
+  // Media: self + Supabase Storage + Mux + Cloudflare Stream for audio/video
+  "media-src 'self' blob: https://*.supabase.co https://*.supabase.in https://stream.mux.com https://videodelivery.net",
   // Workers: service worker from same origin
   "worker-src 'self' blob:",
   // Object: none
@@ -34,7 +34,7 @@ const TUKUBI_CSP = [
 ].join('; ');
 
 const nextConfig = {
-  transpilePackages: ["@caribbean/ui", "@caribbean/design-system", "@caribbean/payments", "@caribbean/ai"],
+  transpilePackages: ["@caribbean/ui", "@caribbean/design-system", "@caribbean/payments", "@caribbean/ai", "@caribbean/media"],
   reactStrictMode: true,
   images: {
     remotePatterns: [
@@ -45,6 +45,26 @@ const nextConfig = {
       {
         protocol: 'https',
         hostname: '*.supabase.co',
+      },
+      {
+        protocol: 'https',
+        hostname: '*.supabase.in',
+      },
+      {
+        protocol: 'https',
+        hostname: 'image.mux.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'videodelivery.net',
+      },
+      {
+        protocol: 'https',
+        hostname: 'imagedelivery.net',
+      },
+      {
+        protocol: 'https',
+        hostname: 'res.cloudinary.com',
       },
     ],
   },

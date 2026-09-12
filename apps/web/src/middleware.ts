@@ -29,6 +29,8 @@ const PUBLIC_EXEMPT_ROUTES = [
   '/offline',
 ];
 
+import { checkRateLimit, getRateLimitHeaders, type RateLimitTier } from './lib/rate-limit/sliding-window';
+
 function detectLocaleFromHeaders(header: string | null): string {
   if (!header) return 'en';
   const lower = header.toLowerCase();
@@ -46,6 +48,12 @@ export async function middleware(request: NextRequest) {
 
   const pathname = request.nextUrl.pathname;
 
+  // Rate Limiting Gate (Anti-DDoS, Credential Stuffing & Scraping Mitigation)
+  const clientIp =
+    request.headers.get('x-forwarded-for')?.split(',')[0].trim() ||
+    request.headers.get('x-real-ip') ||
+    '127.0.0.1';
+
   // Check if route is an auth gateway route (/login, /signup, etc.)
   const isAuthGatewayRoute = AUTH_GATEWAY_ROUTES.some(
     (route) => pathname === route || pathname.startsWith(`${route}/`)
@@ -60,7 +68,33 @@ export async function middleware(request: NextRequest) {
     // Public RSS feeds for podcast distribution
     (pathname.startsWith('/api/v1/podcasts/') && pathname.endsWith('/rss'));
 
+  let tier: RateLimitTier = 'burst';
+  if (isAuthGatewayRoute) {
+    tier = 'auth';
+  } else if (pathname.startsWith('/api/')) {
+    tier = 'api';
+  }
+
+  const rateLimitResult = await checkRateLimit(clientIp, tier);
+  const rateLimitHeaders = getRateLimitHeaders(rateLimitResult);
+
+  if (!rateLimitResult.success) {
+    if (pathname.startsWith('/api/')) {
+      return NextResponse.json(
+        { error: 'Too Many Requests', message: 'Rate limit exceeded. Please try again later.' },
+        { status: 429, headers: rateLimitHeaders }
+      );
+    }
+    return new NextResponse('Too Many Requests. Please slow down and try again later.', {
+      status: 429,
+      headers: { 'Content-Type': 'text/plain', ...rateLimitHeaders },
+    });
+  }
+
   let response = NextResponse.next({ request });
+  for (const [k, v] of Object.entries(rateLimitHeaders)) {
+    response.headers.set(k, v);
+  }
 
   // 0. Language & Locale Detection (Requirement 2 & 5)
   const existingLocale = request.cookies.get('tukubi_locale')?.value;

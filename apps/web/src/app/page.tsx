@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { Suspense } from 'react';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import {
@@ -37,6 +37,8 @@ function relativeTime(iso: string): string {
 import MomentsCinemaRail from '../components/moments/moments-cinema-rail';
 import OfficialAccountHeroCard from '../components/official/official-account-hero-card';
 import { fetchActiveStoriesAction } from '../lib/social/actions';
+import { ErrorBoundary } from '../components/error-boundary';
+import FeedSkeleton from '../components/ui/skeletons/feed-skeleton';
 
 export default async function HomePage(props: { searchParams?: Promise<{ mode?: string, cursor?: string }> }) {
   const searchParams = await props.searchParams;
@@ -181,35 +183,41 @@ export default async function HomePage(props: { searchParams?: Promise<{ mode?: 
       {/* Main Stream (Col 8) */}
       <div className="lg:col-span-8 space-y-6">
         {/* Caribbean Moments Cinema Rail */}
-        <MomentsCinemaRail
-          initialStories={liveStories}
-          currentUserId={user?.id}
-          currentUserAvatar={user?.avatarUrl}
-          currentUserName={user?.displayName}
-        />
+        <ErrorBoundary sectionName="Moments Cinema Rail">
+          <MomentsCinemaRail
+            initialStories={liveStories}
+            currentUserId={user?.id}
+            currentUserAvatar={user?.avatarUrl}
+            currentUserName={user?.displayName}
+          />
+        </ErrorBoundary>
 
         {/* ────────────────────────────────────────────────────────── */}
         {/* OFFICIAL TUKUBI PLATFORM IDENTITY SPOTLIGHT HERO CARD     */}
         {/* ────────────────────────────────────────────────────────── */}
-        <OfficialAccountHeroCard
-          displayName={officialProfile?.display_name || 'TUKUBI'}
-          username={officialProfile?.username || 'tukubi'}
-          avatarUrl={officialProfile?.avatar_url}
-          bio={officialProfile?.bio}
-          postsCount={officialCounts?.posts_count ?? 0}
-          followersCount={officialCounts?.followers_count ?? 0}
-          followingCount={officialCounts?.following_count ?? 0}
-          isOperator={user?.username?.toLowerCase() === 'tukubi' || user?.isOfficial}
-        />
+        <ErrorBoundary sectionName="Official Spotlight">
+          <OfficialAccountHeroCard
+            displayName={officialProfile?.display_name || 'TUKUBI'}
+            username={officialProfile?.username || 'tukubi'}
+            avatarUrl={officialProfile?.avatar_url}
+            bio={officialProfile?.bio}
+            postsCount={officialCounts?.posts_count ?? 0}
+            followersCount={officialCounts?.followers_count ?? 0}
+            followingCount={officialCounts?.following_count ?? 0}
+            isOperator={user?.username?.toLowerCase() === 'tukubi' || user?.isOfficial}
+          />
+        </ErrorBoundary>
 
         {/* ────────────────────────────────────────────────────────── */}
         {/* P0: PRIMARY UNIVERSAL INLINE COMPOSER                      */}
         {/* ────────────────────────────────────────────────────────── */}
         <section aria-label="Create Post" className="space-y-4">
-          <UniversalComposer
-            displayName={user.displayName || `@${user.username}`}
-            avatarInitials={user.username.slice(0, 2).toUpperCase()}
-          />
+          <ErrorBoundary sectionName="Composer">
+            <UniversalComposer
+              displayName={user.displayName || `@${user.username}`}
+              avatarInitials={user.username.slice(0, 2).toUpperCase()}
+            />
+          </ErrorBoundary>
         </section>
 
         {/* Live Audio / Video Quick Ingest Banner */}
@@ -250,13 +258,19 @@ export default async function HomePage(props: { searchParams?: Promise<{ mode?: 
         {/* INTERACTIVE FEED STREAM WITH LIVE LIKES, COMMENTS & TABS   */}
         {/* ────────────────────────────────────────────────────────── */}
         <section aria-label="Caribbean Feed Stream">
-          <FeedStream initialPosts={combinedPosts} currentUserId={user?.id} mode={mode} nextCursor={nextCursor} />
+          <ErrorBoundary sectionName="Feed Stream">
+            <Suspense fallback={<FeedSkeleton />}>
+              <FeedStream initialPosts={combinedPosts} currentUserId={user?.id} mode={mode} nextCursor={nextCursor} />
+            </Suspense>
+          </ErrorBoundary>
         </section>
       </div>
 
       {/* Right Column: TUKUBI Live & Diaspora Pulse (Col 4) */}
       <div className="lg:col-span-4">
-        <TukubiLiveSidebar />
+        <ErrorBoundary sectionName="Caribbean Sidebar">
+          <TukubiLiveSidebar />
+        </ErrorBoundary>
       </div>
     </div>
   );

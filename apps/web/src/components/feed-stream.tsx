@@ -51,7 +51,10 @@ import { useTranslation, LOCALE_DETAILS, LOCALES, Locale } from '@caribbean/loca
 import ReactionPicker from './reactions/reaction-picker';
 import type { ReactionType } from './reactions/reaction-picker';
 import { toggleReactionAction } from '../lib/social/actions';
-
+import TukubiImage from './ui/tukubi-image';
+import TukubiVideoPlayer from './media/tukubi-video-player';
+import InteractivePollWidget from './polls/interactive-poll-widget';
+import type { PollData } from '../lib/polls/types';
 
 export interface FeedPostData {
   id: string;
@@ -75,6 +78,7 @@ export interface FeedPostData {
   isUserLiked?: boolean;
   category?: 'caribbean' | 'foryou' | 'diaspora' | 'creator';
   taggedProduct?: TaggedProduct;
+  poll?: PollData;
 }
 
 interface FeedStreamProps {
@@ -905,14 +909,15 @@ export default function FeedStream({ initialPosts, currentUserId, mode = 'for_yo
                   }`}
                 >
                   {post.mediaUrls.map((url, idx) => (
-                    <div key={idx} className="relative bg-brand-twilight rounded-xl overflow-hidden max-h-96">
-                      {url.endsWith('.mp4') || url.includes('video') ? (
-                        <video src={url} controls className="w-full h-full object-cover" />
+                    <div key={idx} className="relative bg-brand-twilight rounded-xl overflow-hidden min-h-[220px] max-h-[500px]">
+                      {url.endsWith('.mp4') || url.includes('video') || url.endsWith('.m3u8') ? (
+                        <TukubiVideoPlayer src={url} altText="Post video playback" className="w-full h-full" />
                       ) : (
-                        /* eslint-disable-next-line @next/next/no-img-element */
-                        <img
+                        <TukubiImage
                           src={url}
                           alt="Post media"
+                          fill
+                          sizes="(max-width: 768px) 100vw, 50vw"
                           className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
                         />
                       )}
@@ -924,6 +929,14 @@ export default function FeedStream({ initialPosts, currentUserId, mode = 'for_yo
               {/* Shoppable Tagged Product (Social Commerce) */}
               {post.taggedProduct && (
                 <ShoppablePostWidget product={post.taggedProduct} />
+              )}
+
+              {/* Interactive Poll Widget */}
+              {post.poll && (
+                <InteractivePollWidget
+                  initialPoll={post.poll}
+                  currentUserId={currentUserId}
+                />
               )}
 
               {/* Emoji Reactions Display */}

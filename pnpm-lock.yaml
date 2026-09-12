@@ -100,6 +100,131 @@ importers:
         specifier: ^5.5.0
         version: 5.9.3
 
+  apps/business-studio:
+    dependencies:
+      '@caribbean/advertising':
+        specifier: workspace:*
+        version: link:../../packages/advertising
+      '@caribbean/business':
+        specifier: workspace:*
+        version: link:../../packages/business
+      '@caribbean/database':
+        specifier: workspace:*
+        version: link:../../packages/database
+      '@caribbean/design-system':
+        specifier: workspace:*
+        version: link:../../packages/design-system
+      '@caribbean/jobs':
+        specifier: workspace:*
+        version: link:../../packages/jobs
+      '@caribbean/payments':
+        specifier: workspace:*
+        version: link:../../packages/payments
+      '@supabase/ssr':
+        specifier: ^0.12.4
+        version: 0.12.4(@supabase/supabase-js@2.112.3(@opentelemetry/api@1.9.1))
+      '@supabase/supabase-js':
+        specifier: ^2.112.3
+        version: 2.112.3(@opentelemetry/api@1.9.1)
+      lucide-react:
+        specifier: ^0.400.0
+        version: 0.400.0(react@19.2.8)
+      next:
+        specifier: ^15.0.0
+        version: 15.5.23(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@playwright/test@1.62.1)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+      react:
+        specifier: ^19.0.0
+        version: 19.2.8
+      react-dom:
+        specifier: ^19.0.0
+        version: 19.2.8(react@19.2.8)
+    devDependencies:
+      '@types/node':
+        specifier: ^22.0.0
+        version: 22.20.1
+      '@types/react':
+        specifier: ^19.0.0
+        version: 19.2.18
+      '@types/react-dom':
+        specifier: ^19.0.0
+        version: 19.2.4(@types/react@19.2.18)
+      autoprefixer:
+        specifier: ^10.4.19
+        version: 10.5.4(postcss@8.5.26)
+      postcss:
+        specifier: ^8.4.38
+        version: 8.5.26
+      tailwindcss:
+        specifier: ^3.4.4
+        version: 3.4.19
+      typescript:
+        specifier: ^5.5.0
+        version: 5.9.3
+
+  apps/creator-studio:
+    dependencies:
+      '@caribbean/analytics':
+        specifier: workspace:*
+        version: link:../../packages/analytics
+      '@caribbean/creator':
+        specifier: workspace:*
+        version: link:../../packages/creator
+      '@caribbean/database':
+        specifier: workspace:*
+        version: link:../../packages/database
+      '@caribbean/design-system':
+        specifier: workspace:*
+        version: link:../../packages/design-system
+      '@caribbean/jobs':
+        specifier: workspace:*
+        version: link:../../packages/jobs
+      '@caribbean/media':
+        specifier: workspace:*
+        version: link:../../packages/media
+      '@caribbean/payments':
+        specifier: workspace:*
+        version: link:../../packages/payments
+      '@supabase/ssr':
+        specifier: ^0.12.4
+        version: 0.12.4(@supabase/supabase-js@2.112.3(@opentelemetry/api@1.9.1))
+      '@supabase/supabase-js':
+        specifier: ^2.112.3
+        version: 2.112.3(@opentelemetry/api@1.9.1)
+      lucide-react:
+        specifier: ^0.400.0
+        version: 0.400.0(react@19.2.8)
+      next:
+        specifier: ^15.0.0
+        version: 15.5.23(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@playwright/test@1.62.1)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+      react:
+        specifier: ^19.0.0
+        version: 19.2.8
+      react-dom:
+        specifier: ^19.0.0
+        version: 19.2.8(react@19.2.8)
+    devDependencies:
+      '@types/node':
+        specifier: ^22.0.0
+        version: 22.20.1
+      '@types/react':
+        specifier: ^19.0.0
+        version: 19.2.18
+      '@types/react-dom':
+        specifier: ^19.0.0
+        version: 19.2.4(@types/react@19.2.18)
+      autoprefixer:
+        specifier: ^10.4.19
+        version: 10.5.4(postcss@8.5.26)
+      postcss:
+        specifier: ^8.4.38
+        version: 8.5.26
+      tailwindcss:
+        specifier: ^3.4.4
+        version: 3.4.19
+      typescript:
+        specifier: ^5.5.0
+        version: 5.9.3
+
   apps/mobile:
     dependencies:
       '@caribbean/ai':
@@ -254,6 +379,9 @@ importers:
       '@caribbean/marketplace':
         specifier: workspace:*
         version: link:../../packages/marketplace
+      '@caribbean/media':
+        specifier: workspace:*
+        version: link:../../packages/media
       '@caribbean/messaging':
         specifier: workspace:*
         version: link:../../packages/messaging
@@ -414,6 +542,15 @@ importers:
         specifier: ^5.5.0
         version: 5.9.3
 
+  packages/jobs:
+    devDependencies:
+      '@types/node':
+        specifier: ^22.0.0
+        version: 22.20.1
+      typescript:
+        specifier: ^5.5.0
+        version: 5.9.3
+
   packages/live:
     devDependencies:
       typescript:
@@ -474,6 +611,15 @@ importers:
 
   packages/recommendations:
     devDependencies:
+      typescript:
+        specifier: ^5.5.0
+        version: 5.9.3
+
+  packages/sdk:
+    devDependencies:
+      '@types/node':
+        specifier: ^22.0.0
+        version: 22.20.1
       typescript:
         specifier: ^5.5.0
         version: 5.9.3

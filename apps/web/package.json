@@ -22,6 +22,7 @@
     "@caribbean/live": "workspace:*",
     "@caribbean/localization": "workspace:*",
     "@caribbean/marketplace": "workspace:*",
+    "@caribbean/media": "workspace:*",
     "@caribbean/messaging": "workspace:*",
     "@caribbean/notifications": "workspace:*",
     "@caribbean/payments": "workspace:*",

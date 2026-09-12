@@ -20,6 +20,8 @@ const SIZE_MAP: Record<'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl', { box: string; 
   '2xl': { box: 'w-28 h-28', text: 'text-3xl font-black' },
 };
 
+import TukubiImage from './ui/tukubi-image';
+
 export default function UserAvatar({
   src,
   avatarUrl,
@@ -56,10 +58,12 @@ export default function UserAvatar({
       aria-label={displayName}
     >
       {resolvedSrc && !imgError ? (
-        /* eslint-disable-next-line @next/next/no-img-element */
-        <img
+        <TukubiImage
           src={resolvedSrc}
           alt={displayName}
+          fill
+          sizes="120px"
+          fallbackText={initials}
           onError={() => setImgError(true)}
           className={`w-full h-full object-cover rounded-full ${isTukubiBrand && !src && !avatarUrl ? 'bg-[#110D17] p-1' : ''}`}
         />

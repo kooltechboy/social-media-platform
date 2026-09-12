@@ -226,3 +226,6 @@ export class StorageService {
     return SURFACE_BUCKET_MAP[surface];
   }
 }
+
+export * from './streaming';
+export * from './image-optimizer';
