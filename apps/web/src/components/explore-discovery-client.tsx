@@ -276,7 +276,7 @@ export default function ExploreDiscoveryClient({
           <span className="text-xs text-brand-sandstone/60">Select a cultural theme</span>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-4 gap-3.5">
+        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-4 3xl:grid-cols-8 gap-3.5">
           {VIBE_CATEGORIES.map((v) => {
             const isSelected = vibe === v.id;
             return (
@@ -323,7 +323,7 @@ export default function ExploreDiscoveryClient({
           <span className="text-xs text-brand-sandstone/60">28+ Caribbean States</span>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 3xl:grid-cols-8 4xl:grid-cols-10 gap-3">
           {CARIBBEAN_TERRITORIES.map((terr) => {
             const isSelected = country === terr.iso;
             return (
@@ -368,7 +368,7 @@ export default function ExploreDiscoveryClient({
           <span className="text-xs text-brand-sandstone/60">Global Diaspora Centers</span>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3.5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 3xl:grid-cols-6 4xl:grid-cols-8 gap-3.5">
           {DIASPORA_CITY_HUBS.map((cityHub) => {
             const isSelected = (hub || '').toLowerCase().includes(cityHub.city.toLowerCase().split(' ')[0]);
             return (
@@ -494,7 +494,7 @@ export default function ExploreDiscoveryClient({
             <h3 className="text-xs font-black uppercase tracking-wider text-brand-caribbeanSea flex items-center gap-1.5">
               <Flame className="w-3.5 h-3.5" /> Cultural Discussions &amp; Posts
             </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 3xl:grid-cols-3 gap-4">
               {initialResult.posts.map((post) => {
                 const author = Array.isArray(post.profiles) ? post.profiles[0] : post.profiles;
                 return (
@@ -556,7 +556,7 @@ export default function ExploreDiscoveryClient({
             <h3 className="text-xs font-black uppercase tracking-wider text-brand-sunriseCoral flex items-center gap-1.5">
               <Users className="w-3.5 h-3.5" /> Featured Creators &amp; Leaders
             </h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 3xl:grid-cols-5 4xl:grid-cols-6 gap-4">
               {initialResult.creators.map((c) => (
                 <div
                   key={c.id}
@@ -604,7 +604,7 @@ export default function ExploreDiscoveryClient({
             <h3 className="text-xs font-black uppercase tracking-wider text-yellow-400 flex items-center gap-1.5">
               <Calendar className="w-3.5 h-3.5" /> Cultural Events &amp; Fetes
             </h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 3xl:grid-cols-4 4xl:grid-cols-5 gap-4">
               {initialResult.events.map((evt) => (
                 <div
                   key={evt.id}
@@ -650,7 +650,7 @@ export default function ExploreDiscoveryClient({
             <h3 className="text-xs font-black uppercase tracking-wider text-cyan-400 flex items-center gap-1.5">
               <Globe className="w-3.5 h-3.5" /> Diaspora Hubs &amp; Communities
             </h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 3xl:grid-cols-4 4xl:grid-cols-5 gap-4">
               {initialResult.communities.map((comm) => (
                 <div
                   key={comm.id}
@@ -686,7 +686,7 @@ export default function ExploreDiscoveryClient({
             <h3 className="text-xs font-black uppercase tracking-wider text-orange-400 flex items-center gap-1.5">
               <ShoppingBag className="w-3.5 h-3.5" /> Marketplace &amp; Artisan Craft
             </h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 3xl:grid-cols-5 4xl:grid-cols-6 gap-4">
               {initialResult.products.map((prod) => (
                 <div
                   key={prod.id}

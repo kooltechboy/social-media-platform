@@ -296,7 +296,7 @@ export default function InteractiveCaribbeanMap() {
   return (
     <div
       ref={containerRef}
-      className={`min-h-screen bg-brand-twilight/90 backdrop-blur-md text-brand-sandstone p-4 md:p-6 max-w-7xl mx-auto space-y-5 select-none rounded-3xl ${
+      className={`min-h-screen bg-brand-twilight/90 backdrop-blur-md text-brand-sandstone p-4 md:p-6 lg:p-8 w-full space-y-5 select-none rounded-3xl ${
         isFullscreen ? 'fixed inset-0 z-50 p-6 bg-brand-twilight overflow-y-auto' : ''
       }`}
     >
@@ -419,10 +419,10 @@ export default function InteractiveCaribbeanMap() {
 
       {/* ── Main Map Canvas & Territory Detail Drawer Grid ── */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        {/* Left Column: Interactive Map Canvas or Directory Grid (Col 8) */}
-        <div className="lg:col-span-8 space-y-4">
+        {/* Left Column: Interactive Map Canvas or Directory Grid (Col 8 on lg, Col 9 on 3xl+) */}
+        <div className="lg:col-span-8 3xl:col-span-9 space-y-4">
           {viewMode === 'map' ? (
-            <div className="relative w-full h-[580px] md:h-[620px] bg-[#060A13] border border-slate-800 rounded-3xl overflow-hidden shadow-2xl">
+            <div className="relative w-full h-[580px] md:h-[620px] 3xl:h-[760px] 4xl:h-[840px] bg-[#060A13] border border-slate-800 rounded-3xl overflow-hidden shadow-2xl">
               {/* Atmospheric Gradient Backgrounds */}
               <div className="absolute inset-0 bg-gradient-to-t from-brand-sunriseCoral/10 via-transparent to-brand-sunsetPurple/10 pointer-events-none" />
               <div className="absolute top-1/3 left-1/3 w-[500px] h-[500px] rounded-full bg-brand-caribbeanSea/8 blur-[120px] pointer-events-none" />
@@ -671,7 +671,7 @@ export default function InteractiveCaribbeanMap() {
             </div>
           ) : (
             /* Directory Grid View */
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 max-h-[620px] overflow-y-auto pr-1">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 3xl:grid-cols-4 4xl:grid-cols-5 gap-4 max-h-[620px] 3xl:max-h-[760px] 4xl:max-h-[840px] overflow-y-auto pr-1">
               {filteredEntities.map((node) => {
                 const isSelected = selectedEntity.iso === node.iso;
                 const nodeColors = CLASSIFICATION_COLORS[node.classification] || CLASSIFICATION_COLORS['Independent Country'];
@@ -720,8 +720,8 @@ export default function InteractiveCaribbeanMap() {
           )}
         </div>
 
-        {/* Right Column (Desktop Inspector Drawer): Col 4 */}
-        <div className="hidden lg:block lg:col-span-4 h-[580px] md:h-[620px]">
+        {/* Right Column (Desktop Inspector Drawer): Col 4 on lg, Col 3 on 3xl+ */}
+        <div className="hidden lg:block lg:col-span-4 3xl:col-span-3 h-[580px] md:h-[620px] 3xl:h-[760px] 4xl:h-[840px]">
           <TerritoryDiscoveryPanel entity={selectedEntity} />
         </div>
       </div>

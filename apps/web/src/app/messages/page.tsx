@@ -263,8 +263,8 @@ export default async function MessagesPage({
         </div>
       </header>
 
-      {/* Main Container */}
-      <main className="max-w-6xl mx-auto p-3 sm:p-6">
+      {/* Main Container — Fluid desktop messaging workspace */}
+      <main className="w-full py-4">
         <MessagesCenterClient
           conversations={summaries}
           selectedId={selectedId}

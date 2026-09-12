@@ -168,8 +168,8 @@ export default async function TukubiLiveSidebar() {
   }
 
   return (
-    <aside
-      className="hidden lg:block col-span-1 space-y-5"
+    <div
+      className="space-y-5"
       aria-label="TUKUBI Live Discovery"
     >
       {/* Online Friends Widget */}
@@ -364,6 +364,6 @@ export default async function TukubiLiveSidebar() {
           )}
         </div>
       </div>
-    </aside>
+    </div>
   );
 }

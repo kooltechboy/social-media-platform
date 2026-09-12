@@ -78,7 +78,7 @@ export default async function LivePage({
     liveStreams[0];
 
   return (
-    <div className="min-h-screen bg-transparent text-brand-sandstone px-4 sm:px-6 lg:px-8 py-6 sm:py-8 max-w-7xl mx-auto space-y-8">
+    <div className="w-full space-y-8 animate-fadeIn">
       {/* Top Header */}
       <div className="surface-header rounded-3xl p-6 sm:p-8 flex flex-col md:flex-row md:items-center justify-between gap-4 border border-red-500/30 shadow-xl">
         <div>
@@ -158,7 +158,7 @@ export default async function LivePage({
           </span>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 3xl:grid-cols-4 4xl:grid-cols-5 gap-4">
           {filteredStreams.length === 0 && (
             <div className="col-span-full surface-card rounded-3xl p-10 text-center space-y-3 border border-white/10">
               <span className="text-4xl">🎙️</span>

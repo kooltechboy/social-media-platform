@@ -105,7 +105,7 @@ export default async function MarketplacePage({
   const launchMessaging = getMarketplaceLaunchMessaging();
 
   return (
-    <div className="min-h-screen bg-transparent text-brand-sandstone px-4 sm:px-6 lg:px-8 py-6 sm:py-8 max-w-7xl mx-auto space-y-8 animate-fadeIn">
+    <div className="w-full space-y-8 animate-fadeIn">
       {/* Top Header */}
       <div className="surface-header rounded-3xl p-6 sm:p-8 flex flex-col md:flex-row md:items-center justify-between gap-4 border border-orange-500/30 shadow-xl">
         <div>
@@ -258,7 +258,7 @@ export default async function MarketplacePage({
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 3xl:grid-cols-5 4xl:grid-cols-6 gap-5">
             {products.map((p) => {
               const price = new Money(p.price_minor, p.currency);
               const sellerName = p.businesses?.name || p.profiles?.display_name || 'Caribbean Merchant';

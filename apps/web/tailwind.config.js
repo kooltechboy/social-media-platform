@@ -6,6 +6,22 @@ module.exports = {
   ],
   theme: {
     extend: {
+      screens: {
+        '3xl': '1600px',
+        '4xl': '1920px',
+        '5xl': '2560px',
+      },
+      spacing: {
+        'sidebar': '260px',
+        'sidebar-collapsed': '72px',
+        'rail': '340px',
+      },
+      maxWidth: {
+        'content-text': '760px',
+        'app-lg': '1800px',
+        'app-xl': '2200px',
+        'app-ultra': '2800px',
+      },
       colors: {
         brand: {
           twilight: "#110D17",

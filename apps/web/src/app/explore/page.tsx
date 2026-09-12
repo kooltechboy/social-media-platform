@@ -23,7 +23,7 @@ export default async function ExplorePage({
   ]);
 
   return (
-    <div className="min-h-screen bg-transparent text-brand-sandstone px-4 sm:px-6 lg:px-8 py-6 sm:py-8 max-w-7xl mx-auto">
+    <div className="w-full space-y-8 animate-fadeIn">
       <ExploreDiscoveryClient
         initialResult={exploreData}
         trendingSignals={trendingSignals}

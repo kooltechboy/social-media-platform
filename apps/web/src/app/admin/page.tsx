@@ -119,7 +119,7 @@ export default async function AdminPage() {
         </span>
       </header>
 
-      <main className="max-w-6xl mx-auto p-4 grid lg:grid-cols-4 gap-4">
+      <main className="w-full p-4 lg:p-6 grid grid-cols-1 lg:grid-cols-4 3xl:grid-cols-5 gap-6 animate-fadeIn">
         <aside className="lg:col-span-1 bg-brand-dusk/70 border border-slate-800 rounded-2xl p-3 space-y-1 h-fit">
           {SECTIONS.map((section) => (
             <Link
@@ -132,7 +132,7 @@ export default async function AdminPage() {
           ))}
         </aside>
 
-        <section className="lg:col-span-3 space-y-4">
+        <section className="lg:col-span-3 3xl:col-span-4 space-y-6">
           {/* Live Stats */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             {stats.map((metric) => (

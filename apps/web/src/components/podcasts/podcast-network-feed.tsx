@@ -544,7 +544,7 @@ export default function PodcastNetworkFeed({ podcasts, user }: PodcastNetworkFee
           </button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 3xl:grid-cols-3 4xl:grid-cols-4 gap-6">
           {podcasts.map((podcast) => {
             const isCurrent = activePodcast?.id === podcast.id;
             const isCurrentPlaying = isCurrent && isPlaying;

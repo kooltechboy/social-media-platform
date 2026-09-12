@@ -91,7 +91,7 @@ export default async function DiasporaPortalPage({
   const needsProfilePrompt = user && profile && (!profile.origin_country_id || !profile.current_city);
 
   return (
-    <div className="min-h-screen bg-transparent text-brand-sandstone p-4 md:p-6 max-w-7xl mx-auto space-y-8 animate-fadeIn">
+    <div className="w-full space-y-8 animate-fadeIn">
       {/* HERO BANNER */}
       <div className="bg-gradient-to-br from-amber-500/20 via-brand-dusk to-brand-twilight border border-amber-500/30 rounded-3xl p-6 md:p-8 shadow-2xl relative overflow-hidden">
         <div className="absolute right-0 top-0 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20" />
@@ -211,7 +211,7 @@ export default async function DiasporaPortalPage({
           </h2>
           <span className="text-xs text-brand-sandstone/40">15 Key Metropolitan Centers</span>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3.5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 3xl:grid-cols-6 4xl:grid-cols-8 gap-3.5">
           {DIASPORA_CITY_HUBS.map((hub) => (
             <Link
               key={hub.id}
@@ -252,7 +252,7 @@ export default async function DiasporaPortalPage({
             <p className="text-xs text-brand-sandstone/60">No diaspora guilds found for this filter. Create the first diaspora hub!</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 3xl:grid-cols-4 4xl:grid-cols-5 gap-4">
             {diasporaCommunities.map((comm: any) => (
               <div
                 key={comm.id}
@@ -308,7 +308,7 @@ export default async function DiasporaPortalPage({
             <p className="text-xs text-brand-sandstone/60">No upcoming diaspora events scheduled for this region.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 3xl:grid-cols-4 4xl:grid-cols-5 gap-4">
             {diasporaEvents.map((evt: any) => (
               <div
                 key={evt.id}

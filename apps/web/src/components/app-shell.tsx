@@ -26,14 +26,25 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     );
   }
 
+  const isMapRoute = pathname === '/map';
+
   return (
     <div className="relative z-10 flex flex-col min-h-screen">
       <AppHeader />
-      <div className="flex-1 w-full max-w-screen-2xl mx-auto grid grid-cols-1 md:grid-cols-12 gap-0 md:gap-6 px-3 sm:px-6 lg:px-10 py-6 pb-24 md:pb-6">
-        <aside className="hidden md:block md:col-span-3 xl:col-span-2">
+      <div className="flex-1 w-full max-w-[2560px] 5xl:max-w-[2800px] mx-auto flex">
+        {/* Left Navigation: Fixed 240-260px width, sticky on desktop with independent scroll */}
+        <aside className="hidden md:block w-[240px] xl:w-[260px] shrink-0 sticky top-[58px] h-[calc(100vh-58px)] overflow-y-auto px-2.5 sm:px-3.5 py-6 scrollbar-none z-20">
           <AppSidebar />
         </aside>
-        <main className="col-span-1 md:col-span-9 xl:col-span-10 min-h-[80vh]">
+
+        {/* Fluid Main Workspace & Experience Canvas */}
+        <main
+          className={`flex-1 min-w-0 ${
+            isMapRoute
+              ? 'p-0'
+              : 'px-3.5 sm:px-6 lg:px-8 3xl:px-10 py-6'
+          } pb-24 md:pb-6 min-h-[85vh]`}
+        >
           {children}
         </main>
       </div>

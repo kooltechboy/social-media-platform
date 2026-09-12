@@ -326,7 +326,7 @@ export default function FriendsCenterClient({
                     </button>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 3xl:grid-cols-4 4xl:grid-cols-5 gap-4">
                     {filteredPymk.slice(0, 6).map((person) => {
                       const fStatus = friendshipStatusMap[person.id] || person.relationship?.friendshipStatus || 'none';
                       const isFollowing = !!followingMap[person.id] || !!person.relationship?.isFollowing;
@@ -418,7 +418,7 @@ export default function FriendsCenterClient({
               )}
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 3xl:grid-cols-4 4xl:grid-cols-5 gap-4 sm:gap-5">
               {filteredFriends.map((friend) => (
                 <div
                   key={friend.id}
@@ -589,7 +589,7 @@ export default function FriendsCenterClient({
                 No outgoing pending requests.
               </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 3xl:grid-cols-4 4xl:grid-cols-5 gap-3 sm:gap-4">
                 {filteredOutgoing.map((req) => (
                   <div
                     key={req.id}

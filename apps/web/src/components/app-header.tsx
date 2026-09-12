@@ -138,7 +138,7 @@ export default function AppHeader() {
 
   return (
     <header
-      className="sticky top-0 z-50 glass-aerospace border-b border-white/12 px-4 sm:px-8 py-3 flex items-center justify-between gap-4 backdrop-blur-3xl shadow-xl shadow-black/30"
+      className="sticky top-0 z-50 glass-aerospace border-b border-white/12 px-4 sm:px-6 lg:px-8 3xl:px-10 py-3 flex items-center justify-between gap-4 backdrop-blur-3xl shadow-xl shadow-black/30"
       role="banner"
     >
       {/* ────────────────────────────────────────────────────────── */}
@@ -151,8 +151,8 @@ export default function AppHeader() {
       {/* ────────────────────────────────────────────────────────── */}
       {/* 2. CENTER: PROMINENT, STRUCTURALLY CENTERED SEARCH BAR     */}
       {/* ────────────────────────────────────────────────────────── */}
-      <div className="hidden md:flex flex-1 justify-center max-w-2xl mx-auto px-4">
-        <div ref={searchRef} className="relative w-full max-w-xl">
+      <div className="hidden md:flex flex-1 justify-center max-w-2xl 3xl:max-w-3xl mx-auto px-4">
+        <div ref={searchRef} className="relative w-full max-w-xl 3xl:max-w-2xl">
           <form onSubmit={handleFormSubmit} action="/search" method="GET" className="w-full relative">
             <Search className="absolute left-4 top-2.5 w-4 h-4 text-brand-caribbeanSea pointer-events-none" aria-hidden="true" />
             <input

@@ -205,7 +205,7 @@ export default function SettingsView({
   ];
 
   return (
-    <div className="max-w-5xl mx-auto p-4 sm:p-6 space-y-6">
+    <div className="max-w-6xl 3xl:max-w-7xl mx-auto py-2 sm:py-4 space-y-6 animate-fadeIn">
       <div className="surface-header p-6 sm:p-8 rounded-3xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="space-y-1">
           <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
@@ -224,7 +224,7 @@ export default function SettingsView({
         </Link>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-4 3xl:grid-cols-5 gap-6">
         {/* Navigation Sidebar */}
         <aside className="md:col-span-1 space-y-3">
           <nav className="surface-card p-2.5 rounded-2xl flex md:flex-col overflow-x-auto md:overflow-visible scrollbar-none gap-1.5 border border-white/15" aria-label="Settings categories">
@@ -264,7 +264,7 @@ export default function SettingsView({
         </aside>
 
         {/* Content Area */}
-        <div className="md:col-span-3 space-y-6 min-w-0">
+        <div className="md:col-span-3 3xl:col-span-4 space-y-6 min-w-0">
           {/* Feedback banner */}
           {feedback.error && (
             <div className="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs flex items-center gap-2">

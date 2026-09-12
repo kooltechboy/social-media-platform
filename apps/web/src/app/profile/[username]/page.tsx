@@ -279,7 +279,7 @@ export default async function ProfilePage({
         </div>
       </header>
 
-      <main className="max-w-4xl mx-auto p-4 sm:p-6 space-y-6">
+      <main className="max-w-5xl 3xl:max-w-6xl mx-auto w-full py-2 sm:py-4 space-y-6">
         {/* Profile Card Header */}
         <section className="surface-card border border-white/15 rounded-3xl overflow-hidden shadow-2xl">
           {/* Cover Banner — High-Resolution Responsive Container */}

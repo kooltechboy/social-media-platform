@@ -262,7 +262,7 @@ export default async function CreatorStudioPage({
   const creatorLaunch = getCreatorLaunchMessaging();
 
   return (
-    <div className="min-h-screen bg-transparent text-brand-sandstone p-4 md:p-6 lg:p-8 max-w-7xl mx-auto space-y-8">
+    <div className="w-full space-y-8 animate-fadeIn">
       {/* Surface Header */}
       <div className="surface-header p-6 sm:p-8 rounded-3xl flex flex-col md:flex-row md:items-center justify-between gap-6 border border-white/15 shadow-2xl">
         <div className="space-y-2 max-w-xl">

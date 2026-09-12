@@ -348,7 +348,7 @@ export default function MessagesCenterClient({
       <div className="grid grid-cols-1 md:grid-cols-12 min-h-[78vh]">
         {/* LEFT COLUMN: Navigation, Search, Tabs & Conversations List */}
         <aside
-          className={`md:col-span-4 lg:col-span-4 border-r border-white/10 flex flex-col bg-[#0D0816]/70 ${
+          className={`md:col-span-5 lg:col-span-4 3xl:col-span-3 border-r border-white/10 flex flex-col bg-[#0D0816]/70 ${
             mobileView === 'thread' ? 'hidden md:flex' : 'flex'
           }`}
         >
@@ -637,7 +637,7 @@ export default function MessagesCenterClient({
 
         {/* RIGHT COLUMN: Active Thread or Caribbean Messaging Welcome Hub */}
         <section
-          className={`md:col-span-8 lg:col-span-8 flex flex-col bg-slate-950/40 ${
+          className={`md:col-span-7 lg:col-span-8 3xl:col-span-9 flex flex-col bg-slate-950/40 ${
             mobileView === 'list' ? 'hidden md:flex' : 'flex'
           }`}
         >

@@ -310,8 +310,8 @@ function ActiveLivePlayer({
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-      {/* Video Player & Engagement Rail (Col 8) */}
-      <div className="lg:col-span-8 space-y-4">
+      {/* Video Player & Engagement Rail (Col 8, expanded to 9 on 3xl+) */}
+      <div className="lg:col-span-8 3xl:col-span-9 space-y-4">
         <div
           ref={videoContainerRef}
           className="relative bg-slate-950 border border-slate-800 rounded-3xl overflow-hidden shadow-2xl flex flex-col group"
@@ -488,8 +488,8 @@ function ActiveLivePlayer({
         </div>
       </div>
 
-      {/* Live Chat Column (Col 4) */}
-      <div className="lg:col-span-4 surface-card border border-white/10 rounded-3xl p-5 flex flex-col justify-between shadow-2xl h-[560px]">
+      {/* Live Chat Column (Col 4 on lg, Col 3 on 3xl+) */}
+      <div className="lg:col-span-4 3xl:col-span-3 surface-card border border-white/10 rounded-3xl p-5 flex flex-col justify-between shadow-2xl h-[560px] 3xl:h-[680px]">
         {/* Chat Header */}
         <div className="flex items-center justify-between pb-3 border-b border-white/10">
           <div className="flex items-center gap-2">

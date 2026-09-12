@@ -12,6 +12,25 @@
   --brand-gold:         #FFB347;
   --brand-sea:          #00B4D8;
   --brand-purple:       #8B5CF6;
+
+  /* ─── Desktop Real Estate & Responsive Layout Tokens ─── */
+  --sidebar-w:          260px;
+  --rail-w:             340px;
+  --content-text-max:   760px;
+  --app-shell-max:      2560px;
+  --desktop-main-padding: 1.5rem;
+}
+
+@media (min-width: 1600px) {
+  :root {
+    --desktop-main-padding: 2rem;
+  }
+}
+
+@media (min-width: 1920px) {
+  :root {
+    --desktop-main-padding: 2.5rem;
+  }
 }
 
 html {

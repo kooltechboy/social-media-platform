@@ -391,7 +391,7 @@ export default function CreateHubClient({ user }: CreateHubClientProps) {
         </div>
 
         {/* Tools Cards Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 3xl:grid-cols-4 4xl:grid-cols-5 gap-5">
           {filteredTools.map((tool) => {
             if (tool.id === 'podcast') {
               return (

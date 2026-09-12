@@ -20,6 +20,7 @@ import { decodeCursor, encodeCursor } from '@caribbean/database';
 import UniversalComposer from '../components/universal-composer';
 import FeedStream, { type FeedPostData } from '../components/feed-stream';
 import TukubiLiveSidebar from '../components/caribbean-now-sidebar';
+import RightRail from '../components/right-rail';
 import { buildRankedFeed } from '../lib/feed/ranking';
 
 export const dynamic = 'force-dynamic';
@@ -179,9 +180,9 @@ export default async function HomePage(props: { searchParams?: Promise<{ mode?: 
   const combinedPosts = livePosts;
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-      {/* Main Stream (Col 8) */}
-      <div className="lg:col-span-8 space-y-6">
+    <div className="flex flex-col lg:flex-row gap-6 xl:gap-8 items-start w-full">
+      {/* Main Stream — Fluid width, fills available workspace */}
+      <div className="flex-1 min-w-0 space-y-6 w-full max-w-none">
         {/* Caribbean Moments Cinema Rail */}
         <ErrorBoundary sectionName="Moments Cinema Rail">
           <MomentsCinemaRail
@@ -266,12 +267,12 @@ export default async function HomePage(props: { searchParams?: Promise<{ mode?: 
         </section>
       </div>
 
-      {/* Right Column: TUKUBI Live & Diaspora Pulse (Col 4) */}
-      <div className="lg:col-span-4">
+      {/* Right Column: TUKUBI Live & Diaspora Pulse */}
+      <RightRail ariaLabel="TUKUBI Live & Diaspora Pulse">
         <ErrorBoundary sectionName="Caribbean Sidebar">
           <TukubiLiveSidebar />
         </ErrorBoundary>
-      </div>
+      </RightRail>
     </div>
   );
 }

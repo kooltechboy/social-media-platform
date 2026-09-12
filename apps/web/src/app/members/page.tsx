@@ -27,7 +27,7 @@ export default async function MembersPage({
   ]);
 
   return (
-    <div className="min-h-screen bg-transparent text-brand-sandstone p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-6">
+    <div className="w-full space-y-6 animate-fadeIn">
       {/* Standardized Responsive Page Header */}
       <div className="surface-header rounded-3xl p-5 sm:p-7 shadow-xl">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">

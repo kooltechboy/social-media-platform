@@ -184,7 +184,7 @@ export default function MembersDirectoryClient({
             </Link>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 3xl:grid-cols-4 4xl:grid-cols-5 gap-3 sm:gap-4">
             {pymk.slice(0, 3).map((person) => {
               const fStatus = friendshipStatusMap[person.id] || person.relationship?.friendshipStatus || 'none';
               const isFollowing = !!followingMap[person.id];
@@ -358,7 +358,7 @@ export default function MembersDirectoryClient({
           )}
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 3xl:grid-cols-4 4xl:grid-cols-5 gap-4 sm:gap-5">
           {members.map((member) => {
             const fStatus = friendshipStatusMap[member.id] || member.relationship?.friendshipStatus || 'none';
             const isFollowing = !!followingMap[member.id];

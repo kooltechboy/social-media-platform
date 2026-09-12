@@ -156,7 +156,7 @@ export default async function CreatorHubPage() {
   const creatorLaunch = getCreatorLaunchMessaging();
 
   return (
-    <div className="min-h-screen bg-transparent text-brand-sandstone p-4 md:p-6 lg:p-8 max-w-7xl mx-auto space-y-8 animate-fadeIn">
+    <div className="w-full space-y-8 animate-fadeIn">
       {/* 1. Header: Creator Hub & Identity */}
       <div className="surface-header p-6 sm:p-8 rounded-3xl border border-white/15 shadow-2xl flex flex-col md:flex-row items-start md:items-center justify-between gap-6 bg-gradient-to-r from-slate-900/90 via-purple-950/30 to-slate-900/90">
         <div className="flex items-start sm:items-center gap-4">
@@ -469,7 +469,7 @@ export default async function CreatorHubPage() {
             </Link>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 3xl:grid-cols-4 4xl:grid-cols-5 gap-4">
             {briefs.map((b: any) => (
               <div
                 key={b.id}

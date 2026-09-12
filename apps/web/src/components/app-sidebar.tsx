@@ -133,7 +133,7 @@ export default function AppSidebar({ currentPath }: AppSidebarProps) {
   );
 
   return (
-    <aside className="hidden md:block col-span-1 space-y-5" aria-label="Primary navigation">
+    <nav className="w-full space-y-5 pb-8" aria-label="Primary navigation">
       <div className="glass rounded-2xl p-3 space-y-4">
         {renderNavGroup(PRIMARY_NAV, t('nav.explore_connect'))}
         <div className="h-px bg-brand-dusk/60 my-2" />
@@ -219,6 +219,6 @@ export default function AppSidebar({ currentPath }: AppSidebarProps) {
           </p>
         </div>
       </div>
-    </aside>
+    </nav>
   );
 }
