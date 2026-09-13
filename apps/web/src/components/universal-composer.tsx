@@ -603,125 +603,148 @@ export default function UniversalComposer({
             </div>
 
             {/* Direct Action Buttons Row */}
-            <div className="flex items-center justify-between pt-2 md:pt-3 border-t border-slate-800/70 overflow-x-auto scrollbar-none gap-1 sm:gap-2">
-              {/* Photo Direct Trigger */}
-              <button
-                type="button"
-                onClick={() => {
-                  photoInputRef.current?.click();
-                }}
-                className="flex items-center gap-1.5 md:gap-2 px-3 md:px-4 py-2 md:py-2.5 min-h-[38px] md:min-h-[42px] rounded-xl text-xs md:text-sm font-bold text-slate-300 hover:text-brand-sunriseCoral hover:bg-brand-twilight transition-all whitespace-nowrap"
-                title="Choose Photos from Device"
-              >
-                <ImageIcon className="w-4 h-4 md:w-5 md:h-5 text-brand-sunriseCoral" />
-                <span>Photo</span>
-              </button>
+            <div className="pt-2 md:pt-3 border-t border-slate-800/70">
+              <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto scrollbar-none pb-1 snap-x">
+                {/* 1. High-Frequency Media Group */}
+                <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+                  {/* Photo Direct Trigger */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      photoInputRef.current?.click();
+                    }}
+                    className="flex items-center gap-2 px-3.5 sm:px-4 py-2.5 min-h-[44px] rounded-xl text-xs sm:text-sm font-bold text-slate-200 bg-brand-sunriseCoral/10 hover:bg-brand-sunriseCoral/20 hover:text-brand-sunriseCoral border border-brand-sunriseCoral/20 transition-all whitespace-nowrap active:scale-95"
+                    title="Choose Photos from Device"
+                    aria-label="Upload Photo"
+                  >
+                    <ImageIcon className="w-4 h-4 sm:w-5 sm:h-5 text-brand-sunriseCoral" />
+                    <span>Photo</span>
+                  </button>
 
-              {/* Video Direct Trigger */}
-              <button
-                type="button"
-                onClick={() => {
-                  videoInputRef.current?.click();
-                }}
-                className="flex items-center gap-1.5 md:gap-2 px-3 md:px-4 py-2 md:py-2.5 min-h-[38px] md:min-h-[42px] rounded-xl text-xs md:text-sm font-bold text-slate-300 hover:text-rose-400 hover:bg-brand-twilight transition-all whitespace-nowrap"
-                title="Choose Videos from Device"
-              >
-                <Video className="w-4 h-4 md:w-5 md:h-5 text-rose-400" />
-                <span>Video</span>
-              </button>
+                  {/* Video Direct Trigger */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      videoInputRef.current?.click();
+                    }}
+                    className="flex items-center gap-2 px-3.5 sm:px-4 py-2.5 min-h-[44px] rounded-xl text-xs sm:text-sm font-bold text-slate-200 bg-rose-500/10 hover:bg-rose-500/20 hover:text-rose-400 border border-rose-500/20 transition-all whitespace-nowrap active:scale-95"
+                    title="Choose Videos from Device"
+                    aria-label="Upload Video"
+                  >
+                    <Video className="w-4 h-4 sm:w-5 sm:h-5 text-rose-400" />
+                    <span>Video</span>
+                  </button>
 
-              {/* Reel Direct Trigger */}
-              <button
-                type="button"
-                onClick={() => {
-                  setIsReel(true);
-                  setMode('reel');
-                  reelInputRef.current?.click();
-                }}
-                className="flex items-center gap-1.5 md:gap-2 px-3 md:px-4 py-2 md:py-2.5 min-h-[38px] md:min-h-[42px] rounded-xl text-xs md:text-sm font-bold text-slate-300 hover:text-amber-300 hover:bg-brand-twilight transition-all whitespace-nowrap"
-                title="Upload Short Video Reel"
-              >
-                <Film className="w-4 h-4 md:w-5 md:h-5 text-brand-goldenHour" />
-                <span>Reel</span>
-              </button>
+                  {/* Reel Direct Trigger */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsReel(true);
+                      setMode('reel');
+                      reelInputRef.current?.click();
+                    }}
+                    className="flex items-center gap-2 px-3.5 sm:px-4 py-2.5 min-h-[44px] rounded-xl text-xs sm:text-sm font-bold text-slate-200 bg-amber-500/10 hover:bg-amber-500/20 hover:text-amber-300 border border-amber-500/20 transition-all whitespace-nowrap active:scale-95"
+                    title="Upload Short Video Reel"
+                    aria-label="Upload Reel"
+                  >
+                    <Film className="w-4 h-4 sm:w-5 sm:h-5 text-brand-goldenHour" />
+                    <span>Reel</span>
+                  </button>
+                </div>
 
-              {/* Live Camera Direct Trigger */}
-              <button
-                type="button"
-                onClick={() => openCameraFor('photo')}
-                className="flex items-center gap-1.5 md:gap-2 px-3 md:px-4 py-2 md:py-2.5 min-h-[38px] md:min-h-[42px] rounded-xl text-xs md:text-sm font-bold text-slate-300 hover:text-brand-caribbeanSea hover:bg-brand-twilight transition-all whitespace-nowrap"
-                title="Open Camera"
-              >
-                <Camera className="w-4 h-4 md:w-5 md:h-5 text-brand-caribbeanSea" />
-                <span className="hidden md:inline">Camera</span>
-              </button>
+                <div className="h-6 w-px bg-slate-800 shrink-0 mx-1 hidden sm:block" aria-hidden="true" />
 
-              {/* Poll Trigger */}
-              <button
-                type="button"
-                onClick={() => {
-                  setMode('poll');
-                  setIsExpanded(true);
-                }}
-                className="flex items-center gap-1.5 md:gap-2 px-3 md:px-4 py-2 md:py-2.5 min-h-[38px] md:min-h-[42px] rounded-xl text-xs md:text-sm font-bold text-slate-300 hover:text-purple-400 hover:bg-brand-twilight transition-all whitespace-nowrap"
-                title="Create Community Poll"
-              >
-                <BarChart2 className="w-4 h-4 md:w-5 md:h-5 text-purple-400" />
-                <span className="hidden sm:inline">Poll</span>
-              </button>
+                {/* 2. Contextual & Community Group */}
+                <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+                  {/* Live Camera Direct Trigger */}
+                  <button
+                    type="button"
+                    onClick={() => openCameraFor('photo')}
+                    className="flex items-center gap-2 px-3 sm:px-3.5 py-2.5 min-h-[44px] rounded-xl text-xs sm:text-sm font-bold text-slate-300 hover:text-brand-caribbeanSea hover:bg-brand-twilight transition-all whitespace-nowrap active:scale-95"
+                    title="Open Device Camera"
+                    aria-label="Open Camera"
+                  >
+                    <Camera className="w-4 h-4 sm:w-5 sm:h-5 text-brand-caribbeanSea" />
+                    <span className="hidden sm:inline">Camera</span>
+                  </button>
 
-              {/* Store / Product Trigger */}
-              <button
-                type="button"
-                onClick={() => {
-                  setMode('product');
-                  setIsExpanded(true);
-                }}
-                className="flex items-center gap-1.5 md:gap-2 px-3 md:px-4 py-2 md:py-2.5 min-h-[38px] md:min-h-[42px] rounded-xl text-xs md:text-sm font-bold text-slate-300 hover:text-emerald-400 hover:bg-brand-twilight transition-all whitespace-nowrap"
-                title="Feature a Product"
-              >
-                <ShoppingBag className="w-4 h-4 md:w-5 md:h-5 text-emerald-400" />
-                <span className="hidden sm:inline">Store</span>
-              </button>
+                  {/* Poll Trigger */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMode('poll');
+                      setIsExpanded(true);
+                    }}
+                    className="flex items-center gap-2 px-3 sm:px-3.5 py-2.5 min-h-[44px] rounded-xl text-xs sm:text-sm font-bold text-slate-300 hover:text-purple-400 hover:bg-brand-twilight transition-all whitespace-nowrap active:scale-95"
+                    title="Create Community Poll"
+                    aria-label="Create Poll"
+                  >
+                    <BarChart2 className="w-4 h-4 sm:w-5 sm:h-5 text-purple-400" />
+                    <span>Poll</span>
+                  </button>
 
-              {/* Event Trigger */}
-              <button
-                type="button"
-                onClick={() => {
-                  setMode('event');
-                  setIsExpanded(true);
-                }}
-                className="flex items-center gap-1.5 md:gap-2 px-3 md:px-4 py-2 md:py-2.5 min-h-[38px] md:min-h-[42px] rounded-xl text-xs md:text-sm font-bold text-slate-300 hover:text-yellow-400 hover:bg-brand-twilight transition-all whitespace-nowrap"
-                title="Share an Upcoming Caribbean Event"
-              >
-                <Calendar className="w-4 h-4 md:w-5 md:h-5 text-yellow-400" />
-                <span className="hidden sm:inline">Event</span>
-              </button>
+                  {/* Store / Product Trigger */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMode('product');
+                      setIsExpanded(true);
+                    }}
+                    className="flex items-center gap-2 px-3 sm:px-3.5 py-2.5 min-h-[44px] rounded-xl text-xs sm:text-sm font-bold text-slate-300 hover:text-emerald-400 hover:bg-brand-twilight transition-all whitespace-nowrap active:scale-95"
+                    title="Feature a Marketplace Product"
+                    aria-label="Feature Product"
+                  >
+                    <ShoppingBag className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-400" />
+                    <span>Store</span>
+                  </button>
 
-              {/* Fundraiser / Relief Trigger */}
-              <button
-                type="button"
-                onClick={() => {
-                  setMode('fundraiser');
-                  setIsExpanded(true);
-                }}
-                className="flex items-center gap-1.5 md:gap-2 px-3 md:px-4 py-2 md:py-2.5 min-h-[38px] md:min-h-[42px] rounded-xl text-xs md:text-sm font-bold text-slate-300 hover:text-rose-400 hover:bg-brand-twilight transition-all whitespace-nowrap"
-                title="Launch Community Fundraiser"
-              >
-                <HeartHandshake className="w-4 h-4 md:w-5 md:h-5 text-rose-400" />
-                <span className="hidden sm:inline">Relief</span>
-              </button>
+                  {/* Event Trigger */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMode('event');
+                      setIsExpanded(true);
+                    }}
+                    className="flex items-center gap-2 px-3 sm:px-3.5 py-2.5 min-h-[44px] rounded-xl text-xs sm:text-sm font-bold text-slate-300 hover:text-yellow-400 hover:bg-brand-twilight transition-all whitespace-nowrap active:scale-95"
+                    title="Share an Upcoming Caribbean Event"
+                    aria-label="Share Event"
+                  >
+                    <Calendar className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-400" />
+                    <span className="hidden sm:inline">Event</span>
+                  </button>
 
-              {/* AI Creator Assist Trigger */}
-              <button
-                type="button"
-                onClick={() => { setIsExpanded(true); setTimeout(() => handleGenerateCaptions(), 500); }}
-                className="flex items-center gap-1.5 md:gap-2 px-3 md:px-4 py-2 md:py-2.5 min-h-[38px] md:min-h-[42px] rounded-xl text-xs md:text-sm font-bold text-brand-goldenHour bg-brand-goldenHour/10 hover:bg-brand-goldenHour/20 border border-brand-goldenHour/30 transition-all whitespace-nowrap"
-                title="AI Creator Assistant"
-              >
-                <Sparkles className="w-4 h-4 md:w-5 md:h-5 text-brand-goldenHour" />
-                <span className="hidden md:inline">✨ AI</span>
-              </button>
+                  {/* Fundraiser / Relief Trigger */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMode('fundraiser');
+                      setIsExpanded(true);
+                    }}
+                    className="flex items-center gap-2 px-3 sm:px-3.5 py-2.5 min-h-[44px] rounded-xl text-xs sm:text-sm font-bold text-slate-300 hover:text-rose-400 hover:bg-brand-twilight transition-all whitespace-nowrap active:scale-95"
+                    title="Launch Community Relief Fundraiser"
+                    aria-label="Launch Relief Fundraiser"
+                  >
+                    <HeartHandshake className="w-4 h-4 sm:w-5 sm:h-5 text-rose-400" />
+                    <span className="hidden sm:inline">Relief</span>
+                  </button>
+                </div>
+
+                <div className="h-6 w-px bg-slate-800 shrink-0 mx-1 hidden md:block" aria-hidden="true" />
+
+                {/* 3. AI Assistant Trigger */}
+                <div className="shrink-0 ml-auto">
+                  <button
+                    type="button"
+                    onClick={() => { setIsExpanded(true); setTimeout(() => handleGenerateCaptions(), 500); }}
+                    className="flex items-center gap-2 px-3.5 sm:px-4 py-2.5 min-h-[44px] rounded-xl text-xs sm:text-sm font-bold text-brand-goldenHour bg-brand-goldenHour/10 hover:bg-brand-goldenHour/20 border border-brand-goldenHour/30 transition-all whitespace-nowrap active:scale-95"
+                    title="AI Creator Assistant"
+                    aria-label="AI Creator Assistant"
+                  >
+                    <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-brand-goldenHour" />
+                    <span>✨ AI</span>
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         ) : (
@@ -782,8 +805,9 @@ export default function UniversalComposer({
                   setIsExpanded(false);
                   setMode('text');
                 }}
-                className="self-end sm:self-auto p-1.5 md:p-2 rounded-full text-brand-sandstone/60 hover:text-brand-sandstone hover:bg-brand-dusk transition-colors min-w-[36px] min-h-[36px] md:min-w-[40px] md:min-h-[40px] flex items-center justify-center"
+                className="self-end sm:self-auto p-2 rounded-full text-brand-sandstone/60 hover:text-brand-sandstone hover:bg-brand-dusk transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
                 title="Close composer"
+                aria-label="Close composer"
               >
                 <X className="w-5 h-5 md:w-6 md:h-6" />
               </button>
@@ -809,7 +833,7 @@ export default function UniversalComposer({
                 }
                 rows={mediaList.length > 0 || mode !== 'text' ? 3 : 4}
                 maxLength={3000}
-                className="w-full bg-brand-twilight/80 border border-slate-800/80 rounded-2xl p-4 md:p-5 text-sm md:text-base leading-relaxed md:leading-[1.6] text-brand-sandstone placeholder-brand-sandstone/40 focus:outline-none focus:border-brand-caribbeanSea/60 focus:ring-1 focus:ring-brand-caribbeanSea/60 transition-all resize-none"
+                className="w-full bg-brand-twilight/80 border border-slate-800/80 rounded-2xl p-4 md:p-5 text-base md:text-lg leading-relaxed md:leading-[1.6] text-brand-sandstone placeholder-brand-sandstone/40 focus:outline-none focus:border-brand-caribbeanSea/60 focus:ring-1 focus:ring-brand-caribbeanSea/60 transition-all resize-none"
               />
               <div className="absolute bottom-3 right-3 text-[10px] md:text-xs font-mono text-brand-sandstone/40">
                 {content.length}/3000
@@ -1144,7 +1168,8 @@ export default function UniversalComposer({
                   type="button"
                   onClick={() => photoInputRef.current?.click()}
                   title="Add Photos from Device"
-                  className={`p-2 md:px-3 md:py-2.5 rounded-xl text-xs md:text-sm font-semibold flex items-center gap-1.5 md:gap-2 min-h-[38px] md:min-h-[42px] transition-all ${
+                  aria-label="Add Photo"
+                  className={`p-2.5 md:px-3.5 md:py-2.5 rounded-xl text-xs md:text-sm font-semibold flex items-center gap-1.5 md:gap-2 min-h-[44px] min-w-[44px] justify-center transition-all ${
                     mediaList.length > 0
                       ? 'bg-brand-sunriseCoral/20 text-brand-sunriseCoral border border-brand-sunriseCoral/30'
                       : 'text-brand-sandstone/70 hover:text-brand-sunriseCoral hover:bg-brand-twilight'
@@ -1159,7 +1184,8 @@ export default function UniversalComposer({
                   type="button"
                   onClick={() => videoInputRef.current?.click()}
                   title="Add Video from Device"
-                  className="p-2 md:px-3 md:py-2.5 rounded-xl text-xs md:text-sm font-semibold flex items-center gap-1.5 md:gap-2 min-h-[38px] md:min-h-[42px] transition-all text-brand-sandstone/70 hover:text-rose-400 hover:bg-brand-twilight"
+                  aria-label="Add Video"
+                  className="p-2.5 md:px-3.5 md:py-2.5 rounded-xl text-xs md:text-sm font-semibold flex items-center gap-1.5 md:gap-2 min-h-[44px] min-w-[44px] justify-center transition-all text-brand-sandstone/70 hover:text-rose-400 hover:bg-brand-twilight"
                 >
                   <Video className="w-4 h-4 md:w-5 md:h-5 text-rose-400" />
                   <span className="hidden md:inline">Video</span>
@@ -1174,7 +1200,8 @@ export default function UniversalComposer({
                     reelInputRef.current?.click();
                   }}
                   title="Upload Short Vertical Reel"
-                  className={`p-2 md:px-3 md:py-2.5 rounded-xl text-xs md:text-sm font-semibold flex items-center gap-1.5 md:gap-2 min-h-[38px] md:min-h-[42px] transition-all ${
+                  aria-label="Upload Reel"
+                  className={`p-2.5 md:px-3.5 md:py-2.5 rounded-xl text-xs md:text-sm font-semibold flex items-center gap-1.5 md:gap-2 min-h-[44px] min-w-[44px] justify-center transition-all ${
                     isReel
                       ? 'bg-brand-goldenHour/20 text-amber-300 border border-brand-goldenHour/30'
                       : 'text-brand-sandstone/70 hover:text-amber-300 hover:bg-brand-twilight'
@@ -1189,7 +1216,8 @@ export default function UniversalComposer({
                   type="button"
                   onClick={() => openCameraFor('photo')}
                   title="Capture from Camera"
-                  className="p-2 md:px-3 md:py-2.5 rounded-xl text-xs md:text-sm font-semibold flex items-center gap-1.5 md:gap-2 min-h-[38px] md:min-h-[42px] transition-all text-brand-sandstone/70 hover:text-brand-caribbeanSea hover:bg-brand-twilight"
+                  aria-label="Capture from Camera"
+                  className="p-2.5 md:px-3.5 md:py-2.5 rounded-xl text-xs md:text-sm font-semibold flex items-center gap-1.5 md:gap-2 min-h-[44px] min-w-[44px] justify-center transition-all text-brand-sandstone/70 hover:text-brand-caribbeanSea hover:bg-brand-twilight"
                 >
                   <Camera className="w-4 h-4 md:w-5 md:h-5 text-brand-caribbeanSea" />
                   <span className="hidden lg:inline">Camera</span>
@@ -1200,7 +1228,8 @@ export default function UniversalComposer({
                   type="button"
                   onClick={() => setMode(mode === 'poll' ? 'text' : 'poll')}
                   title="Create Interactive Poll"
-                  className={`p-2 md:px-3 md:py-2.5 rounded-xl text-xs md:text-sm font-semibold flex items-center gap-1.5 md:gap-2 min-h-[38px] md:min-h-[42px] transition-all ${
+                  aria-label="Create Interactive Poll"
+                  className={`p-2.5 md:px-3.5 md:py-2.5 rounded-xl text-xs md:text-sm font-semibold flex items-center gap-1.5 md:gap-2 min-h-[44px] min-w-[44px] justify-center transition-all ${
                     mode === 'poll'
                       ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30'
                       : 'text-brand-sandstone/70 hover:text-purple-400 hover:bg-brand-twilight'
@@ -1215,7 +1244,8 @@ export default function UniversalComposer({
                   type="button"
                   onClick={() => setMode(mode === 'product' ? 'text' : 'product')}
                   title="Feature a Store Product"
-                  className={`p-2 md:px-3 md:py-2.5 rounded-xl text-xs md:text-sm font-semibold flex items-center gap-1.5 md:gap-2 min-h-[38px] md:min-h-[42px] transition-all ${
+                  aria-label="Feature a Store Product"
+                  className={`p-2.5 md:px-3.5 md:py-2.5 rounded-xl text-xs md:text-sm font-semibold flex items-center gap-1.5 md:gap-2 min-h-[44px] min-w-[44px] justify-center transition-all ${
                     mode === 'product'
                       ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
                       : 'text-brand-sandstone/70 hover:text-emerald-400 hover:bg-brand-twilight'
@@ -1230,7 +1260,8 @@ export default function UniversalComposer({
                   type="button"
                   onClick={() => setMode(mode === 'event' ? 'text' : 'event')}
                   title="Attach Upcoming Event"
-                  className={`p-2 md:px-3 md:py-2.5 rounded-xl text-xs md:text-sm font-semibold flex items-center gap-1.5 md:gap-2 min-h-[38px] md:min-h-[42px] transition-all ${
+                  aria-label="Attach Upcoming Event"
+                  className={`p-2.5 md:px-3.5 md:py-2.5 rounded-xl text-xs md:text-sm font-semibold flex items-center gap-1.5 md:gap-2 min-h-[44px] min-w-[44px] justify-center transition-all ${
                     mode === 'event'
                       ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30'
                       : 'text-brand-sandstone/70 hover:text-yellow-400 hover:bg-brand-twilight'
@@ -1245,7 +1276,8 @@ export default function UniversalComposer({
                   type="button"
                   onClick={() => setMode(mode === 'fundraiser' ? 'text' : 'fundraiser')}
                   title="Launch Community Relief Fundraiser"
-                  className={`p-2 md:px-3 md:py-2.5 rounded-xl text-xs md:text-sm font-semibold flex items-center gap-1.5 md:gap-2 min-h-[38px] md:min-h-[42px] transition-all ${
+                  aria-label="Launch Community Relief Fundraiser"
+                  className={`p-2.5 md:px-3.5 md:py-2.5 rounded-xl text-xs md:text-sm font-semibold flex items-center gap-1.5 md:gap-2 min-h-[44px] min-w-[44px] justify-center transition-all ${
                     mode === 'fundraiser'
                       ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30'
                       : 'text-brand-sandstone/70 hover:text-rose-400 hover:bg-brand-twilight'
@@ -1261,7 +1293,8 @@ export default function UniversalComposer({
                     type="button"
                     onClick={() => setIsEmojiPickerOpen(!isEmojiPickerOpen)}
                     title="Insert Emojis"
-                    className={`p-2 md:px-3 md:py-2.5 rounded-xl text-xs md:text-sm font-semibold flex items-center gap-1.5 md:gap-2 min-h-[38px] md:min-h-[42px] transition-all ${
+                    aria-label="Insert Emojis"
+                    className={`p-2.5 md:px-3.5 md:py-2.5 rounded-xl text-xs md:text-sm font-semibold flex items-center gap-1.5 md:gap-2 min-h-[44px] min-w-[44px] justify-center transition-all ${
                       isEmojiPickerOpen
                         ? 'bg-amber-400/20 text-amber-300 border border-amber-400/30'
                         : 'text-brand-sandstone/70 hover:text-amber-300 hover:bg-brand-twilight'
@@ -1288,7 +1321,8 @@ export default function UniversalComposer({
                     onClick={handleGenerateCaptions}
                     disabled={isGeneratingCaptions}
                     title="Generate Captions with AI"
-                    className="p-2 md:px-3 md:py-2.5 rounded-xl text-xs md:text-sm font-semibold flex items-center gap-1.5 md:gap-2 min-h-[38px] md:min-h-[42px] transition-all text-brand-goldenHour bg-brand-goldenHour/10 border border-brand-goldenHour/30 hover:bg-brand-goldenHour/20 disabled:opacity-50"
+                    aria-label="Generate Captions with AI"
+                    className="p-2.5 md:px-3.5 md:py-2.5 rounded-xl text-xs md:text-sm font-semibold flex items-center gap-1.5 md:gap-2 min-h-[44px] min-w-[44px] justify-center transition-all text-brand-goldenHour bg-brand-goldenHour/10 border border-brand-goldenHour/30 hover:bg-brand-goldenHour/20 disabled:opacity-50"
                   >
                     {isGeneratingCaptions ? <Loader2 className="w-4 h-4 md:w-5 md:h-5 text-brand-goldenHour animate-spin" /> : <Sparkles className="w-4 h-4 md:w-5 md:h-5 text-brand-goldenHour" />}
                     <span className="hidden lg:inline">✨ AI</span>
@@ -1306,7 +1340,8 @@ export default function UniversalComposer({
                   onClick={handleGenerateHashtags}
                   disabled={isGeneratingHashtags}
                   title="Generate Hashtags with AI"
-                  className="p-2 md:px-3 md:py-2.5 rounded-xl text-xs md:text-sm font-semibold flex items-center gap-1.5 md:gap-2 min-h-[38px] md:min-h-[42px] transition-all text-brand-caribbeanSea bg-brand-caribbeanSea/10 border border-brand-caribbeanSea/30 hover:bg-brand-caribbeanSea/20 disabled:opacity-50"
+                  aria-label="Generate Hashtags with AI"
+                  className="p-2.5 md:px-3.5 md:py-2.5 rounded-xl text-xs md:text-sm font-semibold flex items-center gap-1.5 md:gap-2 min-h-[44px] min-w-[44px] justify-center transition-all text-brand-caribbeanSea bg-brand-caribbeanSea/10 border border-brand-caribbeanSea/30 hover:bg-brand-caribbeanSea/20 disabled:opacity-50"
                 >
                   {isGeneratingHashtags ? <Loader2 className="w-4 h-4 md:w-5 md:h-5 text-brand-caribbeanSea animate-spin" /> : <Hash className="w-4 h-4 md:w-5 md:h-5 text-brand-caribbeanSea" />}
                   <span className="hidden lg:inline"># Hashtags</span>
@@ -1371,7 +1406,7 @@ export default function UniversalComposer({
                       !eventTitle.trim() &&
                       !fundraiserTitle.trim())
                   }
-                  className="w-full sm:w-auto bg-gradient-to-r from-brand-caribbeanSea via-brand-sunriseCoral to-brand-goldenHour hover:opacity-95 disabled:opacity-40 text-slate-950 font-black px-6 md:px-8 py-2.5 md:py-3 min-h-[42px] md:min-h-[46px] rounded-2xl text-xs md:text-sm flex items-center justify-center gap-2 transition-all shadow-lg shadow-brand-caribbeanSea/20 cursor-pointer"
+                  className="w-full sm:w-auto bg-gradient-to-r from-brand-caribbeanSea via-brand-sunriseCoral to-brand-goldenHour hover:opacity-95 disabled:opacity-40 text-slate-950 font-black px-6 md:px-8 py-2.5 md:py-3 min-h-[44px] md:min-h-[48px] rounded-2xl text-xs md:text-sm flex items-center justify-center gap-2 transition-all shadow-lg shadow-brand-caribbeanSea/20 cursor-pointer"
                 >
                   {isSubmitting ? (
                     <>

@@ -9,9 +9,11 @@ import {
   MessageCircle,
 } from "lucide-react";
 import OnlineFriendsWidget from "./online-friends-widget";
+import OfficialPlatformWidget from "./official/official-platform-widget";
 import {
   createSupabaseServerClient,
   getCurrentUser,
+  checkIsOfficialOperator,
 } from "../lib/supabase/server";
 import { Money, sumLedgerMinorUnits } from "@caribbean/payments";
 
@@ -32,9 +34,19 @@ function formatEventDate(iso: string): string {
   });
 }
 
-export default async function TukubiLiveSidebar() {
+export interface TukubiLiveSidebarProps {
+  officialProfile?: any;
+  officialCounts?: any;
+  isOfficialOperator?: boolean;
+}
+
+export default async function TukubiLiveSidebar(props?: TukubiLiveSidebarProps) {
   const user = await getCurrentUser();
   const supabase = await createSupabaseServerClient();
+
+  let officialProfile = props?.officialProfile;
+  let officialCounts = props?.officialCounts;
+  let isOfficialOperator = props?.isOfficialOperator ?? false;
 
   let walletBalanceFormatted = "$0.00 USD";
   let livePulses: LivePulseItem[] = [];
@@ -47,6 +59,29 @@ export default async function TukubiLiveSidebar() {
   }> = [];
 
   if (supabase) {
+    // If not provided by parent, resolve official operator status authoritatively
+    if (props?.isOfficialOperator === undefined && user) {
+      isOfficialOperator = await checkIsOfficialOperator(user.id);
+    }
+
+    if (!officialProfile) {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('id, display_name, username, avatar_url, bio, is_verified')
+        .ilike('username', 'tukubi')
+        .maybeSingle();
+      officialProfile = profile;
+
+      if (officialProfile?.id && !officialCounts) {
+        const { data: counts } = await supabase
+          .from('profile_counts')
+          .select('followers_count, following_count, posts_count, likes_received_count')
+          .eq('profile_id', officialProfile.id)
+          .maybeSingle();
+        officialCounts = counts;
+      }
+    }
+
     const [eventsRes, walletAccountRes, liveStreamsRes, storiesRes, postsRes] =
       await Promise.all([
         supabase
@@ -172,6 +207,18 @@ export default async function TukubiLiveSidebar() {
       className="space-y-5"
       aria-label="TUKUBI Live Discovery"
     >
+      {/* Official TUKUBI Platform Identity & Verified Controls */}
+      <OfficialPlatformWidget
+        displayName={officialProfile?.display_name || 'TUKUBI'}
+        username={officialProfile?.username || 'tukubi'}
+        avatarUrl={officialProfile?.avatar_url}
+        bio={officialProfile?.bio}
+        postsCount={officialCounts?.posts_count ?? 0}
+        followersCount={officialCounts?.followers_count ?? 0}
+        followingCount={officialCounts?.following_count ?? 0}
+        isOperator={isOfficialOperator}
+      />
+
       {/* Online Friends Widget */}
       <OnlineFriendsWidget />
 

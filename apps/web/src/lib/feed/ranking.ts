@@ -50,7 +50,7 @@ export async function buildRankedFeed(
     // 3. Build the base query
     let postQuery = supabase
       .from('posts')
-      .select('id, author_id, content, created_at, media_urls, cultural_tags, likes_count, comments_count, shares_count, country_id, profiles:profiles!posts_author_id_fkey(display_name, username, avatar_url, is_verified)')
+      .select('id, author_id, content, created_at, media_urls, cultural_tags, likes_count, comments_count, shares_count, country_id, is_official, is_pinned, official_content_type, profiles:profiles!posts_author_id_fkey(display_name, username, avatar_url, is_verified, is_official)')
       .order('created_at', { ascending: false })
       .limit(limitCount);
 

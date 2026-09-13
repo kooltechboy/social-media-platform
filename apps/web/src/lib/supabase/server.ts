@@ -183,4 +183,44 @@ export async function getStaffUser(
   return auth.user;
 }
 
+export async function checkIsOfficialOperator(userId?: string | null): Promise<boolean> {
+  if (!userId) return false;
+  const serviceClient = await createServiceSupabaseClient();
+  if (!serviceClient) return false;
+
+  // 1. Check platform super_admin / admin / management roles in accounts table
+  const { data: account } = await serviceClient
+    .from('accounts')
+    .select('role, status')
+    .or(`profile_id.eq.${userId},id.eq.${userId}`)
+    .eq('status', 'active')
+    .maybeSingle();
+
+  if (account && ['super_admin', 'superadmin', 'management', 'admin', 'content_manager'].includes(account.role)) {
+    return true;
+  }
+
+  // 2. Check if official account exists and user is in official_account_operators
+  const { data: officialAccount } = await serviceClient
+    .from('official_accounts')
+    .select('id')
+    .eq('status', 'active')
+    .maybeSingle();
+
+  if (!officialAccount) return false;
+
+  const { data: operator } = await serviceClient
+    .from('official_account_operators')
+    .select('role')
+    .eq('official_account_id', officialAccount.id)
+    .eq('operator_profile_id', userId)
+    .maybeSingle();
+
+  if (!operator) return false;
+
+  const allowedRoles = ['owner', 'administrator', 'editor', 'publisher'];
+  return allowedRoles.includes(operator.role);
+}
+
+
 

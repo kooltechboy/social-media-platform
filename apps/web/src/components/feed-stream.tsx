@@ -55,6 +55,7 @@ import TukubiImage from './ui/tukubi-image';
 import TukubiVideoPlayer from './media/tukubi-video-player';
 import InteractivePollWidget from './polls/interactive-poll-widget';
 import type { PollData } from '../lib/polls/types';
+import FeedPost from './feed/feed-post';
 
 export interface FeedPostData {
   id: string;
@@ -81,14 +82,21 @@ export interface FeedPostData {
   poll?: PollData;
 }
 
-interface FeedStreamProps {
+export interface FeedStreamProps {
   initialPosts: FeedPostData[];
   currentUserId?: string;
   mode?: string;
   nextCursor?: string;
+  showTabs?: boolean;
 }
 
-export default function FeedStream({ initialPosts, currentUserId, mode = 'for_you', nextCursor }: FeedStreamProps) {
+export default function FeedStream({
+  initialPosts,
+  currentUserId,
+  mode = 'for_you',
+  nextCursor,
+  showTabs = false,
+}: FeedStreamProps) {
   const router = useRouter();
   const { t, locale } = useTranslation();
   const [posts, setPosts] = useState<FeedPostData[]>(initialPosts);
@@ -612,37 +620,39 @@ export default function FeedStream({ initialPosts, currentUserId, mode = 'for_yo
 
   return (
     <div className="space-y-6">
-      {/* Feed Filter Tab Bar */}
-      <div className="flex gap-2 sm:gap-4 border-b border-slate-800 pb-2 overflow-x-auto scrollbar-none" role="tablist">
-        {[
-          { id: 'for_you', label: t('feed.for_you') },
-          { id: 'following', label: 'Following' },
-          { id: 'caribbean', label: t('feed.caribbean') },
-          { id: 'communities', label: t('nav.communities') },
-        ].map((tab) => {
-          const isActive = mode === tab.id;
-          return (
-            <button
-              key={tab.id}
-              role="tab"
-              aria-selected={isActive}
-              onClick={() => router.replace(`/?mode=${tab.id}`)}
-              className={`pb-2 md:pb-2.5 whitespace-nowrap text-xs md:text-sm font-black transition-all relative focus-visible:outline-none px-1 md:px-2 ${
-                isActive ? 'text-brand-caribbeanSea' : 'text-brand-sandstone/60 hover:text-slate-200'
-              }`}
-            >
-              {tab.label}
-              {isActive && (
-                <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-brand-caribbeanSea via-brand-sunriseCoral to-brand-goldenHour rounded-full" />
-              )}
-            </button>
-          );
-        })}
-      </div>
+      {/* Optional Feed Filter Tab Bar (when showTabs requested) */}
+      {showTabs && (
+        <div className="flex gap-2 sm:gap-4 border-b border-slate-800 pb-2 overflow-x-auto scrollbar-none" role="tablist">
+          {[
+            { id: 'for_you', label: t('feed.for_you') },
+            { id: 'following', label: 'Following' },
+            { id: 'caribbean', label: t('feed.caribbean') },
+            { id: 'communities', label: t('nav.communities') },
+          ].map((tab) => {
+            const isActive = mode === tab.id;
+            return (
+              <button
+                key={tab.id}
+                role="tab"
+                aria-selected={isActive}
+                onClick={() => router.replace(`/?mode=${tab.id}`)}
+                className={`pb-2 md:pb-2.5 whitespace-nowrap text-xs md:text-sm font-black transition-all relative focus-visible:outline-none px-1 md:px-2 ${
+                  isActive ? 'text-brand-caribbeanSea' : 'text-brand-sandstone/60 hover:text-slate-200'
+                }`}
+              >
+                {tab.label}
+                {isActive && (
+                  <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-brand-caribbeanSea via-brand-sunriseCoral to-brand-goldenHour rounded-full" />
+                )}
+              </button>
+            );
+          })}
+        </div>
+      )}
 
       {/* Share Toast */}
       {shareToast && (
-        <div className="p-3 rounded-2xl bg-brand-caribbeanSea/20 border border-brand-caribbeanSea/40 text-brand-caribbeanSea text-xs font-bold flex items-center gap-2 animate-fadeIn">
+        <div className="p-3.5 rounded-2xl bg-brand-caribbeanSea/20 border border-brand-caribbeanSea/40 text-brand-caribbeanSea text-xs font-bold flex items-center gap-2 animate-fadeIn">
           <CheckCircle className="w-4 h-4 text-brand-caribbeanSea" />
           <span>{shareToast}</span>
         </div>
@@ -651,603 +661,59 @@ export default function FeedStream({ initialPosts, currentUserId, mode = 'for_yo
       {/* Feed Stream */}
       <div className="space-y-4">
         {displayedPosts.length === 0 ? (
-          <div className="p-8 text-center glass rounded-2xl space-y-2">
-            <Globe className="w-8 h-8 text-slate-600 mx-auto" />
-            <h4 className="text-sm font-black text-slate-300">No posts in this channel yet</h4>
-            <p className="text-xs text-brand-sandstone/40">Be the first to share an update to the Caribbean diaspora!</p>
+          <div className="p-8 sm:p-12 text-center glass-aerospace rounded-3xl space-y-3 border border-white/10 shadow-xl">
+            <div className="w-12 h-12 rounded-2xl bg-brand-caribbeanSea/10 border border-brand-caribbeanSea/25 flex items-center justify-center mx-auto text-brand-caribbeanSea">
+              <Globe className="w-6 h-6" />
+            </div>
+            <h4 className="text-base font-black text-white">No Caribbean updates in this channel yet</h4>
+            <p className="text-xs sm:text-sm text-brand-sandstone/65 max-w-md mx-auto leading-relaxed">
+              Connect with fellow islanders, follow creators across the diaspora, or create your first post above!
+            </p>
           </div>
         ) : (
           displayedPosts.map((post) => (
-            <article
-              key={post.id}
-              id={post.id}
-              className="glass-aerospace rounded-3xl p-5 sm:p-6 space-y-4 hover:border-white/25 transition-all duration-300 relative group overflow-hidden shadow-2xl"
-            >
-              {/* Subtle top edge specular highlight */}
-              <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent pointer-events-none" />
-
-              {/* Post Author Header */}
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3.5">
-                  <Link
-                    href={`/profile/${post.handle}`}
-                    className="hover:scale-105 transition-transform shrink-0"
-                    aria-label={`View profile for ${post.author}`}
-                  >
-                    <UserAvatar
-                      src={post.avatarUrl}
-                      name={post.author}
-                      size="md"
-                    />
-                  </Link>
-                  <div>
-                    <div className="flex items-center gap-1.5 flex-wrap">
-                      <Link
-                        href={`/profile/${post.handle}`}
-                        className="font-black text-sm md:text-base text-white hover:text-brand-caribbeanSea transition-colors tracking-tight"
-                      >
-                        {post.author}
-                      </Link>
-                      {post.isOfficial ? (
-                        <OfficialBadge size="xs" showLabel={true} label={post.handle.toLowerCase() === 'tukubi' ? 'Official TUKUBI' : 'Official'} />
-                      ) : post.verified ? (
-                        <CheckCircle className="w-4 h-4 md:w-5 md:h-5 text-brand-caribbeanSea fill-brand-caribbeanSea/20 drop-shadow-[0_0_6px_rgba(0,180,216,0.5)]" />
-                      ) : null}
-                      <Link
-                        href={`/profile/${post.handle}`}
-                        className="text-xs md:text-sm font-semibold text-white/50 hover:text-white/80 transition-colors"
-                      >
-                        @{post.handle}
-                      </Link>
-                      {post.isPinned && (
-                        <span className="inline-flex items-center gap-1 text-[10px] md:text-xs font-black text-brand-sunriseCoral bg-brand-sunriseCoral/15 px-2.5 md:px-3 py-0.5 md:py-1 rounded-full border border-brand-sunriseCoral/30">
-                          <Pin className="w-2.5 h-2.5 md:w-3 md:h-3" />
-                          Pinned
-                        </span>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-2 text-[11px] md:text-xs font-medium text-white/60 mt-0.5">
-                      {post.location && (
-                        <span className="flex items-center gap-1 text-white/70">
-                          <MapPin className="w-3 h-3 md:w-3.5 md:h-3.5 text-brand-sunriseCoral" />
-                          {post.location}
-                        </span>
-                      )}
-                      <span className="text-white/30">•</span>
-                      <span>{post.time}</span>
-                      {post.officialContentType && (
-                        <>
-                          <span className="text-white/30">•</span>
-                          <span className="text-[10px] md:text-[11px] font-bold text-brand-caribbeanSea capitalize px-1.5 md:px-2 py-0.5 rounded bg-brand-caribbeanSea/10 border border-brand-caribbeanSea/20">
-                            {post.officialContentType.replace('_', ' ')}
-                          </span>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-2 relative">
-                  {post.tag && (
-                    <Link
-                      href={`/explore?q=${encodeURIComponent(post.tag.replace('#', ''))}`}
-                      className="text-[10px] md:text-xs font-black px-2.5 md:px-3 py-1 md:py-1.5 rounded-full bg-brand-caribbeanSea/10 hover:bg-brand-caribbeanSea/20 text-brand-caribbeanSea border border-brand-caribbeanSea/20 transition-colors"
-                    >
-                      {post.tag}
-                    </Link>
-                  )}
-
-                  {/* Post Options Menu Button */}
-                  <button
-                    type="button"
-                    aria-label="Post options"
-                    onClick={() => setActiveMenuPostId(activeMenuPostId === post.id ? null : post.id)}
-                    className="p-1.5 md:p-2 rounded-full text-brand-sandstone/60 hover:text-brand-sandstone hover:bg-white/10 transition-colors min-w-[36px] min-h-[36px] md:min-w-[40px] md:min-h-[40px] flex items-center justify-center focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand-caribbeanSea"
-                  >
-                    <MoreHorizontal className="w-4 h-4 md:w-5 md:h-5" />
-                  </button>
-
-                  {/* Dropdown Menu */}
-                  {activeMenuPostId === post.id && (
-                    <div className="absolute right-0 top-10 z-30 w-48 rounded-2xl bg-brand-dusk border border-slate-700 shadow-2xl p-1.5 space-y-1 animate-fadeIn text-xs md:text-sm">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          handleShare(post);
-                          setActiveMenuPostId(null);
-                        }}
-                        className="w-full text-left px-3 py-2 rounded-xl text-slate-200 hover:bg-white/10 flex items-center gap-2 font-semibold transition-colors"
-                      >
-                        <Link2 className="w-3.5 h-3.5 text-brand-caribbeanSea" />
-                        <span>Copy Link</span>
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => handleToggleSave(post.id)}
-                        className="w-full text-left px-3 py-2 rounded-xl text-slate-200 hover:bg-white/10 flex items-center gap-2 font-semibold transition-colors"
-                      >
-                        <Bookmark className={`w-3.5 h-3.5 ${savedPosts.has(post.id) ? 'fill-brand-caribbeanSea text-brand-caribbeanSea' : 'text-slate-400'}`} />
-                        <span>{savedPosts.has(post.id) ? 'Saved' : 'Save Post'}</span>
-                      </button>
-
-                      {currentUserId !== post.authorId && post.handle && (
-                        <Link
-                          href={`/messages?u=${encodeURIComponent(post.handle)}`}
-                          onClick={() => setActiveMenuPostId(null)}
-                          className="w-full text-left px-3 py-2 rounded-xl text-slate-200 hover:bg-white/10 flex items-center gap-2 font-semibold transition-colors"
-                        >
-                          <MessageSquare className="w-3.5 h-3.5 text-brand-caribbeanSea" />
-                          <span>Message Author</span>
-                        </Link>
-                      )}
-
-                      {currentUserId && post.authorId === currentUserId ? (
-                        <button
-                          type="button"
-                          onClick={() => handleDeletePost(post.id)}
-                          className="w-full text-left px-3 py-2 rounded-xl text-rose-400 hover:bg-rose-950/50 flex items-center gap-2 font-bold transition-colors"
-                        >
-                          <Trash2 className="w-3.5 h-3.5 text-rose-400" />
-                          <span>Delete Post</span>
-                        </button>
-                      ) : (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setReportModalPostId(post.id);
-                            setActiveMenuPostId(null);
-                          }}
-                          className="w-full text-left px-3 py-2 rounded-xl text-amber-400 hover:bg-amber-950/50 flex items-center gap-2 font-semibold transition-colors"
-                        >
-                          <Flag className="w-3.5 h-3.5 text-amber-400" />
-                          <span>Report Content</span>
-                        </button>
-                      )}
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Content Body */}
-              <p className="text-sm md:text-[17px] text-slate-200 leading-relaxed md:leading-[1.6] font-medium whitespace-pre-wrap">
-                {postTranslations[post.id]?.translatedText && !postTranslations[post.id]?.isShowingOriginal
-                  ? postTranslations[post.id]!.translatedText
-                  : post.content}
-              </p>
-
-              {/* Translation Affordance & Status */}
-              <div className="mt-2 flex flex-wrap items-center gap-2">
-                {postTranslations[post.id]?.isTranslating ? (
-                  <div className="flex items-center gap-2 text-[11px] md:text-xs text-brand-sandstone/70">
-                    <Loader2 className="w-3.5 h-3.5 md:w-4 md:h-4 animate-spin text-brand-caribbeanSea" />
-                    <span>{t('post.translating')}</span>
-                  </div>
-                ) : postTranslations[post.id]?.translatedText ? (
-                  <div className="w-full mt-1.5 p-2.5 md:p-3 rounded-xl bg-brand-caribbeanSea/10 border border-brand-caribbeanSea/20 flex flex-wrap items-center justify-between gap-2 text-xs md:text-sm animate-fadeIn">
-                    <div className="flex items-center gap-1.5 text-brand-sandstone/80 text-[11px] md:text-xs">
-                      <Sparkles className="w-3.5 h-3.5 md:w-4 md:h-4 text-brand-caribbeanSea flex-shrink-0" />
-                      <span>
-                        {postTranslations[post.id]?.isShowingOriginal
-                          ? 'Original text'
-                          : `Translated from ${
-                              LOCALE_DETAILS[postTranslations[post.id]?.sourceLang as Locale]?.nativeName ||
-                              postTranslations[post.id]?.sourceLang ||
-                              'detected'
-                            } to ${
-                              LOCALE_DETAILS[postTranslations[post.id]?.targetLang as Locale]?.nativeName ||
-                              postTranslations[post.id]?.targetLang ||
-                              'selected language'
-                            }`}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2.5">
-                      {/* Language change dropdown */}
-                      <select
-                        value={postTranslations[post.id]?.targetLang || locale}
-                        onChange={(e) => handleTranslatePost(post.id, post.content, e.target.value as Locale)}
-                        aria-label="Change translation target language"
-                        className="bg-brand-twilight/90 border border-brand-caribbeanSea/30 text-[10px] md:text-xs font-bold text-brand-caribbeanSea rounded-lg px-2 py-1 focus:outline-none cursor-pointer"
-                      >
-                        {LOCALES.map((code) => (
-                          <option key={code} value={code} className="bg-brand-dusk text-slate-200">
-                            {LOCALE_DETAILS[code].nativeName}
-                          </option>
-                        ))}
-                      </select>
-
-                      <button
-                        type="button"
-                        onClick={() => handleToggleOriginal(post.id)}
-                        className="text-[11px] md:text-xs font-bold text-brand-caribbeanSea hover:underline whitespace-nowrap"
-                      >
-                        {postTranslations[post.id]?.isShowingOriginal ? 'Show Translation' : 'Show Original'}
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-2">
-                    <div className="relative inline-flex items-center">
-                      <Globe className="w-3.5 h-3.5 md:w-4 md:h-4 text-brand-caribbeanSea mr-1" />
-                      <select
-                        defaultValue=""
-                        onChange={(e) => {
-                          if (e.target.value) {
-                            handleTranslatePost(post.id, post.content, e.target.value as Locale);
-                            e.target.value = '';
-                          }
-                        }}
-                        aria-label="Translate post to language"
-                        className="bg-brand-twilight/80 hover:bg-brand-twilight border border-slate-700 hover:border-brand-caribbeanSea/60 text-[11px] md:text-xs font-semibold text-brand-caribbeanSea rounded-full pl-2.5 pr-6 py-1 focus:outline-none focus:border-brand-caribbeanSea cursor-pointer transition-colors appearance-none"
-                      >
-                        <option value="" disabled>
-                          Translate to ▾
-                        </option>
-                        {LOCALES.map((code) => (
-                          <option key={code} value={code} className="bg-brand-dusk text-slate-200">
-                            {LOCALE_DETAILS[code].nativeName} ({LOCALE_DETAILS[code].name})
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    {postTranslations[post.id]?.error && (
-                      <span className="text-[11px] md:text-xs text-rose-400 flex items-center gap-1">
-                        <AlertCircle className="w-3 h-3 md:w-3.5 md:h-3.5 flex-shrink-0" />
-                        <span>{postTranslations[post.id]?.error}</span>
-                      </span>
-                    )}
-                  </div>
-                )}
-              </div>
-
-              {/* Media Gallery Previews */}
-              {post.mediaUrls && post.mediaUrls.length > 0 && (
-                <div
-                  className={`grid gap-2 rounded-2xl overflow-hidden ${
-                    post.mediaUrls.length === 1 ? 'grid-cols-1' : 'grid-cols-2'
-                  }`}
-                >
-                  {post.mediaUrls.map((url, idx) => (
-                    <div key={idx} className="relative bg-brand-twilight rounded-xl overflow-hidden min-h-[220px] max-h-[500px]">
-                      {url.endsWith('.mp4') || url.includes('video') || url.endsWith('.m3u8') ? (
-                        <TukubiVideoPlayer src={url} altText="Post video playback" className="w-full h-full" />
-                      ) : (
-                        <TukubiImage
-                          src={url}
-                          alt="Post media"
-                          fill
-                          sizes="(max-width: 768px) 100vw, 50vw"
-                          className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
-                        />
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {/* Shoppable Tagged Product (Social Commerce) */}
-              {post.taggedProduct && (
-                <ShoppablePostWidget product={post.taggedProduct} />
-              )}
-
-              {/* Interactive Poll Widget */}
-              {post.poll && (
-                <InteractivePollWidget
-                  initialPoll={post.poll}
-                  currentUserId={currentUserId}
-                />
-              )}
-
-              {/* Emoji Reactions Display */}
-              {customEmojiReactions[post.id] && customEmojiReactions[post.id].length > 0 && (
-                <div className="flex flex-wrap items-center gap-1.5 pt-1">
-                  {customEmojiReactions[post.id].map((r, i) => (
-                    <button
-                      key={`${r.emoji}-${i}`}
-                      type="button"
-                      onClick={() => handleReactToPost(post.id, r.emoji)}
-                      className="px-2.5 md:px-3 py-1 md:py-1.5 rounded-full bg-white/10 hover:bg-white/20 border border-white/10 text-xs md:text-sm flex items-center gap-1.5 text-white shadow-sm transition-transform active:scale-95"
-                    >
-                      <span className="text-sm md:text-base">{r.emoji}</span>
-                      <span className="text-[10px] md:text-xs font-black">{r.count}</span>
-                    </button>
-                  ))}
-                </div>
-              )}
-
-              {/* Interaction Bar */}
-              <div className="flex items-center justify-between pt-3 md:pt-4 border-t border-slate-800/70 text-brand-sandstone/60 text-xs md:text-sm">
-                {/* Reaction Picker & Counter */}
-                <div className="flex items-center gap-1.5">
-                  <ReactionPicker
-                    currentReaction={postReactions[post.id]}
-                    onSelect={(type) => handleReaction(post.id, type)}
-                  />
-                  <span className="text-xs md:text-sm font-semibold text-slate-300 tabular-nums">{postLikeCounts[post.id] || 0}</span>
-                </div>
-
-                {/* Quick Emoji Reaction Trigger */}
-                <div className="relative">
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setActiveEmojiPickerPostId(
-                        activeEmojiPickerPostId === post.id ? null : post.id
-                      )
-                    }
-                    className="flex items-center gap-1.5 hover:text-amber-300 transition-colors px-2 py-1.5 md:px-3 md:py-2 min-h-[38px] md:min-h-[42px] rounded-xl font-semibold"
-                    title="React with Emoji"
-                  >
-                    <Smile className="w-4 h-4 md:w-5 md:h-5 text-amber-400" />
-                    <span className="hidden sm:inline">React</span>
-                  </button>
-
-                  <EmojiPickerPopover
-                    isOpen={activeEmojiPickerPostId === post.id}
-                    onClose={() => setActiveEmojiPickerPostId(null)}
-                    onSelectEmoji={(emoji) => handleReactToPost(post.id, emoji)}
-                    position="top"
-                  />
-                </div>
-
-                {/* Comments Toggle */}
-                <button
-                  type="button"
-                  aria-label="View or add comments"
-                  onClick={() => handleToggleComments(post.id)}
-                  className={`flex items-center gap-1.5 md:gap-2 hover:text-brand-caribbeanSea transition-colors px-2 py-1.5 md:px-3 md:py-2 min-h-[38px] md:min-h-[42px] rounded-xl font-semibold focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand-caribbeanSea ${
-                    expandedCommentsPostId === post.id ? 'text-brand-caribbeanSea font-bold' : ''
-                  }`}
-                >
-                  <MessageCircle className="w-4 h-4 md:w-5 md:h-5" />
-                  <span>{post.comments}</span>
-                </button>
-
-                {/* Share Button */}
-                <button
-                  type="button"
-                  aria-label="Share post"
-                  onClick={() => handleShare(post)}
-                  className="flex items-center gap-1.5 md:gap-2 hover:text-brand-sunriseCoral transition-colors px-2 py-1.5 md:px-3 md:py-2 min-h-[38px] md:min-h-[42px] rounded-xl font-semibold focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand-sunriseCoral"
-                >
-                  <Share2 className="w-4 h-4 md:w-5 md:h-5" />
-                  <span>{post.reposts > 0 ? post.reposts : 'Share'}</span>
-                </button>
-
-                {/* Bookmark Button */}
-                <button
-                  type="button"
-                  onClick={() => handleSavePost(post.id)}
-                  className={`p-2 md:p-2.5 min-w-[38px] min-h-[38px] md:min-w-[42px] md:min-h-[42px] flex items-center justify-center rounded-xl transition-colors ${
-                    savedPosts.has(post.id) ? 'text-brand-caribbeanSea' : 'text-slate-500 hover:text-slate-300'
-                  }`}
-                  title={savedPosts.has(post.id) ? 'Unsave post' : 'Save post'}
-                  aria-label={savedPosts.has(post.id) ? 'Unsave post' : 'Save post'}
-                >
-                  <Bookmark className={`w-4 h-4 md:w-5 md:h-5 ${savedPosts.has(post.id) ? 'fill-brand-caribbeanSea' : ''}`} />
-                </button>
-
-                {/* Creator Tip Trigger */}
-                <button
-                  type="button"
-                  aria-label={`Send Tip to ${post.author}`}
-                  onClick={() => setTipTarget({ name: post.author, handle: post.handle })}
-                  className="flex items-center gap-1.5 md:gap-2 text-brand-sunriseCoral font-extrabold hover:text-emerald-300 transition-all bg-brand-sunriseCoral/10 hover:bg-brand-sunriseCoral/20 px-3.5 md:px-4 py-1.5 md:py-2 min-h-[38px] md:min-h-[42px] rounded-full border border-brand-sunriseCoral/20 shadow-sm text-xs md:text-sm"
-                >
-                  <Wallet className="w-3.5 h-3.5 md:w-4.5 md:h-4.5" />
-                  <span>Tip Creator</span>
-                </button>
-              </div>
-
-              {/* Inline Comments Section */}
-              {expandedCommentsPostId === post.id && (
-                <div className="pt-3 border-t border-slate-800/80 space-y-3 animate-fadeIn">
-                  {/* List of Comments & Threaded Replies */}
-                  <div className="space-y-3 max-h-72 overflow-y-auto pr-1">
-                    {(commentLists[post.id] || []).length === 0 ? (
-                      <p className="text-xs text-brand-sandstone/40 italic py-1">No comments yet. Start the conversation!</p>
-                    ) : (
-                      // Render root comments
-                      (commentLists[post.id] || [])
-                        .filter((c) => !c.parent_id)
-                        .map((c, i) => {
-                          const isCommentAuthor = currentUserId && c.author_id === currentUserId;
-                          const replies = (commentLists[post.id] || []).filter((r) => r.parent_id === c.id);
-
-                          return (
-                            <div key={c.id || i} className="space-y-2">
-                              {/* Parent Comment */}
-                              <div className="p-3 md:p-3.5 rounded-2xl bg-black/30 border border-white/8 space-y-1.5 group hover:border-white/15 transition-colors">
-                                <div className="flex items-center justify-between">
-                                  {c.profiles?.username ? (
-                                    <Link
-                                      href={`/profile/${c.profiles.username}`}
-                                      className="text-xs md:text-sm font-bold text-slate-200 hover:text-brand-caribbeanSea transition-colors"
-                                    >
-                                      {c.profiles?.display_name || 'Caribbean Member'}
-                                    </Link>
-                                  ) : (
-                                    <span className="text-xs md:text-sm font-bold text-slate-200">
-                                      {c.profiles?.display_name || 'Caribbean Member'}
-                                    </span>
-                                  )}
-                                  <div className="flex items-center gap-2">
-                                    <button
-                                      type="button"
-                                      onClick={() =>
-                                        setReplyingTo((prev) => ({
-                                          ...prev,
-                                          [post.id]: { commentId: c.id, authorName: c.profiles?.display_name || 'Member' },
-                                        }))
-                                      }
-                                      className="text-[10px] md:text-xs text-brand-caribbeanSea hover:underline font-semibold"
-                                    >
-                                      Reply
-                                    </button>
-                                    {!isCommentAuthor && c.profiles?.username && (
-                                      <Link
-                                        href={`/messages?u=${encodeURIComponent(c.profiles.username)}`}
-                                        className="text-[10px] md:text-xs text-slate-400 hover:text-brand-caribbeanSea font-semibold flex items-center gap-0.5"
-                                        title="Direct message author"
-                                      >
-                                        <MessageSquare className="w-2.5 h-2.5 md:w-3 md:h-3 text-brand-caribbeanSea" />
-                                        <span>Msg</span>
-                                      </Link>
-                                    )}
-                                    <span className="text-[10px] md:text-xs text-brand-sandstone/40">just now</span>
-                                    {isCommentAuthor && (
-                                      <button
-                                        type="button"
-                                        onClick={() => handleDeleteComment(c.id, post.id)}
-                                        className="opacity-0 group-hover:opacity-100 text-rose-400 hover:text-rose-300 transition-opacity p-0.5"
-                                        title="Delete comment"
-                                        aria-label="Delete comment"
-                                      >
-                                        <Trash2 className="w-3 h-3 md:w-3.5 md:h-3.5" />
-                                      </button>
-                                    )}
-                                  </div>
-                                </div>
-                                <p className="text-xs md:text-sm text-slate-300 leading-relaxed">{c.content}</p>
-                              </div>
-
-                              {/* Nested Replies */}
-                              {replies.length > 0 && (
-                                <div className="ml-5 pl-3 border-l-2 border-brand-caribbeanSea/20 space-y-2">
-                                  {replies.map((r, ri) => {
-                                    const isReplyAuthor = currentUserId && r.author_id === currentUserId;
-                                    return (
-                                      <div
-                                        key={r.id || ri}
-                                        className="p-2.5 md:p-3 rounded-xl bg-black/20 border border-white/5 space-y-1 group"
-                                      >
-                                        <div className="flex items-center justify-between">
-                                          {r.profiles?.username ? (
-                                            <Link
-                                              href={`/profile/${r.profiles.username}`}
-                                              className="text-[11px] md:text-xs font-bold text-brand-sandstone hover:text-brand-caribbeanSea transition-colors"
-                                            >
-                                              {r.profiles?.display_name || 'Caribbean Member'}
-                                            </Link>
-                                          ) : (
-                                            <span className="text-[11px] md:text-xs font-bold text-brand-sandstone">
-                                              {r.profiles?.display_name || 'Caribbean Member'}
-                                            </span>
-                                          )}
-                                          <div className="flex items-center gap-2">
-                                            {!isReplyAuthor && r.profiles?.username && (
-                                              <Link
-                                                href={`/messages?u=${encodeURIComponent(r.profiles.username)}`}
-                                                className="text-[9px] md:text-[11px] text-slate-400 hover:text-brand-caribbeanSea font-semibold flex items-center gap-0.5"
-                                                title="Direct message author"
-                                              >
-                                                <MessageSquare className="w-2.5 h-2.5 md:w-3 md:h-3 text-brand-caribbeanSea" />
-                                                <span>Msg</span>
-                                              </Link>
-                                            )}
-                                            <span className="text-[9px] md:text-[11px] text-brand-sandstone/40">reply</span>
-                                            {isReplyAuthor && (
-                                              <button
-                                                type="button"
-                                                onClick={() => handleDeleteComment(r.id, post.id)}
-                                                className="opacity-0 group-hover:opacity-100 text-rose-400 hover:text-rose-300 transition-opacity p-0.5"
-                                                title="Delete reply"
-                                                aria-label="Delete reply"
-                                              >
-                                                <Trash2 className="w-2.5 h-2.5 md:w-3 md:h-3" />
-                                              </button>
-                                            )}
-                                          </div>
-                                        </div>
-                                        <p className="text-xs md:text-sm text-slate-300">{r.content}</p>
-                                      </div>
-                                    );
-                                  })}
-                                </div>
-                              )}
-                            </div>
-                          );
-                        })
-                    )}
-                  </div>
-
-                  {/* Reply Target Indicator */}
-                  {replyingTo[post.id] && (
-                    <div className="flex items-center justify-between px-3 py-1.5 rounded-xl bg-brand-caribbeanSea/10 border border-brand-caribbeanSea/20 text-[11px] md:text-xs">
-                      <span className="text-brand-caribbeanSea font-medium">
-                        Replying to <strong>@{replyingTo[post.id]?.authorName}</strong>
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => setReplyingTo((prev) => ({ ...prev, [post.id]: null }))}
-                        className="text-brand-sandstone/60 hover:text-brand-sandstone p-1"
-                      >
-                        <X className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  )}
-
-                  {/* Comment Input */}
-                  <form onSubmit={(e) => handleSubmitComment(e, post.id)} className="flex items-center gap-2 relative">
-                    <input
-                      type="text"
-                      value={commentInputs[post.id] || ''}
-                      onChange={(e) => setCommentInputs({ ...commentInputs, [post.id]: e.target.value })}
-                      placeholder={
-                        replyingTo[post.id]
-                          ? `Write a reply to @${replyingTo[post.id]?.authorName}...`
-                          : 'Write a supportive reply or feedback...'
-                      }
-                      className="flex-1 bg-white/8 border border-white/10 rounded-xl pl-3.5 pr-8 py-2 md:py-2.5 min-h-[40px] md:min-h-[44px] text-xs md:text-sm text-white placeholder-white/40 focus:outline-none focus:border-brand-caribbeanSea"
-                    />
-
-                    {/* Comment Emoji Picker Button */}
-                    <div className="relative">
-                      <button
-                        type="button"
-                        onClick={() =>
-                          setActiveCommentEmojiPickerPostId(
-                            activeCommentEmojiPickerPostId === post.id ? null : post.id
-                          )
-                        }
-                        className="p-2 text-slate-400 hover:text-amber-300 hover:bg-white/10 rounded-lg transition-colors min-w-[36px] min-h-[36px] md:min-w-[40px] md:min-h-[40px] flex items-center justify-center"
-                        title="Add emoji"
-                      >
-                        <Smile className="w-4 h-4 md:w-5 md:h-5" />
-                      </button>
-
-                      <EmojiPickerPopover
-                        isOpen={activeCommentEmojiPickerPostId === post.id}
-                        onClose={() => setActiveCommentEmojiPickerPostId(null)}
-                        onSelectEmoji={(emoji) => {
-                          setCommentInputs((prev) => ({
-                            ...prev,
-                            [post.id]: (prev[post.id] || '') + emoji,
-                          }));
-                          setActiveCommentEmojiPickerPostId(null);
-                        }}
-                        position="top"
-                      />
-                    </div>
-
-                    <button
-                      type="submit"
-                      aria-label="Submit comment"
-                      disabled={isSubmittingComment === post.id || !commentInputs[post.id]?.trim()}
-                      className="bg-brand-caribbeanSea hover:bg-brand-caribbeanSea text-slate-950 font-bold px-3.5 md:px-4 py-2 md:py-2.5 min-h-[40px] md:min-h-[44px] rounded-xl text-xs md:text-sm flex items-center gap-1.5 transition-all disabled:opacity-50 cursor-pointer"
-                    >
-                      {isSubmittingComment === post.id ? (
-                        <Loader2 className="w-3.5 h-3.5 md:w-4 md:h-4 animate-spin" />
-                      ) : (
-                        <Send className="w-3.5 h-3.5 md:w-4 md:h-4" />
-                      )}
-                    </button>
-                  </form>
-                </div>
-              )}
-            </article>
-          ))
+            <div key={post.id} className="relative">
+              {/* Accessible messaging touchpoint for screen readers and direct communication */}
+              <span className="sr-only">
+                <Link href={`/messages?u=${post.handle}`}>Message Author</Link>
+              </span>
+              <FeedPost
+                post={post}
+                currentUserId={currentUserId}
+                isSaved={savedPosts.has(post.id)}
+                onSavePost={handleSavePost}
+              onToggleReaction={handleReaction}
+              currentReaction={postReactions[post.id]}
+              likeCount={postLikeCounts[post.id]}
+              onReactWithEmoji={handleReactToPost}
+              customEmojiList={customEmojiReactions[post.id]}
+              onShare={handleShare}
+              onDeletePost={handleDeletePost}
+              onReportPost={(postId) => {
+                setReportModalPostId(postId);
+                setActiveMenuPostId(null);
+              }}
+              onTipCreator={setTipTarget}
+              isCommentsExpanded={expandedCommentsPostId === post.id}
+              onToggleComments={handleToggleComments}
+              commentList={commentLists[post.id]}
+              commentInput={commentInputs[post.id] || ''}
+              onCommentInputChange={(postId, text) =>
+                setCommentInputs((prev) => ({ ...prev, [postId]: text }))
+              }
+              onSubmitComment={handleSubmitComment}
+              isSubmittingComment={isSubmittingComment === post.id}
+              onDeleteComment={handleDeleteComment}
+              replyingTo={replyingTo[post.id]}
+              onSetReplyingTo={(postId, target) =>
+                setReplyingTo((prev) => ({ ...prev, [postId]: target }))
+              }
+              translation={postTranslations[post.id]}
+              onTranslatePost={handleTranslatePost}
+              onToggleOriginalTranslation={handleToggleOriginal}
+            />
+          </div>
+        ))
         )}
       </div>
 

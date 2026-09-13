@@ -2,19 +2,13 @@ import React, { Suspense } from 'react';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import {
-  Plus,
-  Flame,
-  Globe,
-  Radio,
-  Tv,
-  Mic,
-  Users,
   Sparkles,
-  Play,
-  Calendar,
-  CheckCircle,
 } from 'lucide-react';
-import { createSupabaseServerClient, getCurrentUser } from '../lib/supabase/server';
+import {
+  createSupabaseServerClient,
+  getCurrentUser,
+  checkIsOfficialOperator,
+} from '../lib/supabase/server';
 import { isFeedMode, type FeedMode } from '@caribbean/social';
 import { decodeCursor, encodeCursor } from '@caribbean/database';
 import UniversalComposer from '../components/universal-composer';
@@ -22,6 +16,12 @@ import FeedStream, { type FeedPostData } from '../components/feed-stream';
 import TukubiLiveSidebar from '../components/caribbean-now-sidebar';
 import RightRail from '../components/right-rail';
 import { buildRankedFeed } from '../lib/feed/ranking';
+import MomentsCinemaRail from '../components/moments/moments-cinema-rail';
+import FeedNavigation from '../components/feed/feed-navigation';
+import LiveBroadcastDiscovery from '../components/feed/live-broadcast-discovery';
+import { fetchActiveStoriesAction } from '../lib/social/actions';
+import { ErrorBoundary } from '../components/error-boundary';
+import FeedSkeleton from '../components/ui/skeletons/feed-skeleton';
 
 export const dynamic = 'force-dynamic';
 
@@ -34,12 +34,6 @@ function relativeTime(iso: string): string {
   if (hours < 24) return `${hours}h ago`;
   return `${Math.floor(hours / 24)}d ago`;
 }
-
-import MomentsCinemaRail from '../components/moments/moments-cinema-rail';
-import OfficialAccountHeroCard from '../components/official/official-account-hero-card';
-import { fetchActiveStoriesAction } from '../lib/social/actions';
-import { ErrorBoundary } from '../components/error-boundary';
-import FeedSkeleton from '../components/ui/skeletons/feed-skeleton';
 
 export default async function HomePage(props: { searchParams?: Promise<{ mode?: string, cursor?: string }> }) {
   const searchParams = await props.searchParams;
@@ -58,10 +52,12 @@ export default async function HomePage(props: { searchParams?: Promise<{ mode?: 
   let livePosts: FeedPostData[] = [];
   let officialProfile: any = null;
   let officialCounts: any = null;
+  let activeLiveStream: any = null;
+  let isOfficialOperator = false;
   let nextCursor: string | undefined = undefined;
 
   if (supabase) {
-    const [postsRes, liveRes, officialProfileRes] = await Promise.all([
+    const [postsRes, liveRes, officialProfileRes, operatorStatus] = await Promise.all([
       buildRankedFeed(user.id, mode, supabase, cursor),
       supabase
         .from('livestreams')
@@ -75,7 +71,12 @@ export default async function HomePage(props: { searchParams?: Promise<{ mode?: 
         .select('id, display_name, username, avatar_url, bio, is_verified')
         .ilike('username', 'tukubi')
         .maybeSingle(),
+      checkIsOfficialOperator(user.id),
     ]);
+
+    isOfficialOperator = operatorStatus;
+    activeLiveStream = liveRes.data;
+    officialProfile = officialProfileRes.data;
 
     let data = postsRes.data;
     if (!data && postsRes.error) {
@@ -93,9 +94,6 @@ export default async function HomePage(props: { searchParams?: Promise<{ mode?: 
       const lastPost = data[data.length - 1];
       nextCursor = encodeCursor({ sortKey: lastPost.created_at, id: lastPost.id });
     }
-
-    const activeLiveStream = liveRes.data;
-    officialProfile = officialProfileRes.data;
 
     if (officialProfile?.id) {
       const { data: counts } = await supabase
@@ -181,9 +179,9 @@ export default async function HomePage(props: { searchParams?: Promise<{ mode?: 
 
   return (
     <div className="flex flex-col lg:flex-row gap-6 xl:gap-8 items-start w-full">
-      {/* Main Stream — Fluid width, fills available workspace */}
-      <div className="flex-1 min-w-0 space-y-6 w-full max-w-none">
-        {/* Caribbean Moments Cinema Rail */}
+      {/* Main Stream — Fluid width, bounded for optimal desktop readability (65-75 chars/line) */}
+      <div className="flex-1 min-w-0 space-y-6 w-full max-w-[740px] xl:max-w-[760px] mx-auto lg:mx-0">
+        {/* 1. Caribbean Moments Cinema Rail */}
         <ErrorBoundary sectionName="Moments Cinema Rail">
           <MomentsCinemaRail
             initialStories={liveStories}
@@ -193,25 +191,12 @@ export default async function HomePage(props: { searchParams?: Promise<{ mode?: 
           />
         </ErrorBoundary>
 
-        {/* ────────────────────────────────────────────────────────── */}
-        {/* OFFICIAL TUKUBI PLATFORM IDENTITY SPOTLIGHT HERO CARD     */}
-        {/* ────────────────────────────────────────────────────────── */}
-        <ErrorBoundary sectionName="Official Spotlight">
-          <OfficialAccountHeroCard
-            displayName={officialProfile?.display_name || 'TUKUBI'}
-            username={officialProfile?.username || 'tukubi'}
-            avatarUrl={officialProfile?.avatar_url}
-            bio={officialProfile?.bio}
-            postsCount={officialCounts?.posts_count ?? 0}
-            followersCount={officialCounts?.followers_count ?? 0}
-            followingCount={officialCounts?.following_count ?? 0}
-            isOperator={user?.username?.toLowerCase() === 'tukubi' || user?.isOfficial}
-          />
+        {/* 2. Feed Mode Navigation Tabs (For You / Following / Caribbean / Communities) */}
+        <ErrorBoundary sectionName="Feed Navigation">
+          <FeedNavigation currentMode={mode} />
         </ErrorBoundary>
 
-        {/* ────────────────────────────────────────────────────────── */}
-        {/* P0: PRIMARY UNIVERSAL INLINE COMPOSER                      */}
-        {/* ────────────────────────────────────────────────────────── */}
+        {/* 3. Primary Universal Inline Composer */}
         <section aria-label="Create Post" className="space-y-4">
           <ErrorBoundary sectionName="Composer">
             <UniversalComposer
@@ -221,43 +206,12 @@ export default async function HomePage(props: { searchParams?: Promise<{ mode?: 
           </ErrorBoundary>
         </section>
 
-        {/* Live Audio / Video Quick Ingest Banner */}
-        <section className="glass rounded-2xl p-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <span className="w-3 h-3 rounded-full bg-red-500 animate-ping" />
-            <div>
-              <div className="flex items-center gap-2">
-                <h4 className="font-extrabold text-xs text-brand-sandstone uppercase tracking-wider">
-                  Caribbean Live Broadcasts
-                </h4>
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-red-500/20 text-red-300 border border-red-500/30">
-                  REALTIME
-                </span>
-              </div>
-              <p className="text-[11px] text-brand-sandstone/60">
-                Broadcast live fete streams, dub sessions, or cultural talk shows across the diaspora.
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <Link
-              href="/live/broadcast"
-              className="hidden sm:inline-flex bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white font-extrabold px-3.5 py-2 rounded-2xl text-xs items-center gap-1.5 transition-all shadow-md shadow-red-600/20"
-            >
-              🔴 Go Live
-            </Link>
-            <Link
-              href="/live"
-              className="bg-red-500/20 hover:bg-red-500 text-red-300 hover:text-white border border-red-500/30 font-extrabold px-4 py-2 rounded-2xl text-xs flex items-center gap-1.5 transition-all shadow-md"
-            >
-              <Play className="w-3.5 h-3.5 fill-current" /> Watch Live
-            </Link>
-          </div>
-        </section>
+        {/* 4. Live Broadcast Discovery (Intelligent: Active Stream Highlight or Clean Strip) */}
+        <ErrorBoundary sectionName="Live Broadcasts">
+          <LiveBroadcastDiscovery activeStream={activeLiveStream} />
+        </ErrorBoundary>
 
-        {/* ────────────────────────────────────────────────────────── */}
-        {/* INTERACTIVE FEED STREAM WITH LIVE LIKES, COMMENTS & TABS   */}
-        {/* ────────────────────────────────────────────────────────── */}
+        {/* 5. Caribbean Feed Stream */}
         <section aria-label="Caribbean Feed Stream">
           <ErrorBoundary sectionName="Feed Stream">
             <Suspense fallback={<FeedSkeleton />}>
@@ -270,7 +224,11 @@ export default async function HomePage(props: { searchParams?: Promise<{ mode?: 
       {/* Right Column: TUKUBI Live & Diaspora Pulse */}
       <RightRail ariaLabel="TUKUBI Live & Diaspora Pulse">
         <ErrorBoundary sectionName="Caribbean Sidebar">
-          <TukubiLiveSidebar />
+          <TukubiLiveSidebar
+            officialProfile={officialProfile}
+            officialCounts={officialCounts}
+            isOfficialOperator={isOfficialOperator}
+          />
         </ErrorBoundary>
       </RightRail>
     </div>
