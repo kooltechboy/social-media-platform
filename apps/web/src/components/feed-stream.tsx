@@ -27,6 +27,12 @@ import {
   Pin,
   Smile,
   MessageSquare,
+  Linkedin,
+  QrCode,
+  Code,
+  Mail,
+  Smartphone,
+  Check,
 } from 'lucide-react';
 import {
   toggleLikeAction,
@@ -462,6 +468,8 @@ export default function FeedStream({
 
   const [replyingTo, setReplyingTo] = useState<{ [postId: string]: { commentId: string; authorName: string } | null }>({});
   const [shareModalPost, setShareModalPost] = useState<FeedPostData | null>(null);
+  const [isCopied, setIsCopied] = useState(false);
+  const [showQrCode, setShowQrCode] = useState(false);
 
   async function handleSubmitComment(e: React.FormEvent, postId: string) {
     e.preventDefault();
@@ -535,24 +543,52 @@ export default function FeedStream({
   }
 
   function handleShare(post: FeedPostData) {
+    setIsCopied(false);
+    setShowQrCode(false);
     setShareModalPost(post);
   }
 
   async function handleExecuteShare(
     post: FeedPostData,
-    shareType: 'copy_link' | 'native' | 'whatsapp' | 'twitter' | 'facebook' | 'repost'
+    shareType:
+      | 'copy_link'
+      | 'native'
+      | 'whatsapp'
+      | 'twitter'
+      | 'facebook'
+      | 'linkedin'
+      | 'telegram'
+      | 'reddit'
+      | 'threads'
+      | 'email'
+      | 'sms'
+      | 'embed'
+      | 'repost'
   ) {
     const postUrl = typeof window !== 'undefined' ? `${window.location.origin}/#${post.id}` : '';
     const shareText = `Check out this post by ${post.author} on Tukubi: "${post.content.slice(0, 100)}..."`;
 
+    let shouldCloseModal = true;
+
     if (shareType === 'copy_link') {
-      if (navigator.clipboard) {
+      if (typeof navigator !== 'undefined' && navigator.clipboard) {
         await navigator.clipboard.writeText(postUrl);
+        setIsCopied(true);
+        setTimeout(() => setIsCopied(false), 2500);
         setShareToast('Post link copied to clipboard!');
         setTimeout(() => setShareToast(null), 3000);
       }
+      shouldCloseModal = false;
+    } else if (shareType === 'embed') {
+      const embedCode = `<blockquote class="tukubi-post-embed" data-post-id="${post.id}"><p lang="en">${post.content}</p>&mdash; ${post.author} (@${post.handle}) <a href="${postUrl}">View on Tukubi</a></blockquote>`;
+      if (typeof navigator !== 'undefined' && navigator.clipboard) {
+        await navigator.clipboard.writeText(embedCode);
+        setShareToast('Post embed code copied to clipboard!');
+        setTimeout(() => setShareToast(null), 3000);
+      }
+      shouldCloseModal = false;
     } else if (shareType === 'native') {
-      if (navigator.share) {
+      if (typeof navigator !== 'undefined' && navigator.share) {
         try {
           await navigator.share({
             title: `Tukubi — ${post.author}'s post`,
@@ -569,12 +605,26 @@ export default function FeedStream({
       window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(postUrl)}`, '_blank');
     } else if (shareType === 'facebook') {
       window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(postUrl)}`, '_blank');
+    } else if (shareType === 'linkedin') {
+      window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(postUrl)}`, '_blank');
+    } else if (shareType === 'telegram') {
+      window.open(`https://t.me/share/url?url=${encodeURIComponent(postUrl)}&text=${encodeURIComponent(shareText)}`, '_blank');
+    } else if (shareType === 'reddit') {
+      window.open(`https://reddit.com/submit?url=${encodeURIComponent(postUrl)}&title=${encodeURIComponent(shareText)}`, '_blank');
+    } else if (shareType === 'threads') {
+      window.open(`https://threads.net/intent/post?text=${encodeURIComponent(`${shareText} ${postUrl}`)}`, '_blank');
+    } else if (shareType === 'email') {
+      window.open(`mailto:?subject=${encodeURIComponent(`Post by ${post.author} on Tukubi`)}&body=${encodeURIComponent(`${shareText}\n\n${postUrl}`)}`, '_blank');
+    } else if (shareType === 'sms') {
+      window.open(`sms:?&body=${encodeURIComponent(`${shareText} ${postUrl}`)}`, '_blank');
     } else if (shareType === 'repost') {
       setShareToast('Post shared to TUKUBI!');
       setTimeout(() => setShareToast(null), 3000);
     }
 
-    setShareModalPost(null);
+    if (shouldCloseModal) {
+      setShareModalPost(null);
+    }
 
     // Increment share counter in database & UI
     setPosts((prev) =>
@@ -801,37 +851,61 @@ export default function FeedStream({
       {/* Share Modal */}
       {shareModalPost && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fadeIn">
-          <div className="bg-brand-dusk border border-slate-800 rounded-3xl p-6 max-w-md w-full shadow-2xl space-y-4 relative">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-              <h3 className="font-black text-sm text-brand-sandstone flex items-center gap-2">
+          <div className="bg-brand-dusk border border-slate-800 rounded-3xl p-5 sm:p-6 max-w-lg w-full shadow-2xl space-y-4 relative max-h-[92vh] overflow-y-auto scrollbar-thin">
+            <div className="flex items-center justify-between border-b border-slate-800/80 pb-3">
+              <h3 className="font-black text-sm sm:text-base text-brand-sandstone flex items-center gap-2">
                 <Share2 className="w-4 h-4 text-brand-sunriseCoral" /> Share Post
               </h3>
               <button
                 type="button"
-                onClick={() => setShareModalPost(null)}
-                className="p-1.5 rounded-full text-brand-sandstone/60 hover:text-brand-sandstone hover:bg-slate-800"
+                onClick={() => {
+                  setShareModalPost(null);
+                  setIsCopied(false);
+                  setShowQrCode(false);
+                }}
+                className="p-1.5 rounded-full text-brand-sandstone/60 hover:text-brand-sandstone hover:bg-slate-800 transition-colors"
+                aria-label="Close share dialog"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
-            <div className="space-y-3 py-1">
+            <div className="space-y-3.5 py-1">
               {/* Copy Link Option */}
               <button
                 type="button"
                 onClick={() => handleExecuteShare(shareModalPost, 'copy_link')}
-                className="w-full flex items-center justify-between p-3 rounded-2xl bg-brand-twilight/60 border border-slate-800 hover:border-brand-caribbeanSea/40 hover:bg-brand-twilight transition-colors text-left group"
+                className="w-full flex items-center justify-between p-3 rounded-2xl bg-brand-twilight/60 border border-slate-800 hover:border-brand-caribbeanSea/40 hover:bg-brand-twilight transition-all text-left group shadow-sm"
               >
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-xl bg-brand-caribbeanSea/10 text-brand-caribbeanSea flex items-center justify-center">
+                <div className="flex items-center gap-3 min-w-0 pr-2">
+                  <div className="w-9 h-9 rounded-xl bg-brand-caribbeanSea/10 text-brand-caribbeanSea flex items-center justify-center shrink-0">
                     <Link2 className="w-4 h-4" />
                   </div>
-                  <div>
-                    <p className="text-xs font-bold text-slate-200 group-hover:text-brand-sandstone">Copy Link to Post</p>
-                    <p className="text-[10px] text-brand-sandstone/40">Direct link to share anywhere</p>
+                  <div className="min-w-0">
+                    <p className="text-xs font-bold text-slate-200 group-hover:text-brand-sandstone truncate">
+                      Copy Link to Post
+                    </p>
+                    <p className="text-[10px] text-brand-sandstone/40 truncate">
+                      Direct link to share anywhere
+                    </p>
                   </div>
                 </div>
-                <span className="text-[10px] font-bold px-2 py-1 rounded bg-slate-800 text-slate-300">Copy</span>
+                <span
+                  className={`text-[10px] font-bold px-2.5 py-1 rounded-lg transition-all shrink-0 flex items-center gap-1 ${
+                    isCopied
+                      ? 'bg-emerald-500 text-slate-950 font-black'
+                      : 'bg-slate-800 text-slate-300 group-hover:bg-slate-700'
+                  }`}
+                >
+                  {isCopied ? (
+                    <>
+                      <Check className="w-3 h-3" />
+                      <span>Copied!</span>
+                    </>
+                  ) : (
+                    'Copy'
+                  )}
+                </span>
               </button>
 
               {/* Native Mobile Share if available */}
@@ -839,56 +913,172 @@ export default function FeedStream({
                 <button
                   type="button"
                   onClick={() => handleExecuteShare(shareModalPost, 'native')}
-                  className="w-full flex items-center justify-between p-3 rounded-2xl bg-brand-twilight/60 border border-slate-800 hover:border-brand-sunriseCoral/40 hover:bg-brand-twilight transition-colors text-left group"
+                  className="w-full flex items-center justify-between p-3 rounded-2xl bg-brand-twilight/60 border border-slate-800 hover:border-brand-sunriseCoral/40 hover:bg-brand-twilight transition-all text-left group shadow-sm"
                 >
-                  <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-xl bg-brand-sunriseCoral/10 text-brand-sunriseCoral flex items-center justify-center">
-                      <Share2 className="w-4 h-4" />
+                  <div className="flex items-center gap-3 min-w-0 pr-2">
+                    <div className="w-9 h-9 rounded-xl bg-brand-sunriseCoral/10 text-brand-sunriseCoral flex items-center justify-center shrink-0">
+                      <Smartphone className="w-4 h-4" />
                     </div>
-                    <div>
-                      <p className="text-xs font-bold text-slate-200 group-hover:text-brand-sandstone">Device Share Menu</p>
-                      <p className="text-[10px] text-brand-sandstone/40">AirDrop, SMS, Nearby Share &amp; apps</p>
+                    <div className="min-w-0">
+                      <p className="text-xs font-bold text-slate-200 group-hover:text-brand-sandstone truncate">
+                        Device Share Menu
+                      </p>
+                      <p className="text-[10px] text-brand-sandstone/40 truncate">
+                        AirDrop, Nearby Share, Messages &amp; apps
+                      </p>
                     </div>
                   </div>
-                  <span className="text-[10px] font-bold px-2 py-1 rounded bg-slate-800 text-slate-300">Open</span>
+                  <span className="text-[10px] font-bold px-2.5 py-1 rounded-lg bg-slate-800 text-slate-300 group-hover:bg-slate-700 shrink-0">
+                    Open
+                  </span>
                 </button>
               )}
 
               {/* Social Channels Grid */}
-              <div className="grid grid-cols-3 gap-2 pt-2">
-                <button
-                  type="button"
-                  onClick={() => handleExecuteShare(shareModalPost, 'whatsapp')}
-                  className="p-3 rounded-2xl bg-emerald-950/30 border border-emerald-800/30 hover:border-emerald-500/50 hover:bg-emerald-900/40 text-center space-y-1 transition-all"
-                >
-                  <div className="text-lg">💬</div>
-                  <p className="text-[11px] font-bold text-emerald-300">WhatsApp</p>
-                </button>
+              <div className="space-y-1.5">
+                <span className="text-[10px] font-black uppercase tracking-wider text-brand-sandstone/50 px-1">
+                  Share via Social Channels
+                </span>
+                <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                  {/* WhatsApp */}
+                  <button
+                    type="button"
+                    onClick={() => handleExecuteShare(shareModalPost, 'whatsapp')}
+                    className="p-2.5 rounded-2xl bg-emerald-950/30 border border-emerald-800/30 hover:border-emerald-500/50 hover:bg-emerald-900/40 text-center space-y-1 transition-all group"
+                  >
+                    <div className="text-lg group-hover:scale-110 transition-transform">💬</div>
+                    <p className="text-[11px] font-bold text-emerald-300 truncate">WhatsApp</p>
+                  </button>
 
-                <button
-                  type="button"
-                  onClick={() => handleExecuteShare(shareModalPost, 'twitter')}
-                  className="p-3 rounded-2xl bg-sky-950/30 border border-sky-800/30 hover:border-sky-500/50 hover:bg-sky-900/40 text-center space-y-1 transition-all"
-                >
-                  <div className="text-lg">𝕏</div>
-                  <p className="text-[11px] font-bold text-sky-300">X / Twitter</p>
-                </button>
+                  {/* X / Twitter */}
+                  <button
+                    type="button"
+                    onClick={() => handleExecuteShare(shareModalPost, 'twitter')}
+                    className="p-2.5 rounded-2xl bg-sky-950/30 border border-sky-800/30 hover:border-sky-500/50 hover:bg-sky-900/40 text-center space-y-1 transition-all group"
+                  >
+                    <div className="text-lg group-hover:scale-110 transition-transform">𝕏</div>
+                    <p className="text-[11px] font-bold text-sky-300 truncate">X / Twitter</p>
+                  </button>
 
+                  {/* Facebook */}
+                  <button
+                    type="button"
+                    onClick={() => handleExecuteShare(shareModalPost, 'facebook')}
+                    className="p-2.5 rounded-2xl bg-blue-950/30 border border-blue-800/30 hover:border-blue-500/50 hover:bg-blue-900/40 text-center space-y-1 transition-all group"
+                  >
+                    <div className="text-lg group-hover:scale-110 transition-transform">👥</div>
+                    <p className="text-[11px] font-bold text-blue-300 truncate">Facebook</p>
+                  </button>
+
+                  {/* LinkedIn */}
+                  <button
+                    type="button"
+                    onClick={() => handleExecuteShare(shareModalPost, 'linkedin')}
+                    className="p-2.5 rounded-2xl bg-indigo-950/30 border border-indigo-800/30 hover:border-indigo-500/50 hover:bg-indigo-900/40 text-center space-y-1 transition-all group"
+                  >
+                    <div className="text-lg group-hover:scale-110 transition-transform">💼</div>
+                    <p className="text-[11px] font-bold text-indigo-300 truncate">LinkedIn</p>
+                  </button>
+
+                  {/* Telegram */}
+                  <button
+                    type="button"
+                    onClick={() => handleExecuteShare(shareModalPost, 'telegram')}
+                    className="p-2.5 rounded-2xl bg-cyan-950/30 border border-cyan-800/30 hover:border-cyan-500/50 hover:bg-cyan-900/40 text-center space-y-1 transition-all group"
+                  >
+                    <div className="text-lg group-hover:scale-110 transition-transform">✈️</div>
+                    <p className="text-[11px] font-bold text-cyan-300 truncate">Telegram</p>
+                  </button>
+
+                  {/* Reddit */}
+                  <button
+                    type="button"
+                    onClick={() => handleExecuteShare(shareModalPost, 'reddit')}
+                    className="p-2.5 rounded-2xl bg-orange-950/30 border border-orange-800/30 hover:border-orange-500/50 hover:bg-orange-900/40 text-center space-y-1 transition-all group"
+                  >
+                    <div className="text-lg group-hover:scale-110 transition-transform">🤖</div>
+                    <p className="text-[11px] font-bold text-orange-300 truncate">Reddit</p>
+                  </button>
+
+                  {/* Threads */}
+                  <button
+                    type="button"
+                    onClick={() => handleExecuteShare(shareModalPost, 'threads')}
+                    className="p-2.5 rounded-2xl bg-purple-950/30 border border-purple-800/30 hover:border-purple-500/50 hover:bg-purple-900/40 text-center space-y-1 transition-all group"
+                  >
+                    <div className="text-lg group-hover:scale-110 transition-transform">🧵</div>
+                    <p className="text-[11px] font-bold text-purple-300 truncate">Threads</p>
+                  </button>
+
+                  {/* Email */}
+                  <button
+                    type="button"
+                    onClick={() => handleExecuteShare(shareModalPost, 'email')}
+                    className="p-2.5 rounded-2xl bg-rose-950/30 border border-rose-800/30 hover:border-rose-500/50 hover:bg-rose-900/40 text-center space-y-1 transition-all group"
+                  >
+                    <div className="text-lg group-hover:scale-110 transition-transform">✉️</div>
+                    <p className="text-[11px] font-bold text-rose-300 truncate">Email</p>
+                  </button>
+
+                  {/* SMS / Messages */}
+                  <button
+                    type="button"
+                    onClick={() => handleExecuteShare(shareModalPost, 'sms')}
+                    className="p-2.5 rounded-2xl bg-teal-950/30 border border-teal-800/30 hover:border-teal-500/50 hover:bg-teal-900/40 text-center space-y-1 transition-all group"
+                  >
+                    <div className="text-lg group-hover:scale-110 transition-transform">📱</div>
+                    <p className="text-[11px] font-bold text-teal-300 truncate">SMS / Text</p>
+                  </button>
+                </div>
+              </div>
+
+              {/* Utility Actions: Embed Post & QR Code Toggle */}
+              <div className="grid grid-cols-2 gap-2 pt-1">
                 <button
                   type="button"
-                  onClick={() => handleExecuteShare(shareModalPost, 'facebook')}
-                  className="p-3 rounded-2xl bg-blue-950/30 border border-blue-800/30 hover:border-blue-500/50 hover:bg-blue-900/40 text-center space-y-1 transition-all"
+                  onClick={() => handleExecuteShare(shareModalPost, 'embed')}
+                  className="p-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-bold text-slate-200 flex items-center justify-center gap-2 transition-all"
                 >
-                  <div className="text-lg">👥</div>
-                  <p className="text-[11px] font-bold text-blue-300">Facebook</p>
+                  <Code className="w-3.5 h-3.5 text-brand-caribbeanSea" />
+                  <span>Embed Post</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowQrCode(!showQrCode)}
+                  className={`p-2.5 rounded-xl border text-xs font-bold flex items-center justify-center gap-2 transition-all ${
+                    showQrCode
+                      ? 'bg-brand-caribbeanSea/20 border-brand-caribbeanSea text-brand-caribbeanSea'
+                      : 'bg-white/5 hover:bg-white/10 border-white/10 text-slate-200'
+                  }`}
+                >
+                  <QrCode className="w-3.5 h-3.5 text-brand-goldenHour" />
+                  <span>{showQrCode ? 'Hide QR' : 'QR Code'}</span>
                 </button>
               </div>
+
+              {/* QR Code display */}
+              {showQrCode && (
+                <div className="p-4 rounded-2xl bg-[#0B0614] border border-brand-caribbeanSea/30 text-center space-y-2 animate-fadeIn">
+                  <p className="text-xs font-bold text-slate-200">
+                    Scan with phone camera to open on mobile
+                  </p>
+                  <div className="inline-block p-2 bg-white rounded-xl shadow-lg">
+                    <img
+                      src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(
+                        typeof window !== 'undefined' ? `${window.location.origin}/#${shareModalPost.id}` : ''
+                      )}`}
+                      alt="QR Code to Post"
+                      className="w-32 h-32"
+                    />
+                  </div>
+                </div>
+              )}
 
               {/* Internal Repost */}
               <button
                 type="button"
                 onClick={() => handleExecuteShare(shareModalPost, 'repost')}
-                className="w-full flex items-center justify-center gap-2 p-3 rounded-2xl bg-gradient-to-r from-brand-caribbeanSea/20 to-brand-sunriseCoral/20 border border-brand-caribbeanSea/30 hover:bg-brand-caribbeanSea/30 text-brand-sandstone font-extrabold text-xs transition-colors mt-2"
+                className="w-full flex items-center justify-center gap-2 p-3 rounded-2xl bg-gradient-to-r from-brand-caribbeanSea/20 via-brand-sunriseCoral/20 to-brand-goldenHour/20 border border-brand-caribbeanSea/30 hover:border-brand-caribbeanSea/60 hover:bg-brand-caribbeanSea/30 text-white font-black text-xs sm:text-sm transition-all shadow-md active:scale-98"
               >
                 <Repeat className="w-4 h-4 text-brand-caribbeanSea" /> Repost to My Caribbean Feed
               </button>

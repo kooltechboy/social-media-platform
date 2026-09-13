@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useMemo, useTransition } from 'react';
 import { Search, MessageSquare, BadgeCheck, Users, Compass, ArrowRight, Loader2, X, Sparkles, MessageCircle, UserCheck, UserPlus } from 'lucide-react';
 import Link from 'next/link';
-import { createBrowserClient } from '@supabase/ssr';
+import { createSupabaseBrowserClient } from '../lib/supabase/browser';
 import UserAvatar from './user-avatar';
 import { followUserAction, unfollowUserAction } from '../lib/social/relationship-actions';
 
@@ -17,61 +17,68 @@ interface FriendMember {
   lastSeen?: string;
 }
 
-export default function OnlineFriendsWidget() {
+export interface OnlineFriendsWidgetProps {
+  initialUserId?: string | null;
+}
+
+export default function OnlineFriendsWidget({ initialUserId }: OnlineFriendsWidgetProps = {}) {
   const [search, setSearch] = useState('');
   const [activeFilter, setActiveFilter] = useState<'all' | 'online'>('all');
   const [friends, setFriends] = useState<FriendMember[]>([]);
   const [onlineUserIds, setOnlineUserIds] = useState<Set<string>>(new Set());
-  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(initialUserId || null);
   const [followingUserIds, setFollowingUserIds] = useState<Set<string>>(new Set());
   const [followLoadingId, setFollowLoadingId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [, startTransition] = useTransition();
 
-  const supabase = useMemo(
-    () =>
-      createBrowserClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL || '',
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
-      ),
-    []
-  );
+  const supabase = useMemo(() => createSupabaseBrowserClient(), []);
 
   // 1. Initial profile fetch and Realtime Presence setup
   useEffect(() => {
     let channel: any;
 
     async function loadMembersAndPresence() {
+      if (!supabase) {
+        setLoading(false);
+        return;
+      }
+
       try {
         setLoading(true);
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user) {
-          setCurrentUserId(user.id);
-          const { data: followsData } = await supabase
-            .from('follows')
-            .select('following_id')
-            .eq('follower_id', user.id);
-          if (followsData) {
-            setFollowingUserIds(new Set(followsData.map((f: any) => f.following_id)));
-          }
+        let activeUserId = initialUserId;
+        if (!activeUserId) {
+          const { data: authData } = await supabase.auth.getUser();
+          activeUserId = authData?.user?.id || null;
         }
 
-        let query = supabase
+        if (activeUserId) {
+          setCurrentUserId(activeUserId);
+        }
+
+        const followsPromise = activeUserId
+          ? supabase.from('follows').select('following_id').eq('follower_id', activeUserId)
+          : Promise.resolve({ data: null });
+
+        let profilesQuery = supabase
           .from('profiles')
           .select('id, display_name, username, is_verified, avatar_url, updated_at')
           .eq('is_private', false)
           .order('updated_at', { ascending: false })
           .limit(16);
 
-        if (user) {
-          query = query.neq('id', user.id);
+        if (activeUserId) {
+          profilesQuery = profilesQuery.neq('id', activeUserId);
         }
 
-        const { data, error } = await query;
-        if (error) throw error;
+        const [followsRes, profilesRes] = await Promise.all([followsPromise, profilesQuery]);
 
-        if (data) {
-          const mapped: FriendMember[] = data.map((p) => ({
+        if (followsRes?.data) {
+          setFollowingUserIds(new Set(followsRes.data.map((f: any) => f.following_id)));
+        }
+
+        if (profilesRes?.data) {
+          const mapped: FriendMember[] = profilesRes.data.map((p) => ({
             id: p.id,
             name: p.display_name || p.username || 'Caribbean Member',
             username: p.username || p.id.slice(0, 8),
@@ -84,7 +91,7 @@ export default function OnlineFriendsWidget() {
 
         // 2. Track Realtime Presence
         channel = supabase.channel('tukubi:presence', {
-          config: { presence: { key: user?.id || `anon-${Math.random().toString(36).slice(2, 7)}` } },
+          config: { presence: { key: activeUserId || `anon-${Math.random().toString(36).slice(2, 7)}` } },
         });
 
         channel
@@ -99,9 +106,9 @@ export default function OnlineFriendsWidget() {
             setOnlineUserIds(onlineIds);
           })
           .subscribe(async (status: string) => {
-            if (status === 'SUBSCRIBED' && user) {
+            if (status === 'SUBSCRIBED' && activeUserId) {
               await channel.track({
-                userId: user.id,
+                userId: activeUserId,
                 onlineAt: new Date().toISOString(),
               });
             }
@@ -116,7 +123,7 @@ export default function OnlineFriendsWidget() {
     loadMembersAndPresence();
 
     return () => {
-      if (channel) {
+      if (channel && supabase) {
         supabase.removeChannel(channel);
       }
     };
@@ -124,11 +131,12 @@ export default function OnlineFriendsWidget() {
 
   // 3. Debounced live database search
   useEffect(() => {
-    if (!search.trim()) return;
+    if (!search.trim() || !supabase) return;
 
     const timer = setTimeout(async () => {
       startTransition(async () => {
         try {
+          if (!supabase) return;
           const { data: { user } } = await supabase.auth.getUser();
           const cleanQuery = search.trim();
           let query = supabase

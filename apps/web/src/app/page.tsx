@@ -22,6 +22,7 @@ import LiveBroadcastDiscovery from '../components/feed/live-broadcast-discovery'
 import { fetchActiveStoriesAction } from '../lib/social/actions';
 import { ErrorBoundary } from '../components/error-boundary';
 import FeedSkeleton from '../components/ui/skeletons/feed-skeleton';
+import SidebarSkeleton from '../components/ui/skeletons/sidebar-skeleton';
 
 export const dynamic = 'force-dynamic';
 
@@ -57,12 +58,14 @@ export default async function HomePage(props: { searchParams?: Promise<{ mode?: 
   let nextCursor: string | undefined = undefined;
 
   if (supabase) {
+    const sixHoursAgo = new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString();
     const [postsRes, liveRes, officialProfileRes, operatorStatus] = await Promise.all([
       buildRankedFeed(user.id, mode, supabase, cursor),
       supabase
         .from('livestreams')
         .select('id, title, peak_viewers, profiles(display_name)')
         .eq('state', 'live')
+        .gte('started_at', sixHoursAgo)
         .order('started_at', { ascending: false })
         .limit(1)
         .maybeSingle(),
@@ -224,11 +227,15 @@ export default async function HomePage(props: { searchParams?: Promise<{ mode?: 
       {/* Right Column: TUKUBI Live & Diaspora Pulse */}
       <RightRail ariaLabel="TUKUBI Live & Diaspora Pulse">
         <ErrorBoundary sectionName="Caribbean Sidebar">
-          <TukubiLiveSidebar
-            officialProfile={officialProfile}
-            officialCounts={officialCounts}
-            isOfficialOperator={isOfficialOperator}
-          />
+          <Suspense fallback={<SidebarSkeleton />}>
+            <TukubiLiveSidebar
+              user={user}
+              activeLiveStream={activeLiveStream}
+              officialProfile={officialProfile}
+              officialCounts={officialCounts}
+              isOfficialOperator={isOfficialOperator}
+            />
+          </Suspense>
         </ErrorBoundary>
       </RightRail>
     </div>

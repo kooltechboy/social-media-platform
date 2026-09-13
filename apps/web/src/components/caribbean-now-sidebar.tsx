@@ -35,13 +35,15 @@ function formatEventDate(iso: string): string {
 }
 
 export interface TukubiLiveSidebarProps {
+  user?: any;
+  activeLiveStream?: any;
   officialProfile?: any;
   officialCounts?: any;
   isOfficialOperator?: boolean;
 }
 
 export default async function TukubiLiveSidebar(props?: TukubiLiveSidebarProps) {
-  const user = await getCurrentUser();
+  const user = props?.user !== undefined ? props.user : await getCurrentUser();
   const supabase = await createSupabaseServerClient();
 
   let officialProfile = props?.officialProfile;
@@ -82,6 +84,8 @@ export default async function TukubiLiveSidebar(props?: TukubiLiveSidebarProps) 
       }
     }
 
+    const sixHoursAgo = new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString();
+
     const [eventsRes, walletAccountRes, liveStreamsRes, storiesRes, postsRes] =
       await Promise.all([
         supabase
@@ -98,14 +102,17 @@ export default async function TukubiLiveSidebar(props?: TukubiLiveSidebarProps) 
               .in("account_type", ["user_wallet", "wallet"])
               .maybeSingle()
           : Promise.resolve({ data: null }),
-        supabase
-          .from("livestreams")
-          .select(
-            "id, title, peak_viewers, started_at, profiles(display_name, username)",
-          )
-          .eq("state", "live")
-          .order("started_at", { ascending: false })
-          .limit(3),
+        props?.activeLiveStream !== undefined && props.activeLiveStream === null
+          ? Promise.resolve({ data: [] })
+          : supabase
+              .from("livestreams")
+              .select(
+                "id, title, peak_viewers, started_at, profiles(display_name, username)",
+              )
+              .eq("state", "live")
+              .gte("started_at", sixHoursAgo)
+              .order("started_at", { ascending: false })
+              .limit(3),
         supabase
           .from("stories")
           .select(
@@ -202,6 +209,8 @@ export default async function TukubiLiveSidebar(props?: TukubiLiveSidebarProps) 
     }
   }
 
+  const hasActiveLive = livePulses.some((p) => p.isLive);
+
   return (
     <div
       className="space-y-5"
@@ -220,7 +229,7 @@ export default async function TukubiLiveSidebar(props?: TukubiLiveSidebarProps) 
       />
 
       {/* Online Friends Widget */}
-      <OnlineFriendsWidget />
+      <OnlineFriendsWidget initialUserId={user?.id} />
 
       {/* TUKUBI Live Ticker */}
       <div className="glass-aerospace rounded-3xl p-5 space-y-4 shadow-xl border border-white/12 relative overflow-hidden">
@@ -228,87 +237,126 @@ export default async function TukubiLiveSidebar(props?: TukubiLiveSidebarProps) 
 
         <div className="flex items-center justify-between">
           <h3 className="font-black text-sm md:text-base text-white flex items-center gap-2 tracking-tight">
-            <span className="flex h-2.5 w-2.5 relative">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
-              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500" />
-            </span>
+            {hasActiveLive ? (
+              <span className="flex h-2.5 w-2.5 relative">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500" />
+              </span>
+            ) : (
+              <span className="h-2.5 w-2.5 rounded-full bg-slate-500/80 inline-block" />
+            )}
             <span className="bg-gradient-to-r from-red-400 via-amber-300 to-brand-caribbeanSea bg-clip-text text-transparent font-black">
               TUKUBI LIVE
             </span>
           </h3>
-          <span className="text-[10px] md:text-xs font-black px-2.5 py-0.5 rounded-full bg-red-500/20 text-red-300 border border-red-500/30">
-            PULSE
+          <span
+            className={`text-[10px] md:text-xs font-black px-2.5 py-0.5 rounded-full border ${
+              hasActiveLive
+                ? "bg-red-500/20 text-red-300 border-red-500/30 animate-pulse"
+                : "bg-slate-800/80 text-slate-300 border-white/10"
+            }`}
+          >
+            {hasActiveLive ? "LIVE NOW" : "STANDBY"}
           </span>
         </div>
 
         <div className="space-y-3">
-          {livePulses.length > 0 ? (
-            livePulses.map((pulse) => (
-              <Link
-                key={pulse.id}
-                href={pulse.href}
-                className={`flex items-center justify-between p-3 md:p-3.5 rounded-2xl border transition-all duration-200 group ${
-                  pulse.isLive
-                    ? "bg-red-950/30 hover:bg-red-900/40 border-red-500/40 hover:border-red-500/60 shadow-lg shadow-red-900/20"
-                    : "bg-white/5 hover:bg-white/10 border-white/10 hover:border-white/20"
-                }`}
-              >
-                <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                  <span className="text-base md:text-lg flex-shrink-0">
-                    {pulse.type === "live"
-                      ? "🔴"
-                      : pulse.type === "story"
-                        ? "✨"
-                        : "🌴"}
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-1.5">
-                      {pulse.badge && (
-                        <span
-                          className={`text-[9px] md:text-[10px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded border ${
-                            pulse.isLive
-                              ? "bg-red-500/20 text-red-300 border-red-500/30 animate-pulse"
-                              : "bg-brand-caribbeanSea/15 text-brand-caribbeanSea border-brand-caribbeanSea/30"
-                          }`}
-                        >
-                          {pulse.badge}
+          {hasActiveLive ? (
+            livePulses
+              .filter((p) => p.isLive)
+              .map((pulse) => (
+                <Link
+                  key={pulse.id}
+                  href={pulse.href}
+                  className="flex items-center justify-between p-3 md:p-3.5 rounded-2xl border transition-all duration-200 group bg-red-950/30 hover:bg-red-900/40 border-red-500/40 hover:border-red-500/60 shadow-lg shadow-red-900/20"
+                >
+                  <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                    <span className="text-base md:text-lg flex-shrink-0">🔴</span>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-[9px] md:text-[10px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded border bg-red-500/20 text-red-300 border-red-500/30 animate-pulse">
+                          LIVE
                         </span>
-                      )}
-                      <h4 className="font-bold text-xs md:text-sm text-white group-hover:text-brand-caribbeanSea transition-colors truncate">
-                        {pulse.title}
-                      </h4>
+                        <h4 className="font-bold text-xs md:text-sm text-white group-hover:text-brand-caribbeanSea transition-colors truncate">
+                          {pulse.title}
+                        </h4>
+                      </div>
+                      <p className="text-[11px] md:text-xs text-white/60 font-medium truncate mt-0.5">
+                        {pulse.subtitle}
+                      </p>
                     </div>
-                    <p className="text-[11px] md:text-xs text-white/60 font-medium truncate mt-0.5">
-                      {pulse.subtitle}
-                    </p>
                   </div>
-                </div>
-                <ArrowUpRight className="w-4 h-4 md:w-5 md:h-5 text-white/40 group-hover:text-brand-caribbeanSea transition-colors flex-shrink-0 ml-2" />
-              </Link>
-            ))
-          ) : (
-            <div className="p-4 rounded-2xl bg-white/5 border border-dashed border-white/10 text-center space-y-2">
-              <p className="text-xs md:text-sm font-semibold text-white/80">
-                Nothing happening right now.
-              </p>
-              <p className="text-[11px] md:text-xs text-white/50 leading-relaxed">
-                Check back soon for live broadcasts, fetes, and island moments.
-              </p>
-              <div className="pt-2 flex items-center justify-center gap-2">
-                <Link
-                  href="/explore"
-                  className="inline-flex items-center gap-1 text-[11px] md:text-xs font-bold text-brand-caribbeanSea hover:underline"
-                >
-                  Explore Caribbean →
+                  <ArrowUpRight className="w-4 h-4 md:w-5 md:h-5 text-white/40 group-hover:text-brand-caribbeanSea transition-colors flex-shrink-0 ml-2" />
                 </Link>
-                <span className="text-white/30">•</span>
+              ))
+          ) : (
+            <div className="p-4 rounded-2xl bg-white/[0.03] border border-dashed border-white/12 text-center space-y-2.5">
+              <div className="w-9 h-9 rounded-2xl bg-red-500/10 border border-red-500/25 flex items-center justify-center mx-auto text-red-400">
+                <Radio className="w-4 h-4" />
+              </div>
+              <div className="space-y-0.5">
+                <p className="text-xs md:text-sm font-black text-white">
+                  No Live Broadcasts Right Now
+                </p>
+                <p className="text-[11px] md:text-xs text-white/50 leading-relaxed max-w-xs mx-auto">
+                  Broadcast live audio, DJ sets, carnival sessions, or discussions across the Caribbean.
+                </p>
+              </div>
+              <div className="pt-1 flex items-center justify-center gap-2">
                 <Link
-                  href="/create"
-                  className="inline-flex items-center gap-1 text-[11px] md:text-xs font-bold text-brand-goldenHour hover:underline"
+                  href="/live/broadcast"
+                  className="inline-flex items-center gap-1.5 text-[11px] md:text-xs font-black px-3 py-1.5 rounded-xl bg-red-600 hover:bg-red-500 text-white transition-all shadow-md shadow-red-600/25 active:scale-95"
                 >
-                  Create a Post →
+                  <span className="text-[10px]">🔴</span> Start Broadcast
+                </Link>
+                <Link
+                  href="/live"
+                  className="inline-flex items-center gap-1 text-[11px] md:text-xs font-bold px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-white/80 transition-all border border-white/10"
+                >
+                  Explore Channels →
                 </Link>
               </div>
+            </div>
+          )}
+
+          {/* Island Moments / Updates if any (when not live) */}
+          {!hasActiveLive && livePulses.filter((p) => !p.isLive).length > 0 && (
+            <div className="pt-2 border-t border-white/5 space-y-2">
+              <span className="text-[10px] font-black uppercase tracking-wider text-white/50 flex items-center gap-1">
+                <Sparkles className="w-3 h-3 text-brand-goldenHour" /> Island Moments &amp; Trending
+              </span>
+              {livePulses
+                .filter((p) => !p.isLive)
+                .slice(0, 2)
+                .map((pulse) => (
+                  <Link
+                    key={pulse.id}
+                    href={pulse.href}
+                    className="flex items-center justify-between p-2.5 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 transition-all group"
+                  >
+                    <div className="flex items-center gap-2 min-w-0 flex-1">
+                      <span className="text-sm shrink-0">
+                        {pulse.type === "story" ? "✨" : "🌴"}
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-1.5">
+                          {pulse.badge && (
+                            <span className="text-[9px] font-black uppercase px-1.5 py-0.5 rounded bg-brand-caribbeanSea/15 text-brand-caribbeanSea border border-brand-caribbeanSea/30">
+                              {pulse.badge}
+                            </span>
+                          )}
+                          <h5 className="font-bold text-xs text-white group-hover:text-brand-caribbeanSea truncate">
+                            {pulse.title}
+                          </h5>
+                        </div>
+                        <p className="text-[10px] text-white/50 truncate">
+                          {pulse.subtitle}
+                        </p>
+                      </div>
+                    </div>
+                    <ArrowUpRight className="w-3.5 h-3.5 text-white/40 group-hover:text-brand-caribbeanSea shrink-0 ml-1.5" />
+                  </Link>
+                ))}
             </div>
           )}
         </div>
