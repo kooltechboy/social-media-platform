@@ -41,8 +41,7 @@ interface NavItem {
 
 const PRIMARY_NAV: NavItem[] = [
   { href: '/', labelKey: 'nav.home', fallbackLabel: 'Home Feed', icon: <Home className="w-5 h-5 text-brand-caribbeanSea" /> },
-  { href: '/friends', fallbackLabel: 'Friends & Network', icon: <UserPlus className="w-5 h-5 text-emerald-400" /> },
-  { href: '/members', fallbackLabel: 'Members Directory', icon: <Users className="w-5 h-5 text-cyan-400" /> },
+  { href: '/people', fallbackLabel: 'People & Network', icon: <Users className="w-5 h-5 text-brand-caribbeanSea" /> },
   { href: '/create', labelKey: 'nav.create_hub', fallbackLabel: 'Create Hub', icon: <PlusCircle className="w-5 h-5 text-brand-sunriseCoral" />, badge: 'NEW' },
   { href: '/explore', labelKey: 'nav.explore', fallbackLabel: 'Explore & Diaspora', icon: <Compass className="w-5 h-5 text-brand-goldenHour" /> },
   { href: '/map', labelKey: 'nav.map', fallbackLabel: 'Caribbean Map', icon: <MapPin className="w-5 h-5 text-rose-400" /> },
@@ -96,6 +95,8 @@ export default function AppSidebar({ currentPath }: AppSidebarProps) {
         const isActive =
           item.href === '/'
             ? activePath === '/'
+            : item.href === '/people'
+            ? activePath.startsWith('/people') || activePath.startsWith('/members') || activePath.startsWith('/friends')
             : activePath.startsWith(item.href);
 
         return (

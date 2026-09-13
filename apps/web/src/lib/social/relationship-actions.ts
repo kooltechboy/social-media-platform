@@ -27,9 +27,10 @@ export async function followUserAction(targetUserId: string): Promise<ActionResu
 
   if (error) return { success: false, error: error.message };
 
-  revalidatePath(`/profile/${targetUserId}`);
+  revalidatePath('/people');
   revalidatePath('/friends');
   revalidatePath('/members');
+  revalidatePath(`/profile/${targetUserId}`);
   return { success: true, error: null };
 }
 
@@ -51,9 +52,10 @@ export async function unfollowUserAction(targetUserId: string): Promise<ActionRe
 
   if (error) return { success: false, error: error.message };
 
-  revalidatePath(`/profile/${targetUserId}`);
+  revalidatePath('/people');
   revalidatePath('/friends');
   revalidatePath('/members');
+  revalidatePath(`/profile/${targetUserId}`);
   return { success: true, error: null };
 }
 
@@ -101,9 +103,10 @@ export async function sendFriendRequestAction(targetUserId: string): Promise<Act
 
   if (error) return { success: false, error: error.message };
 
-  revalidatePath(`/profile/${targetUserId}`);
+  revalidatePath('/people');
   revalidatePath('/friends');
   revalidatePath('/members');
+  revalidatePath(`/profile/${targetUserId}`);
   return { success: true, error: null, data: { status: 'pending' } };
 }
 
@@ -124,7 +127,9 @@ export async function acceptFriendRequestAction(targetUserId: string): Promise<A
 
   if (error) return { success: false, error: error.message };
 
+  revalidatePath('/people');
   revalidatePath('/friends');
+  revalidatePath('/members');
   revalidatePath(`/profile/${targetUserId}`);
   return { success: true, error: null };
 }
@@ -146,7 +151,9 @@ export async function declineFriendRequestAction(targetUserId: string): Promise<
 
   if (error) return { success: false, error: error.message };
 
+  revalidatePath('/people');
   revalidatePath('/friends');
+  revalidatePath('/members');
   return { success: true, error: null };
 }
 
@@ -167,7 +174,9 @@ export async function cancelFriendRequestAction(targetUserId: string): Promise<A
 
   if (error) return { success: false, error: error.message };
 
+  revalidatePath('/people');
   revalidatePath('/friends');
+  revalidatePath('/members');
   revalidatePath(`/profile/${targetUserId}`);
   return { success: true, error: null };
 }
@@ -189,7 +198,9 @@ export async function unfriendAction(targetUserId: string): Promise<ActionResult
 
   if (error) return { success: false, error: error.message };
 
+  revalidatePath('/people');
   revalidatePath('/friends');
+  revalidatePath('/members');
   revalidatePath(`/profile/${targetUserId}`);
   return { success: true, error: null };
 }
@@ -216,6 +227,7 @@ export async function blockUserAction(targetUserId: string): Promise<ActionResul
 
   if (error) return { success: false, error: error.message };
 
+  revalidatePath('/people');
   revalidatePath('/friends');
   revalidatePath('/members');
   return { success: true, error: null };
@@ -239,7 +251,9 @@ export async function unblockUserAction(targetUserId: string): Promise<ActionRes
 
   if (error) return { success: false, error: error.message };
 
+  revalidatePath('/people');
   revalidatePath('/friends');
+  revalidatePath('/members');
   return { success: true, error: null };
 }
 
@@ -277,18 +291,26 @@ export async function dismissRecommendationAction(
   return { success: true, error: null };
 }
 
+export interface BatchRelationshipItem {
+  state: RelationshipState;
+  isFollowing: boolean;
+  isFollower: boolean;
+  friendshipStatus: string;
+  isBlocked: boolean;
+}
+
 /**
  * Batch resolve relationship states for a list of target user IDs
  */
 export async function getRelationshipBatchAction(
   targetUserIds: string[]
-): Promise<Record<string, { state: RelationshipState; isFollowing: boolean; friendshipStatus: string }>> {
+): Promise<Record<string, BatchRelationshipItem>> {
   const user = await getCurrentUser();
-  const map: Record<string, { state: RelationshipState; isFollowing: boolean; friendshipStatus: string }> = {};
+  const map: Record<string, BatchRelationshipItem> = {};
 
   if (!user || targetUserIds.length === 0) {
     targetUserIds.forEach((id) => {
-      map[id] = { state: 'none', isFollowing: false, friendshipStatus: 'none' };
+      map[id] = { state: 'none', isFollowing: false, isFollower: false, friendshipStatus: 'none', isBlocked: false };
     });
     return map;
   }
@@ -296,12 +318,17 @@ export async function getRelationshipBatchAction(
   const supabase = await createSupabaseServerClient();
   if (!supabase) return map;
 
-  const [followsRes, friendsRes, blocksRes] = await Promise.all([
+  const [followsRes, followersRes, friendsRes, blocksRes] = await Promise.all([
     supabase
       .from('follows')
       .select('following_id')
       .eq('follower_id', user.id)
       .in('following_id', targetUserIds),
+    supabase
+      .from('follows')
+      .select('follower_id')
+      .eq('following_id', user.id)
+      .in('follower_id', targetUserIds),
     supabase
       .from('friendships')
       .select('requester_id, addressee_id, status')
@@ -314,6 +341,7 @@ export async function getRelationshipBatchAction(
   ]);
 
   const followingSet = new Set((followsRes.data || []).map((f) => f.following_id));
+  const followerSet = new Set((followersRes.data || []).map((f) => f.follower_id));
   const blockedSet = new Set((blocksRes.data || []).map((b) => b.blocked_id));
 
   const friendshipMap: Record<string, 'pending_sent' | 'pending_received' | 'accepted' | 'declined'> = {};
@@ -335,16 +363,18 @@ export async function getRelationshipBatchAction(
 
   targetUserIds.forEach((id) => {
     const isFollowing = followingSet.has(id);
+    const isFollower = followerSet.has(id);
     const isBlocked = blockedSet.has(id);
     const fStatus = friendshipMap[id] || 'none';
 
     const state = resolvePrimaryRelationshipState({
       isBlocked,
       isFollowing,
+      isFollower,
       friendshipStatus: fStatus,
     });
 
-    map[id] = { state, isFollowing, friendshipStatus: fStatus };
+    map[id] = { state, isFollowing, isFollower, friendshipStatus: fStatus, isBlocked };
   });
 
   return map;

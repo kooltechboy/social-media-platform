@@ -1,9 +1,13 @@
 import React from 'react';
 import Link from 'next/link';
-import { Users, UserPlus, Compass, ArrowLeft } from 'lucide-react';
+import { Users, UserPlus, Compass, ArrowLeft, Search } from 'lucide-react';
 import { getCurrentUser } from '../../lib/supabase/server';
-import { fetchFriendsOverviewAction } from '../../lib/discovery/actions';
-import FriendsCenterClient from '../../components/friends/friends-center-client';
+import {
+  fetchMembersDirectoryAction,
+  fetchFriendsOverviewAction,
+  fetchPeopleYouMayKnowAction,
+} from '../../lib/discovery/actions';
+import PeopleHubClient, { type PeopleTab } from '../../components/people/people-hub-client';
 
 export const dynamic = 'force-dynamic';
 
@@ -13,18 +17,32 @@ export default async function FriendsPage({
   searchParams?: Promise<{ tab?: string; q?: string }>;
 }) {
   const resolvedParams = searchParams ? await searchParams : {};
-  const { tab, q } = resolvedParams;
+  const { tab = 'friends', q } = resolvedParams;
   const user = await getCurrentUser();
 
-  const overviewData = await fetchFriendsOverviewAction({
-    tab: (tab as any) || 'friends',
-    query: q,
-  });
+  const [overviewData, directoryData, pymkData] = await Promise.all([
+    fetchFriendsOverviewAction({
+      tab: (tab as any) || 'friends',
+      query: q,
+    }),
+    fetchMembersDirectoryAction({
+      query: q,
+      page: 1,
+      limit: 24,
+    }),
+    fetchPeopleYouMayKnowAction({ limit: 6 }),
+  ]);
+
+  overviewData.pymk = pymkData;
+
+  const activeTabKey = (['friends', 'requests', 'following', 'followers', 'discover'].includes(tab)
+    ? tab
+    : 'friends') as PeopleTab;
 
   return (
     <div className="w-full space-y-6 animate-fadeIn">
       {/* Standardized Responsive Page Header */}
-      <div className="surface-header rounded-3xl p-5 sm:p-7 shadow-xl">
+      <div className="surface-header rounded-3xl p-5 sm:p-7 shadow-xl border border-white/10 bg-[#140C22]/90 backdrop-blur-2xl">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-start sm:items-center gap-3.5">
             <Link
@@ -41,32 +59,27 @@ export default async function FriendsPage({
                 <span>Friends &amp; Connections</span>
               </h1>
               <p className="text-xs sm:text-sm text-brand-sandstone/80 mt-1 leading-relaxed">
-                Manage your Caribbean network, friend requests, and social graph.
+                Manage your personal Caribbean network, friend requests, and social connections.
               </p>
             </div>
           </div>
 
           <div className="flex items-center gap-2.5 self-start sm:self-auto shrink-0 flex-wrap">
             <Link
-              href="/members"
-              className="text-xs font-bold px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/15 text-white border border-white/15 flex items-center gap-1.5 transition-colors min-h-[40px]"
-            >
-              <Compass className="w-4 h-4 text-brand-goldenHour" /> Discover Members
-            </Link>
-            <Link
               href="/search"
               className="text-xs font-black px-4 py-2.5 rounded-xl bg-gradient-to-r from-brand-caribbeanSea to-brand-sunriseCoral text-slate-950 flex items-center gap-1.5 shadow-md shadow-brand-caribbeanSea/20 hover:brightness-110 transition-all min-h-[40px]"
             >
-              <UserPlus className="w-4 h-4" /> Find People
+              <Search className="w-4 h-4" /> Global Search
             </Link>
           </div>
         </div>
       </div>
 
       {/* Main Interactive Client */}
-      <FriendsCenterClient
-        initialData={overviewData}
-        initialTab={tab || 'friends'}
+      <PeopleHubClient
+        initialTab={activeTabKey}
+        initialOverview={overviewData}
+        initialDirectory={directoryData}
         initialQuery={q || ''}
         currentUserId={user?.id}
       />

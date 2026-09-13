@@ -201,44 +201,64 @@ export default function AppHeader() {
                     No matching users found for &quot;{query}&quot;
                   </div>
                 ) : (
-                  livePeople.map((person) => (
-                    <div
-                      key={person.id}
-                      className="p-2.5 md:p-3 rounded-2xl hover:bg-white/10 transition-all flex items-center justify-between gap-3 group"
-                    >
-                      <Link
-                        href={`/profile/${person.username}`}
-                        onClick={() => setIsOpen(false)}
-                        className="flex items-center gap-3 flex-1 min-w-0"
+                  livePeople.map((person) => {
+                    const isOfficial = person.account_type === 'official' || person.username.toLowerCase() === 'tukubi';
+                    const isFollowing = !!followingMap[person.id];
+                    return (
+                      <div
+                        key={person.id}
+                        className="p-2.5 md:p-3 rounded-2xl hover:bg-white/10 transition-all flex items-center justify-between gap-3 group"
                       >
-                        <UserAvatar
-                          src={person.avatar_url}
-                          name={person.display_name}
-                          size="sm"
-                        />
-                        <div className="min-w-0">
-                          <h5 className="text-xs md:text-sm font-bold text-white truncate flex items-center gap-1.5 group-hover:text-brand-caribbeanSea">
-                            {person.display_name}
-                            <CheckCircle className="w-3.5 h-3.5 md:w-4 md:h-4 text-brand-caribbeanSea" />
-                          </h5>
-                          <p className="text-[10px] md:text-xs text-white/50 truncate">@{person.username}</p>
-                        </div>
-                      </Link>
+                        <Link
+                          href={`/profile/${person.username}`}
+                          onClick={() => setIsOpen(false)}
+                          className="flex items-center gap-3 flex-1 min-w-0"
+                        >
+                          <UserAvatar
+                            src={person.avatar_url}
+                            name={person.display_name}
+                            size="sm"
+                          />
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-1.5">
+                              <h5 className="text-xs md:text-sm font-bold text-white truncate group-hover:text-brand-caribbeanSea">
+                                {person.display_name}
+                              </h5>
+                              {isOfficial && (
+                                <CheckCircle className="w-3.5 h-3.5 md:w-4 md:h-4 text-brand-caribbeanSea shrink-0" />
+                              )}
+                            </div>
+                            <p className="text-[10px] md:text-xs text-white/50 truncate">@{person.username}</p>
+                          </div>
+                        </Link>
 
-                      <button
-                        type="button"
-                        disabled={pendingFollowId === person.id}
-                        onClick={() => toggleFollow(person.id)}
-                        className={`text-[10px] md:text-xs font-black px-3.5 py-1.5 md:py-2 min-h-[36px] rounded-xl transition-all disabled:opacity-50 ${
-                          followingMap[person.id]
-                            ? 'bg-white/10 text-white border border-white/15 hover:bg-rose-500/20 hover:text-rose-300 hover:border-rose-500/40'
-                            : 'bg-gradient-to-r from-brand-caribbeanSea to-brand-sunriseCoral hover:brightness-110 text-slate-950 shadow-md shadow-brand-caribbeanSea/20'
-                        }`}
-                      >
-                        {pendingFollowId === person.id ? '…' : followingMap[person.id] ? 'Following' : '+ Follow'}
-                      </button>
-                    </div>
-                  ))
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          <Link
+                            href={`/messages?u=${encodeURIComponent(person.username)}`}
+                            onClick={() => setIsOpen(false)}
+                            className="p-2 text-white/60 hover:text-brand-caribbeanSea hover:bg-white/10 rounded-xl transition-all flex items-center justify-center min-h-[36px] min-w-[36px] border border-white/10"
+                            title={`Message ${person.display_name}`}
+                            aria-label={`Message ${person.display_name}`}
+                          >
+                            <MessageSquare className="w-3.5 h-3.5" />
+                          </Link>
+
+                          <button
+                            type="button"
+                            disabled={pendingFollowId === person.id}
+                            onClick={() => toggleFollow(person.id)}
+                            className={`text-[10px] md:text-xs font-black px-3.5 py-1.5 md:py-2 min-h-[36px] rounded-xl transition-all disabled:opacity-50 ${
+                              isFollowing
+                                ? 'bg-white/10 text-white border border-white/15 hover:bg-rose-500/20 hover:text-rose-300 hover:border-rose-500/40'
+                                : 'bg-gradient-to-r from-brand-caribbeanSea to-brand-sunriseCoral hover:brightness-110 text-slate-950 shadow-md shadow-brand-caribbeanSea/20'
+                            }`}
+                          >
+                            {pendingFollowId === person.id ? '…' : isFollowing ? 'Following' : '+ Follow'}
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })
                 )}
               </div>
             </div>

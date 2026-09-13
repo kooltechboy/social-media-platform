@@ -1,28 +1,34 @@
 import React from 'react';
 import Link from 'next/link';
-import { Compass, Users, UserPlus, ArrowLeft, Search } from 'lucide-react';
+import { Users, UserPlus, Compass, ArrowLeft, Search } from 'lucide-react';
 import { getCurrentUser } from '../../lib/supabase/server';
 import {
   fetchMembersDirectoryAction,
   fetchFriendsOverviewAction,
   fetchPeopleYouMayKnowAction,
 } from '../../lib/discovery/actions';
-import PeopleHubClient from '../../components/people/people-hub-client';
+import PeopleHubClient, { type PeopleTab } from '../../components/people/people-hub-client';
 
 export const dynamic = 'force-dynamic';
 
-export default async function MembersPage({
+export default async function PeoplePage({
   searchParams,
 }: {
-  searchParams?: Promise<{ country?: string; category?: string; q?: string; page?: string }>;
+  searchParams?: Promise<{
+    tab?: string;
+    country?: string;
+    category?: string;
+    q?: string;
+    page?: string;
+  }>;
 }) {
   const resolvedParams = searchParams ? await searchParams : {};
-  const { country, category, q, page } = resolvedParams;
+  const { tab = 'discover', country, category, q, page } = resolvedParams;
   const user = await getCurrentUser();
 
   const [overviewData, directoryData, pymkData] = await Promise.all([
     fetchFriendsOverviewAction({
-      tab: 'discover',
+      tab: (tab as any) || 'friends',
       query: q,
     }),
     fetchMembersDirectoryAction({
@@ -34,7 +40,12 @@ export default async function MembersPage({
     fetchPeopleYouMayKnowAction({ limit: 6, countryIso: country }),
   ]);
 
+  // Merge pymk into overview
   overviewData.pymk = pymkData;
+
+  const activeTabKey = (['discover', 'friends', 'requests', 'following', 'followers'].includes(tab)
+    ? tab
+    : 'discover') as PeopleTab;
 
   return (
     <div className="w-full space-y-6 animate-fadeIn">
@@ -52,11 +63,11 @@ export default async function MembersPage({
             </Link>
             <div>
               <h1 className="text-xl sm:text-2xl lg:text-3xl font-black text-white flex items-center gap-2.5 tracking-tight">
-                <Compass className="w-6 h-6 sm:w-7 sm:h-7 text-brand-goldenHour shrink-0" />
-                <span>Caribbean Members Directory</span>
+                <Users className="w-6 h-6 sm:w-7 sm:h-7 text-brand-caribbeanSea shrink-0" />
+                <span>Caribbean People &amp; Network</span>
               </h1>
               <p className="text-xs sm:text-sm text-brand-sandstone/80 mt-1 leading-relaxed">
-                Discover creators, professionals, and members across the Caribbean diaspora.
+                Connect with Caribbean members, manage your personal friends, and follow creators across the diaspora.
               </p>
             </div>
           </div>
@@ -72,9 +83,9 @@ export default async function MembersPage({
         </div>
       </div>
 
-      {/* Main Interactive Client */}
+      {/* Main Interactive People Hub Client */}
       <PeopleHubClient
-        initialTab="discover"
+        initialTab={activeTabKey}
         initialOverview={overviewData}
         initialDirectory={directoryData}
         initialCountry={country || 'ALL'}

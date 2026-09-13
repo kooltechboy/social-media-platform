@@ -162,19 +162,23 @@ export function resolveFeedVisibility(authorId: string, visibility: Visibility, 
 export type RelationshipState =
   | 'none'
   | 'following'
-  | 'friends'
+  | 'followed_by'
+  | 'mutual_follow'
   | 'request_sent'
+  | 'friend_request_sent'
   | 'request_received'
+  | 'friend_request_received'
+  | 'friends'
   | 'blocked'
   | 'muted';
 
 export interface UserRelationship {
   targetUserId: string;
   isFollowing: boolean;
-  isFollower: boolean;
+  isFollower?: boolean;
   friendshipStatus: 'none' | 'pending_sent' | 'pending_received' | 'accepted' | 'declined';
   isBlocked: boolean;
-  isMuted: boolean;
+  isMuted?: boolean;
   primaryState: RelationshipState;
 }
 
@@ -186,12 +190,113 @@ export function resolvePrimaryRelationshipState(rel: {
   isMuted?: boolean;
   friendshipStatus?: 'none' | 'pending_sent' | 'pending_received' | 'accepted' | 'declined';
   isFollowing?: boolean;
+  isFollower?: boolean;
 }): RelationshipState {
   if (rel.isBlocked) return 'blocked';
   if (rel.friendshipStatus === 'accepted') return 'friends';
   if (rel.friendshipStatus === 'pending_sent') return 'request_sent';
   if (rel.friendshipStatus === 'pending_received') return 'request_received';
+  if (rel.isFollowing && rel.isFollower) return 'mutual_follow';
   if (rel.isFollowing) return 'following';
+  if (rel.isFollower) return 'followed_by';
   if (rel.isMuted) return 'muted';
   return 'none';
 }
+
+export interface RelationshipActionConfig {
+  canFriend: boolean;
+  friendLabel: string;
+  friendState: 'none' | 'request_sent' | 'request_received' | 'friends';
+  canFollow: boolean;
+  followLabel: string;
+  isFollowing: boolean;
+  canMessage: boolean;
+  isOfficial: boolean;
+}
+
+/**
+ * Derives UI action configurations for profile cards and header actions
+ * adhering to Tukubi relationship rules:
+ * - Official accounts never display "Add Friend"
+ * - Mutual friendships show "Friends" and allow Messaging
+ * - Pending states show "Request Sent" or "Accept/Decline"
+ */
+export function getRelationshipActionConfig(
+  rel: {
+    isBlocked?: boolean;
+    friendshipStatus?: 'none' | 'pending_sent' | 'pending_received' | 'accepted' | 'declined';
+    isFollowing?: boolean;
+    isFollower?: boolean;
+    isOfficial?: boolean;
+  }
+): RelationshipActionConfig {
+  const isOfficial = !!rel.isOfficial;
+  const isBlocked = !!rel.isBlocked;
+  const friendshipStatus = rel.friendshipStatus || 'none';
+  const isFollowing = !!rel.isFollowing;
+  const isFollower = !!rel.isFollower;
+
+  if (isBlocked) {
+    return {
+      canFriend: false,
+      friendLabel: 'Blocked',
+      friendState: 'none',
+      canFollow: false,
+      followLabel: 'Blocked',
+      isFollowing: false,
+      canMessage: false,
+      isOfficial,
+    };
+  }
+
+  // Official accounts: follow & message only; never friend
+  if (isOfficial) {
+    return {
+      canFriend: false,
+      friendLabel: '',
+      friendState: 'none',
+      canFollow: true,
+      followLabel: isFollowing ? 'Following' : 'Follow',
+      isFollowing,
+      canMessage: true,
+      isOfficial: true,
+    };
+  }
+
+  let friendLabel = 'Add Friend';
+  let friendState: 'none' | 'request_sent' | 'request_received' | 'friends' = 'none';
+  let canFriend = true;
+
+  if (friendshipStatus === 'accepted') {
+    friendLabel = 'Friends';
+    friendState = 'friends';
+    canFriend = false; // Already friends
+  } else if (friendshipStatus === 'pending_sent') {
+    friendLabel = 'Request Sent';
+    friendState = 'request_sent';
+    canFriend = false; // Pending
+  } else if (friendshipStatus === 'pending_received') {
+    friendLabel = 'Respond';
+    friendState = 'request_received';
+    canFriend = true; // Needs respond
+  }
+
+  let followLabel = 'Follow';
+  if (isFollowing) {
+    followLabel = 'Following';
+  } else if (isFollower) {
+    followLabel = 'Follow Back';
+  }
+
+  return {
+    canFriend,
+    friendLabel,
+    friendState,
+    canFollow: true,
+    followLabel,
+    isFollowing,
+    canMessage: true,
+    isOfficial: false,
+  };
+}
+

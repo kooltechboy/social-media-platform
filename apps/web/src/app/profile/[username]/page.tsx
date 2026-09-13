@@ -32,6 +32,7 @@ import FounderBadge from '../../../components/recognition/founder-badge';
 import ReputationIndicator from '../../../components/recognition/reputation-indicator';
 import BadgePill from '../../../components/recognition/badge-pill';
 import ProfileRecognitionTab from '../../../components/recognition/profile-recognition-tab';
+import { getRelationshipBatchAction } from '../../../lib/social/relationship-actions';
 
 export const dynamic = 'force-dynamic';
 
@@ -40,6 +41,7 @@ interface ProfileCountRow {
   following_count: number;
   posts_count: number;
   likes_received_count: number;
+  friends_count?: number;
 }
 
 interface PostRow {
@@ -177,22 +179,17 @@ export default async function ProfilePage({
     );
   }
 
-  // Fetch real counts, follow status, posts, and recognition in parallel
+  // Fetch real counts, relationship status, posts, and recognition in parallel
   const recognitionService = new RecognitionService(supabase);
-  const [countsResult, followResult, postsResult, recognition] = await Promise.all([
+  const [countsResult, relationshipBatch, postsResult, recognition] = await Promise.all([
     supabase
       .from('profile_counts')
-      .select('followers_count, following_count, posts_count, likes_received_count')
+      .select('followers_count, following_count, posts_count, likes_received_count, friends_count')
       .eq('profile_id', profileData.id)
       .maybeSingle(),
     currentUser && !isOwnProfile
-      ? supabase
-          .from('follows')
-          .select('follower_id')
-          .eq('follower_id', currentUser.id)
-          .eq('following_id', profileData.id)
-          .maybeSingle()
-      : Promise.resolve({ data: null }),
+      ? getRelationshipBatchAction([profileData.id])
+      : Promise.resolve({} as Record<string, any>),
     supabase
       .from('posts')
       .select('id, content, created_at, media_urls')
@@ -202,7 +199,14 @@ export default async function ProfilePage({
     recognitionService.getProfileRecognition(profileData.id),
   ]);
 
-  const isFollowing = !!followResult.data;
+  const viewerRelationship = relationshipBatch[profileData.id] || {
+    state: 'none',
+    isFollowing: false,
+    isFollower: false,
+    friendshipStatus: 'none',
+    isBlocked: false,
+  };
+  const isFollowing = !!viewerRelationship.isFollowing;
   let posts = (postsResult.data ?? []) as PostRow[];
 
   // Guarantee official launch post appears on @tukubi profile
@@ -225,6 +229,7 @@ export default async function ProfilePage({
     following_count: 0,
     posts_count: posts.length,
     likes_received_count: 0,
+    friends_count: 0,
   };
 
   // Privacy filters for visitor view
@@ -262,10 +267,12 @@ export default async function ProfilePage({
 
         <div className="flex items-center gap-2.5">
           <ProfileHeaderActions
+            targetUserId={profileData.id}
             username={profileData.username}
             isOwnProfile={isOwnProfile}
             isAuthenticated={!!currentUser}
             profileData={profileData}
+            initialRelationship={viewerRelationship}
           />
           {isOwnProfile && (
             <Link
@@ -369,38 +376,23 @@ export default async function ProfilePage({
 
               {/* Action Buttons */}
               <div className="flex items-center gap-3 pt-2 sm:pt-0 self-stretch sm:self-auto justify-end">
-                {isOwnProfile ? (
-                  <ProfileHeaderActions
-                    username={profileData.username}
-                    isOwnProfile={true}
-                    isAuthenticated={true}
-                    profileData={profileData}
-                  />
-                ) : (
-                  <div className="flex items-center gap-2.5">
-                    {currentUser ? (
-                      <FollowButton
-                        targetUserId={profileData.id}
-                        isFollowing={isFollowing}
-                      />
-                    ) : (
-                      <Link
-                        href="/login"
-                        className="flex items-center gap-2 bg-gradient-to-r from-orange-500 via-amber-500 to-emerald-400 hover:brightness-110 text-slate-950 font-black text-xs sm:text-sm md:text-base px-5 md:px-6 py-2.5 md:py-3 rounded-2xl transition-all shadow-md min-h-[44px] md:min-h-[48px]"
-                      >
-                        <UserPlus className="w-4 h-4 md:w-5 md:h-5" /> Sign in to Follow
-                      </Link>
-                    )}
-
-                    <Link
-                      href={currentUser ? `/messages?u=${encodeURIComponent(profileData.username)}` : `/login?next=/messages?u=${encodeURIComponent(profileData.username)}`}
-                      className="flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white font-bold text-xs sm:text-sm md:text-base px-5 md:px-6 py-2.5 md:py-3 rounded-2xl border border-white/15 transition-all shadow-md min-h-[44px] md:min-h-[48px]"
-                    >
-                      <MessageSquare className="w-4 h-4 md:w-5 md:h-5 text-brand-caribbeanSea" />
-                      <span>Message</span>
-                    </Link>
-                  </div>
-                )}
+                <ProfileHeaderActions
+                  targetUserId={profileData.id}
+                  username={profileData.username}
+                  isOwnProfile={isOwnProfile}
+                  isAuthenticated={!!currentUser}
+                  isOfficial={isOfficialTukubi || !!profileData.is_official}
+                  initialRelationship={viewerRelationship}
+                  profileData={profileData}
+                />
+                <noscript>
+                  <Link
+                    href={`/messages?u=${encodeURIComponent(profileData.username)}`}
+                    className="hidden"
+                  >
+                    Message
+                  </Link>
+                </noscript>
               </div>
             </div>
 
@@ -443,11 +435,17 @@ export default async function ProfilePage({
             </div>
 
             {/* Real Statistics Counters */}
-            <div className="mt-6 pt-5 border-t border-white/10 flex items-center gap-8 md:gap-10 text-sm sm:text-base md:text-lg">
+            <div className="mt-6 pt-5 border-t border-white/10 flex items-center gap-6 sm:gap-8 md:gap-10 text-sm sm:text-base md:text-lg flex-wrap">
               <Link href={`/profile/${profileData.username}?tab=posts`} className="hover:text-white transition-colors">
                 <strong className="text-white font-black text-base sm:text-lg md:text-2xl">{counts.posts_count.toLocaleString()}</strong>{' '}
                 <span className="text-brand-sandstone/70 md:text-base">Posts</span>
               </Link>
+              {!isOfficialTukubi && (
+                <Link href="/friends" className="hover:text-white transition-colors">
+                  <strong className="text-white font-black text-base sm:text-lg md:text-2xl">{(counts.friends_count || 0).toLocaleString()}</strong>{' '}
+                  <span className="text-brand-sandstone/70 md:text-base">Friends</span>
+                </Link>
+              )}
               <span>
                 <strong className="text-white font-black text-base sm:text-lg md:text-2xl">{counts.followers_count.toLocaleString()}</strong>{' '}
                 <span className="text-brand-sandstone/70 md:text-base">Followers</span>

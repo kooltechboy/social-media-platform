@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Compass, PlusCircle, MessageSquare, User, Settings, LogOut, X } from 'lucide-react';
+import { Home, Compass, PlusCircle, MessageSquare, User, Users, Settings, LogOut, X } from 'lucide-react';
 import { useAuth } from './auth-provider';
 import UserAvatar from './user-avatar';
 import { useUnreadMessagesCount } from './notifications-realtime-provider';
@@ -103,7 +103,7 @@ export default function MobileNav() {
 
             <div className="h-px bg-white/10" />
 
-            {/* Profile & Settings links */}
+            {/* Profile, People & Network, Settings links */}
             <Link
               href="/profile"
               className="flex items-center gap-3 w-full px-4 py-3.5 rounded-2xl bg-brand-twilight/70 hover:bg-brand-dusk border border-white/5 text-white text-sm font-bold transition-colors min-h-[44px]"
@@ -111,6 +111,15 @@ export default function MobileNav() {
             >
               <User className="w-5 h-5 text-brand-caribbeanSea flex-shrink-0" />
               <span>View Profile</span>
+            </Link>
+
+            <Link
+              href="/people"
+              className="flex items-center gap-3 w-full px-4 py-3.5 rounded-2xl bg-brand-twilight/70 hover:bg-brand-dusk border border-white/5 text-white text-sm font-bold transition-colors min-h-[44px]"
+              onClick={() => setIsProfileSheetOpen(false)}
+            >
+              <Users className="w-5 h-5 text-brand-caribbeanSea flex-shrink-0" />
+              <span>People & Network</span>
             </Link>
 
             <Link

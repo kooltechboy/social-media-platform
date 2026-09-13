@@ -18,12 +18,16 @@ export interface DiscoverProfile {
   is_official?: boolean;
   account_type?: string;
   mutual_count?: number;
+  friends_count?: number;
   followers_count?: number;
   following_count?: number;
+  messaging_permission?: string;
   relationship?: {
     state: string;
     isFollowing: boolean;
+    isFollower?: boolean;
     friendshipStatus: string;
+    isBlocked?: boolean;
   };
   recommendationReason?: string;
   badgeIcon?: string;
@@ -572,7 +576,7 @@ export async function fetchPeopleYouMayKnowAction(params?: {
  * Loads Relationship Center overview (Friends, Incoming Requests, Outgoing Requests, Following, Followers, PYMK)
  */
 export async function fetchFriendsOverviewAction(params?: {
-  tab?: 'friends' | 'requests' | 'pymk' | 'following' | 'followers';
+  tab?: 'discover' | 'friends' | 'requests' | 'pymk' | 'following' | 'followers';
   query?: string;
   page?: number;
   limit?: number;
@@ -665,7 +669,7 @@ export async function fetchFriendsOverviewAction(params?: {
     if (allProfileIds.length > 0) {
       const { data: profilesData } = await supabase
         .from('profiles')
-        .select('id, display_name, username, avatar_url, bio, country, island, city, is_verified, account_type')
+        .select('id, display_name, username, avatar_url, bio, country, island, city, is_verified, account_type, messaging_permission')
         .in('id', allProfileIds);
 
       const relationshipBatch = await getRelationshipBatchAction(allProfileIds);
@@ -683,7 +687,8 @@ export async function fetchFriendsOverviewAction(params?: {
           is_verified: !!p.is_verified,
           is_official: p.username?.toLowerCase() === 'tukubi' || !!(p as any).is_official,
           account_type: p.account_type,
-          relationship: relationshipBatch[p.id] || { state: 'none', isFollowing: false, friendshipStatus: 'none' },
+          messaging_permission: p.messaging_permission,
+          relationship: relationshipBatch[p.id] || { state: 'none', isFollowing: false, isFollower: false, friendshipStatus: 'none', isBlocked: false },
         };
       });
     }
@@ -754,12 +759,18 @@ export async function fetchMembersDirectoryAction(params?: {
   try {
     let query = supabase
       .from('profiles')
-      .select('id, display_name, username, avatar_url, bio, country, island, city, is_verified, account_type, status, is_private, updated_at', { count: 'exact' })
+      .select('id, display_name, username, avatar_url, bio, country, island, city, is_verified, account_type, messaging_permission, status, is_private, updated_at', { count: 'exact' })
       .eq('is_private', false)
       .neq('status', 'suspended')
       .order('is_verified', { ascending: false })
       .order('updated_at', { ascending: false })
       .range(offset, offset + limit - 1);
+
+    if (params?.countryIso && params.countryIso !== 'ALL') {
+      const territory = CARIBBEAN_TERRITORIES_BY_ISO[params.countryIso.toUpperCase()];
+      const territoryName = territory?.name || params.countryIso;
+      query = query.or(`origin_country_iso.eq.${params.countryIso.toUpperCase()},country.ilike.%${territoryName}%,island.ilike.%${territoryName}%`);
+    }
 
     if (params?.category && params.category !== 'all') {
       query = query.eq('account_type', params.category);
@@ -789,7 +800,8 @@ export async function fetchMembersDirectoryAction(params?: {
         is_verified: !!d.is_verified,
         is_official: d.username?.toLowerCase() === 'tukubi' || !!(d as any).is_official,
         account_type: d.account_type,
-        relationship: relationshipMap[d.id] || { state: 'none', isFollowing: false, friendshipStatus: 'none' },
+        messaging_permission: d.messaging_permission,
+        relationship: relationshipMap[d.id] || { state: 'none', isFollowing: false, isFollower: false, friendshipStatus: 'none', isBlocked: false },
       };
     });
 
