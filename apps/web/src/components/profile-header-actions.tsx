@@ -52,9 +52,9 @@ export default function ProfileHeaderActions({
           <button
             type="button"
             onClick={() => setIsEditOpen(true)}
-            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-brand-caribbeanSea/20 hover:bg-brand-caribbeanSea text-brand-caribbeanSea hover:text-slate-950 border border-brand-caribbeanSea/30 text-xs font-bold transition-all cursor-pointer"
+            className="flex items-center gap-2 px-3.5 md:px-4 py-1.5 md:py-2 rounded-full bg-brand-caribbeanSea/20 hover:bg-brand-caribbeanSea text-brand-caribbeanSea hover:text-slate-950 border border-brand-caribbeanSea/30 text-xs md:text-sm font-bold transition-all cursor-pointer min-h-[36px] md:min-h-[40px]"
           >
-            <Edit3 className="w-3.5 h-3.5" />
+            <Edit3 className="w-3.5 h-3.5 md:w-4 md:h-4" />
             <span>Edit Profile</span>
           </button>
         )}
@@ -63,9 +63,9 @@ export default function ProfileHeaderActions({
           <Link
             href={`/messages?u=${encodeURIComponent(username)}`}
             title={profileData?.messaging_permission === 'no_one' ? "This member isn't accepting new messages right now" : `Message @${username}`}
-            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-brand-caribbeanSea/20 hover:bg-brand-caribbeanSea text-brand-caribbeanSea hover:text-slate-950 border border-brand-caribbeanSea/30 text-xs font-bold transition-all"
+            className="flex items-center gap-2 px-3.5 md:px-4 py-1.5 md:py-2 rounded-full bg-brand-caribbeanSea/20 hover:bg-brand-caribbeanSea text-brand-caribbeanSea hover:text-slate-950 border border-brand-caribbeanSea/30 text-xs md:text-sm font-bold transition-all min-h-[36px] md:min-h-[40px]"
           >
-            <MessageSquare className="w-3.5 h-3.5" />
+            <MessageSquare className="w-3.5 h-3.5 md:w-4 md:h-4" />
             <span>Message</span>
           </Link>
         )}
@@ -74,15 +74,15 @@ export default function ProfileHeaderActions({
           type="button"
           onClick={handleShare}
           aria-label="Share profile"
-          className="p-2 text-slate-300 hover:text-brand-sandstone rounded-full hover:bg-brand-dusk border border-slate-800 transition-colors flex items-center gap-1 text-xs cursor-pointer"
+          className="p-2 md:p-2.5 text-slate-300 hover:text-brand-sandstone rounded-full hover:bg-brand-dusk border border-slate-800 transition-colors flex items-center gap-1.5 text-xs md:text-sm cursor-pointer min-h-[36px] md:min-h-[40px] min-w-[36px] md:min-w-[40px] justify-center"
         >
           {copied ? (
             <>
-              <Check className="w-3.5 h-3.5 text-brand-sunriseCoral" />
-              <span className="text-[10px] text-brand-sunriseCoral font-bold">Copied</span>
+              <Check className="w-3.5 h-3.5 md:w-4 md:h-4 text-brand-sunriseCoral" />
+              <span className="text-[10px] md:text-xs text-brand-sunriseCoral font-bold">Copied</span>
             </>
           ) : (
-            <Share2 className="w-4 h-4" />
+            <Share2 className="w-4 h-4 md:w-4.5 md:h-4.5" />
           )}
         </button>
       </div>

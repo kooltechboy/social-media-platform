@@ -237,17 +237,17 @@ export default async function MessagesPage({
   return (
     <div className="min-h-screen bg-transparent text-white pb-12">
       {/* Header Bar */}
-      <header className="sticky top-0 z-40 bg-[#0E0818]/90 backdrop-blur-xl border-b border-white/10 px-4 sm:px-6 py-3.5 flex items-center justify-between">
+      <header className="sticky top-0 z-40 bg-[#0E0818]/90 backdrop-blur-xl border-b border-white/10 px-4 sm:px-6 py-3.5 md:py-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <Link
             href="/"
-            className="flex items-center gap-1.5 text-slate-300 hover:text-white text-xs font-bold px-3 py-1.5 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 transition-colors"
+            className="flex items-center gap-1.5 text-slate-300 hover:text-white text-xs md:text-sm font-bold px-3 md:px-4 py-1.5 md:py-2 min-h-[36px] md:min-h-[40px] rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 transition-colors"
           >
-            <ArrowLeft className="w-3.5 h-3.5" /> Back
+            <ArrowLeft className="w-3.5 h-3.5 md:w-4 md:h-4" /> Back
           </Link>
           <div className="flex items-center gap-2">
-            <h1 className="text-base sm:text-lg font-black text-white flex items-center gap-2">
-              <MessageSquare className="w-5 h-5 text-brand-caribbeanSea" /> Messages Hub
+            <h1 className="text-base sm:text-lg md:text-xl font-black text-white flex items-center gap-2">
+              <MessageSquare className="w-5 h-5 md:w-6 md:h-6 text-brand-caribbeanSea" /> Messages Hub
             </h1>
           </div>
         </div>
@@ -255,9 +255,9 @@ export default async function MessagesPage({
         <div className="flex items-center gap-2">
           <Link
             href="/friends"
-            className="text-xs font-bold px-3 py-1.5 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 text-slate-200 flex items-center gap-1.5 transition-colors"
+            className="text-xs md:text-sm font-bold px-3 md:px-4 py-1.5 md:py-2 min-h-[36px] md:min-h-[40px] rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 text-slate-200 flex items-center gap-1.5 transition-colors"
           >
-            <Users className="w-3.5 h-3.5 text-brand-caribbeanSea" />
+            <Users className="w-3.5 h-3.5 md:w-4 md:h-4 text-brand-caribbeanSea" />
             <span className="hidden sm:inline">Friends</span>
           </Link>
         </div>

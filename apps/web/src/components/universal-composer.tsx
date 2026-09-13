@@ -584,36 +584,36 @@ export default function UniversalComposer({
           /* ────────────────────────────────────────────────────────── */
           /* 1. COLLAPSED STREAM PROMPT BAR (ALL OPTIONS DIRECTLY CLICKABLE) */
           /* ────────────────────────────────────────────────────────── */
-          <div className="p-4 sm:p-5 space-y-3">
-            <div className="flex items-center gap-3.5">
-              <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-brand-caribbeanSea via-brand-goldenHour to-brand-sunriseCoral text-slate-950 font-black flex items-center justify-center text-xs shadow-lg shadow-cyan-500/20 flex-shrink-0 ring-2 ring-white/20">
+          <div className="p-4 sm:p-5 md:p-6 space-y-3 md:space-y-4">
+            <div className="flex items-center gap-3.5 md:gap-4">
+              <div className="w-11 h-11 md:w-12 md:h-12 rounded-2xl bg-gradient-to-tr from-brand-caribbeanSea via-brand-goldenHour to-brand-sunriseCoral text-slate-950 font-black flex items-center justify-center text-xs md:text-sm shadow-lg shadow-cyan-500/20 flex-shrink-0 ring-2 ring-white/20">
                 {avatarInitials}
               </div>
 
               <button
                 type="button"
                 onClick={() => setIsExpanded(true)}
-                className="flex-1 bg-black/40 hover:bg-black/60 text-left px-5 py-3 rounded-2xl text-sm font-medium text-white/50 hover:text-white border border-white/10 hover:border-white/20 transition-all flex items-center justify-between group cursor-text shadow-inner"
+                className="flex-1 bg-black/40 hover:bg-black/60 text-left px-5 py-3 md:py-3.5 rounded-2xl text-sm md:text-base font-medium min-h-[46px] md:min-h-[50px] text-white/50 hover:text-white border border-white/10 hover:border-white/20 transition-all flex items-center justify-between group cursor-text shadow-inner"
               >
                 <span className="tracking-tight">What&apos;s happening, {firstName}?</span>
-                <span className="text-xs font-black text-brand-caribbeanSea group-hover:text-brand-goldenHour flex items-center gap-1.5 transition-colors">
-                  <Sparkles className="w-3.5 h-3.5 text-brand-goldenHour animate-spin" style={{ animationDuration: '8s' }} /> Create Post
+                <span className="text-xs md:text-sm font-black text-brand-caribbeanSea group-hover:text-brand-goldenHour flex items-center gap-1.5 transition-colors">
+                  <Sparkles className="w-3.5 h-3.5 md:w-4 md:h-4 text-brand-goldenHour animate-spin" style={{ animationDuration: '8s' }} /> Create Post
                 </span>
               </button>
             </div>
 
             {/* Direct Action Buttons Row */}
-            <div className="flex items-center justify-between pt-2 border-t border-slate-800/70 overflow-x-auto scrollbar-none gap-1 sm:gap-2">
+            <div className="flex items-center justify-between pt-2 md:pt-3 border-t border-slate-800/70 overflow-x-auto scrollbar-none gap-1 sm:gap-2">
               {/* Photo Direct Trigger */}
               <button
                 type="button"
                 onClick={() => {
                   photoInputRef.current?.click();
                 }}
-                className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold text-slate-300 hover:text-brand-sunriseCoral hover:bg-brand-twilight transition-all whitespace-nowrap"
+                className="flex items-center gap-1.5 md:gap-2 px-3 md:px-4 py-2 md:py-2.5 min-h-[38px] md:min-h-[42px] rounded-xl text-xs md:text-sm font-bold text-slate-300 hover:text-brand-sunriseCoral hover:bg-brand-twilight transition-all whitespace-nowrap"
                 title="Choose Photos from Device"
               >
-                <ImageIcon className="w-4 h-4 text-brand-sunriseCoral" />
+                <ImageIcon className="w-4 h-4 md:w-5 md:h-5 text-brand-sunriseCoral" />
                 <span>Photo</span>
               </button>
 
@@ -623,10 +623,10 @@ export default function UniversalComposer({
                 onClick={() => {
                   videoInputRef.current?.click();
                 }}
-                className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold text-slate-300 hover:text-rose-400 hover:bg-brand-twilight transition-all whitespace-nowrap"
+                className="flex items-center gap-1.5 md:gap-2 px-3 md:px-4 py-2 md:py-2.5 min-h-[38px] md:min-h-[42px] rounded-xl text-xs md:text-sm font-bold text-slate-300 hover:text-rose-400 hover:bg-brand-twilight transition-all whitespace-nowrap"
                 title="Choose Videos from Device"
               >
-                <Video className="w-4 h-4 text-rose-400" />
+                <Video className="w-4 h-4 md:w-5 md:h-5 text-rose-400" />
                 <span>Video</span>
               </button>
 
@@ -638,10 +638,10 @@ export default function UniversalComposer({
                   setMode('reel');
                   reelInputRef.current?.click();
                 }}
-                className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold text-slate-300 hover:text-amber-300 hover:bg-brand-twilight transition-all whitespace-nowrap"
+                className="flex items-center gap-1.5 md:gap-2 px-3 md:px-4 py-2 md:py-2.5 min-h-[38px] md:min-h-[42px] rounded-xl text-xs md:text-sm font-bold text-slate-300 hover:text-amber-300 hover:bg-brand-twilight transition-all whitespace-nowrap"
                 title="Upload Short Video Reel"
               >
-                <Film className="w-4 h-4 text-brand-goldenHour" />
+                <Film className="w-4 h-4 md:w-5 md:h-5 text-brand-goldenHour" />
                 <span>Reel</span>
               </button>
 
@@ -649,10 +649,10 @@ export default function UniversalComposer({
               <button
                 type="button"
                 onClick={() => openCameraFor('photo')}
-                className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold text-slate-300 hover:text-brand-caribbeanSea hover:bg-brand-twilight transition-all whitespace-nowrap"
+                className="flex items-center gap-1.5 md:gap-2 px-3 md:px-4 py-2 md:py-2.5 min-h-[38px] md:min-h-[42px] rounded-xl text-xs md:text-sm font-bold text-slate-300 hover:text-brand-caribbeanSea hover:bg-brand-twilight transition-all whitespace-nowrap"
                 title="Open Camera"
               >
-                <Camera className="w-4 h-4 text-brand-caribbeanSea" />
+                <Camera className="w-4 h-4 md:w-5 md:h-5 text-brand-caribbeanSea" />
                 <span className="hidden md:inline">Camera</span>
               </button>
 
@@ -663,10 +663,10 @@ export default function UniversalComposer({
                   setMode('poll');
                   setIsExpanded(true);
                 }}
-                className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold text-slate-300 hover:text-purple-400 hover:bg-brand-twilight transition-all whitespace-nowrap"
+                className="flex items-center gap-1.5 md:gap-2 px-3 md:px-4 py-2 md:py-2.5 min-h-[38px] md:min-h-[42px] rounded-xl text-xs md:text-sm font-bold text-slate-300 hover:text-purple-400 hover:bg-brand-twilight transition-all whitespace-nowrap"
                 title="Create Community Poll"
               >
-                <BarChart2 className="w-4 h-4 text-purple-400" />
+                <BarChart2 className="w-4 h-4 md:w-5 md:h-5 text-purple-400" />
                 <span className="hidden sm:inline">Poll</span>
               </button>
 
@@ -677,10 +677,10 @@ export default function UniversalComposer({
                   setMode('product');
                   setIsExpanded(true);
                 }}
-                className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold text-slate-300 hover:text-emerald-400 hover:bg-brand-twilight transition-all whitespace-nowrap"
+                className="flex items-center gap-1.5 md:gap-2 px-3 md:px-4 py-2 md:py-2.5 min-h-[38px] md:min-h-[42px] rounded-xl text-xs md:text-sm font-bold text-slate-300 hover:text-emerald-400 hover:bg-brand-twilight transition-all whitespace-nowrap"
                 title="Feature a Product"
               >
-                <ShoppingBag className="w-4 h-4 text-emerald-400" />
+                <ShoppingBag className="w-4 h-4 md:w-5 md:h-5 text-emerald-400" />
                 <span className="hidden sm:inline">Store</span>
               </button>
 
@@ -691,10 +691,10 @@ export default function UniversalComposer({
                   setMode('event');
                   setIsExpanded(true);
                 }}
-                className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold text-slate-300 hover:text-yellow-400 hover:bg-brand-twilight transition-all whitespace-nowrap"
+                className="flex items-center gap-1.5 md:gap-2 px-3 md:px-4 py-2 md:py-2.5 min-h-[38px] md:min-h-[42px] rounded-xl text-xs md:text-sm font-bold text-slate-300 hover:text-yellow-400 hover:bg-brand-twilight transition-all whitespace-nowrap"
                 title="Share an Upcoming Caribbean Event"
               >
-                <Calendar className="w-4 h-4 text-yellow-400" />
+                <Calendar className="w-4 h-4 md:w-5 md:h-5 text-yellow-400" />
                 <span className="hidden sm:inline">Event</span>
               </button>
 
@@ -705,10 +705,10 @@ export default function UniversalComposer({
                   setMode('fundraiser');
                   setIsExpanded(true);
                 }}
-                className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold text-slate-300 hover:text-rose-400 hover:bg-brand-twilight transition-all whitespace-nowrap"
+                className="flex items-center gap-1.5 md:gap-2 px-3 md:px-4 py-2 md:py-2.5 min-h-[38px] md:min-h-[42px] rounded-xl text-xs md:text-sm font-bold text-slate-300 hover:text-rose-400 hover:bg-brand-twilight transition-all whitespace-nowrap"
                 title="Launch Community Fundraiser"
               >
-                <HeartHandshake className="w-4 h-4 text-rose-400" />
+                <HeartHandshake className="w-4 h-4 md:w-5 md:h-5 text-rose-400" />
                 <span className="hidden sm:inline">Relief</span>
               </button>
 
@@ -716,10 +716,10 @@ export default function UniversalComposer({
               <button
                 type="button"
                 onClick={() => { setIsExpanded(true); setTimeout(() => handleGenerateCaptions(), 500); }}
-                className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold text-brand-goldenHour bg-brand-goldenHour/10 hover:bg-brand-goldenHour/20 border border-brand-goldenHour/30 transition-all whitespace-nowrap"
+                className="flex items-center gap-1.5 md:gap-2 px-3 md:px-4 py-2 md:py-2.5 min-h-[38px] md:min-h-[42px] rounded-xl text-xs md:text-sm font-bold text-brand-goldenHour bg-brand-goldenHour/10 hover:bg-brand-goldenHour/20 border border-brand-goldenHour/30 transition-all whitespace-nowrap"
                 title="AI Creator Assistant"
               >
-                <Sparkles className="w-4 h-4 text-brand-goldenHour" />
+                <Sparkles className="w-4 h-4 md:w-5 md:h-5 text-brand-goldenHour" />
                 <span className="hidden md:inline">✨ AI</span>
               </button>
             </div>
@@ -728,32 +728,32 @@ export default function UniversalComposer({
           /* ────────────────────────────────────────────────────────── */
           /* 2. EXPANDED FULL-FEATURED COMPOSER WORKSPACE               */
           /* ────────────────────────────────────────────────────────── */
-          <form onSubmit={handlePublish} className="p-5 space-y-4">
+          <form onSubmit={handlePublish} className="p-5 md:p-6 space-y-4 md:space-y-5">
             {scheduledAt && <input type="hidden" name="scheduled_at" value={scheduledAt} />}
             {/* Header: Author, Audience & Mode Badge */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-800/80">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-brand-caribbeanSea to-brand-sunriseCoral text-slate-950 font-black flex items-center justify-center text-xs shadow-md flex-shrink-0">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 md:pb-4 border-b border-slate-800/80">
+              <div className="flex items-center gap-3 md:gap-3.5">
+                <div className="w-10 h-10 md:w-12 md:h-12 rounded-2xl bg-gradient-to-tr from-brand-caribbeanSea to-brand-sunriseCoral text-slate-950 font-black flex items-center justify-center text-xs md:text-sm shadow-md flex-shrink-0">
                   {avatarInitials}
                 </div>
                 <div>
-                  <h4 className="font-extrabold text-sm text-brand-sandstone flex items-center gap-1.5">
+                  <h4 className="font-extrabold text-sm md:text-base text-brand-sandstone flex items-center gap-2">
                     {displayName}
                     {isReel && (
-                      <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded-full bg-brand-goldenHour/20 text-amber-300 border border-brand-goldenHour/30">
+                      <span className="text-[9px] md:text-xs font-black uppercase px-2 md:px-2.5 py-0.5 rounded-full bg-brand-goldenHour/20 text-amber-300 border border-brand-goldenHour/30">
                         Reel
                       </span>
                     )}
                     {mode !== 'text' && mode !== 'reel' && (
-                      <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded-full bg-brand-caribbeanSea/20 text-brand-caribbeanSea border border-brand-caribbeanSea/30">
+                      <span className="text-[9px] md:text-xs font-black uppercase px-2 md:px-2.5 py-0.5 rounded-full bg-brand-caribbeanSea/20 text-brand-caribbeanSea border border-brand-caribbeanSea/30">
                         {mode}
                       </span>
                     )}
                   </h4>
 
                   {/* Audience Selector */}
-                  <div className="flex items-center gap-1.5 mt-1">
-                    <label htmlFor="audience-select" className="text-[11px] font-bold text-brand-sandstone/60">
+                  <div className="flex items-center gap-2 mt-1">
+                    <label htmlFor="audience-select" className="text-[11px] md:text-xs font-bold text-brand-sandstone/60">
                       Who can see this?
                     </label>
                     <div className="relative inline-block">
@@ -761,7 +761,7 @@ export default function UniversalComposer({
                         id="audience-select"
                         value={audience}
                         onChange={(e) => setAudience(e.target.value as AudienceSelection)}
-                        className="bg-brand-twilight border border-brand-caribbeanSea/40 text-[11px] font-bold text-brand-caribbeanSea rounded-full pl-3 pr-7 py-1 focus:outline-none focus:border-brand-caribbeanSea cursor-pointer appearance-none shadow-sm"
+                        className="bg-brand-twilight border border-brand-caribbeanSea/40 text-[11px] md:text-xs font-bold text-brand-caribbeanSea rounded-full pl-3 pr-7 py-1 md:py-1.5 focus:outline-none focus:border-brand-caribbeanSea cursor-pointer appearance-none shadow-sm"
                       >
                         <option value="everyone">🌍 Everyone</option>
                         <option value="friends">🤝 Friends</option>
@@ -769,7 +769,7 @@ export default function UniversalComposer({
                         <option value="caribbean">🌴 Caribbean</option>
                         <option value="diaspora">✈️ Diaspora</option>
                       </select>
-                      <ChevronDown className="w-3 h-3 text-brand-caribbeanSea absolute right-2.5 top-2 pointer-events-none" />
+                      <ChevronDown className="w-3 h-3 md:w-3.5 md:h-3.5 text-brand-caribbeanSea absolute right-2.5 top-2 md:top-2.5 pointer-events-none" />
                     </div>
                   </div>
                 </div>
@@ -782,10 +782,10 @@ export default function UniversalComposer({
                   setIsExpanded(false);
                   setMode('text');
                 }}
-                className="self-end sm:self-auto p-1.5 rounded-full text-brand-sandstone/60 hover:text-brand-sandstone hover:bg-brand-dusk transition-colors"
+                className="self-end sm:self-auto p-1.5 md:p-2 rounded-full text-brand-sandstone/60 hover:text-brand-sandstone hover:bg-brand-dusk transition-colors min-w-[36px] min-h-[36px] md:min-w-[40px] md:min-h-[40px] flex items-center justify-center"
                 title="Close composer"
               >
-                <X className="w-5 h-5" />
+                <X className="w-5 h-5 md:w-6 md:h-6" />
               </button>
             </div>
 
@@ -809,9 +809,9 @@ export default function UniversalComposer({
                 }
                 rows={mediaList.length > 0 || mode !== 'text' ? 3 : 4}
                 maxLength={3000}
-                className="w-full bg-brand-twilight/80 border border-slate-800/80 rounded-2xl p-4 text-sm text-brand-sandstone placeholder-brand-sandstone/40 focus:outline-none focus:border-brand-caribbeanSea/60 focus:ring-1 focus:ring-brand-caribbeanSea/60 transition-all resize-none leading-relaxed"
+                className="w-full bg-brand-twilight/80 border border-slate-800/80 rounded-2xl p-4 md:p-5 text-sm md:text-base leading-relaxed md:leading-[1.6] text-brand-sandstone placeholder-brand-sandstone/40 focus:outline-none focus:border-brand-caribbeanSea/60 focus:ring-1 focus:ring-brand-caribbeanSea/60 transition-all resize-none"
               />
-              <div className="absolute bottom-3 right-3 text-[10px] font-mono text-brand-sandstone/40">
+              <div className="absolute bottom-3 right-3 text-[10px] md:text-xs font-mono text-brand-sandstone/40">
                 {content.length}/3000
               </div>
             </div>
@@ -1136,21 +1136,21 @@ export default function UniversalComposer({
             )}
 
             {/* Action Bar Footer (All options directly clickable) */}
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 border-t border-slate-800/80">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 md:pt-4 border-t border-slate-800/80">
               {/* Attachment Mode Switchers */}
-              <div className="flex items-center gap-1.5 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0 scrollbar-none">
+              <div className="flex items-center gap-1.5 md:gap-2 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0 scrollbar-none">
                 {/* Media */}
                 <button
                   type="button"
                   onClick={() => photoInputRef.current?.click()}
                   title="Add Photos from Device"
-                  className={`p-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all ${
+                  className={`p-2 md:px-3 md:py-2.5 rounded-xl text-xs md:text-sm font-semibold flex items-center gap-1.5 md:gap-2 min-h-[38px] md:min-h-[42px] transition-all ${
                     mediaList.length > 0
                       ? 'bg-brand-sunriseCoral/20 text-brand-sunriseCoral border border-brand-sunriseCoral/30'
                       : 'text-brand-sandstone/70 hover:text-brand-sunriseCoral hover:bg-brand-twilight'
                   }`}
                 >
-                  <ImageIcon className="w-4 h-4 text-brand-sunriseCoral" />
+                  <ImageIcon className="w-4 h-4 md:w-5 md:h-5 text-brand-sunriseCoral" />
                   <span className="hidden md:inline">Photo</span>
                 </button>
 
@@ -1159,9 +1159,9 @@ export default function UniversalComposer({
                   type="button"
                   onClick={() => videoInputRef.current?.click()}
                   title="Add Video from Device"
-                  className="p-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all text-brand-sandstone/70 hover:text-rose-400 hover:bg-brand-twilight"
+                  className="p-2 md:px-3 md:py-2.5 rounded-xl text-xs md:text-sm font-semibold flex items-center gap-1.5 md:gap-2 min-h-[38px] md:min-h-[42px] transition-all text-brand-sandstone/70 hover:text-rose-400 hover:bg-brand-twilight"
                 >
-                  <Video className="w-4 h-4 text-rose-400" />
+                  <Video className="w-4 h-4 md:w-5 md:h-5 text-rose-400" />
                   <span className="hidden md:inline">Video</span>
                 </button>
 
@@ -1174,13 +1174,13 @@ export default function UniversalComposer({
                     reelInputRef.current?.click();
                   }}
                   title="Upload Short Vertical Reel"
-                  className={`p-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all ${
+                  className={`p-2 md:px-3 md:py-2.5 rounded-xl text-xs md:text-sm font-semibold flex items-center gap-1.5 md:gap-2 min-h-[38px] md:min-h-[42px] transition-all ${
                     isReel
                       ? 'bg-brand-goldenHour/20 text-amber-300 border border-brand-goldenHour/30'
                       : 'text-brand-sandstone/70 hover:text-amber-300 hover:bg-brand-twilight'
                   }`}
                 >
-                  <Film className="w-4 h-4 text-brand-goldenHour" />
+                  <Film className="w-4 h-4 md:w-5 md:h-5 text-brand-goldenHour" />
                   <span className="hidden md:inline">Reel</span>
                 </button>
 
@@ -1189,9 +1189,9 @@ export default function UniversalComposer({
                   type="button"
                   onClick={() => openCameraFor('photo')}
                   title="Capture from Camera"
-                  className="p-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all text-brand-sandstone/70 hover:text-brand-caribbeanSea hover:bg-brand-twilight"
+                  className="p-2 md:px-3 md:py-2.5 rounded-xl text-xs md:text-sm font-semibold flex items-center gap-1.5 md:gap-2 min-h-[38px] md:min-h-[42px] transition-all text-brand-sandstone/70 hover:text-brand-caribbeanSea hover:bg-brand-twilight"
                 >
-                  <Camera className="w-4 h-4 text-brand-caribbeanSea" />
+                  <Camera className="w-4 h-4 md:w-5 md:h-5 text-brand-caribbeanSea" />
                   <span className="hidden lg:inline">Camera</span>
                 </button>
 
@@ -1200,13 +1200,13 @@ export default function UniversalComposer({
                   type="button"
                   onClick={() => setMode(mode === 'poll' ? 'text' : 'poll')}
                   title="Create Interactive Poll"
-                  className={`p-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all ${
+                  className={`p-2 md:px-3 md:py-2.5 rounded-xl text-xs md:text-sm font-semibold flex items-center gap-1.5 md:gap-2 min-h-[38px] md:min-h-[42px] transition-all ${
                     mode === 'poll'
                       ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30'
                       : 'text-brand-sandstone/70 hover:text-purple-400 hover:bg-brand-twilight'
                   }`}
                 >
-                  <BarChart2 className="w-4 h-4 text-purple-400" />
+                  <BarChart2 className="w-4 h-4 md:w-5 md:h-5 text-purple-400" />
                   <span className="hidden md:inline">Poll</span>
                 </button>
 
@@ -1215,13 +1215,13 @@ export default function UniversalComposer({
                   type="button"
                   onClick={() => setMode(mode === 'product' ? 'text' : 'product')}
                   title="Feature a Store Product"
-                  className={`p-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all ${
+                  className={`p-2 md:px-3 md:py-2.5 rounded-xl text-xs md:text-sm font-semibold flex items-center gap-1.5 md:gap-2 min-h-[38px] md:min-h-[42px] transition-all ${
                     mode === 'product'
                       ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
                       : 'text-brand-sandstone/70 hover:text-emerald-400 hover:bg-brand-twilight'
                   }`}
                 >
-                  <ShoppingBag className="w-4 h-4 text-emerald-400" />
+                  <ShoppingBag className="w-4 h-4 md:w-5 md:h-5 text-emerald-400" />
                   <span className="hidden md:inline">Store</span>
                 </button>
 
@@ -1230,13 +1230,13 @@ export default function UniversalComposer({
                   type="button"
                   onClick={() => setMode(mode === 'event' ? 'text' : 'event')}
                   title="Attach Upcoming Event"
-                  className={`p-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all ${
+                  className={`p-2 md:px-3 md:py-2.5 rounded-xl text-xs md:text-sm font-semibold flex items-center gap-1.5 md:gap-2 min-h-[38px] md:min-h-[42px] transition-all ${
                     mode === 'event'
                       ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30'
                       : 'text-brand-sandstone/70 hover:text-yellow-400 hover:bg-brand-twilight'
                   }`}
                 >
-                  <Calendar className="w-4 h-4 text-yellow-400" />
+                  <Calendar className="w-4 h-4 md:w-5 md:h-5 text-yellow-400" />
                   <span className="hidden md:inline">Event</span>
                 </button>
 
@@ -1245,13 +1245,13 @@ export default function UniversalComposer({
                   type="button"
                   onClick={() => setMode(mode === 'fundraiser' ? 'text' : 'fundraiser')}
                   title="Launch Community Relief Fundraiser"
-                  className={`p-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all ${
+                  className={`p-2 md:px-3 md:py-2.5 rounded-xl text-xs md:text-sm font-semibold flex items-center gap-1.5 md:gap-2 min-h-[38px] md:min-h-[42px] transition-all ${
                     mode === 'fundraiser'
                       ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30'
                       : 'text-brand-sandstone/70 hover:text-rose-400 hover:bg-brand-twilight'
                   }`}
                 >
-                  <HeartHandshake className="w-4 h-4 text-rose-400" />
+                  <HeartHandshake className="w-4 h-4 md:w-5 md:h-5 text-rose-400" />
                   <span className="hidden md:inline">Relief</span>
                 </button>
 
@@ -1261,13 +1261,13 @@ export default function UniversalComposer({
                     type="button"
                     onClick={() => setIsEmojiPickerOpen(!isEmojiPickerOpen)}
                     title="Insert Emojis"
-                    className={`p-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all ${
+                    className={`p-2 md:px-3 md:py-2.5 rounded-xl text-xs md:text-sm font-semibold flex items-center gap-1.5 md:gap-2 min-h-[38px] md:min-h-[42px] transition-all ${
                       isEmojiPickerOpen
                         ? 'bg-amber-400/20 text-amber-300 border border-amber-400/30'
                         : 'text-brand-sandstone/70 hover:text-amber-300 hover:bg-brand-twilight'
                     }`}
                   >
-                    <Smile className="w-4 h-4 text-amber-400" />
+                    <Smile className="w-4 h-4 md:w-5 md:h-5 text-amber-400" />
                     <span className="hidden sm:inline">Emoji</span>
                   </button>
 
@@ -1288,9 +1288,9 @@ export default function UniversalComposer({
                     onClick={handleGenerateCaptions}
                     disabled={isGeneratingCaptions}
                     title="Generate Captions with AI"
-                    className="p-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all text-brand-goldenHour bg-brand-goldenHour/10 border border-brand-goldenHour/30 hover:bg-brand-goldenHour/20 disabled:opacity-50"
+                    className="p-2 md:px-3 md:py-2.5 rounded-xl text-xs md:text-sm font-semibold flex items-center gap-1.5 md:gap-2 min-h-[38px] md:min-h-[42px] transition-all text-brand-goldenHour bg-brand-goldenHour/10 border border-brand-goldenHour/30 hover:bg-brand-goldenHour/20 disabled:opacity-50"
                   >
-                    {isGeneratingCaptions ? <Loader2 className="w-4 h-4 text-brand-goldenHour animate-spin" /> : <Sparkles className="w-4 h-4 text-brand-goldenHour" />}
+                    {isGeneratingCaptions ? <Loader2 className="w-4 h-4 md:w-5 md:h-5 text-brand-goldenHour animate-spin" /> : <Sparkles className="w-4 h-4 md:w-5 md:h-5 text-brand-goldenHour" />}
                     <span className="hidden lg:inline">✨ AI</span>
                   </button>
                   {aiTooltip && (
@@ -1306,16 +1306,16 @@ export default function UniversalComposer({
                   onClick={handleGenerateHashtags}
                   disabled={isGeneratingHashtags}
                   title="Generate Hashtags with AI"
-                  className="p-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all text-brand-caribbeanSea bg-brand-caribbeanSea/10 border border-brand-caribbeanSea/30 hover:bg-brand-caribbeanSea/20 disabled:opacity-50"
+                  className="p-2 md:px-3 md:py-2.5 rounded-xl text-xs md:text-sm font-semibold flex items-center gap-1.5 md:gap-2 min-h-[38px] md:min-h-[42px] transition-all text-brand-caribbeanSea bg-brand-caribbeanSea/10 border border-brand-caribbeanSea/30 hover:bg-brand-caribbeanSea/20 disabled:opacity-50"
                 >
-                  {isGeneratingHashtags ? <Loader2 className="w-4 h-4 text-brand-caribbeanSea animate-spin" /> : <Hash className="w-4 h-4 text-brand-caribbeanSea" />}
+                  {isGeneratingHashtags ? <Loader2 className="w-4 h-4 md:w-5 md:h-5 text-brand-caribbeanSea animate-spin" /> : <Hash className="w-4 h-4 md:w-5 md:h-5 text-brand-caribbeanSea" />}
                   <span className="hidden lg:inline"># Hashtags</span>
                 </button>
               </div>
 
               {/* AI Suggestions Display */}
               {(captionSuggestions.length > 0 || hashtagSuggestions.length > 0) && (
-                <div className="w-full bg-brand-twilight/50 border border-slate-700/50 rounded-xl p-3 mt-3 animate-fadeIn text-xs space-y-2">
+                <div className="w-full bg-brand-twilight/50 border border-slate-700/50 rounded-xl p-3 mt-3 animate-fadeIn text-xs md:text-sm space-y-2">
                   {captionSuggestions.length > 0 && (
                     <div className="space-y-1">
                       <p className="text-brand-sandstone/70 font-bold mb-1">Select an AI Caption to append:</p>
@@ -1371,16 +1371,16 @@ export default function UniversalComposer({
                       !eventTitle.trim() &&
                       !fundraiserTitle.trim())
                   }
-                  className="w-full sm:w-auto bg-gradient-to-r from-brand-caribbeanSea via-brand-sunriseCoral to-brand-goldenHour hover:opacity-95 disabled:opacity-40 text-slate-950 font-black px-6 py-2.5 rounded-2xl text-xs flex items-center justify-center gap-2 transition-all shadow-lg shadow-brand-caribbeanSea/20 cursor-pointer"
+                  className="w-full sm:w-auto bg-gradient-to-r from-brand-caribbeanSea via-brand-sunriseCoral to-brand-goldenHour hover:opacity-95 disabled:opacity-40 text-slate-950 font-black px-6 md:px-8 py-2.5 md:py-3 min-h-[42px] md:min-h-[46px] rounded-2xl text-xs md:text-sm flex items-center justify-center gap-2 transition-all shadow-lg shadow-brand-caribbeanSea/20 cursor-pointer"
                 >
                   {isSubmitting ? (
                     <>
-                      <Loader2 className="w-4 h-4 animate-spin text-slate-950" />
+                      <Loader2 className="w-4 h-4 md:w-5 md:h-5 animate-spin text-slate-950" />
                       <span>{uploadProgressText || (scheduledAt ? 'Scheduling...' : 'Publishing...')}</span>
                     </>
                   ) : (
                     <>
-                      <Send className="w-3.5 h-3.5" />
+                      <Send className="w-3.5 h-3.5 md:w-4 md:h-4" />
                       <span>{scheduledAt ? 'Schedule' : 'Post'}</span>
                     </>
                   )}

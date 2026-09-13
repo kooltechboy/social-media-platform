@@ -222,14 +222,14 @@ export default function OnlineFriendsWidget() {
       <div className="flex items-center justify-between">
         <Link
           href="/friends"
-          className="font-black text-sm text-white flex items-center gap-2 hover:text-brand-caribbeanSea transition-colors"
+          className="font-black text-sm md:text-base text-white flex items-center gap-2 hover:text-brand-caribbeanSea transition-colors"
         >
-          <div className="w-7 h-7 rounded-xl bg-brand-caribbeanSea/20 border border-brand-caribbeanSea/40 flex items-center justify-center text-brand-caribbeanSea">
-            <Users className="w-4 h-4" />
+          <div className="w-7 h-7 md:w-8 md:h-8 rounded-xl bg-brand-caribbeanSea/20 border border-brand-caribbeanSea/40 flex items-center justify-center text-brand-caribbeanSea">
+            <Users className="w-4 h-4 md:w-4.5 md:h-4.5" />
           </div>
           <span>Friends & Members</span>
         </Link>
-        <span className="text-[10px] font-black px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center gap-1.5 shadow-sm">
+        <span className="text-[10px] md:text-xs font-black px-2.5 md:px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center gap-1.5 shadow-sm">
           <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
           {onlineCount} ONLINE
         </span>
@@ -237,11 +237,11 @@ export default function OnlineFriendsWidget() {
 
       {/* Filter Tabs & Quick Action */}
       <div className="flex items-center justify-between gap-2 pt-0.5">
-        <div className="flex items-center bg-[#1E142B] p-1 rounded-xl border border-white/10 text-[11px] font-bold">
+        <div className="flex items-center bg-[#1E142B] p-1 rounded-xl border border-white/10 text-[11px] md:text-xs font-bold">
           <button
             type="button"
             onClick={() => setActiveFilter('all')}
-            className={`px-3 py-1 rounded-lg transition-all ${
+            className={`px-3 md:px-3.5 py-1 md:py-1.5 rounded-lg transition-all ${
               activeFilter === 'all'
                 ? 'bg-brand-caribbeanSea text-slate-950 font-black shadow-sm'
                 : 'text-slate-300 hover:text-white'
@@ -252,7 +252,7 @@ export default function OnlineFriendsWidget() {
           <button
             type="button"
             onClick={() => setActiveFilter('online')}
-            className={`px-3 py-1 rounded-lg transition-all flex items-center gap-1 ${
+            className={`px-3 md:px-3.5 py-1 md:py-1.5 rounded-lg transition-all flex items-center gap-1 ${
               activeFilter === 'online'
                 ? 'bg-emerald-500 text-slate-950 font-black shadow-sm'
                 : 'text-slate-300 hover:text-white'
@@ -265,10 +265,10 @@ export default function OnlineFriendsWidget() {
 
         <Link
           href="/messages"
-          className="text-[11px] font-bold px-2.5 py-1.5 rounded-xl bg-gradient-to-r from-brand-caribbeanSea/20 to-brand-sunriseCoral/20 hover:from-brand-caribbeanSea/30 hover:to-brand-sunriseCoral/30 border border-brand-caribbeanSea/30 text-white flex items-center gap-1 transition-all"
+          className="text-[11px] md:text-xs font-bold px-2.5 md:px-3 py-1.5 md:py-2 min-h-[34px] md:min-h-[38px] rounded-xl bg-gradient-to-r from-brand-caribbeanSea/20 to-brand-sunriseCoral/20 hover:from-brand-caribbeanSea/30 hover:to-brand-sunriseCoral/30 border border-brand-caribbeanSea/30 text-white flex items-center gap-1.5 transition-all"
           title="Open Messages"
         >
-          <MessageCircle className="w-3.5 h-3.5 text-brand-caribbeanSea" />
+          <MessageCircle className="w-3.5 h-3.5 md:w-4 md:h-4 text-brand-caribbeanSea" />
           <span>Messages</span>
         </Link>
       </div>
@@ -276,14 +276,14 @@ export default function OnlineFriendsWidget() {
       {/* Search Bar */}
       <div className="relative">
         <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-          <Search className="h-4 w-4 text-slate-400" />
+          <Search className="h-4 w-4 md:h-4.5 md:w-4.5 text-slate-400" />
         </div>
         <input
           type="text"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search members by name or @..."
-          className="w-full bg-[#1A1128] border border-white/15 rounded-xl pl-9 pr-8 py-2.5 text-xs text-white placeholder-slate-400 focus:outline-none focus:border-brand-caribbeanSea focus:ring-1 focus:ring-brand-caribbeanSea/50 transition-all font-medium"
+          className="w-full bg-[#1A1128] border border-white/15 rounded-xl pl-9 pr-8 py-2.5 md:py-3 min-h-[40px] md:min-h-[44px] text-xs md:text-sm text-white placeholder-slate-400 focus:outline-none focus:border-brand-caribbeanSea focus:ring-1 focus:ring-brand-caribbeanSea/50 transition-all font-medium"
         />
         {search && (
           <button
@@ -291,7 +291,7 @@ export default function OnlineFriendsWidget() {
             onClick={() => setSearch('')}
             className="absolute inset-y-0 right-2.5 flex items-center text-slate-400 hover:text-white"
           >
-            <X className="w-3.5 h-3.5" />
+            <X className="w-3.5 h-3.5 md:w-4 md:h-4" />
           </button>
         )}
       </div>
@@ -314,7 +314,7 @@ export default function OnlineFriendsWidget() {
           displayedFriends.map((friend) => (
             <div
               key={friend.id}
-              className="flex items-center justify-between p-2.5 rounded-2xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/5 hover:border-white/15 transition-all group shadow-sm cursor-pointer"
+              className="flex items-center justify-between p-2.5 md:p-3 rounded-2xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/5 hover:border-white/15 transition-all group shadow-sm cursor-pointer"
             >
               <Link
                 href={`/messages?u=${encodeURIComponent(friend.username)}`}
@@ -336,14 +336,14 @@ export default function OnlineFriendsWidget() {
                 </div>
                 <div className="min-w-0">
                   <div className="flex items-center gap-1.5">
-                    <p className="text-xs font-black text-white group-hover:text-brand-caribbeanSea transition-colors truncate">
+                    <p className="text-xs md:text-sm font-black text-white group-hover:text-brand-caribbeanSea transition-colors truncate">
                       {friend.name}
                     </p>
                     {friend.isVerified && (
-                      <BadgeCheck className="w-3.5 h-3.5 text-brand-caribbeanSea flex-shrink-0" />
+                      <BadgeCheck className="w-3.5 h-3.5 md:w-4 md:h-4 text-brand-caribbeanSea flex-shrink-0" />
                     )}
                   </div>
-                  <p className="text-[11px] font-semibold text-slate-300 truncate">
+                  <p className="text-[11px] md:text-xs font-semibold text-slate-300 truncate">
                     @{friend.username}
                   </p>
                 </div>
@@ -360,7 +360,7 @@ export default function OnlineFriendsWidget() {
                       handleToggleFollow(friend.id);
                     }}
                     disabled={followLoadingId === friend.id}
-                    className={`px-2 py-1.5 rounded-xl text-[10px] font-black border transition-all flex items-center gap-1 shadow-sm ${
+                    className={`px-2 md:px-2.5 py-1.5 md:py-2 min-h-[32px] md:min-h-[36px] rounded-xl text-[10px] md:text-xs font-black border transition-all flex items-center gap-1 shadow-sm ${
                       followingUserIds.has(friend.id)
                         ? 'bg-white/10 hover:bg-rose-500/20 text-slate-300 hover:text-rose-300 border-white/15 hover:border-rose-500/30'
                         : 'bg-brand-sunriseCoral/20 hover:bg-brand-sunriseCoral text-brand-sunriseCoral hover:text-slate-950 border-brand-sunriseCoral/40 hover:border-transparent'
@@ -369,12 +369,12 @@ export default function OnlineFriendsWidget() {
                   >
                     {followingUserIds.has(friend.id) ? (
                       <>
-                        <UserCheck className="w-3 h-3 text-emerald-400" />
+                        <UserCheck className="w-3 h-3 md:w-3.5 md:h-3.5 text-emerald-400" />
                         <span className="hidden sm:inline">Following</span>
                       </>
                     ) : (
                       <>
-                        <UserPlus className="w-3 h-3" />
+                        <UserPlus className="w-3 h-3 md:w-3.5 md:h-3.5" />
                         <span className="hidden sm:inline">Follow</span>
                       </>
                     )}
@@ -383,11 +383,11 @@ export default function OnlineFriendsWidget() {
 
                 <Link
                   href={`/messages?u=${encodeURIComponent(friend.username)}`}
-                  className="p-1.5 sm:px-2.5 sm:py-1.5 rounded-xl bg-brand-caribbeanSea/15 hover:bg-brand-caribbeanSea text-brand-caribbeanSea hover:text-slate-950 border border-brand-caribbeanSea/30 hover:border-transparent transition-all shadow-sm flex items-center gap-1 flex-shrink-0"
+                  className="p-1.5 sm:px-2.5 sm:py-1.5 md:px-3 md:py-2 min-h-[32px] md:min-h-[36px] rounded-xl bg-brand-caribbeanSea/15 hover:bg-brand-caribbeanSea text-brand-caribbeanSea hover:text-slate-950 border border-brand-caribbeanSea/30 hover:border-transparent transition-all shadow-sm flex items-center gap-1 flex-shrink-0"
                   title={`Start chat with ${friend.name}`}
                 >
-                  <MessageSquare className="w-3.5 h-3.5" />
-                  <span className="text-[10px] font-black hidden sm:inline-block">Chat</span>
+                  <MessageSquare className="w-3.5 h-3.5 md:w-4 md:h-4" />
+                  <span className="text-[10px] md:text-xs font-black hidden sm:inline-block">Chat</span>
                 </Link>
               </div>
             </div>
@@ -395,10 +395,10 @@ export default function OnlineFriendsWidget() {
         ) : (
           <div className="text-center py-8 px-4 rounded-2xl bg-white/[0.02] border border-dashed border-white/10 space-y-2">
             <Users className="w-6 h-6 text-slate-400 mx-auto" />
-            <p className="text-xs font-bold text-slate-200">
+            <p className="text-xs md:text-sm font-bold text-slate-200">
               {activeFilter === 'online' ? 'No members currently online' : `No members found matching "${search}"`}
             </p>
-            <p className="text-[11px] text-slate-400">
+            <p className="text-[11px] md:text-xs text-slate-400">
               Browse the directory to connect with Caribbean diaspora members.
             </p>
           </div>
@@ -409,15 +409,15 @@ export default function OnlineFriendsWidget() {
       <div className="pt-3 border-t border-white/10 flex items-center justify-between text-xs">
         <Link
           href="/friends"
-          className="text-[11px] font-black text-brand-caribbeanSea hover:text-cyan-300 transition-colors flex items-center gap-1"
+          className="text-[11px] md:text-xs font-black text-brand-caribbeanSea hover:text-cyan-300 transition-colors flex items-center gap-1"
         >
-          View All Friends <ArrowRight className="w-3 h-3" />
+          View All Friends <ArrowRight className="w-3 h-3 md:w-3.5 md:h-3.5" />
         </Link>
         <Link
           href="/members"
-          className="text-[11px] font-black text-amber-400 hover:text-amber-300 transition-colors flex items-center gap-1"
+          className="text-[11px] md:text-xs font-black text-amber-400 hover:text-amber-300 transition-colors flex items-center gap-1"
         >
-          <Compass className="w-3 h-3" /> Discover Directory
+          <Compass className="w-3 h-3 md:w-3.5 md:h-3.5" /> Discover Directory
         </Link>
       </div>
     </div>

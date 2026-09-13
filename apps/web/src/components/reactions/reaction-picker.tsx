@@ -74,7 +74,7 @@ export default function ReactionPicker({ currentReaction, onSelect, className = 
     >
       <button
         type="button"
-        className={`flex items-center gap-1.5 text-sm font-medium transition-colors ${
+        className={`flex items-center gap-1.5 px-2 py-1.5 md:px-2.5 md:py-2 min-h-[38px] md:min-h-[42px] rounded-xl text-sm font-medium transition-colors ${
           current ? current.color : 'text-slate-400 hover:text-slate-200'
         }`}
         onClick={() => {
@@ -88,13 +88,13 @@ export default function ReactionPicker({ currentReaction, onSelect, className = 
         onTouchEnd={handleTouchEnd}
         aria-label={current ? `Reacted: ${current.label}. Hold to change.` : 'React to post'}
       >
-        <span className="text-base leading-none">{current?.emoji ?? '🤍'}</span>
-        <span className="hidden sm:inline text-xs">{current?.label ?? 'Like'}</span>
+        <span className="text-base md:text-lg leading-none">{current?.emoji ?? '🤍'}</span>
+        <span className="hidden sm:inline text-xs md:text-sm font-semibold">{current?.label ?? 'Like'}</span>
       </button>
 
       {open && (
         <div
-          className="absolute bottom-full left-0 mb-2 flex items-center gap-1 bg-brand-dusk border border-slate-700 rounded-2xl px-3 py-2 shadow-2xl z-50 animate-fadeIn"
+          className="absolute bottom-full left-0 mb-2 flex items-center gap-1 md:gap-1.5 bg-brand-dusk border border-slate-700 rounded-2xl px-3 py-2 md:px-4 md:py-2.5 shadow-2xl z-50 animate-fadeIn"
           role="listbox"
           aria-label="Choose a reaction"
           onMouseEnter={() => { if (closeTimerRef.current) clearTimeout(closeTimerRef.current); }}
@@ -109,7 +109,7 @@ export default function ReactionPicker({ currentReaction, onSelect, className = 
                 role="option"
                 aria-selected={currentReaction === type}
                 title={info.label}
-                className={`flex flex-col items-center gap-0.5 p-1.5 rounded-xl transition-all hover:scale-125 hover:bg-slate-700/50 ${
+                className={`flex flex-col items-center gap-0.5 p-1.5 md:p-2 rounded-xl transition-all hover:scale-125 hover:bg-slate-700/50 ${
                   currentReaction === type ? 'ring-1 ring-brand-caribbeanSea bg-slate-700/50 scale-110' : ''
                 }`}
                 onClick={(e) => {
@@ -118,8 +118,8 @@ export default function ReactionPicker({ currentReaction, onSelect, className = 
                   setOpen(false);
                 }}
               >
-                <span className="text-xl leading-none">{info.emoji}</span>
-                <span className="text-[9px] text-slate-400 font-medium leading-none">{info.label}</span>
+                <span className="text-xl md:text-2xl leading-none">{info.emoji}</span>
+                <span className="text-[9px] md:text-[11px] text-slate-400 font-medium leading-none">{info.label}</span>
               </button>
             );
           })}

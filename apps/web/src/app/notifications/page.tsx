@@ -27,7 +27,7 @@ function relativeTime(iso: string): string {
 }
 
 function NotificationIcon({ kind }: { kind: string }) {
-  const cls = 'w-4 h-4';
+  const cls = 'w-4 h-4 md:w-5 md:h-5';
   if (kind === 'message') return <MessageSquare className={`${cls} text-brand-caribbeanSea`} />;
   if (kind === 'reaction' || kind === 'post_reaction') return <Heart className={`${cls} text-brand-goldenHour`} />;
   if (kind === 'comment') return <MessageCircle className={`${cls} text-brand-caribbeanSea`} />;
@@ -121,14 +121,14 @@ export default async function NotificationsPage() {
           <div className="flex items-center gap-4">
             <Link
               href="/"
-              className="flex items-center gap-2 text-brand-sandstone/70 hover:text-white text-sm font-bold transition-colors min-h-[40px] px-2"
+              className="flex items-center gap-2 text-brand-sandstone/70 hover:text-white text-sm md:text-base font-bold transition-colors min-h-[40px] md:min-h-[44px] px-2.5"
             >
-              <ArrowLeft className="w-4 h-4" /> Back
+              <ArrowLeft className="w-4 h-4 md:w-5 md:h-5" /> Back
             </Link>
-            <h1 className="text-lg sm:text-xl font-black text-white flex items-center gap-2.5">
-              <Bell className="w-5 h-5 text-orange-400" /> Notifications
+            <h1 className="text-lg sm:text-xl md:text-2xl font-black text-white flex items-center gap-2.5">
+              <Bell className="w-5 h-5 md:w-6 md:h-6 text-orange-400" /> Notifications
               {unreadCount > 0 && (
-                <span className="text-[11px] font-black px-2.5 py-0.5 rounded-full bg-orange-500/20 text-orange-300 border border-orange-500/40">
+                <span className="text-[11px] md:text-xs font-black px-2.5 md:px-3 py-0.5 md:py-1 rounded-full bg-orange-500/20 text-orange-300 border border-orange-500/40">
                   {unreadCount} new
                 </span>
               )}
@@ -143,15 +143,15 @@ export default async function NotificationsPage() {
         </div>
       </header>
 
-      <main className="max-w-4xl 3xl:max-w-5xl mx-auto py-4 space-y-3">
+      <main className="max-w-4xl 3xl:max-w-5xl mx-auto py-4 space-y-3 md:space-y-4">
         {notifications.length === 0 ? (
           <div className="surface-card rounded-3xl p-12 text-center space-y-4 max-w-md mx-auto mt-8 border border-white/10">
             <div className="w-16 h-16 rounded-2xl bg-white/5 border border-white/15 flex items-center justify-center mx-auto text-brand-sandstone/60">
               <Bell className="w-8 h-8" />
             </div>
-            <div className="space-y-1">
-              <h3 className="text-lg font-black text-white">No notifications yet</h3>
-              <p className="text-sm text-brand-sandstone/70 leading-relaxed">
+            <div className="space-y-1.5">
+              <h3 className="text-lg md:text-xl font-black text-white">No notifications yet</h3>
+              <p className="text-sm md:text-base text-brand-sandstone/70 leading-relaxed md:leading-[1.6]">
                 When Caribbean creators and friends interact with your content, tips, or orders, they&apos;ll appear here.
               </p>
             </div>
@@ -160,17 +160,17 @@ export default async function NotificationsPage() {
           notifications.map((notification) => (
             <div
               key={notification.id}
-              className={`surface-card surface-card-interactive rounded-2xl p-4 sm:p-5 flex items-start gap-4 transition-all ${
+              className={`surface-card surface-card-interactive rounded-2xl p-4 sm:p-5 md:p-6 flex items-start gap-4 md:gap-5 transition-all ${
                 !notification.read_at
                   ? 'border-orange-500/40 bg-orange-950/10'
                   : 'border-white/10'
               }`}
             >
-              <div className="w-11 h-11 rounded-2xl bg-slate-900 border border-white/15 flex items-center justify-center flex-shrink-0 shadow-inner">
+              <div className="w-11 h-11 md:w-12 md:h-12 rounded-2xl bg-slate-900 border border-white/15 flex items-center justify-center flex-shrink-0 shadow-inner">
                 <NotificationIcon kind={notification.kind} />
               </div>
-              <div className="flex-1 min-w-0 space-y-1">
-                <p className="text-sm sm:text-base text-brand-sandstone/90 leading-snug">
+              <div className="flex-1 min-w-0 space-y-1.5">
+                <p className="text-sm sm:text-base md:text-[16px] text-brand-sandstone/90 leading-snug md:leading-relaxed">
                   {notification.actor ? (
                     <Link
                       href={`/profile/${notification.actor.username}`}
@@ -186,7 +186,7 @@ export default async function NotificationsPage() {
                 {notification.payload?.post_id && (
                   <Link
                     href={`/?post=${notification.payload.post_id}`}
-                    className="inline-flex items-center gap-1 text-xs font-black text-orange-400 hover:text-orange-300 mt-1 min-h-[36px]"
+                    className="inline-flex items-center gap-1.5 text-xs md:text-sm font-black text-orange-400 hover:text-orange-300 mt-1 min-h-[36px] md:min-h-[40px]"
                   >
                     View Post →
                   </Link>
@@ -194,7 +194,7 @@ export default async function NotificationsPage() {
                 {notification.payload?.event_id && (
                   <Link
                     href="/events"
-                    className="inline-flex items-center gap-1 text-xs font-black text-amber-400 hover:text-amber-300 mt-1 min-h-[36px]"
+                    className="inline-flex items-center gap-1.5 text-xs md:text-sm font-black text-amber-400 hover:text-amber-300 mt-1 min-h-[36px] md:min-h-[40px]"
                   >
                     View Event Details →
                   </Link>
@@ -202,7 +202,7 @@ export default async function NotificationsPage() {
                 {notification.payload?.stream_id && (
                   <Link
                     href={`/live?id=${notification.payload.stream_id}`}
-                    className="inline-flex items-center gap-1 text-xs font-black text-rose-400 hover:text-rose-300 mt-1 min-h-[36px]"
+                    className="inline-flex items-center gap-1.5 text-xs md:text-sm font-black text-rose-400 hover:text-rose-300 mt-1 min-h-[36px] md:min-h-[40px]"
                   >
                     Join Live Stream →
                   </Link>
@@ -210,18 +210,18 @@ export default async function NotificationsPage() {
                 {(notification.kind === 'message' || notification.payload?.conversation_id) && (
                   <Link
                     href={`/messages?c=${notification.payload?.conversation_id || notification.entity_id || ''}`}
-                    className="inline-flex items-center gap-1 text-xs font-black text-brand-caribbeanSea hover:underline mt-1 min-h-[36px]"
+                    className="inline-flex items-center gap-1.5 text-xs md:text-sm font-black text-brand-caribbeanSea hover:underline mt-1 min-h-[36px] md:min-h-[40px]"
                   >
                     Open Conversation →
                   </Link>
                 )}
-                <span className="text-xs text-brand-sandstone/50 font-medium block pt-0.5">
+                <span className="text-xs md:text-sm text-brand-sandstone/50 font-medium block pt-0.5">
                   {relativeTime(notification.created_at)}
                 </span>
               </div>
               {!notification.read_at && (
                 <div className="flex items-center gap-2.5 flex-shrink-0 pt-1">
-                  <span className="w-2.5 h-2.5 bg-orange-400 rounded-full animate-pulse" aria-label="Unread" />
+                  <span className="w-2.5 h-2.5 md:w-3 md:h-3 bg-orange-400 rounded-full animate-pulse" aria-label="Unread" />
                   <NotificationMarkRead mode="single" notificationId={notification.id} />
                 </div>
               )}
@@ -229,7 +229,7 @@ export default async function NotificationsPage() {
           ))
         )}
         {notifications.length > 0 && (
-          <p className="text-center text-xs text-brand-sandstone/50 py-6 font-medium">
+          <p className="text-center text-xs md:text-sm text-brand-sandstone/50 py-6 font-medium">
             Showing last {notifications.length} notification{notifications.length !== 1 ? 's' : ''}.
           </p>
         )}

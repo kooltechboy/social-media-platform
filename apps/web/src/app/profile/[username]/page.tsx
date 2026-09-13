@@ -250,17 +250,17 @@ export default async function ProfilePage({
         <div className="flex items-center gap-3">
           <Link
             href="/"
-            className="flex items-center gap-1.5 text-brand-sandstone/70 hover:text-white text-xs font-bold transition-colors min-h-[36px] px-2"
+            className="flex items-center gap-1.5 text-brand-sandstone/70 hover:text-white text-xs md:text-sm font-bold transition-colors min-h-[38px] md:min-h-[42px] px-2.5 py-1.5"
           >
             ← Back
           </Link>
           <span className="text-white/20">|</span>
-          <span className="text-xs sm:text-sm font-black text-white truncate max-w-[200px] sm:max-w-md">
+          <span className="text-xs sm:text-sm md:text-base font-black text-white truncate max-w-[200px] sm:max-w-md">
             {profileData.display_name}
           </span>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2.5">
           <ProfileHeaderActions
             username={profileData.username}
             isOwnProfile={isOwnProfile}
@@ -271,9 +271,9 @@ export default async function ProfilePage({
             <Link
               href="/settings"
               aria-label="Account Settings"
-              className="p-2.5 text-brand-sandstone/80 hover:text-white rounded-xl hover:bg-white/10 border border-white/15 transition-colors min-h-[40px] min-w-[40px] flex items-center justify-center"
+              className="p-2.5 text-brand-sandstone/80 hover:text-white rounded-xl hover:bg-white/10 border border-white/15 transition-colors min-h-[40px] min-w-[40px] md:min-h-[44px] md:min-w-[44px] flex items-center justify-center"
             >
-              <Settings className="w-4 h-4" />
+              <Settings className="w-4 h-4 md:w-5 md:h-5" />
             </Link>
           )}
         </div>
@@ -310,9 +310,9 @@ export default async function ProfilePage({
                   className="ring-4 ring-slate-950 shadow-2xl shrink-0"
                 />
 
-                <div className="space-y-1.5">
+                <div className="space-y-2">
                   <div className="flex items-center gap-2.5 flex-wrap">
-                    <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black text-white tracking-tight flex items-center gap-2">
+                    <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-black text-white tracking-tight flex items-center gap-2.5">
                       <span>{profileData.display_name}</span>
                       {isOfficialTukubi ? (
                         <OfficialBadge
@@ -327,7 +327,7 @@ export default async function ProfilePage({
                           label="Official Platform"
                         />
                       ) : profileData.is_verified ? (
-                        <BadgeCheck className="w-6 h-6 text-orange-400 shrink-0" aria-label="Verified Member" />
+                        <BadgeCheck className="w-6 h-6 md:w-7 md:h-7 text-orange-400 shrink-0" aria-label="Verified Member" />
                       ) : null}
                     </h1>
 
@@ -336,7 +336,7 @@ export default async function ProfilePage({
                     )}
 
                     {profileData.account_type && profileData.account_type !== 'personal' && (
-                      <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-orange-500/15 text-orange-300 border border-orange-500/30 font-black uppercase tracking-wider">
+                      <span className="text-[10px] md:text-xs px-2.5 md:px-3 py-0.5 md:py-1 rounded-full bg-orange-500/15 text-orange-300 border border-orange-500/30 font-black uppercase tracking-wider">
                         {profileData.account_type}
                       </span>
                     )}
@@ -346,11 +346,11 @@ export default async function ProfilePage({
                     )}
                   </div>
 
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <p className="text-sm sm:text-base font-bold text-brand-sandstone/80">
+                  <div className="flex items-center gap-2.5 flex-wrap">
+                    <p className="text-sm sm:text-base md:text-lg font-bold text-brand-sandstone/80">
                       @{profileData.username}
                       {profileData.pronouns && (
-                        <span className="ml-2 text-xs text-brand-sandstone/50">({profileData.pronouns})</span>
+                        <span className="ml-2 text-xs md:text-sm text-brand-sandstone/50">({profileData.pronouns})</span>
                       )}
                     </p>
                     {/* Top 2 featured badges preview */}
@@ -360,7 +360,7 @@ export default async function ProfilePage({
                   </div>
 
                   {isOfficialTukubi && (
-                    <div className="pt-1 text-xs sm:text-sm text-orange-300 font-black tracking-wide">
+                    <div className="pt-1 text-xs sm:text-sm md:text-base text-orange-300 font-black tracking-wide">
                       The Caribbean Connected. Born in the Caribbean. Built for the World.
                     </div>
                   )}
@@ -377,7 +377,7 @@ export default async function ProfilePage({
                     profileData={profileData}
                   />
                 ) : (
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2.5">
                     {currentUser ? (
                       <FollowButton
                         targetUserId={profileData.id}
@@ -386,17 +386,17 @@ export default async function ProfilePage({
                     ) : (
                       <Link
                         href="/login"
-                        className="flex items-center gap-1.5 bg-gradient-to-r from-orange-500 via-amber-500 to-emerald-400 hover:brightness-110 text-slate-950 font-black text-xs sm:text-sm px-5 py-2.5 rounded-2xl transition-all shadow-md min-h-[44px]"
+                        className="flex items-center gap-2 bg-gradient-to-r from-orange-500 via-amber-500 to-emerald-400 hover:brightness-110 text-slate-950 font-black text-xs sm:text-sm md:text-base px-5 md:px-6 py-2.5 md:py-3 rounded-2xl transition-all shadow-md min-h-[44px] md:min-h-[48px]"
                       >
-                        <UserPlus className="w-4 h-4" /> Sign in to Follow
+                        <UserPlus className="w-4 h-4 md:w-5 md:h-5" /> Sign in to Follow
                       </Link>
                     )}
 
                     <Link
                       href={currentUser ? `/messages?u=${encodeURIComponent(profileData.username)}` : `/login?next=/messages?u=${encodeURIComponent(profileData.username)}`}
-                      className="flex items-center gap-1.5 bg-white/10 hover:bg-white/20 text-white font-bold text-xs sm:text-sm px-5 py-2.5 rounded-2xl border border-white/15 transition-all shadow-md min-h-[44px]"
+                      className="flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white font-bold text-xs sm:text-sm md:text-base px-5 md:px-6 py-2.5 md:py-3 rounded-2xl border border-white/15 transition-all shadow-md min-h-[44px] md:min-h-[48px]"
                     >
-                      <MessageSquare className="w-4 h-4 text-brand-caribbeanSea" />
+                      <MessageSquare className="w-4 h-4 md:w-5 md:h-5 text-brand-caribbeanSea" />
                       <span>Message</span>
                     </Link>
                   </div>
@@ -406,20 +406,20 @@ export default async function ProfilePage({
 
             {/* Bio */}
             {profileData.bio ? (
-              <p className="text-sm sm:text-base text-brand-sandstone/90 mt-5 leading-relaxed max-w-2xl whitespace-pre-wrap font-normal">
+              <p className="text-sm sm:text-base md:text-[17px] text-brand-sandstone/90 mt-5 leading-relaxed md:leading-[1.6] max-w-2xl whitespace-pre-wrap font-normal">
                 {profileData.bio}
               </p>
             ) : isOwnProfile ? (
-              <p className="text-xs sm:text-sm text-brand-sandstone/50 italic mt-4">
+              <p className="text-xs sm:text-sm md:text-base text-brand-sandstone/50 italic mt-4">
                 No bio added yet. Click &quot;Edit Profile&quot; to tell your Caribbean story.
               </p>
             ) : null}
 
             {/* Sub-meta tags (Location, Website, Join Date) */}
-            <div className="mt-5 flex flex-wrap items-center gap-y-2 gap-x-5 text-xs sm:text-sm text-brand-sandstone/75 font-medium">
+            <div className="mt-5 flex flex-wrap items-center gap-y-2.5 gap-x-6 text-xs sm:text-sm md:text-base text-brand-sandstone/75 font-medium">
               {locationDisplay && (
-                <span className="flex items-center gap-1.5 text-orange-300 font-bold">
-                  <MapPin className="w-4 h-4 text-orange-400 shrink-0" />
+                <span className="flex items-center gap-2 text-orange-300 font-bold">
+                  <MapPin className="w-4 h-4 md:w-4.5 md:h-4.5 text-orange-400 shrink-0" />
                   <span>{locationDisplay}</span>
                 </span>
               )}
@@ -429,42 +429,42 @@ export default async function ProfilePage({
                   href={profileData.website}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-1.5 text-orange-300 hover:underline font-bold"
+                  className="flex items-center gap-2 text-orange-300 hover:underline font-bold"
                 >
-                  <Globe className="w-4 h-4 text-orange-400 shrink-0" />
+                  <Globe className="w-4 h-4 md:w-4.5 md:h-4.5 text-orange-400 shrink-0" />
                   <span>{profileData.website.replace(/^https?:\/\//, '')}</span>
                 </a>
               )}
 
-              <span className="flex items-center gap-1.5 text-brand-sandstone/60">
-                <Calendar className="w-4 h-4 text-brand-sandstone/60 shrink-0" />
+              <span className="flex items-center gap-2 text-brand-sandstone/60">
+                <Calendar className="w-4 h-4 md:w-4.5 md:h-4.5 text-brand-sandstone/60 shrink-0" />
                 <span>Joined {formatJoinDate(profileData.created_at)}</span>
               </span>
             </div>
 
             {/* Real Statistics Counters */}
-            <div className="mt-6 pt-5 border-t border-white/10 flex items-center gap-8 text-sm sm:text-base">
+            <div className="mt-6 pt-5 border-t border-white/10 flex items-center gap-8 md:gap-10 text-sm sm:text-base md:text-lg">
               <Link href={`/profile/${profileData.username}?tab=posts`} className="hover:text-white transition-colors">
-                <strong className="text-white font-black text-base sm:text-lg">{counts.posts_count.toLocaleString()}</strong>{' '}
-                <span className="text-brand-sandstone/70">Posts</span>
+                <strong className="text-white font-black text-base sm:text-lg md:text-2xl">{counts.posts_count.toLocaleString()}</strong>{' '}
+                <span className="text-brand-sandstone/70 md:text-base">Posts</span>
               </Link>
               <span>
-                <strong className="text-white font-black text-base sm:text-lg">{counts.followers_count.toLocaleString()}</strong>{' '}
-                <span className="text-brand-sandstone/70">Followers</span>
+                <strong className="text-white font-black text-base sm:text-lg md:text-2xl">{counts.followers_count.toLocaleString()}</strong>{' '}
+                <span className="text-brand-sandstone/70 md:text-base">Followers</span>
               </span>
               <span>
-                <strong className="text-white font-black text-base sm:text-lg">{counts.following_count.toLocaleString()}</strong>{' '}
-                <span className="text-brand-sandstone/70">Following</span>
+                <strong className="text-white font-black text-base sm:text-lg md:text-2xl">{counts.following_count.toLocaleString()}</strong>{' '}
+                <span className="text-brand-sandstone/70 md:text-base">Following</span>
               </span>
             </div>
           </div>
         </section>
 
         {/* Tab Navigation */}
-        <nav className="flex border-b border-white/15 gap-8 text-sm font-black" aria-label="Profile navigation">
+        <nav className="flex border-b border-white/15 gap-8 text-sm md:text-base font-black" aria-label="Profile navigation">
           <Link
             href={`/profile/${profileData.username}?tab=about`}
-            className={`pb-3.5 border-b-2 transition-all min-h-[44px] flex items-center ${
+            className={`pb-3.5 md:pb-4 border-b-2 transition-all min-h-[44px] md:min-h-[48px] flex items-center ${
               tab === 'about'
                 ? 'border-orange-500 text-orange-400 font-black'
                 : 'border-transparent text-brand-sandstone/70 hover:text-white'
@@ -474,7 +474,7 @@ export default async function ProfilePage({
           </Link>
           <Link
             href={`/profile/${profileData.username}?tab=posts`}
-            className={`pb-3.5 border-b-2 transition-all min-h-[44px] flex items-center ${
+            className={`pb-3.5 md:pb-4 border-b-2 transition-all min-h-[44px] md:min-h-[48px] flex items-center ${
               tab === 'posts'
                 ? 'border-orange-500 text-orange-400 font-black'
                 : 'border-transparent text-brand-sandstone/70 hover:text-white'
@@ -484,14 +484,14 @@ export default async function ProfilePage({
           </Link>
           <Link
             href={`/profile/${profileData.username}?tab=recognition`}
-            className={`pb-3.5 border-b-2 transition-all flex items-center gap-2 min-h-[44px] ${
+            className={`pb-3.5 md:pb-4 border-b-2 transition-all flex items-center gap-2 min-h-[44px] md:min-h-[48px] ${
               tab === 'recognition'
                 ? 'border-amber-400 text-amber-300 font-black'
                 : 'border-transparent text-brand-sandstone/70 hover:text-white'
             }`}
           >
             <span>Recognition</span>
-            <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-mono font-bold border border-amber-500/30">
+            <span className="text-[10px] md:text-xs px-2 md:px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-mono font-bold border border-amber-500/30">
               {recognition.badges.length + (recognition.founder.is_founder ? 1 : 0)}
             </span>
           </Link>
@@ -502,13 +502,13 @@ export default async function ProfilePage({
         {tab === 'about' && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Professional & Career */}
-            <section className="surface-card rounded-3xl p-6 sm:p-7 space-y-4 border border-white/15">
-              <h3 className="text-xs font-black uppercase tracking-wider text-orange-400 flex items-center gap-2">
-                <Briefcase className="w-4 h-4" /> Work &amp; Career
+            <section className="surface-card rounded-3xl p-6 sm:p-7 md:p-8 space-y-4 border border-white/15">
+              <h3 className="text-xs md:text-sm font-black uppercase tracking-wider text-orange-400 flex items-center gap-2.5">
+                <Briefcase className="w-4 h-4 md:w-5 md:h-5" /> Work &amp; Career
               </h3>
 
               {profileData.job_title || profileData.employer || profileData.industry ? (
-                <div className="text-xs sm:text-sm space-y-2.5 text-brand-sandstone/85">
+                <div className="text-xs sm:text-sm md:text-base space-y-2.5 text-brand-sandstone/85 md:leading-relaxed">
                   {profileData.job_title && (
                     <p>
                       <span className="text-brand-sandstone/50 font-medium">Role:</span>{' '}
@@ -528,11 +528,11 @@ export default async function ProfilePage({
                     </p>
                   )}
                   {profileData.professional_bio && (
-                    <p className="pt-2 text-brand-sandstone/90 italic">{profileData.professional_bio}</p>
+                    <p className="pt-2 text-brand-sandstone/90 italic md:leading-[1.6]">{profileData.professional_bio}</p>
                   )}
                 </div>
               ) : (
-                <p className="text-xs sm:text-sm text-brand-sandstone/50">
+                <p className="text-xs sm:text-sm md:text-base text-brand-sandstone/50">
                   {isOwnProfile ? 'Add your work experience to connect with diaspora opportunities.' : 'No career information listed.'}
                 </p>
               )}
@@ -540,12 +540,12 @@ export default async function ProfilePage({
               {/* Skills */}
               {profileData.skills && profileData.skills.length > 0 && (
                 <div className="pt-4 border-t border-white/10">
-                  <span className="text-xs font-black text-brand-sandstone/70 block mb-2 uppercase tracking-wider">Skills &amp; Expertise</span>
-                  <div className="flex flex-wrap gap-2">
+                  <span className="text-xs md:text-sm font-black text-brand-sandstone/70 block mb-2.5 uppercase tracking-wider">Skills &amp; Expertise</span>
+                  <div className="flex flex-wrap gap-2 md:gap-2.5">
                     {profileData.skills.map((skill, idx) => (
                       <span
                         key={idx}
-                        className="text-xs font-bold bg-white/5 text-orange-300 px-3 py-1.5 rounded-xl border border-white/10"
+                        className="text-xs md:text-sm font-bold bg-white/5 text-orange-300 px-3.5 py-1.5 md:py-2 rounded-xl border border-white/10"
                       >
                         {skill}
                       </span>
@@ -556,13 +556,13 @@ export default async function ProfilePage({
             </section>
 
             {/* Education & Roots */}
-            <section className="surface-card rounded-3xl p-6 sm:p-7 space-y-4 border border-white/15">
-              <h3 className="text-xs font-black uppercase tracking-wider text-amber-400 flex items-center gap-2">
-                <GraduationCap className="w-4 h-4" /> Education &amp; Background
+            <section className="surface-card rounded-3xl p-6 sm:p-7 md:p-8 space-y-4 border border-white/15">
+              <h3 className="text-xs md:text-sm font-black uppercase tracking-wider text-amber-400 flex items-center gap-2.5">
+                <GraduationCap className="w-4 h-4 md:w-5 md:h-5" /> Education &amp; Background
               </h3>
 
               {profileData.education || profileData.school ? (
-                <div className="text-xs sm:text-sm space-y-2.5 text-brand-sandstone/85">
+                <div className="text-xs sm:text-sm md:text-base space-y-2.5 text-brand-sandstone/85 md:leading-relaxed">
                   {profileData.education && (
                     <p>
                       <span className="text-brand-sandstone/50 font-medium">Degree:</span>{' '}
@@ -577,14 +577,14 @@ export default async function ProfilePage({
                   )}
                 </div>
               ) : (
-                <p className="text-xs sm:text-sm text-brand-sandstone/50">
+                <p className="text-xs sm:text-sm md:text-base text-brand-sandstone/50">
                   {isOwnProfile ? 'Add your education or academic background.' : 'No education listed.'}
                 </p>
               )}
 
               {/* Personal Details (Privacy Filtered) */}
-              <div className="pt-4 border-t border-white/10 space-y-2.5 text-xs sm:text-sm">
-                <span className="text-xs font-black text-brand-sandstone/70 block uppercase tracking-wider">Personal Information</span>
+              <div className="pt-4 border-t border-white/10 space-y-2.5 text-xs sm:text-sm md:text-base">
+                <span className="text-xs md:text-sm font-black text-brand-sandstone/70 block uppercase tracking-wider">Personal Information</span>
 
                 {canViewRelationship && profileData.relationship_status && (
                   <p>
@@ -618,9 +618,9 @@ export default async function ProfilePage({
 
             {/* Social Links */}
             {hasSocialLinks && (
-              <section className="surface-card rounded-3xl p-6 sm:p-7 space-y-4 md:col-span-2 border border-white/15">
-                <h3 className="text-xs font-black uppercase tracking-wider text-orange-400 flex items-center gap-2">
-                  <Sparkles className="w-4 h-4" /> Social &amp; Web Links
+              <section className="surface-card rounded-3xl p-6 sm:p-7 md:p-8 space-y-4 md:col-span-2 border border-white/15">
+                <h3 className="text-xs md:text-sm font-black uppercase tracking-wider text-orange-400 flex items-center gap-2.5">
+                  <Sparkles className="w-4 h-4 md:w-5 md:h-5" /> Social &amp; Web Links
                 </h3>
                 <div className="flex flex-wrap gap-3 pt-1">
                   {social.instagram && (
@@ -628,9 +628,9 @@ export default async function ProfilePage({
                       href={`https://instagram.com/${social.instagram}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-pink-500/10 hover:bg-pink-500/20 text-pink-300 text-xs font-bold border border-pink-500/30 transition-colors min-h-[40px]"
+                      className="flex items-center gap-2 px-3.5 md:px-4 py-2 md:py-2.5 rounded-xl bg-pink-500/10 hover:bg-pink-500/20 text-pink-300 text-xs md:text-sm font-bold border border-pink-500/30 transition-colors min-h-[40px] md:min-h-[44px]"
                     >
-                      <Instagram className="w-4 h-4" /> @{social.instagram}
+                      <Instagram className="w-4 h-4 md:w-4.5 md:h-4.5" /> @{social.instagram}
                     </a>
                   )}
                   {social.twitter && (
@@ -638,9 +638,9 @@ export default async function ProfilePage({
                       href={`https://x.com/${social.twitter}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-sky-500/10 hover:bg-sky-500/20 text-sky-300 text-xs font-bold border border-sky-500/30 transition-colors min-h-[40px]"
+                      className="flex items-center gap-2 px-3.5 md:px-4 py-2 md:py-2.5 rounded-xl bg-sky-500/10 hover:bg-sky-500/20 text-sky-300 text-xs md:text-sm font-bold border border-sky-500/30 transition-colors min-h-[40px] md:min-h-[44px]"
                     >
-                      <Twitter className="w-4 h-4" /> @{social.twitter}
+                      <Twitter className="w-4 h-4 md:w-4.5 md:h-4.5" /> @{social.twitter}
                     </a>
                   )}
                   {social.tiktok && (
@@ -648,9 +648,9 @@ export default async function ProfilePage({
                       href={`https://tiktok.com/@${social.tiktok}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 text-xs font-bold border border-cyan-500/30 transition-colors min-h-[40px]"
+                      className="flex items-center gap-2 px-3.5 md:px-4 py-2 md:py-2.5 rounded-xl bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 text-xs md:text-sm font-bold border border-cyan-500/30 transition-colors min-h-[40px] md:min-h-[44px]"
                     >
-                      <Video className="w-4 h-4" /> @{social.tiktok}
+                      <Video className="w-4 h-4 md:w-4.5 md:h-4.5" /> @{social.tiktok}
                     </a>
                   )}
                   {social.youtube && (
@@ -658,9 +658,9 @@ export default async function ProfilePage({
                       href={social.youtube}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-300 text-xs font-bold border border-red-500/30 transition-colors min-h-[40px]"
+                      className="flex items-center gap-2 px-3.5 md:px-4 py-2 md:py-2.5 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-300 text-xs md:text-sm font-bold border border-red-500/30 transition-colors min-h-[40px] md:min-h-[44px]"
                     >
-                      <Youtube className="w-4 h-4" /> YouTube
+                      <Youtube className="w-4 h-4 md:w-4.5 md:h-4.5" /> YouTube
                     </a>
                   )}
                   {social.linkedin && (
@@ -668,9 +668,9 @@ export default async function ProfilePage({
                       href={social.linkedin}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-blue-500/10 hover:bg-blue-500/20 text-blue-300 text-xs font-bold border border-blue-500/30 transition-colors min-h-[40px]"
+                      className="flex items-center gap-2 px-3.5 md:px-4 py-2 md:py-2.5 rounded-xl bg-blue-500/10 hover:bg-blue-500/20 text-blue-300 text-xs md:text-sm font-bold border border-blue-500/30 transition-colors min-h-[40px] md:min-h-[44px]"
                     >
-                      <Linkedin className="w-4 h-4" /> LinkedIn
+                      <Linkedin className="w-4 h-4 md:w-4.5 md:h-4.5" /> LinkedIn
                     </a>
                   )}
                   {social.facebook && (
@@ -678,9 +678,9 @@ export default async function ProfilePage({
                       href={social.facebook}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-300 text-xs font-bold border border-indigo-500/30 transition-colors min-h-[40px]"
+                      className="flex items-center gap-2 px-3.5 md:px-4 py-2 md:py-2.5 rounded-xl bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-300 text-xs md:text-sm font-bold border border-indigo-500/30 transition-colors min-h-[40px] md:min-h-[44px]"
                     >
-                      <Facebook className="w-4 h-4" /> Facebook
+                      <Facebook className="w-4 h-4 md:w-4.5 md:h-4.5" /> Facebook
                     </a>
                   )}
                 </div>
@@ -698,8 +698,8 @@ export default async function ProfilePage({
                   <FileText className="w-8 h-8" />
                 </div>
                 <div className="space-y-1">
-                  <h4 className="text-lg font-black text-white">No posts published yet</h4>
-                  <p className="text-xs sm:text-sm text-brand-sandstone/70 max-w-sm mx-auto leading-relaxed">
+                  <h4 className="text-lg md:text-xl font-black text-white">No posts published yet</h4>
+                  <p className="text-xs sm:text-sm md:text-base text-brand-sandstone/70 max-w-sm mx-auto leading-relaxed md:leading-[1.6]">
                     {isOwnProfile
                       ? 'Share your thoughts, music, diaspora updates, or stories with the Caribbean network.'
                       : `@${profileData.username} hasn't published any posts yet.`}
@@ -709,7 +709,7 @@ export default async function ProfilePage({
                   <div className="pt-2">
                     <Link
                       href="/create"
-                      className="inline-flex items-center justify-center bg-gradient-to-r from-orange-500 via-amber-500 to-emerald-400 hover:brightness-110 text-slate-950 text-xs sm:text-sm font-black px-6 py-3 rounded-2xl transition-all shadow-md min-h-[44px]"
+                      className="inline-flex items-center justify-center bg-gradient-to-r from-orange-500 via-amber-500 to-emerald-400 hover:brightness-110 text-slate-950 text-xs sm:text-sm md:text-base font-black px-6 md:px-7 py-3 rounded-2xl transition-all shadow-md min-h-[44px] md:min-h-[48px]"
                     >
                       Create First Post
                     </Link>
@@ -718,22 +718,22 @@ export default async function ProfilePage({
               </div>
             ) : (
               posts.map((post) => (
-                <article key={post.id} className="surface-card surface-card-interactive rounded-3xl p-6 space-y-4 border border-white/10 shadow-xl">
+                <article key={post.id} className="surface-card surface-card-interactive rounded-3xl p-6 md:p-7 space-y-4 border border-white/10 shadow-xl">
                   <div className="flex items-center justify-between gap-3">
                     <div className="flex items-center gap-3.5">
                       <UserAvatar
                         src={profileData.avatar_url}
                         name={profileData.display_name}
-                        size="sm"
+                        size="md"
                       />
                       <div>
                         <div className="flex items-center gap-1.5 flex-wrap">
-                          <span className="text-sm font-black text-white">{profileData.display_name}</span>
+                          <span className="text-sm md:text-base font-black text-white">{profileData.display_name}</span>
                           {profileData.is_official && (
                             <OfficialBadge size="xs" showLabel={false} />
                           )}
                         </div>
-                        <div className="flex items-center gap-2 text-xs text-brand-sandstone/50 font-medium">
+                        <div className="flex items-center gap-2 text-xs md:text-sm text-brand-sandstone/50 font-medium">
                           <span>{relativeTime(post.created_at)}</span>
                           {post.official_content_type && (
                             <>
@@ -747,14 +747,14 @@ export default async function ProfilePage({
                       </div>
                     </div>
                     {post.is_pinned && (
-                      <span className="inline-flex items-center gap-1.5 text-xs font-black text-orange-400 bg-orange-500/15 px-3 py-1 rounded-full border border-orange-500/30">
-                        <Pin className="w-3 h-3" />
+                      <span className="inline-flex items-center gap-1.5 text-xs md:text-sm font-black text-orange-400 bg-orange-500/15 px-3 py-1 rounded-full border border-orange-500/30">
+                        <Pin className="w-3 h-3 md:w-3.5 md:h-3.5" />
                         Pinned
                       </span>
                     )}
                   </div>
                   {post.content && (
-                    <p className="text-sm sm:text-base text-brand-sandstone/95 leading-relaxed whitespace-pre-wrap font-normal">{post.content}</p>
+                    <p className="text-sm sm:text-base md:text-[17px] text-brand-sandstone/95 leading-relaxed md:leading-[1.6] whitespace-pre-wrap font-normal">{post.content}</p>
                   )}
                   {post.media_urls && post.media_urls.length > 0 && (
                     <div className={`grid gap-3 rounded-2xl overflow-hidden ${

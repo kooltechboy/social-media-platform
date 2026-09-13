@@ -627,7 +627,7 @@ export default function FeedStream({ initialPosts, currentUserId, mode = 'for_yo
               role="tab"
               aria-selected={isActive}
               onClick={() => router.replace(`/?mode=${tab.id}`)}
-              className={`pb-2 whitespace-nowrap text-xs font-black transition-all relative focus-visible:outline-none px-1 ${
+              className={`pb-2 md:pb-2.5 whitespace-nowrap text-xs md:text-sm font-black transition-all relative focus-visible:outline-none px-1 md:px-2 ${
                 isActive ? 'text-brand-caribbeanSea' : 'text-brand-sandstone/60 hover:text-slate-200'
               }`}
             >
@@ -684,32 +684,32 @@ export default function FeedStream({ initialPosts, currentUserId, mode = 'for_yo
                     <div className="flex items-center gap-1.5 flex-wrap">
                       <Link
                         href={`/profile/${post.handle}`}
-                        className="font-black text-sm text-white hover:text-brand-caribbeanSea transition-colors tracking-tight"
+                        className="font-black text-sm md:text-base text-white hover:text-brand-caribbeanSea transition-colors tracking-tight"
                       >
                         {post.author}
                       </Link>
                       {post.isOfficial ? (
                         <OfficialBadge size="xs" showLabel={true} label={post.handle.toLowerCase() === 'tukubi' ? 'Official TUKUBI' : 'Official'} />
                       ) : post.verified ? (
-                        <CheckCircle className="w-4 h-4 text-brand-caribbeanSea fill-brand-caribbeanSea/20 drop-shadow-[0_0_6px_rgba(0,180,216,0.5)]" />
+                        <CheckCircle className="w-4 h-4 md:w-5 md:h-5 text-brand-caribbeanSea fill-brand-caribbeanSea/20 drop-shadow-[0_0_6px_rgba(0,180,216,0.5)]" />
                       ) : null}
                       <Link
                         href={`/profile/${post.handle}`}
-                        className="text-xs font-semibold text-white/50 hover:text-white/80 transition-colors"
+                        className="text-xs md:text-sm font-semibold text-white/50 hover:text-white/80 transition-colors"
                       >
                         @{post.handle}
                       </Link>
                       {post.isPinned && (
-                        <span className="inline-flex items-center gap-1 text-[10px] font-black text-brand-sunriseCoral bg-brand-sunriseCoral/15 px-2.5 py-0.5 rounded-full border border-brand-sunriseCoral/30">
-                          <Pin className="w-2.5 h-2.5" />
+                        <span className="inline-flex items-center gap-1 text-[10px] md:text-xs font-black text-brand-sunriseCoral bg-brand-sunriseCoral/15 px-2.5 md:px-3 py-0.5 md:py-1 rounded-full border border-brand-sunriseCoral/30">
+                          <Pin className="w-2.5 h-2.5 md:w-3 md:h-3" />
                           Pinned
                         </span>
                       )}
                     </div>
-                    <div className="flex items-center gap-2 text-[11px] font-medium text-white/60 mt-0.5">
+                    <div className="flex items-center gap-2 text-[11px] md:text-xs font-medium text-white/60 mt-0.5">
                       {post.location && (
                         <span className="flex items-center gap-1 text-white/70">
-                          <MapPin className="w-3 h-3 text-brand-sunriseCoral" />
+                          <MapPin className="w-3 h-3 md:w-3.5 md:h-3.5 text-brand-sunriseCoral" />
                           {post.location}
                         </span>
                       )}
@@ -718,7 +718,7 @@ export default function FeedStream({ initialPosts, currentUserId, mode = 'for_yo
                       {post.officialContentType && (
                         <>
                           <span className="text-white/30">•</span>
-                          <span className="text-[10px] font-bold text-brand-caribbeanSea capitalize px-1.5 py-0.2 rounded bg-brand-caribbeanSea/10 border border-brand-caribbeanSea/20">
+                          <span className="text-[10px] md:text-[11px] font-bold text-brand-caribbeanSea capitalize px-1.5 md:px-2 py-0.5 rounded bg-brand-caribbeanSea/10 border border-brand-caribbeanSea/20">
                             {post.officialContentType.replace('_', ' ')}
                           </span>
                         </>
@@ -731,7 +731,7 @@ export default function FeedStream({ initialPosts, currentUserId, mode = 'for_yo
                   {post.tag && (
                     <Link
                       href={`/explore?q=${encodeURIComponent(post.tag.replace('#', ''))}`}
-                      className="text-[10px] font-black px-2.5 py-1 rounded-full bg-brand-caribbeanSea/10 hover:bg-brand-caribbeanSea/20 text-brand-caribbeanSea border border-brand-caribbeanSea/20 transition-colors"
+                      className="text-[10px] md:text-xs font-black px-2.5 md:px-3 py-1 md:py-1.5 rounded-full bg-brand-caribbeanSea/10 hover:bg-brand-caribbeanSea/20 text-brand-caribbeanSea border border-brand-caribbeanSea/20 transition-colors"
                     >
                       {post.tag}
                     </Link>
@@ -742,14 +742,14 @@ export default function FeedStream({ initialPosts, currentUserId, mode = 'for_yo
                     type="button"
                     aria-label="Post options"
                     onClick={() => setActiveMenuPostId(activeMenuPostId === post.id ? null : post.id)}
-                    className="p-1.5 rounded-full text-brand-sandstone/60 hover:text-brand-sandstone hover:bg-white/10 transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand-caribbeanSea"
+                    className="p-1.5 md:p-2 rounded-full text-brand-sandstone/60 hover:text-brand-sandstone hover:bg-white/10 transition-colors min-w-[36px] min-h-[36px] md:min-w-[40px] md:min-h-[40px] flex items-center justify-center focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand-caribbeanSea"
                   >
-                    <MoreHorizontal className="w-4 h-4" />
+                    <MoreHorizontal className="w-4 h-4 md:w-5 md:h-5" />
                   </button>
 
                   {/* Dropdown Menu */}
                   {activeMenuPostId === post.id && (
-                    <div className="absolute right-0 top-8 z-30 w-44 rounded-2xl bg-brand-dusk border border-slate-700 shadow-2xl p-1.5 space-y-1 animate-fadeIn text-xs">
+                    <div className="absolute right-0 top-10 z-30 w-48 rounded-2xl bg-brand-dusk border border-slate-700 shadow-2xl p-1.5 space-y-1 animate-fadeIn text-xs md:text-sm">
                       <button
                         type="button"
                         onClick={() => {
@@ -810,7 +810,7 @@ export default function FeedStream({ initialPosts, currentUserId, mode = 'for_yo
               </div>
 
               {/* Content Body */}
-              <p className="text-sm text-slate-200 leading-relaxed font-medium whitespace-pre-wrap">
+              <p className="text-sm md:text-[17px] text-slate-200 leading-relaxed md:leading-[1.6] font-medium whitespace-pre-wrap">
                 {postTranslations[post.id]?.translatedText && !postTranslations[post.id]?.isShowingOriginal
                   ? postTranslations[post.id]!.translatedText
                   : post.content}
@@ -819,14 +819,14 @@ export default function FeedStream({ initialPosts, currentUserId, mode = 'for_yo
               {/* Translation Affordance & Status */}
               <div className="mt-2 flex flex-wrap items-center gap-2">
                 {postTranslations[post.id]?.isTranslating ? (
-                  <div className="flex items-center gap-2 text-[11px] text-brand-sandstone/70">
-                    <Loader2 className="w-3.5 h-3.5 animate-spin text-brand-caribbeanSea" />
+                  <div className="flex items-center gap-2 text-[11px] md:text-xs text-brand-sandstone/70">
+                    <Loader2 className="w-3.5 h-3.5 md:w-4 md:h-4 animate-spin text-brand-caribbeanSea" />
                     <span>{t('post.translating')}</span>
                   </div>
                 ) : postTranslations[post.id]?.translatedText ? (
-                  <div className="w-full mt-1.5 p-2.5 rounded-xl bg-brand-caribbeanSea/10 border border-brand-caribbeanSea/20 flex flex-wrap items-center justify-between gap-2 text-xs animate-fadeIn">
-                    <div className="flex items-center gap-1.5 text-brand-sandstone/80 text-[11px]">
-                      <Sparkles className="w-3.5 h-3.5 text-brand-caribbeanSea flex-shrink-0" />
+                  <div className="w-full mt-1.5 p-2.5 md:p-3 rounded-xl bg-brand-caribbeanSea/10 border border-brand-caribbeanSea/20 flex flex-wrap items-center justify-between gap-2 text-xs md:text-sm animate-fadeIn">
+                    <div className="flex items-center gap-1.5 text-brand-sandstone/80 text-[11px] md:text-xs">
+                      <Sparkles className="w-3.5 h-3.5 md:w-4 md:h-4 text-brand-caribbeanSea flex-shrink-0" />
                       <span>
                         {postTranslations[post.id]?.isShowingOriginal
                           ? 'Original text'
@@ -847,7 +847,7 @@ export default function FeedStream({ initialPosts, currentUserId, mode = 'for_yo
                         value={postTranslations[post.id]?.targetLang || locale}
                         onChange={(e) => handleTranslatePost(post.id, post.content, e.target.value as Locale)}
                         aria-label="Change translation target language"
-                        className="bg-brand-twilight/90 border border-brand-caribbeanSea/30 text-[10px] font-bold text-brand-caribbeanSea rounded-lg px-2 py-0.5 focus:outline-none cursor-pointer"
+                        className="bg-brand-twilight/90 border border-brand-caribbeanSea/30 text-[10px] md:text-xs font-bold text-brand-caribbeanSea rounded-lg px-2 py-1 focus:outline-none cursor-pointer"
                       >
                         {LOCALES.map((code) => (
                           <option key={code} value={code} className="bg-brand-dusk text-slate-200">
@@ -859,7 +859,7 @@ export default function FeedStream({ initialPosts, currentUserId, mode = 'for_yo
                       <button
                         type="button"
                         onClick={() => handleToggleOriginal(post.id)}
-                        className="text-[11px] font-bold text-brand-caribbeanSea hover:underline whitespace-nowrap"
+                        className="text-[11px] md:text-xs font-bold text-brand-caribbeanSea hover:underline whitespace-nowrap"
                       >
                         {postTranslations[post.id]?.isShowingOriginal ? 'Show Translation' : 'Show Original'}
                       </button>
@@ -868,7 +868,7 @@ export default function FeedStream({ initialPosts, currentUserId, mode = 'for_yo
                 ) : (
                   <div className="flex items-center gap-2">
                     <div className="relative inline-flex items-center">
-                      <Globe className="w-3.5 h-3.5 text-brand-caribbeanSea mr-1" />
+                      <Globe className="w-3.5 h-3.5 md:w-4 md:h-4 text-brand-caribbeanSea mr-1" />
                       <select
                         defaultValue=""
                         onChange={(e) => {
@@ -878,7 +878,7 @@ export default function FeedStream({ initialPosts, currentUserId, mode = 'for_yo
                           }
                         }}
                         aria-label="Translate post to language"
-                        className="bg-brand-twilight/80 hover:bg-brand-twilight border border-slate-700 hover:border-brand-caribbeanSea/60 text-[11px] font-semibold text-brand-caribbeanSea rounded-full pl-2.5 pr-6 py-0.5 focus:outline-none focus:border-brand-caribbeanSea cursor-pointer transition-colors appearance-none"
+                        className="bg-brand-twilight/80 hover:bg-brand-twilight border border-slate-700 hover:border-brand-caribbeanSea/60 text-[11px] md:text-xs font-semibold text-brand-caribbeanSea rounded-full pl-2.5 pr-6 py-1 focus:outline-none focus:border-brand-caribbeanSea cursor-pointer transition-colors appearance-none"
                       >
                         <option value="" disabled>
                           Translate to ▾
@@ -892,8 +892,8 @@ export default function FeedStream({ initialPosts, currentUserId, mode = 'for_yo
                     </div>
 
                     {postTranslations[post.id]?.error && (
-                      <span className="text-[11px] text-rose-400 flex items-center gap-1">
-                        <AlertCircle className="w-3 h-3 flex-shrink-0" />
+                      <span className="text-[11px] md:text-xs text-rose-400 flex items-center gap-1">
+                        <AlertCircle className="w-3 h-3 md:w-3.5 md:h-3.5 flex-shrink-0" />
                         <span>{postTranslations[post.id]?.error}</span>
                       </span>
                     )}
@@ -947,24 +947,24 @@ export default function FeedStream({ initialPosts, currentUserId, mode = 'for_yo
                       key={`${r.emoji}-${i}`}
                       type="button"
                       onClick={() => handleReactToPost(post.id, r.emoji)}
-                      className="px-2.5 py-1 rounded-full bg-white/10 hover:bg-white/20 border border-white/10 text-xs flex items-center gap-1 text-white shadow-sm transition-transform active:scale-95"
+                      className="px-2.5 md:px-3 py-1 md:py-1.5 rounded-full bg-white/10 hover:bg-white/20 border border-white/10 text-xs md:text-sm flex items-center gap-1.5 text-white shadow-sm transition-transform active:scale-95"
                     >
-                      <span>{r.emoji}</span>
-                      <span className="text-[10px] font-black">{r.count}</span>
+                      <span className="text-sm md:text-base">{r.emoji}</span>
+                      <span className="text-[10px] md:text-xs font-black">{r.count}</span>
                     </button>
                   ))}
                 </div>
               )}
 
               {/* Interaction Bar */}
-              <div className="flex items-center justify-between pt-3 border-t border-slate-800/70 text-brand-sandstone/60 text-xs">
+              <div className="flex items-center justify-between pt-3 md:pt-4 border-t border-slate-800/70 text-brand-sandstone/60 text-xs md:text-sm">
                 {/* Reaction Picker & Counter */}
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-1.5">
                   <ReactionPicker
                     currentReaction={postReactions[post.id]}
                     onSelect={(type) => handleReaction(post.id, type)}
                   />
-                  <span className="text-xs text-slate-400 tabular-nums">{postLikeCounts[post.id] || 0}</span>
+                  <span className="text-xs md:text-sm font-semibold text-slate-300 tabular-nums">{postLikeCounts[post.id] || 0}</span>
                 </div>
 
                 {/* Quick Emoji Reaction Trigger */}
@@ -976,10 +976,10 @@ export default function FeedStream({ initialPosts, currentUserId, mode = 'for_yo
                         activeEmojiPickerPostId === post.id ? null : post.id
                       )
                     }
-                    className="flex items-center gap-1 hover:text-amber-300 transition-colors px-1 py-0.5 rounded-lg"
+                    className="flex items-center gap-1.5 hover:text-amber-300 transition-colors px-2 py-1.5 md:px-3 md:py-2 min-h-[38px] md:min-h-[42px] rounded-xl font-semibold"
                     title="React with Emoji"
                   >
-                    <Smile className="w-4 h-4 text-amber-400" />
+                    <Smile className="w-4 h-4 md:w-5 md:h-5 text-amber-400" />
                     <span className="hidden sm:inline">React</span>
                   </button>
 
@@ -996,11 +996,11 @@ export default function FeedStream({ initialPosts, currentUserId, mode = 'for_yo
                   type="button"
                   aria-label="View or add comments"
                   onClick={() => handleToggleComments(post.id)}
-                  className={`flex items-center gap-1.5 hover:text-brand-caribbeanSea transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand-caribbeanSea rounded-lg px-1 ${
+                  className={`flex items-center gap-1.5 md:gap-2 hover:text-brand-caribbeanSea transition-colors px-2 py-1.5 md:px-3 md:py-2 min-h-[38px] md:min-h-[42px] rounded-xl font-semibold focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand-caribbeanSea ${
                     expandedCommentsPostId === post.id ? 'text-brand-caribbeanSea font-bold' : ''
                   }`}
                 >
-                  <MessageCircle className="w-4 h-4" />
+                  <MessageCircle className="w-4 h-4 md:w-5 md:h-5" />
                   <span>{post.comments}</span>
                 </button>
 
@@ -1009,9 +1009,9 @@ export default function FeedStream({ initialPosts, currentUserId, mode = 'for_yo
                   type="button"
                   aria-label="Share post"
                   onClick={() => handleShare(post)}
-                  className="flex items-center gap-1.5 hover:text-brand-sunriseCoral transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand-sunriseCoral rounded-lg px-1"
+                  className="flex items-center gap-1.5 md:gap-2 hover:text-brand-sunriseCoral transition-colors px-2 py-1.5 md:px-3 md:py-2 min-h-[38px] md:min-h-[42px] rounded-xl font-semibold focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand-sunriseCoral"
                 >
-                  <Share2 className="w-4 h-4" />
+                  <Share2 className="w-4 h-4 md:w-5 md:h-5" />
                   <span>{post.reposts > 0 ? post.reposts : 'Share'}</span>
                 </button>
 
@@ -1019,13 +1019,13 @@ export default function FeedStream({ initialPosts, currentUserId, mode = 'for_yo
                 <button
                   type="button"
                   onClick={() => handleSavePost(post.id)}
-                  className={`p-1.5 rounded-lg transition-colors ${
+                  className={`p-2 md:p-2.5 min-w-[38px] min-h-[38px] md:min-w-[42px] md:min-h-[42px] flex items-center justify-center rounded-xl transition-colors ${
                     savedPosts.has(post.id) ? 'text-brand-caribbeanSea' : 'text-slate-500 hover:text-slate-300'
                   }`}
                   title={savedPosts.has(post.id) ? 'Unsave post' : 'Save post'}
                   aria-label={savedPosts.has(post.id) ? 'Unsave post' : 'Save post'}
                 >
-                  <Bookmark className={`w-4 h-4 ${savedPosts.has(post.id) ? 'fill-brand-caribbeanSea' : ''}`} />
+                  <Bookmark className={`w-4 h-4 md:w-5 md:h-5 ${savedPosts.has(post.id) ? 'fill-brand-caribbeanSea' : ''}`} />
                 </button>
 
                 {/* Creator Tip Trigger */}
@@ -1033,9 +1033,9 @@ export default function FeedStream({ initialPosts, currentUserId, mode = 'for_yo
                   type="button"
                   aria-label={`Send Tip to ${post.author}`}
                   onClick={() => setTipTarget({ name: post.author, handle: post.handle })}
-                  className="flex items-center gap-1.5 text-brand-sunriseCoral font-extrabold hover:text-emerald-300 transition-all bg-brand-sunriseCoral/10 hover:bg-brand-sunriseCoral/20 px-3 py-1 rounded-full border border-brand-sunriseCoral/20 shadow-sm"
+                  className="flex items-center gap-1.5 md:gap-2 text-brand-sunriseCoral font-extrabold hover:text-emerald-300 transition-all bg-brand-sunriseCoral/10 hover:bg-brand-sunriseCoral/20 px-3.5 md:px-4 py-1.5 md:py-2 min-h-[38px] md:min-h-[42px] rounded-full border border-brand-sunriseCoral/20 shadow-sm text-xs md:text-sm"
                 >
-                  <Wallet className="w-3.5 h-3.5" />
+                  <Wallet className="w-3.5 h-3.5 md:w-4.5 md:h-4.5" />
                   <span>Tip Creator</span>
                 </button>
               </div>
@@ -1058,17 +1058,17 @@ export default function FeedStream({ initialPosts, currentUserId, mode = 'for_yo
                           return (
                             <div key={c.id || i} className="space-y-2">
                               {/* Parent Comment */}
-                              <div className="p-3 rounded-2xl bg-black/30 border border-white/8 space-y-1.5 group hover:border-white/15 transition-colors">
+                              <div className="p-3 md:p-3.5 rounded-2xl bg-black/30 border border-white/8 space-y-1.5 group hover:border-white/15 transition-colors">
                                 <div className="flex items-center justify-between">
                                   {c.profiles?.username ? (
                                     <Link
                                       href={`/profile/${c.profiles.username}`}
-                                      className="text-xs font-bold text-slate-200 hover:text-brand-caribbeanSea transition-colors"
+                                      className="text-xs md:text-sm font-bold text-slate-200 hover:text-brand-caribbeanSea transition-colors"
                                     >
                                       {c.profiles?.display_name || 'Caribbean Member'}
                                     </Link>
                                   ) : (
-                                    <span className="text-xs font-bold text-slate-200">
+                                    <span className="text-xs md:text-sm font-bold text-slate-200">
                                       {c.profiles?.display_name || 'Caribbean Member'}
                                     </span>
                                   )}
@@ -1081,21 +1081,21 @@ export default function FeedStream({ initialPosts, currentUserId, mode = 'for_yo
                                           [post.id]: { commentId: c.id, authorName: c.profiles?.display_name || 'Member' },
                                         }))
                                       }
-                                      className="text-[10px] text-brand-caribbeanSea hover:underline font-semibold"
+                                      className="text-[10px] md:text-xs text-brand-caribbeanSea hover:underline font-semibold"
                                     >
                                       Reply
                                     </button>
                                     {!isCommentAuthor && c.profiles?.username && (
                                       <Link
                                         href={`/messages?u=${encodeURIComponent(c.profiles.username)}`}
-                                        className="text-[10px] text-slate-400 hover:text-brand-caribbeanSea font-semibold flex items-center gap-0.5"
+                                        className="text-[10px] md:text-xs text-slate-400 hover:text-brand-caribbeanSea font-semibold flex items-center gap-0.5"
                                         title="Direct message author"
                                       >
-                                        <MessageSquare className="w-2.5 h-2.5 text-brand-caribbeanSea" />
+                                        <MessageSquare className="w-2.5 h-2.5 md:w-3 md:h-3 text-brand-caribbeanSea" />
                                         <span>Msg</span>
                                       </Link>
                                     )}
-                                    <span className="text-[10px] text-brand-sandstone/40">just now</span>
+                                    <span className="text-[10px] md:text-xs text-brand-sandstone/40">just now</span>
                                     {isCommentAuthor && (
                                       <button
                                         type="button"
@@ -1104,12 +1104,12 @@ export default function FeedStream({ initialPosts, currentUserId, mode = 'for_yo
                                         title="Delete comment"
                                         aria-label="Delete comment"
                                       >
-                                        <Trash2 className="w-3 h-3" />
+                                        <Trash2 className="w-3 h-3 md:w-3.5 md:h-3.5" />
                                       </button>
                                     )}
                                   </div>
                                 </div>
-                                <p className="text-xs text-slate-300 leading-relaxed">{c.content}</p>
+                                <p className="text-xs md:text-sm text-slate-300 leading-relaxed">{c.content}</p>
                               </div>
 
                               {/* Nested Replies */}
@@ -1120,18 +1120,18 @@ export default function FeedStream({ initialPosts, currentUserId, mode = 'for_yo
                                     return (
                                       <div
                                         key={r.id || ri}
-                                        className="p-2.5 rounded-xl bg-black/20 border border-white/5 space-y-1 group"
+                                        className="p-2.5 md:p-3 rounded-xl bg-black/20 border border-white/5 space-y-1 group"
                                       >
                                         <div className="flex items-center justify-between">
                                           {r.profiles?.username ? (
                                             <Link
                                               href={`/profile/${r.profiles.username}`}
-                                              className="text-[11px] font-bold text-brand-sandstone hover:text-brand-caribbeanSea transition-colors"
+                                              className="text-[11px] md:text-xs font-bold text-brand-sandstone hover:text-brand-caribbeanSea transition-colors"
                                             >
                                               {r.profiles?.display_name || 'Caribbean Member'}
                                             </Link>
                                           ) : (
-                                            <span className="text-[11px] font-bold text-brand-sandstone">
+                                            <span className="text-[11px] md:text-xs font-bold text-brand-sandstone">
                                               {r.profiles?.display_name || 'Caribbean Member'}
                                             </span>
                                           )}
@@ -1139,14 +1139,14 @@ export default function FeedStream({ initialPosts, currentUserId, mode = 'for_yo
                                             {!isReplyAuthor && r.profiles?.username && (
                                               <Link
                                                 href={`/messages?u=${encodeURIComponent(r.profiles.username)}`}
-                                                className="text-[9px] text-slate-400 hover:text-brand-caribbeanSea font-semibold flex items-center gap-0.5"
+                                                className="text-[9px] md:text-[11px] text-slate-400 hover:text-brand-caribbeanSea font-semibold flex items-center gap-0.5"
                                                 title="Direct message author"
                                               >
-                                                <MessageSquare className="w-2.5 h-2.5 text-brand-caribbeanSea" />
+                                                <MessageSquare className="w-2.5 h-2.5 md:w-3 md:h-3 text-brand-caribbeanSea" />
                                                 <span>Msg</span>
                                               </Link>
                                             )}
-                                            <span className="text-[9px] text-brand-sandstone/40">reply</span>
+                                            <span className="text-[9px] md:text-[11px] text-brand-sandstone/40">reply</span>
                                             {isReplyAuthor && (
                                               <button
                                                 type="button"
@@ -1155,12 +1155,12 @@ export default function FeedStream({ initialPosts, currentUserId, mode = 'for_yo
                                                 title="Delete reply"
                                                 aria-label="Delete reply"
                                               >
-                                                <Trash2 className="w-2.5 h-2.5" />
+                                                <Trash2 className="w-2.5 h-2.5 md:w-3 md:h-3" />
                                               </button>
                                             )}
                                           </div>
                                         </div>
-                                        <p className="text-xs text-slate-300">{r.content}</p>
+                                        <p className="text-xs md:text-sm text-slate-300">{r.content}</p>
                                       </div>
                                     );
                                   })}
@@ -1174,16 +1174,16 @@ export default function FeedStream({ initialPosts, currentUserId, mode = 'for_yo
 
                   {/* Reply Target Indicator */}
                   {replyingTo[post.id] && (
-                    <div className="flex items-center justify-between px-3 py-1.5 rounded-xl bg-brand-caribbeanSea/10 border border-brand-caribbeanSea/20 text-[11px]">
+                    <div className="flex items-center justify-between px-3 py-1.5 rounded-xl bg-brand-caribbeanSea/10 border border-brand-caribbeanSea/20 text-[11px] md:text-xs">
                       <span className="text-brand-caribbeanSea font-medium">
                         Replying to <strong>@{replyingTo[post.id]?.authorName}</strong>
                       </span>
                       <button
                         type="button"
                         onClick={() => setReplyingTo((prev) => ({ ...prev, [post.id]: null }))}
-                        className="text-brand-sandstone/60 hover:text-brand-sandstone"
+                        className="text-brand-sandstone/60 hover:text-brand-sandstone p-1"
                       >
-                        <X className="w-3 h-3" />
+                        <X className="w-3.5 h-3.5" />
                       </button>
                     </div>
                   )}
@@ -1199,7 +1199,7 @@ export default function FeedStream({ initialPosts, currentUserId, mode = 'for_yo
                           ? `Write a reply to @${replyingTo[post.id]?.authorName}...`
                           : 'Write a supportive reply or feedback...'
                       }
-                      className="flex-1 bg-white/8 border border-white/10 rounded-xl pl-3.5 pr-8 py-2 text-xs text-white placeholder-white/40 focus:outline-none focus:border-brand-caribbeanSea"
+                      className="flex-1 bg-white/8 border border-white/10 rounded-xl pl-3.5 pr-8 py-2 md:py-2.5 min-h-[40px] md:min-h-[44px] text-xs md:text-sm text-white placeholder-white/40 focus:outline-none focus:border-brand-caribbeanSea"
                     />
 
                     {/* Comment Emoji Picker Button */}
@@ -1211,10 +1211,10 @@ export default function FeedStream({ initialPosts, currentUserId, mode = 'for_yo
                             activeCommentEmojiPickerPostId === post.id ? null : post.id
                           )
                         }
-                        className="p-1.5 text-slate-400 hover:text-amber-300 hover:bg-white/10 rounded-lg transition-colors"
+                        className="p-2 text-slate-400 hover:text-amber-300 hover:bg-white/10 rounded-lg transition-colors min-w-[36px] min-h-[36px] md:min-w-[40px] md:min-h-[40px] flex items-center justify-center"
                         title="Add emoji"
                       >
-                        <Smile className="w-4 h-4" />
+                        <Smile className="w-4 h-4 md:w-5 md:h-5" />
                       </button>
 
                       <EmojiPickerPopover
@@ -1235,12 +1235,12 @@ export default function FeedStream({ initialPosts, currentUserId, mode = 'for_yo
                       type="submit"
                       aria-label="Submit comment"
                       disabled={isSubmittingComment === post.id || !commentInputs[post.id]?.trim()}
-                      className="bg-brand-caribbeanSea hover:bg-brand-caribbeanSea text-slate-950 font-bold px-3.5 py-2 rounded-xl text-xs flex items-center gap-1 transition-all disabled:opacity-50 cursor-pointer"
+                      className="bg-brand-caribbeanSea hover:bg-brand-caribbeanSea text-slate-950 font-bold px-3.5 md:px-4 py-2 md:py-2.5 min-h-[40px] md:min-h-[44px] rounded-xl text-xs md:text-sm flex items-center gap-1.5 transition-all disabled:opacity-50 cursor-pointer"
                     >
                       {isSubmittingComment === post.id ? (
-                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        <Loader2 className="w-3.5 h-3.5 md:w-4 md:h-4 animate-spin" />
                       ) : (
-                        <Send className="w-3.5 h-3.5" />
+                        <Send className="w-3.5 h-3.5 md:w-4 md:h-4" />
                       )}
                     </button>
                   </form>
@@ -1469,7 +1469,7 @@ export default function FeedStream({ initialPosts, currentUserId, mode = 'for_yo
         <div className="pt-4 pb-8 flex justify-center">
           <button
             onClick={() => router.push(`/?mode=${mode}&cursor=${nextCursor}`)}
-            className="px-6 py-2 rounded-full glass hover:bg-white/10 transition-colors text-sm font-bold text-slate-200"
+            className="px-6 md:px-8 py-2 md:py-2.5 min-h-[42px] md:min-h-[46px] rounded-full glass hover:bg-white/10 transition-colors text-sm md:text-base font-bold text-slate-200"
           >
             Load more
           </button>

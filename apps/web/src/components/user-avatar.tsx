@@ -12,12 +12,12 @@ export interface UserAvatarProps {
 }
 
 const SIZE_MAP: Record<'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl', { box: string; text: string }> = {
-  xs: { box: 'w-6 h-6', text: 'text-[10px]' },
-  sm: { box: 'w-8 h-8', text: 'text-xs' },
-  md: { box: 'w-10 h-10', text: 'text-sm' },
-  lg: { box: 'w-14 h-14', text: 'text-base font-bold' },
-  xl: { box: 'w-20 h-20', text: 'text-xl font-black' },
-  '2xl': { box: 'w-28 h-28', text: 'text-3xl font-black' },
+  xs: { box: 'w-6 h-6 md:w-7 md:h-7', text: 'text-[10px] md:text-xs' },
+  sm: { box: 'w-8 h-8 md:w-9 md:h-9', text: 'text-xs md:text-sm' },
+  md: { box: 'w-10 h-10 md:w-11 md:h-11', text: 'text-sm md:text-base' },
+  lg: { box: 'w-14 h-14 md:w-16 md:h-16', text: 'text-base md:text-lg font-bold' },
+  xl: { box: 'w-20 h-20 md:w-22 md:h-22', text: 'text-xl md:text-2xl font-black' },
+  '2xl': { box: 'w-28 h-28 md:w-32 md:h-32', text: 'text-3xl md:text-4xl font-black' },
 };
 
 import TukubiImage from './ui/tukubi-image';

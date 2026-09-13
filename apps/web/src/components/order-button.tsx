@@ -37,16 +37,16 @@ export default function OrderButton({
     return (
       <Link
         href="/login?next=/marketplace"
-        className="w-full text-center bg-orange-500/20 text-orange-300 hover:bg-orange-500/30 border border-orange-500/40 font-bold py-2 rounded-xl text-xs flex items-center justify-center gap-2 transition-colors"
+        className="w-full text-center bg-orange-500/20 text-orange-300 hover:bg-orange-500/30 border border-orange-500/40 font-bold py-2.5 md:py-3 px-4 rounded-xl text-xs md:text-sm min-h-[42px] md:min-h-[44px] flex items-center justify-center gap-2 transition-colors"
       >
-        <Wallet className="w-4 h-4" /> Sign in to Buy
+        <Wallet className="w-4 h-4 md:w-5 md:h-5" /> Sign in to Buy
       </Link>
     );
   }
 
   if (isSeller) {
     return (
-      <div className="w-full text-center text-[11px] text-brand-sandstone/40 py-2">Your product listing</div>
+      <div className="w-full text-center text-xs md:text-sm font-semibold text-brand-sandstone/60 py-2.5">Your product listing</div>
     );
   }
 

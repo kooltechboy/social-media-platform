@@ -31,6 +31,18 @@ module.exports = {
           caribbeanSea: "#00B4D8",
           sunsetPurple: "#8B5CF6"
         }
+      },
+      fontSize: {
+        'desktop-post': ['1.0625rem', { lineHeight: '1.6' }],
+        'desktop-nav': ['1rem', { lineHeight: '1.5' }],
+        'desktop-meta': ['0.875rem', { lineHeight: '1.4' }],
+        'desktop-title': ['1.875rem', { lineHeight: '1.25' }],
+      },
+      minHeight: {
+        'touch-target': '44px',
+        'control-sm': '38px',
+        'control-md': '44px',
+        'control-lg': '48px',
       }
     },
   },

@@ -142,6 +142,30 @@ body {
   min-width: 44px;
 }
 
+/* ─── Desktop Readability & Visual Scale Architecture ─── */
+.desktop-reading {
+  line-height: 1.6;
+  letter-spacing: -0.011em;
+}
+
+.control-desktop-sm {
+  min-height: 38px;
+}
+
+.control-desktop-md {
+  min-height: 44px;
+}
+
+.icon-text-gap {
+  gap: 0.5rem;
+}
+@media (min-width: 768px) {
+  .icon-text-gap {
+    gap: 0.625rem;
+  }
+}
+
+
 /* ─── Smooth animations ─── */
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(6px); }

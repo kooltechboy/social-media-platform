@@ -502,12 +502,12 @@ export default function MessageThread({
 
           <div className="min-w-0">
             <div className="flex items-center gap-1.5">
-              <h3 className="text-sm font-black text-white truncate">{peerName}</h3>
+              <h3 className="text-sm md:text-base font-black text-white truncate">{peerName}</h3>
               <span title="256-Bit E2EE Verified">
-                <ShieldCheck className="w-3.5 h-3.5 text-brand-caribbeanSea" />
+                <ShieldCheck className="w-3.5 h-3.5 md:w-4 md:h-4 text-brand-caribbeanSea" />
               </span>
             </div>
-            <p className="text-[10px] text-emerald-400 font-bold flex items-center gap-1">
+            <p className="text-[10px] md:text-xs text-emerald-400 font-bold flex items-center gap-1">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" /> Active now
             </p>
           </div>
@@ -522,9 +522,9 @@ export default function MessageThread({
               setIsCallOpen(true);
             }}
             title="Start Audio Call"
-            className="p-2 sm:px-3 sm:py-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-slate-200 hover:text-white border border-white/10 text-xs font-bold flex items-center gap-1.5 transition-all shadow-sm"
+            className="p-2 sm:px-3 sm:py-1.5 md:px-4 md:py-2 rounded-xl bg-white/5 hover:bg-white/10 text-slate-200 hover:text-white border border-white/10 text-xs md:text-sm font-bold flex items-center gap-1.5 md:gap-2 transition-all shadow-sm min-h-[36px] md:min-h-[42px]"
           >
-            <Phone className="w-3.5 h-3.5 text-brand-caribbeanSea" />
+            <Phone className="w-3.5 h-3.5 md:w-4 md:h-4 text-brand-caribbeanSea" />
             <span className="hidden sm:inline">Audio</span>
           </button>
 
@@ -535,9 +535,9 @@ export default function MessageThread({
               setIsCallOpen(true);
             }}
             title="Start HD Video Call"
-            className="p-2 sm:px-3 sm:py-1.5 rounded-xl bg-gradient-to-r from-brand-caribbeanSea/20 to-brand-sunriseCoral/20 hover:from-brand-caribbeanSea/30 hover:to-brand-sunriseCoral/30 text-brand-caribbeanSea border border-brand-caribbeanSea/30 text-xs font-bold flex items-center gap-1.5 transition-all shadow-sm"
+            className="p-2 sm:px-3 sm:py-1.5 md:px-4 md:py-2 rounded-xl bg-gradient-to-r from-brand-caribbeanSea/20 to-brand-sunriseCoral/20 hover:from-brand-caribbeanSea/30 hover:to-brand-sunriseCoral/30 text-brand-caribbeanSea border border-brand-caribbeanSea/30 text-xs md:text-sm font-bold flex items-center gap-1.5 md:gap-2 transition-all shadow-sm min-h-[36px] md:min-h-[42px]"
           >
-            <Video className="w-3.5 h-3.5" />
+            <Video className="w-3.5 h-3.5 md:w-4 md:h-4" />
             <span className="hidden sm:inline">Video</span>
           </button>
         </div>
@@ -560,8 +560,8 @@ export default function MessageThread({
             <div className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-brand-caribbeanSea">
               <Sparkles className="w-6 h-6" />
             </div>
-            <h4 className="text-sm font-black text-white">Direct Caribbean Conversation</h4>
-            <p className="text-xs text-slate-400 max-w-xs">
+            <h4 className="text-sm md:text-base font-black text-white">Direct Caribbean Conversation</h4>
+            <p className="text-xs md:text-sm text-slate-400 max-w-xs">
               Say wah gwaan to {peerName}! All messages, calls, and voice notes are end-to-end encrypted.
             </p>
           </div>
@@ -583,7 +583,7 @@ export default function MessageThread({
                 {/* Reply Quote Preview */}
                 {repliedMsg && (
                   <div
-                    className={`flex items-center gap-1 text-[11px] text-slate-400 mb-1 px-2 py-0.5 rounded-lg bg-white/[0.04] border border-white/5 max-w-sm truncate ${
+                    className={`flex items-center gap-1 text-[11px] md:text-xs text-slate-400 mb-1 px-2 py-0.5 rounded-lg bg-white/[0.04] border border-white/5 max-w-sm truncate ${
                       isMine ? 'mr-1' : 'ml-1'
                     }`}
                   >
@@ -621,20 +621,20 @@ export default function MessageThread({
                         />
                         {msg.body && !msg.body.startsWith('[') && (
                           <div
-                            className={`p-3 rounded-2xl text-xs ${
+                            className={`p-3 md:p-3.5 rounded-2xl text-xs md:text-sm ${
                               isMine
                                 ? 'bg-gradient-to-tr from-brand-caribbeanSea via-teal-500 to-brand-sunriseCoral text-slate-950 font-bold'
                                 : 'bg-[#181126] border border-white/10 text-white'
                             }`}
                           >
-                            <p className="whitespace-pre-wrap break-words leading-relaxed">{msg.body}</p>
+                            <p className="whitespace-pre-wrap break-words leading-relaxed md:leading-[1.6]">{msg.body}</p>
                           </div>
                         )}
                       </div>
                     ) : (
                       /* Bubble */
                       <div
-                        className={`p-3.5 rounded-2xl text-xs relative transition-all shadow-md ${
+                        className={`p-3.5 md:p-4 rounded-2xl text-xs sm:text-sm md:text-[15px] relative transition-all shadow-md ${
                           isDeleted
                             ? 'bg-white/5 border border-white/10 text-slate-400 italic'
                             : isMine
@@ -651,14 +651,14 @@ export default function MessageThread({
                             />
                           </div>
                         ) : (
-                          <p className="whitespace-pre-wrap break-words leading-relaxed font-semibold">
+                          <p className="whitespace-pre-wrap break-words leading-relaxed md:leading-[1.6] font-semibold">
                             {msg.body}
                           </p>
                         )}
 
                         {/* Timestamp & Status Metadata */}
                         <div
-                          className={`flex items-center justify-end gap-1 mt-1 text-[9px] ${
+                          className={`flex items-center justify-end gap-1 mt-1 text-[9px] md:text-[11px] ${
                             isMine ? 'text-slate-900/80 font-bold' : 'text-slate-400'
                           }`}
                         >
@@ -676,12 +676,12 @@ export default function MessageThread({
                                   onClick={() => handleRetry(msg)}
                                   className="text-rose-600 hover:underline flex items-center gap-0.5 font-black"
                                 >
-                                  <RotateCcw className="w-2.5 h-2.5" /> Retry
+                                  <RotateCcw className="w-2.5 h-2.5 md:w-3 md:h-3" /> Retry
                                 </button>
                               ) : msg.status === 'sending' ? (
                                 <span className="opacity-70 animate-pulse">…</span>
                               ) : (
-                                <CheckCheck className="w-3 h-3 text-slate-950" />
+                                <CheckCheck className="w-3 h-3 md:w-3.5 md:h-3.5 text-slate-950" />
                               )}
                             </span>
                           )}
@@ -853,7 +853,7 @@ export default function MessageThread({
       {!isRecordingVoice && !editingMessage && (
         <form
           onSubmit={handleSend}
-          className="p-3 sm:p-4 border-t border-white/10 bg-[#0E0818]/90 backdrop-blur-xl flex items-center gap-2"
+          className="p-3 sm:p-4 md:p-5 border-t border-white/10 bg-[#0E0818]/90 backdrop-blur-xl flex items-center gap-2 md:gap-3"
         >
           {/* Emoji Popover Trigger */}
           <div className="relative">
@@ -861,11 +861,11 @@ export default function MessageThread({
               type="button"
               onClick={() => setIsEmojiPickerOpen(!isEmojiPickerOpen)}
               title="Insert Emojis & Diaspora Vibrations"
-              className={`p-2 rounded-xl text-slate-300 hover:text-amber-300 hover:bg-white/5 border border-white/10 transition-all ${
+              className={`p-2 md:p-2.5 rounded-xl text-slate-300 hover:text-amber-300 hover:bg-white/5 border border-white/10 transition-all min-w-[38px] min-h-[38px] md:min-w-[44px] md:min-h-[44px] flex items-center justify-center ${
                 isEmojiPickerOpen ? 'bg-amber-400/20 text-amber-300 border-amber-400/30' : ''
               }`}
             >
-              <Smile className="w-4 h-4 text-amber-400" />
+              <Smile className="w-4 h-4 md:w-5 md:h-5 text-amber-400" />
             </button>
 
             <EmojiPickerPopover
@@ -885,9 +885,9 @@ export default function MessageThread({
             onClick={handleAskAiAssistant}
             title="Ask TUKUBI Business AI"
             disabled={!messageInput.trim() || isAiResponding}
-            className="p-2 rounded-xl text-brand-goldenHour hover:bg-brand-goldenHour/10 border border-brand-goldenHour/30 disabled:opacity-30 transition-all cursor-pointer"
+            className="p-2 md:p-2.5 rounded-xl text-brand-goldenHour hover:bg-brand-goldenHour/10 border border-brand-goldenHour/30 disabled:opacity-30 transition-all cursor-pointer min-w-[38px] min-h-[38px] md:min-w-[44px] md:min-h-[44px] flex items-center justify-center"
           >
-            <Bot className="w-4 h-4" />
+            <Bot className="w-4 h-4 md:w-5 md:h-5" />
           </button>
 
           {/* Voice Record Button */}
@@ -895,9 +895,9 @@ export default function MessageThread({
             type="button"
             onClick={() => setIsRecordingVoice(true)}
             title="Record Voice Note"
-            className="p-2 rounded-xl text-slate-300 hover:text-brand-caribbeanSea hover:bg-white/5 border border-white/10 transition-all"
+            className="p-2 md:p-2.5 rounded-xl text-slate-300 hover:text-brand-caribbeanSea hover:bg-white/5 border border-white/10 transition-all min-w-[38px] min-h-[38px] md:min-w-[44px] md:min-h-[44px] flex items-center justify-center"
           >
-            <Mic className="w-4 h-4 text-brand-caribbeanSea" />
+            <Mic className="w-4 h-4 md:w-5 md:h-5 text-brand-caribbeanSea" />
           </button>
 
           {/* Text Input */}
@@ -911,16 +911,16 @@ export default function MessageThread({
               handleTyping();
             }}
             placeholder={`Message ${peerName}…`}
-            className="flex-1 px-4 py-2.5 rounded-2xl bg-white/[0.05] border border-white/10 text-xs text-white placeholder:text-slate-400 focus:outline-none focus:border-brand-caribbeanSea/60 transition-all"
+            className="flex-1 px-4 py-2.5 md:py-3 rounded-2xl bg-white/[0.05] border border-white/10 text-xs sm:text-sm md:text-base min-h-[42px] md:min-h-[46px] text-white placeholder:text-slate-400 focus:outline-none focus:border-brand-caribbeanSea/60 transition-all"
           />
 
           {/* Send Button */}
           <button
             type="submit"
             disabled={pending || !messageInput.trim()}
-            className="px-4 py-2.5 rounded-2xl bg-gradient-to-r from-brand-caribbeanSea via-brand-sunriseCoral to-brand-goldenHour text-slate-950 font-black text-xs flex items-center gap-1.5 shadow-lg shadow-brand-caribbeanSea/20 hover:opacity-95 disabled:opacity-30 transition-all cursor-pointer"
+            className="px-4 md:px-5 py-2.5 md:py-3 rounded-2xl bg-gradient-to-r from-brand-caribbeanSea via-brand-sunriseCoral to-brand-goldenHour text-slate-950 font-black text-xs md:text-sm flex items-center gap-1.5 md:gap-2 shadow-lg shadow-brand-caribbeanSea/20 hover:opacity-95 disabled:opacity-30 transition-all cursor-pointer min-h-[42px] md:min-h-[46px]"
           >
-            <Send className="w-3.5 h-3.5" />
+            <Send className="w-3.5 h-3.5 md:w-4.5 md:h-4.5" />
             <span className="hidden sm:inline">Send</span>
           </button>
         </form>

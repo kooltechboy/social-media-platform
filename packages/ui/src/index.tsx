@@ -14,7 +14,7 @@ export const Button: React.FC<ButtonProps> = ({
   className = '',
   ...props
 }) => {
-  const baseStyle = "font-bold rounded-xl transition-colors inline-flex items-center justify-center gap-2";
+  const baseStyle = "font-bold rounded-xl transition-all inline-flex items-center justify-center gap-2 md:gap-2.5 select-none";
   
   const variantStyles: Record<'primary' | 'secondary' | 'danger' | 'ghost', string> = {
     primary: "bg-brand-sunriseCoral hover:opacity-90 text-brand-twilight shadow-[0_0_15px_rgba(255,122,89,0.4)]",
@@ -24,9 +24,9 @@ export const Button: React.FC<ButtonProps> = ({
   };
 
   const sizeStyles: Record<'sm' | 'md' | 'lg', string> = {
-    sm: "px-3 py-1.5 text-xs",
-    md: "px-4 py-2 text-sm",
-    lg: "px-6 py-3 text-base",
+    sm: "px-3.5 py-1.5 md:py-2 text-xs md:text-sm min-h-[36px] md:min-h-[40px]",
+    md: "px-5 py-2 md:py-2.5 text-sm md:text-base min-h-[42px] md:min-h-[44px]",
+    lg: "px-6 md:px-7 py-3 md:py-3.5 text-base md:text-lg min-h-[48px] md:min-h-[50px]",
   };
 
   return (
@@ -66,7 +66,7 @@ export const Badge: React.FC<BadgeProps> = ({ children, color = 'sunrise' }: Bad
   };
 
   return (
-    <span className={`text-[11px] font-bold px-2 py-0.5 rounded border ${colorStyles[color]}`}>
+    <span className={`text-[11px] md:text-xs font-bold px-2.5 py-0.5 md:px-3 md:py-1 rounded-md border ${colorStyles[color]}`}>
       {children}
     </span>
   );
@@ -80,9 +80,9 @@ export interface AvatarProps {
 
 export const Avatar: React.FC<AvatarProps> = ({ src, fallback, size = 'md' }: AvatarProps) => {
   const sizeStyles: Record<'sm' | 'md' | 'lg', string> = {
-    sm: 'w-8 h-8 text-xs',
-    md: 'w-10 h-10 text-sm',
-    lg: 'w-14 h-14 text-base',
+    sm: 'w-8 h-8 md:w-9 md:h-9 text-xs md:text-sm',
+    md: 'w-10 h-10 md:w-11 md:h-11 text-sm md:text-base',
+    lg: 'w-14 h-14 md:w-16 md:h-16 text-base md:text-lg',
   };
 
   if (src) {
@@ -112,12 +112,12 @@ export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> 
 export const Input: React.FC<InputProps> = ({ label, error, className = '', ...props }: InputProps) => {
   return (
     <div className="space-y-1.5 w-full">
-      {label && <label className="block text-xs font-bold text-brand-sandstone/70">{label}</label>}
+      {label && <label className="block text-xs md:text-sm font-bold text-brand-sandstone/80">{label}</label>}
       <input
-        className={`w-full bg-brand-twilight border ${error ? 'border-rose-500' : 'border-brand-dusk'} rounded-xl px-4 py-2.5 text-sm text-brand-sandstone placeholder-brand-sandstone/40 focus:outline-none focus:border-brand-sunriseCoral transition-colors ${className}`}
+        className={`w-full bg-brand-twilight border ${error ? 'border-rose-500' : 'border-brand-dusk'} rounded-xl px-4 py-2.5 md:py-3 text-sm md:text-base min-h-[42px] md:min-h-[46px] text-brand-sandstone placeholder-brand-sandstone/50 focus:outline-none focus:border-brand-sunriseCoral transition-colors ${className}`}
         {...props}
       />
-      {error && <p className="text-xs text-rose-400 font-medium">{error}</p>}
+      {error && <p className="text-xs md:text-sm text-rose-400 font-medium">{error}</p>}
     </div>
   );
 };
@@ -130,12 +130,12 @@ export interface TextareaProps extends React.TextareaHTMLAttributes<HTMLTextArea
 export const Textarea: React.FC<TextareaProps> = ({ label, error, className = '', ...props }: TextareaProps) => {
   return (
     <div className="space-y-1.5 w-full">
-      {label && <label className="block text-xs font-bold text-brand-sandstone/70">{label}</label>}
+      {label && <label className="block text-xs md:text-sm font-bold text-brand-sandstone/80">{label}</label>}
       <textarea
-        className={`w-full bg-brand-twilight border ${error ? 'border-rose-500' : 'border-brand-dusk'} rounded-xl px-4 py-2.5 text-sm text-brand-sandstone placeholder-brand-sandstone/40 focus:outline-none focus:border-brand-sunriseCoral transition-colors resize-none ${className}`}
+        className={`w-full bg-brand-twilight border ${error ? 'border-rose-500' : 'border-brand-dusk'} rounded-xl px-4 py-2.5 md:py-3 text-sm md:text-base text-brand-sandstone placeholder-brand-sandstone/50 focus:outline-none focus:border-brand-sunriseCoral transition-colors resize-none leading-relaxed ${className}`}
         {...props}
       />
-      {error && <p className="text-xs text-rose-400 font-medium">{error}</p>}
+      {error && <p className="text-xs md:text-sm text-rose-400 font-medium">{error}</p>}
     </div>
   );
 };
@@ -164,8 +164,8 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
   return (
     <div className="bg-[#181126]/95 border border-dashed border-brand-sunsetPurple/40 rounded-3xl p-8 sm:p-12 text-center space-y-3.5 shadow-xl max-w-xl mx-auto">
       {icon && <div className="mx-auto text-brand-goldenHour flex justify-center text-3xl sm:text-4xl">{icon}</div>}
-      <h3 className="text-base sm:text-lg font-black text-white">{title}</h3>
-      <p className="text-xs sm:text-sm text-brand-sandstone/80 max-w-md mx-auto leading-relaxed">{description}</p>
+      <h3 className="text-base sm:text-lg md:text-xl font-black text-white">{title}</h3>
+      <p className="text-xs sm:text-sm md:text-base text-brand-sandstone/80 max-w-md mx-auto leading-relaxed">{description}</p>
       {action && <div className="pt-2">{action}</div>}
     </div>
   );
@@ -201,7 +201,7 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
           {backHref && (
             <a
               href={backHref}
-              className="mt-1 sm:mt-0 p-2 sm:px-3 sm:py-2 rounded-xl bg-white/5 hover:bg-white/10 text-brand-sandstone/80 hover:text-white border border-white/10 transition-colors inline-flex items-center gap-1.5 text-xs font-bold shrink-0 min-h-[38px]"
+              className="mt-1 sm:mt-0 p-2 sm:px-3.5 sm:py-2 md:py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-brand-sandstone/80 hover:text-white border border-white/10 transition-colors inline-flex items-center gap-1.5 text-xs md:text-sm font-bold shrink-0 min-h-[38px] md:min-h-[42px]"
               aria-label={backLabel}
             >
               <span>←</span>
@@ -211,13 +211,13 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
           <div className="min-w-0">
             <div className="flex items-center gap-2.5 flex-wrap">
               {icon && <span className="shrink-0 flex items-center justify-center">{icon}</span>}
-              <h1 className="text-xl sm:text-2xl lg:text-3xl font-black text-white tracking-tight leading-tight">
+              <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-black text-white tracking-tight leading-tight">
                 {title}
               </h1>
               {badge && <span className="shrink-0">{badge}</span>}
             </div>
             {subtitle && (
-              <p className="text-xs sm:text-sm text-brand-sandstone/70 mt-1 leading-relaxed max-w-3xl">
+              <p className="text-xs sm:text-sm md:text-base text-brand-sandstone/75 mt-1 leading-relaxed max-w-3xl">
                 {subtitle}
               </p>
             )}
@@ -296,23 +296,23 @@ export const ResponsiveTabs: React.FC<ResponsiveTabsProps> = ({
             role="tab"
             aria-selected={isActive}
             onClick={() => onTabChange(tab.id)}
-            className={`px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all relative flex items-center gap-2 whitespace-nowrap min-h-[40px] ${
+            className={`px-3.5 md:px-4 py-2 md:py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all relative flex items-center gap-2 whitespace-nowrap min-h-[40px] md:min-h-[44px] ${
               isActive
                 ? 'bg-white/15 text-brand-caribbeanSea border border-brand-caribbeanSea/40 shadow-sm'
                 : 'text-brand-sandstone/70 hover:text-white hover:bg-white/5 border border-transparent'
             }`}
           >
-            {tab.icon && <span className="w-4 h-4">{tab.icon}</span>}
+            {tab.icon && <span className="w-4 h-4 md:w-5 md:h-5">{tab.icon}</span>}
             <span>{tab.label}</span>
             {tab.count !== undefined && (
-              <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
+              <span className={`text-[10px] md:text-xs font-bold px-2 py-0.5 rounded-full ${
                 isActive ? 'bg-brand-caribbeanSea/20 text-brand-caribbeanSea border border-brand-caribbeanSea/30' : 'bg-white/10 text-brand-sandstone/60'
               }`}>
                 {tab.count}
               </span>
             )}
             {tab.badge && (
-              <span className="text-[9px] font-black px-1.5 py-0.5 rounded-full bg-brand-sunriseCoral text-slate-950">
+              <span className="text-[9px] md:text-[10px] font-black px-2 py-0.5 rounded-full bg-brand-sunriseCoral text-slate-950">
                 {tab.badge}
               </span>
             )}
@@ -367,13 +367,13 @@ export const BrandLogo: React.FC<BrandLogoProps> = ({
         src="/brand/tukubi-emblem.png"
         alt=""
         aria-hidden="true"
-        className="w-9 h-9 object-contain drop-shadow-md"
+        className="w-9 h-9 md:w-10 md:h-10 object-contain drop-shadow-md"
       />
       <div className="flex flex-col leading-tight">
-        <span className="text-xl font-black bg-gradient-to-r from-brand-caribbeanSea via-brand-goldenHour to-brand-sunriseCoral bg-clip-text text-transparent tracking-wider">
+        <span className="text-xl md:text-2xl font-black bg-gradient-to-r from-brand-caribbeanSea via-brand-goldenHour to-brand-sunriseCoral bg-clip-text text-transparent tracking-wider">
           TUKUBI
         </span>
-        <span className="text-[10px] font-bold text-brand-sandstone/80 tracking-wide">
+        <span className="text-[10px] md:text-xs font-bold text-brand-sandstone/80 tracking-wide">
           The Caribbean Connected.
         </span>
       </div>

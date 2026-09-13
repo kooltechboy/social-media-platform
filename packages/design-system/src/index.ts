@@ -99,3 +99,41 @@ export const elevations = {
   glowPurple: '0 0 25px -5px rgba(139, 92, 246, 0.4)',
 };
 
+export const desktopTokens = {
+  typography: {
+    display: '2.25rem',         // 36px
+    pageTitle: '2rem',          // 32px
+    sectionHeading: '1.625rem', // 26px
+    cardHeading: '1.25rem',     // 20px
+    bodyLarge: '1.125rem',      // 18px
+    body: '1.0625rem',          // 17px (~16-18px target)
+    bodySmall: '0.9375rem',     // 15px (~14-16px target)
+    navigation: '1rem',         // 16px (~15-17px target)
+    button: '1rem',             // 16px (~15-17px target)
+    label: '0.9375rem',         // 15px (~14-16px target)
+    input: '1rem',              // 16px (~15-17px target)
+    metadata: '0.875rem',       // 14px (~13-15px target)
+    caption: '0.875rem',        // 14px (~13-14px target)
+    helperText: '0.8125rem',    // 13px
+  },
+  icons: {
+    primaryNav: '24px',         // 22–26px
+    secondaryNav: '22px',       // 20–24px
+    action: '22px',             // 20–24px
+    postAction: '22px',         // 20–24px
+    header: '24px',             // 22–26px
+    buttonIcon: '20px',         // 20–24px
+    utility: '18px',            // 18–20px
+    avatarAdjacent: '22px',     // 20–24px
+  },
+  controls: {
+    minTarget: '44px',
+    inputHeight: '46px',
+    buttonHeightSm: '38px',
+    buttonHeightMd: '44px',
+    buttonHeightLg: '50px',
+    iconTextGap: '8px',         // 6–10px
+  },
+};
+
+
