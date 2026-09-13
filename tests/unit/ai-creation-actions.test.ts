@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { extractJsonFromAiResponse } from '../../apps/web/src/lib/ai/creation-actions';
+import { extractJsonFromAiResponse } from '../../apps/web/src/lib/ai/creation-utils';
 
 describe('AI Creation Actions & JSON Extraction Resilience', () => {
   it('extracts valid JSON object from clean JSON string', () => {
