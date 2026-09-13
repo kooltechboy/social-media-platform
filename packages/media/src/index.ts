@@ -229,3 +229,4 @@ export class StorageService {
 
 export * from './streaming';
 export * from './image-optimizer';
+export * from './captions';

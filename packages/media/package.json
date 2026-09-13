@@ -7,7 +7,11 @@
   "scripts": {
     "typecheck": "tsc --noEmit"
   },
+  "dependencies": {
+    "@caribbean/localization": "workspace:*"
+  },
   "devDependencies": {
     "typescript": "^5.5.0"
   }
 }
+

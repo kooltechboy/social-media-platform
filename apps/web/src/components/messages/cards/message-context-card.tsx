@@ -18,13 +18,18 @@ import {
   ArrowRight,
   Bot,
   UserCheck,
+  Truck,
+  Ship,
+  Plane,
 } from 'lucide-react';
 import type {
   MessageKind,
   MessageMetadata,
   ProductContextPayload,
   OrderContextPayload,
+  ShipmentTrackingContextPayload,
   EventContextPayload,
+
   LivestreamContextPayload,
   StoreContextPayload,
   ProfileContextPayload,
@@ -136,7 +141,70 @@ export default function MessageContextCard({
     );
   }
 
+  // 2.5. SHIPMENT TRACKING CONTEXT CARD (Inter-Island Logistics)
+  if (kind === 'shipment_tracking' && metadata.shipment) {
+    const shipment = metadata.shipment;
+    const isMaritime = shipment.transitMode === 'maritime_freight' || shipment.transitMode === 'inter_island_ferry';
+    const isAir = shipment.transitMode === 'air_cargo';
+
+    return (
+      <div className="rounded-2xl bg-[#140C22] border border-white/15 p-3.5 space-y-3 max-w-sm shadow-xl text-left hover:border-brand-caribbeanSea/40 transition-all">
+        <div className="flex items-center justify-between text-[11px] font-black text-slate-400">
+          <span className="flex items-center gap-1.5 text-brand-caribbeanSea">
+            {isAir ? <Plane className="w-3.5 h-3.5" /> : isMaritime ? <Ship className="w-3.5 h-3.5" /> : <Truck className="w-3.5 h-3.5" />}
+            Inter-Island Logistics
+          </span>
+          <span className="px-2 py-0.5 rounded-full bg-brand-caribbeanSea/20 text-brand-caribbeanSea text-[10px] font-black uppercase">
+            {shipment.statusLabel || shipment.status}
+          </span>
+        </div>
+
+        <div className="space-y-1.5 text-xs">
+          <div className="flex items-center justify-between">
+            <span className="font-bold text-white">
+              {shipment.originIsland} ➔ {shipment.destinationIsland}
+            </span>
+            <span className="text-[11px] font-mono text-slate-400">#{shipment.trackingNumber}</span>
+          </div>
+          <p className="text-[11px] text-slate-300 flex items-center gap-1">
+            <span>Carrier: <strong>{shipment.carrierName}</strong></span>
+          </p>
+          {shipment.latestLocation && (
+            <p className="text-[10px] text-slate-400 flex items-center gap-1">
+              <MapPin className="w-3 h-3 text-slate-500" />
+              <span>{shipment.latestLocation}</span>
+            </p>
+          )}
+
+          {/* Progress Bar */}
+          <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden mt-2">
+            <div
+              className="h-full bg-gradient-to-r from-brand-caribbeanSea to-brand-sunriseCoral rounded-full transition-all duration-300"
+              style={{ width: `${Math.min(100, Math.max(10, shipment.progressPercent || 20))}%` }}
+            />
+          </div>
+
+          <div className="flex items-center justify-between text-[10px] text-slate-400 pt-0.5">
+            <span>Estimated Delivery:</span>
+            <span className="text-white font-medium">
+              {new Date(shipment.estimatedDeliveryAt).toLocaleDateString()}
+            </span>
+          </div>
+        </div>
+
+        <Link
+          href={shipment.trackingUrl || `/account/orders`}
+          className="w-full py-1.5 px-3 rounded-xl bg-gradient-to-r from-brand-caribbeanSea to-brand-twilight text-white text-xs font-bold flex items-center justify-center gap-1 hover:opacity-95 transition-all"
+        >
+          <span>Track Live Shipment</span>
+          <ExternalLink className="w-3 h-3" />
+        </Link>
+      </div>
+    );
+  }
+
   // 3. EVENT CONTEXT CARD
+
   if (kind === 'event' && metadata.event) {
     const event: EventContextPayload = metadata.event;
     return (

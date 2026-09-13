@@ -398,3 +398,6 @@ export function digitalGoodsRequireMobileStoreRouting(lines: CartLine[], platfor
   const hasDigital = lines.some((line) => line.productKind === 'digital');
   return hasDigital && platform !== 'web';
 }
+
+export * from './logistics';
+

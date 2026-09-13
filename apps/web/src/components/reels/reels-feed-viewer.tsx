@@ -5,8 +5,10 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
   Video, Music, Heart, MessageCircle, MessageSquare, Share2, Wallet, Play, Pause,
-  Volume2, VolumeX, Plus, Send, X, Copy, Check, UserPlus, UserCheck, Disc, Bookmark
+  Volume2, VolumeX, Plus, Send, X, Copy, Check, UserPlus, UserCheck, Disc, Bookmark,
+  Subtitles
 } from 'lucide-react';
+import type { CaptionTrack } from '@caribbean/media';
 import {
   toggleReelLikeAction,
   postReelCommentAction,
@@ -18,6 +20,7 @@ import {
 import { followAction, unfollowAction } from '../../lib/social/profile-actions';
 import UseThisSoundButton from '../sounds/use-this-sound-button';
 import CreateReelModal from './create-reel-modal';
+import ReelSubtitleOverlay from './reel-subtitle-overlay';
 
 export interface ReelItem {
   id: string;
@@ -35,7 +38,9 @@ export interface ReelItem {
   gradient: string;
   videoUrl?: string;
   initialLiked?: boolean;
+  captions?: CaptionTrack;
 }
+
 
 interface CommentItem {
   id: string;
@@ -90,6 +95,8 @@ function ReelCard({
   const [progress, setProgress] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isCaptionExpanded, setIsCaptionExpanded] = useState(false);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [captionsEnabled, setCaptionsEnabled] = useState(true);
 
   useEffect(() => {
     if (isActive) {
@@ -112,9 +119,11 @@ function ReelCard({
     if (videoRef.current) {
       const cur = videoRef.current.currentTime;
       const dur = videoRef.current.duration || 1;
+      setCurrentTime(cur);
       setProgress((cur / dur) * 100);
     }
   };
+
 
   const handleTogglePlay = () => {
     if (!videoRef.current) return;
@@ -218,6 +227,20 @@ function ReelCard({
           <span className="text-[10px] font-medium shadow-black drop-shadow-md">{isSaved ? 'Saved' : 'Save'}</span>
         </button>
 
+        {reel.captions && (
+          <button
+            type="button"
+            onClick={() => setCaptionsEnabled(prev => !prev)}
+            aria-label={captionsEnabled ? 'Turn off subtitles' : 'Turn on subtitles'}
+            className={`flex flex-col items-center gap-1 group active:scale-90 transition-transform ${captionsEnabled ? 'text-brand-sunriseCoral' : 'text-white/60'}`}
+          >
+            <div className={`w-12 h-12 rounded-full flex items-center justify-center backdrop-blur-md transition-colors ${captionsEnabled ? 'bg-brand-sunriseCoral/20 border border-brand-sunriseCoral/40 text-brand-sunriseCoral' : 'bg-black/40 text-white'}`}>
+              <Subtitles className="w-6 h-6" />
+            </div>
+            <span className="text-[10px] font-bold shadow-black drop-shadow-md">{captionsEnabled ? 'CC On' : 'CC Off'}</span>
+          </button>
+        )}
+
         <button onClick={() => onOpenShare(reel.id)} aria-label="Share" className="flex flex-col items-center gap-1 group active:scale-90 transition-transform">
           <div className="w-12 h-12 rounded-full bg-black/40 flex items-center justify-center backdrop-blur-md text-white">
             <Share2 className="w-6 h-6" />
@@ -252,7 +275,16 @@ function ReelCard({
         </div>
       </div>
 
+      {/* Caribbean Dialect Subtitle Overlay */}
+      <ReelSubtitleOverlay
+        currentTime={currentTime}
+        captions={reel.captions}
+        isEnabled={captionsEnabled}
+        onToggleEnabled={() => setCaptionsEnabled((prev) => !prev)}
+      />
+
       {/* Bottom Left Info */}
+
       <div className="absolute left-4 bottom-6 right-20 z-20 flex flex-col gap-2">
         <Link href={`/profile/${reel.handle}`} className="flex items-center gap-2">
           <span className="text-base font-bold text-white drop-shadow-md">{reel.creator}</span>
@@ -286,23 +318,187 @@ function ReelCard({
   );
 }
 
+export const DEFAULT_CARIBBEAN_REELS: ReelItem[] = [
+  {
+    id: 'sample-reel-jam-1',
+    title: 'Wah Gwaan Kingston! Downtown street vibes and fresh riddims 🇯🇲',
+    creator: 'Zion Marley',
+    handle: 'zionvibes',
+    views: '42.5K views',
+    likes: '4.8K',
+    comments: '312',
+    sound: 'Kingston Dubplate Session — Original Sound',
+    location: 'Kingston, Jamaica 🇯🇲',
+    duration: '0:15',
+    gradient: 'from-amber-900/60 via-slate-900 to-[#110D17]',
+    captions: {
+      id: 'captions-jam-1',
+      label: 'Jamaican Patois (Original)',
+      language: 'jam',
+      dialect: 'jam',
+      cues: [
+        {
+          id: 'jam-1',
+          startTimeSec: 0.1,
+          endTimeSec: 3.2,
+          text: 'Wah gwaan fam! Mi deh yah inna downtown Kingston today.',
+          dialect: 'jam',
+          translations: {
+            en: "What's going on family! I'm right here in downtown Kingston today.",
+          },
+        },
+        {
+          id: 'jam-2',
+          startTimeSec: 3.3,
+          endTimeSec: 7.0,
+          text: 'Di whole place criss, riddim loud, and everybody hold a vibes!',
+          dialect: 'jam',
+          translations: {
+            en: 'The whole place is great, the rhythm is loud, and everybody is chilling!',
+          },
+        },
+        {
+          id: 'jam-3',
+          startTimeSec: 7.1,
+          endTimeSec: 12.0,
+          text: 'Soon come wit di fresh new release pon TUKUBI, big up unnu!',
+          dialect: 'jam',
+          translations: {
+            en: "I'll be right back with the fresh new release on TUKUBI, shoutout to you all!",
+          },
+        },
+      ],
+    },
+  },
+  {
+    id: 'sample-reel-ht-1',
+    title: 'Bèl Solèy Pòtoprens — Kilti ak Mizik Kreyòl 🇭🇹',
+    creator: 'Fabienne Jean',
+    handle: 'fabienne_ayiti',
+    views: '28.1K views',
+    likes: '3.2K',
+    comments: '184',
+    sound: 'Koudjay Rara Beat — Live Roots',
+    location: 'Pòtoprens, Ayiti 🇭🇹',
+    duration: '0:12',
+    gradient: 'from-blue-900/60 via-slate-900 to-[#110D17]',
+    captions: {
+      id: 'captions-ht-1',
+      label: 'Kreyòl Ayisyen (Original)',
+      language: 'ht',
+      dialect: 'ht',
+      cues: [
+        {
+          id: 'ht-1',
+          startTimeSec: 0.1,
+          endTimeSec: 3.5,
+          text: "Sak pase tout moun! Nou la n'ap boule nan bèl chalè sa a.",
+          dialect: 'ht',
+          translations: {
+            en: "What's up everyone! We're here doing great in this beautiful warmth.",
+            fr: "Qu'est-ce qui se passe tout le monde! On est là, tout va bien dans cette belle chaleur.",
+          },
+        },
+        {
+          id: 'ht-2',
+          startTimeSec: 3.6,
+          endTimeSec: 7.5,
+          text: 'Lakay se lakay, mwen renmen nou tout zanmi m yo!',
+          dialect: 'ht',
+          translations: {
+            en: 'Home is home, I love you all my friends!',
+            fr: "Chez soi c'est chez soi, je vous aime tous mes amis!",
+          },
+        },
+        {
+          id: 'ht-3',
+          startTimeSec: 7.6,
+          endTimeSec: 11.5,
+          text: 'An nou ale pataje bèl enèji kreyòl sa a ansanm!',
+          dialect: 'ht',
+          translations: {
+            en: "Let's go share this beautiful creole energy together!",
+            fr: 'Allons partager cette belle énergie créole ensemble!',
+          },
+        },
+      ],
+    },
+  },
+  {
+    id: 'sample-reel-pap-1',
+    title: 'Dushi Kòrsou — Sunset Vibes na Willemstad 🇨🇼',
+    creator: 'Dangelo Tromp',
+    handle: 'dangelo_curacao',
+    views: '19.4K views',
+    likes: '2.1K',
+    comments: '97',
+    sound: 'Tumba Festival Stems — Antillean Rhythm',
+    location: 'Willemstad, Kòrsou 🇨🇼',
+    duration: '0:14',
+    gradient: 'from-teal-900/60 via-slate-900 to-[#110D17]',
+    captions: {
+      id: 'captions-pap-1',
+      label: 'Papiamentu (Original)',
+      language: 'pap',
+      dialect: 'pap',
+      cues: [
+        {
+          id: 'pap-1',
+          startTimeSec: 0.1,
+          endTimeSec: 3.8,
+          text: 'Con ta bay tur hende! Bon bini na Kòrsou dushi yiu.',
+          dialect: 'pap',
+          translations: {
+            en: 'How is it going everyone! Welcome to Curaçao sweet darling.',
+            es: '¿Cómo les va a todos! Bienvenidos a Curazao mi gente linda.',
+          },
+        },
+        {
+          id: 'pap-2',
+          startTimeSec: 3.9,
+          endTimeSec: 7.8,
+          text: 'Tur kos bon aki na warda di solo, hopi dushi bida!',
+          dialect: 'pap',
+          translations: {
+            en: 'All is well here watching the sunset, such a sweet beautiful life!',
+            es: 'Todo bien aquí contemplando la puesta de sol, ¡qué vida tan hermosa!',
+          },
+        },
+        {
+          id: 'pap-3',
+          startTimeSec: 7.9,
+          endTimeSec: 13.0,
+          text: 'Masha danki pa tur e sosten, pasa un bon dia!',
+          dialect: 'pap',
+          translations: {
+            en: 'Thank you very much for all the support, have a wonderful day!',
+            es: '¡Muchas gracias por todo el apoyo, que tengan un lindo día!',
+          },
+        },
+      ],
+    },
+  },
+];
+
 export default function ReelsFeedViewer({ initialReels, user }: ReelsFeedViewerProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const currentTab = searchParams?.get('tab') || 'for_you';
   
-  const [reels, setReels] = useState<ReelItem[]>(initialReels);
+  const effectiveReels = initialReels && initialReels.length > 0 ? initialReels : DEFAULT_CARIBBEAN_REELS;
+  const [reels, setReels] = useState<ReelItem[]>(effectiveReels);
   const [isMuted, setIsMuted] = useState(true);
-  const [activeReelId, setActiveReelId] = useState<string | null>(initialReels[0]?.id || null);
+  const [activeReelId, setActiveReelId] = useState<string | null>(effectiveReels[0]?.id || null);
 
   const [likesState, setLikesState] = useState<Record<string, { count: number; liked: boolean }>>(() => {
     const initial: Record<string, { count: number; liked: boolean }> = {};
-    for (const r of initialReels) {
+    for (const r of effectiveReels) {
       const numeric = parseInt(r.likes.replace(/[^0-9]/g, ''), 10) || 0;
       initial[r.id] = { count: numeric, liked: r.initialLiked ?? false };
     }
     return initial;
   });
+
   const [followingState, setFollowingState] = useState<Record<string, boolean>>({});
   const [savedReels, setSavedReels] = useState<Set<string>>(new Set());
 

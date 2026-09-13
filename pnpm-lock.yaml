@@ -576,6 +576,10 @@ importers:
         version: 5.9.3
 
   packages/media:
+    dependencies:
+      '@caribbean/localization':
+        specifier: workspace:*
+        version: link:../localization
     devDependencies:
       typescript:
         specifier: ^5.5.0

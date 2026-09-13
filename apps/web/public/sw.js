@@ -159,3 +159,75 @@ self.addEventListener('fetch', (event) => {
     );
   }
 });
+
+// 5. Push Notifications: background event listener for Web Push Protocol
+self.addEventListener('push', (event) => {
+  if (!event.data) {
+    return;
+  }
+
+  let payload = {
+    title: 'TUKUBI Caribbean Alert',
+    body: 'You have a new update in your Caribbean feed.',
+    icon: '/icons/icon-192.png',
+    badge: '/favicon.svg',
+    tag: 'tukubi-alert',
+    data: { url: '/notifications' },
+  };
+
+  try {
+    const json = event.data.json();
+    payload = {
+      title: json.title || payload.title,
+      body: json.body || payload.body,
+      icon: json.icon || payload.icon,
+      badge: json.badge || payload.badge,
+      tag: json.tag || payload.tag,
+      data: json.data || payload.data,
+    };
+  } catch (_e) {
+    payload.body = event.data.text() || payload.body;
+  }
+
+  const notificationOptions = {
+    body: payload.body,
+    icon: payload.icon,
+    badge: payload.badge,
+    tag: payload.tag,
+    data: payload.data,
+    vibrate: [100, 50, 100],
+    requireInteraction: false,
+  };
+
+  event.waitUntil(
+    self.registration.showNotification(payload.title, notificationOptions)
+  );
+});
+
+// 6. Notification Click: deep-link routing and client focus
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+
+  const targetUrl = (event.notification.data && event.notification.data.url) || '/';
+  const fullTargetUrl = new URL(targetUrl, self.location.origin).href;
+
+  event.waitUntil(
+    self.clients
+      .matchAll({ type: 'window', includeUncontrolled: true })
+      .then((clientList) => {
+        for (const client of clientList) {
+          if ('focus' in client) {
+            return client.focus().then(() => {
+              if ('navigate' in client) {
+                return client.navigate(fullTargetUrl);
+              }
+            });
+          }
+        }
+        if (self.clients.openWindow) {
+          return self.clients.openWindow(fullTargetUrl);
+        }
+      })
+  );
+});
+

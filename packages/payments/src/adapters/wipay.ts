@@ -2,6 +2,8 @@
 
 import type { PSPAdapter, PSPChargeParams, PSPChargeResult, PSPRefundParams, PSPRefundResult, WebhookVerifier } from './types';
 
+export const WIPAY_SUPPORTED_CURRENCIES = ['TTD', 'JMD', 'USD', 'XCD', 'BBD', 'GYD'] as const;
+
 export interface WiPayAdapterConfig {
   accountNumber?: string;
   apiKey?: string;
@@ -28,6 +30,17 @@ export class WiPayAdapter implements PSPAdapter {
   }
 
   async charge(params: PSPChargeParams): Promise<PSPChargeResult> {
+    const currencyUpper = params.currency.toUpperCase();
+    if (!WIPAY_SUPPORTED_CURRENCIES.includes(currencyUpper as any)) {
+      return {
+        success: false,
+        providerTransactionId: '',
+        providerName: this.providerName,
+        status: 'error',
+        errorMessage: `WiPay does not support currency ${params.currency}. Supported currencies: ${WIPAY_SUPPORTED_CURRENCIES.join(', ')}`,
+      };
+    }
+
     if (!this.isConfigured) {
       return {
         success: false,

@@ -898,3 +898,4 @@ export function missingKeys(locale: Locale): TranslationKey[] {
 
 export * from './service';
 export * from './react';
+export * from './dialects';

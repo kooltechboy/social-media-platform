@@ -21,7 +21,9 @@ export type MessageKind =
   | 'community' 
   | 'profile' 
   | 'system' 
-  | 'ai_response';
+  | 'ai_response'
+  | 'shipment_tracking';
+
 
 export type MessageStatus = 'sending' | 'sent' | 'delivered' | 'read' | 'failed' | 'retry';
 
@@ -136,11 +138,28 @@ export interface AiResponsePayload {
   detectedLanguage?: 'en' | 'es' | 'fr' | 'ht' | 'pt';
 }
 
+export interface ShipmentTrackingContextPayload {
+  shipmentId: string;
+  orderId: string;
+  trackingNumber: string;
+  carrierName: string;
+  originIsland: string;
+  destinationIsland: string;
+  transitMode: 'maritime_freight' | 'air_cargo' | 'inter_island_ferry' | 'local_island_dispatch';
+  status: string;
+  statusLabel: string;
+  progressPercent: number;
+  estimatedDeliveryAt: string;
+  trackingUrl: string;
+  latestLocation?: string;
+}
+
 export interface MessageMetadata {
   audio_url?: string;
   media_urls?: string[];
   product?: ProductContextPayload;
   order?: OrderContextPayload;
+  shipment?: ShipmentTrackingContextPayload;
   event?: EventContextPayload;
   livestream?: LivestreamContextPayload;
   store?: StoreContextPayload;
@@ -155,6 +174,7 @@ export interface MessageMetadata {
   };
   [key: string]: unknown;
 }
+
 
 export interface MessageDraft {
   senderId: string;

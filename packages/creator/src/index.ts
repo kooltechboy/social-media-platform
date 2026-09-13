@@ -304,4 +304,7 @@ export function canTeamRolePerform(role: CreatorTeamRole, action: string): boole
   return ROLE_PERMISSIONS[role]?.includes(action) ?? false;
 }
 
+export * from './gating';
+
+
 

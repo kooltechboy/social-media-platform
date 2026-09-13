@@ -95,3 +95,6 @@ export class NotificationFanout {
     return dispatched;
   }
 }
+
+export * from './push';
+
