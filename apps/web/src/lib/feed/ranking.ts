@@ -50,7 +50,7 @@ export async function buildRankedFeed(
     // 3. Build the base query
     let postQuery = supabase
       .from('posts')
-      .select('id, author_id, content, created_at, media_urls, cultural_tags, likes_count, comments_count, shares_count, country_id, is_official, is_pinned, official_content_type, profiles:profiles!posts_author_id_fkey(display_name, username, avatar_url, is_verified, is_official)')
+      .select('id, author_id, content, created_at, media_urls, cultural_tags, likes_count, comments_count, shares_count, country_id, community_id, is_official, is_pinned, official_content_type, profiles:profiles!posts_author_id_fkey(display_name, username, avatar_url, is_verified, is_official)')
       .order('created_at', { ascending: false })
       .limit(limitCount);
 
@@ -63,34 +63,41 @@ export async function buildRankedFeed(
     if (mode === 'following') {
       const { data: follows } = await supabase.from('follows').select('following_id').eq('follower_id', userId);
       const followingIds = follows?.map((f: any) => f.following_id) || [];
-      if (followingIds.length > 0) postQuery = postQuery.in('author_id', followingIds);
-      else postQuery = postQuery.in('author_id', ['00000000-0000-0000-0000-000000000000']);
+      if (followingIds.length > 0) {
+        postQuery = postQuery.in('author_id', followingIds);
+      } else {
+        postQuery = postQuery.in('author_id', ['00000000-0000-0000-0000-000000000000']);
+      }
     } else if (mode === 'friends') {
       const { data: f1 } = await supabase.from('friendships').select('addressee_id').eq('requester_id', userId).eq('status', 'accepted');
       const { data: f2 } = await supabase.from('friendships').select('requester_id').eq('addressee_id', userId).eq('status', 'accepted');
       const friendIds = [...(f1?.map((f: any) => f.addressee_id) || []), ...(f2?.map((f: any) => f.requester_id) || [])];
-      if (friendIds.length > 0) postQuery = postQuery.in('author_id', friendIds);
-      else postQuery = postQuery.in('author_id', ['00000000-0000-0000-0000-000000000000']);
-    } else if (mode === 'caribbean') {
-      postQuery = postQuery.not('country_id', 'is', null);
-    } else if (mode === 'communities') {
-      const { data: memberships } = await supabase.from('community_members').select('community_id').eq('profile_id', userId).eq('membership_status', 'active');
-      const communityIds = memberships?.map((m: any) => m.community_id) || [];
-      if (communityIds.length > 0) {
-        const { data: communityMembers } = await supabase.from('community_members').select('profile_id').in('community_id', communityIds);
-        const memberIds = communityMembers?.map((m: any) => m.profile_id) || [];
-        if (memberIds.length > 0) postQuery = postQuery.in('author_id', memberIds);
-        else postQuery = postQuery.in('author_id', ['00000000-0000-0000-0000-000000000000']);
+      if (friendIds.length > 0) {
+        postQuery = postQuery.in('author_id', friendIds);
       } else {
         postQuery = postQuery.in('author_id', ['00000000-0000-0000-0000-000000000000']);
+      }
+    } else if (mode === 'caribbean') {
+      postQuery = postQuery.or('country_id.not.is.null,cultural_tags.cs.{"caribbean"}');
+    } else if (mode === 'communities') {
+      const { data: memberships } = await supabase
+        .from('community_members')
+        .select('community_id')
+        .eq('profile_id', userId)
+        .eq('membership_status', 'active');
+      const communityIds = memberships?.map((m: any) => m.community_id).filter(Boolean) || [];
+
+      if (communityIds.length > 0) {
+        postQuery = postQuery.in('community_id', communityIds);
+      } else {
+        // Show posts from public communities so new users can discover hubs
+        postQuery = postQuery.not('community_id', 'is', null);
       }
     } else if (mode === 'for_you') {
       const { data: follows } = await supabase.from('follows').select('following_id').eq('follower_id', userId);
       const followingIds = follows?.map((f: any) => f.following_id) || [];
       if (followingIds.length > 0) {
         postQuery = postQuery.or(`author_id.in.(${followingIds.join(',')}),country_id.not.is.null`);
-      } else {
-        postQuery = postQuery.not('country_id', 'is', null);
       }
     }
 
@@ -101,6 +108,17 @@ export async function buildRankedFeed(
     }
     
     if (!candidates || candidates.length === 0) {
+      // Fallback for "for_you" if initial query yields 0: return general public posts
+      if (mode === 'for_you' && !cursor) {
+        const { data: fallbackPosts } = await supabase
+          .from('posts')
+          .select('id, author_id, content, created_at, media_urls, cultural_tags, likes_count, comments_count, shares_count, country_id, community_id, is_official, is_pinned, official_content_type, profiles:profiles!posts_author_id_fkey(display_name, username, avatar_url, is_verified, is_official)')
+          .order('created_at', { ascending: false })
+          .limit(30);
+        if (fallbackPosts && fallbackPosts.length > 0) {
+          return { data: fallbackPosts };
+        }
+      }
       return { data: [] };
     }
 
@@ -119,16 +137,28 @@ export async function buildRankedFeed(
     }
 
     // 5. Fetch context for signals (follows, friendships, user profile)
+    const profileBuilder = supabase
+      .from('profiles')
+      .select('country_id, current_country_id, origin_country_id')
+      .eq('id', userId);
+
+    const profileQueryPromise =
+      typeof (profileBuilder as any).single === 'function'
+        ? (profileBuilder as any).single()
+        : typeof (profileBuilder as any).maybeSingle === 'function'
+        ? (profileBuilder as any).maybeSingle()
+        : Promise.resolve({ data: null });
+
     const [followsRes, friendshipsRes, profileRes] = await Promise.all([
       supabase.from('follows').select('following_id').eq('follower_id', userId),
       supabase.from('friendships').select('requester_id, addressee_id, status')
         .or(`requester_id.eq.${userId},addressee_id.eq.${userId}`),
-      supabase.from('profiles').select('country_id').eq('id', userId).single()
+      profileQueryPromise,
     ]);
 
     const followingSet = new Set(followsRes.data?.map((f: any) => f.following_id) || []);
     const friendsSet = new Set(friendshipsRes.data?.filter((f: any) => f.status === 'accepted').map((f: any) => f.requester_id === userId ? f.addressee_id : f.requester_id) || []);
-    const userCountryId = profileRes.data?.country_id;
+    const userCountryId = profileRes.data?.country_id || profileRes.data?.current_country_id || profileRes.data?.origin_country_id;
 
     // 6. Build Signals and Rank
     const ranker = new CaribbeanFeedRanker();

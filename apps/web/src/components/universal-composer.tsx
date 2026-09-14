@@ -58,6 +58,9 @@ export interface UniversalComposerProps {
   onPostCreated?: (post?: any) => void;
   defaultExpanded?: boolean;
   initialMode?: ComposerMode;
+  userId?: string;
+  defaultCommunityId?: string;
+  defaultCountryId?: string;
 }
 
 interface UploadedMediaItem {
@@ -78,6 +81,9 @@ export default function UniversalComposer({
   onPostCreated,
   defaultExpanded = false,
   initialMode = 'text',
+  userId,
+  defaultCommunityId,
+  defaultCountryId,
 }: UniversalComposerProps) {
   const router = useRouter();
   const { t } = useTranslation();
@@ -88,6 +94,10 @@ export default function UniversalComposer({
   const [audience, setAudience] = useState<AudienceSelection>('everyone');
   const [isReel, setIsReel] = useState(initialMode === 'reel');
   const [scheduledAt, setScheduledAt] = useState<string | null>(null);
+  const [selectedCommunityId, setSelectedCommunityId] = useState<string | null>(defaultCommunityId || null);
+  const [selectedCountryId, setSelectedCountryId] = useState<string | null>(defaultCountryId || null);
+  const [userCommunities, setUserCommunities] = useState<Array<{ id: string; name: string }>>([]);
+  const [allCountries, setAllCountries] = useState<Array<{ id: string; name: string; flag_emoji: string }>>([]);
 
   // Media files
   const [mediaList, setMediaList] = useState<UploadedMediaItem[]>([]);
@@ -152,6 +162,47 @@ export default function UniversalComposer({
       // Ignore
     }
   }, []);
+
+  // Fetch user communities and countries for tagging and feed routing
+  useEffect(() => {
+    let isMounted = true;
+    async function loadMetadata() {
+      const supabase = createSupabaseBrowserClient();
+      if (!supabase) return;
+
+      try {
+        const [countriesRes, authRes] = await Promise.all([
+          supabase.from('countries').select('id, name, flag_emoji').order('name'),
+          supabase.auth.getUser(),
+        ]);
+
+        if (isMounted && countriesRes.data) {
+          setAllCountries(countriesRes.data as Array<{ id: string; name: string; flag_emoji: string }>);
+        }
+
+        const effectiveUid = userId || authRes.data.user?.id;
+        if (isMounted && effectiveUid) {
+          const { data: comms } = await supabase
+            .from('community_members')
+            .select('community_id, communities(id, name)')
+            .eq('profile_id', effectiveUid);
+
+          if (comms && isMounted) {
+            const list = comms
+              .map((c: any) => c.communities)
+              .filter(Boolean) as Array<{ id: string; name: string }>;
+            setUserCommunities(list);
+          }
+        }
+      } catch {
+        // Non-blocking metadata load failure
+      }
+    }
+    loadMetadata();
+    return () => {
+      isMounted = false;
+    };
+  }, [userId]);
 
   // Auto-save draft
   useEffect(() => {
@@ -262,6 +313,15 @@ export default function UniversalComposer({
     const supabase = createSupabaseBrowserClient();
     const uploadedUrls: string[] = [];
 
+    let effectiveUserId = userId;
+    if (!effectiveUserId && supabase) {
+      const { data: authData } = await supabase.auth.getUser();
+      effectiveUserId = authData.user?.id;
+    }
+    if (!effectiveUserId) {
+      throw new Error('Please sign in to upload media files.');
+    }
+
     for (let i = 0; i < mediaList.length; i++) {
       const item = mediaList[i];
       setUploadProgressText(`Uploading media ${i + 1} of ${mediaList.length}...`);
@@ -270,7 +330,7 @@ export default function UniversalComposer({
         try {
           const fileExt = item.file.name.split('.').pop() || (item.type === 'video' ? 'mp4' : 'jpg');
           const cleanName = item.file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
-          const filePath = `${Date.now()}_${Math.random().toString(36).substring(2, 8)}_${cleanName}.${fileExt}`;
+          const filePath = `${effectiveUserId}/${Date.now()}_${Math.random().toString(36).substring(2, 8)}_${cleanName}.${fileExt}`;
 
           const { error: uploadError } = await supabase.storage
             .from('post-media')
@@ -396,6 +456,12 @@ export default function UniversalComposer({
       formData.set('visibility', backendVisibility);
       formData.set('media_urls', JSON.stringify(uploadedMediaUrls));
       formData.set('cultural_tags', JSON.stringify(culturalTags));
+      if (selectedCommunityId) {
+        formData.set('community_id', selectedCommunityId);
+      }
+      if (selectedCountryId) {
+        formData.set('country_id', selectedCountryId);
+      }
       if (scheduledAt) {
         formData.set('scheduled_at', scheduledAt);
       }
@@ -774,16 +840,15 @@ export default function UniversalComposer({
                     )}
                   </h4>
 
-                  {/* Audience Selector */}
-                  <div className="flex items-center gap-2 mt-1">
-                    <label htmlFor="audience-select" className="text-[11px] md:text-xs font-bold text-brand-sandstone/60">
-                      Who can see this?
-                    </label>
+                  {/* Audience & Destination Selectors */}
+                  <div className="flex flex-wrap items-center gap-2 mt-1.5">
+                    {/* Audience Selector */}
                     <div className="relative inline-block">
                       <select
                         id="audience-select"
                         value={audience}
                         onChange={(e) => setAudience(e.target.value as AudienceSelection)}
+                        aria-label="Audience Visibility"
                         className="bg-brand-twilight border border-brand-caribbeanSea/40 text-[11px] md:text-xs font-bold text-brand-caribbeanSea rounded-full pl-3 pr-7 py-1 md:py-1.5 focus:outline-none focus:border-brand-caribbeanSea cursor-pointer appearance-none shadow-sm"
                       >
                         <option value="everyone">🌍 Everyone</option>
@@ -794,6 +859,48 @@ export default function UniversalComposer({
                       </select>
                       <ChevronDown className="w-3 h-3 md:w-3.5 md:h-3.5 text-brand-caribbeanSea absolute right-2.5 top-2 md:top-2.5 pointer-events-none" />
                     </div>
+
+                    {/* Caribbean Nation Target */}
+                    {allCountries.length > 0 && (
+                      <div className="relative inline-block">
+                        <select
+                          id="country-select"
+                          value={selectedCountryId || ''}
+                          onChange={(e) => setSelectedCountryId(e.target.value || null)}
+                          aria-label="Target Island Nation"
+                          className="bg-brand-twilight border border-brand-sunriseCoral/40 text-[11px] md:text-xs font-bold text-brand-sunriseCoral rounded-full pl-3 pr-7 py-1 md:py-1.5 focus:outline-none focus:border-brand-sunriseCoral cursor-pointer appearance-none shadow-sm"
+                        >
+                          <option value="">🌴 All Caribbean</option>
+                          {allCountries.map((c) => (
+                            <option key={c.id} value={c.id}>
+                              {c.flag_emoji || '🏝️'} {c.name}
+                            </option>
+                          ))}
+                        </select>
+                        <ChevronDown className="w-3 h-3 md:w-3.5 md:h-3.5 text-brand-sunriseCoral absolute right-2.5 top-2 md:top-2.5 pointer-events-none" />
+                      </div>
+                    )}
+
+                    {/* Community Destination Target */}
+                    {userCommunities.length > 0 && (
+                      <div className="relative inline-block">
+                        <select
+                          id="community-select"
+                          value={selectedCommunityId || ''}
+                          onChange={(e) => setSelectedCommunityId(e.target.value || null)}
+                          aria-label="Post to Community Guild"
+                          className="bg-brand-twilight border border-brand-goldenHour/40 text-[11px] md:text-xs font-bold text-amber-300 rounded-full pl-3 pr-7 py-1 md:py-1.5 focus:outline-none focus:border-brand-goldenHour cursor-pointer appearance-none shadow-sm"
+                        >
+                          <option value="">🔥 General Stream</option>
+                          {userCommunities.map((c) => (
+                            <option key={c.id} value={c.id}>
+                              👥 {c.name}
+                            </option>
+                          ))}
+                        </select>
+                        <ChevronDown className="w-3 h-3 md:w-3.5 md:h-3.5 text-amber-300 absolute right-2.5 top-2 md:top-2.5 pointer-events-none" />
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

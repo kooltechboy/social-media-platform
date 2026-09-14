@@ -36,10 +36,12 @@ function relativeTime(iso: string): string {
   return `${Math.floor(hours / 24)}d ago`;
 }
 
-export default async function HomePage(props: { searchParams?: Promise<{ mode?: string, cursor?: string }> }) {
+export default async function HomePage(props: { searchParams?: Promise<{ mode?: string; feed?: string; cursor?: string }> }) {
   const searchParams = await props.searchParams;
-  const modeParam = typeof searchParams?.mode === 'string' ? searchParams.mode : undefined;
-  const mode = modeParam && isFeedMode(modeParam) ? (modeParam as FeedMode) : 'for_you';
+  const rawMode = searchParams?.feed || searchParams?.mode;
+  let normalizedMode = typeof rawMode === 'string' ? rawMode.toLowerCase().replace(/-/g, '_') : undefined;
+  if (normalizedMode === 'foryou') normalizedMode = 'for_you';
+  const mode = normalizedMode && isFeedMode(normalizedMode) ? (normalizedMode as FeedMode) : 'for_you';
   const cursor = typeof searchParams?.cursor === 'string' ? searchParams.cursor : undefined;
 
   const user = await getCurrentUser();
@@ -205,6 +207,7 @@ export default async function HomePage(props: { searchParams?: Promise<{ mode?: 
             <UniversalComposer
               displayName={user.displayName || `@${user.username}`}
               avatarInitials={user.username.slice(0, 2).toUpperCase()}
+              userId={user.id}
             />
           </ErrorBoundary>
         </section>

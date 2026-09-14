@@ -23,9 +23,11 @@ import {
   Clock,
   Layers,
   Music,
+  Camera,
 } from 'lucide-react';
 import UniversalComposer, { type ComposerMode } from './universal-composer';
 import CreatePodcastModal from './podcasts/create-podcast-modal';
+import TukubiCameraModal from './media/tukubi-camera-modal';
 import { getCreatorDraftsAction, type CreatorDraftItem } from '../lib/creator/draft-actions';
 import { createSupabaseBrowserClient } from '../lib/supabase/browser';
 
@@ -69,6 +71,15 @@ const CREATE_TOOLS: CreateTool[] = [
     directHref: '/reels',
     badge: 'POPULAR',
     color: 'from-rose-500/20 to-rose-950/40 border-rose-500/30',
+  },
+  {
+    id: 'camera',
+    title: 'Camera Studio (Photo / Video / Reel)',
+    description: 'Capture photo snapshots, record video clips, or shoot 9:16 vertical reels with live camera and rhythm stems.',
+    category: 'media',
+    icon: <Camera className="w-6 h-6 text-brand-goldenHour" />,
+    badge: 'STUDIO',
+    color: 'from-brand-goldenHour/20 to-amber-950/40 border-brand-goldenHour/30',
   },
   {
     id: 'live',
@@ -191,6 +202,7 @@ export default function CreateHubClient({ user }: CreateHubClientProps) {
   const [serverDrafts, setServerDrafts] = useState<CreatorDraftItem[]>([]);
   const [creatorPodcasts, setCreatorPodcasts] = useState<Array<{ id: string; title: string; slug: string }>>([]);
   const [isPodcastModalOpen, setIsPodcastModalOpen] = useState(false);
+  const [isCameraStudioOpen, setIsCameraStudioOpen] = useState(false);
   const [publishedPostId, setPublishedPostId] = useState<string | null>(null);
   const [composerMode, setComposerMode] = useState<ComposerMode>('text');
   const composerSectionRef = useRef<HTMLDivElement>(null);
@@ -351,6 +363,7 @@ export default function CreateHubClient({ user }: CreateHubClientProps) {
           initialMode={composerMode}
           displayName={user?.displayName ?? 'Caribbean Citizen'}
           avatarInitials={(user?.displayName ?? 'CO').slice(0, 2).toUpperCase()}
+          userId={user?.id}
           defaultExpanded={true}
           onPostCreated={(post) => {
             if (post?.id) setPublishedPostId(post.id);
@@ -393,6 +406,41 @@ export default function CreateHubClient({ user }: CreateHubClientProps) {
         {/* Tools Cards Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 3xl:grid-cols-4 4xl:grid-cols-5 gap-5">
           {filteredTools.map((tool) => {
+            if (tool.id === 'camera') {
+              return (
+                <button
+                  key={tool.id}
+                  type="button"
+                  onClick={() => setIsCameraStudioOpen(true)}
+                  className="surface-card surface-card-interactive rounded-2xl p-5 md:p-6 flex flex-col justify-between group text-left w-full cursor-pointer min-h-[210px]"
+                >
+                  <div className="space-y-3.5">
+                    <div className="flex items-center justify-between">
+                      <div className="p-3 md:p-3.5 rounded-xl bg-white/5 border border-white/10 text-white shadow-sm">
+                        {tool.icon}
+                      </div>
+                      <span className="text-[10px] md:text-xs font-black px-2.5 md:px-3 py-1 rounded-full bg-brand-goldenHour/15 text-amber-300 border border-brand-goldenHour/30">
+                        LIVE STUDIO
+                      </span>
+                    </div>
+                    <div>
+                      <h3 className="font-black text-sm sm:text-base md:text-lg text-white group-hover:text-amber-300 transition-colors">
+                        {tool.title}
+                      </h3>
+                      <p className="text-xs sm:text-sm md:text-[15px] text-brand-sandstone/80 mt-1 leading-relaxed">
+                        {tool.description}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="pt-4 mt-3 flex items-center justify-between text-xs md:text-sm font-bold text-amber-300 border-t border-white/10 w-full">
+                    <span>Open Camera Studio</span>
+                    <ArrowRight className="w-4 h-4 md:w-5 md:h-5 group-hover:translate-x-1 transition-transform" />
+                  </div>
+                </button>
+              );
+            }
+
             if (tool.id === 'podcast') {
               return (
                 <button
@@ -510,6 +558,21 @@ export default function CreateHubClient({ user }: CreateHubClientProps) {
         onClose={() => setIsPodcastModalOpen(false)}
         user={user}
         existingPodcasts={creatorPodcasts}
+      />
+
+      {/* Live Camera Studio Modal */}
+      <TukubiCameraModal
+        isOpen={isCameraStudioOpen}
+        mode="photo"
+        onClose={() => setIsCameraStudioOpen(false)}
+        onCaptureComplete={(_file, type) => {
+          setIsCameraStudioOpen(false);
+          handleStartCreating(type === 'video' ? 'video' : 'photo');
+        }}
+        onFallbackToFilePicker={() => {
+          setIsCameraStudioOpen(false);
+          handleStartCreating('photo');
+        }}
       />
     </div>
   );

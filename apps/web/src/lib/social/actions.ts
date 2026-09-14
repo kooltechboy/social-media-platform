@@ -2,9 +2,10 @@
 
 import { revalidatePath } from 'next/cache';
 import { CaribAIEngine } from '@caribbean/ai';
-import { validateComposer } from '@caribbean/social';
+import { validateComposer, type FeedMode } from '@caribbean/social';
 import { createSupabaseServerClient, getCurrentUser } from '../supabase/server';
 import { ensureUserProfile } from '../auth/user-sync';
+import { buildRankedFeed } from '../feed/ranking';
 
 export interface PostActionState {
   error: string | null;
@@ -135,6 +136,26 @@ export async function createPostAction(_prev: PostActionState, formData: FormDat
   }
   const postStatus = scheduledAt ? 'scheduled' : 'published';
 
+  // Community destination
+  const communityIdRaw = formData.get('community_id');
+  const communityId = typeof communityIdRaw === 'string' && communityIdRaw.trim() ? communityIdRaw.trim() : null;
+
+  // Island nation destination
+  const countryIdRaw = formData.get('country_id');
+  let countryId = typeof countryIdRaw === 'string' && countryIdRaw.trim() ? countryIdRaw.trim() : null;
+
+  // If country_id not explicitly supplied, fallback to profile's country
+  if (!countryId) {
+    const { data: profileCountry } = await supabase
+      .from('profiles')
+      .select('current_country_id, origin_country_id')
+      .eq('id', user.id)
+      .maybeSingle();
+    if (profileCountry) {
+      countryId = profileCountry.current_country_id || profileCountry.origin_country_id || null;
+    }
+  }
+
   const { data, error } = await supabase
     .from('posts')
     .insert({
@@ -145,8 +166,10 @@ export async function createPostAction(_prev: PostActionState, formData: FormDat
       cultural_tags: culturalTags,
       scheduled_at: scheduledAt,
       post_status: postStatus,
+      community_id: communityId,
+      country_id: countryId,
     })
-    .select('id, content, created_at, media_urls, cultural_tags, likes_count, comments_count, shares_count, visibility, profiles:profiles!posts_author_id_fkey(display_name, username, avatar_url, is_verified)')
+    .select('id, content, created_at, media_urls, cultural_tags, likes_count, comments_count, shares_count, visibility, community_id, country_id, profiles:profiles!posts_author_id_fkey(display_name, username, avatar_url, is_verified)')
     .single();
 
   if (error) {
@@ -178,6 +201,8 @@ export async function createPostAction(_prev: PostActionState, formData: FormDat
     reposts: data.shares_count || 0,
     comments: data.comments_count || 0,
     category: 'caribbean' as const,
+    communityId: data.community_id || undefined,
+    countryId: data.country_id || undefined,
   };
 
   revalidatePath('/');
@@ -187,6 +212,74 @@ export async function createPostAction(_prev: PostActionState, formData: FormDat
   track('post_created', { postId: data.id, visibility }, user.id);
   
   return { error: null, postId: data.id, post: normalizedPost };
+}
+
+/**
+ * Fetches feed posts with cursor-based pagination and channel awareness.
+ */
+export async function fetchFeedPostsAction(params: {
+  mode: FeedMode;
+  cursor?: string;
+}): Promise<{ posts: any[]; nextCursor?: string; error?: string }> {
+  const user = await getCurrentUser();
+  if (!user) return { posts: [], error: 'Please sign in to view updates.' };
+
+  const supabase = await createSupabaseServerClient();
+  if (!supabase) return { posts: [], error: 'Service temporarily unavailable.' };
+
+  try {
+    const res = await buildRankedFeed(user.id, params.mode, supabase, params.cursor);
+    if (res.error) {
+      return { posts: [], error: String(res.error?.message || res.error) };
+    }
+
+    const data = res.data || [];
+    let userLikedPostIds = new Set<string>();
+    if (data.length > 0) {
+      const postIds = data.map((p: any) => p.id);
+      const { data: reactions } = await supabase
+        .from('post_reactions')
+        .select('post_id')
+        .eq('user_id', user.id)
+        .in('post_id', postIds);
+      if (reactions) {
+        userLikedPostIds = new Set(reactions.map((r: any) => r.post_id));
+      }
+    }
+
+    const normalizedPosts = data.map((p: any) => {
+      const rawProfile = p.profiles;
+      const profile = Array.isArray(rawProfile) ? rawProfile[0] : rawProfile;
+      const isPostOfficial = profile?.username?.toLowerCase() === 'tukubi' || profile?.is_verified || false;
+      return {
+        id: p.id,
+        authorId: p.author_id,
+        author: profile?.display_name || 'Caribbean Member',
+        handle: profile?.username || 'member',
+        avatarUrl: profile?.avatar_url || (profile?.username?.toLowerCase() === 'tukubi' ? '/brand/tukubi-emblem.png' : null),
+        verified: profile?.is_verified ?? false,
+        isOfficial: isPostOfficial,
+        isPinned: isPostOfficial,
+        officialContentType: isPostOfficial ? 'welcome' : undefined,
+        location: 'Caribbean 🌴',
+        time: 'just now',
+        content: p.content || '',
+        mediaUrls: p.media_urls || [],
+        culturalTags: p.cultural_tags || [],
+        likes: p.likes_count || 0,
+        reposts: p.shares_count || 0,
+        comments: p.comments_count || 0,
+        isUserLiked: userLikedPostIds.has(p.id),
+        category: 'caribbean',
+        communityId: p.community_id || undefined,
+        countryId: p.country_id || undefined,
+      };
+    });
+
+    return { posts: normalizedPosts, nextCursor: res.nextCursor };
+  } catch (err) {
+    return { posts: [], error: err instanceof Error ? err.message : 'Failed to fetch feed' };
+  }
 }
 
 /**

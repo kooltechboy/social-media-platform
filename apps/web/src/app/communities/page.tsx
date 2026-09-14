@@ -72,7 +72,7 @@ export default async function CommunitiesPage({
     const [communitiesRes, membershipsRes] = await Promise.all([
       query,
       user
-        ? supabase.from('community_members').select('community_id').eq('user_id', user.id)
+        ? supabase.from('community_members').select('community_id').eq('profile_id', user.id)
         : Promise.resolve({ data: [] }),
     ]);
 

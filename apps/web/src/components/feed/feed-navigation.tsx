@@ -37,7 +37,8 @@ export default function FeedNavigation({
     if (onModeChange) {
       onModeChange(mode);
     } else {
-      router.replace(`/?mode=${mode}`, { scroll: false });
+      const feedSlug = mode.replace(/_/g, '-');
+      router.replace(`/?feed=${feedSlug}`, { scroll: false });
     }
   }
 
@@ -74,7 +75,11 @@ export default function FeedNavigation({
         className="flex items-center justify-between sm:justify-start gap-1 sm:gap-3 overflow-x-auto scrollbar-none"
       >
         {FEED_CHANNELS.map((channel, index) => {
-          const isActive = currentMode === channel.id;
+          const isActive =
+            currentMode === channel.id ||
+            currentMode === channel.id.replace(/_/g, '-') ||
+            (currentMode === 'for-you' && channel.id === 'for_you') ||
+            (currentMode === 'for_you' && channel.id === 'for_you');
           const label = t(channel.labelKey as any) || channel.fallbackLabel;
           const Icon = channel.icon;
 

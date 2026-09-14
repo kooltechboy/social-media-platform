@@ -17,6 +17,7 @@ import {
 import { createSupabaseServerClient, getCurrentUser } from '../../../lib/supabase/server';
 import CommunityJoinButton from '../../../components/community-join-button';
 import FeedStream, { type FeedPostData } from '../../../components/feed-stream';
+import UniversalComposer from '../../../components/universal-composer';
 
 export const dynamic = 'force-dynamic';
 
@@ -78,14 +79,15 @@ export default async function CommunityHubPage({
               .from('community_members')
               .select('community_id')
               .eq('community_id', dbComm.id)
-              .eq('user_id', user.id)
+              .eq('profile_id', user.id)
               .maybeSingle()
           : Promise.resolve({ data: null }),
         supabase
           .from('posts')
-          .select('id, author_id, content, created_at, media_urls, cultural_tags, likes_count, comments_count, shares_count, profiles:profiles!posts_author_id_fkey(display_name, username, is_verified)')
+          .select('id, author_id, content, created_at, media_urls, cultural_tags, likes_count, comments_count, shares_count, profiles:profiles!posts_author_id_fkey(display_name, username, avatar_url, is_verified)')
+          .eq('community_id', dbComm.id)
           .order('created_at', { ascending: false })
-          .limit(20),
+          .limit(30),
       ]);
 
       isMember = !!memberRes.data;
@@ -200,6 +202,15 @@ export default async function CommunityHubPage({
               <MessageCircle className="w-4 h-4 text-brand-sunriseCoral" /> Community Discussions &amp; Updates
             </h2>
           </div>
+
+          {user && (
+            <UniversalComposer
+              displayName={user.displayName || `@${user.username}`}
+              avatarInitials={user.username?.slice(0, 2).toUpperCase() || 'TK'}
+              userId={user.id}
+              defaultCommunityId={community.id}
+            />
+          )}
 
           <FeedStream
             initialPosts={communityPosts}

@@ -14,9 +14,13 @@ import {
   Lock,
   Globe,
   Users,
+  Camera,
+  Loader2,
 } from 'lucide-react';
 import { CARIBBEAN_SOUNDS, type CaribbeanSound } from '../../lib/constants/caribbean-sounds';
 import { publishReelAction } from '../../lib/media/reel-actions';
+import { createSupabaseBrowserClient } from '../../lib/supabase/browser';
+import TukubiCameraModal from '../media/tukubi-camera-modal';
 
 interface CreateReelModalProps {
   isOpen: boolean;
@@ -45,8 +49,10 @@ export default function CreateReelModal({
   const [originalAudioVolume, setOriginalAudioVolume] = useState(100);
   const [trackVolume, setTrackVolume] = useState(80);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [isCameraOpen, setIsCameraOpen] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const videoPreviewRef = useRef<HTMLVideoElement>(null);
@@ -81,20 +87,52 @@ export default function CreateReelModal({
       setErrorMessage('Please add a title / caption for your Reel.');
       return;
     }
+    if (!videoFile) {
+      setErrorMessage('Please select or record a video file for your Reel.');
+      return;
+    }
 
     setIsSubmitting(true);
     setErrorMessage(null);
-
-    const formData = new FormData();
-    formData.set('title', title.trim());
-    formData.set('visibility', visibility);
-    if (selectedSound) {
-      formData.set('soundId', selectedSound.id);
-      formData.set('soundTitle', `${selectedSound.title} — ${selectedSound.artist}`);
-    }
-    formData.set('durationSeconds', '30');
+    setUploadProgress('Uploading Caribbean Reel video to media storage...');
 
     try {
+      const supabase = createSupabaseBrowserClient();
+      if (!supabase) throw new Error('Storage client is unavailable.');
+
+      const fileExt = videoFile.name.split('.').pop() || 'mp4';
+      const cleanName = videoFile.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+      const effectiveUid = user?.id || 'anonymous';
+      const filePath = `${effectiveUid}/reels/${Date.now()}_${Math.random().toString(36).substring(2, 7)}_${cleanName}.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('post-media')
+        .upload(filePath, videoFile, {
+          cacheControl: '3600',
+          upsert: false,
+        });
+
+      if (uploadError) {
+        throw new Error(`Reel upload failed: ${uploadError.message}`);
+      }
+
+      const { data: pubData } = supabase.storage.from('post-media').getPublicUrl(filePath);
+      if (!pubData || !pubData.publicUrl) {
+        throw new Error('Failed to resolve public URL for uploaded reel video.');
+      }
+
+      setUploadProgress('Publishing Reel across the Caribbean network...');
+
+      const formData = new FormData();
+      formData.set('title', title.trim());
+      formData.set('visibility', visibility);
+      formData.set('storagePath', pubData.publicUrl);
+      if (selectedSound) {
+        formData.set('soundId', selectedSound.id);
+        formData.set('soundTitle', `${selectedSound.title} — ${selectedSound.artist}`);
+      }
+      formData.set('durationSeconds', '30');
+
       const res = await publishReelAction(formData);
       if (res.success) {
         setSuccessMessage('🎉 Your Caribbean Reel has been published!');
@@ -109,6 +147,8 @@ export default function CreateReelModal({
     } catch (err) {
       setErrorMessage(err instanceof Error ? err.message : 'Error publishing reel.');
       setIsSubmitting(false);
+    } finally {
+      setUploadProgress(null);
     }
   }
 
@@ -181,25 +221,52 @@ export default function CreateReelModal({
                 </button>
               </div>
             ) : (
-              <div
-                onClick={() => fileInputRef.current?.click()}
-                className="border-2 border-dashed border-slate-700 hover:border-rose-500/50 rounded-2xl p-6 text-center cursor-pointer transition-colors bg-brand-dusk/40 flex flex-col items-center gap-2.5"
-              >
-                <UploadCloud className="w-10 h-10 text-rose-400" />
-                <div className="space-y-1">
-                  <p className="text-xs font-bold text-slate-200">Click to upload video</p>
-                  <p className="text-[11px] text-brand-sandstone/60">MP4, MOV, WebM (up to 500MB, 9:16 vertical)</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {/* 1. Record with Camera */}
+                <button
+                  type="button"
+                  onClick={() => setIsCameraOpen(true)}
+                  className="border-2 border-dashed border-rose-500/40 hover:border-rose-400 bg-rose-500/10 hover:bg-rose-500/20 rounded-2xl p-5 text-center cursor-pointer transition-all flex flex-col items-center justify-center gap-2 group min-h-[140px]"
+                >
+                  <div className="w-11 h-11 rounded-2xl bg-rose-500/20 flex items-center justify-center text-rose-400 group-hover:scale-110 transition-transform">
+                    <Camera className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-black text-white">Record Reel (9:16 Camera)</p>
+                    <p className="text-[11px] text-brand-sandstone/70 mt-0.5">Use device camera &amp; Caribbean stem</p>
+                  </div>
+                </button>
+
+                {/* 2. Upload from Device */}
+                <div
+                  onClick={() => fileInputRef.current?.click()}
+                  className="border-2 border-dashed border-slate-700 hover:border-slate-500 rounded-2xl p-5 text-center cursor-pointer transition-all bg-brand-dusk/40 flex flex-col items-center justify-center gap-2 group min-h-[140px]"
+                >
+                  <div className="w-11 h-11 rounded-2xl bg-white/5 flex items-center justify-center text-slate-300 group-hover:scale-110 transition-transform">
+                    <UploadCloud className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-black text-slate-200">Upload Video File</p>
+                    <p className="text-[11px] text-brand-sandstone/60 mt-0.5">MP4, MOV, WebM (up to 500MB)</p>
+                  </div>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="video/*"
+                    onChange={handleFileChange}
+                    className="hidden"
+                  />
                 </div>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="video/*"
-                  onChange={handleFileChange}
-                  className="hidden"
-                />
               </div>
             )}
           </div>
+
+          {uploadProgress && (
+            <div className="p-3.5 bg-rose-500/10 border border-rose-500/30 rounded-2xl text-xs text-rose-300 flex items-center gap-2.5 animate-pulse">
+              <Loader2 className="w-4 h-4 animate-spin text-rose-400 flex-shrink-0" />
+              <span className="font-bold">{uploadProgress}</span>
+            </div>
+          )}
 
           {/* Sound Attachment */}
           <div className="bg-brand-dusk/60 border border-slate-800 rounded-2xl p-4 space-y-3">
@@ -341,6 +408,27 @@ export default function CreateReelModal({
           </div>
         </form>
       </div>
+
+      {/* Dedicated Reel Camera Studio Modal */}
+      <TukubiCameraModal
+        isOpen={isCameraOpen}
+        initialMode="reel"
+        initialSoundId={selectedSound?.id}
+        onClose={() => setIsCameraOpen(false)}
+        onCaptureComplete={(file, _type, meta) => {
+          setVideoFile(file);
+          setVideoPreviewUrl(URL.createObjectURL(file));
+          if (meta?.soundId && !selectedSound) {
+            const matched = CARIBBEAN_SOUNDS.find((s) => s.id === meta.soundId);
+            if (matched) setSelectedSound(matched);
+          }
+          setIsCameraOpen(false);
+        }}
+        onFallbackToFilePicker={() => {
+          setIsCameraOpen(false);
+          fileInputRef.current?.click();
+        }}
+      />
     </div>
   );
 }

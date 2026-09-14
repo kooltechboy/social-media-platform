@@ -33,6 +33,8 @@ import {
   Mail,
   Smartphone,
   Check,
+  Users,
+  Flame,
 } from 'lucide-react';
 import {
   toggleLikeAction,
@@ -45,6 +47,7 @@ import {
   savePostAction,
   unsavePostAction,
   getSavedPostIdsAction,
+  fetchFeedPostsAction,
 } from '../lib/social/actions';
 import { translatePostAction } from '../lib/social/translate-actions';
 import { createSupabaseBrowserClient } from '../lib/supabase/browser';
@@ -118,6 +121,38 @@ export default function FeedStream({
   const [savedPosts, setSavedPosts] = useState<Set<string>>(
     () => new Set(mode === 'saved' ? initialPosts.map((p) => p.id) : [])
   );
+  const [currentCursor, setCurrentCursor] = useState<string | undefined>(nextCursor);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+
+  useEffect(() => {
+    setCurrentCursor(nextCursor);
+    setPosts(initialPosts);
+  }, [nextCursor, initialPosts]);
+
+  async function handleLoadMore() {
+    if (!currentCursor || isLoadingMore) return;
+    setIsLoadingMore(true);
+    try {
+      const normalizedMode = (mode.replace(/-/g, '_') as any) || 'for_you';
+      const res = await fetchFeedPostsAction({
+        mode: normalizedMode,
+        cursor: currentCursor,
+      });
+
+      if (res.posts && res.posts.length > 0) {
+        setPosts((prev) => {
+          const existingIds = new Set(prev.map((p) => p.id));
+          const newUnique = res.posts.filter((p) => !existingIds.has(p.id));
+          return [...prev, ...newUnique];
+        });
+      }
+      setCurrentCursor(res.nextCursor);
+    } catch {
+      router.push(`/?mode=${mode}&cursor=${currentCursor}`);
+    } finally {
+      setIsLoadingMore(false);
+    }
+  }
 
   useEffect(() => {
     if (currentUserId && mode !== 'saved') {
@@ -711,14 +746,86 @@ export default function FeedStream({
       {/* Feed Stream */}
       <div className="space-y-4">
         {displayedPosts.length === 0 ? (
-          <div className="p-8 sm:p-12 text-center glass-aerospace rounded-3xl space-y-3 border border-white/10 shadow-xl">
-            <div className="w-12 h-12 rounded-2xl bg-brand-caribbeanSea/10 border border-brand-caribbeanSea/25 flex items-center justify-center mx-auto text-brand-caribbeanSea">
-              <Globe className="w-6 h-6" />
-            </div>
-            <h4 className="text-base font-black text-white">No Caribbean updates in this channel yet</h4>
-            <p className="text-xs sm:text-sm text-brand-sandstone/65 max-w-md mx-auto leading-relaxed">
-              Connect with fellow islanders, follow creators across the diaspora, or create your first post above!
-            </p>
+          <div className="p-8 sm:p-12 text-center glass-aerospace rounded-3xl space-y-4 border border-white/10 shadow-xl animate-fadeIn">
+            {mode === 'following' ? (
+              <>
+                <div className="w-14 h-14 rounded-2xl bg-brand-goldenHour/10 border border-brand-goldenHour/30 flex items-center justify-center mx-auto text-brand-goldenHour shadow-lg">
+                  <Users className="w-7 h-7" />
+                </div>
+                <h4 className="text-lg font-black text-white">You aren&apos;t following anyone yet</h4>
+                <p className="text-xs sm:text-sm text-brand-sandstone/70 max-w-md mx-auto leading-relaxed">
+                  Follow Caribbean creators, innovators, musicians, and diaspora friends to see their latest updates right here.
+                </p>
+                <div className="pt-2">
+                  <Link
+                    href="/explore"
+                    className="inline-flex items-center gap-2 px-5 py-2.5 min-h-[44px] rounded-xl bg-gradient-to-r from-brand-caribbeanSea via-brand-goldenHour to-brand-sunriseCoral text-slate-950 font-black text-xs sm:text-sm shadow-lg hover:brightness-110 transition-all"
+                  >
+                    <Sparkles className="w-4 h-4" /> Discover Caribbean Creators
+                  </Link>
+                </div>
+              </>
+            ) : mode === 'communities' ? (
+              <>
+                <div className="w-14 h-14 rounded-2xl bg-rose-500/10 border border-rose-500/30 flex items-center justify-center mx-auto text-rose-400 shadow-lg">
+                  <Flame className="w-7 h-7" />
+                </div>
+                <h4 className="text-lg font-black text-white">No community updates in your stream yet</h4>
+                <p className="text-xs sm:text-sm text-brand-sandstone/70 max-w-md mx-auto leading-relaxed">
+                  Join island city hubs, alumni associations, professional diaspora guilds, and cultural circles to join the conversation.
+                </p>
+                <div className="pt-2">
+                  <Link
+                    href="/communities"
+                    className="inline-flex items-center gap-2 px-5 py-2.5 min-h-[44px] rounded-xl bg-brand-sunriseCoral text-slate-950 font-black text-xs sm:text-sm shadow-lg hover:brightness-110 transition-all"
+                  >
+                    <Users className="w-4 h-4" /> Browse Caribbean Communities
+                  </Link>
+                </div>
+              </>
+            ) : mode === 'caribbean' ? (
+              <>
+                <div className="w-14 h-14 rounded-2xl bg-brand-caribbeanSea/10 border border-brand-caribbeanSea/30 flex items-center justify-center mx-auto text-brand-caribbeanSea shadow-lg">
+                  <Globe className="w-7 h-7" />
+                </div>
+                <h4 className="text-lg font-black text-white">No regional island updates found</h4>
+                <p className="text-xs sm:text-sm text-brand-sandstone/70 max-w-md mx-auto leading-relaxed">
+                  Be the first to share breaking carnival news, cultural stories, or dialect moments from across the archipelago.
+                </p>
+                <div className="pt-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }}
+                    className="inline-flex items-center gap-2 px-5 py-2.5 min-h-[44px] rounded-xl bg-brand-caribbeanSea text-slate-950 font-black text-xs sm:text-sm shadow-lg hover:brightness-110 transition-all"
+                  >
+                    <Sparkles className="w-4 h-4" /> Share an Island Update
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="w-14 h-14 rounded-2xl bg-brand-caribbeanSea/10 border border-brand-caribbeanSea/30 flex items-center justify-center mx-auto text-brand-caribbeanSea shadow-lg">
+                  <Globe className="w-7 h-7" />
+                </div>
+                <h4 className="text-lg font-black text-white">No Caribbean updates in this channel yet</h4>
+                <p className="text-xs sm:text-sm text-brand-sandstone/70 max-w-md mx-auto leading-relaxed">
+                  Connect with fellow islanders, follow creators across the diaspora, or create your first post above!
+                </p>
+                <div className="pt-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }}
+                    className="inline-flex items-center gap-2 px-5 py-2.5 min-h-[44px] rounded-xl bg-brand-caribbeanSea text-slate-950 font-black text-xs sm:text-sm shadow-lg hover:brightness-110 transition-all"
+                  >
+                    <Sparkles className="w-4 h-4" /> Create First Post
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         ) : (
           displayedPosts.map((post) => (
@@ -1121,13 +1228,22 @@ export default function FeedStream({
       )}
 
       {/* Load More */}
-      {nextCursor && (
+      {currentCursor && (
         <div className="pt-4 pb-8 flex justify-center">
           <button
-            onClick={() => router.push(`/?mode=${mode}&cursor=${nextCursor}`)}
-            className="px-6 md:px-8 py-2 md:py-2.5 min-h-[42px] md:min-h-[46px] rounded-full glass hover:bg-white/10 transition-colors text-sm md:text-base font-bold text-slate-200"
+            type="button"
+            disabled={isLoadingMore}
+            onClick={handleLoadMore}
+            className="px-6 md:px-8 py-2 md:py-2.5 min-h-[44px] rounded-full glass hover:bg-white/10 transition-colors text-sm md:text-base font-bold text-slate-200 flex items-center gap-2 disabled:opacity-50"
           >
-            Load more
+            {isLoadingMore ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin text-brand-caribbeanSea" />
+                <span>Loading more updates...</span>
+              </>
+            ) : (
+              <span>Load more</span>
+            )}
           </button>
         </div>
       )}

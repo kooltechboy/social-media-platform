@@ -60,19 +60,66 @@ export async function postReelCommentAction(reelId: string, content: string): Pr
   const supabase = await createSupabaseServerClient();
   if (!supabase) return { success: false, error: 'Database unavailable.' };
 
+  const { data: comment, error } = await supabase
+    .from('comments')
+    .insert({
+      video_id: reelId,
+      author_id: user.id,
+      content: text,
+    })
+    .select('id, content, created_at, profiles:profiles!comments_author_id_fkey(display_name, username, avatar_url)')
+    .single();
+
+  if (error) {
+    console.error('[postReelCommentAction] DB error:', error);
+    return { success: false, error: error.message };
+  }
+
+  const rawP = (comment as any)?.profiles;
+  const p = Array.isArray(rawP) ? rawP[0] : rawP;
+
   const commentData = {
-    id: `rc_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+    id: comment.id,
     reel_id: reelId,
     user_id: user.id,
-    display_name: user.displayName,
-    username: user.username,
-    avatar_url: user.avatarUrl,
-    content: text,
-    created_at: new Date().toISOString(),
+    display_name: p?.display_name || user.displayName,
+    username: p?.username || user.username,
+    avatar_url: p?.avatar_url || user.avatarUrl,
+    content: comment.content,
+    created_at: comment.created_at,
   };
 
   revalidatePath('/reels');
   return { success: true, data: commentData };
+}
+
+export async function fetchReelCommentsAction(reelId: string) {
+  const supabase = await createSupabaseServerClient();
+  if (!supabase) return { comments: [] };
+
+  const { data } = await supabase
+    .from('comments')
+    .select('id, content, created_at, author_id, profiles:profiles!comments_author_id_fkey(display_name, username, avatar_url)')
+    .eq('video_id', reelId)
+    .order('created_at', { ascending: true })
+    .limit(50);
+
+  if (!data) return { comments: [] };
+
+  return {
+    comments: data.map((c: any) => {
+      const rawP = c.profiles;
+      const p = Array.isArray(rawP) ? rawP[0] : rawP;
+      return {
+        id: c.id,
+        user: p?.display_name || 'Caribbean Member',
+        handle: p?.username || 'member',
+        avatar: p?.avatar_url || '🌴',
+        text: c.content,
+        time: new Date(c.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      };
+    }),
+  };
 }
 
 export async function recordReelShareAction(reelId: string, shareType: string = 'copy_link'): Promise<ReelActionResult> {
@@ -130,31 +177,56 @@ export async function publishReelAction(formData: FormData): Promise<ReelActionR
   const durationSeconds = parseInt(String(formData.get('durationSeconds') ?? '30'), 10);
 
   if (!title) return { success: false, error: 'Please add a caption for your reel.' };
+  if (!storagePath) return { success: false, error: 'Video media file is required to publish a reel.' };
 
   const supabase = await createSupabaseServerClient();
   if (!supabase) return { success: false, error: 'Database unavailable.' };
 
   const finalTitle = soundTitle ? `${title} • 🎵 ${soundTitle}` : title;
 
-  const { data, error } = await supabase
+  const { data: videoData, error } = await supabase
     .from('videos')
     .insert({
       creator_id: user.id,
       title: finalTitle,
       video_kind: 'reel',
-      storage_path: storagePath || 'https://assets.mixkit.co/videos/preview/mixkit-caribbean-tropical-beach-with-turquoise-water-41221-large.mp4',
+      storage_path: storagePath,
       duration_seconds: isNaN(durationSeconds) ? 30 : durationSeconds,
       visibility: visibility === 'subscribers' ? 'subscribers' : visibility === 'followers' ? 'followers' : 'public',
+      audio_track: soundTitle || 'Original Caribbean Audio',
       view_count: 0,
     })
-    .select('id, title, created_at')
+    .select('id, title, created_at, storage_path')
     .single();
 
   if (error) return { success: false, error: error.message };
 
+  // Resolve author profile country for post synchronization
+  try {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('country_id, current_country_id, origin_country_id')
+      .eq('id', user.id)
+      .maybeSingle();
+
+    const countryId = profile?.country_id || profile?.current_country_id || profile?.origin_country_id || null;
+
+    await supabase.from('posts').insert({
+      author_id: user.id,
+      content: finalTitle,
+      visibility: visibility === 'subscribers' ? 'followers' : (visibility as any),
+      media_urls: [storagePath],
+      cultural_tags: ['reel', 'caribbean_creators'],
+      country_id: countryId,
+    });
+  } catch (postSyncErr) {
+    console.warn('[publishReelAction] Companion post creation warning:', postSyncErr);
+  }
+
   revalidatePath('/reels');
   revalidatePath('/creator-studio/videos');
-  return { success: true, data };
+  revalidatePath('/');
+  return { success: true, data: videoData };
 }
 
 // ===== REEL SAVE / BOOKMARK =====
