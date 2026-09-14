@@ -39,6 +39,7 @@ import {
 } from '../lib/explore/canonical-geography';
 import TrendingPanel from './trending/trending-panel';
 import type { TrendingSignal } from '../lib/explore/actions';
+import { track } from '../lib/monitoring/analytics';
 
 interface ExploreDiscoveryClientProps {
   initialResult: ExploreQueryResult;
@@ -99,30 +100,6 @@ export default function ExploreDiscoveryClient({
     startTransition(() => {
       router.push(url);
     });
-  }
-
-  function handleVibeClick(vibeId: string) {
-    if (vibe === vibeId) {
-      updateFilters({ vibe: null });
-    } else {
-      updateFilters({ vibe: vibeId });
-    }
-  }
-
-  function handleCountryClick(identifier: string) {
-    if (country === identifier) {
-      updateFilters({ country: null });
-    } else {
-      updateFilters({ country: identifier });
-    }
-  }
-
-  function handleHubClick(hubCityOrSlug: string) {
-    if (hub === hubCityOrSlug) {
-      updateFilters({ hub: null });
-    } else {
-      updateFilters({ hub: hubCityOrSlug });
-    }
   }
 
   function handleSearchSubmit(e: React.FormEvent) {
@@ -312,43 +289,33 @@ export default function ExploreDiscoveryClient({
           {VIBE_CATEGORIES.map((v) => {
             const isSelected = vibe === v.id;
             return (
-              <div
+              <Link
                 key={v.id}
-                className={`relative rounded-3xl p-4 md:p-5 transition-all flex flex-col justify-between shadow-lg group border ${
+                href={`/explore/vibe/${v.id}`}
+                onClick={() => track('vibe_selected', { vibe: v.id })}
+                className={`relative rounded-3xl p-4 md:p-5 transition-all flex flex-col justify-between shadow-lg group border cursor-pointer ${
                   isSelected
                     ? 'surface-card border-purple-400 ring-2 ring-purple-400/50 shadow-purple-500/20 scale-[1.02]'
-                    : 'surface-card surface-card-interactive'
+                    : 'surface-card surface-card-interactive hover:border-purple-400/60'
                 }`}
               >
                 <div className="flex items-center justify-between">
-                  <button
-                    type="button"
-                    onClick={() => handleVibeClick(v.id)}
-                    className="text-2xl md:text-3xl group-hover:scale-110 transition-transform cursor-pointer"
-                  >
+                  <span className="text-2xl md:text-3xl group-hover:scale-110 transition-transform">
                     {v.icon}
-                  </button>
+                  </span>
                   <div className="flex items-center gap-1.5">
                     {isSelected && (
                       <span className="text-[10px] md:text-xs font-black px-2.5 py-0.5 rounded-full bg-purple-400 text-slate-950">
                         ACTIVE
                       </span>
                     )}
-                    <Link
-                      href={`/explore/vibe/${v.id}`}
-                      title={`Open dedicated ${v.name} discovery page`}
-                      className="text-brand-sandstone/40 hover:text-purple-300 transition-colors p-1"
-                    >
+                    <span className="text-brand-sandstone/40 group-hover:text-purple-300 transition-colors p-1">
                       <ArrowUpRight className="w-4 h-4 md:w-5 md:h-5" />
-                    </Link>
+                    </span>
                   </div>
                 </div>
 
-                <button
-                  type="button"
-                  onClick={() => handleVibeClick(v.id)}
-                  className="mt-3 text-left cursor-pointer w-full"
-                >
+                <div className="mt-3 text-left w-full">
                   <h3
                     className={`font-black text-sm sm:text-base md:text-lg transition-colors ${
                       isSelected ? 'text-purple-300' : 'text-white group-hover:text-purple-300'
@@ -359,8 +326,8 @@ export default function ExploreDiscoveryClient({
                   <p className="text-xs md:text-sm text-brand-sandstone/80 mt-1 leading-snug">
                     {v.desc}
                   </p>
-                </button>
-              </div>
+                </div>
+              </Link>
             );
           })}
         </div>
@@ -432,13 +399,16 @@ export default function ExploreDiscoveryClient({
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 3xl:grid-cols-8 gap-3">
           {visibleGeographies.map((terr) => {
             const isSelected = country === terr.slug || country === terr.iso;
+            const targetHref = terr.isDiasporaHub ? `/explore/diaspora/${terr.slug}` : `/explore/${terr.slug}`;
             return (
-              <div
+              <Link
                 key={terr.slug}
-                className={`relative rounded-2xl p-3.5 md:p-4 transition-all flex flex-col justify-between shadow-md group border ${
+                href={targetHref}
+                onClick={() => track('destination_selected', { destination: terr.slug, iso: terr.iso })}
+                className={`relative rounded-2xl p-3.5 md:p-4 transition-all flex flex-col justify-between shadow-md group border cursor-pointer ${
                   isSelected
                     ? 'surface-card border-brand-caribbeanSea ring-2 ring-brand-caribbeanSea/50 scale-[1.02]'
-                    : 'surface-card surface-card-interactive'
+                    : 'surface-card surface-card-interactive hover:border-brand-caribbeanSea/60'
                 }`}
               >
                 <div className="flex items-center justify-between mb-2">
@@ -447,21 +417,13 @@ export default function ExploreDiscoveryClient({
                     <span className="text-[10px] md:text-xs font-mono font-black text-brand-caribbeanSea bg-white/10 px-1.5 py-0.5 rounded">
                       {terr.iso}
                     </span>
-                    <Link
-                      href={terr.isDiasporaHub ? `/explore/diaspora/${terr.slug}` : `/explore/${terr.slug}`}
-                      title={`Open dedicated ${terr.name} discovery page`}
-                      className="text-brand-sandstone/40 hover:text-brand-caribbeanSea transition-colors p-0.5"
-                    >
+                    <span className="text-brand-sandstone/40 group-hover:text-brand-caribbeanSea transition-colors p-0.5">
                       <ArrowUpRight className="w-3.5 h-3.5 md:w-4 md:h-4" />
-                    </Link>
+                    </span>
                   </div>
                 </div>
 
-                <button
-                  type="button"
-                  onClick={() => handleCountryClick(terr.slug)}
-                  className="text-left cursor-pointer w-full"
-                >
+                <div className="text-left w-full">
                   <h4
                     className={`font-bold text-xs sm:text-sm md:text-[15px] truncate transition-colors ${
                       isSelected ? 'text-brand-caribbeanSea font-black' : 'text-white group-hover:text-brand-caribbeanSea'
@@ -472,8 +434,8 @@ export default function ExploreDiscoveryClient({
                   <span className="text-[10px] md:text-xs text-brand-sandstone/70 block mt-0.5 truncate">
                     {terr.sovereign ? 'Sovereign' : terr.isDiasporaHub ? 'Diaspora Hub' : 'Territory'}
                   </span>
-                </button>
-              </div>
+                </div>
+              </Link>
             );
           })}
         </div>
@@ -498,12 +460,14 @@ export default function ExploreDiscoveryClient({
               hub === cityHub.slug ||
               (hub && cityHub.capital.toLowerCase().includes(hub.toLowerCase()));
             return (
-              <div
+              <Link
                 key={cityHub.slug}
-                className={`relative rounded-2xl p-4 md:p-5 transition-all flex flex-col justify-between shadow-md group border ${
+                href={`/explore/diaspora/${cityHub.slug}`}
+                onClick={() => track('diaspora_hub_selected', { hub: cityHub.slug, iso: cityHub.iso })}
+                className={`relative rounded-2xl p-4 md:p-5 transition-all flex flex-col justify-between shadow-md group border cursor-pointer ${
                   isSelected
                     ? 'surface-card border-amber-400 ring-2 ring-amber-400/50 scale-[1.02]'
-                    : 'surface-card surface-card-interactive'
+                    : 'surface-card surface-card-interactive hover:border-amber-400/60'
                 }`}
               >
                 <div className="flex items-center justify-between">
@@ -512,23 +476,15 @@ export default function ExploreDiscoveryClient({
                     <span className="text-[10px] md:text-xs font-black text-brand-goldenHour uppercase">
                       {cityHub.currency}
                     </span>
-                    <Link
-                      href={`/explore/diaspora/${cityHub.slug}`}
-                      title={`Open dedicated ${cityHub.name} discovery page`}
-                      className="text-brand-sandstone/40 hover:text-amber-300 transition-colors p-0.5"
-                    >
+                    <span className="text-brand-sandstone/40 group-hover:text-amber-300 transition-colors p-0.5">
                       <ArrowUpRight className="w-4 h-4 md:w-5 md:h-5" />
-                    </Link>
+                    </span>
                   </div>
                 </div>
 
-                <button
-                  type="button"
-                  onClick={() => handleHubClick(cityHub.slug)}
-                  className="mt-2.5 text-left cursor-pointer w-full"
-                >
+                <div className="mt-2.5 text-left w-full">
                   <h4
-                    className={`font-bold text-xs sm:text-sm md:text-base leading-snug ${
+                    className={`font-bold text-xs sm:text-sm md:text-base leading-snug transition-colors ${
                       isSelected ? 'text-amber-300 font-black' : 'text-white group-hover:text-brand-goldenHour'
                     }`}
                   >
@@ -537,8 +493,8 @@ export default function ExploreDiscoveryClient({
                   <p className="text-[11px] md:text-xs text-brand-sandstone/70 mt-0.5">
                     {cityHub.capital}
                   </p>
-                </button>
-              </div>
+                </div>
+              </Link>
             );
           })}
         </div>
@@ -601,27 +557,27 @@ export default function ExploreDiscoveryClient({
               </p>
             </div>
             <div className="flex flex-wrap justify-center gap-2 pt-2">
-              <button
-                type="button"
-                onClick={() => handleVibeClick('music')}
-                className="px-4 md:px-5 py-2 md:py-2.5 rounded-xl bg-purple-500/20 text-purple-200 text-xs md:text-sm font-bold border border-purple-500/40 hover:bg-purple-500/30 min-h-[38px]"
+              <Link
+                href="/explore/vibe/music"
+                onClick={() => track('vibe_selected', { vibe: 'music' })}
+                className="px-4 md:px-5 py-2 md:py-2.5 rounded-xl bg-purple-500/20 text-purple-200 text-xs md:text-sm font-bold border border-purple-500/40 hover:bg-purple-500/30 min-h-[38px] inline-flex items-center"
               >
                 🎵 Soca &amp; Reggae
-              </button>
-              <button
-                type="button"
-                onClick={() => handleVibeClick('carnival')}
-                className="px-4 md:px-5 py-2 md:py-2.5 rounded-xl bg-rose-500/20 text-rose-200 text-xs md:text-sm font-bold border border-rose-500/40 hover:bg-rose-500/30 min-h-[38px]"
+              </Link>
+              <Link
+                href="/explore/vibe/carnival"
+                onClick={() => track('vibe_selected', { vibe: 'carnival' })}
+                className="px-4 md:px-5 py-2 md:py-2.5 rounded-xl bg-rose-500/20 text-rose-200 text-xs md:text-sm font-bold border border-rose-500/40 hover:bg-rose-500/30 min-h-[38px] inline-flex items-center"
               >
                 🎭 Carnival &amp; Fetes
-              </button>
-              <button
-                type="button"
-                onClick={() => handleVibeClick('food')}
-                className="px-4 md:px-5 py-2 md:py-2.5 rounded-xl bg-amber-500/20 text-amber-200 text-xs md:text-sm font-bold border border-amber-500/40 hover:bg-amber-500/30 min-h-[38px]"
+              </Link>
+              <Link
+                href="/explore/vibe/food"
+                onClick={() => track('vibe_selected', { vibe: 'food' })}
+                className="px-4 md:px-5 py-2 md:py-2.5 rounded-xl bg-amber-500/20 text-amber-200 text-xs md:text-sm font-bold border border-amber-500/40 hover:bg-amber-500/30 min-h-[38px] inline-flex items-center"
               >
                 🍛 Food &amp; Rum
-              </button>
+              </Link>
               <button
                 type="button"
                 onClick={clearAllFilters}

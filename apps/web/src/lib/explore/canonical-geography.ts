@@ -49,6 +49,11 @@ export interface CanonicalGeography {
   callingCode?: string;
   searchAliases: string[];
   summary: string;
+  musicGenres: string[];
+  cuisineTags: string[];
+  culturalTags: string[];
+  diasporaHubs: string[];
+  topFestivals: string[];
 }
 
 export const CANONICAL_GEOGRAPHIES: CanonicalGeography[] = [
@@ -77,7 +82,12 @@ export const CANONICAL_GEOGRAPHIES: CanonicalGeography[] = [
     callingCode: '+1-876',
     searchAliases: ['jamrock', 'yard', 'kingston', 'montego bay', 'reggae nation'],
     summary: 'Global epicenter of Reggae, Sound System culture, Dancehall, Blue Mountain coffee, sprint athletics, and jerk seasoning.',
-  },
+      musicGenres: ["Reggae","Dancehall","Ska","Rocksteady","Dub","Mento"],
+    cuisineTags: ["Jerk Chicken & Pork","Ackee & Saltfish","Curry Goat","Jamaican Patties","Escovitch Fish","Oxtail"],
+    culturalTags: ["Sound System Culture","Rastafari Heritage","Blue Mountain Coffee","Track & Field Sprint Culture","Patois"],
+    diasporaHubs: ["london","new-york","toronto","miami","atlanta","birmingham"],
+    topFestivals: ["Reggae Sumfest","Jamaica Carnival (Bacchanal)","Rebel Salute","Grand Gala"],
+},
   {
     id: 'geo-dom',
     iso: 'DOM',
@@ -100,7 +110,12 @@ export const CANONICAL_GEOGRAPHIES: CanonicalGeography[] = [
     callingCode: '+1-809',
     searchAliases: ['rd', 'dr', 'quisqueya', 'santo domingo', 'bachata', 'merengue'],
     summary: 'Cradle of Merengue and Bachata, historic Zona Colonial, world-class baseball champions, and fertile mountain valleys.',
-  },
+      musicGenres: ["Bachata","Merengue","Dembow","Son","Mambo"],
+    cuisineTags: ["Mangú","Sancocho","La Bandera","Chicharrón","Pastelón","Mofongo"],
+    culturalTags: ["Zona Colonial Heritage","Baseball (Pelota)","Dominican Spanish","Larimar Gemstones","Carnaval Vegano"],
+    diasporaHubs: ["new-york","miami","madrid","boston"],
+    topFestivals: ["Carnaval de La Vega","Festival Presidente","Festival del Merengue y Ritmos Caribeños"],
+},
   {
     id: 'geo-hti',
     iso: 'HTI',
@@ -123,7 +138,12 @@ export const CANONICAL_GEOGRAPHIES: CanonicalGeography[] = [
     callingCode: '+509',
     searchAliases: ['ayiti', 'kiskeya', 'port-au-prince', 'kompa', 'cap-haitien'],
     summary: 'First independent republic of the Caribbean, world-renowned iron market art, Kompa rhythms, and heroic liberation heritage.',
-  },
+      musicGenres: ["Kompa","Rasin","Twoubadou","Zouk","Rabòday"],
+    cuisineTags: ["Griot","Diri ak Djon Djon","Soup Joumou","Pikliz","Bannann Peze","Akra","Mayi Moulen"],
+    culturalTags: ["Kreyòl Ayisyen","Iron Market Art","Citadelle Laferrière","Jacmel Carnival Masks","Haitian Revolution Heritage"],
+    diasporaHubs: ["miami","montreal","new-york","boston","paris"],
+    topFestivals: ["Kanaval (National Carnival)","Festival Rara","Fèt Gede","Festival International de Jazz de Port-au-Prince"],
+},
   {
     id: 'geo-cub',
     iso: 'CUB',
@@ -146,7 +166,12 @@ export const CANONICAL_GEOGRAPHIES: CanonicalGeography[] = [
     callingCode: '+53',
     searchAliases: ['la habana', 'son cubano', 'salsa', 'cuba libre', 'afro-cuban'],
     summary: 'Son, Rumba, Afro-Cuban jazz, historic colonial architecture, vibrant literature, and legendary musical dynasties.',
-  },
+      musicGenres: ["Son Cubano","Salsa / Timba","Rumba","Afro-Cuban Jazz","Trova","Bolero"],
+    cuisineTags: ["Ropa Vieja","Moros y Cristianos","Lechón Asado","Yuca con Mojo","Tostones"],
+    culturalTags: ["Classic Havana Architecture","Afro-Cuban Yoruba Traditions","Cuban Ballet & Literature","Cigar Rolling Artisanship"],
+    diasporaHubs: ["miami","madrid","new-york"],
+    topFestivals: ["Festival del Habano","Carnaval de Santiago de Cuba","Festival Internacional de Jazz de La Habana"],
+},
   {
     id: 'geo-pri',
     iso: 'PRI',
@@ -169,7 +194,12 @@ export const CANONICAL_GEOGRAPHIES: CanonicalGeography[] = [
     callingCode: '+1-787',
     searchAliases: ['borinquen', 'boricua', 'san juan', 'bomba y plena', 'reggaeton'],
     summary: 'Island of Enchantment, birthplace of international urban music and salsa romántica, bioluminescent bays, and El Yunque rain forest.',
-  },
+      musicGenres: ["Reggaeton","Salsa","Bomba","Plena","Jíbaro"],
+    cuisineTags: ["Mofongo","Arroz con Gandules","Pernil","Tostones","Alcapurrias","Pasteles"],
+    culturalTags: ["Boricua Identity","Old San Juan Fortresses","El Yunque","Vejigante Masks","Plena Street Sessions"],
+    diasporaHubs: ["new-york","boston","miami"],
+    topFestivals: ["Fiestas de la Calle San Sebastián","Carnaval Ponceño","Festival de la Novilla"],
+},
   {
     id: 'geo-bhs',
     iso: 'BHS',
@@ -192,7 +222,12 @@ export const CANONICAL_GEOGRAPHIES: CanonicalGeography[] = [
     callingCode: '+1-242',
     searchAliases: ['the bahamas', 'nassau', 'junkanoo', 'exuma', 'eleuthera'],
     summary: 'Spectacular Junkanoo street theater, crystal turquoise waters, archipelago navigation, and maritime commerce.',
-  },
+      musicGenres: ["Junkanoo","Rake ‘n’ Scrape","Calypso","Goombay"],
+    cuisineTags: ["Conch Salad","Cracked Conch","Bahamian Mac & Cheese","Guava Duff","Johnny Cake"],
+    culturalTags: ["Junkanoo Street Parades","Lucayan Heritage","Out Island Regattas","Bonefishing","Straw Crafts"],
+    diasporaHubs: ["miami","atlanta","new-york"],
+    topFestivals: ["Boxing Day & New Year Junkanoo","Cat Island Rake & Scrape Festival","All Bahamas Regatta"],
+},
   {
     id: 'geo-cym',
     iso: 'CYM',
@@ -215,7 +250,12 @@ export const CANONICAL_GEOGRAPHIES: CanonicalGeography[] = [
     callingCode: '+1-345',
     searchAliases: ['grand cayman', 'george town', 'caymanian', 'batabano'],
     summary: 'Global financial hub, Batabano carnival, stingray sandbars, and culinary excellence in the Western Caribbean.',
-  },
+      musicGenres: ["Kitchen Band / Caymanian Folk","Soca","Reggae","Calypso"],
+    cuisineTags: ["Cayman-style Beef","Conch Stew","Cassava Heavy Cake","Fish Fry"],
+    culturalTags: ["Seven Mile Beach","Stingray City","Maritime Seafaring Tradition","Thatch Palm Weaving"],
+    diasporaHubs: ["miami","london"],
+    topFestivals: ["Pirates Week Festival","Batabano Carnival","Cayfest (Arts & Culture Festival)"],
+},
   {
     id: 'geo-tca',
     iso: 'TCA',
@@ -238,7 +278,12 @@ export const CANONICAL_GEOGRAPHIES: CanonicalGeography[] = [
     callingCode: '+1-649',
     searchAliases: ['turks and caicos', 'tci', 'providenciales', 'provo'],
     summary: 'World-famous coral reefs, pristine barrier beaches, maritime heritage, and Ripsaw music traditions.',
-  },
+      musicGenres: ["Ripsaw Music (Scrape)","Junkanoo","Soca","Reggae"],
+    cuisineTags: ["Conch Fritters & Cracked Conch","Peas & Hominy","Boiled Fish & Grits","Rum Punch"],
+    culturalTags: ["Ripsaw Handsaw Percussion","Grace Bay","Caicos Conch Festival","Humpback Whale Migration"],
+    diasporaHubs: ["miami","new-york","london"],
+    topFestivals: ["Maskanoo (Post-Christmas Cultural Parade)","Caicos Conch Festival","Windvibes Kiteboarding & Music Festival"],
+},
 
   // ──────────────────────────────────────────────────────────────────────────
   // LESSER ANTILLES — WINDWARD ISLANDS & BARBADOS
@@ -265,7 +310,12 @@ export const CANONICAL_GEOGRAPHIES: CanonicalGeography[] = [
     callingCode: '+1-868',
     searchAliases: ['trinidad', 'tobago', 'pos', 'soca capital', 'pan', 'steelpan', 'calypso'],
     summary: 'The mother of modern Caribbean carnival, birth soil of the steelpan instrument, Soca, Calypso, and Pitch Lake.',
-  },
+      musicGenres: ["Soca","Calypso","Chutney Soca","Steelpan","Parang","Rapso"],
+    cuisineTags: ["Doubles","Roti","Bake & Shark","Pelau","Callaloo","Crab & Dumpling"],
+    culturalTags: ["Trinidad Carnival (Mother of all Carnivals)","Steelpan Invention","Hosay","Divali","J'ouvert"],
+    diasporaHubs: ["new-york","london","toronto","miami","atlanta"],
+    topFestivals: ["Trinidad Carnival","Panorama Steelband Championship","Divali Nagar","Tobago Heritage Festival"],
+},
   {
     id: 'geo-brb',
     iso: 'BRB',
@@ -288,7 +338,12 @@ export const CANONICAL_GEOGRAPHIES: CanonicalGeography[] = [
     callingCode: '+1-246',
     searchAliases: ['bajan', 'bridgetown', 'crop over', 'little england', 'bim'],
     summary: 'Oldest continuous parliament in the Americas, Crop Over grand kadooment, rum distillery heritage, and Bajan culinary craft.',
-  },
+      musicGenres: ["Soca","Spouge","Tuk Band","Calypso","Ringbang"],
+    cuisineTags: ["Flying Fish & Cou-Cou","Pudding & Souse","Bajan Fish Cakes","Macaroni Pie","Mount Gay Rum"],
+    culturalTags: ["Crop Over Festival","Historic Bridgetown & Garrison","Cricket Heritage","Bajan Dialect"],
+    diasporaHubs: ["london","new-york","toronto","boston","birmingham"],
+    topFestivals: ["Crop Over Festival","Grand Kadooment","Barbados Food & Rum Festival","Oistins Fish Festival"],
+},
   {
     id: 'geo-lca',
     iso: 'LCA',
@@ -311,7 +366,12 @@ export const CANONICAL_GEOGRAPHIES: CanonicalGeography[] = [
     callingCode: '+1-758',
     searchAliases: ['st lucia', 'pitons', 'castries', 'kweyol'],
     summary: 'Iconic twin volcanic Pitons UNESCO peaks, Nobel laureates, sulfur springs, Kwéyòl heritage, and Dennery Segment rhythm.',
-  },
+      musicGenres: ["Dennery Segment","Kuduro","Soca","Calypso","Zouk"],
+    cuisineTags: ["Green Fig & Saltfish","Bouyon Soup","Callaloo","Cocoa Tea","Bakes"],
+    culturalTags: ["The Pitons (UNESCO)","Kwéyòl Language","La Rose & La Marguerite Flower Festivals","Nobel Laureate Legacy"],
+    diasporaHubs: ["london","new-york","toronto","birmingham"],
+    topFestivals: ["Saint Lucia Carnival","Saint Lucia Jazz & Arts Festival","Jounen Kwéyòl (Creole Day)"],
+},
   {
     id: 'geo-grd',
     iso: 'GRD',
@@ -334,7 +394,12 @@ export const CANONICAL_GEOGRAPHIES: CanonicalGeography[] = [
     callingCode: '+1-473',
     searchAliases: ['spice isle', 'nutmeg', 'st georges', 'carriacou'],
     summary: 'The Spice Isle of the Caribbean, world nutmeg production, Jab Jab carnival culture, and organic bean-to-bar cocoa.',
-  },
+      musicGenres: ["Jab Jab Soca","Calypso","Shortknee Chants","Steelband"],
+    cuisineTags: ["Oil Down (National Dish)","Nutmeg Ice Cream","Callaloo Soup","Cocoa Balls"],
+    culturalTags: ["Isle of Spice (Nutmeg, Mace, Cinnamon)","Jab Jab Carnival Tradition","Underwater Sculpture Park"],
+    diasporaHubs: ["new-york","london","toronto","montreal"],
+    topFestivals: ["Spicemas (Grenada Carnival)","Grenada Chocolate Festival","Carriacou Maroon & String Band Music Festival"],
+},
   {
     id: 'geo-vct',
     iso: 'VCT',
@@ -357,7 +422,12 @@ export const CANONICAL_GEOGRAPHIES: CanonicalGeography[] = [
     callingCode: '+1-784',
     searchAliases: ['st vincent', 'grenadines', 'bequia', 'kingstown', 'svg', 'vincy'],
     summary: 'Vincy Mas, sailing capital of the Grenadines, lush La Soufrière ridges, Bequia whaling history, and breadfruit agro-craft.',
-  },
+      musicGenres: ["Soca","Ragga Soca","Calypso","Steelpan","Big Drum"],
+    cuisineTags: ["Roasted Breadfruit & Fried Jackfish","Callaloo Soup","Arrowroot Bakes","Madongo Dumplings"],
+    culturalTags: ["Vincy Mas","Bequia Easter Regatta","Garifuna Ancestral Homeland (Balliceaux)","Grenadines Island-Hopping"],
+    diasporaHubs: ["new-york","london","toronto"],
+    topFestivals: ["Vincy Mas","Bequia Easter Regatta","Nine Mornings Festival"],
+},
   {
     id: 'geo-dma',
     iso: 'DMA',
@@ -380,7 +450,12 @@ export const CANONICAL_GEOGRAPHIES: CanonicalGeography[] = [
     callingCode: '+1-767',
     searchAliases: ['nature isle', 'roseau', 'kalinago', 'waitukubuli'],
     summary: 'The Nature Island, 365 rivers, indigenous Kalinago territory, Boiling Lake, and geothermal wellness sanctuaries.',
-  },
+      musicGenres: ["Cadence-Lypso","Bouyon","Zouk","Jing Ping"],
+    cuisineTags: ["Mountain Chicken / Callaloo","Crab Callaloo","Roast Breadfruit & Saltfish","Sancocho"],
+    culturalTags: ["Nature Island","Kalinago Indigenous Territory","Morne Trois Pitons (UNESCO)","World Creole Music"],
+    diasporaHubs: ["london","new-york","toronto","miami"],
+    topFestivals: ["World Creole Music Festival (WCMF)","Mas Domnik (The Real Mas)","Titiwi Festival"],
+},
   {
     id: 'geo-mtq',
     iso: 'MTQ',
@@ -403,7 +478,12 @@ export const CANONICAL_GEOGRAPHIES: CanonicalGeography[] = [
     callingCode: '+596',
     searchAliases: ['madinina', 'fort-de-france', 'zouk', 'rhum agricole'],
     summary: 'Birthplace of Zouk music, AOC Rhum Agricole distilleries, Aimé Césaire Négritude philosophy, and Mount Pelée.',
-  },
+      musicGenres: ["Zouk","Biguine","Mazurka","Chouval Bwa","Délire"],
+    cuisineTags: ["Colombo de Cabri","Matoutou de Crabes","Boudin Créole","Ti' Punch","Accras de Morue"],
+    culturalTags: ["Aimé Césaire Négritude Heritage","Mont Pelée","Habitation Clément Rum","Yole Ronde Boat Racing"],
+    diasporaHubs: ["paris","montreal"],
+    topFestivals: ["Carnaval de Martinique (Vaval)","Tour des Yoles Rondes","Festival de Fort-de-France"],
+},
 
   // ──────────────────────────────────────────────────────────────────────────
   // LESSER ANTILLES — LEEWARD ISLANDS
@@ -430,7 +510,12 @@ export const CANONICAL_GEOGRAPHIES: CanonicalGeography[] = [
     callingCode: '+1-268',
     searchAliases: ['antigua', 'barbuda', 'st johns', 'sailing week', 'wadadli'],
     summary: '365 beaches, Nelson’s Dockyard UNESCO naval site, Antigua Sailing Week, and Wadadli sound system clashes.',
-  },
+      musicGenres: ["Soca","Calypso","Steelpan","Iron Band"],
+    cuisineTags: ["Fungi & Pepperpot","Ducana & Saltfish","Antiguan Black Pineapple","Wadadli Beer"],
+    culturalTags: ["365 Beaches","Nelson's Dockyard (UNESCO)","Sailing Week Capital","Wadadli Identity"],
+    diasporaHubs: ["london","new-york","toronto"],
+    topFestivals: ["Antigua Carnival (Caribbean's Greatest Summer Festival)","Antigua Sailing Week","Antigua Mango Festival"],
+},
   {
     id: 'geo-kna',
     iso: 'KNA',
@@ -453,7 +538,12 @@ export const CANONICAL_GEOGRAPHIES: CanonicalGeography[] = [
     callingCode: '+1-869',
     searchAliases: ['st kitts', 'nevis', 'basseterre', 'brimstone hill'],
     summary: 'Brimstone Hill fortress of the Caribbean, scenic railway, Nevis peak trails, and historic federation heritage.',
-  },
+      musicGenres: ["Soca","Calypso","Iron Band","Wild Masquerade Chants"],
+    cuisineTags: ["Stewed Saltfish with Coconut Dumplings & Spicy Plantains","Goat Water","Sugar Cake","Roti"],
+    culturalTags: ["Brimstone Hill Fortress (UNESCO)","Sugar City Heritage","Masquerade Dancers in Peacock Feathers","Nevis Mango Festival"],
+    diasporaHubs: ["london","new-york","toronto","birmingham"],
+    topFestivals: ["Sugar Mas (National Carnival)","St. Kitts Music Festival","Culturama (Nevis)"],
+},
   {
     id: 'geo-glp',
     iso: 'GLP',
@@ -476,7 +566,12 @@ export const CANONICAL_GEOGRAPHIES: CanonicalGeography[] = [
     callingCode: '+590',
     searchAliases: ['gwada', 'karukera', 'pointe-a-pitre', 'gwo ka'],
     summary: 'Butterfly-shaped archipelago, Gwo Ka drum traditions, La Soufrière trails, culinary fusion, and French Caribbean literature.',
-  },
+      musicGenres: ["Gwo Ka","Zouk","Biguine","Bouyon","Léwòz"],
+    cuisineTags: ["Bokit","Colombo","Agoulou","Chiquetaille de Morue","Tourment d'Amour"],
+    culturalTags: ["Gwo Ka 7 Rhythms (UNESCO)","Léwòz Gatherings","Memorial ACTe","Route du Rhum"],
+    diasporaHubs: ["paris","montreal"],
+    topFestivals: ["Carnaval de Guadeloupe","Festival de Gwo Ka de Sainte-Anne","Fête des Cuisinières"],
+},
   {
     id: 'geo-vgb',
     iso: 'VGB',
@@ -499,7 +594,12 @@ export const CANONICAL_GEOGRAPHIES: CanonicalGeography[] = [
     callingCode: '+1-284',
     searchAliases: ['bvi', 'tortola', 'virgin gorda', 'the baths', 'road town'],
     summary: 'World-famous sailing paradise, The Baths boulder grottos of Virgin Gorda, yachting regattas, and maritime commerce.',
-  },
+      musicGenres: ["Fungi Music","Soca","Calypso","Reggae"],
+    cuisineTags: ["Fish & Fungi","Roti","Painkiller Cocktail (Jost Van Dyke)","Pate"],
+    culturalTags: ["Sailing Capital of the World","The Baths (Virgin Gorda)","Fungi Band Scratch Traditions","Full Moon Parties at Bomba Shack"],
+    diasporaHubs: ["london","new-york","miami"],
+    topFestivals: ["BVI Emancipation Festival (August Festival)","BVI Spring Regatta","Foxy's Old Year's Night"],
+},
   {
     id: 'geo-vir',
     iso: 'VIR',
@@ -522,7 +622,12 @@ export const CANONICAL_GEOGRAPHIES: CanonicalGeography[] = [
     callingCode: '+1-340',
     searchAliases: ['usvi', 'st thomas', 'st croix', 'st john', 'charlotte amalie'],
     summary: 'St. Thomas harbor commerce, St. Croix historic rum estate heritage, St. John national park nature, and Quelbe scratch music.',
-  },
+      musicGenres: ["Quelbe (Official Music)","Soca","Calypso","Reggae"],
+    cuisineTags: ["Callaloo","Pate","Pot Fish & Fungi","Dumb Bread","Cruzan Rum"],
+    culturalTags: ["St. Thomas, St. John, St. Croix Tri-Island Culture","Quelbe Bamboo Flute & Gourd Tradition","Mocko Jumbie Stilt Walkers"],
+    diasporaHubs: ["atlanta","new-york","miami"],
+    topFestivals: ["St. Thomas Carnival","Crucian Christmas Festival (St. Croix)","St. John Celebration"],
+},
   {
     id: 'geo-sxm',
     iso: 'SXM',
@@ -545,7 +650,12 @@ export const CANONICAL_GEOGRAPHIES: CanonicalGeography[] = [
     callingCode: '+1-721',
     searchAliases: ['philipsburg', 'st maarten', 'maho beach'],
     summary: 'Vibrant Dutch Caribbean cruise and duty-free haven, international gastronomy, and unique dual-nation shared island border.',
-  },
+      musicGenres: ["Soca","Calypso","Zouk","Dancehall","Reggae"],
+    cuisineTags: ["Callaloo","Crab & Rice","Johnny Cakes","Guavaberry Liqueur"],
+    culturalTags: ["Dual-Nation Island","Culinary Capital of the Caribbean","Heineken Regatta"],
+    diasporaHubs: ["amsterdam","paris","new-york","miami"],
+    topFestivals: ["Sint Maarten Carnival","St. Maarten Heineken Regatta"],
+},
   {
     id: 'geo-maf',
     iso: 'MAF',
@@ -568,7 +678,12 @@ export const CANONICAL_GEOGRAPHIES: CanonicalGeography[] = [
     callingCode: '+590',
     searchAliases: ['st martin', 'marigot', 'grand case'],
     summary: 'Gourmet dining capital of the Caribbean, Marigot marina crafts, and protected marine reserve nature.',
-  },
+      musicGenres: ["Zouk","Soca","Biguine","Dancehall"],
+    cuisineTags: ["French-Creole Gastronomy in Grand Case","Accras","Boudin","Guavaberry"],
+    culturalTags: ["French-Antillean Identity","Grand Case Culinary Strip","Pic Paradis"],
+    diasporaHubs: ["paris","montreal"],
+    topFestivals: ["Grand Case Tuesdays (Les Mardis de Grand Case)","Carnaval de Saint-Martin"],
+},
   {
     id: 'geo-aia',
     iso: 'AIA',
@@ -591,7 +706,12 @@ export const CANONICAL_GEOGRAPHIES: CanonicalGeography[] = [
     callingCode: '+1-264',
     searchAliases: ['the valley', 'anguillan', 'shoal bay'],
     summary: 'Spectacular powder-white sand coves, elite boat racing traditions, Bankie Banx reggae dunes, and five-star coastal culinary art.',
-  },
+      musicGenres: ["Soca","Reggae","Calypso","String Band"],
+    cuisineTags: ["Anguillian Crayfish & Spiny Lobster","Goat Curry","Pigeon Peas & Rice","Johnny Cakes"],
+    culturalTags: ["National Sport of Boat Racing","Shoal Bay","Moonsplash Reggae Festival (Bankie Banx)","Dune Preserve"],
+    diasporaHubs: ["london","new-york"],
+    topFestivals: ["Anguilla Summer Festival (Carnival & Boat Racing)","Moonsplash Reggae Festival","Festival Del Mar"],
+},
   {
     id: 'geo-msr',
     iso: 'MSR',
@@ -614,7 +734,12 @@ export const CANONICAL_GEOGRAPHIES: CanonicalGeography[] = [
     callingCode: '+1-664',
     searchAliases: ['emerald isle', 'soufriere hills', 'brades', 'plymouth'],
     summary: 'The Emerald Isle of the Caribbean, legendary AIR Studios music history (Sting, McCartney, Elton John), and volcano observatory eco-science.',
-  },
+      musicGenres: ["Soca (Arrow \"Hot Hot Hot\" birthplace!)","Masquerade Fife & Drum","Calypso"],
+    cuisineTags: ["Goat Water (National Dish)","Duckna (Sweet Potato Dumpling)","Saltfish & Plantains","Montserrat Rum Punch"],
+    culturalTags: ["Emerald Isle of the Caribbean","Soufrière Hills Volcano & Buried Capital Plymouth","AIR Studios George Martin Legacy"],
+    diasporaHubs: ["london","birmingham"],
+    topFestivals: ["Montserrat St. Patrick's Festival (10-day celebration)","Montserrat Carnival (December)","Calabash Festival"],
+},
   {
     id: 'geo-blm',
     iso: 'BLM',
@@ -637,7 +762,12 @@ export const CANONICAL_GEOGRAPHIES: CanonicalGeography[] = [
     callingCode: '+590',
     searchAliases: ['st barts', 'saint barth', 'gustavia'],
     summary: 'Exclusive Scandinavian and French heritage harbor, haute cuisine, pristine beaches, and premier yachting showcases.',
-  },
+      musicGenres: ["French Chanson & Caribbean Accoustics","Zouk","Lounge & Sunset House"],
+    cuisineTags: ["French-Creole Haute Cuisine","Fresh Grilled Mahi Mahi","Accras","Fine French Pastries"],
+    culturalTags: ["Gustavia Harbor & Swedish-Norman Architecture","Traditional Straw Hats & Breton-Norman Heritage","World-Class Gastronomy"],
+    diasporaHubs: ["paris","miami"],
+    topFestivals: ["St. Barth Music Festival","Carnaval de Saint-Barth","St. Barth Gourmet Festival"],
+},
   {
     id: 'geo-bmu',
     iso: 'BMU',
@@ -660,7 +790,12 @@ export const CANONICAL_GEOGRAPHIES: CanonicalGeography[] = [
     callingCode: '+1-441',
     searchAliases: ['hamilton', 'gombey', 'pink sand'],
     summary: 'Gombey masquerade dancers, pink sand shores, historic maritime fortifications, and premier reinsurance global commerce.',
-  },
+      musicGenres: ["Gombey Rhythms","Calypso","Reggae","Soca"],
+    cuisineTags: ["Bermuda Fish Chowder with Black Rum & Sherry Peppers","Codfish & Potato Breakfast","Cassava Pie","Dark 'n Stormy"],
+    culturalTags: ["Gombey Dancers (Centuries-old Afro-Indigenous-British tradition)","Pink Sand Beaches","Bermuda Cricket Cup Match"],
+    diasporaHubs: ["london","new-york","toronto","atlanta"],
+    topFestivals: ["Bermuda Cup Match (Emancipation Celebration)","Bermuda Carnival (Bermuda Heroes Weekend)","Gombey Festival"],
+},
 
   // ──────────────────────────────────────────────────────────────────────────
   // SOUTHERN CARIBBEAN & ABC ISLANDS
@@ -687,7 +822,12 @@ export const CANONICAL_GEOGRAPHIES: CanonicalGeography[] = [
     callingCode: '+599',
     searchAliases: ['korsou', 'willemstad', 'handelskade', 'dushi korsou'],
     summary: 'UNESCO World Heritage Handelskade waterfront, vibrant Papiamentu multilingual society, blue liqueur origin, and diving reefs.',
-  },
+      musicGenres: ["Tumba","Ritmo Kombina","Seú","Tambú","Bachata"],
+    cuisineTags: ["Keshi Yena","Stobá (Karni / Kabritu)","Funchi & Tutu","Pastechi","Blue Curaçao Liqueur"],
+    culturalTags: ["Papiamentu Language","Handelskade Willemstad (UNESCO)","Tambú Sacred Drumming","Seú Harvest Festival"],
+    diasporaHubs: ["amsterdam","rotterdam","miami"],
+    topFestivals: ["Curaçao Carnival (Gran Marcha)","Curaçao North Sea Jazz Festival","Seú Harvest Parade"],
+},
   {
     id: 'geo-abw',
     iso: 'ABW',
@@ -710,7 +850,12 @@ export const CANONICAL_GEOGRAPHIES: CanonicalGeography[] = [
     callingCode: '+297',
     searchAliases: ['one happy island', 'oranjestad', 'eagle beach', 'aruban'],
     summary: 'One Happy Island, desert aloe landscapes, trade wind watersports, Eagle Beach, and rich multilingual cultural fabric.',
-  },
+      musicGenres: ["Socambú","Tumba","Dande","Gaita","Calypso"],
+    cuisineTags: ["Keshi Yena","Pastechi","Stobá","Pan Bati","Balashi Beer"],
+    culturalTags: ["One Happy Island","Papiamento","Dande New Year Strolling Musicians","San Nicolas Street Art Capital"],
+    diasporaHubs: ["amsterdam","rotterdam","miami","new-york"],
+    topFestivals: ["Aruba Carnival (Lighting Parade & Grand Parade)","Dande Festival","Carubbian Festival"],
+},
   {
     id: 'geo-bes-bon',
     iso: 'BES',
@@ -733,7 +878,12 @@ export const CANONICAL_GEOGRAPHIES: CanonicalGeography[] = [
     callingCode: '+599',
     searchAliases: ['kralendijk', 'rincon', 'flamingos', 'bonerian'],
     summary: 'Pioneer of marine ecology and conservation, global shore diving capital, flamingo sanctuaries, and historic Rincon culture.',
-  },
+      musicGenres: ["Simadan","Bari","Tumba","Ritmo Kombina"],
+    cuisineTags: ["Kabritu Stobá (Stewed Goat)","Guiambo (Okra Soup)","Funchi","Piska Kora (Fried Red Snapper)"],
+    culturalTags: ["Shore Diving Capital of the World","Papiamentu","Simadan Harvest Singing","Rincon Village Oldest Settlement"],
+    diasporaHubs: ["amsterdam","rotterdam"],
+    topFestivals: ["Simadan Harvest Festival","Dia di Rincon","Bonaire Carnival"],
+},
   {
     id: 'geo-bes-sab',
     iso: 'SAB',
@@ -756,7 +906,12 @@ export const CANONICAL_GEOGRAPHIES: CanonicalGeography[] = [
     callingCode: '+599',
     searchAliases: ['the bottom', 'unspoiled queen', 'mount scenery'],
     summary: 'The Unspoiled Queen, Mount Scenery pinnacle (highest peak of Netherlands), handcrafted lace, and dramatic vertical marine drop-offs.',
-  },
+      musicGenres: ["String Band","Calypso","Soca","Reggae"],
+    cuisineTags: ["Saba Lobster","Goat Stew","Saba Spice Liqueur","Johnny Cakes"],
+    culturalTags: ["The Unspoiled Queen","Mount Scenery","Saba Lace Handcraft","Tide Pools & Rainforests"],
+    diasporaHubs: ["amsterdam","rotterdam","miami"],
+    topFestivals: ["Saba Summer Festival (Carnival)","Saba Day (December)","Sea & Learn on Saba"],
+},
   {
     id: 'geo-bes-eux',
     iso: 'EUX',
@@ -779,7 +934,12 @@ export const CANONICAL_GEOGRAPHIES: CanonicalGeography[] = [
     callingCode: '+599',
     searchAliases: ['statia', 'the quill', 'golden rock'],
     summary: 'The Historic Golden Rock, dormant The Quill volcano crater rainforest, historic trade depot, and peaceful eco-trails.',
-  },
+      musicGenres: ["String Band","Calypso","Soca"],
+    cuisineTags: ["Statia Saltfish & Dumplings","Conch Stew","Plantain Tarts","Johnny Cakes"],
+    culturalTags: ["The Historic Golden Rock","First Salute to American Flag (1776)","The Quill Dormant Volcano","Fort Oranje"],
+    diasporaHubs: ["amsterdam"],
+    topFestivals: ["Statia Carnival","Statia America Day (First Salute)","Emancipation Day Celebration"],
+},
 
   // ──────────────────────────────────────────────────────────────────────────
   // CARICOM & MAINLAND CARIBBEAN / GUIANAS
@@ -806,7 +966,12 @@ export const CANONICAL_GEOGRAPHIES: CanonicalGeography[] = [
     callingCode: '+501',
     searchAliases: ['belize city', 'caye caulker', 'garifuna', 'belmopan', 'blue hole'],
     summary: 'Great Blue Hole barrier reef UNESCO wonder, Garifuna drumming and Punta music, Maya rainforest temples, and CARICOM unity.',
-  },
+      musicGenres: ["Punta Rock","Paranda","Brukdown","Reggae","Soca"],
+    cuisineTags: ["Rice and Beans in Coconut Milk","Fry Jacks","Hudut (Fish & Plantain)","Conch Fritters"],
+    culturalTags: ["Garifuna Drumming & Language (UNESCO)","Mayan Temples & Rainforests","Barrier Reef (UNESCO)","Kriol Culture"],
+    diasporaHubs: ["new-york","miami","atlanta"],
+    topFestivals: ["Garifuna Settlement Day","Belize Carnival","September Celebrations","Costa Maya Festival"],
+},
   {
     id: 'geo-guy',
     iso: 'GUY',
@@ -829,7 +994,12 @@ export const CANONICAL_GEOGRAPHIES: CanonicalGeography[] = [
     callingCode: '+592',
     searchAliases: ['georgetown', 'kaieteur', 'land of many waters', 'mashramani'],
     summary: 'Land of Many Waters, Kaieteur single-drop waterfall, Mashramani festival, Amazonian biodiversity, and dynamic energy expansion.',
-  },
+      musicGenres: ["Chutney","Calypso","Soca","Reggae","Indian Classical Fusion"],
+    cuisineTags: ["Pepperpot","Cook-up Rice","Roti & Curry","Metemgee","Pine Tart","Salara"],
+    culturalTags: ["Kaieteur Falls","Six Peoples Diversity","Mashramani","Phagwah (Holi)","Demerara Rum"],
+    diasporaHubs: ["new-york","toronto","london"],
+    topFestivals: ["Mashramani (Mash)","Phagwah","Guyana Carnival","Rupununi Rodeo"],
+},
   {
     id: 'geo-sur',
     iso: 'SUR',
@@ -852,7 +1022,12 @@ export const CANONICAL_GEOGRAPHIES: CanonicalGeography[] = [
     callingCode: '+597',
     searchAliases: ['paramaribo', 'sranan', 'maroon culture', 'kaseko'],
     summary: 'UNESCO wooden colonial capital Paramaribo, living Maroon and Indigenous rainforest societies, Kaseko music, and religious harmony.',
-  },
+      musicGenres: ["Kaseko","Kawina","Baila","Aleke","Baithak Gana"],
+    cuisineTags: ["Pom","Moksi Alesi","Roti","Saoto Soup","Bojo","Bakabana"],
+    culturalTags: ["Sranan Tongo","Maroon Cultural Heritage","Javanese & Hindustani Fusion","Paramaribo Wooden Architecture (UNESCO)"],
+    diasporaHubs: ["amsterdam","rotterdam"],
+    topFestivals: ["Keti Koti (Emancipation Day)","Suriname Carnival","Pagara Estafette (Owru Yari)"],
+},
   {
     id: 'geo-guf',
     iso: 'GUF',
@@ -875,7 +1050,12 @@ export const CANONICAL_GEOGRAPHIES: CanonicalGeography[] = [
     callingCode: '+594',
     searchAliases: ['guyane', 'cayenne', 'kourou space center'],
     summary: 'Guiana Space Centre rocket launchport, Amazonian equatorial rainforest, Toulouse-Lautrecan carnival Touloulous, and pepper cuisine.',
-  },
+      musicGenres: ["Aléké","Kasékò","Grajé","Zouk"],
+    cuisineTags: ["Bouillon d'Awara","Colombo Guyanais","Piment de Cayenne Dishes","Roti"],
+    culturalTags: ["Amazonian-Caribbean Fusion","Carnaval de Guyane (Touloulou Masked Queens)","Guiana Space Centre"],
+    diasporaHubs: ["paris","montreal"],
+    topFestivals: ["Carnaval de Guyane","Fête de l'Awara","Festival des Danses Métisses"],
+},
   {
     id: 'geo-pan',
     iso: 'PAN',
@@ -898,7 +1078,12 @@ export const CANONICAL_GEOGRAPHIES: CanonicalGeography[] = [
     callingCode: '+507',
     searchAliases: ['colon', 'bocas del toro', 'canal zone', 'afro-antillano'],
     summary: 'Afro-Antillean canal builder heritage, Bocas del Toro coral keys, and vibrant Reggae en Español foundational roots.',
-  },
+      musicGenres: ["Reggae en Español","Calipso Panameño","Congo Rhythms"],
+    cuisineTags: ["Saos (Pickled Pork)","Rondón (Seafood Coconut Stew)","Pati Panameño","Arroz con Guandú y Coco","Chicheme"],
+    culturalTags: ["Afro-Antillano Heritage","El Bembé del Congo (UNESCO)","Portobelo Forts","Bocas del Toro Archipelagos"],
+    diasporaHubs: ["new-york","miami","atlanta"],
+    topFestivals: ["Festival de Diablos y Congos de Portobelo","Feria del Mar en Bocas del Toro","Carnavales de Colón"],
+},
 
   // ──────────────────────────────────────────────────────────────────────────
   // GLOBAL DIASPORA METROPOLITAN HUBS
@@ -924,7 +1109,12 @@ export const CANONICAL_GEOGRAPHIES: CanonicalGeography[] = [
     callingCode: '+1-305',
     searchAliases: ['south florida', 'broward', 'little haiti', 'wynwood', 'miami carnival'],
     summary: 'The continental gateway to the Caribbean: Little Haiti, Calle Ocho, Miami Carnival, Wynwood sound system takeovers, and maritime trade.',
-  },
+      musicGenres: ["Kompa","Soca","Reggae","Bachata","Dembow"],
+    cuisineTags: ["Griot & Pikliz","Jerk Chicken","Cuban Sandwiches","Doubles"],
+    culturalTags: ["Little Haiti","Little Havana","Wynwood Art","Miami Carnival"],
+    diasporaHubs: ["haiti","cuba","jamaica","trinidad-and-tobago","bahamas","dominican-republic"],
+    topFestivals: ["Miami Carnival","Haitian Compas Festival","Calle Ocho Music Festival"],
+},
   {
     id: 'hub-nyc',
     iso: 'NYC',
@@ -946,7 +1136,12 @@ export const CANONICAL_GEOGRAPHIES: CanonicalGeography[] = [
     callingCode: '+1-718',
     searchAliases: ['brooklyn', 'flatbush', 'eastern parkway', 'crown heights', 'west indian day carnival', 'queens', 'bronx'],
     summary: 'The largest Caribbean metropolis outside the region: Eastern Parkway West Indian American Day Carnival, Flatbush Little Caribbean, and diaspora finance.',
-  },
+      musicGenres: ["Dancehall","Soca","Kompa","Bachata","Salsa","Chutney"],
+    cuisineTags: ["Jerk Pork & Chicken","Doubles & Roti","Griot & Diri Djon Djon","Mangú","Mofongo"],
+    culturalTags: ["Flatbush Caribbean Cultural Corridor","Eastern Parkway Labor Day Parade","Washington Heights Quisqueya","Little Guyana Richmond Hill"],
+    diasporaHubs: ["jamaica","trinidad-and-tobago","haiti","guyana","dominican-republic","puerto-rico","barbados","grenada","saint-vincent-and-the-grenadines"],
+    topFestivals: ["West Indian American Day Carnival (Labor Day)","National Puerto Rican Day Parade","Dominican Day Parade"],
+},
   {
     id: 'hub-tor',
     iso: 'TOR',
@@ -968,7 +1163,12 @@ export const CANONICAL_GEOGRAPHIES: CanonicalGeography[] = [
     callingCode: '+1-416',
     searchAliases: ['caribana', 'toronto carnival', 'gta', 'scarborough', 'eglinton west', 'little jamaica'],
     summary: 'Home to Toronto Caribbean Carnival (Caribana), Eglinton West Little Jamaica cultural mile, vibrant soca/reggae labels, and pan-Caribbean diaspora media.',
-  },
+      musicGenres: ["Soca","Dancehall","Reggae","Chutney","Calypso"],
+    cuisineTags: ["Roti & Doubles","Jerk Chicken","Guyanese Chinese Fried Rice","Patties"],
+    culturalTags: ["Little Jamaica (Eglinton West)","Caribana Festival Culture","Scarborough Caribbean Kitchens","Blackhurst Cultural Hub"],
+    diasporaHubs: ["jamaica","trinidad-and-tobago","guyana","barbados","saint-lucia","grenada","saint-vincent-and-the-grenadines"],
+    topFestivals: ["Toronto Caribbean Carnival (Caribana)","JerkFest Toronto","Afro-Carib Fest"],
+},
   {
     id: 'hub-mtl',
     iso: 'MTL',
@@ -990,7 +1190,12 @@ export const CANONICAL_GEOGRAPHIES: CanonicalGeography[] = [
     callingCode: '+1-514',
     searchAliases: ['montreal haitian', 'carifiesta', 'saint-michel', 'kompa montreal'],
     summary: 'Dynamic Francophone Caribbean center: world-famous Haitian cultural presence, Carifiesta, Kompa live circuits, and Caribbean literature festivals.',
-  },
+      musicGenres: ["Kompa","Zouk","Rasin","Cadence","Twoubadou"],
+    cuisineTags: ["Griot avec Pikliz","Diri Djon Djon","Bannann Peze","Pâtés Haïtiens"],
+    culturalTags: ["Communauté Haïtienne de Montréal","Quartier Saint-Michel & Montréal-Nord","Festival Nuits d'Afrique","Créole Académie"],
+    diasporaHubs: ["haiti","martinique","guadeloupe","french-guiana"],
+    topFestivals: ["Carifiesta Montréal","Festival International Nuits d'Afrique","Mois de l'Histoire des Noirs"],
+},
   {
     id: 'hub-lon',
     iso: 'LON',
@@ -1012,7 +1217,12 @@ export const CANONICAL_GEOGRAPHIES: CanonicalGeography[] = [
     callingCode: '+44-20',
     searchAliases: ['notting hill carnival', 'windrush', 'brixton', 'tottenham', 'ladbroke grove'],
     summary: 'Home to Notting Hill Carnival (Europe’s largest street party), legendary Windrush generation legacy, Brixton Market, and UK soundsystem heritage.',
-  },
+      musicGenres: ["Reggae","Dancehall","Soca","Lovers Rock","Dub","Jungle / Sound System"],
+    cuisineTags: ["Jerk Chicken","Curry Goat","Ackee & Saltfish","Roti","Saltfish Fritters"],
+    culturalTags: ["Notting Hill Carnival (Europe's biggest street festival)","Windrush Generation Heritage","Brixton Market & Electric Avenue","Tottenham West Indian Hub"],
+    diasporaHubs: ["jamaica","trinidad-and-tobago","barbados","saint-lucia","grenada","dominica","guyana","antigua-and-barbuda","saint-kitts-and-nevis","montserrat"],
+    topFestivals: ["Notting Hill Carnival","City Splash Festival","London Jerk Fest"],
+},
   {
     id: 'hub-bir',
     iso: 'BIR',
@@ -1034,7 +1244,12 @@ export const CANONICAL_GEOGRAPHIES: CanonicalGeography[] = [
     callingCode: '+44-121',
     searchAliases: ['handsworth', 'midlands caribbean', 'steel pulse'],
     summary: 'Pioneering roots reggae cradle (Steel Pulse), Handsworth community movements, and vital Caribbean business enterprise in the UK Midlands.',
-  },
+      musicGenres: ["Roots Reggae","Dub","Dancehall","Soca"],
+    cuisineTags: ["Curry Mutton","Jerk Chicken","Fried Dumplings","Hard Dough Bread"],
+    culturalTags: ["Handsworth Cultural Heart","Legacy Sound Systems (Steel Pulse)","Soho Road Corridor","Handsworth Park Gatherings"],
+    diasporaHubs: ["jamaica","saint-kitts-and-nevis","montserrat","barbados"],
+    topFestivals: ["Birmingham Caribbean Carnival","Simmer Down Festival"],
+},
   {
     id: 'hub-ams',
     iso: 'AMS',
@@ -1056,7 +1271,12 @@ export const CANONICAL_GEOGRAPHIES: CanonicalGeography[] = [
     callingCode: '+31-20',
     searchAliases: ['amsterdam zuidoost', 'bijlmer', 'kwaku festival', 'keti koti'],
     summary: 'Vibrant Dutch Caribbean heartland in Amsterdam-Zuidoost (Bijlmer), Kwaku Summer Festival, Keti Koti liberation ceremonies, and Afro-Surinamese literature.',
-  },
+      musicGenres: ["Kaseko","Kawina","Ritmo Kombina","Tumba","Soca"],
+    cuisineTags: ["Surinamese Roti","Pom","Saoto Soup","Bara","Pastechi"],
+    culturalTags: ["Bijlmermeer (Bijlmer) Cultural Heart","Kwaku Summer Festival","Sranan Heritage","Antillean Community Network"],
+    diasporaHubs: ["suriname","curacao","aruba","bonaire","sint-maarten"],
+    topFestivals: ["Kwaku Summer Festival","Keti Koti Festival","Amsterdam Roots Festival"],
+},
   {
     id: 'hub-rot',
     iso: 'ROT',
@@ -1078,7 +1298,12 @@ export const CANONICAL_GEOGRAPHIES: CanonicalGeography[] = [
     callingCode: '+31-10',
     searchAliases: ['rotterdam zomercarnaval', 'zomercarnaval'],
     summary: 'Host of the monumental Rotterdam Zomercarnaval, major port trade connections, and rich Antillean / Surinamese cultural organizations.',
-  },
+      musicGenres: ["Ritmo Kombina","Kaseko","Zouk","Soca","Kizomba Fusion"],
+    cuisineTags: ["Moksi Alesi","Bara","Keshi Yena","Stobá","Roti Rolls"],
+    culturalTags: ["Rotterdam Unlimited Zomercarnaval","Witte de With Multicultural Hub","Zuid-Holland Caribbean Guilds","Port Seafarer Ties"],
+    diasporaHubs: ["curacao","suriname","aruba","bonaire","sint-maarten"],
+    topFestivals: ["Rotterdam Unlimited Zomercarnaval (Summer Carnival)","Keti Koti Rotterdam"],
+},
   {
     id: 'hub-par',
     iso: 'PAR',
@@ -1100,7 +1325,12 @@ export const CANONICAL_GEOGRAPHIES: CanonicalGeography[] = [
     callingCode: '+33-1',
     searchAliases: ['carnaval tropical de paris', 'antillais paris', 'zouk paris'],
     summary: 'Carnaval Tropical de Paris on the Champs-Élysées, major publishing houses for Caribbean authors, Zouk concert tours, and Antillean gastronomy.',
-  },
+      musicGenres: ["Zouk","Gwo Ka","Biguine","Kompa","Bouyon"],
+    cuisineTags: ["Bokit","Colombo de Cabri","Accras de Morue","Griot","Tourment d'Amour"],
+    culturalTags: ["Carnaval Tropical de Paris","Antillais de Paris","Éditions Littéraires Antillaises","Zouk Concert Dynasties"],
+    diasporaHubs: ["martinique","guadeloupe","haiti","french-guiana"],
+    topFestivals: ["Carnaval Tropical de Paris","Festival du Zouk de Paris"],
+},
   {
     id: 'hub-mad',
     iso: 'MAD',
@@ -1122,7 +1352,12 @@ export const CANONICAL_GEOGRAPHIES: CanonicalGeography[] = [
     callingCode: '+34-91',
     searchAliases: ['tetuan', 'dominicanos en madrid', 'bachata madrid'],
     summary: 'Thriving Dominican and Cuban community hubs in Tetuán and Cuatro Caminos, Latin Grammy studios, and European Bachata dance congresses.',
-  },
+      musicGenres: ["Bachata","Merengue","Dembow","Son Cubano","Salsa"],
+    cuisineTags: ["Mangú","Chicharrón","Sancocho","Ropa Vieja","Pastelón"],
+    culturalTags: ["Tetuán & Cuatro Caminos Caribbean Corridors","Latin Grammy European Hubs","Bachata Dance Academies"],
+    diasporaHubs: ["dominican-republic","cuba"],
+    topFestivals: ["Festival de la Hispanidad","Madrid Bachata Congress","Carnaval Dominicano en Madrid"],
+},
   {
     id: 'hub-atl',
     iso: 'ATL',
@@ -1144,7 +1379,12 @@ export const CANONICAL_GEOGRAPHIES: CanonicalGeography[] = [
     callingCode: '+1-404',
     searchAliases: ['atlanta carnival', 'dekalb', 'decatur caribbean'],
     summary: 'Fast-growing southern hub for Caribbean tech founders, Atlanta Caribbean Carnival, DeKalb culinary corridors, and major recording studios.',
-  },
+      musicGenres: ["Soca","Dancehall","Afrobeats-Caribbean Fusion","Reggae"],
+    cuisineTags: ["Jerk Chicken & Waffles","Curry Goat","Roti","Oxtail Stew"],
+    culturalTags: ["Atlanta Caribbean Carnival","DeKalb County Caribbean Corridor","Caribbean Tech Founders Network","Music Production Studios"],
+    diasporaHubs: ["jamaica","trinidad-and-tobago","guyana","haiti","bahamas","us-virgin-islands"],
+    topFestivals: ["Atlanta Caribbean Carnival","Atlanta Jerk Festival"],
+},
   {
     id: 'hub-bos',
     iso: 'BOS',
@@ -1166,7 +1406,12 @@ export const CANONICAL_GEOGRAPHIES: CanonicalGeography[] = [
     callingCode: '+1-617',
     searchAliases: ['mattapan', 'dorchester', 'boston carnival', 'cambridge haitian'],
     summary: 'Deep-rooted Haitian and West Indian communities across Mattapan and Dorchester, Boston Caribbean Carnival, and premier university diaspora scholars.',
-  },
+      musicGenres: ["Kompa","Soca","Reggae","Zouk","Dancehall"],
+    cuisineTags: ["Griot & Pikliz","Diri Djon Djon","Jerk Chicken","Curry Goat","Patties"],
+    culturalTags: ["Mattapan & Dorchester Haitian/West Indian Enclaves","Boston Caribbean Carnival (Franklin Park)","University Diaspora Scholar Network"],
+    diasporaHubs: ["haiti","jamaica","trinidad-and-tobago","barbados","dominican-republic","puerto-rico"],
+    topFestivals: ["Boston Caribbean Carnival","Haitian Heritage Month Gala"],
+},
 ];
 
 // Lookup Maps
@@ -1215,4 +1460,31 @@ export function resolveGeography(query: string | null | undefined): CanonicalGeo
     g.name.toLowerCase().includes(clean) || clean.includes(g.name.toLowerCase())
   );
   return fuzzy || null;
+}
+
+/**
+ * Retrieve CanonicalGeography objects for all diaspora hubs linked to this origin country
+ */
+export function getDiasporaHubsForGeography(
+  geoOrSlug: CanonicalGeography | string
+): CanonicalGeography[] {
+  const geo = typeof geoOrSlug === 'string' ? resolveGeography(geoOrSlug) : geoOrSlug;
+  if (!geo || !geo.diasporaHubs || geo.diasporaHubs.length === 0) return [];
+  return geo.diasporaHubs
+    .map((hubSlug) => resolveGeography(hubSlug))
+    .filter((h): h is CanonicalGeography => h !== null);
+}
+
+/**
+ * Retrieve CanonicalGeography objects for all Caribbean origin countries represented in this diaspora hub
+ */
+export function getOriginNationsForHub(
+  hubOrSlug: CanonicalGeography | string
+): CanonicalGeography[] {
+  const hub = typeof hubOrSlug === 'string' ? resolveGeography(hubOrSlug) : hubOrSlug;
+  if (!hub || !hub.isDiasporaHub) return [];
+  if (!hub.diasporaHubs || hub.diasporaHubs.length === 0) return [];
+  return hub.diasporaHubs
+    .map((originSlug) => resolveGeography(originSlug))
+    .filter((o): o is CanonicalGeography => o !== null);
 }

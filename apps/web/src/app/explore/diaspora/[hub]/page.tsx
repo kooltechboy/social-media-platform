@@ -1,11 +1,48 @@
 import React from 'react';
 import Link from 'next/link';
+import type { Metadata } from 'next';
 import { resolveGeography, DIASPORA_HUBS_ONLY } from '../../../../lib/explore/canonical-geography';
 import { executeDiscoveryQuery } from '../../../../lib/explore/discovery-engine';
 import DiasporaDiscoveryView from '../../../../components/explore/diaspora-discovery-view';
 import { Compass, ArrowLeft } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ hub: string }>;
+}): Promise<Metadata> {
+  const { hub: hubSlug } = await params;
+  const hub = resolveGeography(hubSlug);
+  if (!hub || !hub.isDiasporaHub) {
+    return {
+      title: 'Diaspora Hub Not Found | TUKUBI Explore',
+      description: 'Discover Caribbean diaspora communities and hubs on TUKUBI.',
+    };
+  }
+
+  const title = `🌎 Discover Caribbean ${hub.name} on TUKUBI | Diaspora Discovery`;
+  const description =
+    hub.summary ||
+    `Explore Caribbean diaspora community guilds, fetes, creators, and commerce in ${hub.name}.`;
+
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      type: 'website',
+      siteName: 'TUKUBI',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+    },
+  };
+}
 
 interface DiasporaExplorePageProps {
   params: Promise<{ hub: string }>;

@@ -21,6 +21,15 @@ export const EVENT_NAMES = [
   'pwa_install_dismissed',
   'pwa_ios_install_instructions_shown',
   'pwa_already_installed',
+  'destination_selected',
+  'vibe_selected',
+  'diaspora_hub_selected',
+  'content_opened',
+  'sound_opened',
+  'event_opened',
+  'creator_opened',
+  'community_opened',
+  'marketplace_item_opened',
 ] as const;
 
 export type EventName = (typeof EVENT_NAMES)[number];

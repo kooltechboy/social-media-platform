@@ -48,12 +48,25 @@ export async function createEventAction(_prev: EventActionState, formData: FormD
   return { error: null };
 }
 
-export async function rsvpAction(eventId: string): Promise<void> {
+export async function rsvpAction(
+  eventId: string,
+  targetStatusOrFormData: 'going' | 'interested' | 'cancelled' | FormData = 'going'
+): Promise<{ status: string | null; error?: string }> {
+  let targetStatus: 'going' | 'interested' | 'cancelled' = 'going';
+  if (typeof targetStatusOrFormData === 'string') {
+    targetStatus = targetStatusOrFormData;
+  } else if (targetStatusOrFormData instanceof FormData) {
+    const raw = String(targetStatusOrFormData.get('targetStatus') ?? 'going');
+    if (raw === 'going' || raw === 'interested' || raw === 'cancelled') {
+      targetStatus = raw;
+    }
+  }
+
   const user = await getCurrentUser();
-  if (!user) return;
+  if (!user) return { status: null, error: 'Sign in to RSVP to events.' };
 
   const supabase = await createSupabaseServerClient();
-  if (!supabase) return;
+  if (!supabase) return { status: null, error: 'Database not available.' };
 
   const existing = await supabase
     .from('event_attendees')
@@ -62,17 +75,24 @@ export async function rsvpAction(eventId: string): Promise<void> {
     .eq('profile_id', user.id)
     .maybeSingle();
 
-  if (existing.data && existing.data.rsvp_status === 'going') {
+  if (existing.data && existing.data.rsvp_status === targetStatus) {
     await supabase
       .from('event_attendees')
       .update({ rsvp_status: 'cancelled' })
       .eq('event_id', eventId)
       .eq('profile_id', user.id);
+    revalidatePath('/events');
+    return { status: 'cancelled' };
   } else {
     await supabase.from('event_attendees').upsert(
-      { event_id: eventId, profile_id: user.id, rsvp_status: 'going' },
+      { event_id: eventId, profile_id: user.id, rsvp_status: targetStatus },
       { onConflict: 'event_id,profile_id' },
     );
+    revalidatePath('/events');
+    return { status: targetStatus };
   }
-  revalidatePath('/events');
+}
+
+export async function rsvpEventFormAction(eventId: string): Promise<void> {
+  await rsvpAction(eventId, 'going');
 }

@@ -2,7 +2,7 @@ import React from 'react';
 import { Calendar, MapPin, Users, Radio, Sparkles, Ticket, CheckCircle, Clock, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 import { createSupabaseServerClient, getCurrentUser } from '../../lib/supabase/server';
-import { rsvpAction } from '../../lib/events/actions';
+import { rsvpEventFormAction } from '../../lib/events/actions';
 import EventCreateForm, { type CityOption } from '../../components/event-create-form';
 
 export const dynamic = 'force-dynamic';
@@ -165,7 +165,7 @@ export default async function EventsPage({
 
               <div className="pt-4 border-t border-white/10">
                 {user ? (
-                  <form action={rsvpAction.bind(null, event.id)}>
+                  <form action={rsvpEventFormAction.bind(null, event.id)}>
                     <button
                       type="submit"
                       className={`w-full font-black py-3 rounded-xl text-xs sm:text-sm md:text-base transition-all shadow-md min-h-[44px] md:min-h-[46px] flex items-center justify-center ${

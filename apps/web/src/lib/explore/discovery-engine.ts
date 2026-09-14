@@ -12,6 +12,7 @@ import {
 } from './constants';
 import { CARIBBEAN_TERRITORIES_BY_ISO } from '../constants/caribbean-territories';
 import { DIASPORA_CITY_HUBS } from '../constants/diaspora-hubs';
+import { searchCaribbeanSounds, type CaribbeanSound } from '../constants/caribbean-sounds';
 
 export interface DiscoveryFilterParams {
   geo?: string | null;
@@ -28,7 +29,7 @@ export interface DiscoveryFilterParams {
  *
  * Executes parallel, highly indexed PostgreSQL queries against real Supabase
  * tables for posts, creators, events, communities, businesses, marketplace,
- * reels, and podcasts with zero mock data.
+ * reels, podcasts, and livestreams with zero mock data.
  */
 export async function executeDiscoveryQuery(
   params: DiscoveryFilterParams
@@ -78,9 +79,17 @@ export async function executeDiscoveryQuery(
     businesses: 0,
     reels: 0,
     podcasts: 0,
+    livestreams: 0,
+    sounds: 0,
+    stories: 0,
   };
 
   if (!supabase) {
+    const sounds = searchCaribbeanSounds({
+      countryIso: selectedGeography && !selectedGeography.isDiasporaHub ? selectedGeography.iso : undefined,
+      query: queryText || (selectedVibe ? selectedVibe.name : undefined),
+    });
+
     return {
       posts: [],
       creators: [],
@@ -90,12 +99,19 @@ export async function executeDiscoveryQuery(
       businesses: [],
       reels: [],
       podcasts: [],
+      livestreams: [],
+      sounds,
+      officialStories: [],
+      trendingSignals: [],
       selectedVibe,
       selectedCountry,
       selectedHub,
       selectedGeography,
-      counts: emptyCounts,
-      totalMatches: 0,
+      counts: {
+        ...emptyCounts,
+        sounds: sounds.length,
+      },
+      totalMatches: sounds.length,
     };
   }
 
@@ -129,7 +145,7 @@ export async function executeDiscoveryQuery(
     let postQuery = supabase
       .from('posts')
       .select(
-        'id, content, media_urls, cultural_tags, likes_count, comments_count, shares_count, created_at, author_id, country_id, profiles:profiles!posts_author_id_fkey(id, display_name, username, avatar_url, is_verified, country, island, city)'
+        'id, content, media_urls, cultural_tags, likes_count, comments_count, shares_count, created_at, author_id, country_id, is_official, official_content_type, is_pinned, community_id, profiles:profiles!posts_author_id_fkey(id, display_name, username, avatar_url, is_verified, country, island, city)'
       )
       .eq('visibility', 'public')
       .order('created_at', { ascending: false })
@@ -361,6 +377,42 @@ export async function executeDiscoveryQuery(
       );
     }
 
+    // ────────────────────────────────────────────────────────────
+    // 11. LIVESTREAMS QUERY
+    // ────────────────────────────────────────────────────────────
+    let livestreamsQuery = supabase
+      .from('livestreams')
+      .select(
+        'id, creator_id, title, access_level, state, scheduled_for, started_at, peak_viewers, created_at, profiles:profiles!livestreams_creator_id_fkey(id, display_name, username, avatar_url, is_verified, country, island)'
+      )
+      .in('state', ['live', 'scheduled'])
+      .order('started_at', { ascending: false })
+      .limit(8);
+
+    if (queryText) {
+      livestreamsQuery = livestreamsQuery.ilike('title', `%${queryText}%`);
+    }
+
+    if (geoName) {
+      livestreamsQuery = livestreamsQuery.ilike('title', `%${geoName}%`);
+    }
+
+    // ────────────────────────────────────────────────────────────
+    // 12. TRENDING SIGNALS QUERY
+    // ────────────────────────────────────────────────────────────
+    let signalsQuery = supabase
+      .from('trending_signals')
+      .select('*')
+      .gt('expires_at', new Date().toISOString())
+      .order('score', { ascending: false })
+      .limit(10);
+
+    if (geoIso) {
+      signalsQuery = signalsQuery.or(`territory_iso.eq.${geoIso},territory_iso.is.null`);
+    } else {
+      signalsQuery = signalsQuery.is('territory_iso', null);
+    }
+
     // Parallel Execution
     const [
       postsRes,
@@ -371,6 +423,8 @@ export async function executeDiscoveryQuery(
       productsRes,
       reelsRes,
       podcastsRes,
+      livestreamsRes,
+      signalsRes,
     ] = await Promise.all([
       postQuery,
       profilesQuery,
@@ -380,6 +434,8 @@ export async function executeDiscoveryQuery(
       productsQuery,
       reelsQuery,
       podcastsQuery,
+      livestreamsQuery,
+      signalsQuery,
     ]);
 
     const posts = postsRes.data ?? [];
@@ -390,6 +446,19 @@ export async function executeDiscoveryQuery(
     const products = productsRes.data ?? [];
     const reels = reelsRes.data ?? [];
     const podcasts = podcastsRes.data ?? [];
+    const livestreams = livestreamsRes.data ?? [];
+    const trendingSignals = signalsRes.data ?? [];
+
+    // Filter sounds from Caribbean Sounds registry
+    const sounds = searchCaribbeanSounds({
+      countryIso: selectedGeography && !selectedGeography.isDiasporaHub ? selectedGeography.iso : undefined,
+      query: queryText || (selectedVibe ? selectedVibe.tags[0] : undefined),
+    });
+
+    // Distinguish official news and community stories from regular posts
+    const officialStories = posts.filter(
+      (p: any) => p.is_official || p.official_content_type === 'news' || p.official_content_type === 'announcement' || p.community_id
+    );
 
     const counts: ExploreCounts = {
       posts: posts.length,
@@ -400,6 +469,9 @@ export async function executeDiscoveryQuery(
       businesses: businesses.length,
       reels: reels.length,
       podcasts: podcasts.length,
+      livestreams: livestreams.length,
+      sounds: sounds.length,
+      stories: officialStories.length,
     };
 
     const totalMatches =
@@ -410,7 +482,9 @@ export async function executeDiscoveryQuery(
       businesses.length +
       products.length +
       reels.length +
-      podcasts.length;
+      podcasts.length +
+      livestreams.length +
+      sounds.length;
 
     return {
       posts,
@@ -421,6 +495,10 @@ export async function executeDiscoveryQuery(
       products,
       reels,
       podcasts,
+      livestreams,
+      sounds,
+      officialStories,
+      trendingSignals,
       selectedVibe,
       selectedCountry,
       selectedHub,
@@ -439,6 +517,10 @@ export async function executeDiscoveryQuery(
       products: [],
       reels: [],
       podcasts: [],
+      livestreams: [],
+      sounds: [],
+      officialStories: [],
+      trendingSignals: [],
       selectedVibe,
       selectedCountry,
       selectedHub,

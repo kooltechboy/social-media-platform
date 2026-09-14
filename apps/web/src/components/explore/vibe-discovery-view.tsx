@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
@@ -11,6 +11,7 @@ import {
   Calendar,
   ShoppingBag,
   Tv,
+  Radio,
   Heart,
   MessageCircle,
   CheckCircle,
@@ -18,10 +19,20 @@ import {
   Flame,
   Globe,
   Clock,
+  Music,
+  Play,
+  Pause,
+  Share2,
+  Check,
+  UserCheck,
+  Disc,
 } from 'lucide-react';
 import GeographyFlag from '../geography-flag';
 import type { VibeCategory, ExploreQueryResult } from '../../lib/explore/constants';
-import { CARIBBEAN_CORE_ENTITIES, type CanonicalGeography } from '../../lib/explore/canonical-geography';
+import { CARIBBEAN_CORE_ENTITIES } from '../../lib/explore/canonical-geography';
+import type { CaribbeanSound } from '../../lib/constants/caribbean-sounds';
+import { rsvpAction } from '../../lib/events/actions';
+import { track } from '../../lib/monitoring/analytics';
 
 interface VibeDiscoveryViewProps {
   vibe: VibeCategory;
@@ -36,9 +47,13 @@ export default function VibeDiscoveryView({
 }: VibeDiscoveryViewProps) {
   const router = useRouter();
   const [selectedCountry, setSelectedCountry] = useState<string | null>(activeCountry || null);
-  const [activeTab, setActiveTab] = useState<
-    'all' | 'posts' | 'creators' | 'events' | 'communities' | 'products' | 'reels'
-  >('all');
+  const [activeTab, setActiveTab] = useState<string>('all');
+  const [playingSoundId, setPlayingSoundId] = useState<string | null>(null);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [rsvpStates, setRsvpStates] = useState<Record<string, 'going' | 'interested' | null>>({});
+  const [rsvpLoading, setRsvpLoading] = useState<Record<string, boolean>>({});
+
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   function handleCountryFilter(geoSlug: string) {
     if (selectedCountry === geoSlug) {
@@ -47,13 +62,65 @@ export default function VibeDiscoveryView({
     } else {
       setSelectedCountry(geoSlug);
       router.push(`/explore/vibe/${vibe.id}?country=${geoSlug}`);
+      track('destination_selected', { destination: geoSlug, vibe: vibe.id });
     }
   }
 
-  const { counts } = data;
+  function toggleSoundPreview(sound: CaribbeanSound) {
+    if (playingSoundId === sound.id) {
+      audioRef.current?.pause();
+      setPlayingSoundId(null);
+    } else {
+      if (!audioRef.current) {
+        audioRef.current = new Audio(sound.audioUrl);
+        audioRef.current.onended = () => setPlayingSoundId(null);
+      } else {
+        audioRef.current.src = sound.audioUrl;
+      }
+      audioRef.current.play().catch(() => {});
+      setPlayingSoundId(sound.id);
+      track('sound_opened', { soundId: sound.id, vibe: vibe.id });
+    }
+  }
+
+  async function handleRsvp(eventId: string, status: 'going' | 'interested') {
+    setRsvpLoading((prev) => ({ ...prev, [eventId]: true }));
+    try {
+      const res = await rsvpAction(eventId, status);
+      setRsvpStates((prev) => ({
+        ...prev,
+        [eventId]: res.status === status ? status : null,
+      }));
+      track('event_opened', { eventId, rsvpStatus: status, vibe: vibe.id });
+    } catch (err) {
+      console.error('RSVP error:', err);
+    } finally {
+      setRsvpLoading((prev) => ({ ...prev, [eventId]: false }));
+    }
+  }
+
+  function handleShare(url: string, id: string) {
+    if (typeof window !== 'undefined' && navigator.clipboard) {
+      navigator.clipboard.writeText(url);
+      setCopiedId(id);
+      setTimeout(() => setCopiedId(null), 2500);
+    }
+  }
+
+  const {
+    posts = [],
+    creators = [],
+    events = [],
+    communities = [],
+    products = [],
+    reels = [],
+    sounds = [],
+    podcasts = [],
+    counts,
+  } = data;
 
   return (
-    <div className="w-full space-y-8 animate-fadeIn pb-16">
+    <div className="w-full space-y-8 animate-fadeIn pb-20">
       {/* ────────────────────────────────────────────────────────── */}
       {/* BREADCRUMB & BACK LINK                                     */}
       {/* ────────────────────────────────────────────────────────── */}
@@ -62,7 +129,7 @@ export default function VibeDiscoveryView({
           href="/explore"
           className="inline-flex items-center gap-2 text-xs sm:text-sm font-bold text-brand-sandstone/80 hover:text-brand-caribbeanSea transition-colors"
         >
-          <ArrowLeft className="w-4 h-4" /> Back to All Caribbean Discovery
+          <ArrowLeft className="w-4 h-4" /> Back to Caribbean Explore
         </Link>
         <span className="text-[11px] md:text-xs font-mono font-bold text-purple-400 bg-purple-500/10 px-3 py-1 rounded-full border border-purple-500/30">
           VIBE: #{vibe.id.toUpperCase()}
@@ -73,11 +140,11 @@ export default function VibeDiscoveryView({
       {/* VIBE HERO BANNER                                           */}
       {/* ────────────────────────────────────────────────────────── */}
       <div className="surface-header rounded-3xl p-6 sm:p-8 md:p-10 shadow-2xl relative overflow-hidden border border-purple-500/30">
-        <div className="absolute right-0 top-0 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20" />
+        <div className="absolute right-0 top-0 w-96 h-96 bg-purple-500/15 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20" />
 
         <div className="relative z-10 space-y-4 max-w-3xl">
-          <div className="flex items-center gap-3">
-            <span className="text-4xl sm:text-5xl md:text-6xl p-3 rounded-2xl bg-white/5 border border-white/10 shadow-inner">
+          <div className="flex items-center gap-4">
+            <span className="text-4xl sm:text-5xl md:text-6xl p-3.5 rounded-2xl bg-white/5 border border-white/10 shadow-inner">
               {vibe.icon}
             </span>
             <div className="space-y-1">
@@ -119,7 +186,7 @@ export default function VibeDiscoveryView({
             <button
               type="button"
               onClick={() => handleCountryFilter(selectedCountry)}
-              className="text-xs text-rose-400 hover:underline font-bold"
+              className="text-xs text-rose-400 hover:underline font-bold cursor-pointer"
             >
               Clear Island Filter
             </button>
@@ -134,7 +201,7 @@ export default function VibeDiscoveryView({
                 key={geo.slug}
                 type="button"
                 onClick={() => handleCountryFilter(geo.slug)}
-                className={`px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all flex items-center gap-2 border min-h-[38px] ${
+                className={`px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all flex items-center gap-2 border min-h-[38px] cursor-pointer ${
                   isSelected
                     ? 'bg-brand-caribbeanSea text-slate-950 border-brand-caribbeanSea font-black shadow-md shadow-brand-caribbeanSea/20'
                     : 'bg-white/5 hover:bg-white/10 text-white border-white/10'
@@ -152,21 +219,23 @@ export default function VibeDiscoveryView({
       {/* CATEGORY TABS                                              */}
       {/* ────────────────────────────────────────────────────────── */}
       <section className="space-y-6">
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-2 border-b border-white/10 scrollbar-none">
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-2 border-b border-white/10 scrollbar-none text-xs sm:text-sm">
           {[
             { id: 'all', label: `All Matches (${data.totalMatches})` },
             { id: 'posts', label: `Posts (${counts.posts})` },
+            { id: 'sounds', label: `Sounds (${sounds.length})` },
             { id: 'creators', label: `Creators (${counts.creators})` },
             { id: 'events', label: `Events (${counts.events})` },
             { id: 'communities', label: `Communities (${counts.communities})` },
             { id: 'products', label: `Shop (${counts.products})` },
             { id: 'reels', label: `Reels (${counts.reels})` },
+            { id: 'podcasts', label: `Podcasts (${counts.podcasts})` },
           ].map((t) => (
             <button
               key={t.id}
               type="button"
-              onClick={() => setActiveTab(t.id as any)}
-              className={`px-4 py-2 rounded-xl text-xs md:text-sm font-bold whitespace-nowrap transition-all min-h-[38px] ${
+              onClick={() => setActiveTab(t.id)}
+              className={`px-4 py-2 rounded-xl font-bold whitespace-nowrap transition-all min-h-[38px] cursor-pointer ${
                 activeTab === t.id
                   ? 'bg-purple-500 text-white font-black shadow-md shadow-purple-500/30'
                   : 'bg-white/5 hover:bg-white/10 text-brand-sandstone/80 border border-white/10'
@@ -206,14 +275,56 @@ export default function VibeDiscoveryView({
           </div>
         )}
 
+        {/* ── Sounds & Music (if available) ── */}
+        {(activeTab === 'all' || activeTab === 'sounds') && sounds.length > 0 && (
+          <div className="space-y-3">
+            <h3 className="text-xs md:text-sm font-black uppercase tracking-wider text-purple-400 flex items-center gap-2">
+              <Music className="w-4 h-4" /> Sounds &amp; Tracks for {vibe.name}
+            </h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {sounds.slice(0, 6).map((sound) => {
+                const isPlaying = playingSoundId === sound.id;
+                return (
+                  <div
+                    key={sound.id}
+                    className="surface-card rounded-2xl p-4 space-y-3 shadow-lg border border-white/10 flex flex-col justify-between"
+                  >
+                    <div className="flex items-start gap-3">
+                      <button
+                        type="button"
+                        onClick={() => toggleSoundPreview(sound)}
+                        className={`w-12 h-12 rounded-xl bg-gradient-to-br ${sound.coverGradient} flex items-center justify-center shadow shrink-0 text-white cursor-pointer`}
+                        aria-label={isPlaying ? 'Pause sound preview' : 'Play sound preview'}
+                      >
+                        {isPlaying ? <Pause className="w-5 h-5 text-purple-300" /> : <Play className="w-5 h-5 text-white ml-0.5" />}
+                      </button>
+                      <div className="min-w-0 flex-1">
+                        <span className="text-[10px] font-bold text-purple-300 uppercase">{sound.genre}</span>
+                        <h4 className="font-bold text-sm text-white truncate">{sound.title}</h4>
+                        <p className="text-xs text-brand-sandstone/70 truncate">{sound.artist}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between text-xs text-brand-sandstone/60 pt-2 border-t border-white/10">
+                      <span>{sound.durationFormatted}</span>
+                      <Link href={`/sounds?id=${encodeURIComponent(sound.id)}`} className="text-purple-400 hover:underline font-bold">
+                        Use Sound →
+                      </Link>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
         {/* ── Posts ── */}
-        {(activeTab === 'all' || activeTab === 'posts') && data.posts.length > 0 && (
+        {(activeTab === 'all' || activeTab === 'posts') && posts.length > 0 && (
           <div className="space-y-3">
             <h3 className="text-xs md:text-sm font-black uppercase tracking-wider text-purple-400 flex items-center gap-2">
               <Flame className="w-4 h-4" /> Cultural Discussions &amp; Posts
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {data.posts.map((post) => {
+              {posts.map((post: any) => {
                 const author = Array.isArray(post.profiles) ? post.profiles[0] : post.profiles;
                 return (
                   <article
@@ -241,7 +352,7 @@ export default function VibeDiscoveryView({
                             </span>
                           </div>
                         </Link>
-                        <span className="text-xs text-brand-sandstone/50">
+                        <span className="text-xs text-brand-sandstone/50 font-mono">
                           {new Date(post.created_at).toLocaleDateString()}
                         </span>
                       </div>
@@ -274,19 +385,19 @@ export default function VibeDiscoveryView({
         )}
 
         {/* ── Creators ── */}
-        {(activeTab === 'all' || activeTab === 'creators') && data.creators.length > 0 && (
+        {(activeTab === 'all' || activeTab === 'creators') && creators.length > 0 && (
           <div className="space-y-3">
             <h3 className="text-xs md:text-sm font-black uppercase tracking-wider text-brand-sunriseCoral flex items-center gap-2">
               <Users className="w-4 h-4" /> Creators &amp; Artists
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {data.creators.map((c) => (
+              {creators.map((c: any) => (
                 <div
                   key={c.id}
                   className="surface-card surface-card-interactive rounded-2xl p-5 flex flex-col justify-between space-y-4 shadow-md border border-white/10"
                 >
                   <div className="flex items-start gap-3">
-                    <div className="w-12 h-12 rounded-2xl bg-brand-sunriseCoral text-slate-950 font-black flex items-center justify-center text-sm shadow-md flex-shrink-0">
+                    <div className="w-12 h-12 rounded-2xl bg-brand-sunriseCoral text-slate-950 font-black flex items-center justify-center text-sm shadow-md shrink-0">
                       {(c.display_name || 'CR').slice(0, 2).toUpperCase()}
                     </div>
                     <div className="min-w-0 flex-1">
@@ -326,48 +437,164 @@ export default function VibeDiscoveryView({
         )}
 
         {/* ── Events ── */}
-        {(activeTab === 'all' || activeTab === 'events') && data.events.length > 0 && (
+        {(activeTab === 'all' || activeTab === 'events') && events.length > 0 && (
           <div className="space-y-3">
             <h3 className="text-xs md:text-sm font-black uppercase tracking-wider text-yellow-400 flex items-center gap-2">
               <Calendar className="w-4 h-4" /> Events &amp; Festivals
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-              {data.events.map((evt) => (
-                <div
-                  key={evt.id}
-                  className="surface-card surface-card-interactive rounded-2xl p-5 space-y-3 flex flex-col justify-between shadow-lg border border-white/10"
-                >
-                  <div className="space-y-2">
-                    <span className="text-[10px] font-black px-2.5 py-1 rounded-full bg-yellow-500/15 text-yellow-300 border border-yellow-500/30 uppercase tracking-wider">
-                      {evt.event_kind}
-                    </span>
-                    <h4 className="font-black text-base text-white leading-snug">{evt.title}</h4>
-                    {evt.description && (
-                      <p className="text-xs text-brand-sandstone/85 line-clamp-2 leading-relaxed">
-                        {evt.description}
-                      </p>
-                    )}
-                    <div className="text-xs text-brand-sandstone/70 space-y-1 pt-1">
-                      <p className="flex items-center gap-2">
-                        <Clock className="w-3.5 h-3.5 text-yellow-400" />
-                        <span>{new Date(evt.starts_at).toLocaleDateString()}</span>
-                      </p>
-                      <p className="flex items-center gap-2">
-                        <MapPin className="w-3.5 h-3.5 text-brand-caribbeanSea" />
-                        <span>{evt.venue || evt.cities?.name || 'Caribbean'}</span>
-                      </p>
+              {events.map((evt: any) => {
+                const currentRsvp = rsvpStates[evt.id];
+                const isLoading = rsvpLoading[evt.id];
+                return (
+                  <div
+                    key={evt.id}
+                    className="surface-card rounded-2xl p-5 space-y-3 flex flex-col justify-between shadow-lg border border-white/10"
+                  >
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-black px-2.5 py-1 rounded-full bg-yellow-500/15 text-yellow-300 border border-yellow-500/30 uppercase tracking-wider">
+                          {evt.event_kind}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => handleShare(`${typeof window !== 'undefined' ? window.location.origin : ''}/events`, evt.id)}
+                          className="text-brand-sandstone/50 hover:text-white transition-colors cursor-pointer"
+                        >
+                          {copiedId === evt.id ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Share2 className="w-3.5 h-3.5" />}
+                        </button>
+                      </div>
+                      <h4 className="font-black text-base text-white leading-snug">{evt.title}</h4>
+                      {evt.description && (
+                        <p className="text-xs text-brand-sandstone/85 line-clamp-2 leading-relaxed">
+                          {evt.description}
+                        </p>
+                      )}
+                      <div className="text-xs text-brand-sandstone/70 space-y-1 pt-1">
+                        <p className="flex items-center gap-2">
+                          <Clock className="w-3.5 h-3.5 text-yellow-400" />
+                          <span>{new Date(evt.starts_at).toLocaleDateString()}</span>
+                        </p>
+                        <p className="flex items-center gap-2">
+                          <MapPin className="w-3.5 h-3.5 text-brand-caribbeanSea" />
+                          <span>{evt.venue || evt.cities?.name || 'Caribbean'}</span>
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2 pt-3 border-t border-white/10">
+                      <div className="grid grid-cols-2 gap-2">
+                        <button
+                          type="button"
+                          disabled={isLoading}
+                          onClick={() => handleRsvp(evt.id, 'going')}
+                          className={`py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer border ${
+                            currentRsvp === 'going'
+                              ? 'bg-yellow-400 text-slate-950 border-yellow-400 font-black shadow-md'
+                              : 'bg-white/5 hover:bg-white/10 text-white border-white/10'
+                          }`}
+                        >
+                          <UserCheck className="w-3.5 h-3.5" />
+                          <span>{currentRsvp === 'going' ? 'Going ✓' : 'Going'}</span>
+                        </button>
+                        <button
+                          type="button"
+                          disabled={isLoading}
+                          onClick={() => handleRsvp(evt.id, 'interested')}
+                          className={`py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer border ${
+                            currentRsvp === 'interested'
+                              ? 'bg-purple-500 text-white border-purple-400 font-black shadow-md'
+                              : 'bg-white/5 hover:bg-white/10 text-white border-white/10'
+                          }`}
+                        >
+                          <Heart className="w-3.5 h-3.5" />
+                          <span>{currentRsvp === 'interested' ? 'Interested ✓' : 'Interested'}</span>
+                        </button>
+                      </div>
+                      <Link
+                        href="/events"
+                        className="w-full text-center bg-white/10 hover:bg-white/15 text-white font-bold py-2 rounded-xl text-xs transition-all block"
+                      >
+                        Get Tickets / RSVP →
+                      </Link>
                     </div>
                   </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
-                  <div className="pt-3 border-t border-white/10">
-                    <Link
-                      href="/events"
-                      className="w-full text-center bg-yellow-400 hover:brightness-110 text-slate-950 font-black py-2.5 rounded-xl text-xs transition-all block"
-                    >
-                      Get Tickets / RSVP →
+        {/* ── Communities ── */}
+        {(activeTab === 'all' || activeTab === 'communities') && communities.length > 0 && (
+          <div className="space-y-3">
+            <h3 className="text-xs md:text-sm font-black uppercase tracking-wider text-cyan-400 flex items-center gap-2">
+              <Globe className="w-4 h-4" /> Related Communities &amp; Guilds
+            </h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+              {communities.map((comm: any) => (
+                <div key={comm.id} className="surface-card rounded-2xl p-5 space-y-3 border border-white/10">
+                  <h4 className="font-black text-base text-white">{comm.name}</h4>
+                  {comm.description && <p className="text-xs text-brand-sandstone/85 line-clamp-2">{comm.description}</p>}
+                  <Link href={`/communities/${comm.slug || comm.id}`} className="text-xs font-bold text-cyan-400 hover:underline block pt-2">
+                    Join Guild →
+                  </Link>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* ── Shop / Products ── */}
+        {(activeTab === 'all' || activeTab === 'products') && products.length > 0 && (
+          <div className="space-y-3">
+            <h3 className="text-xs md:text-sm font-black uppercase tracking-wider text-emerald-400 flex items-center gap-2">
+              <ShoppingBag className="w-4 h-4" /> Marketplace Items for {vibe.name}
+            </h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              {products.map((p: any) => (
+                <div key={p.id} className="surface-card rounded-2xl p-5 space-y-3 border border-white/10">
+                  <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 uppercase">
+                    {p.product_kind}
+                  </span>
+                  <h4 className="font-black text-sm text-white truncate">{p.title}</h4>
+                  <div className="pt-2 flex items-center justify-between text-xs font-bold">
+                    <span>{p.currency} ${(p.price_minor / 100).toFixed(2)}</span>
+                    <Link href="/marketplace" className="text-emerald-400 hover:underline">
+                      Buy Now →
                     </Link>
                   </div>
                 </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* ── Reels ── */}
+        {(activeTab === 'all' || activeTab === 'reels') && reels.length > 0 && (
+          <div className="space-y-3">
+            <h3 className="text-xs md:text-sm font-black uppercase tracking-wider text-rose-400 flex items-center gap-2">
+              <Tv className="w-4 h-4" /> Trending Reels
+            </h3>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3.5">
+              {reels.map((reel: any) => (
+                <Link
+                  key={reel.id}
+                  href="/reels"
+                  className="surface-card surface-card-interactive rounded-2xl p-3 space-y-2 block border border-white/10 group cursor-pointer"
+                >
+                  <div className="aspect-[9/16] bg-slate-950 rounded-xl overflow-hidden relative flex items-center justify-center border border-white/5">
+                    {reel.thumbnail_path ? (
+                      <img src={reel.thumbnail_path} alt={reel.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
+                    ) : (
+                      <Tv className="w-8 h-8 text-brand-sandstone/40" />
+                    )}
+                    <span className="absolute bottom-2 left-2 text-[10px] font-bold bg-slate-950/80 px-2 py-0.5 rounded text-white">
+                      {reel.view_count ?? 0} views
+                    </span>
+                  </div>
+                  <h4 className="font-bold text-xs text-white truncate">{reel.title}</h4>
+                </Link>
               ))}
             </div>
           </div>

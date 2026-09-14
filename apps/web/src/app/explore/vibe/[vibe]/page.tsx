@@ -1,12 +1,47 @@
 import React from 'react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import type { Metadata } from 'next';
 import { VIBE_CATEGORIES } from '../../../../lib/explore/constants';
 import { executeDiscoveryQuery } from '../../../../lib/explore/discovery-engine';
 import VibeDiscoveryView from '../../../../components/explore/vibe-discovery-view';
 import { Compass, ArrowLeft } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ vibe: string }>;
+}): Promise<Metadata> {
+  const { vibe: vibeId } = await params;
+  const vibe = VIBE_CATEGORIES.find((v) => v.id === vibeId.toLowerCase().trim());
+  if (!vibe) {
+    return {
+      title: 'Vibe Not Found | TUKUBI Explore',
+      description: 'Discover Caribbean vibes and cultural movements on TUKUBI.',
+    };
+  }
+
+  const title = `${vibe.icon} Discover ${vibe.name} on TUKUBI | Caribbean Discovery`;
+  const description = `${vibe.desc} Explore creators, sounds, discussions, and events in the Caribbean.`;
+
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      type: 'website',
+      siteName: 'TUKUBI',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+    },
+  };
+}
 
 interface VibeExplorePageProps {
   params: Promise<{ vibe: string }>;
