@@ -17,21 +17,27 @@ import {
   ShoppingBag,
   Heart,
   MessageCircle,
-  Share2,
   CheckCircle,
-  ExternalLink,
-  ChevronRight,
-  Layers,
-  Flame,
+  Building2,
+  Tv,
   Radio,
+  Flame,
   Clock,
   Loader2,
+  ExternalLink,
 } from 'lucide-react';
+import GeographyFlag from './geography-flag';
 import { VIBE_CATEGORIES, type VibeCategory, type ExploreQueryResult } from '../lib/explore/constants';
-import { CARIBBEAN_TERRITORIES, type CaribbeanTerritory } from '../lib/constants/caribbean-territories';
-import { DIASPORA_CITY_HUBS, type DiasporaCityHub } from '../lib/constants/diaspora-hubs';
+import {
+  CANONICAL_GEOGRAPHIES,
+  CARIBBEAN_CORE_ENTITIES,
+  CARIBBEAN_SOVEREIGN_COUNTRIES,
+  CARIBBEAN_TERRITORIES_ONLY,
+  DIASPORA_HUBS_ONLY,
+  resolveGeography,
+  type CanonicalGeography,
+} from '../lib/explore/canonical-geography';
 import TrendingPanel from './trending/trending-panel';
-
 import type { TrendingSignal } from '../lib/explore/actions';
 
 interface ExploreDiscoveryClientProps {
@@ -59,17 +65,25 @@ export default function ExploreDiscoveryClient({
   const [country, setCountry] = useState<string | null>(activeCountryKey || null);
   const [hub, setHub] = useState<string | null>(activeHubKey || null);
   const [query, setQuery] = useState<string>(activeQueryText || '');
-  const [activeTab, setActiveTab] = useState<'all' | 'posts' | 'creators' | 'events' | 'communities' | 'products'>('all');
+  const [geoTab, setGeoTab] = useState<'all' | 'sovereign' | 'territories' | 'diaspora'>('all');
+  const [activeTab, setActiveTab] = useState<
+    'all' | 'posts' | 'creators' | 'events' | 'communities' | 'businesses' | 'products' | 'reels' | 'podcasts'
+  >('all');
 
-  // Sync state with URL params
+  // Synchronize state with URL parameters
   useEffect(() => {
     setVibe(searchParams.get('vibe'));
-    setCountry(searchParams.get('country'));
+    setCountry(searchParams.get('geo') || searchParams.get('country'));
     setHub(searchParams.get('hub'));
     setQuery(searchParams.get('q') || '');
   }, [searchParams]);
 
-  function updateFilters(next: { vibe?: string | null; country?: string | null; hub?: string | null; q?: string | null }) {
+  function updateFilters(next: {
+    vibe?: string | null;
+    country?: string | null;
+    hub?: string | null;
+    q?: string | null;
+  }) {
     const params = new URLSearchParams();
     const newVibe = next.vibe !== undefined ? next.vibe : vibe;
     const newCountry = next.country !== undefined ? next.country : country;
@@ -95,19 +109,19 @@ export default function ExploreDiscoveryClient({
     }
   }
 
-  function handleCountryClick(isoCode: string) {
-    if (country === isoCode) {
+  function handleCountryClick(identifier: string) {
+    if (country === identifier) {
       updateFilters({ country: null });
     } else {
-      updateFilters({ country: isoCode });
+      updateFilters({ country: identifier });
     }
   }
 
-  function handleHubClick(hubCity: string) {
-    if (hub === hubCity) {
+  function handleHubClick(hubCityOrSlug: string) {
+    if (hub === hubCityOrSlug) {
       updateFilters({ hub: null });
     } else {
-      updateFilters({ hub: hubCity });
+      updateFilters({ hub: hubCityOrSlug });
     }
   }
 
@@ -129,11 +143,27 @@ export default function ExploreDiscoveryClient({
   const hasActiveFilters = Boolean(vibe || country || hub || query.trim());
 
   const selectedVibeObj = VIBE_CATEGORIES.find((v) => v.id === vibe);
-  const selectedCountryObj = CARIBBEAN_TERRITORIES.find((c) => c.iso === country);
-  const selectedHubObj = DIASPORA_CITY_HUBS.find((h) => h.city.toLowerCase().includes((hub || '').toLowerCase()));
+  const selectedGeographyObj = resolveGeography(country);
+  const selectedHubObj = resolveGeography(hub);
+
+  // Filtered geographies based on user sub-tab
+  const visibleGeographies = (() => {
+    switch (geoTab) {
+      case 'sovereign':
+        return CARIBBEAN_SOVEREIGN_COUNTRIES;
+      case 'territories':
+        return CARIBBEAN_TERRITORIES_ONLY;
+      case 'diaspora':
+        return DIASPORA_HUBS_ONLY;
+      default:
+        return CARIBBEAN_CORE_ENTITIES;
+    }
+  })();
+
+  const { counts } = initialResult;
 
   return (
-    <div className="space-y-8 animate-fadeIn">
+    <div className="space-y-8 animate-fadeIn pb-16">
       {/* ────────────────────────────────────────────────────────── */}
       {/* HERO & DISCOVERY SEARCH BAR                                */}
       {/* ────────────────────────────────────────────────────────── */}
@@ -150,10 +180,10 @@ export default function ExploreDiscoveryClient({
           </h1>
 
           <p className="text-xs sm:text-sm md:text-base text-brand-sandstone/85 leading-relaxed md:leading-[1.6]">
-            Connect across 28+ island nations, global diaspora hubs from Brooklyn to London, verified creators, festivals, and cultural discussions.
+            Discover 31+ Caribbean island nations, global diaspora hubs from Brooklyn to London, verified creators, festivals, and cultural commerce.
           </p>
 
-          {/* Live Search Input */}
+          {/* Search Input */}
           <form onSubmit={handleSearchSubmit} className="relative pt-2 w-full max-w-xl">
             <Search className="absolute left-4 top-5.5 md:top-6 w-4 h-4 md:w-5 md:h-5 text-brand-caribbeanSea pointer-events-none" />
             <input
@@ -191,7 +221,7 @@ export default function ExploreDiscoveryClient({
       {/* ACTIVE FILTER PILLS / BREADCRUMBS                          */}
       {/* ────────────────────────────────────────────────────────── */}
       {hasActiveFilters && (
-        <div className="p-4 md:p-5 rounded-2xl surface-card flex flex-wrap items-center justify-between gap-3 animate-fadeIn">
+        <div className="p-4 md:p-5 rounded-2xl surface-card flex flex-wrap items-center justify-between gap-3 animate-fadeIn border border-white/10">
           <div className="flex flex-wrap items-center gap-2 md:gap-2.5">
             <span className="text-xs md:text-sm font-black uppercase text-brand-caribbeanSea flex items-center gap-1.5 mr-1">
               <Filter className="w-3.5 h-3.5 md:w-4 md:h-4 text-brand-caribbeanSea" /> Active Filters:
@@ -201,31 +231,33 @@ export default function ExploreDiscoveryClient({
               <button
                 type="button"
                 onClick={() => updateFilters({ vibe: null })}
-                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 md:py-2 rounded-full text-xs md:text-sm font-bold bg-purple-500/20 text-purple-200 border border-purple-500/40 hover:bg-purple-500/30 transition-colors min-h-[34px] md:min-h-[38px]"
+                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 md:py-2 rounded-full text-xs md:text-sm font-bold bg-purple-500/20 text-purple-200 border border-purple-500/40 hover:bg-purple-500/30 transition-colors min-h-[34px]"
               >
                 <span>{selectedVibeObj.icon} Vibe: {selectedVibeObj.name}</span>
                 <X className="w-3.5 h-3.5 md:w-4 md:h-4" />
               </button>
             )}
 
-            {selectedCountryObj && (
+            {selectedGeographyObj && (
               <button
                 type="button"
                 onClick={() => updateFilters({ country: null })}
-                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 md:py-2 rounded-full text-xs md:text-sm font-bold bg-brand-caribbeanSea/20 text-brand-caribbeanSea border border-brand-caribbeanSea/40 hover:bg-brand-caribbeanSea/30 transition-colors min-h-[34px] md:min-h-[38px]"
+                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 md:py-2 rounded-full text-xs md:text-sm font-bold bg-brand-caribbeanSea/20 text-brand-caribbeanSea border border-brand-caribbeanSea/40 hover:bg-brand-caribbeanSea/30 transition-colors min-h-[34px]"
               >
-                <span>{selectedCountryObj.flag} Territory: {selectedCountryObj.name}</span>
+                <GeographyFlag geo={selectedGeographyObj} size="xs" />
+                <span>Territory: {selectedGeographyObj.name}</span>
                 <X className="w-3.5 h-3.5 md:w-4 md:h-4" />
               </button>
             )}
 
-            {hub && (
+            {selectedHubObj && (
               <button
                 type="button"
                 onClick={() => updateFilters({ hub: null })}
-                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 md:py-2 rounded-full text-xs md:text-sm font-bold bg-amber-500/20 text-amber-200 border border-amber-500/40 hover:bg-amber-500/30 transition-colors min-h-[34px] md:min-h-[38px]"
+                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 md:py-2 rounded-full text-xs md:text-sm font-bold bg-amber-500/20 text-amber-200 border border-amber-500/40 hover:bg-amber-500/30 transition-colors min-h-[34px]"
               >
-                <span>🗽 Diaspora Hub: {selectedHubObj?.city || hub}</span>
+                <GeographyFlag geo={selectedHubObj.iso} size="xs" />
+                <span>Diaspora Hub: {selectedHubObj.capital || selectedHubObj.name}</span>
                 <X className="w-3.5 h-3.5 md:w-4 md:h-4" />
               </button>
             )}
@@ -237,7 +269,7 @@ export default function ExploreDiscoveryClient({
                   setQuery('');
                   updateFilters({ q: '' });
                 }}
-                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 md:py-2 rounded-full text-xs md:text-sm font-bold bg-brand-sunriseCoral/20 text-brand-sunriseCoral border border-brand-sunriseCoral/40 hover:bg-brand-sunriseCoral/30 transition-colors min-h-[34px] md:min-h-[38px]"
+                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 md:py-2 rounded-full text-xs md:text-sm font-bold bg-brand-sunriseCoral/20 text-brand-sunriseCoral border border-brand-sunriseCoral/40 hover:bg-brand-sunriseCoral/30 transition-colors min-h-[34px]"
               >
                 <span>Keyword: &quot;{query}&quot;</span>
                 <X className="w-3.5 h-3.5 md:w-4 md:h-4" />
@@ -256,12 +288,12 @@ export default function ExploreDiscoveryClient({
       )}
 
       {/* ────────────────────────────────────────────────────────── */}
-      {/* TRENDING SIGNALS (TrendingPanel)                           */}
+      {/* TRENDING SIGNALS                                           */}
       {/* ────────────────────────────────────────────────────────── */}
       <section className="space-y-4">
         <TrendingPanel
           signals={trendingSignals}
-          territory={selectedCountryObj?.name || null}
+          territory={selectedGeographyObj?.name || null}
         />
       </section>
 
@@ -273,147 +305,259 @@ export default function ExploreDiscoveryClient({
           <h2 className="text-sm md:text-base font-extrabold text-white flex items-center gap-2 uppercase tracking-wider">
             <Sparkles className="w-4 h-4 md:w-5 md:h-5 text-brand-goldenHour" /> 1. Explore by Vibe
           </h2>
-          <span className="text-xs md:text-sm text-brand-sandstone/60">Select a cultural theme</span>
+          <span className="text-xs md:text-sm text-brand-sandstone/60">Select a cultural theme to filter</span>
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-4 3xl:grid-cols-8 gap-3.5">
           {VIBE_CATEGORIES.map((v) => {
             const isSelected = vibe === v.id;
             return (
-              <button
+              <div
                 key={v.id}
-                type="button"
-                onClick={() => handleVibeClick(v.id)}
-                className={`text-left rounded-3xl p-4 md:p-5 transition-all flex flex-col justify-between shadow-lg group cursor-pointer border ${
+                className={`relative rounded-3xl p-4 md:p-5 transition-all flex flex-col justify-between shadow-lg group border ${
                   isSelected
                     ? 'surface-card border-purple-400 ring-2 ring-purple-400/50 shadow-purple-500/20 scale-[1.02]'
                     : 'surface-card surface-card-interactive'
                 }`}
               >
                 <div className="flex items-center justify-between">
-                  <span className="text-2xl md:text-3xl group-hover:scale-110 transition-transform">{v.icon}</span>
-                  {isSelected ? (
-                    <span className="text-[10px] md:text-xs font-black px-2.5 md:px-3 py-1 rounded-full bg-purple-400 text-slate-950">
-                      ACTIVE
-                    </span>
-                  ) : (
-                    <ArrowUpRight className="w-4 h-4 md:w-5 md:h-5 text-brand-sandstone/50 group-hover:text-brand-caribbeanSea transition-colors" />
-                  )}
+                  <button
+                    type="button"
+                    onClick={() => handleVibeClick(v.id)}
+                    className="text-2xl md:text-3xl group-hover:scale-110 transition-transform cursor-pointer"
+                  >
+                    {v.icon}
+                  </button>
+                  <div className="flex items-center gap-1.5">
+                    {isSelected && (
+                      <span className="text-[10px] md:text-xs font-black px-2.5 py-0.5 rounded-full bg-purple-400 text-slate-950">
+                        ACTIVE
+                      </span>
+                    )}
+                    <Link
+                      href={`/explore/vibe/${v.id}`}
+                      title={`Open dedicated ${v.name} discovery page`}
+                      className="text-brand-sandstone/40 hover:text-purple-300 transition-colors p-1"
+                    >
+                      <ArrowUpRight className="w-4 h-4 md:w-5 md:h-5" />
+                    </Link>
+                  </div>
                 </div>
-                <div className="mt-3">
-                  <h3 className={`font-black text-sm sm:text-base md:text-lg transition-colors ${isSelected ? 'text-purple-300' : 'text-white group-hover:text-brand-caribbeanSea'}`}>
+
+                <button
+                  type="button"
+                  onClick={() => handleVibeClick(v.id)}
+                  className="mt-3 text-left cursor-pointer w-full"
+                >
+                  <h3
+                    className={`font-black text-sm sm:text-base md:text-lg transition-colors ${
+                      isSelected ? 'text-purple-300' : 'text-white group-hover:text-purple-300'
+                    }`}
+                  >
                     {v.name}
                   </h3>
-                  <p className="text-xs md:text-sm text-brand-sandstone/80 mt-1 leading-snug">{v.desc}</p>
-                </div>
-              </button>
+                  <p className="text-xs md:text-sm text-brand-sandstone/80 mt-1 leading-snug">
+                    {v.desc}
+                  </p>
+                </button>
+              </div>
             );
           })}
         </div>
       </section>
 
       {/* ────────────────────────────────────────────────────────── */}
-      {/* 2. ISLAND NATIONS & TERRITORIES (Interactive Cards)       */}
+      {/* 2. ISLAND NATIONS & TERRITORIES (Vector Flag Cards)       */}
       {/* ────────────────────────────────────────────────────────── */}
       <section className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-sm md:text-base font-extrabold text-white flex items-center gap-2 uppercase tracking-wider">
-            <Globe className="w-4 h-4 md:w-5 md:h-5 text-brand-sunriseCoral" /> 2. Island Nations &amp; Territories
-          </h2>
-          <span className="text-xs md:text-sm text-brand-sandstone/60">28+ Caribbean States</span>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <h2 className="text-sm md:text-base font-extrabold text-white flex items-center gap-2 uppercase tracking-wider">
+              <Globe className="w-4 h-4 md:w-5 md:h-5 text-brand-sunriseCoral" /> 2. Discover Caribbean Nations &amp; Territories
+            </h2>
+            <span className="text-xs md:text-sm text-brand-sandstone/60">
+              Select an island to filter, or open its dedicated discovery portal
+            </span>
+          </div>
+
+          {/* Sub-tabs for filtering sovereign vs territory vs diaspora */}
+          <div className="flex items-center gap-1.5 bg-white/5 p-1 rounded-xl border border-white/10 text-xs">
+            <button
+              type="button"
+              onClick={() => setGeoTab('all')}
+              className={`px-3 py-1.5 rounded-lg font-bold transition-colors ${
+                geoTab === 'all'
+                  ? 'bg-brand-caribbeanSea text-slate-950'
+                  : 'text-brand-sandstone hover:text-white'
+              }`}
+            >
+              All ({CARIBBEAN_CORE_ENTITIES.length})
+            </button>
+            <button
+              type="button"
+              onClick={() => setGeoTab('sovereign')}
+              className={`px-3 py-1.5 rounded-lg font-bold transition-colors ${
+                geoTab === 'sovereign'
+                  ? 'bg-brand-caribbeanSea text-slate-950'
+                  : 'text-brand-sandstone hover:text-white'
+              }`}
+            >
+              Sovereign ({CARIBBEAN_SOVEREIGN_COUNTRIES.length})
+            </button>
+            <button
+              type="button"
+              onClick={() => setGeoTab('territories')}
+              className={`px-3 py-1.5 rounded-lg font-bold transition-colors ${
+                geoTab === 'territories'
+                  ? 'bg-brand-caribbeanSea text-slate-950'
+                  : 'text-brand-sandstone hover:text-white'
+              }`}
+            >
+              Islands &amp; Territories ({CARIBBEAN_TERRITORIES_ONLY.length})
+            </button>
+            <button
+              type="button"
+              onClick={() => setGeoTab('diaspora')}
+              className={`px-3 py-1.5 rounded-lg font-bold transition-colors ${
+                geoTab === 'diaspora'
+                  ? 'bg-brand-caribbeanSea text-slate-950'
+                  : 'text-brand-sandstone hover:text-white'
+              }`}
+            >
+              Diaspora Hubs ({DIASPORA_HUBS_ONLY.length})
+            </button>
+          </div>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 3xl:grid-cols-8 4xl:grid-cols-10 gap-3">
-          {CARIBBEAN_TERRITORIES.map((terr) => {
-            const isSelected = country === terr.iso;
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 3xl:grid-cols-8 gap-3">
+          {visibleGeographies.map((terr) => {
+            const isSelected = country === terr.slug || country === terr.iso;
             return (
-              <button
-                key={terr.iso}
-                type="button"
-                onClick={() => handleCountryClick(terr.iso)}
-                className={`text-left rounded-2xl p-3.5 md:p-4 transition-all flex flex-col justify-between shadow-md group cursor-pointer border ${
+              <div
+                key={terr.slug}
+                className={`relative rounded-2xl p-3.5 md:p-4 transition-all flex flex-col justify-between shadow-md group border ${
                   isSelected
                     ? 'surface-card border-brand-caribbeanSea ring-2 ring-brand-caribbeanSea/50 scale-[1.02]'
                     : 'surface-card surface-card-interactive'
                 }`}
               >
-                <div className="flex items-center justify-between mb-1.5">
-                  <span className="text-2xl md:text-3xl group-hover:scale-110 transition-transform">{terr.flag}</span>
-                  <span className="text-[10px] md:text-xs font-mono font-black text-brand-caribbeanSea bg-white/10 px-2 py-0.5 rounded">
-                    {terr.iso}
-                  </span>
+                <div className="flex items-center justify-between mb-2">
+                  <GeographyFlag geo={terr} size="md" className="group-hover:scale-110 transition-transform" />
+                  <div className="flex items-center gap-1">
+                    <span className="text-[10px] md:text-xs font-mono font-black text-brand-caribbeanSea bg-white/10 px-1.5 py-0.5 rounded">
+                      {terr.iso}
+                    </span>
+                    <Link
+                      href={terr.isDiasporaHub ? `/explore/diaspora/${terr.slug}` : `/explore/${terr.slug}`}
+                      title={`Open dedicated ${terr.name} discovery page`}
+                      className="text-brand-sandstone/40 hover:text-brand-caribbeanSea transition-colors p-0.5"
+                    >
+                      <ArrowUpRight className="w-3.5 h-3.5 md:w-4 md:h-4" />
+                    </Link>
+                  </div>
                 </div>
-                <div>
-                  <h4 className={`font-bold text-xs sm:text-sm md:text-[15px] truncate transition-colors ${isSelected ? 'text-brand-caribbeanSea font-black' : 'text-white group-hover:text-brand-caribbeanSea'}`}>
+
+                <button
+                  type="button"
+                  onClick={() => handleCountryClick(terr.slug)}
+                  className="text-left cursor-pointer w-full"
+                >
+                  <h4
+                    className={`font-bold text-xs sm:text-sm md:text-[15px] truncate transition-colors ${
+                      isSelected ? 'text-brand-caribbeanSea font-black' : 'text-white group-hover:text-brand-caribbeanSea'
+                    }`}
+                  >
                     {terr.name}
                   </h4>
-                  <span className="text-[10px] md:text-xs text-brand-sandstone/70 block mt-0.5">
-                    {terr.sovereign ? 'Sovereign' : 'Territory'}
+                  <span className="text-[10px] md:text-xs text-brand-sandstone/70 block mt-0.5 truncate">
+                    {terr.sovereign ? 'Sovereign' : terr.isDiasporaHub ? 'Diaspora Hub' : 'Territory'}
                   </span>
-                </div>
-              </button>
+                </button>
+              </div>
             );
           })}
         </div>
       </section>
 
       {/* ────────────────────────────────────────────────────────── */}
-      {/* 3. GLOBAL DIASPORA HUBS (Interactive Cards)               */}
+      {/* 3. GLOBAL DIASPORA HUBS                                   */}
       {/* ────────────────────────────────────────────────────────── */}
       <section className="space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-sm md:text-base font-extrabold text-white flex items-center gap-2 uppercase tracking-wider">
             <MapPin className="w-4 h-4 md:w-5 md:h-5 text-brand-goldenHour" /> 3. Global Diaspora Hubs
           </h2>
-          <span className="text-xs md:text-sm text-brand-sandstone/60">Global Diaspora Centers</span>
+          <span className="text-xs md:text-sm text-brand-sandstone/60">
+            Caribbean communities across North America, Europe &amp; beyond
+          </span>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 3xl:grid-cols-6 4xl:grid-cols-8 gap-3.5">
-          {DIASPORA_CITY_HUBS.map((cityHub) => {
-            const isSelected = (hub || '').toLowerCase().includes(cityHub.city.toLowerCase().split(' ')[0]);
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 3xl:grid-cols-6 gap-3.5">
+          {DIASPORA_HUBS_ONLY.map((cityHub) => {
+            const isSelected =
+              hub === cityHub.slug ||
+              (hub && cityHub.capital.toLowerCase().includes(hub.toLowerCase()));
             return (
-              <button
-                key={cityHub.id}
-                type="button"
-                onClick={() => handleHubClick(cityHub.city)}
-                className={`text-left rounded-2xl p-4 md:p-5 transition-all flex flex-col justify-between shadow-md group cursor-pointer border ${
+              <div
+                key={cityHub.slug}
+                className={`relative rounded-2xl p-4 md:p-5 transition-all flex flex-col justify-between shadow-md group border ${
                   isSelected
                     ? 'surface-card border-amber-400 ring-2 ring-amber-400/50 scale-[1.02]'
                     : 'surface-card surface-card-interactive'
                 }`}
               >
                 <div className="flex items-center justify-between">
-                  <span className="text-2xl md:text-3xl">{cityHub.flag}</span>
-                  <span className="text-[10px] md:text-xs font-black text-brand-goldenHour uppercase">
-                    {cityHub.countryIso}
-                  </span>
+                  <GeographyFlag geo={cityHub.iso} size="md" />
+                  <div className="flex items-center gap-1">
+                    <span className="text-[10px] md:text-xs font-black text-brand-goldenHour uppercase">
+                      {cityHub.currency}
+                    </span>
+                    <Link
+                      href={`/explore/diaspora/${cityHub.slug}`}
+                      title={`Open dedicated ${cityHub.name} discovery page`}
+                      className="text-brand-sandstone/40 hover:text-amber-300 transition-colors p-0.5"
+                    >
+                      <ArrowUpRight className="w-4 h-4 md:w-5 md:h-5" />
+                    </Link>
+                  </div>
                 </div>
-                <div className="mt-2.5">
-                  <h4 className={`font-bold text-xs sm:text-sm md:text-base leading-snug ${isSelected ? 'text-amber-300 font-black' : 'text-white group-hover:text-brand-goldenHour'}`}>
-                    {cityHub.city}
+
+                <button
+                  type="button"
+                  onClick={() => handleHubClick(cityHub.slug)}
+                  className="mt-2.5 text-left cursor-pointer w-full"
+                >
+                  <h4
+                    className={`font-bold text-xs sm:text-sm md:text-base leading-snug ${
+                      isSelected ? 'text-amber-300 font-black' : 'text-white group-hover:text-brand-goldenHour'
+                    }`}
+                  >
+                    {cityHub.name}
                   </h4>
-                  <p className="text-[11px] md:text-xs text-brand-sandstone/70 mt-0.5">{cityHub.country}</p>
-                </div>
-              </button>
+                  <p className="text-[11px] md:text-xs text-brand-sandstone/70 mt-0.5">
+                    {cityHub.capital}
+                  </p>
+                </button>
+              </div>
             );
           })}
         </div>
       </section>
 
       {/* ────────────────────────────────────────────────────────── */}
-      {/* 4. DYNAMIC DISCOVERY RESULTS WORKSPACE                     */}
+      {/* 4. DYNAMIC DISCOVERY FEED & MATCHES                        */}
       {/* ────────────────────────────────────────────────────────── */}
       <section className="space-y-6 pt-8 border-t border-white/10">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h2 className="text-xl sm:text-2xl md:text-3xl font-black text-white flex items-center gap-2">
-              <Layers className="w-5 h-5 md:w-6 md:h-6 text-brand-caribbeanSea" />
+              <Sparkles className="w-5 h-5 md:w-6 md:h-6 text-brand-caribbeanSea" />
               {hasActiveFilters ? 'Discovery Feed & Matches' : 'Trending Across the Caribbean'}
             </h2>
             <p className="text-xs sm:text-sm md:text-base text-brand-sandstone/70 mt-1">
               {hasActiveFilters
-                ? `Showing real-time matches for ${[selectedVibeObj?.name, selectedCountryObj?.name, hub, query ? `"${query}"` : null].filter(Boolean).join(' • ')}`
-                : 'Curated cultural updates, top creators, events, and diaspora communities.'}
+                ? `Showing real-time matches for ${[selectedVibeObj?.name, selectedGeographyObj?.name, selectedHubObj?.capital || hub, query ? `"${query}"` : null].filter(Boolean).join(' • ')}`
+                : 'Real cultural discussions, top creators, events, communities, and artisan commerce.'}
             </p>
           </div>
 
@@ -421,11 +565,14 @@ export default function ExploreDiscoveryClient({
           <div className="flex items-center gap-1.5 md:gap-2 overflow-x-auto pb-1 scrollbar-none">
             {[
               { id: 'all', label: `All (${initialResult.totalMatches})` },
-              { id: 'posts', label: `Feed (${initialResult.posts.length})` },
-              { id: 'creators', label: `Creators (${initialResult.creators.length})` },
-              { id: 'events', label: `Events (${initialResult.events.length})` },
-              { id: 'communities', label: `Hubs (${initialResult.communities.length})` },
-              { id: 'products', label: `Shop (${initialResult.products.length})` },
+              { id: 'posts', label: `Feed (${counts.posts})` },
+              { id: 'creators', label: `Creators (${counts.creators})` },
+              { id: 'events', label: `Events (${counts.events})` },
+              { id: 'communities', label: `Guilds (${counts.communities})` },
+              { id: 'businesses', label: `Businesses (${counts.businesses})` },
+              { id: 'products', label: `Shop (${counts.products})` },
+              { id: 'reels', label: `Reels (${counts.reels})` },
+              { id: 'podcasts', label: `Podcasts (${counts.podcasts})` },
             ].map((t) => (
               <button
                 key={t.id}
@@ -443,9 +590,7 @@ export default function ExploreDiscoveryClient({
           </div>
         </div>
 
-        {/* ── Tab Content Rendering ────────────────────────────────────────── */}
-
-        {/* Empty State */}
+        {/* ── Empty State ── */}
         {initialResult.totalMatches === 0 && (
           <div className="surface-card rounded-3xl p-8 sm:p-12 text-center space-y-4 max-w-xl mx-auto border border-white/10">
             <Compass className="w-12 h-12 md:w-14 md:h-14 text-brand-caribbeanSea/80 mx-auto animate-pulse" />
@@ -459,28 +604,28 @@ export default function ExploreDiscoveryClient({
               <button
                 type="button"
                 onClick={() => handleVibeClick('music')}
-                className="px-4 md:px-5 py-2 md:py-2.5 rounded-xl bg-purple-500/20 text-purple-200 text-xs md:text-sm font-bold border border-purple-500/40 hover:bg-purple-500/30 min-h-[38px] md:min-h-[42px]"
+                className="px-4 md:px-5 py-2 md:py-2.5 rounded-xl bg-purple-500/20 text-purple-200 text-xs md:text-sm font-bold border border-purple-500/40 hover:bg-purple-500/30 min-h-[38px]"
               >
                 🎵 Soca &amp; Reggae
               </button>
               <button
                 type="button"
                 onClick={() => handleVibeClick('carnival')}
-                className="px-4 md:px-5 py-2 md:py-2.5 rounded-xl bg-rose-500/20 text-rose-200 text-xs md:text-sm font-bold border border-rose-500/40 hover:bg-rose-500/30 min-h-[38px] md:min-h-[42px]"
+                className="px-4 md:px-5 py-2 md:py-2.5 rounded-xl bg-rose-500/20 text-rose-200 text-xs md:text-sm font-bold border border-rose-500/40 hover:bg-rose-500/30 min-h-[38px]"
               >
                 🎭 Carnival &amp; Fetes
               </button>
               <button
                 type="button"
                 onClick={() => handleVibeClick('food')}
-                className="px-4 md:px-5 py-2 md:py-2.5 rounded-xl bg-amber-500/20 text-amber-200 text-xs md:text-sm font-bold border border-amber-500/40 hover:bg-amber-500/30 min-h-[38px] md:min-h-[42px]"
+                className="px-4 md:px-5 py-2 md:py-2.5 rounded-xl bg-amber-500/20 text-amber-200 text-xs md:text-sm font-bold border border-amber-500/40 hover:bg-amber-500/30 min-h-[38px]"
               >
                 🍛 Food &amp; Rum
               </button>
               <button
                 type="button"
                 onClick={clearAllFilters}
-                className="px-4 md:px-5 py-2 md:py-2.5 rounded-xl bg-white/10 text-white text-xs md:text-sm font-bold border border-white/15 hover:bg-white/15 min-h-[38px] md:min-h-[42px]"
+                className="px-4 md:px-5 py-2 md:py-2.5 rounded-xl bg-white/10 text-white text-xs md:text-sm font-bold border border-white/15 hover:bg-white/15 min-h-[38px]"
               >
                 Reset All Filters
               </button>
@@ -488,7 +633,7 @@ export default function ExploreDiscoveryClient({
           </div>
         )}
 
-        {/* Feed Posts */}
+        {/* ── Feed Posts ── */}
         {(activeTab === 'all' || activeTab === 'posts') && initialResult.posts.length > 0 && (
           <div className="space-y-4">
             <h3 className="text-xs md:text-sm font-black uppercase tracking-wider text-brand-caribbeanSea flex items-center gap-2">
@@ -500,23 +645,23 @@ export default function ExploreDiscoveryClient({
                 return (
                   <article
                     key={post.id}
-                    className="surface-card rounded-2xl p-5 sm:p-6 md:p-7 space-y-4 shadow-lg flex flex-col justify-between"
+                    className="surface-card rounded-2xl p-5 sm:p-6 space-y-4 shadow-lg flex flex-col justify-between border border-white/10"
                   >
                     <div className="space-y-3">
                       <div className="flex items-center justify-between">
                         <Link
-                          href={`/profile/${author?.username || 'user'}`}
+                          href={`/profile/${author?.username || 'member'}`}
                           className="flex items-center gap-3 group"
                         >
-                          <div className="w-10 h-10 md:w-11 md:h-11 rounded-xl bg-brand-caribbeanSea text-slate-950 font-black flex items-center justify-center text-xs md:text-sm shadow-md">
-                            {(author?.display_name || 'CO').slice(0, 2).toUpperCase()}
+                          <div className="w-10 h-10 rounded-xl bg-brand-caribbeanSea text-slate-950 font-black flex items-center justify-center text-xs md:text-sm shadow-md">
+                            {(author?.display_name || 'MB').slice(0, 2).toUpperCase()}
                           </div>
                           <div>
                             <h4 className="font-black text-sm md:text-base text-white group-hover:text-brand-caribbeanSea transition-colors flex items-center gap-1.5">
                               {author?.display_name || 'Caribbean Member'}
-                              {author?.is_verified && <CheckCircle className="w-3.5 h-3.5 md:w-4 md:h-4 text-brand-caribbeanSea" />}
+                              {author?.is_verified && <CheckCircle className="w-3.5 h-3.5 text-brand-caribbeanSea" />}
                             </h4>
-                            <span className="text-xs md:text-sm text-brand-sandstone/60">@{author?.username || 'user'}</span>
+                            <span className="text-xs md:text-sm text-brand-sandstone/60">@{author?.username || 'member'}</span>
                           </div>
                         </Link>
                         <span className="text-xs md:text-sm text-brand-sandstone/50">
@@ -524,21 +669,21 @@ export default function ExploreDiscoveryClient({
                         </span>
                       </div>
 
-                      <p className="text-xs sm:text-sm md:text-base text-brand-sandstone/90 leading-relaxed md:leading-[1.6] line-clamp-4 whitespace-pre-wrap">
+                      <p className="text-xs sm:text-sm md:text-base text-brand-sandstone/90 leading-relaxed line-clamp-4 whitespace-pre-wrap">
                         {post.content}
                       </p>
                     </div>
 
                     <div className="pt-3 border-t border-white/10 flex items-center justify-between text-xs md:text-sm text-brand-sandstone/70">
                       <span className="flex items-center gap-1.5">
-                        <Heart className="w-4 h-4 md:w-4.5 md:h-4.5 text-rose-400" /> {post.likes_count ?? 0}
+                        <Heart className="w-4 h-4 text-rose-400" /> {post.likes_count ?? 0}
                       </span>
                       <span className="flex items-center gap-1.5">
-                        <MessageCircle className="w-4 h-4 md:w-4.5 md:h-4.5 text-brand-caribbeanSea" /> {post.comments_count ?? 0}
+                        <MessageCircle className="w-4 h-4 text-brand-caribbeanSea" /> {post.comments_count ?? 0}
                       </span>
                       <Link
                         href="/"
-                        className="text-brand-caribbeanSea hover:underline text-xs md:text-sm font-black min-h-[38px] md:min-h-[42px] flex items-center"
+                        className="text-brand-caribbeanSea hover:underline text-xs md:text-sm font-black flex items-center"
                       >
                         View in Feed →
                       </Link>
@@ -550,31 +695,31 @@ export default function ExploreDiscoveryClient({
           </div>
         )}
 
-        {/* Creators & Profiles */}
+        {/* ── Creators & Profiles ── */}
         {(activeTab === 'all' || activeTab === 'creators') && initialResult.creators.length > 0 && (
           <div className="space-y-4">
             <h3 className="text-xs md:text-sm font-black uppercase tracking-wider text-brand-sunriseCoral flex items-center gap-2">
               <Users className="w-3.5 h-3.5 md:w-4 md:h-4" /> Featured Creators &amp; Leaders
             </h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 3xl:grid-cols-5 4xl:grid-cols-6 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 3xl:grid-cols-5 gap-4">
               {initialResult.creators.map((c) => (
                 <div
                   key={c.id}
-                  className="surface-card surface-card-interactive rounded-2xl p-5 md:p-6 flex flex-col justify-between space-y-4 shadow-md group"
+                  className="surface-card surface-card-interactive rounded-2xl p-5 flex flex-col justify-between space-y-4 shadow-md group border border-white/10"
                 >
                   <div className="flex items-start gap-3">
-                    <div className="w-12 h-12 md:w-13 md:h-13 rounded-2xl bg-brand-sunriseCoral text-slate-950 font-black flex items-center justify-center text-sm md:text-base shadow-md flex-shrink-0">
+                    <div className="w-12 h-12 rounded-2xl bg-brand-sunriseCoral text-slate-950 font-black flex items-center justify-center text-sm md:text-base shadow-md flex-shrink-0">
                       {(c.display_name || 'CR').slice(0, 2).toUpperCase()}
                     </div>
                     <div className="min-w-0 flex-1">
                       <h4 className="font-black text-sm md:text-base text-white truncate group-hover:text-brand-sunriseCoral transition-colors flex items-center gap-1.5">
                         {c.display_name}
-                        {c.is_verified && <CheckCircle className="w-3.5 h-3.5 md:w-4 md:h-4 text-brand-caribbeanSea" />}
+                        {c.is_verified && <CheckCircle className="w-3.5 h-3.5 text-brand-caribbeanSea" />}
                       </h4>
                       <p className="text-xs md:text-sm text-brand-sandstone/70 truncate">@{c.username}</p>
-                      {c.origin_country_iso && (
+                      {(c.island || c.country) && (
                         <span className="text-[10px] md:text-xs font-mono font-black text-brand-goldenHour bg-white/10 px-2 py-0.5 rounded mt-1 inline-block">
-                          {c.origin_country_iso}
+                          {c.island || c.country}
                         </span>
                       )}
                     </div>
@@ -587,7 +732,7 @@ export default function ExploreDiscoveryClient({
                   <div className="pt-3 border-t border-white/10">
                     <Link
                       href={`/profile/${c.username}`}
-                      className="w-full text-center bg-brand-sunriseCoral hover:brightness-110 text-slate-950 font-black py-2 md:py-2.5 rounded-xl text-xs md:text-sm transition-all shadow-sm block min-h-[38px] md:min-h-[42px] flex items-center justify-center"
+                      className="w-full text-center bg-brand-sunriseCoral hover:brightness-110 text-slate-950 font-black py-2 rounded-xl text-xs md:text-sm transition-all block min-h-[38px] flex items-center justify-center"
                     >
                       View Profile
                     </Link>
@@ -598,33 +743,33 @@ export default function ExploreDiscoveryClient({
           </div>
         )}
 
-        {/* Events */}
+        {/* ── Events ── */}
         {(activeTab === 'all' || activeTab === 'events') && initialResult.events.length > 0 && (
           <div className="space-y-4">
             <h3 className="text-xs md:text-sm font-black uppercase tracking-wider text-yellow-400 flex items-center gap-2">
               <Calendar className="w-3.5 h-3.5 md:w-4 md:h-4" /> Cultural Events &amp; Fetes
             </h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 3xl:grid-cols-4 4xl:grid-cols-5 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
               {initialResult.events.map((evt) => (
                 <div
                   key={evt.id}
-                  className="surface-card surface-card-interactive rounded-2xl p-5 sm:p-6 md:p-7 space-y-4 flex flex-col justify-between shadow-lg"
+                  className="surface-card surface-card-interactive rounded-2xl p-5 space-y-4 flex flex-col justify-between shadow-lg border border-white/10"
                 >
                   <div className="space-y-2.5">
-                    <span className="text-[10px] md:text-xs font-black px-2.5 md:px-3 py-1 md:py-1.5 rounded-full bg-yellow-500/15 text-yellow-300 border border-yellow-500/30 uppercase tracking-wider">
+                    <span className="text-[10px] md:text-xs font-black px-2.5 py-1 rounded-full bg-yellow-500/15 text-yellow-300 border border-yellow-500/30 uppercase tracking-wider">
                       {evt.event_kind}
                     </span>
-                    <h4 className="font-black text-base sm:text-lg md:text-xl text-white leading-snug">{evt.title}</h4>
+                    <h4 className="font-black text-base md:text-lg text-white leading-snug">{evt.title}</h4>
                     {evt.description && (
-                      <p className="text-xs sm:text-sm md:text-[15px] text-brand-sandstone/85 line-clamp-2 leading-relaxed md:leading-[1.6]">{evt.description}</p>
+                      <p className="text-xs md:text-sm text-brand-sandstone/85 line-clamp-2 leading-relaxed">{evt.description}</p>
                     )}
                     <div className="text-xs md:text-sm text-brand-sandstone/70 space-y-1.5 pt-1">
                       <p className="flex items-center gap-2">
-                        <Clock className="w-3.5 h-3.5 md:w-4 md:h-4 text-yellow-400" />
+                        <Clock className="w-3.5 h-3.5 text-yellow-400" />
                         <span>{new Date(evt.starts_at).toLocaleDateString()}</span>
                       </p>
                       <p className="flex items-center gap-2">
-                        <MapPin className="w-3.5 h-3.5 md:w-4 md:h-4 text-brand-caribbeanSea" />
+                        <MapPin className="w-3.5 h-3.5 text-brand-caribbeanSea" />
                         <span>{evt.venue || evt.cities?.name || 'Caribbean'}</span>
                       </p>
                     </div>
@@ -633,7 +778,7 @@ export default function ExploreDiscoveryClient({
                   <div className="pt-4 border-t border-white/10">
                     <Link
                       href="/events"
-                      className="w-full text-center bg-yellow-400 hover:brightness-110 text-slate-950 font-black py-2.5 md:py-3 rounded-xl text-xs sm:text-sm md:text-base transition-all shadow-md shadow-yellow-500/20 block min-h-[44px] md:min-h-[46px] flex items-center justify-center"
+                      className="w-full text-center bg-yellow-400 hover:brightness-110 text-slate-950 font-black py-2.5 rounded-xl text-xs md:text-sm transition-all shadow-md shadow-yellow-500/20 block min-h-[42px] flex items-center justify-center"
                     >
                       Get Tickets / RSVP →
                     </Link>
@@ -644,32 +789,32 @@ export default function ExploreDiscoveryClient({
           </div>
         )}
 
-        {/* Communities */}
+        {/* ── Communities ── */}
         {(activeTab === 'all' || activeTab === 'communities') && initialResult.communities.length > 0 && (
           <div className="space-y-4">
             <h3 className="text-xs md:text-sm font-black uppercase tracking-wider text-cyan-400 flex items-center gap-2">
               <Globe className="w-3.5 h-3.5 md:w-4 md:h-4" /> Diaspora Hubs &amp; Communities
             </h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 3xl:grid-cols-4 4xl:grid-cols-5 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
               {initialResult.communities.map((comm) => (
                 <div
                   key={comm.id}
-                  className="surface-card surface-card-interactive rounded-2xl p-5 sm:p-6 md:p-7 space-y-4 flex flex-col justify-between shadow-lg"
+                  className="surface-card surface-card-interactive rounded-2xl p-5 space-y-4 flex flex-col justify-between shadow-lg border border-white/10"
                 >
                   <div className="space-y-2.5">
-                    <h4 className="font-black text-base sm:text-lg md:text-xl text-white leading-snug">{comm.name}</h4>
+                    <h4 className="font-black text-base md:text-lg text-white leading-snug">{comm.name}</h4>
                     {comm.description && (
-                      <p className="text-xs sm:text-sm md:text-[15px] text-brand-sandstone/85 line-clamp-2 leading-relaxed md:leading-[1.6]">{comm.description}</p>
+                      <p className="text-xs md:text-sm text-brand-sandstone/85 line-clamp-2 leading-relaxed">{comm.description}</p>
                     )}
                     <span className="text-xs md:text-sm text-brand-sandstone/70 block">
-                      {comm.member_count ?? 1200} Active Members
+                      {comm.member_count ?? 0} Active Members
                     </span>
                   </div>
 
                   <div className="pt-4 border-t border-white/10">
                     <Link
                       href={`/communities/${comm.slug || comm.id}`}
-                      className="w-full text-center bg-cyan-400 hover:brightness-110 text-slate-950 font-black py-2.5 md:py-3 rounded-xl text-xs sm:text-sm md:text-base transition-all shadow-md shadow-cyan-500/20 block min-h-[44px] md:min-h-[46px] flex items-center justify-center"
+                      className="w-full text-center bg-cyan-400 hover:brightness-110 text-slate-950 font-black py-2.5 rounded-xl text-xs md:text-sm transition-all shadow-md shadow-cyan-500/20 block min-h-[42px] flex items-center justify-center"
                     >
                       Join Community Guild →
                     </Link>
@@ -680,27 +825,79 @@ export default function ExploreDiscoveryClient({
           </div>
         )}
 
-        {/* Products */}
+        {/* ── Businesses ── */}
+        {(activeTab === 'all' || activeTab === 'businesses') && initialResult.businesses.length > 0 && (
+          <div className="space-y-4">
+            <h3 className="text-xs md:text-sm font-black uppercase tracking-wider text-emerald-400 flex items-center gap-2">
+              <Building2 className="w-3.5 h-3.5 md:w-4 md:h-4" /> Verified Caribbean Businesses
+            </h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+              {initialResult.businesses.map((b) => (
+                <div
+                  key={b.id}
+                  className="surface-card surface-card-interactive rounded-2xl p-5 space-y-3 flex flex-col justify-between shadow-lg border border-white/10"
+                >
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 uppercase">
+                        {b.category}
+                      </span>
+                      {b.is_verified && (
+                        <span className="text-[10px] font-bold text-brand-caribbeanSea flex items-center gap-1">
+                          <CheckCircle className="w-3 h-3" /> Verified
+                        </span>
+                      )}
+                    </div>
+                    <h4 className="font-black text-base text-white">{b.name}</h4>
+                    {b.description && (
+                      <p className="text-xs text-brand-sandstone/85 line-clamp-2">{b.description}</p>
+                    )}
+                  </div>
+
+                  <div className="pt-3 border-t border-white/10 flex items-center justify-between text-xs text-brand-sandstone/70">
+                    {b.website ? (
+                      <a
+                        href={b.website.startsWith('http') ? b.website : `https://${b.website}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-brand-caribbeanSea hover:underline inline-flex items-center gap-1 font-bold"
+                      >
+                        Website <ExternalLink className="w-3 h-3" />
+                      </a>
+                    ) : (
+                      <span>Local Enterprise</span>
+                    )}
+                    <Link href={`/pages/${b.slug}`} className="text-white hover:underline font-bold">
+                      View Page →
+                    </Link>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* ── Products & Marketplace ── */}
         {(activeTab === 'all' || activeTab === 'products') && initialResult.products.length > 0 && (
           <div className="space-y-4">
             <h3 className="text-xs md:text-sm font-black uppercase tracking-wider text-orange-400 flex items-center gap-2">
               <ShoppingBag className="w-3.5 h-3.5 md:w-4 md:h-4" /> Marketplace &amp; Artisan Craft
             </h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 3xl:grid-cols-5 4xl:grid-cols-6 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
               {initialResult.products.map((prod) => (
                 <div
                   key={prod.id}
-                  className="surface-card surface-card-interactive rounded-2xl p-5 sm:p-6 md:p-7 space-y-4 flex flex-col justify-between shadow-lg"
+                  className="surface-card surface-card-interactive rounded-2xl p-5 space-y-4 flex flex-col justify-between shadow-lg border border-white/10"
                 >
                   <div className="space-y-2.5">
-                    <span className="text-[10px] md:text-xs font-black px-2.5 md:px-3 py-1 md:py-1.5 rounded-full bg-orange-500/15 text-orange-300 border border-orange-500/30 uppercase tracking-wider">
+                    <span className="text-[10px] md:text-xs font-black px-2.5 py-1 rounded-full bg-orange-500/15 text-orange-300 border border-orange-500/30 uppercase tracking-wider">
                       {prod.product_kind}
                     </span>
-                    <h4 className="font-black text-base sm:text-lg md:text-xl text-white leading-snug">{prod.title}</h4>
+                    <h4 className="font-black text-base text-white leading-snug">{prod.title}</h4>
                     {prod.description && (
-                      <p className="text-xs sm:text-sm md:text-[15px] text-brand-sandstone/85 line-clamp-2 leading-relaxed md:leading-[1.6]">{prod.description}</p>
+                      <p className="text-xs md:text-sm text-brand-sandstone/85 line-clamp-2 leading-relaxed">{prod.description}</p>
                     )}
-                    <p className="text-lg sm:text-xl md:text-2xl font-black text-brand-goldenHour">
+                    <p className="text-lg md:text-xl font-black text-brand-goldenHour">
                       ${(prod.price_minor / 100).toFixed(2)} USD
                     </p>
                   </div>
@@ -708,12 +905,46 @@ export default function ExploreDiscoveryClient({
                   <div className="pt-4 border-t border-white/10">
                     <Link
                       href="/marketplace"
-                      className="w-full text-center bg-orange-400 hover:brightness-110 text-slate-950 font-black py-2.5 md:py-3 rounded-xl text-xs sm:text-sm md:text-base transition-all shadow-md shadow-orange-500/20 block min-h-[44px] md:min-h-[46px] flex items-center justify-center"
+                      className="w-full text-center bg-orange-400 hover:brightness-110 text-slate-950 font-black py-2.5 rounded-xl text-xs md:text-sm transition-all shadow-md shadow-orange-500/20 block min-h-[42px] flex items-center justify-center"
                     >
                       Order with Tukubi Escrow →
                     </Link>
                   </div>
                 </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* ── Reels ── */}
+        {(activeTab === 'all' || activeTab === 'reels') && initialResult.reels.length > 0 && (
+          <div className="space-y-4">
+            <h3 className="text-xs md:text-sm font-black uppercase tracking-wider text-rose-400 flex items-center gap-2">
+              <Tv className="w-3.5 h-3.5 md:w-4 md:h-4" /> Reels &amp; Video Shorts
+            </h3>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+              {initialResult.reels.map((reel) => (
+                <Link
+                  key={reel.id}
+                  href="/reels"
+                  className="surface-card surface-card-interactive rounded-2xl p-4 space-y-2 block border border-white/10 group"
+                >
+                  <div className="aspect-[9/16] bg-slate-950 rounded-xl overflow-hidden relative flex items-center justify-center border border-white/5">
+                    {reel.thumbnail_path ? (
+                      <img
+                        src={reel.thumbnail_path}
+                        alt={reel.title}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                      />
+                    ) : (
+                      <Tv className="w-8 h-8 text-brand-sandstone/40" />
+                    )}
+                    <span className="absolute bottom-2 left-2 text-[10px] font-bold bg-slate-950/80 px-2 py-0.5 rounded text-white">
+                      {reel.view_count ?? 0} views
+                    </span>
+                  </div>
+                  <h4 className="font-bold text-xs text-white truncate">{reel.title}</h4>
+                </Link>
               ))}
             </div>
           </div>

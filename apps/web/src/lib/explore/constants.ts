@@ -1,3 +1,5 @@
+import type { CanonicalGeography } from './canonical-geography';
+
 export interface VibeCategory {
   id: string;
   name: string;
@@ -18,14 +20,30 @@ export const VIBE_CATEGORIES: VibeCategory[] = [
   { id: 'travel', name: 'Islands & Resorts', icon: '🌴', desc: 'Hidden beaches, eco-resorts & island heritage', color: 'from-teal-500/20 to-teal-950/40 border-teal-500/30', tags: ['travel', 'islands', 'beach', 'resort', 'tourism', 'nature'] },
 ];
 
+export interface ExploreCounts {
+  posts: number;
+  creators: number;
+  events: number;
+  communities: number;
+  products: number;
+  businesses: number;
+  reels: number;
+  podcasts: number;
+}
+
 export interface ExploreQueryResult {
   posts: any[];
   creators: any[];
   events: any[];
   communities: any[];
   products: any[];
+  businesses: any[];
+  reels: any[];
+  podcasts: any[];
   selectedVibe: VibeCategory | null;
   selectedCountry: any | null;
   selectedHub: any | null;
+  selectedGeography: CanonicalGeography | null;
+  counts: ExploreCounts;
   totalMatches: number;
 }

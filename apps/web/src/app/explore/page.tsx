@@ -1,6 +1,7 @@
 import React from 'react';
 import { fetchExploreDataAction, fetchTrendingSignalsAction } from '../../lib/explore/actions';
 import ExploreDiscoveryClient from '../../components/explore-discovery-client';
+import { resolveGeography } from '../../lib/explore/canonical-geography';
 
 export const dynamic = 'force-dynamic';
 
@@ -8,18 +9,30 @@ export default async function ExplorePage({
   searchParams,
 }: {
   searchParams?: Promise<{
-    vibe?: string;
+    geo?: string;
     country?: string;
+    vibe?: string;
     hub?: string;
     q?: string;
+    type?: string;
   }>;
 }) {
   const resolvedParams = searchParams ? await searchParams : {};
-  const { vibe, country, hub, q } = resolvedParams;
+  const { geo, country, vibe, hub, q, type } = resolvedParams;
+  const targetGeo = geo || country;
+
+  const geography = targetGeo ? resolveGeography(targetGeo) : null;
 
   const [exploreData, trendingSignals] = await Promise.all([
-    fetchExploreDataAction({ vibe, country, hub, q }),
-    fetchTrendingSignalsAction(),
+    fetchExploreDataAction({
+      geo: targetGeo,
+      country,
+      vibe,
+      hub,
+      q,
+      contentType: type,
+    }),
+    fetchTrendingSignalsAction(geography?.iso || null),
   ]);
 
   return (
@@ -28,11 +41,10 @@ export default async function ExplorePage({
         initialResult={exploreData}
         trendingSignals={trendingSignals}
         activeVibeKey={vibe}
-        activeCountryKey={country}
+        activeCountryKey={targetGeo}
         activeHubKey={hub}
         activeQueryText={q}
       />
     </div>
   );
 }
-
