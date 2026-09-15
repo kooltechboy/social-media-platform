@@ -262,3 +262,85 @@ export interface FinancialDispute {
   updatedAt: string;
 }
 
+export type TransactionType =
+  | 'TUKUBI_SUBSCRIPTION'
+  | 'CREATOR_SUBSCRIPTION'
+  | 'MARKETPLACE_PURCHASE'
+  | 'CREATOR_TIP'
+  | 'DIGITAL_PRODUCT'
+  | 'PHYSICAL_PRODUCT'
+  | 'EVENT_PAYMENT'
+  | 'AD_PAYMENT'
+  | 'BOOST_PAYMENT'
+  | 'PLATFORM_FEE'
+  | 'PAYOUT'
+  | 'REFUND'
+  | 'CHARGEBACK'
+  | 'ADJUSTMENT';
+
+export type PaymentTransactionState =
+  | 'PENDING'
+  | 'PROCESSING'
+  | 'COMPLETED'
+  | 'FAILED'
+  | 'CANCELLED'
+  | 'REFUNDED'
+  | 'PARTIALLY_REFUNDED'
+  | 'DISPUTED';
+
+export interface PaymentTransactionRecord {
+  id: string;
+  idempotencyKey: string;
+  transactionType: TransactionType;
+  status: PaymentTransactionState;
+  payerId?: string | null;
+  recipientId?: string | null;
+  creatorId?: string | null;
+  merchantId?: string | null;
+  orderId?: string | null;
+  paymentIntentId?: string | null;
+  provider: ProviderId | string;
+  providerTransactionId?: string | null;
+  grossAmountMinor: number;
+  platformFeeMinor: number;
+  processingFeeMinor: number;
+  taxMinor: number;
+  netAmountMinor: number;
+  currency: string;
+  settledAt?: string | null;
+  refundedAt?: string | null;
+  metadata?: Record<string, unknown>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreatorSubscriptionPlan {
+  id: string;
+  creatorId: string;
+  name: string;
+  description?: string | null;
+  priceMinor: number;
+  currency: string;
+  billingInterval: 'monthly' | 'annual';
+  benefits: string[];
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreatorSubscription {
+  id: string;
+  creatorAccountId: string;
+  creatorSubscriptionPlanId?: string | null;
+  subscriberId: string;
+  tier: string;
+  priceMinor: number;
+  currency: string;
+  billingSource: string;
+  paypalSubscriptionId?: string | null;
+  status: 'active' | 'cancelled' | 'expired' | 'grace';
+  currentPeriodEnd: string;
+  createdAt: string;
+}
+
+

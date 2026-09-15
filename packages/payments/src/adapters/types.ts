@@ -39,13 +39,55 @@ export interface PSPRefundResult {
   errorMessage?: string;
 }
 
+export interface PSPSubscriptionParams {
+  planId: string;
+  subscriberId: string;
+  subscriberEmail?: string;
+  returnUrl?: string;
+  cancelUrl?: string;
+  customId?: string;
+}
+
+export interface PSPSubscriptionResult {
+  success: boolean;
+  providerSubscriptionId: string;
+  providerName: string;
+  status: 'active' | 'pending' | 'suspended' | 'cancelled' | 'error';
+  approvalUrl?: string;
+  errorMessage?: string;
+  rawResponse?: unknown;
+}
+
+export interface PSPPayoutParams {
+  recipientId: string;
+  recipientEmail?: string;
+  amountMinor: number;
+  currency: string;
+  idempotencyKey: string;
+  note?: string;
+}
+
+export interface PSPPayoutResult {
+  success: boolean;
+  providerPayoutId: string;
+  providerName: string;
+  status: 'succeeded' | 'pending' | 'failed';
+  errorMessage?: string;
+  rawResponse?: unknown;
+}
+
 export interface PSPAdapter {
   readonly providerName: string;
   readonly isConfigured: boolean;
 
   charge(params: PSPChargeParams): Promise<PSPChargeResult>;
   refund(params: PSPRefundParams): Promise<PSPRefundResult>;
+  createSubscription?(params: PSPSubscriptionParams): Promise<PSPSubscriptionResult>;
+  cancelSubscription?(subscriptionId: string, reason?: string): Promise<{ success: boolean; errorMessage?: string }>;
+  getSubscription?(subscriptionId: string): Promise<{ status: string; currentPeriodEnd?: string; raw?: unknown }>;
+  createPayout?(params: PSPPayoutParams): Promise<PSPPayoutResult>;
   verifyWebhook(payload: string, signature: any, secret?: string): boolean | Promise<boolean>;
 }
 
-export type WebhookVerifier = (payload: string, signature: string, secret?: string) => boolean | Promise<boolean>;
+export type WebhookVerifier = (payload: string, signature: any, secret?: string) => boolean | Promise<boolean>;
+

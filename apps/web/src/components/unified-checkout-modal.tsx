@@ -9,14 +9,11 @@ import {
   Lock,
   Loader2,
   ArrowRight,
-  Building2,
   Globe,
   Calendar,
   AlertCircle,
 } from 'lucide-react';
 import { Money, isMarketplaceCommerceActive } from '@caribbean/payments';
-import { createOrderAction, type MarketplaceActionState } from '../lib/marketplace/actions';
-import { ComingSoonButton } from './ui/coming-soon-badge';
 
 export interface UnifiedCheckoutModalProps {
   isOpen: boolean;
@@ -33,7 +30,7 @@ export interface UnifiedCheckoutModalProps {
   creatorReferralCode?: string;
 }
 
-type PaymentMethodType = 'paypal' | 'card' | 'wipay' | 'cxpay' | 'apple_pay' | 'google_pay';
+type PaymentMethodType = 'paypal' | 'card';
 
 export default function UnifiedCheckoutModal({
   isOpen,
@@ -50,7 +47,8 @@ export default function UnifiedCheckoutModal({
     country: '',
   });
 
-  const [state, setState] = useState<MarketplaceActionState>({ error: null, success: null });
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [redirecting, setRedirecting] = useState(false);
   const [isPending, startTransition] = useTransition();
 
   if (!isOpen) return null;
@@ -70,29 +68,53 @@ export default function UnifiedCheckoutModal({
 
   function handleCompletePayment(e: React.FormEvent) {
     e.preventDefault();
+    setErrorMessage(null);
+
     if (!canTransact) {
-      setState({
-        error:
-          'Marketplace transactions officially begin September 30, 2026. You can explore stores and products now. Purchasing will be available when marketplace commerce launches.',
-        success: null,
-      });
+      setErrorMessage(
+        'Marketplace transactions officially begin September 30, 2026. You can explore stores and products now. Purchasing will be available when marketplace commerce launches.'
+      );
       return;
     }
 
-    const formData = new FormData();
-    formData.set('productId', product.id);
-    formData.set('quantity', String(quantity));
-    formData.set('paymentProvider', selectedMethod);
-    if (creatorReferralCode) {
-      formData.set('creatorReferralCode', creatorReferralCode);
-    }
-    if (product.productKind === 'physical') {
-      formData.set('shippingAddress', JSON.stringify(shippingAddress));
-    }
-
     startTransition(async () => {
-      const res = await createOrderAction({ error: null, success: null }, formData);
-      setState(res);
+      try {
+        const response = await fetch('/api/payments/checkout', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            productId: product.id,
+            quantity,
+            provider: selectedMethod,
+            creatorReferralCode,
+            shippingAddress: product.productKind === 'physical' ? shippingAddress : undefined,
+            returnUrl: `${window.location.origin}/financial-center/transactions?status=success`,
+            cancelUrl: `${window.location.origin}/marketplace?status=cancelled`,
+          }),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok || !data.success) {
+          setErrorMessage(data.error || 'Payment initiation failed. Please try again.');
+          return;
+        }
+
+        if (data.redirectUrl) {
+          setRedirecting(true);
+          window.location.href = data.redirectUrl;
+          return;
+        }
+
+        if (data.status === 'succeeded') {
+          window.location.href = `/financial-center/transactions?status=success&intentId=${data.intentId}`;
+          return;
+        }
+
+        setErrorMessage('Payment requires further authorization with the provider.');
+      } catch (err: any) {
+        setErrorMessage(err?.message || 'Network error initiating checkout. Please try again.');
+      }
     });
   }
 
@@ -102,43 +124,21 @@ export default function UnifiedCheckoutModal({
         <button
           type="button"
           onClick={onClose}
-          className="absolute top-4 right-4 p-1.5 rounded-full text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
+          disabled={redirecting || isPending}
+          className="absolute top-4 right-4 p-1.5 rounded-full text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer disabled:opacity-40"
         >
           <X className="w-5 h-5" />
         </button>
 
-        {state.orderId ? (
-          <div className="py-8 text-center space-y-4 animate-fadeIn">
-            <div className="w-16 h-16 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center justify-center mx-auto shadow-lg shadow-emerald-500/20">
-              <CheckCircle className="w-8 h-8" />
-            </div>
+        {redirecting ? (
+          <div className="py-12 text-center space-y-4 animate-fadeIn">
+            <Loader2 className="w-10 h-10 text-blue-400 animate-spin mx-auto" />
             <div className="space-y-1">
-              <h3 className="text-2xl font-black text-white">Order Placed Successfully!</h3>
-              <p className="text-xs text-slate-300">
-                Order <strong className="text-brand-sunriseCoral">#{state.orderId.slice(0, 8)}</strong> placed with TUKUBI buyer protection.
+              <h3 className="text-xl font-bold text-white">Connecting to PayPal...</h3>
+              <p className="text-xs text-slate-300 max-w-xs mx-auto">
+                Redirecting to PayPal for secure transaction authorization. Complete the approval to finalize your order.
               </p>
             </div>
-            <div className="p-4 rounded-2xl bg-slate-900 border border-slate-800 text-xs text-slate-300 space-y-2 text-left">
-              <div className="flex justify-between">
-                <span className="text-slate-400">Item:</span>
-                <span className="font-bold text-white">{product.title}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-slate-400">Total:</span>
-                <span className="font-bold text-emerald-400">{total.format()}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-slate-400">Payment Method:</span>
-                <span className="capitalize font-bold text-brand-goldenHour">{selectedMethod.replace('_', ' ')}</span>
-              </div>
-            </div>
-            <button
-              type="button"
-              onClick={onClose}
-              className="bg-brand-sunriseCoral hover:bg-brand-sunriseCoral/90 text-slate-950 font-black px-6 py-2.5 rounded-2xl text-xs transition-all shadow-md shadow-brand-sunriseCoral/20 cursor-pointer"
-            >
-              Done / Return to Marketplace
-            </button>
           </div>
         ) : (
           <form onSubmit={handleCompletePayment} className="space-y-5">
@@ -156,7 +156,7 @@ export default function UnifiedCheckoutModal({
               <p className="text-xs text-slate-400">Sold by {product.sellerName} • {product.origin || 'Caribbean'}</p>
             </div>
 
-            {/* Pre-launch notification banner (Directive 9, 10, 17) */}
+            {/* Pre-launch notification banner */}
             {!canTransact && (
               <div className="p-4 rounded-2xl bg-orange-500/10 border border-orange-500/30 text-orange-200 text-xs space-y-2">
                 <div className="flex items-center gap-2 font-black text-orange-400 text-sm">
@@ -172,6 +172,13 @@ export default function UnifiedCheckoutModal({
               </div>
             )}
 
+            {errorMessage && (
+              <div className="p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/30 text-xs text-rose-300 flex items-start gap-2">
+                <AlertCircle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
+                <span>{errorMessage}</span>
+              </div>
+            )}
+
             {/* Order Summary Box */}
             <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-3">
               <div className="flex items-center justify-between text-xs">
@@ -180,7 +187,7 @@ export default function UnifiedCheckoutModal({
                   <button
                     type="button"
                     onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                    disabled={!canTransact}
+                    disabled={!canTransact || isPending}
                     className="w-6 h-6 rounded bg-slate-800 text-white font-bold flex items-center justify-center hover:bg-slate-700 cursor-pointer disabled:opacity-50"
                   >
                     -
@@ -189,7 +196,7 @@ export default function UnifiedCheckoutModal({
                   <button
                     type="button"
                     onClick={() => setQuantity(Math.min(10, quantity + 1))}
-                    disabled={!canTransact}
+                    disabled={!canTransact || isPending}
                     className="w-6 h-6 rounded bg-slate-800 text-white font-bold flex items-center justify-center hover:bg-slate-700 cursor-pointer disabled:opacity-50"
                   >
                     +
@@ -219,14 +226,14 @@ export default function UnifiedCheckoutModal({
               </div>
             </div>
 
-            {/* Payment Method Selector */}
+            {/* Payment Method Selector — Only active operational methods */}
             <div className="space-y-3">
               <label className="text-xs font-bold text-slate-200 block">Payment Method Options</label>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                 {/* PayPal (Primary supported payment path) */}
                 <div
-                  onClick={() => setSelectedMethod('paypal')}
+                  onClick={() => !isPending && setSelectedMethod('paypal')}
                   className={`p-3.5 rounded-2xl border transition-all cursor-pointer flex items-center justify-between ${
                     selectedMethod === 'paypal'
                       ? 'bg-slate-800 border-blue-400 text-white shadow-md ring-1 ring-blue-400/50'
@@ -237,7 +244,7 @@ export default function UnifiedCheckoutModal({
                     <Globe className="w-4 h-4 text-blue-400" />
                     <div>
                       <div className="text-xs font-bold">PayPal</div>
-                      <div className="text-[10px] text-slate-400">Primary Payment Path</div>
+                      <div className="text-[10px] text-slate-400">Global diaspora rail</div>
                     </div>
                   </div>
                   <span className="text-[10px] text-blue-400 font-bold bg-blue-500/10 px-2 py-0.5 rounded-full border border-blue-500/30">
@@ -245,9 +252,9 @@ export default function UnifiedCheckoutModal({
                   </span>
                 </div>
 
-                {/* Credit / Debit Card (Stripe) */}
+                {/* Credit / Debit Card */}
                 <div
-                  onClick={() => setSelectedMethod('card')}
+                  onClick={() => !isPending && setSelectedMethod('card')}
                   className={`p-3.5 rounded-2xl border transition-all cursor-pointer flex items-center justify-between ${
                     selectedMethod === 'card'
                       ? 'bg-slate-800 border-brand-sunriseCoral text-white shadow-md ring-1 ring-brand-sunriseCoral/50'
@@ -263,91 +270,87 @@ export default function UnifiedCheckoutModal({
                   </div>
                   <span className="text-[10px] text-emerald-400 font-semibold">Active</span>
                 </div>
-
-                {/* Apple Pay (Coming Soon) */}
-                <div className="p-3.5 rounded-2xl border border-slate-800/60 bg-slate-900/30 text-slate-500 flex items-center justify-between cursor-not-allowed opacity-60">
-                  <div className="flex items-center gap-2.5">
-                    <span className="text-base"></span>
-                    <div>
-                      <div className="text-xs font-bold">Apple Pay</div>
-                      <div className="text-[10px] text-slate-500">Biometric Token</div>
-                    </div>
-                  </div>
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 border border-slate-700">
-                    Coming Soon
-                  </span>
-                </div>
-
-                {/* Google Pay (Coming Soon) */}
-                <div className="p-3.5 rounded-2xl border border-slate-800/60 bg-slate-900/30 text-slate-500 flex items-center justify-between cursor-not-allowed opacity-60">
-                  <div className="flex items-center gap-2.5">
-                    <span className="text-xs font-black text-slate-500">G Pay</span>
-                    <div>
-                      <div className="text-xs font-bold">Google Pay</div>
-                      <div className="text-[10px] text-slate-500">Mobile Wallet</div>
-                    </div>
-                  </div>
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 border border-slate-700">
-                    Coming Soon
-                  </span>
-                </div>
-
-                {/* WiPay (Coming Soon) */}
-                <div className="p-3.5 rounded-2xl border border-slate-800/60 bg-slate-900/30 text-slate-500 flex items-center justify-between cursor-not-allowed opacity-60">
-                  <div className="flex items-center gap-2.5">
-                    <Building2 className="w-4 h-4 text-slate-500" />
-                    <div>
-                      <div className="text-xs font-bold">WiPay Caribbean</div>
-                      <div className="text-[10px] text-slate-500">Localized Island Rails</div>
-                    </div>
-                  </div>
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 border border-slate-700">
-                    Coming Soon
-                  </span>
-                </div>
-
-                {/* CX Pay (Coming Soon) */}
-                <div className="p-3.5 rounded-2xl border border-slate-800/60 bg-slate-900/30 text-slate-500 flex items-center justify-between cursor-not-allowed opacity-60">
-                  <div className="flex items-center gap-2.5">
-                    <Building2 className="w-4 h-4 text-slate-500" />
-                    <div>
-                      <div className="text-xs font-bold">CX Pay Gateway</div>
-                      <div className="text-[10px] text-slate-500">Regional Gateway</div>
-                    </div>
-                  </div>
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 border border-slate-700">
-                    Coming Soon
-                  </span>
-                </div>
               </div>
             </div>
 
-            {state.error && (
-              <div className="p-3 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs font-bold text-center">
-                {state.error}
+            {/* Shipping Address for Physical Goods */}
+            {product.productKind === 'physical' && (
+              <div className="space-y-3 pt-1">
+                <label className="text-xs font-bold text-slate-200 block">Delivery Address (Caribbean &amp; Diaspora)</label>
+                <div className="space-y-2">
+                  <input
+                    type="text"
+                    required
+                    placeholder="Full Name"
+                    value={shippingAddress.fullName}
+                    onChange={(e) => setShippingAddress({ ...shippingAddress, fullName: e.target.value })}
+                    className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-brand-sunriseCoral"
+                  />
+                  <input
+                    type="text"
+                    required
+                    placeholder="Street Address, Apt / Suite"
+                    value={shippingAddress.addressLine}
+                    onChange={(e) => setShippingAddress({ ...shippingAddress, addressLine: e.target.value })}
+                    className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-brand-sunriseCoral"
+                  />
+                  <div className="grid grid-cols-2 gap-2">
+                    <input
+                      type="text"
+                      required
+                      placeholder="City / Parish"
+                      value={shippingAddress.city}
+                      onChange={(e) => setShippingAddress({ ...shippingAddress, city: e.target.value })}
+                      className="bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-brand-sunriseCoral"
+                    />
+                    <input
+                      type="text"
+                      required
+                      placeholder="Country (e.g. Jamaica, Trinidad)"
+                      value={shippingAddress.country}
+                      onChange={(e) => setShippingAddress({ ...shippingAddress, country: e.target.value })}
+                      className="bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-brand-sunriseCoral"
+                    />
+                  </div>
+                </div>
               </div>
             )}
 
-            <div className="p-2.5 rounded-xl bg-slate-900/40 border border-slate-800/80 text-[10px] text-slate-400 flex items-center justify-between">
-              <span className="flex items-center gap-1">
-                <ShieldCheck className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                <span>Escrow Guarantee: <strong>Fulfillment Protected</strong></span>
-              </span>
-              <span className="text-slate-500">Authorized Processor</span>
+            {/* Security Guarantee */}
+            <div className="flex items-center gap-2 text-[11px] text-slate-400 bg-slate-900/40 p-3 rounded-xl border border-slate-800/80">
+              <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
+              <span>TUKUBI Buyer Protection: Double-entry verified financial ledger guarantee.</span>
             </div>
 
-            {canTransact ? (
-              <ComingSoonButton label="Payments Coming Soon" className="w-full" />
-            ) : (
+            {/* Action Buttons */}
+            <div className="flex items-center gap-3 pt-2">
               <button
                 type="button"
                 onClick={onClose}
-                className="w-full bg-slate-800 hover:bg-slate-700 text-orange-400 border border-orange-500/30 font-black py-3 rounded-2xl text-xs flex items-center justify-center gap-2 transition-all cursor-pointer"
+                disabled={isPending}
+                className="flex-1 py-3 px-4 rounded-xl border border-slate-800 text-xs font-bold text-slate-300 hover:bg-slate-800 transition-colors cursor-pointer disabled:opacity-50"
               >
-                <Calendar className="w-4 h-4" />
-                Transactions Begin September 30, 2026 — Close Preview
+                Cancel
               </button>
-            )}
+
+              <button
+                type="submit"
+                disabled={!canTransact || isPending}
+                className="flex-1 py-3 px-4 rounded-xl bg-brand-sunriseCoral hover:bg-brand-sunriseCoral/90 text-slate-950 text-xs font-black flex items-center justify-center gap-2 transition-all shadow-lg shadow-brand-sunriseCoral/20 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isPending ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Authorizing...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>Authorize {total.format()}</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </>
+                )}
+              </button>
+            </div>
           </form>
         )}
       </div>

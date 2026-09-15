@@ -44,7 +44,11 @@ export default function RootLayout({
               <a href="/schedule" className="text-[#FDF2E9]/70 hover:text-[#FF7A59] transition-colors">
                 Schedule
               </a>
+              <a href="/monetization" className="text-[#FDF2E9]/70 hover:text-[#FF7A59] transition-colors">
+                Monetization
+              </a>
             </nav>
+
 
             <div className="flex items-center gap-3">
               <span className="text-xs text-[#00B4D8] bg-[#00B4D8]/10 border border-[#00B4D8]/30 px-2.5 py-1 rounded-full font-mono">

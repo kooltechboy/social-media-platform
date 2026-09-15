@@ -2,8 +2,8 @@ import React from 'react';
 import { applyFees, TIER_PRICES_MINOR } from '@caribbean/creator';
 
 export default function CreatorStudioDashboard() {
-  // Sample production metrics using verified @caribbean/creator fee calculator
-  const grossEarningsMinor = 845000; // $8,450.00
+  // Verified @caribbean/creator initial baseline (Zero Synthetic Financials)
+  const grossEarningsMinor = 0;
   const breakdown = applyFees(grossEarningsMinor);
 
   return (
@@ -18,7 +18,7 @@ export default function CreatorStudioDashboard() {
             Welcome back, Caribbean Creator!
           </h1>
           <p className="text-sm text-[#FDF2E9]/70">
-            Your diaspora audience expanded by <strong className="text-[#00B4D8]">+24.8%</strong> this week across Kingston, Port of Spain, Bridgetown, Miami, and London.
+            Publish authentic Caribbean media, connect with diaspora communities worldwide, and build subscriber patronage.
           </p>
         </div>
       </div>
@@ -30,18 +30,19 @@ export default function CreatorStudioDashboard() {
           <p className="mt-2 text-2xl font-bold text-white font-mono">
             ${(breakdown.netToCreatorMinor / 100).toLocaleString('en-US', { minimumFractionDigits: 2 })}
           </p>
-          <span className="mt-2 inline-flex items-center text-xs font-medium text-emerald-400">
-            ↑ 18.2% vs last month
+          <span className="mt-2 inline-flex items-center text-xs font-medium text-slate-400">
+            Double-entry verified
           </span>
         </div>
 
         <div className="rounded-xl bg-[#1D1429] border border-[#2A1B38] p-5">
           <p className="text-xs font-medium text-[#FDF2E9]/60">Active Subscribers</p>
-          <p className="mt-2 text-2xl font-bold text-white font-mono">1,420</p>
-          <span className="mt-2 inline-flex items-center text-xs font-medium text-[#00B4D8]">
-            Basic ($2.99) • Plus ($4.99) • Pro ($9.99)
-          </span>
+          <p className="mt-2 text-2xl font-bold text-white font-mono">0</p>
+          <a href="/monetization" className="mt-2 inline-flex items-center text-xs font-medium text-[#00B4D8] hover:underline">
+            Manage Fan Tiers →
+          </a>
         </div>
+
 
         <div className="rounded-xl bg-[#1D1429] border border-[#2A1B38] p-5">
           <p className="text-xs font-medium text-[#FDF2E9]/60">Total Media Streams</p>

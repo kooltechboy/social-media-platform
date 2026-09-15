@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { ProviderRegistry, WebhookProcessor, type WebhookEvent } from '@caribbean/payments';
-import { createServiceSupabaseClient } from '../../../../../lib/supabase/server';
+import {
+  ProviderRegistry,
+  WebhookProcessor,
+  TransactionLedgerService,
+  type WebhookEvent,
+} from '@caribbean/payments';
+import { createServiceSupabaseClient } from '@/lib/supabase/server';
 
 export const dynamic = 'force-dynamic';
 
@@ -17,63 +22,236 @@ export async function POST(
 
   const adapter = registry.get(providerId);
   const rawBody = await request.text();
-  const signature = request.headers.get('stripe-signature') || request.headers.get('x-webhook-signature') || '';
 
-  let parsedPayload: Record<string, unknown>;
+  let parsedPayload: Record<string, any>;
   try {
-    parsedPayload = JSON.parse(rawBody) as Record<string, unknown>;
+    parsedPayload = JSON.parse(rawBody);
   } catch {
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
   }
 
-  const eventId = typeof parsedPayload.id === 'string' ? parsedPayload.id : '';
-  const eventType = typeof parsedPayload.type === 'string' ? parsedPayload.type : 'payment.webhook';
+  // Extract event metadata
+  const eventId = String(parsedPayload.id || parsedPayload.event_id || `evt_${Date.now()}`);
+  const eventType = String(parsedPayload.event_type || parsedPayload.type || 'payment.webhook');
+
+  // Convert headers
+  const headerObj: Record<string, string> = {};
+  request.headers.forEach((val, key) => {
+    headerObj[key.toLowerCase()] = val;
+  });
+
   const webhookEvent: WebhookEvent = {
     id: eventId,
     providerId,
     type: eventType,
     payload: rawBody,
-    signature,
+    signature: headerObj['paypal-transmission-sig'] || headerObj['stripe-signature'] || '',
   };
-  const processor = new WebhookProcessor((payload, sig, secret) =>
-    adapter.verifyWebhook(payload, sig, secret), {
-      claim: async (claimedEvent) => {
-        const supabase = await createServiceSupabaseClient();
-        if (!supabase) throw new Error('Webhook persistence unavailable');
+
+  const supabase = await createServiceSupabaseClient();
+  if (!supabase) {
+    return NextResponse.json({ error: 'Database service unavailable' }, { status: 503 });
+  }
+
+  // 1. Enforce Webhook Processor & Idempotency
+  const processor = new WebhookProcessor(
+    async (payload, _sig, _secret) => {
+      return adapter.verifyWebhook(payload, headerObj);
+    },
+    {
+      claim: async (claimed) => {
         const { error } = await supabase.from('payment_webhooks').insert({
-          provider_id: claimedEvent.providerId,
-          event_id: claimedEvent.id,
-          event_type: claimedEvent.type,
+          provider_id: claimed.providerId,
+          event_id: claimed.id,
+          event_type: claimed.type,
           payload: parsedPayload,
           signature_valid: true,
           processing_status: 'received',
         });
-        if (error?.code === '23505') return false;
+        if (error?.code === '23505') return false; // Duplicate event
         if (error) throw error;
         return true;
       },
-    });
+    }
+  );
+
   const outcome = await processor.process(webhookEvent);
 
   if (!outcome.accepted) {
-    return NextResponse.json({ error: outcome.reason }, { status: outcome.reason === 'Webhook persistence unavailable' ? 503 : 400 });
+    if (outcome.duplicate) {
+      // Idempotent 200 return on duplicates per Stripe/PayPal webhooks best practice
+      return NextResponse.json({ received: true, duplicate: true }, { status: 200 });
+    }
+    return NextResponse.json({ error: outcome.reason || 'Webhook verification failed' }, { status: 400 });
   }
 
-  if (providerId === 'paypal') {
-    const supabase = await createServiceSupabaseClient();
-    if (supabase) {
-      const resource = (parsedPayload.resource || {}) as {
-        id?: string;
-        custom_id?: string;
-        invoice_id?: string;
-      };
-      const orderId = resource.custom_id || resource.invoice_id;
-      if (orderId && (eventType === 'PAYMENT.CAPTURE.COMPLETED' || eventType === 'CHECKOUT.ORDER.APPROVED')) {
-        await supabase.from('orders').update({ status: 'paid' }).eq('id', orderId);
-        await supabase.from('payment_intents').update({ status: 'succeeded' }).eq('reference_id', orderId);
+  // 2. Authoritative Event State Machine Processing
+  try {
+    const resource = (parsedPayload.resource || {}) as Record<string, any>;
+    const ledgerService = new TransactionLedgerService();
+
+    if (providerId === 'paypal') {
+      switch (eventType) {
+        case 'PAYMENT.CAPTURE.COMPLETED':
+        case 'CHECKOUT.ORDER.APPROVED': {
+          const customId = resource.custom_id || resource.invoice_id;
+          const captureId = resource.id;
+          const amountMinor = resource.amount?.value ? Math.round(parseFloat(resource.amount.value) * 100) : 0;
+          const currency = resource.amount?.currency_code || 'USD';
+
+          if (customId) {
+            // Find related payment intent
+            const { data: intent } = await supabase
+              .from('payment_intents')
+              .select('*')
+              .or(`id.eq.${customId},idempotency_key.eq.${customId},reference_id.eq.${customId}`)
+              .maybeSingle();
+
+            if (intent) {
+              await supabase
+                .from('payment_intents')
+                .update({ status: 'succeeded', provider_transaction_id: captureId })
+                .eq('id', intent.id);
+
+              // Record in transaction ledger
+              const tx = await ledgerService.recordTransaction(supabase, {
+                idempotencyKey: `wh_${captureId}`,
+                transactionType: intent.product_type === 'digital_subscription'
+                  ? (intent.creator_id ? 'CREATOR_SUBSCRIPTION' : 'TUKUBI_SUBSCRIPTION')
+                  : 'MARKETPLACE_PURCHASE',
+                payerId: intent.payer_id,
+                recipientId: intent.merchant_id || intent.creator_id,
+                creatorId: intent.creator_id,
+                merchantId: intent.merchant_id,
+                orderId: intent.reference_type === 'order' ? intent.reference_id : null,
+                paymentIntentId: intent.id,
+                provider: 'paypal',
+                providerTransactionId: captureId,
+                grossAmountMinor: amountMinor || intent.amount_minor,
+                currency,
+                initialStatus: 'COMPLETED',
+              });
+
+              await ledgerService.settleTransaction(supabase, tx.id, {
+                providerTransactionId: captureId,
+                sellerCategory: intent.creator_id ? 'creator' : 'merchant',
+              });
+
+              if (intent.reference_type === 'order' && intent.reference_id) {
+                await supabase.from('orders').update({ status: 'paid' }).eq('id', intent.reference_id);
+              }
+            }
+          }
+          break;
+        }
+
+        case 'BILLING.SUBSCRIPTION.ACTIVATED': {
+          const subId = resource.id;
+          const customId = resource.custom_id;
+
+          if (customId?.startsWith('tukubi_')) {
+            const parts = customId.split('_');
+            const tierId = parts.slice(1, -1).join('_');
+            const userId = parts[parts.length - 1];
+
+            await supabase
+              .from('commercial_subscriptions')
+              .update({
+                status: 'active',
+                provider_subscription_id: subId,
+                current_period_start: resource.start_time || new Date().toISOString(),
+                current_period_end: resource.billing_info?.next_billing_time || new Date(Date.now() + 30 * 86400000).toISOString(),
+                updated_at: new Date().toISOString(),
+              })
+              .eq('subscriber_id', userId);
+          } else if (subId) {
+            await supabase
+              .from('commercial_subscriptions')
+              .update({ status: 'active', updated_at: new Date().toISOString() })
+              .eq('provider_subscription_id', subId);
+
+            await supabase
+              .from('subscriptions')
+              .update({ status: 'active' })
+              .eq('paypal_subscription_id', subId);
+          }
+          break;
+        }
+
+        case 'BILLING.SUBSCRIPTION.CANCELLED':
+        case 'BILLING.SUBSCRIPTION.SUSPENDED': {
+          const subId = resource.id;
+          if (subId) {
+            await supabase
+              .from('commercial_subscriptions')
+              .update({ status: 'canceled', updated_at: new Date().toISOString() })
+              .eq('provider_subscription_id', subId);
+
+            await supabase
+              .from('subscriptions')
+              .update({ status: 'cancelled' })
+              .eq('paypal_subscription_id', subId);
+          }
+          break;
+        }
+
+        case 'BILLING.SUBSCRIPTION.PAYMENT.FAILED': {
+          const subId = resource.id;
+          if (subId) {
+            await supabase
+              .from('commercial_subscriptions')
+              .update({ status: 'past_due', updated_at: new Date().toISOString() })
+              .eq('provider_subscription_id', subId);
+          }
+          break;
+        }
+
+        case 'PAYMENT.CAPTURE.REFUNDED': {
+          const refundId = resource.id;
+          const originalCaptureId = resource.links?.find((l: any) => l.rel === 'up')?.href?.split('/').pop();
+          const amountMinor = resource.amount?.value ? Math.round(parseFloat(resource.amount.value) * 100) : 0;
+
+          if (originalCaptureId && amountMinor > 0) {
+            const { data: origTx } = await supabase
+              .from('payment_transactions')
+              .select('id')
+              .eq('provider_transaction_id', originalCaptureId)
+              .maybeSingle();
+
+            if (origTx) {
+              await ledgerService.refundTransaction(
+                supabase,
+                origTx.id,
+                amountMinor,
+                'PayPal webhook refund notification',
+                `paypal_refund_${refundId}`
+              );
+            }
+          }
+          break;
+        }
+
+        default:
+          break;
       }
     }
-  }
 
-  return NextResponse.json({ received: true, processed: true }, { status: 200 });
+    // Mark webhook processing status as 'processed'
+    await supabase
+      .from('payment_webhooks')
+      .update({ processing_status: 'processed' })
+      .eq('provider_id', providerId)
+      .eq('event_id', eventId);
+
+    return NextResponse.json({ received: true, processed: true }, { status: 200 });
+  } catch (procErr: any) {
+    console.error('[webhook execution] Error:', procErr);
+    await supabase
+      .from('payment_webhooks')
+      .update({ processing_status: 'failed', error_message: procErr?.message })
+      .eq('provider_id', providerId)
+      .eq('event_id', eventId);
+
+    return NextResponse.json({ error: 'Webhook processing error' }, { status: 500 });
+  }
 }

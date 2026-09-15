@@ -17,6 +17,7 @@ import {
   Users,
   Repeat,
   AlertCircle,
+  Coins,
 } from 'lucide-react';
 import { createAdminSupabaseClient, getAdminSession } from '../../lib/supabase/server';
 
@@ -49,18 +50,25 @@ export default async function AdminRevenueCenterPage({
     dateFilter = new Date(now - 365 * 86400000).toISOString();
   }
 
-  // Fetch snapshots and subscriptions
+  // Fetch snapshots and payment transactions
   let snapshotsQuery = supabase
     .from('commission_snapshots')
     .select('id, gross_amount_minor, commission_amount_minor, fixed_platform_fee_minor, seller_net_minor, tukubi_revenue_minor, refunded_amount_minor, commission_refunded_minor, account_category, seller_tier, product_type, currency, commission_rule_version, created_at')
     .order('created_at', { ascending: false });
 
+  let txQuery = supabase
+    .from('payment_transactions')
+    .select('id, transaction_type, amount_minor, fee_amount_minor, net_amount_minor, currency, provider, state, model_type, created_at')
+    .order('created_at', { ascending: false });
+
   if (dateFilter) {
     snapshotsQuery = snapshotsQuery.gte('created_at', dateFilter);
+    txQuery = txQuery.gte('created_at', dateFilter);
   }
 
-  const [snapshotsRes, tiersRes, rulesRes, subsRes, intentsRes] = await Promise.all([
+  const [snapshotsRes, txRes, tiersRes, rulesRes, subsRes, intentsRes] = await Promise.all([
     snapshotsQuery,
+    txQuery,
     supabase.from('monetization_tier_configs').select('*').order('created_at'),
     supabase.from('commission_rules').select('*').order('created_at', { ascending: false }),
     supabase.from('business_subscriptions').select('id, plan_id, status, created_at').eq('status', 'active'),
@@ -68,35 +76,48 @@ export default async function AdminRevenueCenterPage({
   ]);
 
   const snapshots = (snapshotsRes.data ?? []) as any[];
+  const paymentTxs = (txRes.data ?? []) as any[];
   const tiers = (tiersRes.data ?? []) as any[];
   const rules = (rulesRes.data ?? []) as any[];
   const activeSubs = (subsRes.data ?? []) as any[];
   const succeededIntents = (intentsRes.data ?? []) as any[];
 
-  // 1. Gross Merchandise Value (GMV) vs TUKUBI Retained Revenue
+  // Dynamic Tier Pricing Map from DB (monetization_tier_configs)
+  const tierPriceMap: Record<string, number> = {};
+  for (const t of tiers) {
+    tierPriceMap[t.id] = t.price_minor_monthly ?? 0;
+  }
+
+  // 1. Segregate Model A vs Model B from payment_transactions
+  const completedTxs = paymentTxs.filter((tx) => tx.state === 'COMPLETED');
+  const modelATxs = completedTxs.filter((tx) => tx.model_type === 'MODEL_A');
+  const modelBTxs = completedTxs.filter((tx) => tx.model_type === 'MODEL_B');
+
+  const modelAGrossMinor = modelATxs.reduce((sum, tx) => sum + (tx.amount_minor || 0), 0);
+  const modelBGrossMinor = modelBTxs.reduce((sum, tx) => sum + (tx.amount_minor || 0), 0);
+  const modelBFeesMinor = modelBTxs.reduce((sum, tx) => sum + (tx.fee_amount_minor || 0), 0);
+  const modelBNetMinor = modelBTxs.reduce((sum, tx) => sum + (tx.net_amount_minor || 0), 0);
+
+  // 2. Gross Merchandise Value (GMV)
   const gmvFromSnapshots = snapshots.reduce((sum, s) => sum + (s.gross_amount_minor || 0), 0);
   const gmvFromIntents = succeededIntents.reduce((sum, i) => sum + (i.amount_minor || 0), 0);
-  // Total GMV combines marketplace transactions and payment intents
-  const totalGmvMinor = Math.max(gmvFromSnapshots, gmvFromIntents);
+  const totalGmvMinor = Math.max(gmvFromSnapshots, gmvFromIntents, modelBGrossMinor);
 
-  // Revenue Breakdown
-  const totalCommissionsMinor = snapshots.reduce((sum, s) => sum + (s.commission_amount_minor || 0), 0);
+  // 3. Commissions & Platform Fees
+  const totalCommissionsMinor = snapshots.reduce((sum, s) => sum + (s.commission_amount_minor || 0), 0) || modelBFeesMinor;
   const totalFixedFeesMinor = snapshots.reduce((sum, s) => sum + (s.fixed_platform_fee_minor || 0), 0);
   const totalRefundedCommissionsMinor = snapshots.reduce((sum, s) => sum + (s.commission_refunded_minor || 0), 0);
 
-  // Subscription Revenue estimation (monthly fees for active seller/creator subscriptions)
-  const PLAN_PRICES: Record<string, number> = {
-    business_free: 0,
-    seller_pro: 1499,
-    business_plus: 3999,
-    enterprise: 0,
-  };
-  const mrrMinor = activeSubs.reduce((sum, sub) => sum + (PLAN_PRICES[sub.plan_id] || 0), 0);
+  // 4. Platform Subscription MRR from active commercial subscriptions
+  const mrrMinor = activeSubs.reduce((sum, sub) => sum + (tierPriceMap[sub.plan_id] ?? 0), 0);
   const arrMinor = mrrMinor * 12;
 
-  // TUKUBI Net Retained Revenue
-  const netMarketplaceRevenueMinor = totalCommissionsMinor + totalFixedFeesMinor - totalRefundedCommissionsMinor;
-  const totalTukubiRevenueMinor = netMarketplaceRevenueMinor + mrrMinor;
+  // 5. Total TUKUBI Net Retained Revenue
+  // Model A (100% retained) + Model B Platform Net Commissions
+  const netMarketplaceRevenueMinor = Math.max(0, totalCommissionsMinor + totalFixedFeesMinor - totalRefundedCommissionsMinor);
+  const totalTukubiRevenueMinor = modelAGrossMinor > 0 
+    ? modelAGrossMinor + netMarketplaceRevenueMinor 
+    : netMarketplaceRevenueMinor + mrrMinor;
 
   // Breakdown by Account Category
   const categoryRevenue = {
@@ -112,15 +133,9 @@ export default async function AdminRevenueCenterPage({
     }
   }
 
-  // Breakdown by Product Type
-  const productTypeRevenue: Record<string, number> = {};
-  for (const s of snapshots) {
-    const pt = s.product_type || 'other';
-    productTypeRevenue[pt] = (productTypeRevenue[pt] || 0) + (s.tukubi_revenue_minor || 0);
-  }
-
   // Average Transaction Value (ATV)
-  const atvMinor = snapshots.length > 0 ? Math.round(gmvFromSnapshots / snapshots.length) : 0;
+  const totalTxCount = snapshots.length || completedTxs.length;
+  const atvMinor = totalTxCount > 0 ? Math.round(totalGmvMinor / totalTxCount) : 0;
 
   function fmt(minor: number, currency = 'USD'): string {
     return new Intl.NumberFormat('en-US', { style: 'currency', currency }).format(minor / 100);
@@ -146,7 +161,7 @@ export default async function AdminRevenueCenterPage({
             <h1 className="text-2xl font-black text-brand-sandstone">TUKUBI Revenue Center</h1>
           </div>
           <p className="text-xs text-brand-sandstone/60 mt-1">
-            Executive financial dashboard with strict separation of Gross Merchandise Value (GMV) and Platform Retained Revenue.
+            Executive financial dashboard with strict separation of Model A (Platform Revenue) and Model B (Marketplace GMV &amp; Commissions).
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -184,7 +199,7 @@ export default async function AdminRevenueCenterPage({
 
       {/* Primary KPI Hero Cards — GMV vs TUKUBI Net Revenue */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-        {/* Gross Transaction Volume (GMV) */}
+        {/* Gross Transaction Volume (GMV - Model B) */}
         <div className="p-6 rounded-3xl bg-gradient-to-br from-slate-900 via-[#0E1726] to-slate-900 border border-slate-700/80 shadow-2xl relative overflow-hidden">
           <div className="absolute top-0 right-0 w-32 h-32 bg-sky-500/5 rounded-full blur-2xl" />
           <div className="flex justify-between items-start">
@@ -195,16 +210,16 @@ export default async function AdminRevenueCenterPage({
               <p className="text-4xl font-black text-brand-sandstone mt-2">{fmt(totalGmvMinor)}</p>
             </div>
             <span className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase bg-sky-500/10 text-sky-300 border border-sky-500/30">
-              Total Processed
+              Model B Marketplace
             </span>
           </div>
           <div className="mt-4 pt-4 border-t border-slate-800/80 flex items-center justify-between text-xs text-brand-sandstone/60">
-            <span>Cumulative orders and checkout transactions volume</span>
+            <span>Marketplace transactions, tips &amp; fan subscriptions</span>
             <span>Avg Order: <strong className="text-white">{fmt(atvMinor)}</strong></span>
           </div>
         </div>
 
-        {/* TUKUBI Retained Net Revenue */}
+        {/* TUKUBI Retained Net Revenue (Model A + Model B Commissions) */}
         <div className="p-6 rounded-3xl bg-gradient-to-br from-slate-900 via-[#1A1220] to-emerald-950/30 border border-brand-sunriseCoral/40 shadow-2xl relative overflow-hidden">
           <div className="absolute top-0 right-0 w-32 h-32 bg-brand-sunriseCoral/10 rounded-full blur-2xl" />
           <div className="flex justify-between items-start">
@@ -215,15 +230,55 @@ export default async function AdminRevenueCenterPage({
               <p className="text-4xl font-black text-brand-sandstone mt-2">{fmt(totalTukubiRevenueMinor)}</p>
             </div>
             <span className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase bg-emerald-500/10 text-emerald-300 border border-emerald-500/30">
-              Actual Retained
+              Model A + Model B Net
             </span>
           </div>
           <div className="mt-4 pt-4 border-t border-slate-800/80 flex items-center justify-between text-xs text-brand-sandstone/60">
-            <span>Commissions + Fixed Fees + Subscription MRR</span>
-            <span className="flex items-center gap-1 text-emerald-400">
+            <span>Model A Direct (100%) + Marketplace Commissions</span>
+            <span className="flex items-center gap-1 text-emerald-400 font-bold">
               <ShieldCheck className="w-3.5 h-3.5" /> NASA-grade Ledger Verified
             </span>
           </div>
+        </div>
+      </div>
+
+      {/* Model A vs Model B Architecture Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Model A Summary Card */}
+        <div className="p-5 rounded-2xl bg-brand-dusk/80 border border-brand-gold/30 space-y-3">
+          <div className="flex justify-between items-center">
+            <span className="text-[11px] font-mono uppercase tracking-wider text-brand-gold font-bold flex items-center gap-1.5">
+              <Coins className="w-4 h-4 text-brand-gold" /> Model A: First-Party Platform Revenue
+            </span>
+            <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-brand-gold/10 text-brand-gold border border-brand-gold/20">
+              100% Retained
+            </span>
+          </div>
+          <div className="text-3xl font-black text-white">
+            {fmt(modelAGrossMinor || mrrMinor)}
+          </div>
+          <p className="text-xs text-brand-sandstone/70">
+            Creator Pro, Seller Pro, Business+, and platform advertising tools directly billed to TUKUBI treasury.
+          </p>
+        </div>
+
+        {/* Model B Summary Card */}
+        <div className="p-5 rounded-2xl bg-brand-dusk/80 border border-brand-coral/30 space-y-3">
+          <div className="flex justify-between items-center">
+            <span className="text-[11px] font-mono uppercase tracking-wider text-brand-coral font-bold flex items-center gap-1.5">
+              <Store className="w-4 h-4 text-brand-coral" /> Model B: Multi-Sided Creator Economy
+            </span>
+            <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-brand-coral/10 text-brand-coral border border-brand-coral/20">
+              Split Settlement
+            </span>
+          </div>
+          <div className="text-3xl font-black text-white">
+            {fmt(totalCommissionsMinor)}
+            <span className="text-xs font-normal text-brand-sandstone/60"> / {fmt(totalGmvMinor)} GMV</span>
+          </div>
+          <p className="text-xs text-brand-sandstone/70">
+            Dynamic take-rate commissions retained by TUKUBI, with {fmt(modelBNetMinor)} allocated to creator/merchant payouts.
+          </p>
         </div>
       </div>
 

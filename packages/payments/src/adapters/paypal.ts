@@ -1,6 +1,18 @@
 // PayPal Payment Service Provider Adapter
 
-import type { PSPAdapter, PSPChargeParams, PSPChargeResult, PSPRefundParams, PSPRefundResult, WebhookVerifier } from './types';
+import type {
+  PSPAdapter,
+  PSPChargeParams,
+  PSPChargeResult,
+  PSPRefundParams,
+  PSPRefundResult,
+  PSPSubscriptionParams,
+  PSPSubscriptionResult,
+  PSPPayoutParams,
+  PSPPayoutResult,
+  WebhookVerifier,
+} from './types';
+
 
 export interface PayPalAdapterConfig {
   clientId?: string;
@@ -219,10 +231,216 @@ export class PayPalAdapter implements PSPAdapter {
     return res.json();
   }
 
+  async createSubscription(params: PSPSubscriptionParams): Promise<PSPSubscriptionResult> {
+    if (!this.isConfigured) {
+      return {
+        success: false,
+        providerSubscriptionId: '',
+        providerName: this.providerName,
+        status: 'error',
+        errorMessage: 'PayPal credentials are unavailable',
+      };
+    }
+
+    try {
+      const baseUrl = this.environment === 'live' ? 'https://api-m.paypal.com' : 'https://api-m.sandbox.paypal.com';
+      const accessToken = await this.getAccessToken();
+
+      const subRes = await fetch(`${baseUrl}/v1/billing/subscriptions`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          plan_id: params.planId,
+          custom_id: params.customId || params.subscriberId,
+          subscriber: params.subscriberEmail ? { email_address: params.subscriberEmail } : undefined,
+          application_context: {
+            return_url: params.returnUrl || 'https://tukubi.com/financial-center/subscriptions',
+            cancel_url: params.cancelUrl || 'https://tukubi.com/financial-center',
+            brand_name: 'TUKUBI',
+            user_action: 'SUBSCRIBE_NOW',
+          },
+        }),
+      });
+
+      const subData = (await subRes.json()) as any;
+      if (!subRes.ok) {
+        throw new Error(subData.message || subData.details?.[0]?.description || 'PayPal subscription creation failed');
+      }
+
+      const approveLink = subData.links?.find((l: { rel: string }) => l.rel === 'approve')?.href;
+
+      return {
+        success: true,
+        providerSubscriptionId: subData.id,
+        providerName: this.providerName,
+        status: subData.status === 'ACTIVE' ? 'active' : 'pending',
+        approvalUrl: approveLink,
+        rawResponse: subData,
+      };
+    } catch (err) {
+      return {
+        success: false,
+        providerSubscriptionId: '',
+        providerName: this.providerName,
+        status: 'error',
+        errorMessage: err instanceof Error ? err.message : 'PayPal subscription request failed',
+      };
+    }
+  }
+
+  async cancelSubscription(subscriptionId: string, reason?: string): Promise<{ success: boolean; errorMessage?: string }> {
+    if (!this.isConfigured) {
+      return { success: false, errorMessage: 'PayPal credentials are unavailable' };
+    }
+
+    try {
+      const baseUrl = this.environment === 'live' ? 'https://api-m.paypal.com' : 'https://api-m.sandbox.paypal.com';
+      const accessToken = await this.getAccessToken();
+
+      const res = await fetch(`${baseUrl}/v1/billing/subscriptions/${subscriptionId}/cancel`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          reason: reason || 'Customer requested cancellation on TUKUBI',
+        }),
+      });
+
+      if (res.status === 204 || res.ok) {
+        return { success: true };
+      }
+
+      const data = (await res.json().catch(() => ({}))) as any;
+      return { success: false, errorMessage: data.message || `Cancel failed with status ${res.status}` };
+    } catch (err) {
+      return { success: false, errorMessage: err instanceof Error ? err.message : 'Subscription cancel error' };
+    }
+  }
+
+  async getSubscription(subscriptionId: string): Promise<{ status: string; currentPeriodEnd?: string; raw?: unknown }> {
+    if (!this.isConfigured) throw new Error('PayPal credentials are unavailable');
+    const baseUrl = this.environment === 'live' ? 'https://api-m.paypal.com' : 'https://api-m.sandbox.paypal.com';
+    const accessToken = await this.getAccessToken();
+
+    const res = await fetch(`${baseUrl}/v1/billing/subscriptions/${subscriptionId}`, {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!res.ok) {
+      throw new Error(`Failed to fetch subscription status: ${res.status}`);
+    }
+
+    const data = (await res.json()) as any;
+    return {
+      status: data.status,
+      currentPeriodEnd: data.billing_info?.next_billing_time,
+      raw: data,
+    };
+  }
+
+  async createPayout(params: PSPPayoutParams): Promise<PSPPayoutResult> {
+    if (!this.isConfigured) {
+      return {
+        success: false,
+        providerPayoutId: '',
+        providerName: this.providerName,
+        status: 'failed',
+        errorMessage: 'PayPal credentials are unavailable',
+      };
+    }
+
+    try {
+      const baseUrl = this.environment === 'live' ? 'https://api-m.paypal.com' : 'https://api-m.sandbox.paypal.com';
+      const accessToken = await this.getAccessToken();
+
+      const res = await fetch(`${baseUrl}/v1/payments/payouts`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+          'PayPal-Request-Id': params.idempotencyKey,
+        },
+        body: JSON.stringify({
+          sender_batch_header: {
+            sender_batch_id: `batch_${params.idempotencyKey}`,
+            email_subject: 'You have a disbursement from TUKUBI',
+            email_message: params.note || 'TUKUBI verified creator earnings disbursement',
+          },
+          items: [
+            {
+              recipient_type: 'EMAIL',
+              amount: {
+                value: (params.amountMinor / 100).toFixed(2),
+                currency: params.currency.toUpperCase(),
+              },
+              receiver: params.recipientEmail || params.recipientId,
+              note: params.note || 'TUKUBI earnings payout',
+              sender_item_id: params.idempotencyKey,
+            },
+          ],
+        }),
+      });
+
+      const data = (await res.json()) as any;
+      if (!res.ok) {
+        throw new Error(data.message || data.details?.[0]?.issue || 'PayPal payout request failed');
+      }
+
+      return {
+        success: true,
+        providerPayoutId: data.batch_header?.payout_batch_id || `PAYPAL_PAYOUT_${params.idempotencyKey}`,
+        providerName: this.providerName,
+        status: data.batch_header?.batch_status === 'SUCCESS' ? 'succeeded' : 'pending',
+        rawResponse: data,
+      };
+    } catch (err) {
+      return {
+        success: false,
+        providerPayoutId: '',
+        providerName: this.providerName,
+        status: 'failed',
+        errorMessage: err instanceof Error ? err.message : 'Payout request error',
+      };
+    }
+  }
+
   async verifyWebhook(payload: string, headers: any): Promise<boolean> {
+    if (this.webhookVerifier) {
+      return this.webhookVerifier(payload, headers);
+    }
+    if (!this.isConfigured || !this.webhookId) {
+      // In development or test where PayPal webhook isn't configured, safely reject unauthenticated calls
+      return false;
+    }
+
     try {
       const token = await this.getAccessToken();
       const baseUrl = this.environment === 'live' ? 'https://api-m.paypal.com' : 'https://api-m.sandbox.paypal.com';
+
+      const getHeader = (name: string): string => {
+        if (!headers) return '';
+        if (typeof headers.get === 'function') return headers.get(name) || '';
+        return headers[name] || headers[name.toLowerCase()] || headers[name.toUpperCase()] || '';
+      };
+
+      const authAlgo = getHeader('paypal-auth-algo');
+      const certUrl = getHeader('paypal-cert-url');
+      const transmissionId = getHeader('paypal-transmission-id');
+      const transmissionSig = getHeader('paypal-transmission-sig');
+      const transmissionTime = getHeader('paypal-transmission-time');
+
+      if (!authAlgo || !certUrl || !transmissionId || !transmissionSig) {
+        return false;
+      }
       
       const response = await fetch(`${baseUrl}/v1/notifications/verify-webhook-signature`, {
         method: 'POST',
@@ -231,13 +449,13 @@ export class PayPalAdapter implements PSPAdapter {
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          auth_algo: headers['paypal-auth-algo'] ?? headers['PAYPAL-AUTH-ALGO'],
-          cert_url: headers['paypal-cert-url'] ?? headers['PAYPAL-CERT-URL'],
-          transmission_id: headers['paypal-transmission-id'] ?? headers['PAYPAL-TRANSMISSION-ID'],
-          transmission_sig: headers['paypal-transmission-sig'] ?? headers['PAYPAL-TRANSMISSION-SIG'],
-          transmission_time: headers['paypal-transmission-time'] ?? headers['PAYPAL-TRANSMISSION-TIME'],
+          auth_algo: authAlgo,
+          cert_url: certUrl,
+          transmission_id: transmissionId,
+          transmission_sig: transmissionSig,
+          transmission_time: transmissionTime,
           webhook_id: this.webhookId,
-          webhook_event: JSON.parse(payload),
+          webhook_event: typeof payload === 'string' ? JSON.parse(payload) : payload,
         }),
       });
       
@@ -249,3 +467,4 @@ export class PayPalAdapter implements PSPAdapter {
     }
   }
 }
+

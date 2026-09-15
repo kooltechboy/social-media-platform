@@ -3,6 +3,14 @@
 
 import type { AccountCategory } from './types';
 
+export const CAN_USE_ADVANCED_ANALYTICS = 'CAN_USE_ADVANCED_ANALYTICS';
+export const CAN_MONETIZE = 'CAN_MONETIZE';
+export const CAN_CREATE_PAID_SUBSCRIPTIONS = 'CAN_CREATE_PAID_SUBSCRIPTIONS';
+export const CAN_SELL_DIGITAL_PRODUCTS = 'CAN_SELL_DIGITAL_PRODUCTS';
+export const CAN_CREATE_ADVANCED_CAMPAIGNS = 'CAN_CREATE_ADVANCED_CAMPAIGNS';
+export const CAN_USE_ADVANCED_CREATOR_TOOLS = 'CAN_USE_ADVANCED_CREATOR_TOOLS';
+export const CAN_ACCESS_STORE_PRO = 'CAN_ACCESS_STORE_PRO';
+
 export type EntitlementKey =
   | 'social_access'
   | 'browse_marketplace'
@@ -34,7 +42,15 @@ export type EntitlementKey =
   | 'multi_staff'
   | 'priority_search'
   | 'custom_api'
-  | 'enterprise_support';
+  | 'enterprise_support'
+  | 'CAN_USE_ADVANCED_ANALYTICS'
+  | 'CAN_MONETIZE'
+  | 'CAN_CREATE_PAID_SUBSCRIPTIONS'
+  | 'CAN_SELL_DIGITAL_PRODUCTS'
+  | 'CAN_CREATE_ADVANCED_CAMPAIGNS'
+  | 'CAN_USE_ADVANCED_CREATOR_TOOLS'
+  | 'CAN_ACCESS_STORE_PRO';
+
 
 export interface TierEntitlementsDefinition {
   tierId: string;
@@ -192,8 +208,75 @@ export class EntitlementEngine {
   public hasEntitlement(tierIdOrCode: string, entitlement: EntitlementKey): boolean {
     const tierDef = this.resolveTier(tierIdOrCode);
     if (!tierDef) return false;
-    return tierDef.entitlements.has(entitlement);
+    if (tierDef.entitlements.has(entitlement)) return true;
+
+    // Canonical semantic aliases
+    if (entitlement === 'CAN_MONETIZE') {
+      return tierDef.entitlements.has('fan_tips') || tierDef.entitlements.has('fan_memberships');
+    }
+    if (entitlement === 'CAN_CREATE_PAID_SUBSCRIPTIONS') {
+      return tierDef.entitlements.has('fan_memberships');
+    }
+    if (entitlement === 'CAN_USE_ADVANCED_ANALYTICS') {
+      return (
+        tierDef.entitlements.has('analytics_dashboard') ||
+        tierDef.tierCode === 'plus' ||
+        tierDef.tierCode === 'pro' ||
+        tierDef.tierCode === 'business_plus'
+      );
+    }
+    if (entitlement === 'CAN_SELL_DIGITAL_PRODUCTS') {
+      return tierDef.entitlements.has('basic_storefront') || tierDef.tierCode === 'plus' || tierDef.tierCode === 'pro';
+    }
+    if (entitlement === 'CAN_CREATE_ADVANCED_CAMPAIGNS') {
+      return (
+        tierDef.entitlements.has('ai_tools') ||
+        tierDef.tierCode === 'pro' ||
+        tierDef.tierCode === 'business_plus' ||
+        tierDef.tierCode === 'enterprise'
+      );
+    }
+    if (entitlement === 'CAN_USE_ADVANCED_CREATOR_TOOLS') {
+      return tierDef.tierCode === 'plus' || tierDef.tierCode === 'pro';
+    }
+    if (entitlement === 'CAN_ACCESS_STORE_PRO') {
+      return (
+        tierDef.tierCode === 'pro' ||
+        tierDef.tierCode === 'business_plus' ||
+        tierDef.tierCode === 'enterprise'
+      );
+    }
+    return false;
   }
+
+  public canMonetize(tierIdOrCode: string): boolean {
+    return this.hasEntitlement(tierIdOrCode, 'CAN_MONETIZE');
+  }
+
+  public canCreatePaidSubscriptions(tierIdOrCode: string): boolean {
+    return this.hasEntitlement(tierIdOrCode, 'CAN_CREATE_PAID_SUBSCRIPTIONS');
+  }
+
+  public canSellDigitalProducts(tierIdOrCode: string): boolean {
+    return this.hasEntitlement(tierIdOrCode, 'CAN_SELL_DIGITAL_PRODUCTS');
+  }
+
+  public canUseAdvancedAnalytics(tierIdOrCode: string): boolean {
+    return this.hasEntitlement(tierIdOrCode, 'CAN_USE_ADVANCED_ANALYTICS');
+  }
+
+  public canCreateAdvancedCampaigns(tierIdOrCode: string): boolean {
+    return this.hasEntitlement(tierIdOrCode, 'CAN_CREATE_ADVANCED_CAMPAIGNS');
+  }
+
+  public canUseAdvancedCreatorTools(tierIdOrCode: string): boolean {
+    return this.hasEntitlement(tierIdOrCode, 'CAN_USE_ADVANCED_CREATOR_TOOLS');
+  }
+
+  public canAccessStorePro(tierIdOrCode: string): boolean {
+    return this.hasEntitlement(tierIdOrCode, 'CAN_ACCESS_STORE_PRO');
+  }
+
 
   /**
    * Returns all entitlements for a tier.
