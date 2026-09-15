@@ -2,28 +2,31 @@ import React from 'react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import {
-  ShoppingBag,
   ArrowLeft,
   ShieldCheck,
   Truck,
   CheckCircle,
   Star,
-  Share2,
-  Lock,
-  Wallet,
-  Building2,
-  Calendar,
-  Sparkles,
+  MapPin,
   Store,
   Clock,
   MessageCircle,
-  MessageSquare,
+  Heart,
+  Package,
 } from 'lucide-react';
-import { Money, isMarketplaceCommerceActive } from '@caribbean/payments';
+import { Money } from '@caribbean/payments';
+import {
+  PRODUCT_CONDITION_METADATA,
+  type ProductVariant,
+  type ProductCondition,
+} from '@caribbean/marketplace';
 import { createSupabaseServerClient, getCurrentUser } from '../../../lib/supabase/server';
-import OrderButton from '../../../components/order-button';
+import ProductGallery from '../../../components/marketplace/product-gallery';
+import ProductDetailActions from '../../../components/marketplace/product-detail-actions';
+import WishlistButton from '../../../components/marketplace/wishlist-button';
 import VariantSelector from '../../../components/marketplace/variant-selector';
-import { type ProductVariant } from '@caribbean/marketplace';
+import AiShoppingAssistant from '../../../components/marketplace/ai-shopping-assistant';
+import { CustomsDutyEstimator } from '../../../components/marketplace/customs-duty-estimator';
 
 export const dynamic = 'force-dynamic';
 
@@ -43,12 +46,26 @@ export default async function ProductDetailPage({
   // 1. Fetch Product with seller and business profiles
   const { data: product, error: prodErr } = await supabase
     .from('products')
-    .select('id, title, description, product_kind, price_minor, currency, inventory_count, is_active, seller_id, profiles(display_name, username), businesses(name, slug, category, country_iso)')
+    .select(`
+      id, title, description, product_kind, price_minor, currency, inventory_count, is_active, seller_id,
+      condition, location_city, location_country_iso, pickup_available, shipping_available, delivery_available,
+      shipping_cost_minor, brand, model,
+      profiles(display_name, username, is_verified),
+      businesses(name, slug, category, country_iso, is_verified),
+      marketplace_product_media(id, media_url, media_type, thumbnail_url, alt_text, display_order)
+    `)
     .eq('id', id)
     .maybeSingle();
 
   if (prodErr || !product) {
     notFound();
+  }
+
+  // Increment views in background
+  try {
+    await supabase.rpc('increment_product_views', { p_product_id: id });
+  } catch {
+    // Non-blocking view tracking
   }
 
   // 2. Fetch Product Variants
@@ -77,11 +94,23 @@ export default async function ProductDetailPage({
     .select('id, rating, headline, body, verified_purchase, created_at, profiles(display_name, username)')
     .eq('product_id', id)
     .order('created_at', { ascending: false })
-    .limit(5);
+    .limit(6);
 
   const reviews = (reviewsData ?? []) as any[];
 
-  // 4. Fetch Related Products
+  // 4. Check if current user has saved this product to wishlist
+  let isSaved = false;
+  if (user) {
+    const { data: wish } = await supabase
+      .from('marketplace_wishlists')
+      .select('id')
+      .eq('user_id', user.id)
+      .eq('product_id', id)
+      .maybeSingle();
+    isSaved = !!wish;
+  }
+
+  // 5. Fetch Related Products
   const { data: relatedData } = await supabase
     .from('products')
     .select('id, title, price_minor, currency, product_kind, inventory_count')
@@ -95,27 +124,42 @@ export default async function ProductDetailPage({
   const price = new Money(prod.price_minor, prod.currency);
   const sellerName = prod.businesses?.name ?? prod.profiles?.display_name ?? 'Caribbean Merchant';
   const sellerSlug = prod.businesses?.slug ?? prod.profiles?.username;
-  const outOfStock = prod.inventory_count !== null && prod.inventory_count === 0;
-  const canTransact = isMarketplaceCommerceActive();
+  const isSellerVerified = prod.businesses?.is_verified ?? prod.profiles?.is_verified ?? false;
+  const conditionKey = (prod.condition as ProductCondition) || 'new';
+  const condMeta = PRODUCT_CONDITION_METADATA[conditionKey];
 
-  // Review statistics calculation
-  const totalReviews = reviews.length;
-  const avgRating =
-    totalReviews > 0
-      ? (reviews.reduce((sum, r) => sum + (r.rating || 5), 0) / totalReviews).toFixed(1)
-      : '5.0';
+  // Format media items for gallery
+  const mediaList = (prod.marketplace_product_media ?? [])
+    .sort((a: any, b: any) => (a.display_order ?? 0) - (b.display_order ?? 0))
+    .map((m: any) => ({
+      id: m.id,
+      mediaUrl: m.media_url,
+      mediaType: (m.media_type as 'image' | 'video') || 'image',
+      thumbnailUrl: m.thumbnail_url,
+      altText: m.alt_text || prod.title,
+    }));
 
   return (
-    <div className="min-h-screen bg-transparent text-brand-sandstone p-4 md:p-6 max-w-6xl mx-auto space-y-8 animate-fadeIn">
-      {/* Top Breadcrumb Header */}
-      <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+    <div className="min-h-screen bg-transparent text-brand-sandstone p-4 sm:p-6 max-w-6xl mx-auto space-y-8 animate-fadeIn">
+      {/* Top Header & Breadcrumbs */}
+      <div className="flex items-center justify-between border-b border-white/10 pb-4">
         <Link
           href="/marketplace"
-          className="inline-flex items-center gap-2 text-xs font-bold text-slate-300 hover:text-white transition-colors"
+          className="inline-flex items-center gap-2 text-xs font-bold text-brand-sandstone/80 hover:text-white transition-colors"
         >
           <ArrowLeft className="w-4 h-4" /> Back to Marketplace
         </Link>
         <div className="flex items-center gap-3">
+          <AiShoppingAssistant
+            productContext={{
+              title: prod.title,
+              description: prod.description,
+              priceFormatted: price.format(),
+              condition: condMeta?.label,
+              sellerName,
+              location: prod.location_city,
+            }}
+          />
           {sellerSlug && (
             <Link
               href={`/store/${sellerSlug}`}
@@ -127,220 +171,211 @@ export default async function ProductDetailPage({
         </div>
       </div>
 
-      {/* Pre-launch Notification Banner */}
-      {!canTransact && (
-        <div className="p-4 rounded-3xl bg-orange-500/10 border border-orange-500/30 text-orange-200 text-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-          <div className="flex items-center gap-2.5">
-            <Calendar className="w-4 h-4 text-orange-400 shrink-0" />
-            <div>
-              <strong className="text-white">Storefront Setup Phase:</strong> Marketplace transactions begin September 30, 2026.
-              You can explore products and specifications now.
-            </div>
-          </div>
-          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-orange-500/20 text-orange-400 border border-orange-500/40 shrink-0">
-            Catalog Active
-          </span>
-        </div>
-      )}
-
       {/* Main Product Layout Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        {/* Left Column: Media & Gallery (Col 6) */}
+        {/* Left Column: Media Gallery & Trust Badges (Col 6) */}
         <div className="lg:col-span-6 space-y-4">
-          <div className="aspect-square bg-gradient-to-br from-slate-900 via-slate-900 to-orange-950/30 border border-slate-800 rounded-3xl flex flex-col items-center justify-center relative overflow-hidden shadow-2xl">
-            <span className="text-8xl mb-2 select-none">
-              {product.product_kind === 'service' ? '🤝' : product.product_kind === 'digital' ? '🎧' : '📦'}
-            </span>
-
-            <span className={`absolute top-4 right-4 text-[10px] font-black px-3 py-1 rounded-full border uppercase tracking-wider ${
-              product.product_kind === 'physical'
-                ? 'bg-orange-500/10 text-orange-400 border-orange-500/30'
-                : product.product_kind === 'digital'
-                ? 'bg-sky-500/10 text-sky-400 border-sky-500/30'
-                : 'bg-purple-500/10 text-purple-400 border-purple-500/30'
-            }`}>
-              {product.product_kind}
-            </span>
-
-            <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between text-xs text-brand-sandstone/60 px-2">
-              <span className="flex items-center gap-1 font-semibold text-emerald-400">
-                <ShieldCheck className="w-3.5 h-3.5" /> Verified Product Listing
-              </span>
-              <span className="text-[10px] text-slate-400">TUKUBI Verified Catalog</span>
-            </div>
-          </div>
+          <ProductGallery
+            media={mediaList}
+            title={prod.title}
+            productKind={prod.product_kind}
+            conditionBadge={condMeta ? { label: condMeta.label, badgeClass: condMeta.badgeClass } : undefined}
+          />
 
           {/* Guarantees Box */}
-          <div className="bg-brand-dusk/60 border border-slate-800 rounded-3xl p-5 space-y-2 text-xs">
+          <div className="surface-card border border-white/10 rounded-3xl p-5 space-y-2 text-xs">
             <div className="flex items-center gap-2 text-brand-sunriseCoral font-bold">
               <ShieldCheck className="w-4 h-4" />
-              <span>TUKUBI Buyer &amp; Seller Protection (30-Day Guarantee)</span>
+              <span>TUKUBI Buyer Protection Guarantee</span>
             </div>
-            <p className="text-slate-400 text-[11px] leading-relaxed">
-              Payments are recorded via secure double-entry ledger escrow and released to the merchant upon verified delivery. Automated dispute resolution backed by TUKUBI Trust &amp; Safety.
+            <p className="text-brand-sandstone/70 text-[11px] leading-relaxed">
+              Payments are secured via double-entry escrow records and held until verified delivery. Protected with full 30-day dispute settlement and mediation.
             </p>
           </div>
         </div>
 
-        {/* Right Column: Details, Options & Purchasing (Col 6) */}
+        {/* Right Column: Listing Details, Pricing & Actions (Col 6) */}
         <div className="lg:col-span-6 space-y-6">
           <div className="space-y-3">
-            {/* Merchant Identification */}
-            <div className="flex items-center gap-2">
-              {sellerSlug ? (
+            {/* Merchant Identification & Wishlist */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                {sellerSlug ? (
+                  <Link
+                    href={`/store/${sellerSlug}`}
+                    className="text-xs font-black text-orange-400 hover:text-orange-300 flex items-center gap-1.5 transition-colors"
+                  >
+                    <Store className="w-3.5 h-3.5" />
+                    <span>{sellerName}</span>
+                  </Link>
+                ) : (
+                  <span className="text-xs font-black text-white">{sellerName}</span>
+                )}
+                {isSellerVerified && (
+                  <span className="flex items-center gap-1 text-[10px] font-black text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/30">
+                    <CheckCircle className="w-3 h-3" /> Verified Seller
+                  </span>
+                )}
+              </div>
+
+              <div className="flex items-center gap-2">
                 <Link
-                  href={`/store/${sellerSlug}`}
-                  className="text-xs font-black text-orange-400 hover:text-orange-300 flex items-center gap-1.5 transition-colors"
+                  href={`/messages?u=${prod.seller_id}`}
+                  className="text-xs font-bold text-brand-caribbeanSea hover:text-white px-2.5 py-1.5 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors flex items-center gap-1.5"
                 >
-                  <Store className="w-3.5 h-3.5" />
-                  <span>{sellerName}</span>
+                  <MessageCircle className="w-3.5 h-3.5" />
+                  <span>Message Seller</span>
                 </Link>
-              ) : (
-                <span className="text-xs font-black text-slate-300">{sellerName}</span>
-              )}
-              <span className="text-slate-600">•</span>
-              <span className="text-xs text-brand-sandstone/50">Caribbean Verified</span>
+                <WishlistButton productId={prod.id} initialSaved={isSaved} size="md" />
+              </div>
             </div>
 
-            <h1 className="text-2xl md:text-3xl font-black text-white leading-tight">
-              {product.title}
+            <h1 className="text-2xl sm:text-3xl font-black text-white leading-tight">
+              {prod.title}
             </h1>
 
             {/* Price & Stock Badge */}
             <div className="flex items-baseline gap-3 pt-1">
-              <span className="text-3xl font-black text-white">
+              <span className="text-3xl sm:text-4xl font-black text-white">
                 {price.format()}
               </span>
-              <span className="text-xs font-bold text-brand-sandstone/60">{product.currency}</span>
-              {product.inventory_count !== null && (
-                <span className={`text-[11px] font-bold ml-auto px-2.5 py-0.5 rounded-full border ${
-                  product.inventory_count > 0
-                    ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
-                    : 'bg-rose-500/10 text-rose-400 border-rose-500/30'
-                }`}>
-                  {product.inventory_count > 0 ? `${product.inventory_count} in stock` : 'Sold out'}
+              <span className="text-xs font-bold text-brand-sandstone/60">{prod.currency}</span>
+              {prod.inventory_count !== null && (
+                <span
+                  className={`text-[11px] font-bold ml-auto px-2.5 py-0.5 rounded-full border ${
+                    prod.inventory_count > 0
+                      ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
+                      : 'bg-rose-500/10 text-rose-400 border-rose-500/30'
+                  }`}
+                >
+                  {prod.inventory_count > 0 ? `${prod.inventory_count} in stock` : 'Sold out'}
                 </span>
               )}
+            </div>
+
+            {/* Condition Pill & Description */}
+            {condMeta && (
+              <div className="p-3 rounded-2xl bg-white/5 border border-white/10 space-y-1">
+                <div className="flex items-center justify-between text-xs font-bold">
+                  <span className="text-white flex items-center gap-1.5">
+                    Condition: <strong className="text-orange-400">{condMeta.label}</strong>
+                  </span>
+                </div>
+                <p className="text-[11px] text-brand-sandstone/70">{condMeta.description}</p>
+              </div>
+            )}
+          </div>
+
+          {/* Fulfillment & Delivery Options */}
+          <div className="grid grid-cols-2 gap-2 text-xs">
+            <div className="p-3 rounded-2xl bg-white/5 border border-white/10 flex items-center gap-2.5">
+              <MapPin className="w-4 h-4 text-orange-400 shrink-0" />
+              <div>
+                <p className="font-bold text-white">Local Island Pickup</p>
+                <p className="text-[10px] text-brand-sandstone/60">
+                  {prod.pickup_available ? `${prod.location_city || 'Island Hub'} Available` : 'Not available'}
+                </p>
+              </div>
+            </div>
+
+            <div className="p-3 rounded-2xl bg-white/5 border border-white/10 flex items-center gap-2.5">
+              <Truck className="w-4 h-4 text-brand-caribbeanSea shrink-0" />
+              <div>
+                <p className="font-bold text-white">Regional Shipping</p>
+                <p className="text-[10px] text-brand-sandstone/60">
+                  {prod.shipping_available ? 'Inter-island tracked' : 'Pickup only'}
+                </p>
+              </div>
             </div>
           </div>
 
           {/* Product Description */}
-          {product.description && (
-            <div className="space-y-1.5 pt-3 border-t border-slate-800/80">
-              <h3 className="text-xs font-extrabold uppercase tracking-wider text-brand-sandstone/50">
-                Description
+          {prod.description && (
+            <div className="space-y-1.5 pt-3 border-t border-white/10">
+              <h3 className="text-xs font-black uppercase tracking-wider text-brand-sandstone/60">
+                Description &amp; Specifications
               </h3>
-              <p className="text-xs md:text-sm text-slate-300 leading-relaxed whitespace-pre-wrap">
-                {product.description}
+              <p className="text-xs sm:text-sm text-brand-sandstone/90 leading-relaxed whitespace-pre-wrap font-medium">
+                {prod.description}
               </p>
             </div>
           )}
 
-          {/* Structured Variants Selector */}
+          {/* Variants Selector */}
           {variants.length > 0 && (
             <VariantSelector
               variants={variants}
-              basePriceMinor={product.price_minor}
-              currency={product.currency}
+              basePriceMinor={prod.price_minor}
+              currency={prod.currency}
               onVariantChange={() => {}}
             />
           )}
 
-          {/* Service Booking Specifications if service */}
-          {product.product_kind === 'service' && (
-            <div className="p-4 rounded-2xl bg-purple-950/20 border border-purple-500/30 text-xs space-y-2 text-purple-200">
-              <div className="flex items-center gap-2 font-bold text-purple-300">
-                <Clock className="w-4 h-4" />
-                <span>Service Booking &amp; Deliverables</span>
-              </div>
-              <p className="text-[11px] text-purple-200/80 leading-relaxed">
-                Direct booking with {sellerName}. Session coordination, timeline, and deliverables are managed through secure TUKUBI messaging.
-              </p>
-            </div>
-          )}
+          {/* Client Interactive Actions: Buy, Make Offer, Message, Share, Report */}
+          <ProductDetailActions
+            productId={prod.id}
+            productTitle={prod.title}
+            priceMinor={prod.price_minor}
+            currency={prod.currency}
+            sellerId={prod.seller_id}
+            sellerName={sellerName}
+            productKind={prod.product_kind}
+            isAuthenticated={!!user}
+            isSeller={user?.id === prod.seller_id}
+            inventoryCount={prod.inventory_count}
+          />
 
-          {/* Purchasing Box */}
-          <div className="bg-brand-dusk border border-slate-800 rounded-3xl p-5 space-y-4 shadow-xl">
-            <OrderButton
-              productId={product.id}
-              disabled={outOfStock || !user || user.id === product.seller_id}
-              isAuthenticated={!!user}
-              isSeller={user?.id === product.seller_id}
-              productDetails={{
-                title: product.title,
-                priceMinor: product.price_minor,
-                currency: product.currency,
-                sellerName,
-                productKind: product.product_kind,
-              }}
+          {/* Cross-Border Caribbean & Diaspora Customs Duty Estimator */}
+          {prod.product_kind === 'physical' && (
+            <CustomsDutyEstimator
+              itemValueMinor={prod.price_minor}
+              currency={prod.currency}
+              categorySlug={prod.category_slug || 'fashion-apparel'}
             />
-
-            {user?.id !== product.seller_id && (
-              <Link
-                href={`/messages?u=${encodeURIComponent(sellerSlug || product.seller_id)}`}
-                className="w-full bg-white/10 hover:bg-white/15 text-brand-sandstone hover:text-white font-bold py-3 px-4 rounded-2xl text-xs flex items-center justify-center gap-2 border border-white/10 transition-all cursor-pointer"
-              >
-                <MessageSquare className="w-4 h-4 text-brand-caribbeanSea" />
-                <span>Message Seller</span>
-              </Link>
-            )}
-
-            <div className="flex items-center justify-between text-[11px] text-brand-sandstone/50 pt-2 border-t border-slate-800">
-              <span className="flex items-center gap-1.5">
-                <Truck className="w-3.5 h-3.5 text-brand-caribbeanSea" /> Caribbean &amp; Global Shipping
-              </span>
-              <span className="flex items-center gap-1.5">
-                <Lock className="w-3.5 h-3.5 text-brand-sunriseCoral" /> 256-bit Encrypted Checkout
-              </span>
-            </div>
-          </div>
+          )}
         </div>
       </div>
 
-      {/* Verified Reviews Section */}
-      <div className="space-y-4 pt-4 border-t border-slate-800">
+      {/* Customer Reviews Section */}
+      <div className="pt-8 border-t border-white/10 space-y-4">
         <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-lg font-black text-white flex items-center gap-2">
-              <Star className="w-5 h-5 text-brand-goldenHour fill-brand-goldenHour" />
-              <span>Customer Reviews</span>
-              <span className="text-xs font-normal text-slate-400 ml-1">({reviews.length})</span>
-            </h2>
-            <p className="text-xs text-brand-sandstone/60 mt-0.5">
-              Authentic feedback from verified Caribbean community buyers.
-            </p>
-          </div>
+          <h3 className="text-lg font-black text-white flex items-center gap-2">
+            <Star className="w-5 h-5 text-brand-goldenHour fill-brand-goldenHour" />
+            <span>Verified Customer Reviews</span>
+            <span className="text-xs font-normal text-brand-sandstone/60">
+              ({reviews.length} {reviews.length === 1 ? 'review' : 'reviews'})
+            </span>
+          </h3>
         </div>
 
         {reviews.length === 0 ? (
-          <div className="p-8 rounded-3xl bg-brand-dusk/40 border border-slate-800 text-center space-y-2">
-            <p className="text-xs text-brand-sandstone/60">
-              No customer reviews yet for this listing. Verified buyers can submit reviews after order fulfillment.
+          <div className="surface-card rounded-2xl p-6 text-center space-y-1 border border-white/10">
+            <p className="text-xs font-bold text-white">No reviews yet for this listing</p>
+            <p className="text-[11px] text-brand-sandstone/60">
+              Be the first verified purchaser to share feedback on this Caribbean merchandise.
             </p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {reviews.map((rev) => (
+            {reviews.map((r) => (
               <div
-                key={rev.id}
-                className="p-4 rounded-2xl bg-brand-dusk/70 border border-slate-800 space-y-2 text-xs"
+                key={r.id}
+                className="surface-card rounded-2xl p-4 space-y-2 border border-white/10"
               >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-1.5">
-                    {Array.from({ length: rev.rating }).map((_, i) => (
-                      <Star key={i} className="w-3.5 h-3.5 text-brand-goldenHour fill-brand-goldenHour" />
+                <div className="flex items-center justify-between text-xs">
+                  <span className="font-bold text-white">
+                    {r.profiles?.display_name || 'Verified Buyer'}
+                  </span>
+                  <div className="flex items-center gap-1 text-brand-goldenHour">
+                    {Array.from({ length: r.rating || 5 }).map((_, i) => (
+                      <Star key={i} className="w-3 h-3 fill-brand-goldenHour" />
                     ))}
                   </div>
-                  {rev.verified_purchase && (
-                    <span className="text-[10px] font-bold text-emerald-400 flex items-center gap-1">
-                      <CheckCircle className="w-3 h-3" /> Verified Purchase
-                    </span>
-                  )}
                 </div>
-                {rev.headline && <h4 className="font-bold text-white">{rev.headline}</h4>}
-                <p className="text-slate-300 leading-relaxed">{rev.body}</p>
-                <div className="text-[10px] text-slate-500 pt-1">
-                  By {rev.profiles?.display_name || 'Community Member'} • {new Date(rev.created_at).toLocaleDateString()}
+                {r.headline && <h4 className="text-xs font-black text-white">{r.headline}</h4>}
+                {r.body && <p className="text-xs text-brand-sandstone/80 leading-relaxed">{r.body}</p>}
+                <div className="flex items-center gap-1 text-[10px] text-emerald-400 font-bold pt-1">
+                  <CheckCircle className="w-3 h-3" /> Verified TUKUBI Purchase
                 </div>
               </div>
             ))}
@@ -350,35 +385,24 @@ export default async function ProductDetailPage({
 
       {/* Related Products Carousel */}
       {relatedProducts.length > 0 && (
-        <div className="space-y-4 pt-4 border-t border-slate-800">
-          <div className="flex items-center justify-between">
-            <h3 className="text-sm font-extrabold text-white uppercase tracking-wider flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-orange-400" />
-              <span>More Caribbean Offerings</span>
-            </h3>
-            <Link href="/marketplace" className="text-xs text-orange-400 hover:text-orange-300 font-bold">
-              Explore All →
-            </Link>
-          </div>
-
+        <div className="pt-8 border-t border-white/10 space-y-4">
+          <h3 className="text-base sm:text-lg font-black text-white">More Caribbean Discoveries</h3>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            {relatedProducts.map((rel) => {
+            {relatedProducts.map((rel: any) => {
               const relPrice = new Money(rel.price_minor, rel.currency);
               return (
                 <Link
                   key={rel.id}
                   href={`/marketplace/${rel.id}`}
-                  className="bg-brand-dusk border border-slate-800 hover:border-orange-500/40 rounded-2xl p-3.5 space-y-2 transition-all block group"
+                  className="surface-card rounded-2xl p-3 border border-white/10 hover:border-orange-500/40 transition-all space-y-2 group"
                 >
-                  <div className="aspect-square bg-slate-900 rounded-xl flex items-center justify-center text-3xl group-hover:scale-105 transition-transform">
+                  <div className="aspect-square bg-slate-950 rounded-xl flex items-center justify-center text-3xl group-hover:scale-105 transition-transform">
                     {rel.product_kind === 'service' ? '🤝' : rel.product_kind === 'digital' ? '🎧' : '📦'}
                   </div>
-                  <h4 className="text-xs font-bold text-white group-hover:text-orange-400 line-clamp-1 transition-colors">
+                  <h4 className="text-xs font-bold text-white truncate group-hover:text-orange-400 transition-colors">
                     {rel.title}
                   </h4>
-                  <div className="text-xs font-black text-brand-sunriseCoral">
-                    {relPrice.format()}
-                  </div>
+                  <p className="text-xs font-black text-brand-goldenHour">{relPrice.format()}</p>
                 </Link>
               );
             })}

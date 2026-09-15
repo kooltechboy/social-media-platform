@@ -158,7 +158,15 @@ export default async function MarketplaceOrdersPage() {
                     <span>Fulfillment Protected</span>
                   </div>
 
-                  <div className="flex items-center gap-2 self-end sm:self-auto">
+                  <div className="flex items-center gap-3 self-end sm:self-auto">
+                    {(order.status === 'paid' || order.status === 'fulfilled') && (
+                      <Link
+                        href={`/marketplace/disputes?orderId=${order.id}`}
+                        className="text-amber-400 hover:text-amber-300 text-[11px] font-bold flex items-center gap-1 transition-colors"
+                      >
+                        <AlertCircle className="w-3.5 h-3.5" /> Report Issue / Dispute
+                      </Link>
+                    )}
                     <Link
                       href="/financial-center"
                       className="text-slate-400 hover:text-slate-200 text-[11px] flex items-center gap-1 transition-colors"

@@ -144,3 +144,58 @@ export type { CloudflareStreamLiveInput, CfStreamConfig } from './cloudflare-str
 // Caribbean Audio Spaces ("Tukubi Sound Lounge")
 export * from './sound-lounge';
 
+// =============================================================================
+// Live Shopping Stream Integration (Phase 13)
+// =============================================================================
+
+export interface LiveShoppingProduct {
+  id: string;
+  livestreamId: string;
+  productId: string;
+  isPinned: boolean;
+  pinnedAt?: string | null;
+  flashDiscountBps: number;
+  displayOrder: number;
+  productTitle?: string;
+  productPriceMinor?: number;
+  productCurrency?: string;
+  productImageUrl?: string;
+}
+
+export function validateLiveProductPin(
+  livestreamId: string,
+  productId: string,
+  flashDiscountBps: number = 0
+): { valid: boolean; errors: string[] } {
+  const errors: string[] = [];
+  if (!livestreamId || typeof livestreamId !== 'string') {
+    errors.push('Valid livestream ID is required');
+  }
+  if (!productId || typeof productId !== 'string') {
+    errors.push('Valid product ID is required');
+  }
+  if (flashDiscountBps < 0 || flashDiscountBps > 9000) {
+    errors.push('Flash discount must be between 0% (0 bps) and 90% (9000 bps)');
+  }
+  return { valid: errors.length === 0, errors };
+}
+
+export function calculateLiveDiscountPrice(
+  originalMinor: number,
+  flashDiscountBps: number
+): { discountedMinor: number; savingsMinor: number } {
+  if (!Number.isInteger(originalMinor) || originalMinor <= 0) {
+    throw new Error('Original price must be positive integer minor units');
+  }
+  if (flashDiscountBps <= 0) {
+    return { discountedMinor: originalMinor, savingsMinor: 0 };
+  }
+  const clampedBps = Math.min(9000, Math.max(0, flashDiscountBps));
+  const savingsMinor = Math.round((originalMinor * clampedBps) / 10000);
+  return {
+    discountedMinor: Math.max(1, originalMinor - savingsMinor),
+    savingsMinor,
+  };
+}
+
+

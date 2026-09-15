@@ -399,5 +399,299 @@ export function digitalGoodsRequireMobileStoreRouting(lines: CartLine[], platfor
   return hasDigital && platform !== 'web';
 }
 
+// =============================================================================
+// Product Conditions & Metadata
+// =============================================================================
+
+export type ProductCondition =
+  | 'new'
+  | 'used_like_new'
+  | 'used_good'
+  | 'used_fair'
+  | 'refurbished'
+  | 'handmade'
+  | 'custom';
+
+export interface ConditionMetadata {
+  id: ProductCondition;
+  label: string;
+  description: string;
+  badgeClass: string;
+}
+
+export const PRODUCT_CONDITION_METADATA: Record<ProductCondition, ConditionMetadata> = {
+  new: {
+    id: 'new',
+    label: 'Brand New',
+    description: 'Unopened original packaging, never used or worn.',
+    badgeClass: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30',
+  },
+  used_like_new: {
+    id: 'used_like_new',
+    label: 'Used - Like New',
+    description: 'Flawless condition with no visible signs of wear.',
+    badgeClass: 'bg-teal-500/10 text-teal-400 border-teal-500/30',
+  },
+  used_good: {
+    id: 'used_good',
+    label: 'Used - Good',
+    description: 'Fully functional with minor cosmetic surface wear.',
+    badgeClass: 'bg-sky-500/10 text-sky-400 border-sky-500/30',
+  },
+  used_fair: {
+    id: 'used_fair',
+    label: 'Used - Fair',
+    description: 'Fully operational with noticeable wear or patina.',
+    badgeClass: 'bg-amber-500/10 text-amber-400 border-amber-500/30',
+  },
+  refurbished: {
+    id: 'refurbished',
+    label: 'Certified Refurbished',
+    description: 'Professionally inspected, cleaned, and restored to full functionality.',
+    badgeClass: 'bg-cyan-500/10 text-cyan-400 border-cyan-500/30',
+  },
+  handmade: {
+    id: 'handmade',
+    label: 'Artisan Handmade',
+    description: 'Authentically crafted by Caribbean artisans and creators.',
+    badgeClass: 'bg-purple-500/10 text-purple-400 border-purple-500/30',
+  },
+  custom: {
+    id: 'custom',
+    label: 'Custom Commission',
+    description: 'Made-to-order bespoke item tailored to customer specifications.',
+    badgeClass: 'bg-pink-500/10 text-pink-400 border-pink-500/30',
+  },
+};
+
+export type ProductStatus = 'draft' | 'active' | 'pending_review' | 'sold' | 'archived' | 'rejected';
+
+// =============================================================================
+// Offers & Negotiations State Machine
+// =============================================================================
+
+export type OfferStatus =
+  | 'pending'
+  | 'countered'
+  | 'accepted'
+  | 'rejected'
+  | 'cancelled'
+  | 'expired';
+
+export const OFFER_TRANSITIONS: Record<OfferStatus, OfferStatus[]> = {
+  pending: ['countered', 'accepted', 'rejected', 'cancelled', 'expired'],
+  countered: ['countered', 'accepted', 'rejected', 'cancelled', 'expired'],
+  accepted: [],
+  rejected: [],
+  cancelled: [],
+  expired: [],
+};
+
+export function transitionOffer(from: OfferStatus, to: OfferStatus): OfferStatus {
+  if (!OFFER_TRANSITIONS[from].includes(to)) {
+    throw new Error(`Invalid offer transition: ${from} → ${to}`);
+  }
+  return to;
+}
+
+export function isOfferActive(offer: { status: OfferStatus; expiresAt: string | Date }): boolean {
+  if (offer.status !== 'pending' && offer.status !== 'countered') {
+    return false;
+  }
+  const expiryTime = new Date(offer.expiresAt).getTime();
+  return expiryTime > Date.now();
+}
+
+// =============================================================================
+// Buyer Protection & Disputes
+// =============================================================================
+
+export type DisputeReason =
+  | 'not_received'
+  | 'materially_different'
+  | 'damaged'
+  | 'counterfeit'
+  | 'fraud';
+
+export const DISPUTE_REASON_METADATA: Record<DisputeReason, { label: string; description: string }> = {
+  not_received: {
+    label: 'Item Not Received',
+    description: 'The tracking shows no delivery or package never arrived within the guaranteed window.',
+  },
+  materially_different: {
+    label: 'Materially Different',
+    description: 'The received item differs significantly from the seller listing description or photos.',
+  },
+  damaged: {
+    label: 'Damaged in Transit',
+    description: 'Item arrived broken, spoiled, or damaged during island shipping.',
+  },
+  counterfeit: {
+    label: 'Suspected Counterfeit',
+    description: 'Item appears inauthentic or falsely branded contrary to TUKUBI Trust & Safety rules.',
+  },
+  fraud: {
+    label: 'Seller Fraud or Scam',
+    description: 'Seller engaged in deceptive behavior, off-platform payment solicitation, or unauthorized changes.',
+  },
+};
+
+export type DisputeResolutionStatus =
+  | 'open'
+  | 'seller_responded'
+  | 'under_review'
+  | 'resolved_refund'
+  | 'resolved_seller'
+  | 'closed';
+
+// =============================================================================
+// Canonical Categories & Natural Language Search Parsing
+// =============================================================================
+
+export interface MarketplaceCategory {
+  id: string;
+  slug: string;
+  title: string;
+  description?: string;
+  icon?: string;
+  culturalTags: string[];
+  displayOrder: number;
+}
+
+export const CANONICAL_CARIBBEAN_CATEGORIES: MarketplaceCategory[] = [
+  { id: 'cat-food', slug: 'food-spices', title: 'Food & Spices', icon: 'Utensils', culturalTags: ['coffee', 'spices', 'rum', 'cacao'], displayOrder: 1 },
+  { id: 'cat-carnival', slug: 'carnival-mas', title: 'Carnival & Mas', icon: 'Sparkles', culturalTags: ['carnival', 'mas', 'costume', 'soca'], displayOrder: 2 },
+  { id: 'cat-art', slug: 'art-decor', title: 'Art & Living', icon: 'Palette', culturalTags: ['art', 'craft', 'paintings', 'decor'], displayOrder: 3 },
+  { id: 'cat-fashion', slug: 'fashion-apparel', title: 'Fashion & Wear', icon: 'Shirt', culturalTags: ['fashion', 'apparel', 'crochet', 'resort'], displayOrder: 4 },
+  { id: 'cat-beauty', slug: 'beauty-wellness', title: 'Beauty & Wellness', icon: 'Heart', culturalTags: ['wellness', 'sea-moss', 'castor-oil'], displayOrder: 5 },
+  { id: 'cat-digital', slug: 'digital-sounds', title: 'Digital & Audio', icon: 'Headphones', culturalTags: ['samples', 'beats', 'stems', 'ebooks'], displayOrder: 6 },
+  { id: 'cat-services', slug: 'services-bookings', title: 'Services & Bookings', icon: 'Briefcase', culturalTags: ['consulting', 'photography', 'production'], displayOrder: 7 },
+  { id: 'cat-tech', slug: 'electronics-tech', title: 'Electronics & Tech', icon: 'Smartphone', culturalTags: ['phones', 'laptops', 'audio'], displayOrder: 8 },
+  { id: 'cat-vehicles', slug: 'vehicles-transport', title: 'Vehicles & Marine', icon: 'Car', culturalTags: ['cars', 'boats', 'motorcycles'], displayOrder: 9 },
+  { id: 'cat-realestate', slug: 'real-estate-rentals', title: 'Real Estate & Land', icon: 'Home', culturalTags: ['rentals', 'land', 'villas'], displayOrder: 10 },
+];
+
+export interface MarketplaceFilterParams {
+  query?: string;
+  categorySlug?: string;
+  minPriceMinor?: number;
+  maxPriceMinor?: number;
+  condition?: ProductCondition[];
+  countryIso?: string;
+  productKind?: ProductKind;
+  pickupOnly?: boolean;
+  shippingOnly?: boolean;
+  verifiedOnly?: boolean;
+  sort?: 'newest' | 'price_asc' | 'price_desc' | 'popular';
+}
+
+/**
+ * Natural language shopping assistant parser.
+ * Maps intent queries like "used iPhone under $300 in Kingston" into structured filters.
+ */
+export function parseNaturalLanguageSearch(prompt: string): Partial<MarketplaceFilterParams> {
+  const norm = prompt.toLowerCase().trim();
+  const filters: Partial<MarketplaceFilterParams> = {};
+
+  // Price constraints (e.g. "under $300", "below 50", "less than $100")
+  const underPriceMatch = norm.match(/(?:under|below|less than|max)\s*\$?(\d+)/i);
+  if (underPriceMatch && underPriceMatch[1]) {
+    filters.maxPriceMinor = parseInt(underPriceMatch[1], 10) * 100;
+  }
+  const minPriceMatch = norm.match(/(?:above|over|more than|min)\s*\$?(\d+)/i);
+  if (minPriceMatch && minPriceMatch[1]) {
+    filters.minPriceMinor = parseInt(minPriceMatch[1], 10) * 100;
+  }
+
+  // Condition keywords
+  const conditions: ProductCondition[] = [];
+  if (norm.includes('new') && !norm.includes('used') && !norm.includes('refurbished')) {
+    conditions.push('new');
+  }
+  if (norm.includes('used') || norm.includes('pre-owned') || norm.includes('second hand')) {
+    conditions.push('used_like_new', 'used_good', 'used_fair');
+  }
+  if (norm.includes('refurbished') || norm.includes('renewed')) {
+    conditions.push('refurbished');
+  }
+  if (norm.includes('handmade') || norm.includes('artisan') || norm.includes('craft')) {
+    conditions.push('handmade');
+  }
+  if (conditions.length > 0) {
+    filters.condition = conditions;
+  }
+
+  // Geographic / Island mentions
+  if (norm.includes('jamaica') || norm.includes('kingston') || norm.includes('montego')) {
+    filters.countryIso = 'JAM';
+  } else if (norm.includes('dominican') || norm.includes('santo domingo') || norm.includes('santiago')) {
+    filters.countryIso = 'DOM';
+  } else if (norm.includes('trinidad') || norm.includes('tobago') || norm.includes('port of spain')) {
+    filters.countryIso = 'TTO';
+  } else if (norm.includes('haiti') || norm.includes('port-au-prince')) {
+    filters.countryIso = 'HTI';
+  } else if (norm.includes('barbados') || norm.includes('bridgetown')) {
+    filters.countryIso = 'BRB';
+  } else if (norm.includes('bahamas') || norm.includes('nassau')) {
+    filters.countryIso = 'BHS';
+  } else if (norm.includes('guyana') || norm.includes('georgetown')) {
+    filters.countryIso = 'GUY';
+  } else if (norm.includes('puerto rico') || norm.includes('san juan')) {
+    filters.countryIso = 'PRI';
+  }
+
+  // Category matching
+  if (norm.includes('coffee') || norm.includes('spice') || norm.includes('sauce') || norm.includes('rum') || norm.includes('food')) {
+    filters.categorySlug = 'food-spices';
+  } else if (norm.includes('carnival') || norm.includes('mas') || norm.includes('headdress') || norm.includes('soca')) {
+    filters.categorySlug = 'carnival-mas';
+  } else if (norm.includes('art') || norm.includes('painting') || norm.includes('sculpture') || norm.includes('decor')) {
+    filters.categorySlug = 'art-decor';
+  } else if (norm.includes('phone') || norm.includes('laptop') || norm.includes('iphone') || norm.includes('tech') || norm.includes('electronics')) {
+    filters.categorySlug = 'electronics-tech';
+  } else if (norm.includes('dress') || norm.includes('shirt') || norm.includes('wear') || norm.includes('crochet') || norm.includes('fashion')) {
+    filters.categorySlug = 'fashion-apparel';
+  } else if (norm.includes('service') || norm.includes('photo') || norm.includes('booking') || norm.includes('consulting')) {
+    filters.categorySlug = 'services-bookings';
+    filters.productKind = 'service';
+  } else if (norm.includes('beat') || norm.includes('stem') || norm.includes('sample') || norm.includes('audio') || norm.includes('digital')) {
+    filters.categorySlug = 'digital-sounds';
+    filters.productKind = 'digital';
+  }
+
+  // Delivery preferences
+  if (norm.includes('pickup') || norm.includes('pick up')) {
+    filters.pickupOnly = true;
+  }
+  if (norm.includes('shipping') || norm.includes('deliver') || norm.includes('ship')) {
+    filters.shippingOnly = true;
+  }
+  if (norm.includes('verified')) {
+    filters.verifiedOnly = true;
+  }
+
+  // Clean remaining query text
+  let cleaned = prompt
+    .replace(/(?:under|below|less than|above|over|more than)\s*\$?\d+/gi, '')
+    .replace(/\b(find|show|me|products|items|goods|looking for|near|in|with|verified|sellers?)\b/gi, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  if (cleaned.length >= 2) {
+    filters.query = cleaned;
+  }
+
+  return filters;
+}
+
+/**
+ * Calculates affiliate commission amount in minor currency units.
+ */
+export function calculateAffiliateCommission(subtotalMinor: number, commissionBps: number): number {
+  if (subtotalMinor <= 0 || commissionBps <= 0) return 0;
+  const clampedBps = Math.min(Math.max(commissionBps, 0), 5000); // Max 50%
+  return Math.round((subtotalMinor * clampedBps) / 10000);
+}
+
 export * from './logistics';
 

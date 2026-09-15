@@ -22,7 +22,9 @@ import {
   CheckCircle,
   Radio,
   Sparkles,
+  ShoppingBag,
 } from 'lucide-react';
+import { calculateLiveDiscountPrice } from '@caribbean/live';
 import { createSupabaseBrowserClient } from '../../lib/supabase/browser';
 import { sendLiveMessageAction, type LiveActionState } from '../../lib/live/actions';
 import { LiveGiftModal } from '../live-gift-modal';
@@ -110,12 +112,100 @@ function ActiveLivePlayer({
   const [followingPending, setFollowingPending] = useState(false);
   const [copiedShare, setCopiedShare] = useState(false);
   const [reactions, setReactions] = useState<FloatingReaction[]>([]);
+  const [pinnedProduct, setPinnedProduct] = useState<{
+    id: string;
+    productId: string;
+    title: string;
+    priceMinor: number;
+    discountedPriceMinor: number;
+    savingsMinor: number;
+    flashDiscountBps: number;
+    currency: string;
+    imageUrl?: string;
+    inventoryCount: number | null;
+  } | null>(null);
 
   const videoContainerRef = useRef<HTMLDivElement | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const chatScrollRef = useRef<HTMLDivElement | null>(null);
 
   const isLive = stream.state === 'live';
+
+  // Fetch & subscribe to live pinned shopping drop
+  useEffect(() => {
+    const supabase = createSupabaseBrowserClient();
+    if (!supabase || !stream.id) return;
+
+    let isMounted = true;
+    const loadPinnedProduct = async () => {
+      const { data } = await supabase
+        .from('livestream_products')
+        .select(`
+          id,
+          product_id,
+          flash_discount_bps,
+          products (
+            id,
+            title,
+            price_minor,
+            currency,
+            inventory_count,
+            marketplace_product_media (url, is_primary)
+          )
+        `)
+        .eq('livestream_id', stream.id)
+        .eq('is_pinned', true)
+        .maybeSingle();
+
+      if (!isMounted) return;
+
+      if (data && data.products) {
+        const prod: any = data.products;
+        const media = prod.marketplace_product_media;
+        const img = Array.isArray(media) && media.length > 0 ? media[0].url : undefined;
+        const bps = data.flash_discount_bps || 0;
+        const discount = calculateLiveDiscountPrice(prod.price_minor, bps);
+
+        setPinnedProduct({
+          id: data.id,
+          productId: prod.id,
+          title: prod.title,
+          priceMinor: prod.price_minor,
+          discountedPriceMinor: discount.discountedMinor,
+          savingsMinor: discount.savingsMinor,
+          flashDiscountBps: bps,
+          currency: prod.currency || 'USD',
+          imageUrl: img,
+          inventoryCount: prod.inventory_count,
+        });
+      } else {
+        setPinnedProduct(null);
+      }
+    };
+
+    void loadPinnedProduct();
+
+    const channel = supabase
+      .channel(`viewer-live-products-${stream.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'livestream_products',
+          filter: `livestream_id=eq.${stream.id}`,
+        },
+        () => {
+          void loadPinnedProduct();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      isMounted = false;
+      void supabase.removeChannel(channel);
+    };
+  }, [stream.id]);
 
   // Load existing stream messages on mount
   useEffect(() => {
@@ -405,6 +495,56 @@ function ActiveLivePlayer({
                 {copiedShare ? <Check className="w-4 h-4 text-emerald-400" /> : <Share2 className="w-4 h-4" />}
               </button>
             </div>
+
+            {/* Live Shopping Pinned Flash Drop Card */}
+            {pinnedProduct && (
+              <div className="absolute bottom-16 left-4 right-4 sm:right-auto sm:max-w-sm z-30 pointer-events-auto">
+                <div className="bg-slate-950/90 backdrop-blur-xl border border-red-500/60 rounded-2xl p-3 shadow-2xl flex items-center gap-3">
+                  <div className="relative w-12 h-12 rounded-xl bg-slate-900 border border-white/10 overflow-hidden flex-shrink-0 flex items-center justify-center">
+                    {pinnedProduct.imageUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={pinnedProduct.imageUrl} alt={pinnedProduct.title} className="w-full h-full object-cover" />
+                    ) : (
+                      <ShoppingBag className="w-5 h-5 text-brand-caribbeanSea" />
+                    )}
+                    {pinnedProduct.flashDiscountBps > 0 && (
+                      <span className="absolute top-0 right-0 bg-red-600 text-white text-[9px] font-black px-1 rounded-bl">
+                        -{pinnedProduct.flashDiscountBps / 100}%
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[10px] font-black uppercase text-red-400 flex items-center gap-1">
+                        <Flame className="w-3 h-3 fill-current" /> Live Drop
+                      </span>
+                      {pinnedProduct.inventoryCount !== null && pinnedProduct.inventoryCount <= 5 && (
+                        <span className="text-[9px] font-bold text-amber-300">Only {pinnedProduct.inventoryCount} left!</span>
+                      )}
+                    </div>
+                    <h4 className="text-xs font-black text-white truncate">{pinnedProduct.title}</h4>
+                    <div className="flex items-baseline gap-1.5 mt-0.5">
+                      <span className="text-xs font-black text-brand-caribbeanSea">
+                        ${(pinnedProduct.discountedPriceMinor / 100).toFixed(2)} {pinnedProduct.currency}
+                      </span>
+                      {pinnedProduct.flashDiscountBps > 0 && (
+                        <span className="text-[10px] text-brand-sandstone/50 line-through">
+                          ${(pinnedProduct.priceMinor / 100).toFixed(2)}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  <Link
+                    href={`/marketplace/${pinnedProduct.productId}`}
+                    className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-red-600 to-rose-600 hover:brightness-110 text-white font-black text-xs text-center transition-all shadow-md min-h-[36px] flex items-center justify-center flex-shrink-0 cursor-pointer"
+                  >
+                    Buy Drop
+                  </Link>
+                </div>
+              </div>
+            )}
 
             {/* Bottom Overlay Player Controls */}
             {isLive && (

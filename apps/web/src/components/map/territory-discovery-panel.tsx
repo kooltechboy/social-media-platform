@@ -1,8 +1,9 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { createBrowserClient } from '@supabase/ssr';
-import { Users, Building2, Calendar, LayoutGrid, MessageSquare, Loader2, Info, X } from 'lucide-react';
+import { Users, Building2, Calendar, LayoutGrid, MessageSquare, ShoppingBag, Loader2, Info, X, ArrowRight } from 'lucide-react';
 import type { CaribbeanGeoEntity } from '../../lib/constants/caribbean-geography';
 
 interface TerritoryDiscoveryPanelProps {
@@ -10,11 +11,12 @@ interface TerritoryDiscoveryPanelProps {
   onClose?: () => void;
 }
 
-type TabType = 'creators' | 'businesses' | 'events' | 'communities' | 'posts';
+type TabType = 'creators' | 'businesses' | 'products' | 'events' | 'communities' | 'posts';
 
 const TABS = [
   { id: 'creators', label: 'Creators', icon: Users },
   { id: 'businesses', label: 'Businesses', icon: Building2 },
+  { id: 'products', label: 'Marketplace', icon: ShoppingBag },
   { id: 'events', label: 'Events', icon: Calendar },
   { id: 'communities', label: 'Communities', icon: LayoutGrid },
   { id: 'posts', label: 'Posts', icon: MessageSquare },
@@ -53,6 +55,14 @@ export default function TerritoryDiscoveryPanel({ entity, onClose }: TerritoryDi
               .from('businesses')
               .select('id, name, description, logo_url')
               .eq('country_iso', entity.iso)
+              .limit(10);
+            break;
+          case 'products':
+            res = await supabase
+              .from('products')
+              .select('id, title, description, price_minor, currency, condition, marketplace_product_media(media_url)')
+              .eq('location_country_iso', entity.iso)
+              .eq('is_active', true)
               .limit(10);
             break;
           case 'events':
@@ -107,7 +117,18 @@ export default function TerritoryDiscoveryPanel({ entity, onClose }: TerritoryDi
           <span className="text-3xl">{entity.flag}</span>
           <div>
             <h2 className="text-lg font-black text-brand-sandstone">{entity.name} Discovery</h2>
-            <p className="text-xs text-brand-sandstone/60">Explore local content and connections</p>
+            <div className="flex items-center gap-2 mt-0.5">
+              <p className="text-xs text-brand-sandstone/60">Explore local content and trade</p>
+              <span className="text-brand-sandstone/40">•</span>
+              <Link
+                href={`/marketplace?territory=${entity.iso}`}
+                className="inline-flex items-center gap-1 text-xs font-bold text-orange-400 hover:text-orange-300 hover:underline"
+              >
+                <ShoppingBag className="w-3 h-3" />
+                Shop Marketplace
+                <ArrowRight className="w-3 h-3 ml-0.5" />
+              </Link>
+            </div>
           </div>
         </div>
         {onClose && (
@@ -158,6 +179,14 @@ export default function TerritoryDiscoveryPanel({ entity, onClose }: TerritoryDi
             <p className="text-xs font-medium text-center max-w-[200px]">
               No {tabLabel(activeTab).toLowerCase()} discovered in {entity.name} yet.
             </p>
+            {activeTab === 'products' && (
+              <Link
+                href="/marketplace/seller-center/create"
+                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-orange-500/20 text-orange-400 border border-orange-500/30 text-xs font-bold hover:bg-orange-500/30 transition-all"
+              >
+                List a product in {entity.name} →
+              </Link>
+            )}
           </div>
         ) : (
           <ul className="space-y-3">
@@ -184,6 +213,30 @@ export default function TerritoryDiscoveryPanel({ entity, onClose }: TerritoryDi
                       {item.description && <p className="text-xs text-brand-sandstone/60 line-clamp-1">{item.description}</p>}
                     </div>
                   </>
+                )}
+                {activeTab === 'products' && (
+                  <Link href={`/marketplace/${item.id}`} className="flex gap-3 w-full hover:opacity-90 transition-opacity">
+                    <div className="w-11 h-11 rounded-xl bg-slate-800 shrink-0 overflow-hidden flex items-center justify-center text-brand-sandstone/40 border border-slate-700">
+                      {item.marketplace_product_media?.[0]?.media_url ? (
+                        <img src={item.marketplace_product_media[0].media_url} alt={item.title} className="w-full h-full object-cover" />
+                      ) : (
+                        <ShoppingBag className="w-5 h-5 text-orange-400" />
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-bold text-brand-sandstone truncate">{item.title}</p>
+                      <div className="flex items-center gap-2 mt-0.5">
+                        <span className="text-xs font-black text-orange-400">
+                          ${((item.price_minor || 0) / 100).toFixed(2)} {item.currency || 'USD'}
+                        </span>
+                        {item.condition && (
+                          <span className="text-[10px] font-semibold text-brand-sandstone/60 capitalize">
+                            • {item.condition.replace(/_/g, ' ')}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </Link>
                 )}
                 {activeTab === 'events' && (
                   <>

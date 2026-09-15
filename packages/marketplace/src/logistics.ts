@@ -204,3 +204,252 @@ export function advanceShipmentMilestone(
     updatedAt: timestamp,
   };
 }
+
+// =============================================================================
+// Caribbean Regional Carriers & Webhook Normalization (Phase 14)
+// =============================================================================
+
+export type CarrierCode =
+  | 'aeropost'
+  | 'laparkan'
+  | 'tropical_shipping'
+  | 'caribbean_airlines'
+  | 'dhl_express'
+  | 'custom_courier';
+
+export interface CaribbeanCarrierInfo {
+  code: CarrierCode;
+  name: string;
+  serviceType: 'air_cargo' | 'maritime_freight' | 'express_courier';
+  trackingUrlTemplate: string;
+  supportPhone?: string;
+  regionsServed: string[];
+}
+
+export const CARIBBEAN_CARRIERS: Record<CarrierCode, CaribbeanCarrierInfo> = {
+  aeropost: {
+    code: 'aeropost',
+    name: 'Aeropost Caribbean',
+    serviceType: 'air_cargo',
+    trackingUrlTemplate: 'https://aeropost.com/track?pkg={trackingNumber}',
+    regionsServed: ['JAM', 'DOM', 'TTO', 'BRB', 'BHS', 'HTI', 'USA'],
+  },
+  laparkan: {
+    code: 'laparkan',
+    name: 'Laparkan Freight & Logistics',
+    serviceType: 'maritime_freight',
+    trackingUrlTemplate: 'https://laparkan.com/tracking?b_no={trackingNumber}',
+    regionsServed: ['GUY', 'SUR', 'JAM', 'TTO', 'BRB', 'USA', 'CAN'],
+  },
+  tropical_shipping: {
+    code: 'tropical_shipping',
+    name: 'Tropical Shipping Maritime',
+    serviceType: 'maritime_freight',
+    trackingUrlTemplate: 'https://tropical.com/track/booking/{trackingNumber}',
+    regionsServed: ['JAM', 'DOM', 'TTO', 'BRB', 'BHS', 'LCA', 'ATG'],
+  },
+  caribbean_airlines: {
+    code: 'caribbean_airlines',
+    name: 'Caribbean Airlines Cargo',
+    serviceType: 'air_cargo',
+    trackingUrlTemplate: 'https://cargo.caribbean-airlines.com/track?awb={trackingNumber}',
+    regionsServed: ['TTO', 'JAM', 'GUY', 'BRB', 'MIA', 'JFK', 'YYZ'],
+  },
+  dhl_express: {
+    code: 'dhl_express',
+    name: 'DHL Express Caribbean',
+    serviceType: 'express_courier',
+    trackingUrlTemplate: 'https://www.dhl.com/en/express/tracking.html?AWB={trackingNumber}',
+    regionsServed: ['ALL'],
+  },
+  custom_courier: {
+    code: 'custom_courier',
+    name: 'Island Local Dispatcher',
+    serviceType: 'express_courier',
+    trackingUrlTemplate: '/marketplace/tracking?num={trackingNumber}',
+    regionsServed: ['LOCAL'],
+  },
+};
+
+export function normalizeCarrierWebhookStatus(carrierCode: string, rawStatus: string): ShipmentMilestoneStatus {
+  const norm = rawStatus.toLowerCase().trim();
+  if (
+    norm.includes('out for delivery') ||
+    norm.includes('with driver') ||
+    norm.includes('with courier') ||
+    norm.includes('for delivery') ||
+    norm.includes('van') ||
+    norm.includes('on vehicle')
+  ) {
+    return 'out_for_delivery';
+  }
+  if (norm.includes('delivered') || norm === 'delivered' || norm === 'pod' || norm.includes('signed')) {
+    return 'delivered';
+  }
+  if (norm.includes('custom') || norm.includes('duty') || norm.includes('tax') || norm.includes('clearance')) {
+    return 'customs_cleared';
+  }
+  if (norm.includes('transit') || norm.includes('depart') || norm.includes('sailing') || norm.includes('flight') || norm.includes('arrived at hub')) {
+    return 'inter_island_transit';
+  }
+  if (norm.includes('port') || norm.includes('dock') || norm.includes('warehouse')) {
+    return 'port_dispatched';
+  }
+  if (norm.includes('delay') || norm.includes('exception') || norm.includes('weather') || norm.includes('failed')) {
+    return 'exception';
+  }
+  if (norm.includes('pack') || norm.includes('ready')) {
+    return 'packaged';
+  }
+  return 'order_placed';
+}
+
+export function formatCarrierTrackingUrl(carrierCode: string, trackingNumber: string): string {
+  const carrier = CARIBBEAN_CARRIERS[carrierCode as CarrierCode] || CARIBBEAN_CARRIERS.custom_courier;
+  return carrier.trackingUrlTemplate.replace('{trackingNumber}', encodeURIComponent(trackingNumber));
+}
+
+// =============================================================================
+// Cross-Border Diaspora Duty & Tariff Calculation Engine (Phase 15)
+// =============================================================================
+
+export interface CustomsDutyParams {
+  itemValueMinor: number;
+  shippingMinor?: number;
+  originCountryIso: string;
+  destinationCountryIso: string;
+  categorySlug?: string;
+  prepayDuties?: boolean;
+}
+
+export interface CustomsDutyResult {
+  isCrossBorder: boolean;
+  deMinimisExempt: boolean;
+  deMinimisLimitMinor: number;
+  customsDutyMinor: number;
+  importVatMinor: number;
+  adminFeeMinor: number;
+  totalEstimatedDutiesMinor: number;
+  effectiveDutyRateBps: number;
+  effectiveVatRateBps: number;
+  currency: string;
+}
+
+export const CARICOM_CET_RATES: Record<string, number> = {
+  'food-spices': 2000,       // 20%
+  'carnival-mas': 2000,      // 20%
+  'art-decor': 2000,         // 20%
+  'fashion-apparel': 2000,   // 20%
+  'beauty-wellness': 2000,   // 20%
+  'digital-sounds': 0,       // 0% digital exemption
+  'services-bookings': 0,    // 0% service exemption
+  'electronics-tech': 1000,  // 10%
+  'vehicles-transport': 3000,// 30%
+  'real-estate-rentals': 0,  // 0%
+  default: 2000,             // 20% standard CET
+};
+
+export const DESTINATION_VAT_RATES: Record<string, number> = {
+  JAM: 1500, // 15% GCT (Jamaica)
+  DOM: 1800, // 18% ITBIS (Dominican Republic)
+  TTO: 1250, // 12.5% VAT (Trinidad & Tobago)
+  BRB: 1750, // 17.5% VAT (Barbados)
+  BHS: 1000, // 10% VAT (Bahamas)
+  HTI: 1000, // 10% TCA (Haiti)
+  PRI: 1150, // 11.5% IVU (Puerto Rico)
+  LCA: 1250, // 12.5% VAT (Saint Lucia)
+  GUY: 1400, // 14% VAT (Guyana)
+  default: 1500,
+};
+
+export const DE_MINIMIS_LIMITS_USD_MINOR: Record<string, number> = {
+  JAM: 5000,  // $50 USD
+  DOM: 20000, // $200 USD
+  TTO: 5000,  // $50 USD
+  BRB: 5000,  // $50 USD
+  default: 5000,
+};
+
+export function estimateCaribbeanCustomsDuties(params: CustomsDutyParams): CustomsDutyResult {
+  const origin = params.originCountryIso.toUpperCase();
+  const dest = params.destinationCountryIso.toUpperCase();
+  const isCrossBorder = origin !== dest;
+
+  if (!isCrossBorder || params.itemValueMinor <= 0) {
+    return {
+      isCrossBorder: false,
+      deMinimisExempt: true,
+      deMinimisLimitMinor: 0,
+      customsDutyMinor: 0,
+      importVatMinor: 0,
+      adminFeeMinor: 0,
+      totalEstimatedDutiesMinor: 0,
+      effectiveDutyRateBps: 0,
+      effectiveVatRateBps: 0,
+      currency: 'USD',
+    };
+  }
+
+  const category = params.categorySlug || 'default';
+  const dutyRateBps = CARICOM_CET_RATES[category] ?? CARICOM_CET_RATES.default;
+  const vatRateBps = DESTINATION_VAT_RATES[dest] ?? DESTINATION_VAT_RATES.default;
+  const deMinimisLimitMinor = DE_MINIMIS_LIMITS_USD_MINOR[dest] ?? DE_MINIMIS_LIMITS_USD_MINOR.default;
+
+  // Check de minimis threshold for small personal parcels
+  const isExempt = params.itemValueMinor <= deMinimisLimitMinor || dutyRateBps === 0;
+
+  if (isExempt && dutyRateBps === 0) {
+    return {
+      isCrossBorder: true,
+      deMinimisExempt: true,
+      deMinimisLimitMinor,
+      customsDutyMinor: 0,
+      importVatMinor: 0,
+      adminFeeMinor: 0,
+      totalEstimatedDutiesMinor: 0,
+      effectiveDutyRateBps: 0,
+      effectiveVatRateBps: 0,
+      currency: 'USD',
+    };
+  }
+
+  if (isExempt) {
+    return {
+      isCrossBorder: true,
+      deMinimisExempt: true,
+      deMinimisLimitMinor,
+      customsDutyMinor: 0,
+      importVatMinor: 0,
+      adminFeeMinor: 250, // $2.50 flat clearance handling
+      totalEstimatedDutiesMinor: 250,
+      effectiveDutyRateBps: 0,
+      effectiveVatRateBps: 0,
+      currency: 'USD',
+    };
+  }
+
+  // CIF Value = Cost (item value) + Insurance & Freight (shipping)
+  const shippingMinor = params.shippingMinor ?? 1500;
+  const cifValueMinor = params.itemValueMinor + shippingMinor;
+
+  const customsDutyMinor = Math.round((cifValueMinor * dutyRateBps) / 10000);
+  const vatBaseMinor = cifValueMinor + customsDutyMinor;
+  const importVatMinor = Math.round((vatBaseMinor * vatRateBps) / 10000);
+  const adminFeeMinor = 500; // $5.00 regional customs electronic declaration fee
+
+  const totalEstimatedDutiesMinor = customsDutyMinor + importVatMinor + adminFeeMinor;
+
+  return {
+    isCrossBorder: true,
+    deMinimisExempt: false,
+    deMinimisLimitMinor,
+    customsDutyMinor,
+    importVatMinor,
+    adminFeeMinor,
+    totalEstimatedDutiesMinor,
+    effectiveDutyRateBps: dutyRateBps,
+    effectiveVatRateBps: vatRateBps,
+    currency: 'USD',
+  };
+}
+

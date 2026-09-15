@@ -40,6 +40,7 @@ import {
   sendLiveMessageAction,
 } from '../../lib/live/actions';
 import { createSupabaseBrowserClient } from '../../lib/supabase/browser';
+import { LiveShoppingControls } from './live-shopping-controls';
 
 interface LiveHostStudioProps {
   user: {
@@ -732,6 +733,13 @@ export default function LiveHostStudio({ user }: LiveHostStudioProps) {
                   />
                 </div>
               </div>
+            </div>
+          )}
+
+          {/* Broadcaster Live Shopping & Flash Drops */}
+          {livestreamId && (
+            <div className="mt-4">
+              <LiveShoppingControls livestreamId={livestreamId} hostId={user.id} />
             </div>
           )}
         </div>
