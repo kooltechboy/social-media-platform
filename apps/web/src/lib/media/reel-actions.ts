@@ -33,6 +33,18 @@ export async function toggleReelLikeAction(reelId: string): Promise<ReelActionRe
       .eq('viewer_id', user.id);
 
     if (error) return { success: false, error: error.message };
+
+    // Update real video likes_count
+    try {
+      const { data: v } = await supabase.from('videos').select('likes_count').eq('id', reelId).maybeSingle();
+      if (v) {
+        const nextLikes = nextCompleted ? (v.likes_count || 0) + 1 : Math.max(0, (v.likes_count || 0) - 1);
+        await supabase.from('videos').update({ likes_count: nextLikes }).eq('id', reelId);
+      }
+    } catch {
+      // Non-blocking counter sync
+    }
+
     return { success: true, data: { isLiked: nextCompleted } };
   } else {
     const { error } = await supabase
@@ -45,6 +57,16 @@ export async function toggleReelLikeAction(reelId: string): Promise<ReelActionRe
       });
 
     if (error) return { success: false, error: error.message };
+
+    try {
+      const { data: v } = await supabase.from('videos').select('likes_count').eq('id', reelId).maybeSingle();
+      if (v) {
+        await supabase.from('videos').update({ likes_count: (v.likes_count || 0) + 1 }).eq('id', reelId);
+      }
+    } catch {
+      // Non-blocking counter sync
+    }
+
     return { success: true, data: { isLiked: true } };
   }
 }
@@ -73,6 +95,16 @@ export async function postReelCommentAction(reelId: string, content: string): Pr
   if (error) {
     console.error('[postReelCommentAction] DB error:', error);
     return { success: false, error: error.message };
+  }
+
+  // Sync real video comments_count
+  try {
+    const { data: v } = await supabase.from('videos').select('comments_count').eq('id', reelId).maybeSingle();
+    if (v) {
+      await supabase.from('videos').update({ comments_count: (v.comments_count || 0) + 1 }).eq('id', reelId);
+    }
+  } catch {
+    // Non-blocking
   }
 
   const rawP = (comment as any)?.profiles;
@@ -182,6 +214,9 @@ export async function publishReelAction(formData: FormData): Promise<ReelActionR
   const supabase = await createSupabaseServerClient();
   if (!supabase) return { success: false, error: 'Database unavailable.' };
 
+  const countryId = String(formData.get('countryId') ?? '').trim();
+  const locationTag = String(formData.get('locationTag') ?? '').trim();
+
   const finalTitle = soundTitle ? `${title} • 🎵 ${soundTitle}` : title;
 
   const { data: videoData, error } = await supabase
@@ -194,12 +229,31 @@ export async function publishReelAction(formData: FormData): Promise<ReelActionR
       duration_seconds: isNaN(durationSeconds) ? 30 : durationSeconds,
       visibility: visibility === 'subscribers' ? 'subscribers' : visibility === 'followers' ? 'followers' : 'public',
       audio_track: soundTitle || 'Original Caribbean Audio',
+      sound_id: soundId || null,
+      country_id: countryId || null,
+      location_tag: locationTag || null,
+      aspect_ratio: '9:16',
       view_count: 0,
+      likes_count: 0,
+      comments_count: 0,
     })
     .select('id, title, created_at, storage_path')
     .single();
 
   if (error) return { success: false, error: error.message };
+
+  // Record sound usage if a registered sound was attached
+  if (soundId) {
+    try {
+      await supabase.from('sound_usage').insert({
+        sound_id: soundId,
+        video_id: videoData.id,
+        used_by: user.id,
+      });
+    } catch (usageErr) {
+      console.warn('[publishReelAction] sound_usage track warning:', usageErr);
+    }
+  }
 
   // Resolve author profile country for post synchronization
   try {

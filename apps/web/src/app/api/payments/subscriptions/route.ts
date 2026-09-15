@@ -33,8 +33,9 @@ export async function POST(request: NextRequest) {
       }
 
       if (adapter.createSubscription && adapter.isConfigured) {
+        const paypalPlanId = tier.paypal_plan_id || tier.id;
         const subResult = await adapter.createSubscription({
-          planId: tier.id,
+          planId: paypalPlanId,
           subscriberId: user.id,
           subscriberEmail: user.email,
           returnUrl: returnUrl || `${request.nextUrl.origin}/financial-center/subscriptions?status=active`,
@@ -88,8 +89,26 @@ export async function POST(request: NextRequest) {
       }
 
       if (adapter.createSubscription && adapter.isConfigured) {
+        let paypalPlanId = plan.paypal_plan_id;
+        if (!paypalPlanId && adapter.createBillingPlan) {
+          const planRes = await adapter.createBillingPlan({
+            name: plan.name,
+            description: plan.description || 'Creator Membership on TUKUBI',
+            priceMinor: plan.price_minor,
+            currency: plan.currency || 'USD',
+            billingInterval: plan.billing_interval || 'monthly',
+          });
+          if (planRes.success && planRes.providerPlanId) {
+            paypalPlanId = planRes.providerPlanId;
+            await supabase
+              .from('creator_subscription_plans')
+              .update({ paypal_plan_id: paypalPlanId })
+              .eq('id', plan.id);
+          }
+        }
+
         const subResult = await adapter.createSubscription({
-          planId: plan.id,
+          planId: paypalPlanId || plan.id,
           subscriberId: user.id,
           subscriberEmail: user.email,
           returnUrl: returnUrl || `${request.nextUrl.origin}/financial-center/subscriptions?status=active`,

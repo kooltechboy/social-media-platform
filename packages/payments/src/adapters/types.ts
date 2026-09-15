@@ -76,6 +76,21 @@ export interface PSPPayoutResult {
   rawResponse?: unknown;
 }
 
+export interface PSPBillingPlanParams {
+  name: string;
+  description?: string;
+  priceMinor: number;
+  currency: string;
+  billingInterval?: 'monthly' | 'annual';
+}
+
+export interface PSPBillingPlanResult {
+  success: boolean;
+  providerPlanId: string;
+  providerProductId?: string;
+  errorMessage?: string;
+}
+
 export interface PSPAdapter {
   readonly providerName: string;
   readonly isConfigured: boolean;
@@ -83,6 +98,7 @@ export interface PSPAdapter {
   charge(params: PSPChargeParams): Promise<PSPChargeResult>;
   refund(params: PSPRefundParams): Promise<PSPRefundResult>;
   createSubscription?(params: PSPSubscriptionParams): Promise<PSPSubscriptionResult>;
+  createBillingPlan?(params: PSPBillingPlanParams): Promise<PSPBillingPlanResult>;
   cancelSubscription?(subscriptionId: string, reason?: string): Promise<{ success: boolean; errorMessage?: string }>;
   getSubscription?(subscriptionId: string): Promise<{ status: string; currentPeriodEnd?: string; raw?: unknown }>;
   createPayout?(params: PSPPayoutParams): Promise<PSPPayoutResult>;

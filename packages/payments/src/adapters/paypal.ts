@@ -8,11 +8,20 @@ import type {
   PSPRefundResult,
   PSPSubscriptionParams,
   PSPSubscriptionResult,
+  PSPBillingPlanParams,
+  PSPBillingPlanResult,
   PSPPayoutParams,
   PSPPayoutResult,
   WebhookVerifier,
 } from './types';
 
+export const CANONICAL_PAYPAL_PLANS: Record<string, string> = {
+  user_premium: 'P-24422210GR093024NNKUOD7I',
+  creator_plus: 'P-5V708726CT8509016NKUOD7Q',
+  creator_pro: 'P-66G91342833329842NKUOD7Q',
+  seller_pro: 'P-8HW87778RJ695940XNKUOD7Y',
+  business_plus: 'P-21X48782YF5114038NKUOD7Y',
+};
 
 export interface PayPalAdapterConfig {
   clientId?: string;
@@ -245,6 +254,7 @@ export class PayPalAdapter implements PSPAdapter {
     try {
       const baseUrl = this.environment === 'live' ? 'https://api-m.paypal.com' : 'https://api-m.sandbox.paypal.com';
       const accessToken = await this.getAccessToken();
+      const resolvedPlanId = CANONICAL_PAYPAL_PLANS[params.planId] || params.planId;
 
       const subRes = await fetch(`${baseUrl}/v1/billing/subscriptions`, {
         method: 'POST',
@@ -253,7 +263,7 @@ export class PayPalAdapter implements PSPAdapter {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          plan_id: params.planId,
+          plan_id: resolvedPlanId,
           custom_id: params.customId || params.subscriberId,
           subscriber: params.subscriberEmail ? { email_address: params.subscriberEmail } : undefined,
           application_context: {
@@ -287,6 +297,93 @@ export class PayPalAdapter implements PSPAdapter {
         providerName: this.providerName,
         status: 'error',
         errorMessage: err instanceof Error ? err.message : 'PayPal subscription request failed',
+      };
+    }
+  }
+
+  async createBillingPlan(params: PSPBillingPlanParams): Promise<PSPBillingPlanResult> {
+    if (!this.isConfigured) {
+      return { success: false, providerPlanId: '', errorMessage: 'PayPal credentials are unavailable' };
+    }
+
+    try {
+      const baseUrl = this.environment === 'live' ? 'https://api-m.paypal.com' : 'https://api-m.sandbox.paypal.com';
+      const accessToken = await this.getAccessToken();
+
+      // 1. Create product in PayPal catalog
+      const prodRes = await fetch(`${baseUrl}/v1/catalogs/products`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: params.name,
+          description: params.description || 'Creator tier on TUKUBI',
+          type: 'DIGITAL',
+          category: 'ONLINE_SERVICES',
+        }),
+      });
+
+      const prodData = (await prodRes.json()) as any;
+      if (!prodRes.ok) {
+        throw new Error(prodData.message || 'Failed to create PayPal catalog product');
+      }
+
+      const productId = prodData.id;
+
+      // 2. Create the billing plan
+      const planRes = await fetch(`${baseUrl}/v1/billing/plans`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          product_id: productId,
+          name: params.name,
+          description: params.description || 'Recurring subscription on TUKUBI',
+          status: 'ACTIVE',
+          billing_cycles: [
+            {
+              frequency: {
+                interval_unit: params.billingInterval === 'annual' ? 'YEAR' : 'MONTH',
+                interval_count: 1,
+              },
+              tenure_type: 'REGULAR',
+              sequence: 1,
+              total_cycles: 0,
+              pricing_scheme: {
+                fixed_price: {
+                  value: (params.priceMinor / 100).toFixed(2),
+                  currency_code: (params.currency || 'USD').toUpperCase(),
+                },
+              },
+            },
+          ],
+          payment_preferences: {
+            auto_bill_outstanding: true,
+            setup_fee_failure_action: 'CONTINUE',
+            payment_failure_threshold: 3,
+          },
+        }),
+      });
+
+      const planData = (await planRes.json()) as any;
+      if (!planRes.ok) {
+        throw new Error(planData.message || 'Failed to create PayPal billing plan');
+      }
+
+      return {
+        success: true,
+        providerPlanId: planData.id,
+        providerProductId: productId,
+      };
+    } catch (err) {
+      return {
+        success: false,
+        providerPlanId: '',
+        errorMessage: err instanceof Error ? err.message : 'PayPal billing plan creation failed',
       };
     }
   }

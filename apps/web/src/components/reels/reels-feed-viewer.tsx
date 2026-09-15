@@ -318,177 +318,25 @@ function ReelCard({
   );
 }
 
-export const DEFAULT_CARIBBEAN_REELS: ReelItem[] = [
-  {
-    id: 'sample-reel-jam-1',
-    title: 'Wah Gwaan Kingston! Downtown street vibes and fresh riddims 🇯🇲',
-    creator: 'Zion Marley',
-    handle: 'zionvibes',
-    views: '42.5K views',
-    likes: '4.8K',
-    comments: '312',
-    sound: 'Kingston Dubplate Session — Original Sound',
-    location: 'Kingston, Jamaica 🇯🇲',
-    duration: '0:15',
-    gradient: 'from-amber-900/60 via-slate-900 to-[#110D17]',
-    captions: {
-      id: 'captions-jam-1',
-      label: 'Jamaican Patois (Original)',
-      language: 'jam',
-      dialect: 'jam',
-      cues: [
-        {
-          id: 'jam-1',
-          startTimeSec: 0.1,
-          endTimeSec: 3.2,
-          text: 'Wah gwaan fam! Mi deh yah inna downtown Kingston today.',
-          dialect: 'jam',
-          translations: {
-            en: "What's going on family! I'm right here in downtown Kingston today.",
-          },
-        },
-        {
-          id: 'jam-2',
-          startTimeSec: 3.3,
-          endTimeSec: 7.0,
-          text: 'Di whole place criss, riddim loud, and everybody hold a vibes!',
-          dialect: 'jam',
-          translations: {
-            en: 'The whole place is great, the rhythm is loud, and everybody is chilling!',
-          },
-        },
-        {
-          id: 'jam-3',
-          startTimeSec: 7.1,
-          endTimeSec: 12.0,
-          text: 'Soon come wit di fresh new release pon TUKUBI, big up unnu!',
-          dialect: 'jam',
-          translations: {
-            en: "I'll be right back with the fresh new release on TUKUBI, shoutout to you all!",
-          },
-        },
-      ],
-    },
-  },
-  {
-    id: 'sample-reel-ht-1',
-    title: 'Bèl Solèy Pòtoprens — Kilti ak Mizik Kreyòl 🇭🇹',
-    creator: 'Fabienne Jean',
-    handle: 'fabienne_ayiti',
-    views: '28.1K views',
-    likes: '3.2K',
-    comments: '184',
-    sound: 'Koudjay Rara Beat — Live Roots',
-    location: 'Pòtoprens, Ayiti 🇭🇹',
-    duration: '0:12',
-    gradient: 'from-blue-900/60 via-slate-900 to-[#110D17]',
-    captions: {
-      id: 'captions-ht-1',
-      label: 'Kreyòl Ayisyen (Original)',
-      language: 'ht',
-      dialect: 'ht',
-      cues: [
-        {
-          id: 'ht-1',
-          startTimeSec: 0.1,
-          endTimeSec: 3.5,
-          text: "Sak pase tout moun! Nou la n'ap boule nan bèl chalè sa a.",
-          dialect: 'ht',
-          translations: {
-            en: "What's up everyone! We're here doing great in this beautiful warmth.",
-            fr: "Qu'est-ce qui se passe tout le monde! On est là, tout va bien dans cette belle chaleur.",
-          },
-        },
-        {
-          id: 'ht-2',
-          startTimeSec: 3.6,
-          endTimeSec: 7.5,
-          text: 'Lakay se lakay, mwen renmen nou tout zanmi m yo!',
-          dialect: 'ht',
-          translations: {
-            en: 'Home is home, I love you all my friends!',
-            fr: "Chez soi c'est chez soi, je vous aime tous mes amis!",
-          },
-        },
-        {
-          id: 'ht-3',
-          startTimeSec: 7.6,
-          endTimeSec: 11.5,
-          text: 'An nou ale pataje bèl enèji kreyòl sa a ansanm!',
-          dialect: 'ht',
-          translations: {
-            en: "Let's go share this beautiful creole energy together!",
-            fr: 'Allons partager cette belle énergie créole ensemble!',
-          },
-        },
-      ],
-    },
-  },
-  {
-    id: 'sample-reel-pap-1',
-    title: 'Dushi Kòrsou — Sunset Vibes na Willemstad 🇨🇼',
-    creator: 'Dangelo Tromp',
-    handle: 'dangelo_curacao',
-    views: '19.4K views',
-    likes: '2.1K',
-    comments: '97',
-    sound: 'Tumba Festival Stems — Antillean Rhythm',
-    location: 'Willemstad, Kòrsou 🇨🇼',
-    duration: '0:14',
-    gradient: 'from-teal-900/60 via-slate-900 to-[#110D17]',
-    captions: {
-      id: 'captions-pap-1',
-      label: 'Papiamentu (Original)',
-      language: 'pap',
-      dialect: 'pap',
-      cues: [
-        {
-          id: 'pap-1',
-          startTimeSec: 0.1,
-          endTimeSec: 3.8,
-          text: 'Con ta bay tur hende! Bon bini na Kòrsou dushi yiu.',
-          dialect: 'pap',
-          translations: {
-            en: 'How is it going everyone! Welcome to Curaçao sweet darling.',
-            es: '¿Cómo les va a todos! Bienvenidos a Curazao mi gente linda.',
-          },
-        },
-        {
-          id: 'pap-2',
-          startTimeSec: 3.9,
-          endTimeSec: 7.8,
-          text: 'Tur kos bon aki na warda di solo, hopi dushi bida!',
-          dialect: 'pap',
-          translations: {
-            en: 'All is well here watching the sunset, such a sweet beautiful life!',
-            es: 'Todo bien aquí contemplando la puesta de sol, ¡qué vida tan hermosa!',
-          },
-        },
-        {
-          id: 'pap-3',
-          startTimeSec: 7.9,
-          endTimeSec: 13.0,
-          text: 'Masha danki pa tur e sosten, pasa un bon dia!',
-          dialect: 'pap',
-          translations: {
-            en: 'Thank you very much for all the support, have a wonderful day!',
-            es: '¡Muchas gracias por todo el apoyo, que tengan un lindo día!',
-          },
-        },
-      ],
-    },
-  },
-];
-
 export default function ReelsFeedViewer({ initialReels, user }: ReelsFeedViewerProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const currentTab = searchParams?.get('tab') || 'for_you';
   
-  const effectiveReels = initialReels && initialReels.length > 0 ? initialReels : DEFAULT_CARIBBEAN_REELS;
+  const effectiveReels = initialReels || [];
   const [reels, setReels] = useState<ReelItem[]>(effectiveReels);
   const [isMuted, setIsMuted] = useState(true);
   const [activeReelId, setActiveReelId] = useState<string | null>(effectiveReels[0]?.id || null);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+
+  useEffect(() => {
+    setReels(initialReels || []);
+    if (initialReels && initialReels.length > 0) {
+      setActiveReelId(initialReels[0].id);
+    } else {
+      setActiveReelId(null);
+    }
+  }, [initialReels]);
 
   const [likesState, setLikesState] = useState<Record<string, { count: number; liked: boolean }>>(() => {
     const initial: Record<string, { count: number; liked: boolean }> = {};
@@ -593,41 +441,98 @@ export default function ReelsFeedViewer({ initialReels, user }: ReelsFeedViewerP
     if (activeShareReelId) void recordReelShareAction(activeShareReelId, 'copy_link');
   };
 
+  const tabs = [
+    { id: 'for_you', label: 'For You' },
+    { id: 'following', label: 'Following' },
+    { id: 'caribbean', label: 'Caribbean' },
+    { id: 'communities', label: 'Communities' },
+  ];
+
   if (reels.length === 0) {
     return (
-      <div className="h-full w-full flex flex-col items-center justify-center bg-black p-4 text-center">
-        <Video className="w-12 h-12 text-brand-sunriseCoral mb-4" />
-        <h2 className="text-xl font-bold text-white mb-2">No Reels yet. Be the first Caribbean creator! 🌴</h2>
-        <Link href="/create?mode=reel" className="mt-4 px-6 py-3 bg-brand-sunriseCoral text-black font-bold rounded-full hover:opacity-90">
-          Create Reel
-        </Link>
+      <div className="flex flex-col h-[100dvh] w-full bg-[#0b0811] text-white relative">
+        {/* Top Nav Tabs */}
+        <div className="flex-none h-16 w-full flex items-center justify-between z-30 px-6 bg-gradient-to-b from-black/80 to-transparent">
+          <div className="flex items-center gap-6">
+            {tabs.map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => handleTabChange(tab.id)}
+                aria-label={`Tab ${tab.label}`}
+                className={`text-sm font-bold transition-colors ${currentTab === tab.id ? 'text-white border-b-2 border-brand-sunriseCoral pb-1' : 'text-white/60 hover:text-white'}`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+          <button
+            onClick={() => setIsCreateModalOpen(true)}
+            className="px-4 py-2 bg-brand-sunriseCoral text-slate-950 font-black text-xs rounded-xl hover:opacity-90 flex items-center gap-1.5 transition-all shadow-md shadow-brand-sunriseCoral/20"
+          >
+            <Plus className="w-4 h-4" /> Create Reel
+          </button>
+        </div>
+
+        {/* Premium Intentional Empty State */}
+        <div className="flex-1 flex flex-col items-center justify-center p-6 text-center max-w-md mx-auto space-y-4">
+          <div className="w-20 h-20 rounded-3xl bg-gradient-to-tr from-rose-500/20 to-brand-sunriseCoral/20 border border-brand-sunriseCoral/40 flex items-center justify-center text-brand-sunriseCoral shadow-xl shadow-brand-sunriseCoral/10">
+            <Video className="w-10 h-10" />
+          </div>
+          <div className="space-y-1.5">
+            <h2 className="text-xl sm:text-2xl font-black text-white">No Reels yet</h2>
+            <p className="text-xs sm:text-sm text-brand-sandstone/75 leading-relaxed">
+              Be the first creator to share a Reel. Broadcast short moments, cultural vibes, and dialect stories to the Caribbean &amp; diaspora.
+            </p>
+          </div>
+          <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
+            <button
+              onClick={() => setIsCreateModalOpen(true)}
+              className="px-6 py-3 bg-gradient-to-r from-brand-sunriseCoral to-rose-500 text-slate-950 font-black text-xs rounded-xl hover:opacity-95 transition-all shadow-lg shadow-brand-sunriseCoral/30 flex items-center gap-2 cursor-pointer"
+            >
+              <Plus className="w-4 h-4" /> Create Reel
+            </button>
+            <Link
+              href="/sounds"
+              className="px-5 py-3 bg-white/5 border border-white/10 text-white font-bold text-xs rounded-xl hover:bg-white/10 transition-colors flex items-center gap-2"
+            >
+              <Music className="w-4 h-4 text-brand-goldenHour" /> Caribbean Sounds
+            </Link>
+          </div>
+        </div>
+
+        <CreateReelModal
+          isOpen={isCreateModalOpen}
+          onClose={() => setIsCreateModalOpen(false)}
+          user={user}
+        />
       </div>
     );
   }
 
   const currentComments = activeCommentsReelId ? (commentsByReel[activeCommentsReelId] ?? []) : [];
-  const tabs = [
-    { id: 'for_you', label: 'For You' },
-    { id: 'following', label: 'Following' },
-    { id: 'caribbean', label: 'Caribbean' },
-    { id: 'trending', label: 'Trending' },
-    { id: 'sounds', label: 'Sounds' },
-  ];
 
   return (
     <div className="flex flex-col h-[100dvh] w-full bg-black relative">
       {/* Top Nav Tabs */}
-      <div className="flex-none h-16 w-full flex items-center justify-center gap-6 z-30 px-4 bg-gradient-to-b from-black/80 to-transparent absolute top-0 left-0 right-0">
-        {tabs.map(tab => (
-          <button
-            key={tab.id}
-            onClick={() => handleTabChange(tab.id)}
-            aria-label={`Tab ${tab.label}`}
-            className={`text-sm font-bold transition-colors ${currentTab === tab.id ? 'text-white border-b-2 border-brand-sunriseCoral pb-1' : 'text-white/60 hover:text-white'}`}
-          >
-            {tab.label}
-          </button>
-        ))}
+      <div className="flex-none h-16 w-full flex items-center justify-between z-30 px-6 bg-gradient-to-b from-black/80 to-transparent absolute top-0 left-0 right-0">
+        <div className="flex items-center gap-6">
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => handleTabChange(tab.id)}
+              aria-label={`Tab ${tab.label}`}
+              className={`text-sm font-bold transition-colors ${currentTab === tab.id ? 'text-white border-b-2 border-brand-sunriseCoral pb-1' : 'text-white/60 hover:text-white'}`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+        <button
+          onClick={() => setIsCreateModalOpen(true)}
+          className="px-4 py-2 bg-brand-sunriseCoral text-slate-950 font-black text-xs rounded-xl hover:opacity-90 flex items-center gap-1.5 transition-all shadow-md shadow-brand-sunriseCoral/20 cursor-pointer"
+        >
+          <Plus className="w-4 h-4" /> Create Reel
+        </button>
       </div>
 
       {/* Snap Scroll Container */}
@@ -757,6 +662,12 @@ export default function ReelsFeedViewer({ initialReels, user }: ReelsFeedViewerP
           </div>
         </div>
       )}
+
+      <CreateReelModal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        user={user}
+      />
     </div>
   );
 }

@@ -1,6 +1,7 @@
 import React, { Suspense } from 'react';
 import { getCurrentUser } from '../../lib/supabase/server';
 import SoundsDirectoryClient from '../../components/sounds/sounds-directory-client';
+import { fetchSoundsAction } from '../../lib/sounds/actions';
 
 export const dynamic = 'force-dynamic';
 
@@ -10,7 +11,10 @@ export default async function SoundsPage({
   searchParams?: Promise<{ id?: string; search?: string }>;
 }) {
   const resolvedParams = searchParams ? await searchParams : {};
-  const user = await getCurrentUser();
+  const [user, initialSounds] = await Promise.all([
+    getCurrentUser(),
+    fetchSoundsAction({ query: resolvedParams.search }),
+  ]);
 
   return (
     <div className="w-full space-y-8 animate-fadeIn">
@@ -22,6 +26,7 @@ export default async function SoundsPage({
         }
       >
         <SoundsDirectoryClient
+          initialSounds={initialSounds}
           initialTrackId={resolvedParams.id}
           initialQuery={resolvedParams.search}
           user={

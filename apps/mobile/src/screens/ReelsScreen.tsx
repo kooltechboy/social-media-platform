@@ -23,7 +23,7 @@ const Ionicons = ExpoIonicons as unknown as React.ComponentType<any>;
 
 const { height: screenHeight, width: screenWidth } = Dimensions.get('window');
 
-export function ReelsScreen() {
+export function ReelsScreen({ navigation }: any) {
   const [reels, setReels] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -201,7 +201,7 @@ export function ReelsScreen() {
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <Text style={styles.emptyText}>No Reels yet! Be the first Caribbean creator 🌴</Text>
-            <TouchableOpacity style={styles.createButton} onPress={() => {}}>
+            <TouchableOpacity style={styles.createButton} onPress={() => navigation?.navigate('Create')}>
               <Text style={styles.createButtonText}>Create Reel</Text>
             </TouchableOpacity>
           </View>
