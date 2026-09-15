@@ -17,10 +17,21 @@ ALTER TABLE reconciliation_reports ENABLE ROW LEVEL SECURITY;
 -- No policies = deny all
 
 -- Index for recent runs
-CREATE INDEX idx_reconciliation_reports_run_at ON reconciliation_reports(run_at DESC);
+CREATE INDEX IF NOT EXISTS idx_reconciliation_reports_run_at ON reconciliation_reports(run_at DESC);
+
+-- Ensure pg_cron and pg_net extensions are enabled
+CREATE EXTENSION IF NOT EXISTS pg_cron;
+CREATE EXTENSION IF NOT EXISTS pg_net;
+
+-- Unschedule existing job if already scheduled to allow idempotent re-runs
+DO $$
+BEGIN
+    PERFORM cron.unschedule('daily-reconciliation');
+EXCEPTION WHEN OTHERS THEN
+    NULL;
+END $$;
 
 -- Schedule daily reconciliation at 2 AM UTC
--- Requires pg_cron extension (already enabled in Supabase)
 SELECT cron.schedule(
   'daily-reconciliation',
   '0 2 * * *',

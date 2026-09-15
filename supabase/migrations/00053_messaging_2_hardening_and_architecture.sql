@@ -221,6 +221,28 @@ DROP POLICY IF EXISTS "Members read reactions" ON public.message_reactions;
 DROP POLICY IF EXISTS "Members react to messages" ON public.message_reactions;
 DROP POLICY IF EXISTS "Users delete own reactions" ON public.message_reactions;
 
+-- Drop new format policies if already present
+DROP POLICY IF EXISTS "authenticated_members_read_conversations" ON public.conversations;
+DROP POLICY IF EXISTS "authenticated_users_create_conversations" ON public.conversations;
+DROP POLICY IF EXISTS "authenticated_admins_update_conversations" ON public.conversations;
+DROP POLICY IF EXISTS "authenticated_members_read_memberships" ON public.conversation_members;
+DROP POLICY IF EXISTS "authenticated_users_manage_own_membership" ON public.conversation_members;
+DROP POLICY IF EXISTS "authenticated_members_update_own_membership" ON public.conversation_members;
+DROP POLICY IF EXISTS "authenticated_members_read_messages" ON public.messages;
+DROP POLICY IF EXISTS "authenticated_members_insert_messages" ON public.messages;
+DROP POLICY IF EXISTS "authenticated_senders_update_messages" ON public.messages;
+DROP POLICY IF EXISTS "authenticated_senders_delete_messages" ON public.messages;
+DROP POLICY IF EXISTS "authenticated_members_read_attachments" ON public.message_attachments;
+DROP POLICY IF EXISTS "authenticated_senders_create_attachments" ON public.message_attachments;
+DROP POLICY IF EXISTS "authenticated_members_read_receipts" ON public.message_receipts;
+DROP POLICY IF EXISTS "authenticated_users_manage_own_receipts" ON public.message_receipts;
+DROP POLICY IF EXISTS "authenticated_members_read_reactions" ON public.message_reactions;
+DROP POLICY IF EXISTS "authenticated_members_insert_reactions" ON public.message_reactions;
+DROP POLICY IF EXISTS "authenticated_users_delete_own_reactions" ON public.message_reactions;
+DROP POLICY IF EXISTS "authenticated_users_read_message_requests" ON public.message_requests;
+DROP POLICY IF EXISTS "authenticated_users_create_message_requests" ON public.message_requests;
+DROP POLICY IF EXISTS "authenticated_receivers_update_message_requests" ON public.message_requests;
+
 -- Enable RLS on all tables
 ALTER TABLE public.conversations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.conversation_members ENABLE ROW LEVEL SECURITY;

@@ -290,34 +290,17 @@ CREATE POLICY "authenticated_receivers_update_message_requests" ON public.messag
 -- =============================================================================
 
 DO $$
+DECLARE
+    rec RECORD;
 BEGIN
-    IF EXISTS (SELECT 1 FROM pg_proc WHERE proname = 'is_admin' AND pronamespace = 'public'::regnamespace) THEN
-        REVOKE EXECUTE ON FUNCTION public.is_admin() FROM PUBLIC, anon;
-        GRANT EXECUTE ON FUNCTION public.is_admin() TO authenticated, service_role;
-        ALTER FUNCTION public.is_admin() SET search_path = public;
-    END IF;
-
-    IF EXISTS (SELECT 1 FROM pg_proc WHERE proname = 'is_super_admin' AND pronamespace = 'public'::regnamespace) THEN
-        REVOKE EXECUTE ON FUNCTION public.is_super_admin() FROM PUBLIC, anon;
-        GRANT EXECUTE ON FUNCTION public.is_super_admin() TO authenticated, service_role;
-        ALTER FUNCTION public.is_super_admin() SET search_path = public;
-    END IF;
-
-    IF EXISTS (SELECT 1 FROM pg_proc WHERE proname = 'is_moderator' AND pronamespace = 'public'::regnamespace) THEN
-        REVOKE EXECUTE ON FUNCTION public.is_moderator() FROM PUBLIC, anon;
-        GRANT EXECUTE ON FUNCTION public.is_moderator() TO authenticated, service_role;
-        ALTER FUNCTION public.is_moderator() SET search_path = public;
-    END IF;
-
-    IF EXISTS (SELECT 1 FROM pg_proc WHERE proname = 'has_permission' AND pronamespace = 'public'::regnamespace) THEN
-        REVOKE EXECUTE ON FUNCTION public.has_permission(VARCHAR) FROM PUBLIC, anon;
-        GRANT EXECUTE ON FUNCTION public.has_permission(VARCHAR) TO authenticated, service_role;
-        ALTER FUNCTION public.has_permission(VARCHAR) SET search_path = public;
-    END IF;
-
-    IF EXISTS (SELECT 1 FROM pg_proc WHERE proname = 'has_role' AND pronamespace = 'public'::regnamespace) THEN
-        REVOKE EXECUTE ON FUNCTION public.has_role(VARCHAR) FROM PUBLIC, anon;
-        GRANT EXECUTE ON FUNCTION public.has_role(VARCHAR) TO authenticated, service_role;
-        ALTER FUNCTION public.has_role(VARCHAR) SET search_path = public;
-    END IF;
+    FOR rec IN (
+        SELECT oid::regprocedure AS func_sig
+        FROM pg_proc
+        WHERE proname IN ('is_admin', 'is_super_admin', 'is_moderator', 'has_permission', 'has_role')
+          AND pronamespace = 'public'::regnamespace
+    ) LOOP
+        EXECUTE format('REVOKE EXECUTE ON FUNCTION %s FROM PUBLIC, anon;', rec.func_sig);
+        EXECUTE format('GRANT EXECUTE ON FUNCTION %s TO authenticated, service_role;', rec.func_sig);
+        EXECUTE format('ALTER FUNCTION %s SET search_path = public;', rec.func_sig);
+    END LOOP;
 END $$;

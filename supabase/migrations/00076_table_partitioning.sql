@@ -16,6 +16,18 @@ BEGIN;
 -- 1. Analytics Events (Range Partitioned by Month)
 -- =============================================================================
 
+-- Drop legacy unpartitioned table if present with 0 rows
+DO $$
+BEGIN
+    IF EXISTS (
+        SELECT 1 FROM pg_class c
+        JOIN pg_namespace n ON n.oid = c.relnamespace
+        WHERE n.nspname = 'public' AND c.relname = 'analytics_events' AND c.relkind != 'p'
+    ) THEN
+        DROP TABLE public.analytics_events CASCADE;
+    END IF;
+END $$;
+
 CREATE TABLE IF NOT EXISTS public.analytics_events (
     id UUID DEFAULT gen_random_uuid(),
     event_name VARCHAR(64) NOT NULL,
@@ -62,16 +74,15 @@ CREATE INDEX IF NOT EXISTS idx_analytics_events_country ON public.analytics_even
 -- Mandatory RLS on Analytics Events
 ALTER TABLE public.analytics_events ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "analytics_events_insert_all" ON public.analytics_events;
 CREATE POLICY "analytics_events_insert_all" ON public.analytics_events
     FOR INSERT WITH CHECK (true);
 
+DROP POLICY IF EXISTS "analytics_events_select_own_or_admin" ON public.analytics_events;
 CREATE POLICY "analytics_events_select_own_or_admin" ON public.analytics_events
     FOR SELECT USING (
         auth.uid() = user_id
-        OR EXISTS (
-            SELECT 1 FROM public.admin_roles
-            WHERE user_id = auth.uid()
-        )
+        OR public.is_admin()
     );
 
 -- =============================================================================
@@ -109,9 +120,11 @@ CREATE INDEX IF NOT EXISTS idx_feed_timeline_post ON public.feed_activity_timeli
 -- Mandatory RLS on Feed Activity Timeline
 ALTER TABLE public.feed_activity_timeline ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "feed_timeline_select_own" ON public.feed_activity_timeline;
 CREATE POLICY "feed_timeline_select_own" ON public.feed_activity_timeline
     FOR SELECT USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "feed_timeline_insert_service" ON public.feed_activity_timeline;
 CREATE POLICY "feed_timeline_insert_service" ON public.feed_activity_timeline
     FOR INSERT WITH CHECK (true);
 
@@ -155,6 +168,7 @@ CREATE INDEX IF NOT EXISTS idx_chat_messages_sender ON public.chat_messages_part
 -- Mandatory RLS on Chat Messages Partitioned
 ALTER TABLE public.chat_messages_partitioned ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "chat_messages_select_member" ON public.chat_messages_partitioned;
 CREATE POLICY "chat_messages_select_member" ON public.chat_messages_partitioned
     FOR SELECT USING (
         EXISTS (
@@ -165,6 +179,7 @@ CREATE POLICY "chat_messages_select_member" ON public.chat_messages_partitioned
         )
     );
 
+DROP POLICY IF EXISTS "chat_messages_insert_sender" ON public.chat_messages_partitioned;
 CREATE POLICY "chat_messages_insert_sender" ON public.chat_messages_partitioned
     FOR INSERT WITH CHECK (
         auth.uid() = sender_id

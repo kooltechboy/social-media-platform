@@ -205,6 +205,8 @@ $$;
 -- Section 5: Tighten messages UPDATE RLS
 -- Drop the overly-permissive combined policy
 DROP POLICY IF EXISTS "authenticated_senders_update_messages" ON public.messages;
+DROP POLICY IF EXISTS "authenticated_senders_update_own_messages" ON public.messages;
+DROP POLICY IF EXISTS "authenticated_members_soft_delete_messages" ON public.messages;
 
 -- Policy 1: Senders can update their own messages (edit body, soft-delete)
 CREATE POLICY "authenticated_senders_update_own_messages" ON public.messages

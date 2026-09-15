@@ -82,8 +82,7 @@ CREATE INDEX IF NOT EXISTS idx_events_title_trgm
     ON public.events USING gin (title gin_trgm_ops);
 
 CREATE INDEX IF NOT EXISTS idx_events_starts_at_upcoming
-    ON public.events (starts_at)
-    WHERE starts_at >= now();
+    ON public.events (starts_at ASC);
 
 -- Products search indexes
 CREATE INDEX IF NOT EXISTS idx_products_title_trgm
