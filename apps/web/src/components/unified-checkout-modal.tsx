@@ -159,9 +159,14 @@ export default function UnifiedCheckoutModal({
             {/* Pre-launch notification banner */}
             {!canTransact && (
               <div className="p-4 rounded-2xl bg-orange-500/10 border border-orange-500/30 text-orange-200 text-xs space-y-2">
-                <div className="flex items-center gap-2 font-black text-orange-400 text-sm">
-                  <Calendar className="w-4 h-4" />
-                  <span>Marketplace Transactions Launch September 30, 2026</span>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 font-black text-orange-400 text-sm">
+                    <Calendar className="w-4 h-4" />
+                    <span>Marketplace Transactions Launch September 30, 2026</span>
+                  </div>
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-orange-500/20 text-orange-300 border border-orange-500/30">
+                    Coming Soon
+                  </span>
                 </div>
                 <p className="text-[11px] leading-relaxed text-orange-200/90 font-medium">
                   Merchants can create their stores, add products and services, and prepare their businesses now. Buyer and seller transactions will officially begin September 30, 2026.

@@ -132,6 +132,14 @@ export interface CreateStreamParams {
   accessLevel?: StreamAccess;
   scheduledFor?: string | null;
   streamUrl?: string | null;
+  category?: string;
+  countryId?: string | null;
+  countryIso?: string | null;
+  locationTag?: string | null;
+  description?: string | null;
+  allowChat?: boolean;
+  chatSlowModeSeconds?: number;
+  isRecording?: boolean;
 }
 
 export async function createLivestreamAction(
@@ -171,6 +179,14 @@ export async function createLivestreamAction(
       peak_viewers: 0,
       stream_url: params.streamUrl?.trim() || null,
       playback_path: params.streamUrl?.trim() || null,
+      category: params.category || 'Culture & Talk',
+      country_id: params.countryId || null,
+      country_iso: params.countryIso || null,
+      location_tag: params.locationTag || null,
+      description: params.description || null,
+      allow_chat: params.allowChat !== false,
+      chat_slow_mode_seconds: params.chatSlowModeSeconds || 0,
+      is_recording: params.isRecording !== false,
     })
     .select('id')
     .single();
@@ -212,7 +228,8 @@ export async function startScheduledLivestreamAction(
 export async function endLivestreamAction(
   livestreamId: string,
   peakViewers: number = 0,
-): Promise<{ success: boolean; error?: string }> {
+  replayStoragePath?: string,
+): Promise<{ success: boolean; error?: string; replayId?: string }> {
   const user = await getCurrentUser();
   if (!user) {
     return { success: false, error: 'Unauthorized.' };
@@ -229,6 +246,7 @@ export async function endLivestreamAction(
       state: 'ended',
       ended_at: new Date().toISOString(),
       peak_viewers: Math.max(0, peakViewers),
+      replay_url: replayStoragePath || null,
     })
     .eq('id', livestreamId)
     .eq('creator_id', user.id);
@@ -237,8 +255,114 @@ export async function endLivestreamAction(
     return { success: false, error: error.message };
   }
 
+  let replayId: string | undefined;
+  if (replayStoragePath) {
+    try {
+      const { data: streamRow } = await supabase
+        .from('livestreams')
+        .select('title, description')
+        .eq('id', livestreamId)
+        .single();
+
+      const { data: replayRow } = await supabase
+        .from('live_replays')
+        .insert({
+          livestream_id: livestreamId,
+          creator_id: user.id,
+          title: streamRow?.title ? `Replay: ${streamRow.title}` : 'Live Replay',
+          description: streamRow?.description || null,
+          replay_storage_path: replayStoragePath,
+          is_published: false,
+        })
+        .select('id')
+        .single();
+
+      if (replayRow) {
+        replayId = replayRow.id;
+      }
+    } catch (err) {
+      console.warn('[endLivestreamAction] Non-blocking replay record error:', err);
+    }
+  }
+
   revalidatePath('/live');
   revalidatePath('/creator-studio');
+  return { success: true, replayId };
+}
+
+export async function saveLiveReplayToReelAction(
+  replayId: string,
+  customTitle?: string,
+): Promise<{ success: boolean; reelId?: string; error?: string }> {
+  const user = await getCurrentUser();
+  if (!user) return { success: false, error: 'Unauthorized.' };
+
+  const supabase = await createSupabaseServerClient();
+  if (!supabase) return { success: false, error: 'Database unavailable.' };
+
+  const { data: replay, error: replayError } = await supabase
+    .from('live_replays')
+    .select('*')
+    .eq('id', replayId)
+    .eq('creator_id', user.id)
+    .single();
+
+  if (replayError || !replay) {
+    return { success: false, error: 'Replay not found.' };
+  }
+
+  // Insert into videos as a Reel / Short
+  const { data: video, error: videoError } = await supabase
+    .from('videos')
+    .insert({
+      creator_id: user.id,
+      title: customTitle || replay.title,
+      description: replay.description,
+      video_kind: 'short',
+      visibility: 'public',
+      aspect_ratio: '9:16',
+      storage_path: replay.replay_storage_path,
+      thumbnail_url: replay.thumbnail_url || null,
+      audio_track: 'Live Broadcast Audio',
+      likes_count: 0,
+      comments_count: 0,
+      view_count: 0,
+    })
+    .select('id')
+    .single();
+
+  if (videoError || !video) {
+    return { success: false, error: videoError?.message || 'Failed to clip replay to Reel.' };
+  }
+
+  await supabase
+    .from('live_replays')
+    .update({ is_published: true })
+    .eq('id', replayId);
+
+  revalidatePath('/reels');
+  return { success: true, reelId: video.id };
+}
+
+export async function recordLiveViewerHeartbeatAction(
+  livestreamId: string,
+): Promise<{ success: boolean }> {
+  const user = await getCurrentUser();
+  if (!user) return { success: false };
+
+  const supabase = await createSupabaseServerClient();
+  if (!supabase) return { success: false };
+
+  try {
+    await supabase.from('live_viewers').upsert({
+      livestream_id: livestreamId,
+      viewer_id: user.id,
+      last_heartbeat_at: new Date().toISOString(),
+    });
+  } catch {
+    // Non-blocking telemetry
+  }
+
   return { success: true };
 }
 

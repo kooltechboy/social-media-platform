@@ -38,6 +38,7 @@ import {
   createLivestreamAction,
   endLivestreamAction,
   sendLiveMessageAction,
+  saveLiveReplayToReelAction,
 } from '../../lib/live/actions';
 import { createSupabaseBrowserClient } from '../../lib/supabase/browser';
 import { LiveShoppingControls } from './live-shopping-controls';
@@ -90,6 +91,7 @@ export default function LiveHostStudio({ user }: LiveHostStudioProps) {
   const [category, setCategory] = useState<string>('Culture & Talk');
   const [accessLevel, setAccessLevel] = useState<StreamAccess>('public');
   const [locationTag, setLocationTag] = useState('');
+  const [countryIso, setCountryIso] = useState('TTO');
 
   const [isLive, setIsLive] = useState(false);
   const [livestreamId, setLivestreamId] = useState<string | null>(null);
@@ -97,6 +99,9 @@ export default function LiveHostStudio({ user }: LiveHostStudioProps) {
   const [isEnding, setIsEnding] = useState(false);
   const [showEndModal, setShowEndModal] = useState(false);
   const [showSummary, setShowSummary] = useState(false);
+  const [replayId, setReplayId] = useState<string | null>(null);
+  const [isClipping, setIsClipping] = useState(false);
+  const [clippedReelId, setClippedReelId] = useState<string | null>(null);
 
   // Live Metrics
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
@@ -115,6 +120,27 @@ export default function LiveHostStudio({ user }: LiveHostStudioProps) {
   const animationFrameRef = useRef<number | null>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const chatScrollRef = useRef<HTMLDivElement | null>(null);
+
+  // Realtime Presence for Broadcaster Telemetry
+  useEffect(() => {
+    if (!isLive || !livestreamId) return;
+    const supabase = createSupabaseBrowserClient();
+    if (!supabase) return;
+
+    const channel = supabase.channel(`live-presence-${livestreamId}`);
+    channel
+      .on('presence', { event: 'sync' }, () => {
+        const state = channel.presenceState();
+        const count = Object.keys(state).length;
+        setViewerCount(count);
+        setPeakViewers((prev) => Math.max(prev, count));
+      })
+      .subscribe();
+
+    return () => {
+      void supabase.removeChannel(channel);
+    };
+  }, [isLive, livestreamId]);
 
   // Initialize Media Devices
   useEffect(() => {
@@ -350,6 +376,9 @@ export default function LiveHostStudio({ user }: LiveHostStudioProps) {
       const res = await createLivestreamAction({
         title: title.trim(),
         accessLevel,
+        category,
+        countryIso,
+        locationTag: locationTag || undefined,
       });
 
       if (res.error) {
@@ -384,7 +413,11 @@ export default function LiveHostStudio({ user }: LiveHostStudioProps) {
     setIsEnding(true);
     try {
       if (livestreamId) {
-        await endLivestreamAction(livestreamId, peakViewers);
+        const replayPath = `live-replays/${user.id}/${livestreamId}.mp4`;
+        const res = await endLivestreamAction(livestreamId, peakViewers, replayPath);
+        if (res.replayId) {
+          setReplayId(res.replayId);
+        }
       }
     } catch {
       // Ignore
@@ -394,6 +427,23 @@ export default function LiveHostStudio({ user }: LiveHostStudioProps) {
       setIsEnding(false);
       setShowSummary(true);
       stopAllMedia();
+    }
+  }
+
+  async function handleClipToReel() {
+    if (!replayId) return;
+    setIsClipping(true);
+    try {
+      const res = await saveLiveReplayToReelAction(replayId, `Highlight: ${title}`);
+      if (res.success && res.reelId) {
+        setClippedReelId(res.reelId);
+      } else {
+        alert(res.error || 'Failed to clip replay.');
+      }
+    } catch (err: any) {
+      alert(err?.message || 'Error clipping replay.');
+    } finally {
+      setIsClipping(false);
     }
   }
 
@@ -710,6 +760,31 @@ export default function LiveHostStudio({ user }: LiveHostStudioProps) {
                 </div>
 
                 <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-brand-sandstone/80">Caribbean Territory</label>
+                  <select
+                    value={countryIso}
+                    onChange={(e) => setCountryIso(e.target.value)}
+                    className="w-full bg-brand-twilight border border-slate-700 rounded-2xl px-4 py-2.5 text-xs text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea cursor-pointer"
+                  >
+                    <option value="TTO">🇹🇹 Trinidad &amp; Tobago</option>
+                    <option value="JAM">🇯🇲 Jamaica</option>
+                    <option value="BRB">🇧🇧 Barbados</option>
+                    <option value="HTI">🇭🇹 Haiti</option>
+                    <option value="DMA">🇩🇲 Dominica</option>
+                    <option value="LCA">🇱🇨 Saint Lucia</option>
+                    <option value="GRD">🇬🇩 Grenada</option>
+                    <option value="VCT">🇻🇨 St. Vincent &amp; Grenadines</option>
+                    <option value="ATG">🇦🇬 Antigua &amp; Barbuda</option>
+                    <option value="KNA">🇰🇳 St. Kitts &amp; Nevis</option>
+                    <option value="BHS">🇧🇸 Bahamas</option>
+                    <option value="GUY">🇬🇾 Guyana</option>
+                    <option value="SUR">🇸🇷 Suriname</option>
+                    <option value="BLZ">🇧🇿 Belize</option>
+                    <option value="CAR">🌴 Pan-Caribbean / Diaspora</option>
+                  </select>
+                </div>
+
+                <div className="space-y-1.5">
                   <label className="text-xs font-bold text-brand-sandstone/80">Audience Access Level</label>
                   <select
                     value={accessLevel}
@@ -863,6 +938,34 @@ export default function LiveHostStudio({ user }: LiveHostStudioProps) {
                 <span className="text-sm font-black text-brand-goldenHour">{chatMessages.length}</span>
               </div>
             </div>
+
+            {/* Replay to Reel Action */}
+            {replayId && (
+              <div className="p-4 bg-brand-twilight/80 border border-slate-700 rounded-2xl space-y-2 text-left">
+                <span className="text-xs font-black text-white block">Publish as Caribbean Reel</span>
+                <p className="text-[11px] text-brand-sandstone/70">
+                  Save this broadcast replay highlight directly to the Caribbean Reels feed for viewers who missed your live session.
+                </p>
+                {clippedReelId ? (
+                  <div className="p-2.5 bg-emerald-500/20 border border-emerald-500/40 rounded-xl text-emerald-300 text-xs font-bold flex items-center justify-between">
+                    <span className="flex items-center gap-1.5"><Check className="w-4 h-4" /> Published to Reels!</span>
+                    <Link href={`/reels?id=${clippedReelId}`} className="underline text-white font-black">
+                      Watch Reel →
+                    </Link>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={handleClipToReel}
+                    disabled={isClipping}
+                    className="w-full bg-rose-500 hover:brightness-110 text-slate-950 font-black py-2.5 rounded-xl text-xs flex items-center justify-center gap-2 transition-all cursor-pointer min-h-[40px]"
+                  >
+                    <Sparkles className="w-4 h-4" />
+                    {isClipping ? 'Publishing Reel…' : 'Clip Replay to Reel'}
+                  </button>
+                )}
+              </div>
+            )}
 
             <div className="flex items-center gap-3 pt-2">
               <Link

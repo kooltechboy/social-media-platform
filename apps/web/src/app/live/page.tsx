@@ -34,14 +34,18 @@ export default async function LivePage({
   if (supabase) {
     let query = supabase
       .from('livestreams')
-      .select('id, title, state, access_level, peak_viewers, started_at, creator_id, stream_url, playback_path, profiles(display_name, username)')
+      .select('id, title, state, access_level, peak_viewers, started_at, creator_id, stream_url, playback_path, category, country_iso, location_tag, profiles(display_name, username)')
       .order('started_at', { ascending: false })
-      .limit(15);
+      .limit(20);
 
     if (streamState) {
       query = query.eq('state', streamState);
     } else {
       query = query.in('state', ['live', 'scheduled']);
+    }
+
+    if (selectedCategory && selectedCategory !== 'All Broadcasts') {
+      query = query.eq('category', selectedCategory);
     }
 
     if (q) {
@@ -58,8 +62,8 @@ export default async function LivePage({
         peak_viewers: d.peak_viewers || 0,
         started_at: d.started_at,
         creator_id: d.creator_id,
-        category: 'Live Broadcast',
-        location: 'Caribbean & Diaspora 🌴',
+        category: d.category || 'Culture & Talk',
+        location: d.location_tag || (d.country_iso ? `${d.country_iso} 🌴` : 'Caribbean & Diaspora 🌴'),
         profiles: d.profiles,
         videoUrl: d.stream_url || d.playback_path || '',
       }));

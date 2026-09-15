@@ -1,6 +1,6 @@
 import React from 'react';
 import type { Metadata } from 'next';
-import { Mic, Radio } from 'lucide-react';
+import { Mic, Radio, Globe } from 'lucide-react';
 import Link from 'next/link';
 import { createSupabaseServerClient, getCurrentUser } from '../../lib/supabase/server';
 import PodcastNetworkFeed, { type PodcastShowItem } from '../../components/podcasts/podcast-network-feed';
@@ -27,13 +27,28 @@ const PODCAST_CATEGORIES = [
   'Diaspora Life',
 ];
 
+const PODCAST_TERRITORIES = [
+  { iso: 'ALL', name: 'All Islands', flag: '🌴' },
+  { iso: 'TTO', name: 'Trinidad & Tobago', flag: '🇹🇹' },
+  { iso: 'JAM', name: 'Jamaica', flag: '🇯🇲' },
+  { iso: 'BRB', name: 'Barbados', flag: '🇧🇧' },
+  { iso: 'HTI', name: 'Haiti', flag: '🇭🇹' },
+  { iso: 'GUY', name: 'Guyana', flag: '🇬🇾' },
+  { iso: 'BHS', name: 'Bahamas', flag: '🇧🇸' },
+  { iso: 'DMA', name: 'Dominica', flag: '🇩🇲' },
+  { iso: 'LCA', name: 'Saint Lucia', flag: '🇱🇨' },
+  { iso: 'GRD', name: 'Grenada', flag: '🇬🇩' },
+  { iso: 'VCT', name: 'St. Vincent', flag: '🇻🇨' },
+];
+
 export default async function PodcastsPage({
   searchParams,
 }: {
-  searchParams?: Promise<{ category?: string; q?: string }>;
+  searchParams?: Promise<{ category?: string; territory?: string; q?: string }>;
 }) {
   const resolvedParams = searchParams ? await searchParams : {};
   const activeCategory = resolvedParams.category || 'All Shows';
+  const activeTerritory = resolvedParams.territory || 'ALL';
   const queryText = resolvedParams.q || '';
 
   const [user, supabase] = await Promise.all([getCurrentUser(), createSupabaseServerClient()]);
@@ -44,7 +59,7 @@ export default async function PodcastsPage({
     let query = supabase
       .from('podcasts')
       .select(
-        'id, title, slug, description, is_paid, follower_count, language, cover_path, creator_id, profiles:profiles!podcasts_creator_id_fkey(display_name, username), podcast_episodes(id, title, audio_path, duration_seconds, show_notes, transcript, chapters, published_at, season_number, episode_number, is_subscriber_only)'
+        'id, title, slug, description, is_paid, follower_count, language, category, country_iso, cover_path, creator_id, profiles:profiles!podcasts_creator_id_fkey(display_name, username), podcast_episodes(id, title, audio_path, duration_seconds, show_notes, transcript, chapters, published_at, season_number, episode_number, is_subscriber_only)'
       )
       .order('follower_count', { ascending: false })
       .limit(24);
@@ -59,6 +74,10 @@ export default async function PodcastsPage({
       query = query.or('title.ilike.%food%,title.ilike.%culinary%,title.ilike.%recipe%');
     } else if (activeCategory === 'Culture & History') {
       query = query.or('title.ilike.%culture%,title.ilike.%history%,title.ilike.%roots%');
+    }
+
+    if (activeTerritory !== 'ALL') {
+      query = query.eq('country_iso', activeTerritory);
     }
 
     const { data } = await query;
@@ -106,7 +125,7 @@ export default async function PodcastsPage({
           language: d.language,
           cover_path: coverUrl || d.cover_path,
           creator_id: d.creator_id,
-          category: activeCategory !== 'All Shows' ? activeCategory : 'Caribbean Voice',
+          category: d.category || (activeCategory !== 'All Shows' ? activeCategory : 'Caribbean Voice'),
           episodesCount: episodes.length,
           podcast_episodes: episodes,
           audioUrl: audioUrl,
@@ -131,7 +150,7 @@ export default async function PodcastsPage({
             </h1>
           </div>
           <p className="text-xs sm:text-sm text-brand-sandstone/80 mt-1 leading-relaxed">
-            Audio &amp; video podcasts, AI transcripts, and iTunes-compliant RSS feeds.
+            Authentic Caribbean audio storytelling, cultural talk, AI transcripts, and persistent listening progress.
           </p>
         </div>
 
@@ -144,7 +163,7 @@ export default async function PodcastsPage({
           </Link>
         ) : (
           <Link
-            href="/login"
+            href="/login?redirect=/podcasts"
             className="bg-purple-600/20 text-purple-300 border border-purple-500/40 font-black px-5 py-2.5 rounded-xl text-xs flex items-center justify-center gap-2 hover:bg-purple-600/30 transition-all self-start md:self-auto min-h-[44px]"
           >
             Sign in to Host
@@ -152,24 +171,60 @@ export default async function PodcastsPage({
         )}
       </div>
 
-      {/* Categories Filter Rail */}
-      <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-none">
-        {PODCAST_CATEGORIES.map((cat) => {
-          const isActive = cat === activeCategory;
-          return (
-            <Link
-              key={cat}
-              href={cat === 'All Shows' ? '/podcasts' : `/podcasts?category=${encodeURIComponent(cat)}`}
-              className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all min-h-[38px] flex items-center ${
-                isActive
-                  ? 'bg-purple-600 text-white shadow-md shadow-purple-600/30 font-black'
-                  : 'bg-white/5 text-brand-sandstone/80 hover:text-white hover:bg-white/10 border border-white/10'
-              }`}
-            >
-              {cat}
-            </Link>
-          );
-        })}
+      {/* Filter Rails: Categories & Island Territories */}
+      <div className="space-y-3">
+        {/* Categories Filter Rail */}
+        <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
+          {PODCAST_CATEGORIES.map((cat) => {
+            const isActive = cat === activeCategory;
+            const queryParams = new URLSearchParams();
+            if (cat !== 'All Shows') queryParams.set('category', cat);
+            if (activeTerritory !== 'ALL') queryParams.set('territory', activeTerritory);
+            if (queryText) queryParams.set('q', queryText);
+            const href = queryParams.toString() ? `/podcasts?${queryParams.toString()}` : '/podcasts';
+
+            return (
+              <Link
+                key={cat}
+                href={href}
+                className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all min-h-[38px] flex items-center ${
+                  isActive
+                    ? 'bg-purple-600 text-white shadow-md shadow-purple-600/30 font-black'
+                    : 'bg-white/5 text-brand-sandstone/80 hover:text-white hover:bg-white/10 border border-white/10'
+                }`}
+              >
+                {cat}
+              </Link>
+            );
+          })}
+        </div>
+
+        {/* Territory Filter Rail */}
+        <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
+          {PODCAST_TERRITORIES.map((t) => {
+            const isActive = t.iso === activeTerritory;
+            const queryParams = new URLSearchParams();
+            if (activeCategory !== 'All Shows') queryParams.set('category', activeCategory);
+            if (t.iso !== 'ALL') queryParams.set('territory', t.iso);
+            if (queryText) queryParams.set('q', queryText);
+            const href = queryParams.toString() ? `/podcasts?${queryParams.toString()}` : '/podcasts';
+
+            return (
+              <Link
+                key={t.iso}
+                href={href}
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all min-h-[32px] flex items-center gap-1.5 ${
+                  isActive
+                    ? 'bg-purple-500/20 text-purple-200 border border-purple-500/40 font-bold'
+                    : 'bg-transparent text-brand-sandstone/60 hover:text-white hover:bg-white/5 border border-transparent'
+                }`}
+              >
+                <span>{t.flag}</span>
+                <span>{t.name}</span>
+              </Link>
+            );
+          })}
+        </div>
       </div>
 
       {/* Podcasts Grid with Live Audio Player */}

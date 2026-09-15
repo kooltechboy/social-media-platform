@@ -249,3 +249,152 @@ export async function unfollowPodcastAction(podcastId: string): Promise<PodcastA
   revalidatePath('/podcasts');
   return { error: null, success: 'Unfollowed.' };
 }
+
+export async function savePodcastProgressAction(
+  episodeId: string,
+  positionSeconds: number,
+  completed: boolean = false,
+): Promise<{ success: boolean; error?: string }> {
+  const user = await getCurrentUser();
+  if (!user) return { success: false, error: 'Sign in to save listening progress.' };
+
+  const supabase = await createSupabaseServerClient();
+  if (!supabase) return { success: false, error: 'Database unavailable.' };
+
+  try {
+    const { error } = await supabase.from('podcast_progress').upsert({
+      user_id: user.id,
+      episode_id: episodeId,
+      current_position_seconds: Math.max(0, Math.floor(positionSeconds)),
+      completed,
+      updated_at: new Date().toISOString(),
+    }, {
+      onConflict: 'user_id,episode_id',
+    });
+
+    if (error) return { success: false, error: error.message };
+    return { success: true };
+  } catch (err: any) {
+    return { success: false, error: err?.message || 'Failed to save progress.' };
+  }
+}
+
+export async function getPodcastProgressAction(
+  episodeId: string,
+): Promise<{ positionSeconds: number; completed: boolean } | null> {
+  const user = await getCurrentUser();
+  if (!user) return null;
+
+  const supabase = await createSupabaseServerClient();
+  if (!supabase) return null;
+
+  try {
+    const { data } = await supabase
+      .from('podcast_progress')
+      .select('current_position_seconds, completed')
+      .eq('user_id', user.id)
+      .eq('episode_id', episodeId)
+      .maybeSingle();
+
+    if (data) {
+      return {
+        positionSeconds: data.current_position_seconds || 0,
+        completed: Boolean(data.completed),
+      };
+    }
+  } catch {
+    // Return null on failure
+  }
+
+  return null;
+}
+
+export async function recordPodcastPlayAction(
+  episodeId: string,
+  listenedSeconds: number,
+  completed: boolean = false,
+  countryIso?: string,
+  deviceType?: string,
+): Promise<{ success: boolean }> {
+  const user = await getCurrentUser();
+  const supabase = await createSupabaseServerClient();
+  if (!supabase) return { success: false };
+
+  try {
+    // Increment play_count on podcast_episodes
+    const { data: ep } = await supabase
+      .from('podcast_episodes')
+      .select('play_count')
+      .eq('id', episodeId)
+      .maybeSingle();
+
+    if (ep) {
+      await supabase
+        .from('podcast_episodes')
+        .update({ play_count: (ep.play_count || 0) + 1 })
+        .eq('id', episodeId);
+    }
+
+    // Insert analytics record
+    await supabase.from('podcast_analytics').insert({
+      episode_id: episodeId,
+      listener_id: user?.id || null,
+      listened_seconds: Math.max(1, Math.floor(listenedSeconds)),
+      completed,
+      country_iso: countryIso || null,
+      device_type: deviceType || 'web',
+    });
+  } catch (err) {
+    console.warn('[recordPodcastPlayAction] Non-blocking analytics error:', err);
+  }
+
+  return { success: true };
+}
+
+export async function getPodcastAnalyticsAction(
+  podcastId: string,
+): Promise<{
+  totalPlays: number;
+  uniqueListeners: number;
+  completionRate: number;
+  error?: string;
+}> {
+  const user = await getCurrentUser();
+  if (!user) return { totalPlays: 0, uniqueListeners: 0, completionRate: 0, error: 'Unauthorized.' };
+
+  const supabase = await createSupabaseServerClient();
+  if (!supabase) return { totalPlays: 0, uniqueListeners: 0, completionRate: 0, error: 'Database unavailable.' };
+
+  try {
+    const { data: episodes } = await supabase
+      .from('podcast_episodes')
+      .select('id, play_count')
+      .eq('podcast_id', podcastId);
+
+    if (!episodes || episodes.length === 0) {
+      return { totalPlays: 0, uniqueListeners: 0, completionRate: 0 };
+    }
+
+    const totalPlays = episodes.reduce((acc, curr) => acc + (curr.play_count || 0), 0);
+    const episodeIds = episodes.map((e) => e.id);
+
+    const { data: analytics } = await supabase
+      .from('podcast_analytics')
+      .select('listener_id, completed')
+      .in('episode_id', episodeIds);
+
+    const uniqueListeners = new Set(
+      analytics?.map((a) => a.listener_id).filter(Boolean)
+    ).size;
+
+    const completedCount = analytics?.filter((a) => a.completed).length || 0;
+    const completionRate = analytics && analytics.length > 0
+      ? Math.round((completedCount / analytics.length) * 100)
+      : 0;
+
+    return { totalPlays, uniqueListeners, completionRate };
+  } catch (err: any) {
+    return { totalPlays: 0, uniqueListeners: 0, completionRate: 0, error: err?.message };
+  }
+}
+

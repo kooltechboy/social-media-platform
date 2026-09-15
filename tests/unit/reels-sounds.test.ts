@@ -86,20 +86,31 @@ describe('Caribbean Sounds Search & Discovery Engine', () => {
   });
 
   it('performs case-insensitive fuzzy text matching on title, artist, and genre', () => {
-    const machelResults = searchCaribbeanSounds({ query: 'machel' });
-    expect(machelResults.length).toBeGreaterThanOrEqual(1);
-    expect(machelResults.some((s) => s.artist.toLowerCase().includes('machel'))).toBe(true);
+    const stemResults = searchCaribbeanSounds({ query: 'tukubi' });
+    expect(stemResults.length).toBeGreaterThanOrEqual(1);
+    expect(stemResults.some((s) => s.artist.toLowerCase().includes('tukubi'))).toBe(true);
 
-    const dubResults = searchCaribbeanSounds({ query: 'dubplate' });
+    const dubResults = searchCaribbeanSounds({ query: 'steelpan' });
     expect(dubResults.length).toBeGreaterThanOrEqual(1);
-    expect(dubResults.some((s) => s.title.toLowerCase().includes('dubplate'))).toBe(true);
+    expect(dubResults.some((s) => s.title.toLowerCase().includes('steelpan') || s.genre.toLowerCase().includes('steelpan'))).toBe(true);
   });
 
-  it('filters trending sounds correctly', () => {
+  it('validates verified legal licensing metadata on all sounds', () => {
+    for (const sound of CARIBBEAN_SOUNDS) {
+      expect(['royalty_free', 'public_domain', 'creative_commons', 'original_creator', 'licensed']).toContain(sound.licensingStatus);
+      expect(sound.licenseType.length).toBeGreaterThan(0);
+      expect(sound.licenseSource.length).toBeGreaterThan(0);
+      expect(sound.attributionRequirement.length).toBeGreaterThan(0);
+      expect(typeof sound.commercialUseAllowed).toBe('boolean');
+    }
+  });
+
+  it('filters trending sounds strictly by real community usage', () => {
+    // When no sounds have usage, trending is empty (no fake trending numbers)
     const trending = searchCaribbeanSounds({ trendingOnly: true });
-    expect(trending.length).toBeGreaterThanOrEqual(3);
     for (const track of trending) {
       expect(track.isTrending).toBe(true);
+      expect(track.usageCount).toBeGreaterThan(0);
     }
   });
 });

@@ -1,5 +1,5 @@
 -- =============================================================================
--- Migration 00084: Production Media, Caribbean Sounds, Live & Podcasting Architecture
+-- Migration 00085: Production Media, Caribbean Sounds, Live & Podcasting Architecture
 -- =============================================================================
 -- Description:
 --   Comprehensive production-grade schema for TUKUBI's core media ecosystem:

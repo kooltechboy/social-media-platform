@@ -24,6 +24,10 @@ import {
   EyeOff,
   ArrowRight,
   MessageSquare,
+  Video,
+  Music,
+  Tv,
+  Mic,
 } from 'lucide-react';
 import UserAvatar from '../user-avatar';
 import {
@@ -41,6 +45,10 @@ import {
   type DiscoverEvent,
   type DiscoverProduct,
   type DiscoverPost,
+  type DiscoverReel,
+  type DiscoverSound,
+  type DiscoverLiveStream,
+  type DiscoverPodcast,
 } from '../../lib/discovery/actions';
 import { type UniversalSearchResults } from '@caribbean/search';
 
@@ -54,6 +62,10 @@ interface SocialSearchClientProps {
     eventsData: DiscoverEvent[];
     productsData: DiscoverProduct[];
     postsData: DiscoverPost[];
+    reelsData?: DiscoverReel[];
+    soundsData?: DiscoverSound[];
+    livestreamsData?: DiscoverLiveStream[];
+    podcastsData?: DiscoverPodcast[];
   }) | null;
   initialRecommendations: DiscoverProfile[];
   currentUserId?: string;
@@ -221,6 +233,10 @@ export default function SocialSearchClient({
   const events = searchData?.eventsData || [];
   const products = searchData?.productsData || [];
   const posts = searchData?.postsData || [];
+  const reels = searchData?.reelsData || [];
+  const sounds = searchData?.soundsData || [];
+  const livestreams = searchData?.livestreamsData || [];
+  const podcasts = searchData?.podcastsData || [];
 
   const creators = profiles.filter((p: DiscoverProfile) => p.account_type === 'creator');
   const peopleMembers = profiles.filter((p: DiscoverProfile) => p.account_type !== 'creator');
@@ -231,7 +247,11 @@ export default function SocialSearchClient({
     communities.length +
     events.length +
     products.length +
-    posts.length;
+    posts.length +
+    reels.length +
+    sounds.length +
+    livestreams.length +
+    podcasts.length;
 
   const hasResults = totalHits > 0 || !!aiResult;
 
@@ -239,6 +259,10 @@ export default function SocialSearchClient({
     { id: 'all', label: 'All Results', count: totalHits },
     { id: 'people', label: 'People & Members', count: peopleMembers.length, icon: <User className="w-3.5 h-3.5" /> },
     { id: 'creators', label: 'Creators', count: creators.length, icon: <Sparkles className="w-3.5 h-3.5" /> },
+    { id: 'reels', label: 'Reels', count: reels.length, icon: <Video className="w-3.5 h-3.5" /> },
+    { id: 'sounds', label: 'Sounds', count: sounds.length, icon: <Music className="w-3.5 h-3.5" /> },
+    { id: 'live', label: 'Live', count: livestreams.length, icon: <Tv className="w-3.5 h-3.5" /> },
+    { id: 'podcasts', label: 'Podcasts', count: podcasts.length, icon: <Mic className="w-3.5 h-3.5" /> },
     { id: 'businesses', label: 'Businesses', count: businesses.length, icon: <Building2 className="w-3.5 h-3.5" /> },
     { id: 'products', label: 'Merchants & Stores', count: products.length, icon: <ShoppingBag className="w-3.5 h-3.5" /> },
     { id: 'communities', label: 'Communities / Hubs', count: communities.length, icon: <Users className="w-3.5 h-3.5" /> },
@@ -909,6 +933,159 @@ export default function SocialSearchClient({
                       {post.content}
                     </p>
                   </article>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {/* 5H. REELS & SHORTS */}
+          {(activeTab === 'all' || activeTab === 'reels') && reels.length > 0 && (
+            <section className="space-y-3">
+              <div className="flex items-center justify-between px-1">
+                <h3 className="text-xs font-black uppercase tracking-wider text-rose-400 flex items-center gap-1.5">
+                  <Video className="w-3.5 h-3.5" /> Caribbean Reels ({reels.length})
+                </h3>
+              </div>
+
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+                {reels.map((reel: DiscoverReel) => (
+                  <Link
+                    key={reel.id}
+                    href={`/reels?id=${reel.id}`}
+                    className="glass rounded-2xl overflow-hidden aspect-[9/16] relative flex flex-col justify-end p-3 hover:border-rose-500/50 transition-all group shadow-md"
+                  >
+                    {reel.thumbnail_url ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={reel.thumbnail_url}
+                        alt={reel.title}
+                        className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                    ) : (
+                      <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-900 to-rose-950/40 flex items-center justify-center">
+                        <Video className="w-6 h-6 text-white/30" />
+                      </div>
+                    )}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
+                    <div className="relative z-10 space-y-0.5">
+                      <p className="text-xs font-black text-white truncate">{reel.title}</p>
+                      <p className="text-[10px] text-brand-sandstone/80 truncate">@{reel.creator.username}</p>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {/* 5I. CARIBBEAN SOUNDS */}
+          {(activeTab === 'all' || activeTab === 'sounds') && sounds.length > 0 && (
+            <section className="space-y-3">
+              <div className="flex items-center justify-between px-1">
+                <h3 className="text-xs font-black uppercase tracking-wider text-rose-400 flex items-center gap-1.5">
+                  <Music className="w-3.5 h-3.5" /> Caribbean Sounds ({sounds.length})
+                </h3>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                {sounds.map((sound: DiscoverSound) => (
+                  <Link
+                    key={sound.id}
+                    href={`/sounds/${sound.id}`}
+                    className="glass rounded-2xl p-4 flex items-center justify-between gap-3 hover:border-rose-500/40 transition-all group"
+                  >
+                    <div className="min-w-0 space-y-1">
+                      <div className="flex items-center gap-1.5">
+                        <span>{sound.flag}</span>
+                        <span className="text-[10px] font-black uppercase text-rose-300 bg-rose-500/20 px-1.5 py-0.5 rounded">
+                          {sound.genre}
+                        </span>
+                      </div>
+                      <h4 className="text-xs sm:text-sm font-extrabold text-white group-hover:text-rose-300 truncate">
+                        {sound.title}
+                      </h4>
+                      <p className="text-[11px] text-brand-sandstone/70 truncate">
+                        {sound.artist} • {sound.usage_count > 0 ? `${sound.usage_count} reels` : 'Stem'}
+                      </p>
+                    </div>
+                    <span className="text-xs font-black text-rose-400 shrink-0">
+                      Listen →
+                    </span>
+                  </Link>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {/* 5J. LIVE BROADCASTS */}
+          {(activeTab === 'all' || activeTab === 'live') && livestreams.length > 0 && (
+            <section className="space-y-3">
+              <div className="flex items-center justify-between px-1">
+                <h3 className="text-xs font-black uppercase tracking-wider text-red-400 flex items-center gap-1.5">
+                  <Tv className="w-3.5 h-3.5" /> Live Broadcasts ({livestreams.length})
+                </h3>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                {livestreams.map((stream: DiscoverLiveStream) => (
+                  <Link
+                    key={stream.id}
+                    href={`/live?id=${stream.id}`}
+                    className="glass rounded-2xl p-4 flex items-center justify-between gap-3 hover:border-red-500/40 transition-all group"
+                  >
+                    <div className="min-w-0 space-y-1">
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-red-600 text-white animate-pulse">
+                          LIVE
+                        </span>
+                        <span className="text-[10px] text-brand-sandstone/60">{stream.category}</span>
+                      </div>
+                      <h4 className="text-xs sm:text-sm font-extrabold text-white group-hover:text-red-300 truncate">
+                        {stream.title}
+                      </h4>
+                      <p className="text-[11px] text-brand-sandstone/70">
+                        @{stream.host.username} • {stream.peak_viewers} watching
+                      </p>
+                    </div>
+                    <span className="text-xs font-black text-red-400 shrink-0">
+                      Watch →
+                    </span>
+                  </Link>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {/* 5K. PODCASTS */}
+          {(activeTab === 'all' || activeTab === 'podcasts') && podcasts.length > 0 && (
+            <section className="space-y-3">
+              <div className="flex items-center justify-between px-1">
+                <h3 className="text-xs font-black uppercase tracking-wider text-purple-400 flex items-center gap-1.5">
+                  <Mic className="w-3.5 h-3.5" /> Podcasts ({podcasts.length})
+                </h3>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                {podcasts.map((pod: DiscoverPodcast) => (
+                  <Link
+                    key={pod.id}
+                    href={`/podcasts?slug=${pod.slug}`}
+                    className="glass rounded-2xl p-4 flex items-center justify-between gap-3 hover:border-purple-500/40 transition-all group"
+                  >
+                    <div className="min-w-0 space-y-1">
+                      <span className="text-[10px] font-black uppercase text-purple-300">
+                        {pod.category}
+                      </span>
+                      <h4 className="text-xs sm:text-sm font-extrabold text-white group-hover:text-purple-300 truncate">
+                        {pod.title}
+                      </h4>
+                      <p className="text-[11px] text-brand-sandstone/70 truncate">
+                        Hosted by @{pod.host.username} • {pod.follower_count} followers
+                      </p>
+                    </div>
+                    <span className="text-xs font-black text-purple-400 shrink-0">
+                      Listen →
+                    </span>
+                  </Link>
                 ))}
               </div>
             </section>

@@ -23,10 +23,11 @@ import {
   Radio,
   Sparkles,
   ShoppingBag,
+  Trash2,
 } from 'lucide-react';
 import { calculateLiveDiscountPrice } from '@caribbean/live';
 import { createSupabaseBrowserClient } from '../../lib/supabase/browser';
-import { sendLiveMessageAction, type LiveActionState } from '../../lib/live/actions';
+import { sendLiveMessageAction, deleteLiveMessageAction, recordLiveViewerHeartbeatAction, type LiveActionState } from '../../lib/live/actions';
 import { LiveGiftModal } from '../live-gift-modal';
 import { followAction, unfollowAction } from '../../lib/social/profile-actions';
 
@@ -125,11 +126,59 @@ function ActiveLivePlayer({
     inventoryCount: number | null;
   } | null>(null);
 
+  const [liveViewerCount, setLiveViewerCount] = useState<number>(() => stream.peak_viewers || 0);
+
   const videoContainerRef = useRef<HTMLDivElement | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const chatScrollRef = useRef<HTMLDivElement | null>(null);
 
   const isLive = stream.state === 'live';
+
+  // Live Realtime Presence Telemetry
+  useEffect(() => {
+    const supabase = createSupabaseBrowserClient();
+    if (!supabase || !stream.id) return;
+
+    const presenceChannel = supabase.channel(`live-presence-${stream.id}`, {
+      config: {
+        presence: {
+          key: user?.id || `anon-${Math.random().toString(36).substring(7)}`,
+        },
+      },
+    });
+
+    presenceChannel
+      .on('presence', { event: 'sync' }, () => {
+        const state = presenceChannel.presenceState();
+        const count = Object.keys(state).length;
+        setLiveViewerCount(count);
+      })
+      .subscribe(async (status) => {
+        if (status === 'SUBSCRIBED') {
+          await presenceChannel.track({
+            user_id: user?.id || null,
+            display_name: user?.displayName || 'Anonymous Viewer',
+            online_at: new Date().toISOString(),
+          });
+        }
+      });
+
+    // Send heartbeat
+    if (user) {
+      void recordLiveViewerHeartbeatAction(stream.id);
+      const interval = setInterval(() => {
+        void recordLiveViewerHeartbeatAction(stream.id);
+      }, 30000);
+      return () => {
+        clearInterval(interval);
+        void supabase.removeChannel(presenceChannel);
+      };
+    }
+
+    return () => {
+      void supabase.removeChannel(presenceChannel);
+    };
+  }, [stream.id, user?.id, user?.displayName]);
 
   // Fetch & subscribe to live pinned shopping drop
   useEffect(() => {
@@ -398,6 +447,11 @@ function ActiveLivePlayer({
     }
   }
 
+  async function handleDeleteMessage(messageId: string) {
+    await deleteLiveMessageAction(messageId, stream.id);
+    setMessages((prev) => prev.filter((m) => m.id !== messageId));
+  }
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
       {/* Video Player & Engagement Rail (Col 8, expanded to 9 on 3xl+) */}
@@ -475,7 +529,7 @@ function ActiveLivePlayer({
               </span>
 
               <span className="bg-slate-900/80 backdrop-blur-md text-slate-200 text-xs font-bold px-3 py-1 rounded-full border border-slate-700 flex items-center gap-1.5">
-                <Users className="w-3.5 h-3.5 text-brand-caribbeanSea" /> {stream.peak_viewers.toLocaleString()} watching
+                <Users className="w-3.5 h-3.5 text-brand-caribbeanSea" /> {isLive ? `${liveViewerCount} watching` : `${stream.peak_viewers} peak viewers`}
               </span>
 
               {stream.category && (
@@ -663,9 +717,21 @@ function ActiveLivePlayer({
                   <span className={`font-black ${msg.isHost ? 'text-red-300' : 'text-brand-caribbeanSea'}`}>
                     {msg.display_name}
                   </span>
-                  <span className="text-[10px] text-brand-sandstone/50">
-                    {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                  </span>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[10px] text-brand-sandstone/50">
+                      {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </span>
+                    {user && (user.id === stream.creator_id || user.id === msg.sender_id) && (
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteMessage(msg.id)}
+                        className="text-brand-sandstone/40 hover:text-red-400 p-0.5 rounded transition-colors cursor-pointer"
+                        title="Delete message"
+                      >
+                        <Trash2 className="w-3 h-3" />
+                      </button>
+                    )}
+                  </div>
                 </div>
                 <p className="text-white leading-relaxed break-words">{msg.body}</p>
               </div>

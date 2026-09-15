@@ -2,9 +2,12 @@ import React from 'react';
 import { applyFees, TIER_PRICES_MINOR } from '@caribbean/creator';
 
 export default function CreatorStudioDashboard() {
-  // Verified @caribbean/creator initial baseline (Zero Synthetic Financials)
+  // Zero-state guard: applyFees() correctly rejects non-positive amounts (double-entry safety).
+  // When no earnings exist, we provide a clean zero breakdown without calling the fee engine.
   const grossEarningsMinor = 0;
-  const breakdown = applyFees(grossEarningsMinor);
+  const breakdown = grossEarningsMinor > 0
+    ? applyFees(grossEarningsMinor)
+    : { grossMinor: 0, platformFeeMinor: 0, processingFeeMinor: 0, withholdingMinor: 0, netToCreatorMinor: 0 };
 
   return (
     <div className="space-y-8">
@@ -12,7 +15,7 @@ export default function CreatorStudioDashboard() {
       <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-[#1D1429] via-[#2A1B38] to-[#1D1429] border border-[#8B5CF6]/20 p-8 shadow-2xl">
         <div className="relative z-10 max-w-2xl space-y-2">
           <span className="text-xs font-semibold uppercase tracking-widest text-[#FF7A59]">
-            Carnival Season 2026 Readiness
+            Creator Studio
           </span>
           <h1 className="text-3xl font-extrabold text-white tracking-tight sm:text-4xl">
             Welcome back, Caribbean Creator!
@@ -43,20 +46,19 @@ export default function CreatorStudioDashboard() {
           </a>
         </div>
 
-
         <div className="rounded-xl bg-[#1D1429] border border-[#2A1B38] p-5">
           <p className="text-xs font-medium text-[#FDF2E9]/60">Total Media Streams</p>
-          <p className="mt-2 text-2xl font-bold text-white font-mono">248.5K</p>
+          <p className="mt-2 text-2xl font-bold text-white font-mono">0</p>
           <span className="mt-2 inline-flex items-center text-xs font-medium text-[#FFB347]">
-            Avg 4.8 mins watch time
+            Publish your first reel or live set to start tracking
           </span>
         </div>
 
         <div className="rounded-xl bg-[#1D1429] border border-[#2A1B38] p-5">
           <p className="text-xs font-medium text-[#FDF2E9]/60">Diaspora Footprint</p>
-          <p className="mt-2 text-2xl font-bold text-white font-mono">18 Nations</p>
+          <p className="mt-2 text-2xl font-bold text-white font-mono">—</p>
           <span className="mt-2 inline-flex items-center text-xs font-medium text-[#8B5CF6]">
-            Top: JM, TT, BB, US, UK
+            Audience reach will populate as viewers engage
           </span>
         </div>
       </div>
@@ -84,36 +86,9 @@ export default function CreatorStudioDashboard() {
               </thead>
               <tbody className="divide-y divide-[#2A1B38]/60">
                 <tr>
-                  <td className="py-3 px-2 font-medium text-white">Sunrise Jouvert Live Set 2026</td>
-                  <td className="py-3 px-2 text-xs font-mono">HLS 1080p</td>
-                  <td className="py-3 px-2 font-mono">84,200</td>
-                  <td className="py-3 px-2 text-[#00B4D8] font-mono">$480.00</td>
-                  <td className="py-3 px-2">
-                    <span className="px-2 py-0.5 text-xs rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
-                      Live
-                    </span>
-                  </td>
-                </tr>
-                <tr>
-                  <td className="py-3 px-2 font-medium text-white">Reggae Roots Studio Session</td>
-                  <td className="py-3 px-2 text-xs font-mono">Audio Lounge</td>
-                  <td className="py-3 px-2 font-mono">31,400</td>
-                  <td className="py-3 px-2 text-[#00B4D8] font-mono">$195.00</td>
-                  <td className="py-3 px-2">
-                    <span className="px-2 py-0.5 text-xs rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
-                      Live
-                    </span>
-                  </td>
-                </tr>
-                <tr>
-                  <td className="py-3 px-2 font-medium text-white">Caribbean Street Food Tour — Oistins</td>
-                  <td className="py-3 px-2 text-xs font-mono">4K Video</td>
-                  <td className="py-3 px-2 font-mono">59,800</td>
-                  <td className="py-3 px-2 text-[#00B4D8] font-mono">$320.00</td>
-                  <td className="py-3 px-2">
-                    <span className="px-2 py-0.5 text-xs rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
-                      Live
-                    </span>
+                  <td colSpan={5} className="py-8 text-center text-[#FDF2E9]/40">
+                    <p className="text-sm">No content published yet</p>
+                    <p className="text-xs mt-1">Start your first live session, upload a reel, or share a sound lounge set to see performance here.</p>
                   </td>
                 </tr>
               </tbody>

@@ -30,22 +30,38 @@ export async function POST(
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
   }
 
-  // Extract event metadata
-  const eventId = String(parsedPayload.id || parsedPayload.event_id || `evt_${Date.now()}`);
-  const eventType = String(parsedPayload.event_type || parsedPayload.type || 'payment.webhook');
-
   // Convert headers
   const headerObj: Record<string, string> = {};
   request.headers.forEach((val, key) => {
     headerObj[key.toLowerCase()] = val;
   });
 
+  // Extract and validate event metadata
+  const rawEventId = parsedPayload?.id || parsedPayload?.event_id;
+  if (!rawEventId) {
+    return NextResponse.json({ error: 'Missing provider event ID' }, { status: 400 });
+  }
+  const eventId = String(rawEventId);
+  const eventType = String(parsedPayload.event_type || parsedPayload.type || 'payment.webhook');
+
+  // Validate webhook signature presence
+  const signature =
+    headerObj['paypal-transmission-sig'] ||
+    headerObj['stripe-signature'] ||
+    headerObj['x-webhook-signature'] ||
+    headerObj['signature'] ||
+    '';
+
+  if (!signature) {
+    return NextResponse.json({ error: 'Missing webhook signature' }, { status: 400 });
+  }
+
   const webhookEvent: WebhookEvent = {
     id: eventId,
     providerId,
     type: eventType,
     payload: rawBody,
-    signature: headerObj['paypal-transmission-sig'] || headerObj['stripe-signature'] || '',
+    signature,
   };
 
   const supabase = await createServiceSupabaseClient();

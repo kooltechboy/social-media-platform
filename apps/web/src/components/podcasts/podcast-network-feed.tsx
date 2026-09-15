@@ -32,6 +32,11 @@ import {
 import FollowPodcastButton from '../follow-podcast-button';
 import CreatePodcastModal from './create-podcast-modal';
 import { formatTimestamp, type Chapter } from '@caribbean/podcasts';
+import {
+  savePodcastProgressAction,
+  getPodcastProgressAction,
+  recordPodcastPlayAction,
+} from '../../lib/podcasts/actions';
 
 export interface PodcastShowItem {
   id: string;
@@ -150,6 +155,38 @@ export default function PodcastNetworkFeed({ podcasts, user }: PodcastNetworkFee
     }
   }, [activePodcast, isPlaying, playbackSpeed]);
 
+  const activeEpisode = activePodcast?.podcast_episodes?.[0];
+  const activeEpisodeId = activeEpisode?.id;
+
+  // Restore saved listening progress on mount / episode switch
+  useEffect(() => {
+    if (!activeEpisodeId || !user) return;
+    let isMounted = true;
+    void getPodcastProgressAction(activeEpisodeId).then((progress) => {
+      if (isMounted && progress && progress.positionSeconds > 0 && !progress.completed) {
+        setCurrentTime(progress.positionSeconds);
+        if (audioRef.current) {
+          audioRef.current.currentTime = progress.positionSeconds;
+        }
+      }
+    });
+    return () => {
+      isMounted = false;
+    };
+  }, [activeEpisodeId, user]);
+
+  // Periodically persist listening progress every 10 seconds while playing
+  useEffect(() => {
+    if (!isPlaying || !activeEpisodeId || !user) return;
+    const interval = setInterval(() => {
+      if (audioRef.current) {
+        const pos = audioRef.current.currentTime;
+        void savePodcastProgressAction(activeEpisodeId, pos, false);
+      }
+    }, 10000);
+    return () => clearInterval(interval);
+  }, [isPlaying, activeEpisodeId, user]);
+
   // Sleep Timer Tick
   useEffect(() => {
     if (sleepTimerSeconds > 0) {
@@ -188,6 +225,9 @@ export default function PodcastNetworkFeed({ podcasts, user }: PodcastNetworkFee
       setActivePodcast(podcast);
       setIsPlaying(true);
       setCurrentTime(0);
+      if (podcast.podcast_episodes?.[0]?.id) {
+        void recordPodcastPlayAction(podcast.podcast_episodes[0].id, 1, false);
+      }
     }
   }
 
@@ -263,6 +303,10 @@ export default function PodcastNetworkFeed({ podcasts, user }: PodcastNetworkFee
           onEnded={() => {
             if (sleepTimerSeconds === -1) setSleepTimerSeconds(0);
             setIsPlaying(false);
+            if (activeEpisodeId && user) {
+              void savePodcastProgressAction(activeEpisodeId, duration, true);
+              void recordPodcastPlayAction(activeEpisodeId, duration, true);
+            }
           }}
         />
       )}

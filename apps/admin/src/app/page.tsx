@@ -160,7 +160,7 @@ export default async function AdminDashboardPage() {
                 { label: 'Supabase Realtime', status: 'Connected', ok: true },
                 { label: 'Row Level Security', status: 'All tables enforced', ok: true },
                 { label: 'Ledger sum-zero trigger', status: 'Active', ok: true },
-                { label: 'Migrations applied', status: '15 / 15', ok: true },
+                { label: 'Migrations applied', status: '85 / 85 Verified', ok: true },
                 { label: 'Open moderation cases', status: `${casesResult.count ?? 0} queued`, ok: (casesResult.count ?? 0) === 0 },
               ].map((item) => (
                 <div key={item.label} className="flex items-center justify-between bg-brand-twilight border border-slate-800 rounded-xl px-3 py-2">

@@ -14,6 +14,7 @@ import { CreateScreen } from './src/screens/CreateScreen';
 import { NotificationsScreen } from './src/screens/NotificationsScreen';
 import { CommunitiesScreen } from './src/screens/CommunitiesScreen';
 import { FinancialCenterScreen } from './src/screens/FinancialCenterScreen';
+import { MarketplaceScreen } from './src/screens/MarketplaceScreen';
 import { supabase } from './src/lib/supabase';
 
 export const navigationRef = createNavigationContainerRef<any>();
@@ -163,6 +164,7 @@ export default function App() {
                         { text: 'New Post', onPress: () => navigationRef.isReady() && navigationRef.navigate('Create') },
                         { text: 'Watch Reels', onPress: () => navigationRef.isReady() && navigationRef.navigate('Reels') },
                         { text: 'Communities', onPress: () => navigationRef.isReady() && navigationRef.navigate('Communities') },
+                        { text: 'Marketplace', onPress: () => navigationRef.isReady() && navigationRef.navigate('Marketplace') },
                         { text: 'Wallet', onPress: () => navigationRef.isReady() && navigationRef.navigate('Finance') },
                         { text: 'Notifications', onPress: () => navigationRef.isReady() && navigationRef.navigate('Notifications') },
                         { text: 'Cancel', style: 'cancel' }
@@ -197,6 +199,11 @@ export default function App() {
           <Screen 
             name="Notifications" 
             component={NotificationsScreen} 
+            options={{ tabBarButton: () => null }} 
+          />
+          <Screen 
+            name="Marketplace" 
+            component={MarketplaceScreen} 
             options={{ tabBarButton: () => null }} 
           />
         </Navigator>

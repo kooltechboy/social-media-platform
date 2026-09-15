@@ -27,6 +27,8 @@ const PUBLIC_EXEMPT_ROUTES = [
   '/manifest.json',
   '/sw.js',
   '/offline',
+  '/terms',
+  '/privacy',
 ];
 
 import { checkRateLimit, getRateLimitHeaders, type RateLimitTier } from './lib/rate-limit/sliding-window';

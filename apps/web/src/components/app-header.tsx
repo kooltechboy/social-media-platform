@@ -76,7 +76,7 @@ export default function AppHeader() {
     }
 
     setIsOpen(true);
-    const sanitized = val.replace(/[^a-zA-Z0-9_\-\s]/g, '').trim();
+    const sanitized = val.replace(/^@/, '').replace(/[^a-zA-Z0-9_\-\s]/g, '').trim();
     if (!sanitized) {
       setLivePeople([]);
       return;

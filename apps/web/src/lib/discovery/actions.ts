@@ -98,6 +98,57 @@ export interface DiscoverPost {
   } | null;
 }
 
+export interface DiscoverReel {
+  id: string;
+  title: string;
+  thumbnail_url?: string | null;
+  views: number;
+  likes: number;
+  comments: number;
+  aspect_ratio: string;
+  creator: {
+    display_name: string;
+    username: string;
+  };
+}
+
+export interface DiscoverSound {
+  id: string;
+  title: string;
+  artist: string;
+  genre: string;
+  flag: string;
+  country_name: string;
+  usage_count: number;
+  licensing_status: string;
+}
+
+export interface DiscoverLiveStream {
+  id: string;
+  title: string;
+  state: string;
+  peak_viewers: number;
+  category: string;
+  host: {
+    display_name: string;
+    username: string;
+  };
+}
+
+export interface DiscoverPodcast {
+  id: string;
+  title: string;
+  slug: string;
+  description: string | null;
+  category: string;
+  cover_path: string | null;
+  follower_count: number;
+  host: {
+    display_name: string;
+    username: string;
+  };
+}
+
 /**
  * Safely resolves country information from profile database fields
  * Supports existing database columns (country, island, city) and future origin_country_iso
@@ -152,6 +203,10 @@ export async function universalSearchAction(params: {
   eventsData: DiscoverEvent[];
   productsData: DiscoverProduct[];
   postsData: DiscoverPost[];
+  reelsData: DiscoverReel[];
+  soundsData: DiscoverSound[];
+  livestreamsData: DiscoverLiveStream[];
+  podcastsData: DiscoverPodcast[];
 }> {
   const query = sanitizeSearchTerm(params.term || '');
   const limit = Math.min(Math.max(params.limit || 20, 1), 50);
@@ -183,6 +238,10 @@ export async function universalSearchAction(params: {
     eventsData: [],
     productsData: [],
     postsData: [],
+    reelsData: [],
+    soundsData: [],
+    livestreamsData: [],
+    podcastsData: [],
   };
 
   if (!supabase || !query) {
@@ -190,7 +249,7 @@ export async function universalSearchAction(params: {
   }
 
   try {
-    const termFilter = `%${query}%`;
+    const termFilter = `%${query.replace(/^@/, '')}%`;
 
     // 1. Profiles Search (People, Creators)
     let profileQuery = supabase
@@ -248,13 +307,48 @@ export async function universalSearchAction(params: {
       .order('created_at', { ascending: false })
       .limit(limit);
 
-    const [pRes, bRes, cRes, eRes, prodRes, postRes] = await Promise.all([
+    // 7. Reels Search
+    let reelQuery = supabase
+      .from('videos')
+      .select('id, title, thumbnail_url, view_count, likes_count, comments_count, aspect_ratio, profiles:profiles!videos_creator_id_fkey(display_name, username)')
+      .eq('video_kind', 'short')
+      .eq('visibility', 'public')
+      .or(`title.ilike.${termFilter},description.ilike.${termFilter}`)
+      .limit(limit);
+
+    // 8. Sounds Search
+    let soundQuery = supabase
+      .from('sounds')
+      .select('id, title, artist, genre, country_iso, country_name, usage_count, licensing_status')
+      .or(`title.ilike.${termFilter},artist.ilike.${termFilter},genre.ilike.${termFilter}`)
+      .limit(limit);
+
+    // 9. Live Streams Search
+    let liveQuery = supabase
+      .from('livestreams')
+      .select('id, title, state, peak_viewers, category, profiles(display_name, username)')
+      .in('state', ['live', 'scheduled'])
+      .or(`title.ilike.${termFilter},category.ilike.${termFilter}`)
+      .limit(limit);
+
+    // 10. Podcasts Search
+    let podcastQuery = supabase
+      .from('podcasts')
+      .select('id, title, slug, description, category, cover_path, follower_count, profiles:profiles!podcasts_creator_id_fkey(display_name, username)')
+      .or(`title.ilike.${termFilter},description.ilike.${termFilter}`)
+      .limit(limit);
+
+    const [pRes, bRes, cRes, eRes, prodRes, postRes, rRes, sRes, lRes, podRes] = await Promise.all([
       profileQuery,
       businessQuery,
       communityQuery,
       eventQuery,
       productQuery,
       postQuery,
+      reelQuery,
+      soundQuery,
+      liveQuery,
+      podcastQuery,
     ]);
 
     const rawProfiles = pRes.data || [];
@@ -422,6 +516,113 @@ export async function universalSearchAction(params: {
       });
     });
 
+    const reelsData: DiscoverReel[] = (rRes.data || []).map((v: any) => {
+      const raw = v.profiles;
+      const p = Array.isArray(raw) ? raw[0] : raw;
+      return {
+        id: v.id,
+        title: v.title,
+        thumbnail_url: v.thumbnail_url,
+        views: Number(v.view_count) || 0,
+        likes: Number(v.likes_count) || 0,
+        comments: Number(v.comments_count) || 0,
+        aspect_ratio: v.aspect_ratio || '9:16',
+        creator: {
+          display_name: p?.display_name || 'Caribbean Creator',
+          username: p?.username || 'creator',
+        },
+      };
+    });
+
+    const soundsData: DiscoverSound[] = (sRes.data || []).map((s: any) => ({
+      id: s.id,
+      title: s.title,
+      artist: s.artist,
+      genre: s.genre,
+      flag: s.country_iso === 'JAM' ? '🇯🇲' : s.country_iso === 'TTO' ? '🇹🇹' : s.country_iso === 'BRB' ? '🇧🇧' : '🌴',
+      country_name: s.country_name || 'Caribbean',
+      usage_count: s.usage_count || 0,
+      licensing_status: s.licensing_status || 'royalty_free',
+    }));
+
+    const livestreamsData: DiscoverLiveStream[] = (lRes.data || []).map((l: any) => {
+      const raw = l.profiles;
+      const p = Array.isArray(raw) ? raw[0] : raw;
+      return {
+        id: l.id,
+        title: l.title,
+        state: l.state,
+        peak_viewers: l.peak_viewers || 0,
+        category: l.category || 'Live Stream',
+        host: {
+          display_name: p?.display_name || 'Broadcaster',
+          username: p?.username || 'host',
+        },
+      };
+    });
+
+    const podcastsData: DiscoverPodcast[] = (podRes.data || []).map((pod: any) => {
+      const raw = pod.profiles;
+      const p = Array.isArray(raw) ? raw[0] : raw;
+      return {
+        id: pod.id,
+        title: pod.title,
+        slug: pod.slug,
+        description: pod.description,
+        category: pod.category || 'Podcast',
+        cover_path: pod.cover_path,
+        follower_count: pod.follower_count || 0,
+        host: {
+          display_name: p?.display_name || 'Podcaster',
+          username: p?.username || 'host',
+        },
+      };
+    });
+
+    reelsData.forEach((r) => {
+      hits.push({
+        entityType: 'reels' as any,
+        entityId: r.id,
+        title: r.title,
+        subtitle: `Reel by @${r.creator.username}`,
+        score: computeMatchScore(r.title, query, 1.1),
+        metadata: { ...r },
+      });
+    });
+
+    soundsData.forEach((s) => {
+      hits.push({
+        entityType: 'sounds' as any,
+        entityId: s.id,
+        title: s.title,
+        subtitle: `${s.artist} • ${s.genre}`,
+        score: computeMatchScore(s.title, query, 1.2),
+        metadata: { ...s },
+      });
+    });
+
+    livestreamsData.forEach((l) => {
+      hits.push({
+        entityType: 'live' as any,
+        entityId: l.id,
+        title: l.title,
+        subtitle: `Live Broadcast by @${l.host.username}`,
+        score: computeMatchScore(l.title, query, 1.3),
+        metadata: { ...l },
+      });
+    });
+
+    podcastsData.forEach((pod) => {
+      hits.push({
+        entityType: 'podcasts' as any,
+        entityId: pod.id,
+        title: pod.title,
+        subtitle: `Podcast • ${pod.category}`,
+        score: computeMatchScore(pod.title, query, 1.2),
+        metadata: { ...pod },
+      });
+    });
+
     hits.sort((a, b) => b.score - a.score);
 
     const byEntity = {
@@ -433,6 +634,10 @@ export async function universalSearchAction(params: {
       communities: hits.filter((h) => h.entityType === 'communities'),
       events: hits.filter((h) => h.entityType === 'events'),
       posts: hits.filter((h) => h.entityType === 'posts'),
+      reels: hits.filter((h) => (h.entityType as string) === 'reels'),
+      sounds: hits.filter((h) => (h.entityType as string) === 'sounds'),
+      live: hits.filter((h) => (h.entityType as string) === 'live'),
+      podcasts: hits.filter((h) => (h.entityType as string) === 'podcasts'),
     };
 
     return {
@@ -446,6 +651,10 @@ export async function universalSearchAction(params: {
       eventsData,
       productsData,
       postsData: rawPosts,
+      reelsData,
+      soundsData,
+      livestreamsData,
+      podcastsData,
     };
   } catch (err) {
     console.error('[universalSearchAction] Error:', err);
@@ -777,7 +986,7 @@ export async function fetchMembersDirectoryAction(params?: {
     }
 
     if (params?.query?.trim()) {
-      const q = sanitizeSearchTerm(params.query.trim());
+      const q = sanitizeSearchTerm(params.query.replace(/^@/, '').trim());
       query = query.or(`display_name.ilike.%${q}%,username.ilike.%${q}%,first_name.ilike.%${q}%,last_name.ilike.%${q}%`);
     }
 

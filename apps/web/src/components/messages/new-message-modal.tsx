@@ -84,7 +84,7 @@ export default function NewMessageModal({
     const timer = setTimeout(async () => {
       startTransition(async () => {
         try {
-          const clean = search.trim();
+          const clean = search.replace(/^@/, '').trim();
           let query = supabase
             .from('profiles')
             .select('id, display_name, username, avatar_url, is_verified, bio')
