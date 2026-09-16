@@ -19,7 +19,11 @@ import {
 import UserAvatar from '../user-avatar';
 import OfficialBadge from '../official/official-badge';
 import { type DiscoverProfile } from '../../lib/discovery/actions';
-import { getRelationshipActionConfig } from '@caribbean/social';
+import {
+  getRelationshipActionConfig,
+  resolveRelationshipBadge,
+  formatMutualFriendsCount,
+} from '@caribbean/social';
 
 export interface PersonCardProps {
   person: DiscoverProfile;
@@ -49,6 +53,8 @@ export default function PersonCard({
   contextMode = 'discover',
 }: PersonCardProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [showUnfriendConfirm, setShowUnfriendConfirm] = useState(false);
+  const [showBlockConfirm, setShowBlockConfirm] = useState(false);
   const [copied, setCopied] = useState(false);
 
   const isSelf = currentUserId === person.id;
@@ -75,6 +81,17 @@ export default function PersonCard({
     isFollower,
     isOfficial,
   });
+
+  const relBadge = resolveRelationshipBadge({
+    isOfficial,
+    friendshipStatus,
+    isFollowing,
+    isFollower,
+  });
+
+  const mutualFriendsText = person.mutual_count
+    ? formatMutualFriendsCount(person.mutual_count)
+    : null;
 
   const handleShare = async () => {
     setIsMenuOpen(false);
@@ -120,14 +137,29 @@ export default function PersonCard({
             className="ring-2 ring-white/10 group-hover/author:ring-brand-caribbeanSea/50 transition-all shrink-0"
           />
           <div className="min-w-0">
-            <h4 className="text-sm sm:text-base font-extrabold text-white truncate group-hover/author:text-brand-caribbeanSea transition-colors flex items-center gap-1.5">
-              <span className="truncate">{person.display_name}</span>
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <h4 className="text-sm sm:text-base font-extrabold text-white truncate group-hover/author:text-brand-caribbeanSea transition-colors">
+                {person.display_name}
+              </h4>
               {isOfficial ? (
                 <OfficialBadge size="sm" showLabel={false} />
               ) : person.is_verified ? (
                 <Check className="w-3.5 h-3.5 text-brand-caribbeanSea shrink-0" aria-label="Verified" />
               ) : null}
-            </h4>
+
+              {/* Explicit Member / Friend Relationship Badge */}
+              <span
+                className={`text-[10px] font-black px-2 py-0.5 rounded-full border ${
+                  relBadge.type === 'official'
+                    ? 'bg-gradient-to-r from-brand-caribbeanSea/20 to-brand-sunriseCoral/20 text-brand-caribbeanSea border-brand-caribbeanSea/40'
+                    : relBadge.type === 'friend'
+                    ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
+                    : 'bg-white/5 text-brand-sandstone/70 border-white/10'
+                }`}
+              >
+                {relBadge.label}
+              </span>
+            </div>
 
             <p className="text-xs text-brand-sandstone/70 truncate">@{person.username}</p>
 
@@ -138,9 +170,9 @@ export default function PersonCard({
               </span>
             )}
 
-            {person.mutual_count !== undefined && person.mutual_count > 0 && (
+            {mutualFriendsText && (
               <span className="text-[11px] text-brand-goldenHour font-bold block mt-0.5 truncate">
-                {person.mutual_count} mutual {person.mutual_count === 1 ? 'connection' : 'connections'}
+                {mutualFriendsText}
               </span>
             )}
           </div>
@@ -173,7 +205,7 @@ export default function PersonCard({
                   type="button"
                   onClick={() => {
                     setIsMenuOpen(false);
-                    onUnfriend(person.id);
+                    setShowUnfriendConfirm(true);
                   }}
                   className="w-full text-left px-3 py-2 rounded-xl hover:bg-rose-500/20 text-rose-300 font-bold flex items-center gap-2"
                 >
@@ -187,7 +219,7 @@ export default function PersonCard({
                   type="button"
                   onClick={() => {
                     setIsMenuOpen(false);
-                    onBlock(person.id);
+                    setShowBlockConfirm(true);
                   }}
                   className="w-full text-left px-3 py-2 rounded-xl hover:bg-rose-500/20 text-rose-400 font-bold flex items-center gap-2"
                 >
@@ -331,6 +363,112 @@ export default function PersonCard({
           >
             Connect on TUKUBI
           </Link>
+        </div>
+      )}
+
+      {/* Unfriend Confirmation Dialog */}
+      {showUnfriendConfirm && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="unfriend-dialog-title"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fadeIn"
+          onClick={() => setShowUnfriendConfirm(false)}
+        >
+          <div
+            className="bg-[#1D1429] border border-white/20 rounded-2xl p-6 max-w-sm w-full space-y-4 shadow-2xl text-left"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 rounded-xl bg-rose-500/20 text-rose-400">
+                <UserMinus className="w-5 h-5" />
+              </div>
+              <div>
+                <h4 id="unfriend-dialog-title" className="text-base font-extrabold text-white">
+                  Remove Friend?
+                </h4>
+                <p className="text-xs text-brand-sandstone/70">
+                  Are you sure you want to unfriend {person.display_name}?
+                </p>
+              </div>
+            </div>
+            <p className="text-xs text-brand-sandstone/80 leading-relaxed">
+              They will no longer see your friends-only updates, and you will no longer be listed as friends. You will remain members of TUKUBI.
+            </p>
+            <div className="flex items-center gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => setShowUnfriendConfirm(false)}
+                className="flex-1 py-2 px-3 rounded-xl bg-white/10 hover:bg-white/15 text-white font-bold text-xs transition-colors min-h-[38px]"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={isActionPending}
+                onClick={async () => {
+                  setShowUnfriendConfirm(false);
+                  await onUnfriend?.(person.id);
+                }}
+                className="flex-1 py-2 px-3 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-black text-xs transition-all min-h-[38px] shadow-sm"
+              >
+                Unfriend
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Block Confirmation Dialog */}
+      {showBlockConfirm && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="block-dialog-title"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fadeIn"
+          onClick={() => setShowBlockConfirm(false)}
+        >
+          <div
+            className="bg-[#1D1429] border border-rose-500/30 rounded-2xl p-6 max-w-sm w-full space-y-4 shadow-2xl text-left"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 rounded-xl bg-rose-500/20 text-rose-400">
+                <Shield className="w-5 h-5" />
+              </div>
+              <div>
+                <h4 id="block-dialog-title" className="text-base font-extrabold text-white">
+                  Block {person.display_name}?
+                </h4>
+                <p className="text-xs text-rose-300 font-semibold">
+                  This will sever all ties.
+                </p>
+              </div>
+            </div>
+            <p className="text-xs text-brand-sandstone/80 leading-relaxed">
+              Blocking will automatically remove any friendship, remove following connections, and prevent {person.display_name} from messaging you or seeing your profile.
+            </p>
+            <div className="flex items-center gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => setShowBlockConfirm(false)}
+                className="flex-1 py-2 px-3 rounded-xl bg-white/10 hover:bg-white/15 text-white font-bold text-xs transition-colors min-h-[38px]"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={isActionPending}
+                onClick={async () => {
+                  setShowBlockConfirm(false);
+                  await onBlock?.(person.id);
+                }}
+                className="flex-1 py-2 px-3 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-black text-xs transition-all min-h-[38px] shadow-sm"
+              >
+                Block Member
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

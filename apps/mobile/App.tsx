@@ -20,6 +20,7 @@ import { SellProductScreen } from './src/screens/SellProductScreen';
 import { SoundsScreen } from './src/screens/SoundsScreen';
 import { LiveScreen } from './src/screens/LiveScreen';
 import { PodcastsScreen } from './src/screens/PodcastsScreen';
+import { FriendsScreen } from './src/screens/FriendsScreen';
 import { supabase } from './src/lib/supabase';
 
 export const navigationRef = createNavigationContainerRef<any>();
@@ -90,6 +91,7 @@ export default function App() {
         Profile: 'profile',
         Finance: 'finance',
         Notifications: 'notifications',
+        Friends: 'friends',
       },
     },
   };
@@ -247,6 +249,11 @@ export default function App() {
           <Screen 
             name="Notifications" 
             component={NotificationsScreen} 
+            options={{ tabBarButton: () => null }} 
+          />
+          <Screen 
+            name="Friends" 
+            component={FriendsScreen} 
             options={{ tabBarButton: () => null }} 
           />
         </Navigator>

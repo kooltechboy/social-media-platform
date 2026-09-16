@@ -1,5 +1,5 @@
 import React from 'react';
-import { Bell, Heart, MessageCircle, MessageSquare, UserPlus, Calendar, Wallet, ShieldCheck, ArrowLeft } from 'lucide-react';
+import { Bell, Heart, MessageCircle, MessageSquare, UserPlus, UserCheck, Calendar, Wallet, ShieldCheck, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import { createSupabaseServerClient, getCurrentUser } from '../../lib/supabase/server';
 import NotificationMarkRead from '../../components/notification-mark-read';
@@ -32,6 +32,8 @@ function NotificationIcon({ kind }: { kind: string }) {
   if (kind === 'reaction' || kind === 'post_reaction') return <Heart className={`${cls} text-brand-goldenHour`} />;
   if (kind === 'comment') return <MessageCircle className={`${cls} text-brand-caribbeanSea`} />;
   if (kind === 'follow') return <UserPlus className={`${cls} text-brand-sunriseCoral`} />;
+  if (kind === 'friend_request') return <UserPlus className={`${cls} text-brand-caribbeanSea`} />;
+  if (kind === 'friend_accepted') return <UserCheck className={`${cls} text-emerald-400`} />;
   if (kind === 'payment' || kind === 'creator_tip' || kind === 'live_gift') return <Wallet className={`${cls} text-brand-sunriseCoral`} />;
   if (kind === 'event_reminder') return <Calendar className={`${cls} text-brand-goldenHour`} />;
   if (kind === 'moderation_resolved' || kind === 'appeal_outcome') return <ShieldCheck className={`${cls} text-brand-caribbeanSea`} />;
@@ -49,6 +51,10 @@ function notificationActionText(n: DBNotification): string {
       return 'commented on your post';
     case 'follow':
       return 'started following you';
+    case 'friend_request':
+      return 'sent you a friend request';
+    case 'friend_accepted':
+      return 'accepted your friend request';
     case 'creator_tip':
       return `sent you a tip${n.payload?.amount ? ` of ${n.payload.amount}` : ''}`;
     case 'live_gift':
@@ -213,6 +219,22 @@ export default async function NotificationsPage() {
                     className="inline-flex items-center gap-1.5 text-xs md:text-sm font-black text-brand-caribbeanSea hover:underline mt-1 min-h-[36px] md:min-h-[40px]"
                   >
                     Open Conversation →
+                  </Link>
+                )}
+                {notification.kind === 'friend_request' && (
+                  <Link
+                    href="/friends?tab=requests"
+                    className="inline-flex items-center gap-1.5 text-xs md:text-sm font-black text-brand-caribbeanSea hover:underline mt-1 min-h-[36px] md:min-h-[40px]"
+                  >
+                    Review Friend Request →
+                  </Link>
+                )}
+                {notification.kind === 'friend_accepted' && notification.actor && (
+                  <Link
+                    href={`/profile/${notification.actor.username}`}
+                    className="inline-flex items-center gap-1.5 text-xs md:text-sm font-black text-emerald-400 hover:underline mt-1 min-h-[36px] md:min-h-[40px]"
+                  >
+                    View Friend Profile →
                   </Link>
                 )}
                 <span className="text-xs md:text-sm text-brand-sandstone/50 font-medium block pt-0.5">

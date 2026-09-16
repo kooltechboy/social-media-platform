@@ -70,7 +70,33 @@ export async function sendFriendRequestAction(targetUserId: string): Promise<Act
   const supabase = await createSupabaseServerClient();
   if (!supabase) return { success: false, error: 'Service unavailable.' };
 
-  // Check if reciprocal request already exists
+  // Check if target is an official platform account (official accounts cannot be friended)
+  const { data: targetProfile } = await supabase
+    .from('profiles')
+    .select('id, username, is_official, relationship_visibility')
+    .eq('id', targetUserId)
+    .maybeSingle();
+
+  if (!targetProfile) {
+    return { success: false, error: 'User not found.' };
+  }
+
+  if (targetProfile.is_official || targetProfile.username?.toLowerCase() === 'tukubi') {
+    return { success: false, error: 'Official platform accounts cannot be added as friends. You can follow them instead.' };
+  }
+
+  // Check if either user has blocked the other
+  const { data: blockExists } = await supabase
+    .from('blocks')
+    .select('blocker_id')
+    .or(`and(blocker_id.eq.${user.id},blocked_id.eq.${targetUserId}),and(blocker_id.eq.${targetUserId},blocked_id.eq.${user.id})`)
+    .maybeSingle();
+
+  if (blockExists) {
+    return { success: false, error: 'Unable to send friend request to this user.' };
+  }
+
+  // Check if relationship already exists in either direction
   const { data: existing } = await supabase
     .from('friendships')
     .select('id, requester_id, addressee_id, status')
@@ -82,24 +108,51 @@ export async function sendFriendRequestAction(targetUserId: string): Promise<Act
       return { success: true, error: null, data: { status: 'accepted' } };
     }
     if (existing.requester_id === targetUserId && existing.status === 'pending') {
-      // Auto-accept if they already sent a request to current user
+      // Reciprocal request auto-accepts
       const { error: acceptErr } = await supabase
         .from('friendships')
         .update({ status: 'accepted', updated_at: new Date().toISOString() })
         .eq('id', existing.id);
       if (acceptErr) return { success: false, error: acceptErr.message };
+
+      revalidatePath('/people');
+      revalidatePath('/friends');
+      revalidatePath('/members');
+      revalidatePath(`/profile/${targetUserId}`);
       return { success: true, error: null, data: { status: 'accepted' } };
     }
+    if (existing.requester_id === user.id && existing.status === 'pending') {
+      return { success: true, error: null, data: { status: 'pending' } };
+    }
+
+    // If declined or cancelled, update to pending with current user as requester
+    const { error: updateErr } = await supabase
+      .from('friendships')
+      .update({
+        requester_id: user.id,
+        addressee_id: targetUserId,
+        status: 'pending',
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', existing.id);
+
+    if (updateErr) return { success: false, error: updateErr.message };
+
+    revalidatePath('/people');
+    revalidatePath('/friends');
+    revalidatePath('/members');
+    revalidatePath(`/profile/${targetUserId}`);
+    return { success: true, error: null, data: { status: 'pending' } };
   }
 
   const { error } = await supabase
     .from('friendships')
-    .upsert({
+    .insert({
       requester_id: user.id,
       addressee_id: targetUserId,
       status: 'pending',
       updated_at: new Date().toISOString(),
-    }, { onConflict: 'requester_id,addressee_id' });
+    });
 
   if (error) return { success: false, error: error.message };
 
@@ -378,4 +431,125 @@ export async function getRelationshipBatchAction(
   });
 
   return map;
+}
+
+export interface ProfileFriendItem {
+  id: string;
+  displayName: string;
+  username: string;
+  avatarUrl?: string | null;
+  bio?: string | null;
+  countryIso?: string | null;
+  isVerified: boolean;
+  friendsSince?: string;
+  mutualCount: number;
+}
+
+/**
+ * Loads friends for a target user profile respecting privacy permissions
+ */
+export async function fetchProfileFriendsAction(
+  targetUserId: string,
+  page: number = 1,
+  limit: number = 24
+): Promise<{
+  friends: ProfileFriendItem[];
+  isRestricted: boolean;
+  totalCount: number;
+}> {
+  const [currentUser, supabase] = await Promise.all([
+    getCurrentUser(),
+    createSupabaseServerClient(),
+  ]);
+
+  if (!supabase) return { friends: [], isRestricted: false, totalCount: 0 };
+
+  const offset = (page - 1) * limit;
+
+  // Try RPC get_profile_friends first
+  try {
+    const { data: rpcData, error: rpcError } = await supabase.rpc('get_profile_friends', {
+      target_user_id: targetUserId,
+      viewer_id: currentUser?.id || null,
+      limit_count: limit,
+      offset_count: offset,
+    });
+
+    if (!rpcError && Array.isArray(rpcData)) {
+      const friends: ProfileFriendItem[] = rpcData.map((row: any) => ({
+        id: row.friend_id,
+        displayName: row.display_name || row.username || 'Caribbean Member',
+        username: row.username,
+        avatarUrl: row.avatar_url,
+        bio: row.bio,
+        countryIso: row.country_iso,
+        isVerified: !!row.is_verified,
+        friendsSince: row.friends_since,
+        mutualCount: row.mutual_friends_count || 0,
+      }));
+
+      return {
+        friends,
+        isRestricted: false,
+        totalCount: friends.length,
+      };
+    }
+  } catch {
+    // Fallback below
+  }
+
+  // Fallback: Direct query on accepted friendships
+  const { data: targetProfile } = await supabase
+    .from('profiles')
+    .select('relationship_visibility')
+    .eq('id', targetUserId)
+    .maybeSingle();
+
+  const visibility = targetProfile?.relationship_visibility || 'public';
+  const isSelf = currentUser?.id === targetUserId;
+
+  if (!isSelf && visibility === 'private') {
+    return { friends: [], isRestricted: true, totalCount: 0 };
+  }
+
+  const { data: frRows } = await supabase
+    .from('friendships')
+    .select('requester_id, addressee_id, created_at, updated_at')
+    .eq('status', 'accepted')
+    .or(`requester_id.eq.${targetUserId},addressee_id.eq.${targetUserId}`)
+    .order('updated_at', { ascending: false })
+    .range(offset, offset + limit - 1);
+
+  if (!frRows || frRows.length === 0) {
+    return { friends: [], isRestricted: false, totalCount: 0 };
+  }
+
+  const friendIds = frRows.map((f) => (f.requester_id === targetUserId ? f.addressee_id : f.requester_id));
+
+  const { data: profiles } = await supabase
+    .from('profiles')
+    .select('id, display_name, username, avatar_url, bio, origin_country_iso, is_verified')
+    .in('id', friendIds);
+
+  const profileMap = new Map((profiles || []).map((p) => [p.id, p]));
+
+  const friends: ProfileFriendItem[] = friendIds.map((id) => {
+    const p = profileMap.get(id);
+    return {
+      id,
+      displayName: p?.display_name || p?.username || 'Caribbean Member',
+      username: p?.username || id.slice(0, 8),
+      avatarUrl: p?.avatar_url,
+      bio: p?.bio,
+      countryIso: p?.origin_country_iso,
+      isVerified: !!p?.is_verified,
+      mutualCount: 0,
+    };
+  });
+
+  return {
+    friends,
+    isRestricted: false,
+    totalCount: friends.length,
+  };
 }

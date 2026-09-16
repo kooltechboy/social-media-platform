@@ -139,6 +139,8 @@ export function NotificationsScreen({ navigation }: any) {
       navigation?.navigate('Live');
     } else if (kind.includes('podcast')) {
       navigation?.navigate('Podcasts');
+    } else if (kind.includes('friend_request') || kind.includes('friend')) {
+      navigation?.navigate('Friends');
     } else if (kind.includes('follow') && item.actor_id) {
       navigation?.navigate('Profile', { userId: item.actor_id });
     } else {
@@ -171,6 +173,16 @@ export function NotificationsScreen({ navigation }: any) {
       iconColor = TOKENS.action;
       title = `${actorName} followed you`;
       message = 'Started following your island journey and updates.';
+    } else if (kind.includes('friend_request')) {
+      iconName = 'people';
+      iconColor = TOKENS.action;
+      title = `${actorName} sent a friend request`;
+      message = 'Wants to connect with you as a friend on TUKUBI.';
+    } else if (kind.includes('friend_accepted')) {
+      iconName = 'checkmark-circle';
+      iconColor = '#10B981';
+      title = `${actorName} accepted your friend request`;
+      message = 'You are now friends on TUKUBI.';
     } else if (kind.includes('marketplace') || kind.includes('offer')) {
       iconName = 'cart';
       iconColor = TOKENS.accent;
@@ -189,7 +201,7 @@ export function NotificationsScreen({ navigation }: any) {
   const filteredNotifications = notifications.filter((n) => {
     const kind = n.kind?.toLowerCase() || '';
     if (activeTab === 'social') {
-      return kind.includes('like') || kind.includes('comment') || kind.includes('follow');
+      return kind.includes('like') || kind.includes('comment') || kind.includes('follow') || kind.includes('friend');
     }
     if (activeTab === 'marketplace') {
       return kind.includes('market') || kind.includes('offer') || kind.includes('order');

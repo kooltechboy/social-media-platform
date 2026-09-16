@@ -24,6 +24,7 @@ export interface NewMessageMember {
   isVerified?: boolean;
   isOnline?: boolean;
   bio?: string | null;
+  isFriend?: boolean;
 }
 
 export interface NewMessageModalProps {
@@ -50,7 +51,12 @@ export default function NewMessageModal({
   const [startingChatWith, setStartingChatWith] = useState<string | null>(null);
   const [, startTransition] = useTransition();
 
-  const membersList = onlineMembers || onlineFriends || [];
+  const membersList = useMemo(() => {
+    if (onlineFriends && onlineFriends.length > 0) {
+      return onlineFriends.map((f) => ({ ...f, isFriend: true }));
+    }
+    return (onlineMembers || []).map((m) => ({ ...m, isFriend: false }));
+  }, [onlineFriends, onlineMembers]);
 
   const supabase = useMemo(
     () =>
@@ -100,6 +106,7 @@ export default function NewMessageModal({
           if (error) throw error;
 
           if (data) {
+            const friendSet = new Set((onlineFriends || []).map((f) => f.id));
             const mapped: NewMessageMember[] = data.map((p) => ({
               id: p.id,
               name: p.display_name || p.username || 'Caribbean Member',
@@ -107,6 +114,7 @@ export default function NewMessageModal({
               avatarUrl: p.avatar_url,
               isVerified: !!p.is_verified,
               bio: p.bio,
+              isFriend: friendSet.has(p.id),
             }));
             setSearchResults(mapped);
           }
@@ -119,7 +127,7 @@ export default function NewMessageModal({
     }, 200);
 
     return () => clearTimeout(timer);
-  }, [search, currentUserId, supabase]);
+  }, [search, currentUserId, supabase, onlineFriends]);
 
   if (!isOpen) return null;
 
@@ -226,13 +234,22 @@ export default function NewMessageModal({
                         size="md"
                       />
                       <div className="min-w-0">
-                        <div className="flex items-center gap-1.5">
+                        <div className="flex items-center gap-1.5 flex-wrap">
                           <span className="text-xs font-black text-white truncate">
                             {member.name}
                           </span>
                           {member.isVerified && (
                             <BadgeCheck className="w-3.5 h-3.5 text-brand-caribbeanSea flex-shrink-0" />
                           )}
+                          <span
+                            className={`text-[9px] font-black px-1.5 py-0.5 rounded-full border ${
+                              member.isFriend
+                                ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
+                                : 'bg-white/5 text-slate-400 border-white/10'
+                            }`}
+                          >
+                            {member.isFriend ? 'Friend' : 'Member'}
+                          </span>
                         </div>
                         <p className="text-[11px] text-slate-400 truncate font-mono">
                           @{member.username}
@@ -274,13 +291,22 @@ export default function NewMessageModal({
                       size="md"
                     />
                     <div className="min-w-0">
-                      <div className="flex items-center gap-1.5">
+                      <div className="flex items-center gap-1.5 flex-wrap">
                         <span className="text-xs font-black text-white truncate">
                           {member.name}
                         </span>
                         {member.isVerified && (
                           <BadgeCheck className="w-3.5 h-3.5 text-brand-caribbeanSea flex-shrink-0" />
                         )}
+                        <span
+                          className={`text-[9px] font-black px-1.5 py-0.5 rounded-full border ${
+                            member.isFriend
+                              ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
+                              : 'bg-white/5 text-slate-400 border-white/10'
+                          }`}
+                        >
+                          {member.isFriend ? 'Friend' : 'Member'}
+                        </span>
                       </div>
                       <p className="text-[11px] text-slate-400 truncate font-mono">
                         @{member.username}

@@ -300,3 +300,52 @@ export function getRelationshipActionConfig(
   };
 }
 
+/**
+ * Returns true strictly if the relationship represents an explicit accepted friendship.
+ * Under TUKUBI Core Product Rule, following, community membership, or interactions
+ * NEVER equate to friendship.
+ */
+export function isAcceptedFriend(status?: string | null): boolean {
+  return status === 'accepted';
+}
+
+/**
+ * Returns strictly formatted mutual friend text: "1 mutual friend" or "X mutual friends".
+ * Never displays followers or shared groups as mutual friends.
+ */
+export function formatMutualFriendsCount(count: number): string | null {
+  if (!count || count <= 0) return null;
+  return count === 1 ? '1 mutual friend' : `${count.toLocaleString('en-US')} mutual friends`;
+}
+
+export type RelationshipBadgeType = 'friend' | 'member' | 'following' | 'follower' | 'official';
+
+export interface RelationshipBadge {
+  type: RelationshipBadgeType;
+  label: string;
+}
+
+/**
+ * Resolves the explicit social status badge for directory and search cards
+ */
+export function resolveRelationshipBadge(rel: {
+  isOfficial?: boolean;
+  friendshipStatus?: string;
+  isFollowing?: boolean;
+  isFollower?: boolean;
+}): RelationshipBadge {
+  if (rel.isOfficial) {
+    return { type: 'official', label: 'Official' };
+  }
+  if (rel.friendshipStatus === 'accepted') {
+    return { type: 'friend', label: 'Friend' };
+  }
+  if (rel.isFollowing) {
+    return { type: 'following', label: 'Following' };
+  }
+  if (rel.isFollower) {
+    return { type: 'follower', label: 'Follower' };
+  }
+  return { type: 'member', label: 'Member' };
+}
+

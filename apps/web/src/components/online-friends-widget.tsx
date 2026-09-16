@@ -54,42 +54,53 @@ export default function OnlineFriendsWidget({ initialUserId }: OnlineFriendsWidg
 
         if (activeUserId) {
           setCurrentUserId(activeUserId);
+
+          // 1. Fetch Follows (for one-way follow state)
+          const followsRes = await supabase
+            .from('follows')
+            .select('following_id')
+            .eq('follower_id', activeUserId);
+
+          if (followsRes?.data) {
+            setFollowingUserIds(new Set(followsRes.data.map((f: any) => f.following_id)));
+          }
+
+          // 2. Fetch Strictly Accepted Friendships (Core Product Rule)
+          const { data: frData } = await supabase
+            .from('friendships')
+            .select('requester_id, addressee_id')
+            .eq('status', 'accepted')
+            .or(`requester_id.eq.${activeUserId},addressee_id.eq.${activeUserId}`);
+
+          const friendIds = (frData || []).map((f: any) =>
+            f.requester_id === activeUserId ? f.addressee_id : f.requester_id
+          );
+
+          if (friendIds.length > 0) {
+            const { data: profilesRes } = await supabase
+              .from('profiles')
+              .select('id, display_name, username, is_verified, avatar_url, updated_at')
+              .in('id', friendIds);
+
+            if (profilesRes) {
+              const mapped: FriendMember[] = profilesRes.map((p) => ({
+                id: p.id,
+                name: p.display_name || p.username || 'Caribbean Friend',
+                username: p.username || p.id.slice(0, 8),
+                avatarUrl: p.avatar_url,
+                isVerified: !!p.is_verified,
+                isOnline: false,
+              }));
+              setFriends(mapped);
+            }
+          } else {
+            setFriends([]);
+          }
+        } else {
+          setFriends([]);
         }
 
-        const followsPromise = activeUserId
-          ? supabase.from('follows').select('following_id').eq('follower_id', activeUserId)
-          : Promise.resolve({ data: null });
-
-        let profilesQuery = supabase
-          .from('profiles')
-          .select('id, display_name, username, is_verified, avatar_url, updated_at')
-          .eq('is_private', false)
-          .order('updated_at', { ascending: false })
-          .limit(16);
-
-        if (activeUserId) {
-          profilesQuery = profilesQuery.neq('id', activeUserId);
-        }
-
-        const [followsRes, profilesRes] = await Promise.all([followsPromise, profilesQuery]);
-
-        if (followsRes?.data) {
-          setFollowingUserIds(new Set(followsRes.data.map((f: any) => f.following_id)));
-        }
-
-        if (profilesRes?.data) {
-          const mapped: FriendMember[] = profilesRes.data.map((p) => ({
-            id: p.id,
-            name: p.display_name || p.username || 'Caribbean Member',
-            username: p.username || p.id.slice(0, 8),
-            avatarUrl: p.avatar_url,
-            isVerified: !!p.is_verified,
-            isOnline: false,
-          }));
-          setFriends(mapped);
-        }
-
-        // 2. Track Realtime Presence
+        // 3. Track Realtime Presence
         channel = supabase.channel('tukubi:presence', {
           config: { presence: { key: activeUserId || `anon-${Math.random().toString(36).slice(2, 7)}` } },
         });
@@ -114,7 +125,7 @@ export default function OnlineFriendsWidget({ initialUserId }: OnlineFriendsWidg
             }
           });
       } catch (err) {
-        console.error('[OnlineFriendsWidget] Error fetching members:', err);
+        console.error('[OnlineFriendsWidget] Error fetching friends:', err);
       } finally {
         setLoading(false);
       }
@@ -127,49 +138,13 @@ export default function OnlineFriendsWidget({ initialUserId }: OnlineFriendsWidg
         supabase.removeChannel(channel);
       }
     };
-  }, [supabase]);
+  }, [supabase, initialUserId]);
 
-  // 3. Debounced live database search
+  // 3. Debounced search within accepted friends
   useEffect(() => {
-    if (!search.trim() || !supabase) return;
-
-    const timer = setTimeout(async () => {
-      startTransition(async () => {
-        try {
-          if (!supabase) return;
-          const { data: { user } } = await supabase.auth.getUser();
-          const cleanQuery = search.trim();
-          let query = supabase
-            .from('profiles')
-            .select('id, display_name, username, is_verified, avatar_url, updated_at')
-            .eq('is_private', false)
-            .or(`display_name.ilike.%${cleanQuery}%,username.ilike.%${cleanQuery}%`)
-            .limit(12);
-
-          if (user) {
-            query = query.neq('id', user.id);
-          }
-
-          const { data } = await query;
-          if (data) {
-            const searchMapped: FriendMember[] = data.map((p) => ({
-              id: p.id,
-              name: p.display_name || p.username || 'Caribbean Member',
-              username: p.username || p.id.slice(0, 8),
-              avatarUrl: p.avatar_url,
-              isVerified: !!p.is_verified,
-              isOnline: onlineUserIds.has(p.id),
-            }));
-            setFriends(searchMapped);
-          }
-        } catch (err) {
-          console.error('[OnlineFriendsWidget] Search error:', err);
-        }
-      });
-    }, 250);
-
-    return () => clearTimeout(timer);
-  }, [search, onlineUserIds, supabase]);
+    // Client-side search within authenticated user's friends list
+    // (Preserves strict friendship boundary and prevents member leakage)
+  }, [search]);
 
   async function handleToggleFollow(targetId: string) {
     if (!currentUserId || targetId === currentUserId) return;
@@ -208,18 +183,22 @@ export default function OnlineFriendsWidget({ initialUserId }: OnlineFriendsWidg
     }
   }
 
-  const onlineCount = onlineUserIds.size > 0 ? onlineUserIds.size : friends.filter((f) => onlineUserIds.has(f.id)).length;
+  const onlineCount = friends.filter((f) => onlineUserIds.has(f.id)).length;
 
   const displayedFriends = useMemo(() => {
     let list = friends.map((f) => ({
       ...f,
-      isOnline: onlineUserIds.has(f.id) || f.isOnline,
+      isOnline: onlineUserIds.has(f.id),
     }));
+    if (search.trim()) {
+      const q = search.trim().toLowerCase();
+      list = list.filter((f) => f.name.toLowerCase().includes(q) || f.username.toLowerCase().includes(q));
+    }
     if (activeFilter === 'online') {
       list = list.filter((f) => f.isOnline);
     }
     return list;
-  }, [friends, onlineUserIds, activeFilter]);
+  }, [friends, onlineUserIds, search, activeFilter]);
 
   return (
     <div className="bg-[#130B1E]/95 backdrop-blur-2xl border border-white/15 rounded-3xl p-5 shadow-2xl space-y-4 relative overflow-hidden">
@@ -235,7 +214,7 @@ export default function OnlineFriendsWidget({ initialUserId }: OnlineFriendsWidg
           <div className="w-7 h-7 md:w-8 md:h-8 rounded-xl bg-brand-caribbeanSea/20 border border-brand-caribbeanSea/40 flex items-center justify-center text-brand-caribbeanSea">
             <Users className="w-4 h-4 md:w-4.5 md:h-4.5" />
           </div>
-          <span>Friends & Members</span>
+          <span>Online Friends</span>
         </Link>
         <span className="text-[10px] md:text-xs font-black px-2.5 md:px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center gap-1.5 shadow-sm">
           <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
@@ -404,11 +383,25 @@ export default function OnlineFriendsWidget({ initialUserId }: OnlineFriendsWidg
           <div className="text-center py-8 px-4 rounded-2xl bg-white/[0.02] border border-dashed border-white/10 space-y-2">
             <Users className="w-6 h-6 text-slate-400 mx-auto" />
             <p className="text-xs md:text-sm font-bold text-slate-200">
-              {activeFilter === 'online' ? 'No members currently online' : `No members found matching "${search}"`}
+              {friends.length === 0
+                ? "You don't have any friends yet"
+                : activeFilter === 'online'
+                ? 'None of your friends are currently online'
+                : `No friends found matching "${search}"`}
             </p>
-            <p className="text-[11px] md:text-xs text-slate-400">
-              Browse the directory to connect with Caribbean diaspora members.
+            <p className="text-[11px] md:text-xs text-slate-400 leading-relaxed">
+              {friends.length === 0
+                ? 'Friends are mutual accepted connections on TUKUBI. Explore the Members Directory to connect.'
+                : 'Stay tuned for when your connections log in across the diaspora.'}
             </p>
+            {friends.length === 0 && (
+              <Link
+                href="/members"
+                className="inline-block text-[11px] font-black px-3 py-1.5 rounded-xl bg-brand-caribbeanSea text-slate-950 hover:brightness-110 transition-all mt-1"
+              >
+                Browse Members
+              </Link>
+            )}
           </div>
         )}
       </div>

@@ -43,6 +43,7 @@ export function ProfileScreen({ onLogout, navigation }: ProfileScreenProps) {
   const [followersCount, setFollowersCount] = useState(0);
   const [followingCount, setFollowingCount] = useState(0);
   const [likesReceived, setLikesReceived] = useState(0);
+  const [friendsCount, setFriendsCount] = useState(0);
 
   // Tabbed Content
   const [activeTab, setActiveTab] = useState<ProfileTab>('posts');
@@ -94,7 +95,7 @@ export function ProfileScreen({ onLogout, navigation }: ProfileScreenProps) {
       // 2. Fetch Verified Counters from profile_counts (NASA-grade integrity)
       const { data: countData } = await supabase
         .from('profile_counts')
-        .select('posts_count, followers_count, following_count, likes_received_count')
+        .select('posts_count, followers_count, following_count, likes_received_count, friends_count')
         .eq('profile_id', user.id)
         .maybeSingle();
 
@@ -103,6 +104,7 @@ export function ProfileScreen({ onLogout, navigation }: ProfileScreenProps) {
         setFollowersCount(countData.followers_count || 0);
         setFollowingCount(countData.following_count || 0);
         setLikesReceived(countData.likes_received_count || 0);
+        setFriendsCount(countData.friends_count || 0);
       } else {
         // Fallback count queries
         const { count: pCount } = await supabase
@@ -275,6 +277,14 @@ export function ProfileScreen({ onLogout, navigation }: ProfileScreenProps) {
           <View style={styles.navLinksRow}>
             <TouchableOpacity
               style={styles.navLinkBtn}
+              onPress={() => navigation?.navigate('Friends')}
+            >
+              <Text style={styles.navLinkIcon}>👥</Text>
+              <Text style={styles.navLinkText}>Friends</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.navLinkBtn}
               onPress={() => navigation?.navigate('Communities')}
             >
               <Text style={styles.navLinkIcon}>🌴</Text>
@@ -330,7 +340,7 @@ export function ProfileScreen({ onLogout, navigation }: ProfileScreenProps) {
               ))}
             </ScrollView>
 
-            <Text style={styles.label}>City / District</Text>
+            <Text style={styles.label}>City / Parish / District</Text>
             <TextInput
               style={styles.input}
               value={city}
@@ -340,12 +350,13 @@ export function ProfileScreen({ onLogout, navigation }: ProfileScreenProps) {
             />
 
             <TouchableOpacity
-              style={[styles.saveButton, updating && { opacity: 0.6 }]}
+              style={styles.saveButton}
               onPress={handleSaveProfile}
               disabled={updating}
+              activeOpacity={0.8}
             >
               {updating ? (
-                <ActivityIndicator color="#090D1A" />
+                <ActivityIndicator size="small" color="#090D1A" />
               ) : (
                 <Text style={styles.saveButtonText}>Save Changes</Text>
               )}
@@ -360,6 +371,15 @@ export function ProfileScreen({ onLogout, navigation }: ProfileScreenProps) {
             <Text style={styles.statLabel}>{postsCount === 1 ? 'Post' : 'Posts'}</Text>
           </View>
           <View style={styles.statDivider} />
+          <TouchableOpacity
+            style={styles.statItem}
+            onPress={() => navigation?.navigate('Friends')}
+            activeOpacity={0.7}
+          >
+            <Text style={[styles.statNumber, { color: '#10B981' }]}>{friendsCount}</Text>
+            <Text style={styles.statLabel}>Friends</Text>
+          </TouchableOpacity>
+          <View style={styles.statDivider} />
           <View style={styles.statItem}>
             <Text style={styles.statNumber}>{followersCount}</Text>
             <Text style={styles.statLabel}>Followers</Text>
@@ -368,11 +388,6 @@ export function ProfileScreen({ onLogout, navigation }: ProfileScreenProps) {
           <View style={styles.statItem}>
             <Text style={styles.statNumber}>{followingCount}</Text>
             <Text style={styles.statLabel}>Following</Text>
-          </View>
-          <View style={styles.statDivider} />
-          <View style={styles.statItem}>
-            <Text style={styles.statNumber}>{likesReceived}</Text>
-            <Text style={styles.statLabel}>Likes</Text>
           </View>
         </View>
 

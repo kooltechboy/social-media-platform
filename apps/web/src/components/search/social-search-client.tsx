@@ -51,6 +51,7 @@ import {
   type DiscoverPodcast,
 } from '../../lib/discovery/actions';
 import { type UniversalSearchResults } from '@caribbean/search';
+import { resolveRelationshipBadge, formatMutualFriendsCount } from '@caribbean/social';
 
 interface SocialSearchClientProps {
   initialQuery: string;
@@ -591,6 +592,14 @@ export default function SocialSearchClient({
                   const fStatus = friendshipStatusMap[person.id] || person.relationship?.friendshipStatus || 'none';
                   const isFollowing = !!followingMap[person.id];
                   const isSelf = currentUserId === person.id;
+                  const isOfficial = person.is_official || person.username?.toLowerCase() === 'tukubi';
+                  const relBadge = resolveRelationshipBadge({
+                    isOfficial,
+                    friendshipStatus: fStatus as any,
+                    isFollowing,
+                    isFollower: !!person.relationship?.isFollower,
+                  });
+                  const mutualText = person.mutual_count ? formatMutualFriendsCount(person.mutual_count) : null;
 
                   return (
                     <div
@@ -607,16 +616,32 @@ export default function SocialSearchClient({
                           size="md"
                         />
                         <div className="min-w-0">
-                          <h4 className="text-xs sm:text-sm font-extrabold text-brand-sandstone truncate group-hover:text-brand-caribbeanSea transition-colors flex items-center gap-1.5">
-                            {person.display_name}
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <h4 className="text-xs sm:text-sm font-extrabold text-brand-sandstone truncate group-hover:text-brand-caribbeanSea transition-colors">
+                              {person.display_name}
+                            </h4>
                             {person.is_verified && (
                               <Check className="w-3.5 h-3.5 text-brand-caribbeanSea shrink-0" />
                             )}
-                          </h4>
+                            <span className={`text-[9px] font-black px-1.5 py-0.2 rounded-full border ${
+                              relBadge.type === 'official'
+                                ? 'bg-gradient-to-r from-brand-caribbeanSea/20 to-brand-sunriseCoral/20 text-brand-caribbeanSea border-brand-caribbeanSea/40'
+                                : relBadge.type === 'friend'
+                                ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
+                                : 'bg-white/5 text-brand-sandstone/70 border-white/10'
+                            }`}>
+                              {relBadge.label}
+                            </span>
+                          </div>
                           <p className="text-[11px] text-brand-sandstone/60 truncate">@{person.username}</p>
                           {person.country_name && (
                             <span className="text-[10px] text-brand-sunriseCoral flex items-center gap-0.5 mt-0.5">
                               <MapPin className="w-2.5 h-2.5" /> {person.country_name}
+                            </span>
+                          )}
+                          {mutualText && (
+                            <span className="text-[10px] text-brand-goldenHour font-bold block">
+                              {mutualText}
                             </span>
                           )}
                         </div>
@@ -625,19 +650,26 @@ export default function SocialSearchClient({
                       {!isSelf && (
                         <div className="flex items-center gap-1.5 shrink-0">
                           {fStatus === 'accepted' ? (
-                            <span className="text-[10px] font-bold px-2.5 py-1.5 rounded-xl bg-brand-dusk text-brand-caribbeanSea border border-brand-caribbeanSea/30">
+                            <span className="text-[10px] font-black px-2.5 py-1 rounded-xl bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
                               Friends
                             </span>
                           ) : fStatus === 'pending_sent' ? (
-                            <span className="text-[10px] font-bold px-2.5 py-1.5 rounded-xl bg-brand-dusk text-slate-400 border border-slate-700">
+                            <span className="text-[10px] font-bold px-2.5 py-1 rounded-xl bg-white/5 text-brand-sandstone/70 border border-white/10">
                               Sent
                             </span>
+                          ) : fStatus === 'pending_received' ? (
+                            <Link
+                              href="/friends?tab=requests"
+                              className="text-[10px] font-black px-2.5 py-1 rounded-xl bg-emerald-500 text-slate-950 hover:bg-emerald-400 shadow-sm"
+                            >
+                              Accept
+                            </Link>
                           ) : (
                             <button
                               type="button"
                               disabled={pendingActionId === person.id}
                               onClick={() => handleSendFriendRequest(person.id)}
-                              className="text-[10px] font-bold px-2.5 py-1.5 rounded-xl bg-brand-caribbeanSea text-slate-950 hover:bg-emerald-400"
+                              className="text-[10px] font-bold px-2.5 py-1 rounded-xl bg-brand-caribbeanSea text-slate-950 hover:brightness-110 shadow-sm"
                             >
                               + Friend
                             </button>
@@ -647,7 +679,7 @@ export default function SocialSearchClient({
                             type="button"
                             disabled={pendingActionId === person.id}
                             onClick={() => handleToggleFollow(person.id)}
-                            className={`text-[10px] font-bold px-3 py-1.5 rounded-xl ${
+                            className={`text-[10px] font-bold px-3 py-1 rounded-xl ${
                               isFollowing
                                 ? 'bg-brand-dusk text-slate-300 border border-slate-700 hover:bg-rose-500/20 hover:text-rose-400'
                                 : 'bg-brand-sunriseCoral text-slate-950 shadow-md shadow-brand-sunriseCoral/20'
@@ -659,7 +691,7 @@ export default function SocialSearchClient({
                           {/* Message Button */}
                           <Link
                             href={`/messages?u=${encodeURIComponent(person.username)}`}
-                            className="text-[10px] font-bold px-2.5 py-1.5 rounded-xl bg-brand-dusk text-brand-sandstone border border-slate-700 hover:bg-slate-800 transition-colors flex items-center gap-1"
+                            className="text-[10px] font-bold px-2.5 py-1 rounded-xl bg-brand-dusk text-brand-sandstone border border-slate-700 hover:bg-slate-800 transition-colors flex items-center gap-1"
                           >
                             <MessageSquare className="w-3 h-3 text-brand-caribbeanSea" /> Msg
                           </Link>
