@@ -10,6 +10,8 @@ import {
   KeyboardAvoidingView,
   Platform,
   Alert,
+  Modal,
+  SafeAreaView,
 } from 'react-native';
 import { TOKENS } from '../theme/tokens';
 import { supabase } from '../lib/supabase';
@@ -33,6 +35,15 @@ interface MessageItem {
   sequence_number?: number;
 }
 
+interface SearchProfileItem {
+  id: string;
+  display_name: string;
+  username: string;
+  avatar_url?: string | null;
+  country?: string | null;
+  is_verified?: boolean;
+}
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function generateClientMessageId(): string {
@@ -47,7 +58,7 @@ function formatTime(iso?: string | null): string {
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
-export function MessagesScreen() {
+export function MessagesScreen({ route, navigation }: any) {
   const [conversations, setConversations] = useState<ConversationItem[]>([]);
   const [loadingConversations, setLoadingConversations] = useState(true);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -59,6 +70,13 @@ export function MessagesScreen() {
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [typingUsers, setTypingUsers] = useState<string[]>([]);
 
+  // New Chat User Search state
+  const [newChatModalOpen, setNewChatModalOpen] = useState(false);
+  const [userSearchQuery, setUserSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<SearchProfileItem[]>([]);
+  const [searchingUsers, setSearchingUsers] = useState(false);
+  const [startingChatId, setStartingChatId] = useState<string | null>(null);
+
   const flatListRef = useRef<FlatList>(null);
   const realtimeChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -69,6 +87,18 @@ export function MessagesScreen() {
       if (user) setCurrentUserId(user.id);
     });
   }, []);
+
+  // ── Check route params for direct conversation deep link ──────────────────
+  useEffect(() => {
+    if (route?.params?.conversationId) {
+      handleSelectConversation({
+        id: route.params.conversationId,
+        name: route.params.targetName || 'Direct Message',
+        preview: 'Conversation opened',
+        unread: 0,
+      });
+    }
+  }, [route?.params?.conversationId]);
 
   // ── Load conversations list ────────────────────────────────────────────────
   const loadConversations = useCallback(async () => {
@@ -213,6 +243,69 @@ export function MessagesScreen() {
       }
     };
   }, []);
+
+  // ── Search users to start new conversation ────────────────────────────────
+  const handleSearchUsers = async (query: string) => {
+    setUserSearchQuery(query);
+    if (!query.trim()) {
+      setSearchResults([]);
+      return;
+    }
+
+    setSearchingUsers(true);
+    try {
+      const sanitized = query.replace(/^@/, '').trim();
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, display_name, username, avatar_url, country, is_verified')
+        .or(`display_name.ilike.%${sanitized}%,username.ilike.%${sanitized}%`)
+        .limit(15);
+
+      if (!error && data) {
+        // Filter out self
+        const filtered = data.filter((p: any) => p.id !== currentUserId);
+        setSearchResults(filtered);
+      }
+    } catch (err) {
+      console.warn('Error searching users:', err);
+    } finally {
+      setSearchingUsers(false);
+    }
+  };
+
+  // ── Start conversation with a user ────────────────────────────────────────
+  const handleStartChatWithUser = async (targetUser: SearchProfileItem) => {
+    setStartingChatId(targetUser.id);
+    try {
+      const { data: convId, error } = await supabase.rpc('get_or_create_direct_conversation', {
+        target_user_id: targetUser.id,
+      });
+
+      if (error) {
+        Alert.alert('Could Not Start Chat', error.message);
+        return;
+      }
+
+      setNewChatModalOpen(false);
+      setUserSearchQuery('');
+      setSearchResults([]);
+
+      // Select and open thread
+      handleSelectConversation({
+        id: convId,
+        name: targetUser.display_name || targetUser.username,
+        preview: 'Conversation started',
+        unread: 0,
+      });
+
+      // Reload conversations list in background
+      loadConversations();
+    } catch (err: any) {
+      Alert.alert('Error', err.message || 'Could not start conversation');
+    } finally {
+      setStartingChatId(null);
+    }
+  };
 
   // ── Send message ──────────────────────────────────────────────────────────
   const handleSend = useCallback(async () => {
@@ -375,9 +468,18 @@ export function MessagesScreen() {
   // ── Conversation List ──────────────────────────────────────────────────────
   return (
     <View style={styles.container}>
-      {/* Header */}
+      {/* Header with New Chat Button */}
       <View style={styles.listHeader}>
         <Text style={styles.listHeaderTitle}>Messages</Text>
+        <TouchableOpacity
+          style={styles.newChatBtn}
+          onPress={() => setNewChatModalOpen(true)}
+          activeOpacity={0.8}
+          accessibilityRole="button"
+          accessibilityLabel="Start a new message"
+        >
+          <Text style={styles.newChatBtnText}>+ New Chat</Text>
+        </TouchableOpacity>
       </View>
 
       {conversations.length === 0 ? (
@@ -387,8 +489,15 @@ export function MessagesScreen() {
           </View>
           <Text style={styles.emptyTitle}>No Conversations Yet</Text>
           <Text style={styles.emptySubtitle}>
-            Connect with friends, businesses, and creator communities across the Caribbean diaspora.
+            Connect with friends, merchants, and creator communities across the Caribbean diaspora.
           </Text>
+          <TouchableOpacity
+            style={styles.findPeopleBtn}
+            onPress={() => setNewChatModalOpen(true)}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.findPeopleBtnText}>Find Members to Chat →</Text>
+          </TouchableOpacity>
         </View>
       ) : (
         <FlatList
@@ -422,6 +531,101 @@ export function MessagesScreen() {
           )}
         />
       )}
+
+      {/* New Chat / User Search Modal */}
+      <Modal
+        visible={newChatModalOpen}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setNewChatModalOpen(false)}
+      >
+        <SafeAreaView style={styles.modalSafe}>
+          <View style={styles.modalContent}>
+            {/* Modal Header */}
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalHeaderTitle}>Start Conversation 🌴</Text>
+              <TouchableOpacity
+                onPress={() => {
+                  setNewChatModalOpen(false);
+                  setUserSearchQuery('');
+                  setSearchResults([]);
+                }}
+                style={styles.modalCloseBtn}
+              >
+                <Text style={styles.modalCloseText}>✕</Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* Search Input */}
+            <View style={styles.modalSearchBox}>
+              <TextInput
+                style={styles.modalSearchInput}
+                placeholder="Search by name or @username..."
+                placeholderTextColor={TOKENS.textMuted}
+                value={userSearchQuery}
+                onChangeText={handleSearchUsers}
+                autoFocus
+                autoCapitalize="none"
+              />
+            </View>
+
+            {/* Results */}
+            {searchingUsers ? (
+              <View style={styles.modalCentered}>
+                <ActivityIndicator size="small" color={TOKENS.action} />
+                <Text style={styles.searchStatusText}>Searching Caribbean members…</Text>
+              </View>
+            ) : searchResults.length === 0 ? (
+              <View style={styles.modalCentered}>
+                <Text style={styles.searchEmptyTitle}>
+                  {userSearchQuery.trim() ? 'No members found' : 'Type to search members'}
+                </Text>
+                <Text style={styles.searchEmptySubtitle}>
+                  {userSearchQuery.trim()
+                    ? 'Check the spelling or try searching by username'
+                    : 'Search anyone across the Caribbean network to message directly'}
+                </Text>
+              </View>
+            ) : (
+              <FlatList
+                data={searchResults}
+                keyExtractor={(item) => item.id}
+                contentContainerStyle={{ padding: 16 }}
+                renderItem={({ item }) => {
+                  const isStarting = startingChatId === item.id;
+                  return (
+                    <TouchableOpacity
+                      style={styles.userResultCard}
+                      onPress={() => handleStartChatWithUser(item)}
+                      disabled={isStarting}
+                      activeOpacity={0.75}
+                    >
+                      <View style={styles.userResultAvatar}>
+                        <Text style={styles.userResultAvatarText}>
+                          {(item.display_name || item.username).slice(0, 2).toUpperCase()}
+                        </Text>
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                          <Text style={styles.userResultName}>{item.display_name || item.username}</Text>
+                          {item.is_verified && <Text style={{ fontSize: 12 }}>✓</Text>}
+                        </View>
+                        <Text style={styles.userResultHandle}>@{item.username}</Text>
+                        {item.country && <Text style={styles.userResultCountry}>📍 {item.country}</Text>}
+                      </View>
+                      {isStarting ? (
+                        <ActivityIndicator size="small" color={TOKENS.action} />
+                      ) : (
+                        <Text style={styles.startChatAction}>Message →</Text>
+                      )}
+                    </TouchableOpacity>
+                  );
+                }}
+              />
+            )}
+          </View>
+        </SafeAreaView>
+      </Modal>
     </View>
   );
 }
@@ -437,11 +641,21 @@ const styles = StyleSheet.create({
   listHeader: {
     paddingHorizontal: 20,
     paddingTop: 16,
-    paddingBottom: 10,
+    paddingBottom: 12,
     borderBottomWidth: 1,
     borderBottomColor: TOKENS.border,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
   },
-  listHeaderTitle: { color: TOKENS.textPrimary, fontSize: 20, fontWeight: '900', letterSpacing: -0.5 },
+  listHeaderTitle: { color: TOKENS.textPrimary, fontSize: 22, fontWeight: '900', letterSpacing: -0.5 },
+  newChatBtn: {
+    backgroundColor: TOKENS.action,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 999,
+  },
+  newChatBtnText: { color: '#090D1A', fontSize: 12, fontWeight: '900' },
   listContent: { padding: 16, paddingBottom: 32 },
   chatCard: {
     backgroundColor: TOKENS.surface,
@@ -488,7 +702,14 @@ const styles = StyleSheet.create({
   },
   emptyIconText: { fontSize: 28 },
   emptyTitle: { color: TOKENS.textPrimary, fontSize: 16, fontWeight: '800', marginBottom: 6 },
-  emptySubtitle: { color: TOKENS.textMuted, fontSize: 12, textAlign: 'center', lineHeight: 18, maxWidth: 280 },
+  emptySubtitle: { color: TOKENS.textMuted, fontSize: 12, textAlign: 'center', lineHeight: 18, maxWidth: 280, marginBottom: 16 },
+  findPeopleBtn: {
+    backgroundColor: TOKENS.action,
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 999,
+  },
+  findPeopleBtnText: { color: '#090D1A', fontSize: 13, fontWeight: '900' },
 
   // Thread view
   threadHeader: {
@@ -525,7 +746,7 @@ const styles = StyleSheet.create({
     borderBottomLeftRadius: 4,
   },
   bubbleText: { color: TOKENS.textPrimary, fontSize: 14, lineHeight: 20 },
-  bubbleTextMine: { color: '#FFFFFF' },
+  bubbleTextMine: { color: '#090D1A', fontWeight: '600' },
   bubbleTime: { color: 'rgba(255,255,255,0.55)', fontSize: 10, marginTop: 4, textAlign: 'right' },
 
   // Composer
@@ -559,5 +780,62 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  sendText: { color: '#FFFFFF', fontSize: 13, fontWeight: '800' },
+  sendText: { color: '#090D1A', fontSize: 13, fontWeight: '900' },
+
+  // User Search Modal
+  modalSafe: { flex: 1, backgroundColor: TOKENS.canvas },
+  modalContent: { flex: 1 },
+  modalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: TOKENS.border,
+  },
+  modalHeaderTitle: { color: TOKENS.textPrimary, fontSize: 18, fontWeight: '900' },
+  modalCloseBtn: { padding: 4 },
+  modalCloseText: { color: TOKENS.textMuted, fontSize: 18, fontWeight: '700' },
+  modalSearchBox: { paddingHorizontal: 16, paddingVertical: 12 },
+  modalSearchInput: {
+    backgroundColor: TOKENS.surface,
+    borderWidth: 1,
+    borderColor: TOKENS.border,
+    borderRadius: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    color: TOKENS.textPrimary,
+    fontSize: 14,
+  },
+  modalCentered: { padding: 40, alignItems: 'center' },
+  searchStatusText: { color: TOKENS.textMuted, fontSize: 13, marginTop: 10 },
+  searchEmptyTitle: { color: TOKENS.textPrimary, fontSize: 15, fontWeight: '800' },
+  searchEmptySubtitle: { color: TOKENS.textMuted, fontSize: 12, textAlign: 'center', marginTop: 4 },
+  userResultCard: {
+    backgroundColor: TOKENS.surface,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: TOKENS.border,
+    padding: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginBottom: 10,
+  },
+  userResultAvatar: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: TOKENS.raised,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: TOKENS.border,
+  },
+  userResultAvatarText: { color: TOKENS.action, fontSize: 14, fontWeight: '900' },
+  userResultName: { color: TOKENS.textPrimary, fontSize: 14, fontWeight: '800' },
+  userResultHandle: { color: TOKENS.textMuted, fontSize: 11 },
+  userResultCountry: { color: TOKENS.action, fontSize: 10, marginTop: 2, fontWeight: '700' },
+  startChatAction: { color: TOKENS.action, fontSize: 12, fontWeight: '800' },
 });

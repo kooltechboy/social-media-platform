@@ -9,6 +9,9 @@ import {
   RefreshControl,
   SafeAreaView,
   Modal,
+  Image,
+  ActivityIndicator,
+  Alert,
 } from 'react-native';
 import { TOKENS } from '../theme/tokens';
 import { supabase } from '../lib/supabase';
@@ -26,6 +29,8 @@ interface MobileProduct {
   sellerId: string;
   location: string;
   inventoryCount: number | null;
+  imageUrl?: string | null;
+  categoryTitle?: string | null;
 }
 
 const CATEGORIES = [
@@ -46,17 +51,22 @@ const TERRITORIES = [
   { code: 'TTO', flag: '🇹🇹', name: 'Trinidad' },
   { code: 'HTI', flag: '🇭🇹', name: 'Haiti' },
   { code: 'BRB', flag: '🇧🇧', name: 'Barbados' },
+  { code: 'BHS', flag: '🇧🇸', name: 'Bahamas' },
+  { code: 'GUY', flag: '🇬🇾', name: 'Guyana' },
 ];
 
-export function MarketplaceScreen() {
+export function MarketplaceScreen({ navigation }: any) {
   const [products, setProducts] = useState<MobileProduct[]>([]);
+  const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState('All');
   const [activeTerritory, setActiveTerritory] = useState('ALL');
   const [selectedProduct, setSelectedProduct] = useState<MobileProduct | null>(null);
   const [offerPriceInput, setOfferPriceInput] = useState('');
-  const [offerSuccess, setOfferSuccess] = useState(false);
+  const [offerSubmitting, setOfferSubmitting] = useState(false);
+  const [offerSuccessMsg, setOfferSuccessMsg] = useState<string | null>(null);
+  const [connectingSeller, setConnectingSeller] = useState(false);
 
   const fetchProducts = async () => {
     try {
@@ -64,13 +74,14 @@ export function MarketplaceScreen() {
         .from('products')
         .select(`
           id, title, description, price_minor, currency, product_kind,
-          condition, location_city, location_country_iso, inventory_count, seller_id,
+          condition, location_city, location_country_iso, inventory_count, seller_id, media_urls,
+          marketplace_categories(title, slug),
           profiles(display_name, username),
           businesses(name)
         `)
         .eq('is_active', true)
         .order('created_at', { ascending: false })
-        .limit(30);
+        .limit(40);
 
       if (searchQuery.trim()) {
         query = query.ilike('title', `%${searchQuery.trim()}%`);
@@ -80,65 +91,173 @@ export function MarketplaceScreen() {
         query = query.eq('location_country_iso', activeTerritory);
       }
 
+      if (activeCategory !== 'All') {
+        if (activeCategory === 'Digital') {
+          query = query.eq('product_kind', 'digital');
+        } else if (activeCategory === 'Services') {
+          query = query.eq('product_kind', 'service');
+        } else if (activeCategory === 'Food & Spices') {
+          query = query.or('title.ilike.%coffee%,title.ilike.%spice%,title.ilike.%sauce%,title.ilike.%food%');
+        } else if (activeCategory === 'Carnival & Mas') {
+          query = query.or('title.ilike.%carnival%,title.ilike.%mas%,title.ilike.%costume%');
+        } else if (activeCategory === 'Art & Decor') {
+          query = query.or('title.ilike.%art%,title.ilike.%craft%,title.ilike.%decor%,title.ilike.%painting%');
+        } else if (activeCategory === 'Fashion') {
+          query = query.or('title.ilike.%wear%,title.ilike.%fashion%,title.ilike.%shirt%,title.ilike.%dress%');
+        } else if (activeCategory === 'Tech') {
+          query = query.or('title.ilike.%phone%,title.ilike.%laptop%,title.ilike.%audio%,title.ilike.%tech%');
+        }
+      }
+
       const { data, error } = await query;
       if (data && !error) {
-        const mapped: MobileProduct[] = data.map((item: any) => ({
-          id: item.id,
-          title: item.title,
-          description: item.description || 'Authentic Caribbean listing.',
-          priceMinor: item.price_minor,
-          priceFormatted: `$${(item.price_minor / 100).toFixed(2)} ${item.currency || 'USD'}`,
-          currency: item.currency || 'USD',
-          productKind: item.product_kind || 'physical',
-          condition: item.condition || 'New',
-          sellerName: item.businesses?.name || item.profiles?.display_name || item.profiles?.username || 'Merchant',
-          sellerId: item.seller_id,
-          location: item.location_city || 'Caribbean',
-          inventoryCount: item.inventory_count,
-        }));
+        const mapped: MobileProduct[] = data.map((item: any) => {
+          const media = item.media_urls;
+          const firstImage = Array.isArray(media) && media.length > 0 ? media[0] : null;
+
+          return {
+            id: item.id,
+            title: item.title,
+            description: item.description || 'Authentic Caribbean listing with buyer protection.',
+            priceMinor: item.price_minor,
+            priceFormatted: `$${(item.price_minor / 100).toFixed(2)} ${item.currency || 'USD'}`,
+            currency: item.currency || 'USD',
+            productKind: item.product_kind || 'physical',
+            condition: (item.condition || 'new').replace('_', ' '),
+            sellerName: item.businesses?.name || item.profiles?.display_name || item.profiles?.username || 'Merchant',
+            sellerId: item.seller_id,
+            location: [item.location_city, item.location_country_iso].filter(Boolean).join(', ') || 'Caribbean',
+            inventoryCount: item.inventory_count,
+            imageUrl: firstImage,
+            categoryTitle: item.marketplace_categories?.title,
+          };
+        });
         setProducts(mapped);
       }
     } catch (err) {
       console.warn('Could not fetch marketplace products', err);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
     }
   };
 
   useEffect(() => {
     fetchProducts();
-  }, [activeTerritory, searchQuery]);
+  }, [activeTerritory, activeCategory, searchQuery]);
 
   const onRefresh = async () => {
     setRefreshing(true);
     await fetchProducts();
-    setRefreshing(false);
   };
 
-  const handleMakeOffer = () => {
+  const handleMakeOffer = async () => {
     if (!offerPriceInput || !selectedProduct) return;
-    setOfferSuccess(true);
-    setTimeout(() => {
-      setOfferSuccess(false);
-      setSelectedProduct(null);
-      setOfferPriceInput('');
-    }, 1500);
+    const numPrice = parseFloat(offerPriceInput);
+    if (isNaN(numPrice) || numPrice <= 0) {
+      Alert.alert('Invalid Price', 'Please enter a valid offer amount.');
+      return;
+    }
+
+    setOfferSubmitting(true);
+    try {
+      const priceMinor = Math.round(numPrice * 100);
+      const { data, error } = await supabase.rpc('submit_marketplace_offer', {
+        p_product_id: selectedProduct.id,
+        p_offered_price_minor: priceMinor,
+        p_quantity: 1,
+        p_message: 'Offer submitted via TUKUBI mobile app.',
+      });
+
+      if (error) {
+        // If RPC throws authentication error
+        if (error.message.includes('Authentication required')) {
+          Alert.alert('Sign In Required', 'Please sign in to make an offer to the seller.');
+        } else {
+          Alert.alert('Offer Notice', error.message);
+        }
+      } else {
+        setOfferSuccessMsg('Offer submitted! Seller has 48 hours to review.');
+        setTimeout(() => {
+          setOfferSuccessMsg(null);
+          setSelectedProduct(null);
+          setOfferPriceInput('');
+        }, 2200);
+      }
+    } catch (err: any) {
+      Alert.alert('Error', err.message || 'Could not submit offer.');
+    } finally {
+      setOfferSubmitting(false);
+    }
+  };
+
+  const handleContactSeller = async () => {
+    if (!selectedProduct?.sellerId) return;
+    setConnectingSeller(true);
+
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        Alert.alert('Sign In Required', 'Please sign in to message this merchant.');
+        setConnectingSeller(false);
+        return;
+      }
+
+      if (user.id === selectedProduct.sellerId) {
+        Alert.alert('Seller Notice', 'This is your own listing.');
+        setConnectingSeller(false);
+        return;
+      }
+
+      const { data: convId, error } = await supabase.rpc('get_or_create_direct_conversation', {
+        target_user_id: selectedProduct.sellerId,
+      });
+
+      if (error) {
+        Alert.alert('Message Error', error.message);
+      } else {
+        setSelectedProduct(null);
+        if (navigation) {
+          navigation.navigate('Messages', {
+            conversationId: convId,
+            targetName: selectedProduct.sellerName,
+          });
+        }
+      }
+    } catch (err: any) {
+      Alert.alert('Error', err.message || 'Could not initiate conversation with seller.');
+    } finally {
+      setConnectingSeller(false);
+    }
   };
 
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
-        {/* Header */}
+        {/* Header with Sell Button */}
         <View style={styles.header}>
-          <Text style={styles.headerTitle}>Caribbean Marketplace</Text>
-          <Text style={styles.headerSubtitle}>
-            Verified island crafts, coffee, and creator goods with buyer protection.
-          </Text>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.headerTitle}>Caribbean Marketplace</Text>
+            <Text style={styles.headerSubtitle}>
+              Verified island crafts, spices, mas, and digital assets with buyer protection.
+            </Text>
+          </View>
+          <TouchableOpacity
+            style={styles.sellBtn}
+            onPress={() => navigation && navigation.navigate('SellProduct')}
+            activeOpacity={0.8}
+            accessibilityRole="button"
+            accessibilityLabel="Sell an item on Caribbean Marketplace"
+          >
+            <Text style={styles.sellBtnText}>+ Sell Item</Text>
+          </TouchableOpacity>
         </View>
 
         {/* Search Input */}
         <View style={styles.searchContainer}>
           <TextInput
             style={styles.searchInput}
-            placeholder="Search goods (e.g. coffee, mas, phones)..."
+            placeholder="Search goods (e.g. coffee, mas, art, phone)..."
             placeholderTextColor={TOKENS.textMuted}
             value={searchQuery}
             onChangeText={setSearchQuery}
@@ -203,65 +322,88 @@ export function MarketplaceScreen() {
         </ScrollView>
 
         {/* Product Grid List */}
-        <ScrollView
-          style={styles.scrollView}
-          contentContainerStyle={styles.scrollContent}
-          refreshControl={
-            <RefreshControl
-              refreshing={refreshing}
-              onRefresh={onRefresh}
-              tintColor={TOKENS.action}
-            />
-          }
-        >
-          {products.length === 0 ? (
-            <View style={styles.emptyContainer}>
-              <Text style={styles.emptyIcon}>🛍️</Text>
-              <Text style={styles.emptyTitle}>No Products Found</Text>
-              <Text style={styles.emptyText}>
-                No verified Caribbean merchandise matches this search query. Try clearing your filters.
-              </Text>
-            </View>
-          ) : (
-            <View style={styles.grid}>
-              {products.map((item) => (
+        {loading ? (
+          <View style={styles.centerBox}>
+            <ActivityIndicator size="large" color={TOKENS.action} />
+          </View>
+        ) : (
+          <ScrollView
+            style={styles.scrollView}
+            contentContainerStyle={styles.scrollContent}
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={onRefresh}
+                tintColor={TOKENS.action}
+              />
+            }
+          >
+            {products.length === 0 ? (
+              <View style={styles.emptyContainer}>
+                <Text style={styles.emptyIcon}>🛍️</Text>
+                <Text style={styles.emptyTitle}>No Products Found</Text>
+                <Text style={styles.emptyText}>
+                  No items match this filter. Be the first to list authentic goods from this territory!
+                </Text>
                 <TouchableOpacity
-                  key={item.id}
-                  style={styles.card}
-                  onPress={() => {
-                    setSelectedProduct(item);
-                    setOfferPriceInput((item.priceMinor * 0.9 / 100).toFixed(2));
-                  }}
-                  activeOpacity={0.8}
+                  style={styles.emptySellBtn}
+                  onPress={() => navigation && navigation.navigate('SellProduct')}
                 >
-                  <View style={styles.cardImagePlaceholder}>
-                    <Text style={styles.cardImageEmoji}>
-                      {item.productKind === 'service' ? '🤝' : item.productKind === 'digital' ? '🎧' : '📦'}
-                    </Text>
-                    <View style={styles.kindBadge}>
-                      <Text style={styles.kindBadgeText}>{item.productKind}</Text>
-                    </View>
-                  </View>
-
-                  <View style={styles.cardBody}>
-                    <Text style={styles.cardSeller} numberOfLines={1}>
-                      {item.sellerName}
-                    </Text>
-                    <Text style={styles.cardTitle} numberOfLines={2}>
-                      {item.title}
-                    </Text>
-                    <View style={styles.cardFooter}>
-                      <Text style={styles.cardPrice}>{item.priceFormatted}</Text>
-                      <Text style={styles.cardCondition}>{item.condition}</Text>
-                    </View>
-                  </View>
+                  <Text style={styles.emptySellBtnText}>+ List First Product</Text>
                 </TouchableOpacity>
-              ))}
-            </View>
-          )}
-        </ScrollView>
+              </View>
+            ) : (
+              <View style={styles.grid}>
+                {products.map((item) => (
+                  <TouchableOpacity
+                    key={item.id}
+                    style={styles.card}
+                    onPress={() => {
+                      setSelectedProduct(item);
+                      setOfferPriceInput((item.priceMinor * 0.9 / 100).toFixed(2));
+                    }}
+                    activeOpacity={0.8}
+                  >
+                    {/* Real Product Image or Styled Badge */}
+                    <View style={styles.cardImageContainer}>
+                      {item.imageUrl ? (
+                        <Image
+                          source={{ uri: item.imageUrl }}
+                          style={styles.cardImage}
+                          resizeMode="cover"
+                        />
+                      ) : (
+                        <View style={styles.cardImagePlaceholder}>
+                          <Text style={styles.cardImageEmoji}>
+                            {item.productKind === 'service' ? '🤝' : item.productKind === 'digital' ? '🎧' : '📦'}
+                          </Text>
+                        </View>
+                      )}
+                      <View style={styles.kindBadge}>
+                        <Text style={styles.kindBadgeText}>{item.productKind}</Text>
+                      </View>
+                    </View>
 
-        {/* Product Detail & Make Offer Modal */}
+                    <View style={styles.cardBody}>
+                      <Text style={styles.cardSeller} numberOfLines={1}>
+                        {item.sellerName}
+                      </Text>
+                      <Text style={styles.cardTitle} numberOfLines={2}>
+                        {item.title}
+                      </Text>
+                      <View style={styles.cardFooter}>
+                        <Text style={styles.cardPrice}>{item.priceFormatted}</Text>
+                        <Text style={styles.cardCondition}>{item.condition}</Text>
+                      </View>
+                    </View>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            )}
+          </ScrollView>
+        )}
+
+        {/* Product Detail & Real Offer Modal */}
         <Modal
           visible={!!selectedProduct}
           transparent
@@ -272,6 +414,14 @@ export function MarketplaceScreen() {
             <View style={styles.modalContent}>
               {selectedProduct && (
                 <>
+                  {selectedProduct.imageUrl && (
+                    <Image
+                      source={{ uri: selectedProduct.imageUrl }}
+                      style={styles.modalHeroImage}
+                      resizeMode="cover"
+                    />
+                  )}
+
                   <Text style={styles.modalTitle}>{selectedProduct.title}</Text>
                   <Text style={styles.modalSeller}>
                     Sold by {selectedProduct.sellerName} • {selectedProduct.location}
@@ -279,10 +429,26 @@ export function MarketplaceScreen() {
                   <Text style={styles.modalPrice}>{selectedProduct.priceFormatted}</Text>
                   <Text style={styles.modalDescription}>{selectedProduct.description}</Text>
 
-                  {offerSuccess ? (
+                  {/* Actions Row: Message Seller & Make Offer */}
+                  <View style={styles.modalActionButtons}>
+                    <TouchableOpacity
+                      style={[styles.messageSellerBtn, connectingSeller && { opacity: 0.6 }]}
+                      onPress={handleContactSeller}
+                      disabled={connectingSeller}
+                      activeOpacity={0.8}
+                    >
+                      {connectingSeller ? (
+                        <ActivityIndicator size="small" color="#FFF" />
+                      ) : (
+                        <Text style={styles.messageSellerBtnText}>💬 Message Seller</Text>
+                      )}
+                    </TouchableOpacity>
+                  </View>
+
+                  {offerSuccessMsg ? (
                     <View style={styles.successBanner}>
                       <Text style={styles.successBannerText}>
-                        ✅ Offer submitted to seller with 48h expiration!
+                        ✅ {offerSuccessMsg}
                       </Text>
                     </View>
                   ) : (
@@ -297,11 +463,16 @@ export function MarketplaceScreen() {
                         placeholderTextColor={TOKENS.textMuted}
                       />
                       <TouchableOpacity
-                        style={styles.makeOfferButton}
+                        style={[styles.makeOfferButton, offerSubmitting && { opacity: 0.6 }]}
                         onPress={handleMakeOffer}
+                        disabled={offerSubmitting}
                         activeOpacity={0.8}
                       >
-                        <Text style={styles.makeOfferButtonText}>Submit Offer to Seller</Text>
+                        {offerSubmitting ? (
+                          <ActivityIndicator size="small" color="#090D1A" />
+                        ) : (
+                          <Text style={styles.makeOfferButtonText}>Submit Offer via Escrow</Text>
+                        )}
                       </TouchableOpacity>
                     </View>
                   )}
@@ -330,20 +501,41 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+  centerBox: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     paddingHorizontal: 16,
-    paddingTop: 12,
+    paddingTop: 14,
     paddingBottom: 8,
   },
   headerTitle: {
-    fontSize: 22,
+    fontSize: 20,
     fontWeight: '900',
     color: TOKENS.textPrimary,
   },
   headerSubtitle: {
-    fontSize: 12,
+    fontSize: 11,
     color: TOKENS.textMuted,
     marginTop: 2,
+    lineHeight: 15,
+  },
+  sellBtn: {
+    backgroundColor: TOKENS.action,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 999,
+    marginLeft: 8,
+  },
+  sellBtnText: {
+    color: '#090D1A',
+    fontSize: 12,
+    fontWeight: '900',
   },
   searchContainer: {
     paddingHorizontal: 16,
@@ -355,13 +547,13 @@ const styles = StyleSheet.create({
     borderColor: TOKENS.border,
     borderRadius: 16,
     paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingVertical: 10,
     fontSize: 14,
     color: TOKENS.textPrimary,
     minHeight: 44,
   },
   territoryRail: {
-    maxHeight: 48,
+    maxHeight: 46,
   },
   territoryRailContent: {
     paddingHorizontal: 16,
@@ -376,28 +568,28 @@ const styles = StyleSheet.create({
     borderColor: TOKENS.border,
     borderRadius: 14,
     paddingHorizontal: 12,
-    paddingVertical: 8,
-    minHeight: 44,
+    paddingVertical: 6,
+    minHeight: 38,
   },
   territoryChipActive: {
     backgroundColor: TOKENS.action,
     borderColor: TOKENS.action,
   },
   territoryFlag: {
-    fontSize: 14,
+    fontSize: 13,
   },
   territoryText: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '700',
     color: TOKENS.textMuted,
   },
   territoryTextActive: {
-    color: TOKENS.canvas,
+    color: '#090D1A',
     fontWeight: '900',
   },
   categoryRail: {
     maxHeight: 44,
-    marginTop: 6,
+    marginTop: 4,
   },
   categoryRailContent: {
     paddingHorizontal: 16,
@@ -410,7 +602,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     paddingHorizontal: 12,
     paddingVertical: 6,
-    minHeight: 44,
+    minHeight: 38,
     justifyContent: 'center',
   },
   categoryChipActive: {
@@ -418,20 +610,21 @@ const styles = StyleSheet.create({
     borderColor: TOKENS.action,
   },
   categoryText: {
-    fontSize: 12,
-    fontWeight: '600',
+    fontSize: 11,
+    fontWeight: '700',
     color: TOKENS.textMuted,
   },
   categoryTextActive: {
     color: TOKENS.action,
-    fontWeight: '800',
+    fontWeight: '900',
   },
   scrollView: {
     flex: 1,
-    marginTop: 8,
+    marginTop: 6,
   },
   scrollContent: {
     padding: 16,
+    paddingBottom: 40,
   },
   emptyContainer: {
     padding: 40,
@@ -454,6 +647,18 @@ const styles = StyleSheet.create({
     marginTop: 6,
     lineHeight: 18,
   },
+  emptySellBtn: {
+    marginTop: 16,
+    backgroundColor: TOKENS.action,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 999,
+  },
+  emptySellBtnText: {
+    color: '#090D1A',
+    fontSize: 13,
+    fontWeight: '900',
+  },
   grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -467,14 +672,21 @@ const styles = StyleSheet.create({
     borderColor: TOKENS.border,
     borderRadius: 18,
     overflow: 'hidden',
-    marginBottom: 4,
+    marginBottom: 6,
   },
-  cardImagePlaceholder: {
+  cardImageContainer: {
     height: 120,
     backgroundColor: TOKENS.canvas,
+    position: 'relative',
+  },
+  cardImage: {
+    width: '100%',
+    height: '100%',
+  },
+  cardImagePlaceholder: {
+    flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    position: 'relative',
   },
   cardImageEmoji: {
     fontSize: 40,
@@ -483,7 +695,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 8,
     left: 8,
-    backgroundColor: 'rgba(255, 122, 89, 0.2)',
+    backgroundColor: 'rgba(9, 6, 15, 0.75)',
     borderWidth: 1,
     borderColor: TOKENS.action,
     paddingHorizontal: 6,
@@ -492,7 +704,7 @@ const styles = StyleSheet.create({
   },
   kindBadgeText: {
     fontSize: 9,
-    fontWeight: '800',
+    fontWeight: '900',
     color: TOKENS.action,
     textTransform: 'uppercase',
   },
@@ -503,7 +715,7 @@ const styles = StyleSheet.create({
   cardSeller: {
     fontSize: 10,
     fontWeight: '700',
-    color: TOKENS.accent,
+    color: TOKENS.sea,
   },
   cardTitle: {
     fontSize: 13,
@@ -526,6 +738,7 @@ const styles = StyleSheet.create({
     fontSize: 10,
     color: TOKENS.textMuted,
     fontWeight: '600',
+    textTransform: 'capitalize',
   },
   modalOverlay: {
     flex: 1,
@@ -536,10 +749,17 @@ const styles = StyleSheet.create({
     backgroundColor: TOKENS.surface,
     borderTopLeftRadius: 28,
     borderTopRightRadius: 28,
-    padding: 24,
+    padding: 22,
     borderTopWidth: 1,
     borderColor: TOKENS.borderActive,
-    gap: 10,
+    gap: 8,
+    maxHeight: '90%',
+  },
+  modalHeroImage: {
+    width: '100%',
+    height: 160,
+    borderRadius: 16,
+    marginBottom: 8,
   },
   modalTitle: {
     fontSize: 18,
@@ -561,13 +781,32 @@ const styles = StyleSheet.create({
     color: TOKENS.textPrimary,
     lineHeight: 18,
   },
+  modalActionButtons: {
+    flexDirection: 'row',
+    gap: 10,
+    marginTop: 8,
+  },
+  messageSellerBtn: {
+    flex: 1,
+    backgroundColor: TOKENS.raised,
+    borderWidth: 1,
+    borderColor: TOKENS.sea,
+    paddingVertical: 12,
+    borderRadius: 14,
+    alignItems: 'center',
+  },
+  messageSellerBtnText: {
+    color: TOKENS.sea,
+    fontSize: 13,
+    fontWeight: '900',
+  },
   offerForm: {
-    marginTop: 12,
+    marginTop: 8,
     gap: 8,
   },
   offerLabel: {
     fontSize: 12,
-    fontWeight: '700',
+    fontWeight: '800',
     color: TOKENS.textPrimary,
   },
   offerInput: {
@@ -589,7 +828,7 @@ const styles = StyleSheet.create({
     minHeight: 44,
   },
   makeOfferButtonText: {
-    color: TOKENS.canvas,
+    color: '#090D1A',
     fontSize: 14,
     fontWeight: '900',
   },
@@ -608,13 +847,12 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   closeModalButton: {
-    padding: 12,
+    padding: 10,
     alignItems: 'center',
-    minHeight: 44,
   },
   closeModalButtonText: {
     color: TOKENS.textMuted,
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '700',
   },
 });

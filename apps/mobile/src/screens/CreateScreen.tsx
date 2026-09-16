@@ -7,7 +7,9 @@ import {
   TouchableOpacity,
   SafeAreaView,
   ScrollView,
-  Alert
+  Alert,
+  Image,
+  ActivityIndicator,
 } from 'react-native';
 import { TOKENS } from '../theme/tokens';
 import { supabase } from '../lib/supabase';
@@ -19,99 +21,39 @@ const CARIBBEAN_COUNTRIES = [
   'Belize', 'Suriname', 'Diaspora'
 ];
 
-interface AttachedMediaItem {
-  id: string;
-  type: 'photo' | 'video';
-  name: string;
-}
-
 export function CreateScreen({ navigation }: any) {
   const [draft, setDraft] = useState('');
   const [country, setCountry] = useState('Jamaica');
   const [tags, setTags] = useState('');
   const [submitting, setSubmitting] = useState(false);
-  const [attachedMedia, setAttachedMedia] = useState<AttachedMediaItem[]>([]);
+  const [photoUrlInput, setPhotoUrlInput] = useState('');
+  const [mediaUrls, setMediaUrls] = useState<string[]>([]);
 
   const scrollViewRef = useRef<ScrollView>(null);
   const tagsInputRef = useRef<TextInput>(null);
 
-  const handleAttachPhoto = () => {
-    Alert.alert(
-      'Attach Photo',
-      'Select a photo from your Caribbean island gallery or take a new one:',
-      [
-        {
-          text: 'Snap Photo',
-          onPress: () => {
-            const newItem: AttachedMediaItem = {
-              id: Date.now().toString(),
-              type: 'photo',
-              name: `Caribbean Snap ${attachedMedia.length + 1}.jpg`,
-            };
-            setAttachedMedia(prev => [...prev, newItem]);
-          }
-        },
-        {
-          text: 'Choose from Gallery',
-          onPress: () => {
-            const newItem: AttachedMediaItem = {
-              id: Date.now().toString(),
-              type: 'photo',
-              name: `Photo_${Date.now().toString().slice(-4)}.jpg`,
-            };
-            setAttachedMedia(prev => [...prev, newItem]);
-          }
-        },
-        { text: 'Cancel', style: 'cancel' }
-      ]
-    );
+  const handleAddPhotoUrl = () => {
+    if (!photoUrlInput.trim()) {
+      Alert.prompt
+        ? Alert.prompt('Add Photo URL', 'Enter direct image URL for your post:', [
+            { text: 'Cancel', style: 'cancel' },
+            {
+              text: 'Add',
+              onPress: (url) => {
+                if (url && url.trim()) setMediaUrls((prev) => [...prev, url.trim()]);
+              },
+            },
+          ])
+        : Alert.alert('Add Photo', 'Please paste a valid image URL in the field below.');
+      return;
+    }
+
+    setMediaUrls((prev) => [...prev, photoUrlInput.trim()]);
+    setPhotoUrlInput('');
   };
 
-  const handleAttachVideo = () => {
-    Alert.alert(
-      'Video & Reels',
-      'What type of video would you like to share?',
-      [
-        {
-          text: 'Attach Short Video',
-          onPress: () => {
-            const newItem: AttachedMediaItem = {
-              id: Date.now().toString(),
-              type: 'video',
-              name: `Reel_Clip_${Date.now().toString().slice(-4)}.mp4`,
-            };
-            setAttachedMedia(prev => [...prev, newItem]);
-          }
-        },
-        {
-          text: 'Watch Reels Stream',
-          onPress: () => {
-            navigation.navigate('Reels');
-          }
-        },
-        { text: 'Cancel', style: 'cancel' }
-      ]
-    );
-  };
-
-  const handleLocationPress = () => {
-    scrollViewRef.current?.scrollTo({ y: 220, animated: true });
-    Alert.alert(
-      'Caribbean Territory',
-      `Current territory: ${country}. Tap any island chip below to switch.`,
-      [{ text: 'OK' }]
-    );
-  };
-
-  const handleTagsPress = () => {
-    scrollViewRef.current?.scrollToEnd({ animated: true });
-    setTimeout(() => {
-      tagsInputRef.current?.focus();
-    }, 150);
-  };
-
-  const removeMedia = (id: string) => {
-    setAttachedMedia(prev => prev.filter(m => m.id !== id));
+  const handleRemoveMedia = (index: number) => {
+    setMediaUrls((prev) => prev.filter((_, i) => i !== index));
   };
 
   const handlePublish = async () => {
@@ -120,7 +62,6 @@ export function CreateScreen({ navigation }: any) {
 
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      const mediaUrls = attachedMedia.map(m => `https://storage.tukubi.caribbean/${m.type}s/${m.id}`);
       
       if (user) {
         const { error } = await supabase
@@ -129,23 +70,24 @@ export function CreateScreen({ navigation }: any) {
             author_id: user.id,
             content: draft.trim(),
             visibility: 'public',
-            cultural_tags: tags.split(',').map(t => t.trim()).filter(Boolean),
+            cultural_tags: tags.split(',').map((t) => t.trim()).filter(Boolean),
             media_urls: mediaUrls,
+            location_name: country,
           });
 
         if (!error) {
-          Alert.alert('Success', 'Post published to TUKUBI network!');
+          Alert.alert('Success', 'Post published to TUKUBI network! 🌴');
           navigation.goBack();
           return;
+        } else {
+          Alert.alert('Publish Error', error.message);
         }
+      } else {
+        Alert.alert('Sign In Required', 'Please sign in to publish to TUKUBI.');
       }
-      
-      // Fallback if not authenticated or error
-      Alert.alert('Success', 'Post published! (Local Mode)');
-      navigation.goBack();
-    } catch (err) {
+    } catch (err: any) {
       console.warn('Error publishing post:', err);
-      Alert.alert('Error', 'Could not publish post');
+      Alert.alert('Error', err.message || 'Could not publish post');
     } finally {
       setSubmitting(false);
     }
@@ -154,19 +96,25 @@ export function CreateScreen({ navigation }: any) {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.cancelBtn}>
           <Text style={styles.cancelText}>Cancel</Text>
         </TouchableOpacity>
+        <Text style={styles.screenHeaderTitle}>New Caribbean Post</Text>
         <TouchableOpacity 
           style={[styles.publishButton, (!draft.trim() || submitting) && styles.disabledButton]}
           onPress={handlePublish}
           disabled={!draft.trim() || submitting}
         >
-          <Text style={styles.publishText}>{submitting ? 'Posting...' : 'Post'}</Text>
+          {submitting ? (
+            <ActivityIndicator size="small" color="#090D1A" />
+          ) : (
+            <Text style={styles.publishText}>Post</Text>
+          )}
         </TouchableOpacity>
       </View>
 
-      <ScrollView ref={scrollViewRef} contentContainerStyle={styles.content}>
+      <ScrollView ref={scrollViewRef} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        {/* Post body */}
         <TextInput
           style={styles.input}
           placeholder="What's happening in your Caribbean world?"
@@ -174,46 +122,76 @@ export function CreateScreen({ navigation }: any) {
           value={draft}
           onChangeText={setDraft}
           multiline
-          maxLength={500}
+          maxLength={1000}
           autoFocus
         />
-        <Text style={styles.charCount}>{draft.length}/500</Text>
+        <Text style={styles.charCount}>{draft.length}/1000</Text>
 
-        <View style={styles.mediaRow}>
-          <TouchableOpacity style={styles.mediaBtn} onPress={handleAttachPhoto}>
-            <Text style={styles.mediaIcon}>📷 Photo</Text>
+        {/* Quick Cross-Create Shortcuts */}
+        <View style={styles.shortcutsRow}>
+          <TouchableOpacity
+            style={styles.shortcutBtn}
+            onPress={() => {
+              navigation.goBack();
+              navigation.navigate('Reels');
+            }}
+          >
+            <Text style={styles.shortcutText}>🎬 Create Reel</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.mediaBtn} onPress={handleAttachVideo}>
-            <Text style={styles.mediaIcon}>🎥 Video</Text>
+          <TouchableOpacity
+            style={styles.shortcutBtn}
+            onPress={() => {
+              navigation.goBack();
+              navigation.navigate('SellProduct');
+            }}
+          >
+            <Text style={styles.shortcutText}>🛍️ Sell Item</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.mediaBtn} onPress={handleLocationPress}>
-            <Text style={styles.mediaIcon}>📍 Location ({country})</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.mediaBtn} onPress={handleTagsPress}>
-            <Text style={styles.mediaIcon}>🏷️ Tags</Text>
+          <TouchableOpacity
+            style={styles.shortcutBtn}
+            onPress={() => {
+              navigation.goBack();
+              navigation.navigate('Sounds');
+            }}
+          >
+            <Text style={styles.shortcutText}>🎵 Use Sound</Text>
           </TouchableOpacity>
         </View>
 
-        {attachedMedia.length > 0 && (
-          <View style={styles.attachmentContainer}>
-            <Text style={styles.attachmentTitle}>Attached Media ({attachedMedia.length})</Text>
-            <View style={styles.attachmentGrid}>
-              {attachedMedia.map((m) => (
-                <View key={m.id} style={styles.attachmentChip}>
-                  <Text style={styles.attachmentText}>
-                    {m.type === 'video' ? '🎬 ' : '🖼️ '}
-                    {m.name}
-                  </Text>
-                  <TouchableOpacity onPress={() => removeMedia(m.id)} style={styles.removeBtn}>
-                    <Text style={styles.removeText}>✕</Text>
-                  </TouchableOpacity>
-                </View>
-              ))}
-            </View>
-          </View>
+        {/* Media Attach Input */}
+        <Text style={styles.label}>Attached Photos &amp; Visuals</Text>
+        <View style={styles.mediaRow}>
+          <TextInput
+            style={[styles.tagInput, { flex: 1 }]}
+            placeholder="Paste photo URL (https://...)"
+            placeholderTextColor={TOKENS.textMuted}
+            value={photoUrlInput}
+            onChangeText={setPhotoUrlInput}
+          />
+          <TouchableOpacity style={styles.addMediaBtn} onPress={handleAddPhotoUrl}>
+            <Text style={styles.addMediaBtnText}>+ Attach</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Media Thumbnails */}
+        {mediaUrls.length > 0 && (
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.thumbnailRail}>
+            {mediaUrls.map((url, idx) => (
+              <View key={idx} style={styles.thumbnailBox}>
+                <Image source={{ uri: url }} style={styles.thumbnailImage} />
+                <TouchableOpacity
+                  style={styles.removeMediaBtn}
+                  onPress={() => handleRemoveMedia(idx)}
+                >
+                  <Text style={styles.removeMediaText}>✕</Text>
+                </TouchableOpacity>
+              </View>
+            ))}
+          </ScrollView>
         )}
 
-        <Text style={styles.label}>Location (Territory)</Text>
+        {/* Territory */}
+        <Text style={styles.label}>Location / Territory</Text>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.countryScroll}>
           {CARIBBEAN_COUNTRIES.map((c) => (
             <TouchableOpacity
@@ -226,11 +204,12 @@ export function CreateScreen({ navigation }: any) {
           ))}
         </ScrollView>
 
+        {/* Cultural Tags */}
         <Text style={styles.label}>Cultural Tags</Text>
         <TextInput
           ref={tagsInputRef}
           style={styles.tagInput}
-          placeholder="e.g. dancehall, soca, food, carnival (comma separated)"
+          placeholder="e.g. dancehall, soca, food, carnival, reggae"
           placeholderTextColor={TOKENS.textMuted}
           value={tags}
           onChangeText={setTags}
@@ -250,78 +229,138 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingVertical: 14,
     borderBottomWidth: 1,
     borderBottomColor: TOKENS.border,
+    backgroundColor: TOKENS.surface,
   },
+  cancelBtn: { padding: 4 },
   cancelText: {
+    color: TOKENS.textMuted,
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  screenHeaderTitle: {
     color: TOKENS.textPrimary,
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: 15,
+    fontWeight: '900',
   },
   publishButton: {
     backgroundColor: TOKENS.action,
-    paddingHorizontal: 16,
+    paddingHorizontal: 18,
     paddingVertical: 8,
-    borderRadius: 20,
+    borderRadius: 999,
   },
   disabledButton: {
     opacity: 0.5,
   },
   publishText: {
-    color: '#FFF',
-    fontWeight: '700',
-    fontSize: 14,
+    color: '#090D1A',
+    fontWeight: '900',
+    fontSize: 13,
   },
   content: {
-    padding: 16,
+    padding: 18,
+    paddingBottom: 40,
   },
   input: {
     color: TOKENS.textPrimary,
-    fontSize: 18,
+    fontSize: 16,
     minHeight: 120,
     textAlignVertical: 'top',
+    lineHeight: 24,
   },
   charCount: {
     color: TOKENS.textMuted,
     textAlign: 'right',
-    fontSize: 12,
-    marginTop: 8,
+    fontSize: 11,
+    marginTop: 4,
+    fontWeight: '600',
   },
-  mediaRow: {
+  shortcutsRow: {
     flexDirection: 'row',
     gap: 8,
-    marginTop: 16,
-    marginBottom: 24,
-    flexWrap: 'wrap',
+    marginVertical: 14,
   },
-  mediaBtn: {
-    backgroundColor: TOKENS.surface,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 16,
+  shortcutBtn: {
+    backgroundColor: TOKENS.raised,
     borderWidth: 1,
     borderColor: TOKENS.border,
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
   },
-  mediaIcon: {
+  shortcutText: {
     color: TOKENS.textPrimary,
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: 11,
+    fontWeight: '700',
   },
   label: {
     color: TOKENS.textPrimary,
-    fontSize: 16,
-    fontWeight: '700',
-    marginBottom: 12,
-    marginTop: 8,
+    fontSize: 13,
+    fontWeight: '800',
+    marginBottom: 8,
+    marginTop: 14,
+  },
+  mediaRow: {
+    flexDirection: 'row',
+    gap: 10,
+    alignItems: 'center',
+  },
+  addMediaBtn: {
+    backgroundColor: TOKENS.raised,
+    borderWidth: 1,
+    borderColor: TOKENS.border,
+    borderRadius: 14,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  addMediaBtnText: {
+    color: TOKENS.action,
+    fontSize: 13,
+    fontWeight: '800',
+  },
+  thumbnailRail: {
+    flexDirection: 'row',
+    marginTop: 10,
+  },
+  thumbnailBox: {
+    width: 80,
+    height: 80,
+    borderRadius: 12,
+    marginRight: 10,
+    overflow: 'hidden',
+    position: 'relative',
+    borderWidth: 1,
+    borderColor: TOKENS.border,
+  },
+  thumbnailImage: {
+    width: '100%',
+    height: '100%',
+  },
+  removeMediaBtn: {
+    position: 'absolute',
+    top: 4,
+    right: 4,
+    backgroundColor: 'rgba(0,0,0,0.75)',
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  removeMediaText: {
+    color: '#FFF',
+    fontSize: 10,
+    fontWeight: '900',
   },
   countryScroll: {
     flexDirection: 'row',
-    marginBottom: 24,
+    marginBottom: 10,
   },
   countryChip: {
     backgroundColor: TOKENS.surface,
-    paddingHorizontal: 16,
+    paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: 20,
     marginRight: 8,
@@ -329,68 +368,26 @@ const styles = StyleSheet.create({
     borderColor: TOKENS.border,
   },
   countryChipActive: {
-    backgroundColor: TOKENS.action + '20',
+    backgroundColor: TOKENS.action + '25',
     borderColor: TOKENS.action,
   },
   countryText: {
     color: TOKENS.textMuted,
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: '600',
   },
   countryTextActive: {
     color: TOKENS.action,
+    fontWeight: '800',
   },
   tagInput: {
     backgroundColor: TOKENS.surface,
     borderWidth: 1,
     borderColor: TOKENS.border,
-    borderRadius: 12,
+    borderRadius: 14,
     paddingHorizontal: 16,
     paddingVertical: 12,
     color: TOKENS.textPrimary,
     fontSize: 14,
-  },
-  attachmentContainer: {
-    marginBottom: 16,
-    padding: 12,
-    backgroundColor: TOKENS.surface,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: TOKENS.border,
-  },
-  attachmentTitle: {
-    color: TOKENS.textPrimary,
-    fontSize: 13,
-    fontWeight: '700',
-    marginBottom: 8,
-  },
-  attachmentGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  attachmentChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: TOKENS.canvas,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: TOKENS.border,
-  },
-  attachmentText: {
-    color: TOKENS.textPrimary,
-    fontSize: 12,
-    fontWeight: '600',
-    marginRight: 6,
-  },
-  removeBtn: {
-    padding: 2,
-  },
-  removeText: {
-    color: TOKENS.action,
-    fontSize: 12,
-    fontWeight: 'bold',
   },
 });

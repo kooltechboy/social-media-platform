@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, SafeAreaView, StatusBar, View, ActivityIndicator, TouchableOpacity, Text, Alert } from 'react-native';
+import { StyleSheet, SafeAreaView, StatusBar, View, ActivityIndicator, TouchableOpacity, Text } from 'react-native';
 import { NavigationContainer, DefaultTheme, createNavigationContainerRef } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { TOKENS } from './src/theme/tokens';
 import { Header } from './src/components/Header';
+import { CreateActionSheet } from './src/components/CreateActionSheet';
 import { HomeScreen } from './src/screens/HomeScreen';
 import { ExploreScreen } from './src/screens/ExploreScreen';
 import { MessagesScreen } from './src/screens/MessagesScreen';
@@ -15,6 +16,10 @@ import { NotificationsScreen } from './src/screens/NotificationsScreen';
 import { CommunitiesScreen } from './src/screens/CommunitiesScreen';
 import { FinancialCenterScreen } from './src/screens/FinancialCenterScreen';
 import { MarketplaceScreen } from './src/screens/MarketplaceScreen';
+import { SellProductScreen } from './src/screens/SellProductScreen';
+import { SoundsScreen } from './src/screens/SoundsScreen';
+import { LiveScreen } from './src/screens/LiveScreen';
+import { PodcastsScreen } from './src/screens/PodcastsScreen';
 import { supabase } from './src/lib/supabase';
 
 export const navigationRef = createNavigationContainerRef<any>();
@@ -25,7 +30,7 @@ const Navigator = Tab.Navigator as React.ComponentType<any>;
 const Screen = Tab.Screen as React.ComponentType<any>;
 
 // Create Tab Button Component
-const CreateTabButton = ({ children, onPress }: any) => (
+const CreateTabButton = ({ onPress }: any) => (
   <TouchableOpacity
     style={{
       top: -15,
@@ -33,6 +38,18 @@ const CreateTabButton = ({ children, onPress }: any) => (
       alignItems: 'center',
     }}
     onPress={onPress}
+    activeOpacity={0.85}
+    accessibilityRole="button"
+    accessibilityLabel="Create & Share on Tukubi"
+    /*
+      CreateTabButton action sheet items:
+      { text: 'New Post', onPress: () => navigation.navigate('Create') },
+      { text: 'Watch Reels', onPress: () => navigation.navigate('Reels') },
+      { text: 'Communities', onPress: () => navigation.navigate('Communities') },
+      { text: 'Wallet', onPress: () => navigation.navigate('Finance') },
+      { text: 'Notifications', onPress: () => navigation.navigate('Notifications') },
+      { text: 'Cancel' }
+    */
   >
     <View style={{
       width: 56,
@@ -45,9 +62,9 @@ const CreateTabButton = ({ children, onPress }: any) => (
       shadowOffset: { width: 0, height: 4 },
       shadowOpacity: 0.4,
       shadowRadius: 8,
-      elevation: 5,
+      elevation: 6,
     }}>
-      <Text style={{ fontSize: 32, color: '#FFF', fontWeight: '900', marginTop: -4 }}>+</Text>
+      <Text style={{ fontSize: 30, color: '#090D1A', fontWeight: '900', marginTop: -2 }}>+</Text>
     </View>
   </TouchableOpacity>
 );
@@ -55,16 +72,24 @@ const CreateTabButton = ({ children, onPress }: any) => (
 export default function App() {
   const [session, setSession] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [createSheetVisible, setCreateSheetVisible] = useState(false);
 
   // Deep linking configuration
   const linking = {
-    prefixes: ['tukubi://'],
+    prefixes: ['tukubi://', 'https://tukubi.com'],
     config: {
       screens: {
         Home: 'home',
         Explore: 'explore',
+        Marketplace: 'marketplace',
+        Reels: 'reels',
+        Sounds: 'sounds',
+        Live: 'live',
+        Podcasts: 'podcasts',
         Messages: 'messages',
         Profile: 'profile',
+        Finance: 'finance',
+        Notifications: 'notifications',
       },
     },
   };
@@ -110,6 +135,12 @@ export default function App() {
     },
   };
 
+  const handleNavigateFromSheet = (route: string) => {
+    if (navigationRef.isReady()) {
+      navigationRef.navigate(route);
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor={TOKENS.canvas} />
@@ -120,58 +151,44 @@ export default function App() {
               <Header 
                 onWalletPress={() => navigationRef.isReady() && navigationRef.navigate('Finance')}
                 onNotificationsPress={() => navigationRef.isReady() && navigationRef.navigate('Notifications')}
+                onMarketplacePress={() => navigationRef.isReady() && navigationRef.navigate('Marketplace')}
+                onSearchPress={() => navigationRef.isReady() && navigationRef.navigate('Explore')}
               />
             ),
             tabBarStyle: {
               backgroundColor: TOKENS.surface,
               borderTopColor: TOKENS.border,
-              paddingBottom: 4,
-              height: 60,
+              paddingBottom: 6,
+              height: 62,
             },
             tabBarActiveTintColor: TOKENS.action,
             tabBarInactiveTintColor: TOKENS.textMuted,
             tabBarLabelStyle: {
-              fontWeight: '700',
-              fontSize: 11,
+              fontWeight: '800',
+              fontSize: 10,
             },
-            tabBarIcon: ({ focused, color }: any) => {
+            tabBarIcon: ({ focused }: any) => {
               let iconStr = '🏠';
               if (route.name === 'Home') iconStr = '🏠';
               else if (route.name === 'Explore') iconStr = '🧭';
               else if (route.name === 'Messages') iconStr = '💬';
               else if (route.name === 'Profile') iconStr = '👤';
               
-              return <Text style={{ fontSize: 20, opacity: focused ? 1 : 0.5 }}>{iconStr}</Text>;
+              return <Text style={{ fontSize: 20, opacity: focused ? 1 : 0.6 }}>{iconStr}</Text>;
             },
           })}
         >
+          {/* Primary 5 Tabs */}
           <Screen name="Home" component={HomeScreen} />
           <Screen name="Explore" component={ExploreScreen} />
           <Screen 
-            name="Create" 
+            name="CreateAction" 
             component={CreateScreen}
             options={{
               tabBarIcon: () => null,
               tabBarLabel: () => null,
-              tabBarButton: (props: any) => (
-                <CreateTabButton 
-                  {...props} 
-                  onPress={() => {
-                    Alert.alert(
-                      'Create & Share',
-                      'What would you like to share on TUKUBI?',
-                      [
-                        { text: 'New Post', onPress: () => navigationRef.isReady() && navigationRef.navigate('Create') },
-                        { text: 'Watch Reels', onPress: () => navigationRef.isReady() && navigationRef.navigate('Reels') },
-                        { text: 'Communities', onPress: () => navigationRef.isReady() && navigationRef.navigate('Communities') },
-                        { text: 'Marketplace', onPress: () => navigationRef.isReady() && navigationRef.navigate('Marketplace') },
-                        { text: 'Wallet', onPress: () => navigationRef.isReady() && navigationRef.navigate('Finance') },
-                        { text: 'Notifications', onPress: () => navigationRef.isReady() && navigationRef.navigate('Notifications') },
-                        { text: 'Cancel', style: 'cancel' }
-                      ]
-                    );
-                  }}
-                />
+              tabBarButton: () => (
+                <CreateTabButton onPress={() => setCreateSheetVisible(true)} />
               ),
             }}
           />
@@ -180,7 +197,43 @@ export default function App() {
             name="Profile"
             children={(props: any) => <ProfileScreen {...props} onLogout={() => setSession(null)} />}
           />
-          {/* Hidden screens in the tab navigator */}
+
+          {/* Secondary & High-Value Destinations */}
+          <Screen 
+            name="Create" 
+            component={CreateScreen} 
+            options={{ tabBarButton: () => null }} 
+          />
+          <Screen 
+            name="Marketplace" 
+            component={MarketplaceScreen} 
+            options={{ tabBarButton: () => null }} 
+          />
+          <Screen 
+            name="SellProduct" 
+            component={SellProductScreen} 
+            options={{ tabBarButton: () => null }} 
+          />
+          <Screen 
+            name="Reels" 
+            component={ReelsScreen} 
+            options={{ tabBarButton: () => null }} 
+          />
+          <Screen 
+            name="Sounds" 
+            component={SoundsScreen} 
+            options={{ tabBarButton: () => null }} 
+          />
+          <Screen 
+            name="Live" 
+            component={LiveScreen} 
+            options={{ tabBarButton: () => null }} 
+          />
+          <Screen 
+            name="Podcasts" 
+            component={PodcastsScreen} 
+            options={{ tabBarButton: () => null }} 
+          />
           <Screen 
             name="Communities" 
             component={CommunitiesScreen} 
@@ -192,22 +245,19 @@ export default function App() {
             options={{ tabBarButton: () => null }} 
           />
           <Screen 
-            name="Reels" 
-            component={ReelsScreen} 
-            options={{ tabBarButton: () => null }} 
-          />
-          <Screen 
             name="Notifications" 
             component={NotificationsScreen} 
             options={{ tabBarButton: () => null }} 
           />
-          <Screen 
-            name="Marketplace" 
-            component={MarketplaceScreen} 
-            options={{ tabBarButton: () => null }} 
-          />
         </Navigator>
       </Navigation>
+
+      {/* Global Creation Action Sheet */}
+      <CreateActionSheet
+        visible={createSheetVisible}
+        onClose={() => setCreateSheetVisible(false)}
+        onSelectOption={handleNavigateFromSheet}
+      />
     </SafeAreaView>
   );
 }

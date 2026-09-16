@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   StyleSheet,
   Text,
@@ -9,17 +9,27 @@ import {
   TextInput,
   ActivityIndicator,
   Alert,
+  Image,
+  RefreshControl,
+  Dimensions,
 } from 'react-native';
+import { Ionicons as ExpoIonicons } from '@expo/vector-icons';
 import { TOKENS } from '../theme/tokens';
 import { supabase } from '../lib/supabase';
+
+const Ionicons = ExpoIonicons as unknown as React.ComponentType<any>;
+const { width: screenWidth } = Dimensions.get('window');
 
 interface ProfileScreenProps {
   onLogout: () => void;
   navigation: any;
 }
 
+type ProfileTab = 'posts' | 'reels' | 'listings';
+
 export function ProfileScreen({ onLogout, navigation }: ProfileScreenProps) {
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [profile, setProfile] = useState<any>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [displayName, setDisplayName] = useState('');
@@ -27,6 +37,18 @@ export function ProfileScreen({ onLogout, navigation }: ProfileScreenProps) {
   const [country, setCountry] = useState('');
   const [city, setCity] = useState('');
   const [updating, setUpdating] = useState(false);
+
+  // Live Stats
+  const [postsCount, setPostsCount] = useState(0);
+  const [followersCount, setFollowersCount] = useState(0);
+  const [followingCount, setFollowingCount] = useState(0);
+  const [likesReceived, setLikesReceived] = useState(0);
+
+  // Tabbed Content
+  const [activeTab, setActiveTab] = useState<ProfileTab>('posts');
+  const [userPosts, setUserPosts] = useState<any[]>([]);
+  const [userReels, setUserReels] = useState<any[]>([]);
+  const [userProducts, setUserProducts] = useState<any[]>([]);
 
   const CARIBBEAN_COUNTRIES = [
     'Jamaica',
@@ -45,38 +67,95 @@ export function ProfileScreen({ onLogout, navigation }: ProfileScreenProps) {
     'Diaspora (USA/UK/Canada)',
   ];
 
-  const loadUserProfile = async () => {
+  const loadUserProfile = useCallback(async () => {
     try {
-      setLoading(true);
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         setLoading(false);
+        setRefreshing(false);
         return;
       }
 
-      const { data, error } = await supabase
+      // 1. Fetch Profile
+      const { data: profData } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', user.id)
         .maybeSingle();
 
-      if (data && !error) {
-        setProfile(data);
-        setDisplayName(data.display_name || '');
-        setBio(data.bio || '');
-        setCountry(data.country || 'Jamaica');
-        setCity(data.city || '');
+      if (profData) {
+        setProfile(profData);
+        setDisplayName(profData.display_name || profData.full_name || '');
+        setBio(profData.bio || '');
+        setCountry(profData.country || 'Jamaica');
+        setCity(profData.city || '');
       }
+
+      // 2. Fetch Verified Counters from profile_counts (NASA-grade integrity)
+      const { data: countData } = await supabase
+        .from('profile_counts')
+        .select('posts_count, followers_count, following_count, likes_received_count')
+        .eq('profile_id', user.id)
+        .maybeSingle();
+
+      if (countData) {
+        setPostsCount(countData.posts_count || 0);
+        setFollowersCount(countData.followers_count || 0);
+        setFollowingCount(countData.following_count || 0);
+        setLikesReceived(countData.likes_received_count || 0);
+      } else {
+        // Fallback count queries
+        const { count: pCount } = await supabase
+          .from('posts')
+          .select('id', { count: 'exact', head: true })
+          .eq('author_id', user.id);
+        setPostsCount(pCount || 0);
+      }
+
+      // 3. Fetch User's Posts
+      const { data: postsData } = await supabase
+        .from('posts')
+        .select('id, content, media_urls, likes_count, comments_count, created_at')
+        .eq('author_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(20);
+      if (postsData) setUserPosts(postsData);
+
+      // 4. Fetch User's Reels
+      const { data: reelsData } = await supabase
+        .from('videos')
+        .select('id, title, storage_path, thumbnail_path, likes_count, comments_count, created_at')
+        .eq('creator_id', user.id)
+        .eq('video_kind', 'reel')
+        .order('created_at', { ascending: false })
+        .limit(20);
+      if (reelsData) setUserReels(reelsData);
+
+      // 5. Fetch User's Marketplace Listings
+      const { data: prodsData } = await supabase
+        .from('products')
+        .select('id, title, price_amount, currency, media_urls, status, condition, created_at')
+        .eq('seller_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(20);
+      if (prodsData) setUserProducts(prodsData);
+
     } catch (err) {
       console.warn('Error loading profile:', err);
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     loadUserProfile();
-  }, []);
+  }, [loadUserProfile]);
+
+  const onRefresh = () => {
+    setRefreshing(true);
+    loadUserProfile();
+  };
 
   const handleSaveProfile = async () => {
     if (!profile?.id) return;
@@ -102,9 +181,10 @@ export function ProfileScreen({ onLogout, navigation }: ProfileScreenProps) {
           city: city.trim(),
         });
         setIsEditing(false);
+        Alert.alert('Profile Saved', 'Your island profile has been updated.');
       }
-    } catch (err) {
-      console.warn('Error updating profile:', err);
+    } catch (err: any) {
+      Alert.alert('Error', err.message || 'Error updating profile.');
     } finally {
       setUpdating(false);
     }
@@ -120,7 +200,7 @@ export function ProfileScreen({ onLogout, navigation }: ProfileScreenProps) {
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.centerBox}>
           <ActivityIndicator size="large" color={TOKENS.action} />
-          <Text style={styles.loadingText}>Loading Profile...</Text>
+          <Text style={styles.loadingText}>Loading Caribbean Profile...</Text>
         </View>
       </SafeAreaView>
     );
@@ -128,7 +208,10 @@ export function ProfileScreen({ onLogout, navigation }: ProfileScreenProps) {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <ScrollView contentContainerStyle={styles.container}>
+      <ScrollView
+        contentContainerStyle={styles.container}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={TOKENS.action} />}
+      >
         {/* Cover Banner */}
         <View style={styles.banner}>
           <View style={styles.bannerGradient} />
@@ -136,14 +219,18 @@ export function ProfileScreen({ onLogout, navigation }: ProfileScreenProps) {
 
         {/* Profile Card Header */}
         <View style={styles.profileHeader}>
-          <View style={styles.avatar}>
-            <Text style={styles.avatarText}>
-              {(profile?.display_name || profile?.username || 'TK').slice(0, 2).toUpperCase()}
-            </Text>
-          </View>
+          {profile?.avatar_url ? (
+            <Image source={{ uri: profile.avatar_url }} style={styles.avatarImg} />
+          ) : (
+            <View style={styles.avatar}>
+              <Text style={styles.avatarText}>
+                {(profile?.display_name || profile?.username || 'TK').slice(0, 2).toUpperCase()}
+              </Text>
+            </View>
+          )}
 
           <View style={styles.nameRow}>
-            <Text style={styles.displayName}>{profile?.display_name || 'Caribbean Member'}</Text>
+            <Text style={styles.displayName}>{profile?.display_name || profile?.full_name || 'Caribbean Member'}</Text>
             {profile?.is_official && (
               <View style={styles.officialBadge}>
                 <Text style={styles.officialBadgeText}>OFFICIAL</Text>
@@ -159,8 +246,9 @@ export function ProfileScreen({ onLogout, navigation }: ProfileScreenProps) {
           )}
 
           <View style={styles.locationRow}>
+            <Ionicons name="location-sharp" size={13} color={TOKENS.action} style={{ marginRight: 4 }} />
             <Text style={styles.locationText}>
-              📍 {[profile?.city, profile?.country].filter(Boolean).join(', ') || 'Caribbean'}
+              {[profile?.city, profile?.country].filter(Boolean).join(', ') || 'Caribbean'}
             </Text>
           </View>
 
@@ -183,54 +271,27 @@ export function ProfileScreen({ onLogout, navigation }: ProfileScreenProps) {
             </TouchableOpacity>
           </View>
 
-          {/* New App Links */}
+          {/* App Navigation Shortcuts */}
           <View style={styles.navLinksRow}>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.navLinkBtn}
-              onPress={() => navigation.navigate('Communities')}
+              onPress={() => navigation?.navigate('Communities')}
             >
-              <Text style={styles.navLinkIcon}>👥</Text>
-              <Text style={styles.navLinkText}>Communities</Text>
+              <Text style={styles.navLinkIcon}>🌴</Text>
+              <Text style={styles.navLinkText}>Hubs & Circles</Text>
             </TouchableOpacity>
-            
-            <TouchableOpacity 
+
+            <TouchableOpacity
               style={styles.navLinkBtn}
-              onPress={() => navigation.navigate('Finance')}
+              onPress={() => navigation?.navigate('Finance')}
             >
               <Text style={styles.navLinkIcon}>💰</Text>
               <Text style={styles.navLinkText}>Financial Center</Text>
             </TouchableOpacity>
           </View>
-
-          {/* Creator Ecosystem Hub Card */}
-          <View style={styles.creatorCard}>
-            <View style={styles.creatorCardHeader}>
-              <Text style={styles.creatorBadge}>🌴 CARIBBEAN CREATOR ECOSYSTEM</Text>
-            </View>
-            <Text style={styles.creatorTitle}>Creator Hub &amp; Studio</Text>
-            <Text style={styles.creatorSubtitle}>
-              Produce podcasts, go live, manage fan memberships, and track creator earnings.
-            </Text>
-            <View style={styles.creatorActionsRow}>
-              <TouchableOpacity
-                style={styles.creatorStudioBtn}
-                onPress={() => navigation.navigate('Create')}
-                activeOpacity={0.8}
-              >
-                <Text style={styles.creatorStudioBtnText}>✨ Create &amp; Studio</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.creatorFinanceBtn}
-                onPress={() => navigation.navigate('Finance')}
-                activeOpacity={0.8}
-              >
-                <Text style={styles.creatorFinanceBtnText}>💰 Payouts &amp; Balance</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
         </View>
 
-        {/* Edit Form Modal/Drawer in-place */}
+        {/* Edit Form Modal in-place */}
         {isEditing && (
           <View style={styles.editCard}>
             <Text style={styles.editTitle}>Edit Caribbean Profile</Text>
@@ -254,7 +315,7 @@ export function ProfileScreen({ onLogout, navigation }: ProfileScreenProps) {
               multiline
             />
 
-            <Text style={styles.label}>Country Selector (Never default locked)</Text>
+            <Text style={styles.label}>Country</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.countryScroll}>
               {CARIBBEAN_COUNTRIES.map((c) => (
                 <TouchableOpacity
@@ -292,31 +353,187 @@ export function ProfileScreen({ onLogout, navigation }: ProfileScreenProps) {
           </View>
         )}
 
-        {/* Ecosystem Badges & Stats */}
+        {/* Live Ecosystem Counters */}
         <View style={styles.statsCard}>
           <View style={styles.statItem}>
-            <Text style={styles.statNumber}>1</Text>
-            <Text style={styles.statLabel}>Post</Text>
+            <Text style={styles.statNumber}>{postsCount}</Text>
+            <Text style={styles.statLabel}>{postsCount === 1 ? 'Post' : 'Posts'}</Text>
           </View>
           <View style={styles.statDivider} />
           <View style={styles.statItem}>
-            <Text style={styles.statNumber}>0</Text>
+            <Text style={styles.statNumber}>{followersCount}</Text>
             <Text style={styles.statLabel}>Followers</Text>
           </View>
           <View style={styles.statDivider} />
           <View style={styles.statItem}>
-            <Text style={styles.statNumber}>0</Text>
+            <Text style={styles.statNumber}>{followingCount}</Text>
             <Text style={styles.statLabel}>Following</Text>
+          </View>
+          <View style={styles.statDivider} />
+          <View style={styles.statItem}>
+            <Text style={styles.statNumber}>{likesReceived}</Text>
+            <Text style={styles.statLabel}>Likes</Text>
           </View>
         </View>
 
-        {/* Island Vibes Info */}
-        <View style={styles.infoBox}>
-          <Text style={styles.infoTitle}>🌴 TUKUBI Island Vibes</Text>
-          <Text style={styles.infoText}>
-            Your digital identity is protected by end-to-end cryptographic row-level security and privacy controls.
-          </Text>
+        {/* CONTENT TABS: POSTS, REELS, MARKETPLACE */}
+        <View style={styles.tabsContainer}>
+          <TouchableOpacity
+            style={[styles.contentTab, activeTab === 'posts' && styles.contentTabActive]}
+            onPress={() => setActiveTab('posts')}
+          >
+            <Ionicons
+              name="grid-outline"
+              size={18}
+              color={activeTab === 'posts' ? TOKENS.action : TOKENS.textMuted}
+            />
+            <Text style={[styles.contentTabText, activeTab === 'posts' && styles.contentTabTextActive]}>
+              Posts ({userPosts.length})
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.contentTab, activeTab === 'reels' && styles.contentTabActive]}
+            onPress={() => setActiveTab('reels')}
+          >
+            <Ionicons
+              name="videocam-outline"
+              size={18}
+              color={activeTab === 'reels' ? TOKENS.action : TOKENS.textMuted}
+            />
+            <Text style={[styles.contentTabText, activeTab === 'reels' && styles.contentTabTextActive]}>
+              Reels ({userReels.length})
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.contentTab, activeTab === 'listings' && styles.contentTabActive]}
+            onPress={() => setActiveTab('listings')}
+          >
+            <Ionicons
+              name="cart-outline"
+              size={18}
+              color={activeTab === 'listings' ? TOKENS.action : TOKENS.textMuted}
+            />
+            <Text style={[styles.contentTabText, activeTab === 'listings' && styles.contentTabTextActive]}>
+              Trade ({userProducts.length})
+            </Text>
+          </TouchableOpacity>
         </View>
+
+        {/* TAB CONTENT: POSTS */}
+        {activeTab === 'posts' && (
+          <View style={styles.tabContent}>
+            {userPosts.length === 0 ? (
+              <View style={styles.emptyTabBox}>
+                <Ionicons name="chatbubbles-outline" size={40} color={TOKENS.textMuted} />
+                <Text style={styles.emptyTabText}>No posts shared yet</Text>
+                <TouchableOpacity
+                  style={styles.createShortcutBtn}
+                  onPress={() => navigation?.navigate('Create')}
+                >
+                  <Text style={styles.createShortcutText}>+ Create Post</Text>
+                </TouchableOpacity>
+              </View>
+            ) : (
+              userPosts.map((post) => (
+                <View key={post.id} style={styles.postItem}>
+                  <Text style={styles.postText}>{post.content}</Text>
+                  {post.media_urls && post.media_urls.length > 0 && (
+                    <Image source={{ uri: post.media_urls[0] }} style={styles.postImg} resizeMode="cover" />
+                  )}
+                  <View style={styles.postMeta}>
+                    <Text style={styles.postDate}>{new Date(post.created_at).toLocaleDateString()}</Text>
+                    <View style={styles.postStats}>
+                      <Text style={styles.postStat}>❤️ {post.likes_count || 0}</Text>
+                      <Text style={styles.postStat}>💬 {post.comments_count || 0}</Text>
+                    </View>
+                  </View>
+                </View>
+              ))
+            )}
+          </View>
+        )}
+
+        {/* TAB CONTENT: REELS */}
+        {activeTab === 'reels' && (
+          <View style={styles.tabContent}>
+            {userReels.length === 0 ? (
+              <View style={styles.emptyTabBox}>
+                <Ionicons name="videocam-outline" size={40} color={TOKENS.textMuted} />
+                <Text style={styles.emptyTabText}>No reels published yet</Text>
+                <TouchableOpacity
+                  style={styles.createShortcutBtn}
+                  onPress={() => navigation?.navigate('Create')}
+                >
+                  <Text style={styles.createShortcutText}>+ Upload Reel</Text>
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <View style={styles.reelsGrid}>
+                {userReels.map((reel) => (
+                  <TouchableOpacity
+                    key={reel.id}
+                    style={styles.reelThumb}
+                    onPress={() => navigation?.navigate('Reels')}
+                  >
+                    {reel.thumbnail_path ? (
+                      <Image source={{ uri: reel.thumbnail_path }} style={styles.reelThumbImg} />
+                    ) : (
+                      <View style={styles.reelThumbFallback}>
+                        <Ionicons name="play" size={24} color="#FFF" />
+                      </View>
+                    )}
+                    <View style={styles.reelOverlay}>
+                      <Text style={styles.reelLikes}>❤️ {reel.likes_count || 0}</Text>
+                    </View>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            )}
+          </View>
+        )}
+
+        {/* TAB CONTENT: LISTINGS */}
+        {activeTab === 'listings' && (
+          <View style={styles.tabContent}>
+            {userProducts.length === 0 ? (
+              <View style={styles.emptyTabBox}>
+                <Ionicons name="pricetag-outline" size={40} color={TOKENS.textMuted} />
+                <Text style={styles.emptyTabText}>No active trade listings</Text>
+                <TouchableOpacity
+                  style={styles.createShortcutBtn}
+                  onPress={() => navigation?.navigate('SellProduct')}
+                >
+                  <Text style={styles.createShortcutText}>+ Sell an Item</Text>
+                </TouchableOpacity>
+              </View>
+            ) : (
+              userProducts.map((prod) => (
+                <TouchableOpacity
+                  key={prod.id}
+                  style={styles.prodRow}
+                  onPress={() => navigation?.navigate('Marketplace')}
+                >
+                  {prod.media_urls && prod.media_urls.length > 0 ? (
+                    <Image source={{ uri: prod.media_urls[0] }} style={styles.prodImg} />
+                  ) : (
+                    <View style={styles.prodImgPlaceholder}>
+                      <Ionicons name="cart-outline" size={20} color={TOKENS.textMuted} />
+                    </View>
+                  )}
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.prodTitle} numberOfLines={1}>{prod.title}</Text>
+                    <Text style={styles.prodPrice}>
+                      {prod.currency} ${(prod.price_amount / 100).toFixed(2)} • {prod.status.toUpperCase()}
+                    </Text>
+                  </View>
+                  <Ionicons name="chevron-forward" size={16} color={TOKENS.textMuted} />
+                </TouchableOpacity>
+              ))
+            )}
+          </View>
+        )}
       </ScrollView>
     </SafeAreaView>
   );
@@ -333,7 +550,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     marginTop: -40,
     alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: 16,
   },
   avatar: {
     width: 80,
@@ -344,11 +561,13 @@ const styles = StyleSheet.create({
     borderColor: TOKENS.action,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 6,
+  },
+  avatarImg: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    borderWidth: 3,
+    borderColor: TOKENS.action,
   },
   avatarText: { color: TOKENS.action, fontSize: 24, fontWeight: '900' },
   nameRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 12 },
@@ -365,7 +584,7 @@ const styles = StyleSheet.create({
   username: { color: TOKENS.textMuted, fontSize: 13, fontWeight: '600', marginTop: 2 },
   bio: { color: '#CBD5E1', fontSize: 13, textAlign: 'center', marginTop: 10, lineHeight: 20 },
   bioEmpty: { color: TOKENS.textMuted, fontSize: 12, textAlign: 'center', marginTop: 8, fontStyle: 'italic' },
-  locationRow: { marginTop: 10 },
+  locationRow: { flexDirection: 'row', alignItems: 'center', marginTop: 10 },
   locationText: { color: TOKENS.action, fontSize: 12, fontWeight: '700' },
   actionRow: { flexDirection: 'row', gap: 12, marginTop: 18, width: '100%' },
   editButton: {
@@ -388,13 +607,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   logoutButtonText: { color: TOKENS.danger, fontSize: 13, fontWeight: '800' },
-  navLinksRow: { flexDirection: 'row', gap: 12, marginTop: 16, width: '100%' },
+  navLinksRow: { flexDirection: 'row', gap: 12, marginTop: 14, width: '100%' },
   navLinkBtn: {
     flex: 1,
     backgroundColor: TOKENS.surface,
     borderColor: TOKENS.border,
     borderWidth: 1,
-    paddingVertical: 14,
+    paddingVertical: 12,
     borderRadius: 14,
     alignItems: 'center',
     flexDirection: 'row',
@@ -444,93 +663,184 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 16,
   },
-  saveButtonText: { color: '#090D1A', fontSize: 14, fontWeight: '900' },
+  saveButtonText: { color: '#FFF', fontSize: 14, fontWeight: '900' },
+
   statsCard: {
     flexDirection: 'row',
     backgroundColor: TOKENS.surface,
-    marginHorizontal: 20,
+    marginHorizontal: 16,
     borderRadius: 18,
     borderWidth: 1,
     borderColor: TOKENS.border,
-    paddingVertical: 16,
+    paddingVertical: 14,
     alignItems: 'center',
     justifyContent: 'space-around',
-    marginBottom: 20,
+    marginBottom: 16,
   },
   statItem: { alignItems: 'center' },
-  statNumber: { color: TOKENS.textPrimary, fontSize: 18, fontWeight: '900' },
+  statNumber: { color: TOKENS.textPrimary, fontSize: 17, fontWeight: '900' },
   statLabel: { color: TOKENS.textMuted, fontSize: 11, fontWeight: '600', marginTop: 2 },
-  statDivider: { width: 1, height: 28, backgroundColor: TOKENS.border },
-  infoBox: {
-    marginHorizontal: 20,
-    padding: 16,
-    borderRadius: 18,
-    backgroundColor: TOKENS.action + '10',
-    borderColor: TOKENS.action + '30',
-    borderWidth: 1,
-  },
-  infoTitle: { color: TOKENS.action, fontSize: 12, fontWeight: '800', marginBottom: 4 },
-  infoText: { color: TOKENS.textMuted, fontSize: 11, lineHeight: 16, fontWeight: '500' },
-  creatorCard: {
-    backgroundColor: '#0F172A',
-    borderColor: '#38BDF840',
-    borderWidth: 1,
-    borderRadius: 20,
-    padding: 16,
-    marginTop: 14,
-    width: '100%',
-  },
-  creatorCardHeader: {
+  statDivider: { width: 1, height: 26, backgroundColor: TOKENS.border },
+
+  tabsContainer: {
     flexDirection: 'row',
-    marginBottom: 6,
-  },
-  creatorBadge: {
-    color: '#38BDF8',
-    fontSize: 10,
-    fontWeight: '900',
-    letterSpacing: 1,
-    textTransform: 'uppercase',
-  },
-  creatorTitle: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '800',
-    marginBottom: 4,
-  },
-  creatorSubtitle: {
-    color: TOKENS.textMuted,
-    fontSize: 12,
-    lineHeight: 16,
+    marginHorizontal: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: TOKENS.border,
     marginBottom: 12,
   },
-  creatorActionsRow: {
+  contentTab: {
+    flex: 1,
     flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    gap: 6,
+    borderBottomWidth: 2,
+    borderBottomColor: 'transparent',
+  },
+  contentTabActive: {
+    borderBottomColor: TOKENS.action,
+  },
+  contentTabText: {
+    color: TOKENS.textMuted,
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  contentTabTextActive: {
+    color: TOKENS.action,
+  },
+  tabContent: {
+    paddingHorizontal: 16,
+  },
+  emptyTabBox: {
+    paddingVertical: 48,
+    alignItems: 'center',
+  },
+  emptyTabText: {
+    color: TOKENS.textMuted,
+    fontSize: 14,
+    marginTop: 8,
+    marginBottom: 14,
+  },
+  createShortcutBtn: {
+    backgroundColor: TOKENS.action,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 14,
+  },
+  createShortcutText: {
+    color: '#FFF',
+    fontSize: 12,
+    fontWeight: '800',
+  },
+  postItem: {
+    backgroundColor: TOKENS.surface,
+    borderWidth: 1,
+    borderColor: TOKENS.border,
+    borderRadius: 14,
+    padding: 14,
+    marginBottom: 10,
+  },
+  postText: {
+    color: TOKENS.textPrimary,
+    fontSize: 13,
+    lineHeight: 18,
+    marginBottom: 8,
+  },
+  postImg: {
+    width: '100%',
+    height: 160,
+    borderRadius: 10,
+    marginBottom: 8,
+  },
+  postMeta: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    borderTopWidth: 1,
+    borderTopColor: TOKENS.border,
+    paddingTop: 8,
+  },
+  postDate: {
+    color: TOKENS.textMuted,
+    fontSize: 11,
+  },
+  postStats: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  postStat: {
+    color: TOKENS.textMuted,
+    fontSize: 11,
+  },
+  reelsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: 8,
   },
-  creatorStudioBtn: {
-    flex: 1,
-    backgroundColor: '#FB923C',
-    paddingVertical: 10,
-    borderRadius: 12,
+  reelThumb: {
+    width: (screenWidth - 48) / 3,
+    height: 140,
+    borderRadius: 10,
+    backgroundColor: TOKENS.surface,
+    overflow: 'hidden',
+    position: 'relative',
+  },
+  reelThumbImg: {
+    width: '100%',
+    height: '100%',
+  },
+  reelThumbFallback: {
+    width: '100%',
+    height: '100%',
+    backgroundColor: TOKENS.raised,
     alignItems: 'center',
+    justifyContent: 'center',
   },
-  creatorStudioBtnText: {
-    color: '#090D1A',
-    fontSize: 12,
-    fontWeight: '900',
+  reelOverlay: {
+    position: 'absolute',
+    bottom: 6,
+    left: 6,
   },
-  creatorFinanceBtn: {
-    flex: 1,
-    backgroundColor: '#FFFFFF15',
-    borderWidth: 1,
-    borderColor: '#FFFFFF20',
-    paddingVertical: 10,
-    borderRadius: 12,
-    alignItems: 'center',
-  },
-  creatorFinanceBtnText: {
-    color: '#FFFFFF',
-    fontSize: 12,
+  reelLikes: {
+    color: '#FFF',
+    fontSize: 10,
     fontWeight: '700',
+  },
+  prodRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: TOKENS.surface,
+    borderWidth: 1,
+    borderColor: TOKENS.border,
+    borderRadius: 14,
+    padding: 10,
+    marginBottom: 8,
+    gap: 12,
+  },
+  prodImg: {
+    width: 48,
+    height: 48,
+    borderRadius: 8,
+  },
+  prodImgPlaceholder: {
+    width: 48,
+    height: 48,
+    borderRadius: 8,
+    backgroundColor: TOKENS.raised,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  prodTitle: {
+    color: TOKENS.textPrimary,
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  prodPrice: {
+    color: TOKENS.action,
+    fontSize: 12,
+    fontWeight: '800',
+    marginTop: 2,
   },
 });
