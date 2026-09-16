@@ -93,7 +93,7 @@ describe('Root Route Authentication Gate & Complete Protected-Route Security Aud
       }
 
       if (pathname === '/') {
-        return { action: 'redirect', destination: '/login' };
+        return { action: 'allow' };
       }
 
       const returnPath = pathname + (searchParams?.q ? `?q=${searchParams.q}` : '');
@@ -104,12 +104,11 @@ describe('Root Route Authentication Gate & Complete Protected-Route Security Aud
     return { action: 'allow' };
   }
 
-  // ── 2. Primary Requirement: Root Route Protection ───────────────────────
-  describe('Primary Requirement: Root Route (/) Gate', () => {
-    it('MUST redirect unauthenticated visitor on / immediately to /login', () => {
+  // ── 2. Primary Requirement: Root Route Public Front Door & Protection ───────────────────────
+  describe('Primary Requirement: Root Route (/) Public Front Door & Protection', () => {
+    it('allows unauthenticated visitor on / to view Public Front Door without login bounce', () => {
       const decision = evaluateMiddlewareRoute('/', null);
-      expect(decision.action).toBe('redirect');
-      expect(decision.destination).toBe('/login');
+      expect(decision.action).toBe('allow');
     });
 
     it('MUST load Home Feed when visitor has active authenticated session on /', () => {
@@ -232,13 +231,13 @@ describe('Root Route Authentication Gate & Complete Protected-Route Security Aud
 
   // ── 8. Cache & SSR Safety Audit ──────────────────────────────────────────
   describe('SSR / Cache Directives Verification', () => {
-    it('verifies root page.tsx declares force-dynamic to prevent cached content leakage', () => {
+    it('verifies root page.tsx declares force-dynamic and mounts PublicFrontDoor when unauthenticated', () => {
       const rootPagePath = path.resolve(__dirname, '../../apps/web/src/app/page.tsx');
       const pageContent = fs.readFileSync(rootPagePath, 'utf-8');
       expect(pageContent).toContain("export const dynamic = 'force-dynamic';");
       expect(pageContent).toContain('getCurrentUser()');
       expect(pageContent).toContain('if (!user)');
-      expect(pageContent).toContain("redirect('/login')");
+      expect(pageContent).toContain('<PublicFrontDoor />');
     });
   });
 });

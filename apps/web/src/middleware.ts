@@ -25,6 +25,8 @@ const PUBLIC_EXEMPT_ROUTES = [
   '/api/payments/providers',
   '/manifest.webmanifest',
   '/manifest.json',
+  '/robots.txt',
+  '/sitemap.xml',
   '/sw.js',
   '/offline',
   '/terms',
@@ -165,9 +167,9 @@ export async function middleware(request: NextRequest) {
       );
     }
 
-    // 4b. Root route (/) redirects cleanly to /login without redundant ?next=/
+    // 4b. Root route (/) renders the Public Front Door for first-time / unauthenticated visitors
     if (pathname === '/') {
-      return NextResponse.redirect(new URL('/login', request.url));
+      return response;
     }
 
     // 4c. All other protected application routes redirect to /login with preserved next destination

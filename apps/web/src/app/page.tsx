@@ -23,6 +23,7 @@ import { fetchActiveStoriesAction } from '../lib/social/actions';
 import { ErrorBoundary } from '../components/error-boundary';
 import FeedSkeleton from '../components/ui/skeletons/feed-skeleton';
 import SidebarSkeleton from '../components/ui/skeletons/sidebar-skeleton';
+import PublicFrontDoor from '../components/public-front-door';
 
 export const dynamic = 'force-dynamic';
 
@@ -46,7 +47,7 @@ export default async function HomePage(props: { searchParams?: Promise<{ mode?: 
 
   const user = await getCurrentUser();
   if (!user) {
-    redirect('/login');
+    return <PublicFrontDoor />;
   }
 
   const supabase = await createSupabaseServerClient();

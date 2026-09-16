@@ -19,9 +19,38 @@ import { createSupabaseServerClient } from '../lib/supabase/server';
 import { PostHogProvider } from '../components/posthog-provider';
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://www.tukubi.com'),
   title: 'TUKUBI — The Caribbean Connected.',
   description:
-    'The premier platform for Caribbean culture, community, creators, businesses, and the global diaspora. The Caribbean Connected.',
+    'The premier platform for Caribbean culture, community, creators, businesses, and the global diaspora. The Caribbean Connected. Born in the Caribbean. Built for the World.',
+  alternates: {
+    canonical: '/',
+  },
+  openGraph: {
+    type: 'website',
+    locale: 'en_US',
+    url: 'https://www.tukubi.com',
+    siteName: 'TUKUBI',
+    title: 'TUKUBI — The Caribbean Connected.',
+    description:
+      'The premier platform for Caribbean culture, community, creators, businesses, and the global diaspora. Born in the Caribbean. Built for the World.',
+    images: [
+      {
+        url: '/brand/tukubi-og-card.png',
+        width: 1200,
+        height: 630,
+        alt: 'TUKUBI — The Caribbean Connected.',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    site: '@tukubiofficial',
+    title: 'TUKUBI — The Caribbean Connected.',
+    description:
+      'Born in the Caribbean. Built for the World. The Caribbean Connected.',
+    images: ['/brand/tukubi-og-card.png'],
+  },
   manifest: '/manifest.webmanifest',
   appleWebApp: {
     capable: true,

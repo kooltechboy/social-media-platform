@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { usePathname } from 'next/navigation';
+import { useAuth } from './auth-provider';
 import AppHeader from './app-header';
 import AppSidebar from './app-sidebar';
 import MobileNav from './mobile-nav';
@@ -16,6 +17,7 @@ const GATEWAY_ROUTES = [
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const { user } = useAuth();
   const isGateway = GATEWAY_ROUTES.some((route) => pathname === route || pathname?.startsWith(`${route}/`));
 
   if (isGateway) {
@@ -26,7 +28,17 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     );
   }
 
+  const isPublicLanding = pathname === '/' && !user;
   const isMapRoute = pathname === '/map';
+
+  if (isPublicLanding) {
+    return (
+      <div className="relative z-10 flex flex-col min-h-screen">
+        <AppHeader />
+        <main className="flex-1 w-full">{children}</main>
+      </div>
+    );
+  }
 
   return (
     <div className="relative z-10 flex flex-col min-h-screen">
