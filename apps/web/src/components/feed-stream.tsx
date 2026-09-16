@@ -65,6 +65,7 @@ import TukubiVideoPlayer from './media/tukubi-video-player';
 import InteractivePollWidget from './polls/interactive-poll-widget';
 import type { PollData } from '../lib/polls/types';
 import FeedPost from './feed/feed-post';
+import SponsoredFeedCard from './feed/sponsored-feed-card';
 
 export interface FeedPostData {
   id: string;
@@ -89,6 +90,12 @@ export interface FeedPostData {
   category?: 'caribbean' | 'foryou' | 'diaspora' | 'creator';
   taggedProduct?: TaggedProduct;
   poll?: PollData;
+  isSponsored?: boolean;
+  adId?: string;
+  headline?: string;
+  destinationUrl?: string;
+  ctaText?: string;
+  bidCpmMinor?: number;
 }
 
 export interface FeedStreamProps {
@@ -834,43 +841,47 @@ export default function FeedStream({
               <span className="sr-only">
                 <Link href={`/messages?u=${post.handle}`}>Message Author</Link>
               </span>
-              <FeedPost
-                post={post}
-                currentUserId={currentUserId}
-                isSaved={savedPosts.has(post.id)}
-                onSavePost={handleSavePost}
-              onToggleReaction={handleReaction}
-              currentReaction={postReactions[post.id]}
-              likeCount={postLikeCounts[post.id]}
-              onReactWithEmoji={handleReactToPost}
-              customEmojiList={customEmojiReactions[post.id]}
-              onShare={handleShare}
-              onDeletePost={handleDeletePost}
-              onReportPost={(postId) => {
-                setReportModalPostId(postId);
-                setActiveMenuPostId(null);
-              }}
-              onTipCreator={setTipTarget}
-              isCommentsExpanded={expandedCommentsPostId === post.id}
-              onToggleComments={handleToggleComments}
-              commentList={commentLists[post.id]}
-              commentInput={commentInputs[post.id] || ''}
-              onCommentInputChange={(postId, text) =>
-                setCommentInputs((prev) => ({ ...prev, [postId]: text }))
-              }
-              onSubmitComment={handleSubmitComment}
-              isSubmittingComment={isSubmittingComment === post.id}
-              onDeleteComment={handleDeleteComment}
-              replyingTo={replyingTo[post.id]}
-              onSetReplyingTo={(postId, target) =>
-                setReplyingTo((prev) => ({ ...prev, [postId]: target }))
-              }
-              translation={postTranslations[post.id]}
-              onTranslatePost={handleTranslatePost}
-              onToggleOriginalTranslation={handleToggleOriginal}
-            />
-          </div>
-        ))
+              {post.isSponsored ? (
+                <SponsoredFeedCard post={post as any} />
+              ) : (
+                <FeedPost
+                  post={post}
+                  currentUserId={currentUserId}
+                  isSaved={savedPosts.has(post.id)}
+                  onSavePost={handleSavePost}
+                  onToggleReaction={handleReaction}
+                  currentReaction={postReactions[post.id]}
+                  likeCount={postLikeCounts[post.id]}
+                  onReactWithEmoji={handleReactToPost}
+                  customEmojiList={customEmojiReactions[post.id]}
+                  onShare={handleShare}
+                  onDeletePost={handleDeletePost}
+                  onReportPost={(postId) => {
+                    setReportModalPostId(postId);
+                    setActiveMenuPostId(null);
+                  }}
+                  onTipCreator={setTipTarget}
+                  isCommentsExpanded={expandedCommentsPostId === post.id}
+                  onToggleComments={handleToggleComments}
+                  commentList={commentLists[post.id]}
+                  commentInput={commentInputs[post.id] || ''}
+                  onCommentInputChange={(postId, text) =>
+                    setCommentInputs((prev) => ({ ...prev, [postId]: text }))
+                  }
+                  onSubmitComment={handleSubmitComment}
+                  isSubmittingComment={isSubmittingComment === post.id}
+                  onDeleteComment={handleDeleteComment}
+                  replyingTo={replyingTo[post.id]}
+                  onSetReplyingTo={(postId, target) =>
+                    setReplyingTo((prev) => ({ ...prev, [postId]: target }))
+                  }
+                  translation={postTranslations[post.id]}
+                  onTranslatePost={handleTranslatePost}
+                  onToggleOriginalTranslation={handleToggleOriginal}
+                />
+              )}
+            </div>
+          ))
         )}
       </div>
 

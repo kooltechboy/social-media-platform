@@ -6,6 +6,12 @@ import { validateComposer, type FeedMode } from '@caribbean/social';
 import { createSupabaseServerClient, getCurrentUser } from '../supabase/server';
 import { ensureUserProfile } from '../auth/user-sync';
 import { buildRankedFeed } from '../feed/ranking';
+import {
+  rankAndSelectAds,
+  formatSponsoredFeedItem,
+  injectSponsoredIntoFeed,
+  type AdCandidate,
+} from '@caribbean/advertising';
 
 export interface PostActionState {
   error: string | null;
@@ -275,6 +281,86 @@ export async function fetchFeedPostsAction(params: {
         countryId: p.country_id || undefined,
       };
     });
+
+    // Phase 3: Inject eligible sponsored items into head of feed
+    if (!params.cursor && normalizedPosts.length > 0) {
+      try {
+        const { data: activeAds } = await supabase
+          .from('ads')
+          .select(`
+            id,
+            headline,
+            body,
+            media_path,
+            destination_url,
+            is_approved,
+            ad_sets (
+              id,
+              placement,
+              bid_cpm_minor,
+              country_iso,
+              campaigns (
+                id,
+                status,
+                budget_daily_minor,
+                budget_total_minor,
+                advertisers (
+                  id,
+                  name,
+                  profile_id
+                )
+              )
+            )
+          `)
+          .eq('is_approved', true)
+          .limit(10);
+
+        if (activeAds && activeAds.length > 0) {
+          const candidates: AdCandidate[] = activeAds
+            .filter((ad: any) => {
+              const set = Array.isArray(ad.ad_sets) ? ad.ad_sets[0] : ad.ad_sets;
+              const camp = Array.isArray(set?.campaigns) ? set.campaigns[0] : set?.campaigns;
+              return set?.placement === 'feed' && camp?.status === 'active';
+            })
+            .map((ad: any) => {
+              const set = Array.isArray(ad.ad_sets) ? ad.ad_sets[0] : ad.ad_sets;
+              const camp = Array.isArray(set?.campaigns) ? set.campaigns[0] : set?.campaigns;
+              const adv = Array.isArray(camp?.advertisers) ? camp.advertisers[0] : camp?.advertisers;
+              return {
+                id: ad.id,
+                adSetId: set?.id || '',
+                campaignId: camp?.id || '',
+                advertiserId: adv?.id || '',
+                advertiserName: adv?.name || 'Caribbean Business',
+                headline: ad.headline,
+                body: ad.body,
+                mediaPath: ad.media_path,
+                destinationUrl: ad.destination_url,
+                isApproved: ad.is_approved,
+                campaignStatus: camp?.status || 'active',
+                placement: 'feed' as const,
+                targetCountries: set?.country_iso ? [set.country_iso] : undefined,
+                bidCpmMinor: set?.bid_cpm_minor || 500,
+                budgetDailyMinor: camp?.budget_daily_minor || 5000,
+                spentTodayMinor: 0,
+              };
+            });
+
+          const winningAds = rankAndSelectAds(candidates, {
+            userId: user.id,
+            placement: 'feed',
+          }, 1);
+
+          if (winningAds.length > 0) {
+            const sponsoredItem = formatSponsoredFeedItem(winningAds[0]);
+            const withAds = injectSponsoredIntoFeed(normalizedPosts, sponsoredItem as any, 4);
+            return { posts: withAds, nextCursor: res.nextCursor };
+          }
+        }
+      } catch {
+        // Non-blocking ad injection failure — feed continues seamlessly
+      }
+    }
 
     return { posts: normalizedPosts, nextCursor: res.nextCursor };
   } catch (err) {

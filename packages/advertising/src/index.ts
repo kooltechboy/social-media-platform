@@ -137,3 +137,5 @@ Return JSON with this exact structure:
 
 Headline: max 40 chars. primaryText: max 150 chars. cta: max 20 chars. hashtags: 5 items.`;
 }
+
+export * from './delivery';
