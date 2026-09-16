@@ -40,6 +40,7 @@ import {
 import TrendingPanel from './trending/trending-panel';
 import type { TrendingSignal } from '../lib/explore/actions';
 import { track } from '../lib/monitoring/analytics';
+import ContextualHelpButton from './help/contextual-help-button';
 
 interface ExploreDiscoveryClientProps {
   initialResult: ExploreQueryResult;
@@ -148,8 +149,11 @@ export default function ExploreDiscoveryClient({
         <div className="absolute right-0 top-0 w-96 h-96 bg-brand-caribbeanSea/10 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20" />
 
         <div className="relative z-10 space-y-4 max-w-3xl">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-brand-caribbeanSea/15 border border-brand-caribbeanSea/40 text-brand-caribbeanSea text-xs md:text-sm font-black tracking-wide uppercase">
-            <Compass className="w-3.5 h-3.5 md:w-4 md:h-4 text-brand-goldenHour" /> Tukubi Discovery Engine
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-brand-caribbeanSea/15 border border-brand-caribbeanSea/40 text-brand-caribbeanSea text-xs md:text-sm font-black tracking-wide uppercase">
+              <Compass className="w-3.5 h-3.5 md:w-4 md:h-4 text-brand-goldenHour" /> Tukubi Discovery Engine
+            </div>
+            <ContextualHelpButton articleSlug="how-explore-works" label="How Explore Works" compact={true} />
           </div>
 
           <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-black text-white tracking-tight leading-tight">

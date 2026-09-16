@@ -1,4 +1,5 @@
 import type { MetadataRoute } from 'next';
+import { HELP_ARTICLES } from '../lib/help/articles-data';
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const baseUrl = 'https://www.tukubi.com';
@@ -19,6 +20,14 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${baseUrl}/login`, lastModified, changeFrequency: 'monthly', priority: 0.6 },
     { url: `${baseUrl}/terms`, lastModified, changeFrequency: 'yearly', priority: 0.3 },
     { url: `${baseUrl}/privacy`, lastModified, changeFrequency: 'yearly', priority: 0.3 },
+    { url: `${baseUrl}/help`, lastModified, changeFrequency: 'weekly', priority: 0.8 },
+    { url: `${baseUrl}/learn`, lastModified, changeFrequency: 'weekly', priority: 0.8 },
+    ...HELP_ARTICLES.map((article) => ({
+      url: `${baseUrl}/help/${article.slug}`,
+      lastModified,
+      changeFrequency: 'monthly' as const,
+      priority: 0.7,
+    })),
   ];
 
   return routes;

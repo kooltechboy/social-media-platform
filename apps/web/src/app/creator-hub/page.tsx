@@ -32,6 +32,7 @@ import {
 import { Money, getCreatorLaunchMessaging } from "@caribbean/payments";
 import { isSubscriptionActive } from "@caribbean/creator";
 import BecomeCreatorClientButton from "../../components/become-creator-button";
+import ContextualHelpButton from "../../components/help/contextual-help-button";
 
 export const dynamic = "force-dynamic";
 
@@ -205,6 +206,7 @@ export default async function CreatorHubPage() {
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
+          <ContextualHelpButton articleSlug="creator-hub-overview" label="Creator Guide" compact={false} />
           <Link
             href={`/profile/${profile?.username || user.username}`}
             className="px-4 md:px-5 py-2.5 md:py-3 rounded-xl bg-white/10 hover:bg-white/15 border border-white/10 text-white text-xs md:text-sm font-black transition-all flex items-center gap-2 min-h-[44px] md:min-h-[48px]"

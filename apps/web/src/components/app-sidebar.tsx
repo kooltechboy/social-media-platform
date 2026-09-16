@@ -26,6 +26,7 @@ import {
   UserPlus,
   Radio,
   ArrowRight,
+  HelpCircle,
 } from 'lucide-react';
 
 import { useTranslation, TranslationKey } from '@caribbean/localization';
@@ -83,6 +84,7 @@ export default function AppSidebar({ currentPath }: AppSidebarProps) {
       badge: isOfficialUser ? 'OFFICIAL' : undefined,
     },
     { href: '/settings', label: t('nav.settings'), icon: <Settings className="w-5 h-5 text-slate-300" /> },
+    { href: '/help', label: 'Help & Learn', icon: <HelpCircle className="w-5 h-5 text-slate-300" /> },
   ];
   const renderNavGroup = (items: NavItem[], title?: string) => (
     <div className="space-y-1">

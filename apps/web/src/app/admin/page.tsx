@@ -2,7 +2,7 @@ import React from 'react';
 import { redirect } from 'next/navigation';
 import {
   LayoutDashboard, Users, Wallet, Shield, ShieldCheck, Flag, BarChart3, ToggleLeft,
-  Globe, Database, Bell, Settings, Sparkles
+  Globe, Database, Bell, Settings, Sparkles, BookOpen
 } from 'lucide-react';
 import Link from 'next/link';
 import { createServiceSupabaseClient, getAuthorizedUser } from '../../lib/supabase/server';
@@ -101,6 +101,7 @@ export default async function AdminPage() {
     { label: 'Reports', icon: Flag, href: '/admin/reports' },
     { label: 'Analytics', icon: BarChart3, href: '/admin/analytics' },
     { label: 'Feature Flags', icon: ToggleLeft, href: '/admin#flags' },
+    { label: 'Help Center CMS', icon: BookOpen, href: '/admin/help' },
     { label: 'Bootstrap Roles', icon: Settings, href: '/admin/bootstrap' },
   ];
 

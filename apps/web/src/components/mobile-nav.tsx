@@ -19,6 +19,7 @@ import {
   LogOut,
   X,
   Sparkles,
+  HelpCircle,
 } from 'lucide-react';
 import { useAuth } from './auth-provider';
 import UserAvatar from './user-avatar';
@@ -298,6 +299,15 @@ export default function MobileNav() {
               >
                 <Settings className="w-5 h-5 text-brand-sandstone flex-shrink-0" />
                 <span>{t('nav.settings')}</span>
+              </Link>
+
+              <Link
+                href="/help"
+                className="flex items-center gap-3 w-full px-4 py-3 rounded-2xl bg-brand-twilight/70 hover:bg-brand-dusk border border-white/5 text-white text-sm font-bold transition-colors min-h-[44px]"
+                onClick={() => setIsProfileSheetOpen(false)}
+              >
+                <HelpCircle className="w-5 h-5 text-brand-caribbeanSea flex-shrink-0" />
+                <span>Help &amp; Learn</span>
               </Link>
             </div>
 

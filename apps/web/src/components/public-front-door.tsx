@@ -474,6 +474,8 @@ export default function PublicFrontDoor() {
             <Link href="/podcasts" className="hover:text-white transition-colors">Podcasts</Link>
             <Link href="/reels" className="hover:text-white transition-colors">Reels</Link>
             <Link href="/marketplace" className="hover:text-white transition-colors">Marketplace</Link>
+            <Link href="/help" className="hover:text-white transition-colors">Help Center</Link>
+            <Link href="/learn" className="hover:text-white transition-colors">Learn TUKUBI</Link>
             <Link href="/terms" className="hover:text-white transition-colors">Terms of Service</Link>
             <Link href="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link>
           </div>

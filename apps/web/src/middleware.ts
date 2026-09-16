@@ -31,6 +31,9 @@ const PUBLIC_EXEMPT_ROUTES = [
   '/offline',
   '/terms',
   '/privacy',
+  '/help',
+  '/learn',
+  '/api/v1/help',
 ];
 
 import { checkRateLimit, getRateLimitHeaders, type RateLimitTier } from './lib/rate-limit/sliding-window';
