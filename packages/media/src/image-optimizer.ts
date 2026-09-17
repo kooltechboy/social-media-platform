@@ -9,6 +9,7 @@ export interface ImageTransformationOptions {
   quality?: number; // 1 to 100, default 80
   format?: 'auto' | 'webp' | 'avif' | 'jpeg' | 'png';
   fit?: 'cover' | 'contain' | 'fill' | 'inside';
+  useRenderEndpoint?: boolean;
 }
 
 export const DEFAULT_RESPONSIVE_WIDTHS = [320, 640, 768, 1024, 1280, 1920];
@@ -24,27 +25,31 @@ export function generateOptimizedImageUrl(
     return rawUrl;
   }
 
-  const { width, height, quality = 80, format = 'auto', fit = 'cover' } = options;
+  const { width, height, quality = 80, format = 'auto', fit = 'cover', useRenderEndpoint = false } = options;
 
   try {
     const url = new URL(rawUrl);
 
-    // 1. Supabase Storage Image Transformation
+    // 1. Supabase Storage Image Delivery
     if (url.hostname.endsWith('.supabase.co') || url.hostname.endsWith('.supabase.in')) {
       if (url.pathname.includes('/storage/v1/object/public/')) {
-        // Transform to render endpoint if available, or append query params
-        const transformedPath = url.pathname.replace(
-          '/storage/v1/object/public/',
-          '/storage/v1/render/image/public/'
-        );
-        const transformed = new URL(url.toString());
-        transformed.pathname = transformedPath;
-        if (width) transformed.searchParams.set('width', width.toString());
-        if (height) transformed.searchParams.set('height', height.toString());
-        transformed.searchParams.set('quality', quality.toString());
-        transformed.searchParams.set('resize', fit);
-        if (format !== 'auto') transformed.searchParams.set('format', format);
-        return transformed.toString();
+        if (useRenderEndpoint) {
+          // Transform to render endpoint if explicitly enabled
+          const transformedPath = url.pathname.replace(
+            '/storage/v1/object/public/',
+            '/storage/v1/render/image/public/'
+          );
+          const transformed = new URL(url.toString());
+          transformed.pathname = transformedPath;
+          if (width) transformed.searchParams.set('width', width.toString());
+          if (height) transformed.searchParams.set('height', height.toString());
+          transformed.searchParams.set('quality', quality.toString());
+          transformed.searchParams.set('resize', fit);
+          if (format !== 'auto') transformed.searchParams.set('format', format);
+          return transformed.toString();
+        }
+        // Direct public object delivery: safe across all Supabase tiers and local dev
+        return rawUrl;
       }
     }
 

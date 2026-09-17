@@ -36,6 +36,8 @@ import { generateCreatorContentPlan } from '@caribbean/ai';
 import DeviceMediaCaptureModal, { type CaptureMode } from './media/device-media-capture-modal';
 import EmojiPickerPopover from './emoji/emoji-picker-popover';
 import { createPollAction } from '../lib/polls/actions';
+import { normalizeExifAndCompressImage } from '@caribbean/media';
+import TukubiImage from './ui/tukubi-image';
 
 export type ComposerMode =
   | 'text'
@@ -70,6 +72,9 @@ interface UploadedMediaItem {
   type: 'image' | 'video';
   caption?: string;
   uploadedUrl?: string;
+  width?: number;
+  height?: number;
+  aspectRatio?: number;
 }
 
 const DRAFT_KEY = 'tukubi_composer_draft_v3';
@@ -222,44 +227,109 @@ export default function UniversalComposer({
     }
   }, [content, audience]);
 
-  function handleFileSelect(files: FileList | null, preferredType?: 'image' | 'video', markAsReel = false) {
+  async function handleFileSelect(files: FileList | null, preferredType?: 'image' | 'video', markAsReel = false) {
     if (!files || files.length === 0) return;
-    const items: UploadedMediaItem[] = [];
+    const fileArray = Array.from(files);
 
-    Array.from(files).forEach((file) => {
-      if (mediaList.length + items.length >= 10) return;
+    for (const file of fileArray) {
+      if (mediaList.length >= 10) break;
       const isVideo = file.type.startsWith('video/') || preferredType === 'video';
-      const previewUrl = URL.createObjectURL(file);
-      items.push({
-        id: `media_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
-        file,
-        previewUrl,
-        type: isVideo ? 'video' : 'image',
-        caption: '',
-      });
-    });
 
-    if (items.length > 0) {
-      setMediaList((prev) => [...prev, ...items]);
-      setIsExpanded(true);
-      if (markAsReel) {
-        setIsReel(true);
-        setMode('reel');
+      if (isVideo) {
+        const previewUrl = URL.createObjectURL(file);
+        setMediaList((prev) => [
+          ...prev,
+          {
+            id: `media_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+            file,
+            previewUrl,
+            type: 'video',
+            caption: '',
+          },
+        ]);
+      } else {
+        try {
+          const processed = await normalizeExifAndCompressImage(file);
+          setMediaList((prev) => [
+            ...prev,
+            {
+              id: `media_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+              file: processed.file,
+              previewUrl: processed.previewUrl,
+              type: 'image',
+              caption: '',
+              width: processed.width,
+              height: processed.height,
+              aspectRatio: processed.aspectRatio,
+            },
+          ]);
+        } catch {
+          const previewUrl = URL.createObjectURL(file);
+          setMediaList((prev) => [
+            ...prev,
+            {
+              id: `media_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+              file,
+              previewUrl,
+              type: 'image',
+              caption: '',
+            },
+          ]);
+        }
       }
-      setActiveMediaDropdown(null);
     }
+
+    setIsExpanded(true);
+    if (markAsReel) {
+      setIsReel(true);
+      setMode('reel');
+    }
+    setActiveMediaDropdown(null);
   }
 
-  function handleDirectCapture(file: File, type: 'image' | 'video') {
-    const previewUrl = URL.createObjectURL(file);
-    const item: UploadedMediaItem = {
-      id: `media_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
-      file,
-      previewUrl,
-      type,
-      caption: '',
-    };
-    setMediaList((prev) => [...prev, item]);
+  async function handleDirectCapture(file: File, type: 'image' | 'video') {
+    if (type === 'image') {
+      try {
+        const processed = await normalizeExifAndCompressImage(file);
+        setMediaList((prev) => [
+          ...prev,
+          {
+            id: `media_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+            file: processed.file,
+            previewUrl: processed.previewUrl,
+            type: 'image',
+            caption: '',
+            width: processed.width,
+            height: processed.height,
+            aspectRatio: processed.aspectRatio,
+          },
+        ]);
+      } catch {
+        const previewUrl = URL.createObjectURL(file);
+        setMediaList((prev) => [
+          ...prev,
+          {
+            id: `media_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+            file,
+            previewUrl,
+            type: 'image',
+            caption: '',
+          },
+        ]);
+      }
+    } else {
+      const previewUrl = URL.createObjectURL(file);
+      setMediaList((prev) => [
+        ...prev,
+        {
+          id: `media_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+          file,
+          previewUrl,
+          type: 'video',
+          caption: '',
+        },
+      ]);
+    }
     setIsExpanded(true);
     if (cameraModalMode === 'reel') {
       setIsReel(true);
@@ -328,14 +398,16 @@ export default function UniversalComposer({
 
       if (supabase) {
         try {
-          const fileExt = item.file.name.split('.').pop() || (item.type === 'video' ? 'mp4' : 'jpg');
-          const cleanName = item.file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
-          const filePath = `${effectiveUserId}/${Date.now()}_${Math.random().toString(36).substring(2, 8)}_${cleanName}.${fileExt}`;
+          const rawExt = item.file.name.split('.').pop() || (item.type === 'video' ? 'mp4' : 'jpg');
+          const fileExt = rawExt.toLowerCase();
+          const cleanBase = item.file.name.replace(/\.[^/.]+$/, '').replace(/[^a-zA-Z0-9_-]/g, '_');
+          const filePath = `${effectiveUserId}/${Date.now()}_${Math.random().toString(36).substring(2, 8)}_${cleanBase}.${fileExt}`;
 
           const { error: uploadError } = await supabase.storage
             .from('post-media')
             .upload(filePath, item.file, {
-              cacheControl: '3600',
+              cacheControl: '31536000, immutable',
+              contentType: item.file.type || (item.type === 'video' ? 'video/mp4' : 'image/jpeg'),
               upsert: false,
             });
 
@@ -1187,12 +1259,17 @@ export default function UniversalComposer({
                       key={item.id}
                       className="relative group rounded-xl overflow-hidden bg-brand-dusk border border-slate-800 flex flex-col"
                     >
-                      <div className="relative aspect-video bg-black flex items-center justify-center overflow-hidden">
+                      <div className="relative aspect-[4/3] bg-black flex items-center justify-center overflow-hidden">
                         {item.type === 'video' ? (
                           <video src={item.previewUrl} controls className="w-full h-full object-contain" />
                         ) : (
-                          /* eslint-disable-next-line @next/next/no-img-element */
-                          <img src={item.previewUrl} alt="Preview" className="w-full h-full object-cover" />
+                          <TukubiImage
+                            src={item.previewUrl}
+                            alt="Preview"
+                            fill
+                            objectFit="cover"
+                            className="w-full h-full"
+                          />
                         )}
                         <button
                           type="button"

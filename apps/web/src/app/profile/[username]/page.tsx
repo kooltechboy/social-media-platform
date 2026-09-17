@@ -27,6 +27,8 @@ import { createSupabaseServerClient, getCurrentUser } from '../../../lib/supabas
 import FollowButton from '../../../components/follow-button';
 import ProfileHeaderActions from '../../../components/profile-header-actions';
 import UserAvatar from '../../../components/user-avatar';
+import TukubiImage from '../../../components/ui/tukubi-image';
+import TukubiGallery from '../../../components/media/tukubi-gallery';
 import OfficialBadge from '../../../components/official/official-badge';
 import type { ProfileData } from '../../../components/profile-edit-modal';
 import { RecognitionService } from '../../../lib/recognition/recognition-service';
@@ -301,11 +303,15 @@ export default async function ProfilePage({
           <div className="h-44 sm:h-56 md:h-64 lg:h-72 relative w-full overflow-hidden bg-gradient-to-r from-sky-950 via-slate-900 to-amber-950/40">
             {coverUrl ? (
               <>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
+                <TukubiImage
                   src={coverUrl}
                   alt={`${profileData.display_name}'s cover`}
-                  className="w-full h-full object-cover object-center"
+                  fill
+                  priority
+                  sizes="100vw"
+                  objectFit="cover"
+                  objectPosition="center"
+                  className="w-full h-full"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-black/30 pointer-events-none" />
               </>
@@ -778,29 +784,12 @@ export default async function ProfilePage({
                     <p className="text-sm sm:text-base md:text-[17px] text-brand-sandstone/95 leading-relaxed md:leading-[1.6] whitespace-pre-wrap font-normal">{post.content}</p>
                   )}
                   {post.media_urls && post.media_urls.length > 0 && (
-                    <div className={`grid gap-3 rounded-2xl overflow-hidden ${
-                      post.media_urls.length === 1 ? 'grid-cols-1 max-h-96' : 'grid-cols-2 max-h-80'
-                    }`}>
-                      {post.media_urls.map((url, idx) => {
-                        const isVideo = url.match(/\.(mp4|webm|ogg|mov)$/i) || url.includes('/video');
-                        return isVideo ? (
-                          <video
-                            key={idx}
-                            src={url}
-                            controls
-                            className="w-full h-full object-cover rounded-xl bg-black"
-                          />
-                        ) : (
-                          /* eslint-disable-next-line @next/next/no-img-element */
-                          <img
-                            key={idx}
-                            src={url}
-                            alt={`Post attachment ${idx + 1}`}
-                            className="w-full h-full object-cover rounded-xl"
-                          />
-                        );
-                      })}
-                    </div>
+                    <TukubiGallery
+                      mediaUrls={post.media_urls}
+                      altText={`Post by ${profileData.display_name}`}
+                      authorName={profileData.display_name}
+                      className="w-full"
+                    />
                   )}
                 </article>
               ))

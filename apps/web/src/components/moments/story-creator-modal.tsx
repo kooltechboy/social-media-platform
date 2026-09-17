@@ -1,8 +1,11 @@
 'use client';
 
-import React, { useState, useRef, useTransition } from 'react';
-import { Camera, Video, Type, BarChart2, MessageCircle, MapPin, Tag, Link as LinkIcon, Clock, X, Image as ImageIcon, Send, Music } from 'lucide-react';
+import React, { useState, useRef, useTransition, useEffect } from 'react';
+import { Camera, Video, Type, BarChart2, MessageCircle, MapPin, Tag, Link as LinkIcon, Clock, X, Image as ImageIcon, Send, Music, Trash2 } from 'lucide-react';
 import { createStoryAction } from '../../lib/social/actions';
+import { createSupabaseBrowserClient } from '../../lib/supabase/browser';
+import { normalizeExifAndCompressImage } from '@caribbean/media';
+import TukubiImage from '../ui/tukubi-image';
 
 interface StoryCreatorModalProps {
   isOpen: boolean;
@@ -23,7 +26,8 @@ const GRADIENTS = [
 
 export default function StoryCreatorModal({ isOpen, onClose, onStoryCreated }: StoryCreatorModalProps) {
   const [mode, setMode] = useState<Mode>('photo');
-  const [mediaUrl, setMediaUrl] = useState('');
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string>('');
   const [textContent, setTextContent] = useState('');
   const [bgGradient, setBgGradient] = useState(GRADIENTS[0].value);
   const [audience, setAudience] = useState<'public' | 'friends' | 'close_friends'>('public');
@@ -31,15 +35,100 @@ export default function StoryCreatorModal({ isOpen, onClose, onStoryCreated }: S
   const [question, setQuestion] = useState({ prompt: '' });
   const [isPending, startTransition] = useTransition();
   const [errorMsg, setErrorMsg] = useState('');
+  const [uploadStatus, setUploadStatus] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Revoke preview blob URL when unmounting or changing files
+  useEffect(() => {
+    return () => {
+      if (previewUrl && previewUrl.startsWith('blob:')) {
+        URL.revokeObjectURL(previewUrl);
+      }
+    };
+  }, [previewUrl]);
+
   if (!isOpen) return null;
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (previewUrl && previewUrl.startsWith('blob:')) {
+      URL.revokeObjectURL(previewUrl);
+    }
+    setSelectedFile(file);
+    setPreviewUrl(URL.createObjectURL(file));
+  };
+
+  const handleClearMedia = () => {
+    if (previewUrl && previewUrl.startsWith('blob:')) {
+      URL.revokeObjectURL(previewUrl);
+    }
+    setSelectedFile(null);
+    setPreviewUrl('');
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
 
   const handlePublish = () => {
     setErrorMsg('');
     startTransition(async () => {
+      let finalMediaUrl: string | undefined = undefined;
+
+      if ((mode === 'photo' || mode === 'video') && selectedFile) {
+        setUploadStatus('Preparing media...');
+        try {
+          let fileToUpload: File = selectedFile;
+          if (mode === 'photo') {
+            setUploadStatus('Optimizing image...');
+            const result = await normalizeExifAndCompressImage(selectedFile, {
+              maxWidth: 2560,
+              maxHeight: 2560,
+              quality: 0.88,
+            });
+            fileToUpload = result.file;
+          }
+
+          setUploadStatus('Uploading Moment...');
+          const supabase = createSupabaseBrowserClient();
+          if (!supabase) {
+            throw new Error('Supabase client is not available. Please try again.');
+          }
+
+          const { data: authData } = await supabase.auth.getUser();
+          const userId = authData?.user?.id || 'anonymous';
+          const rawExt = fileToUpload.name.split('.').pop() || (mode === 'video' ? 'mp4' : 'jpg');
+          const fileExt = rawExt.toLowerCase();
+          const cleanBase = fileToUpload.name.replace(/\.[^/.]+$/, '').replace(/[^a-zA-Z0-9_-]/g, '_');
+          const filePath = `${userId}/${Date.now()}_${Math.random().toString(36).substring(2, 8)}_${cleanBase}.${fileExt}`;
+
+          const { error: uploadError } = await supabase.storage
+            .from('story-media')
+            .upload(filePath, fileToUpload, {
+              cacheControl: '31536000, immutable',
+              contentType: fileToUpload.type || (mode === 'video' ? 'video/mp4' : 'image/jpeg'),
+              upsert: false,
+            });
+
+          if (uploadError) {
+            throw new Error(`Media upload failed: ${uploadError.message}`);
+          }
+
+          const { data: pubData } = supabase.storage.from('story-media').getPublicUrl(filePath);
+          if (!pubData?.publicUrl) {
+            throw new Error('Could not resolve public URL for uploaded media.');
+          }
+          finalMediaUrl = pubData.publicUrl;
+        } catch (err) {
+          setErrorMsg(err instanceof Error ? err.message : 'Failed to upload media.');
+          setUploadStatus(null);
+          return;
+        }
+      }
+
+      setUploadStatus('Publishing Moment...');
       const { error } = await createStoryAction({
-        mediaUrl: mode === 'photo' || mode === 'video' ? mediaUrl : undefined,
+        mediaUrl: finalMediaUrl,
         mediaType: mode === 'photo' ? 'photo' : mode === 'video' ? 'video' : 'text',
         textContent,
         backgroundColor: mode === 'text' ? bgGradient : undefined,
@@ -48,6 +137,7 @@ export default function StoryCreatorModal({ isOpen, onClose, onStoryCreated }: S
         audienceMode: audience,
       });
 
+      setUploadStatus(null);
       if (error) {
         setErrorMsg(error);
       } else {
@@ -101,20 +191,45 @@ export default function StoryCreatorModal({ isOpen, onClose, onStoryCreated }: S
         <div className="flex-1 relative m-4 rounded-2xl overflow-hidden border border-white/10 bg-slate-900 flex items-center justify-center">
           
           {(mode === 'photo' || mode === 'video') && (
-            <div className="w-full h-full flex flex-col items-center justify-center relative">
-              {mediaUrl ? (
-                mode === 'photo' ? (
-                  <img src={mediaUrl} alt="preview" className="w-full h-full object-cover" />
-                ) : (
-                  <video src={mediaUrl} className="w-full h-full object-cover" controls />
-                )
+            <div className="w-full h-full flex flex-col items-center justify-center relative bg-black/40">
+              {previewUrl ? (
+                <>
+                  {mode === 'photo' ? (
+                    <div className="w-full h-full relative flex items-center justify-center overflow-hidden">
+                      <TukubiImage
+                        src={previewUrl}
+                        alt="Story preview"
+                        fill
+                        objectFit="contain"
+                        priority
+                        className="w-full h-full"
+                      />
+                    </div>
+                  ) : (
+                    <video src={previewUrl} className="w-full h-full object-contain" controls />
+                  )}
+                  <button
+                    type="button"
+                    onClick={handleClearMedia}
+                    className="absolute top-3 right-3 z-20 p-2 bg-black/70 hover:bg-black/90 text-white/90 hover:text-white rounded-full transition-colors border border-white/20"
+                    title="Remove media"
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                </>
               ) : (
                 <button
+                  type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className="p-4 bg-white/5 rounded-2xl flex flex-col items-center gap-2 hover:bg-white/10 transition-colors"
+                  className="p-6 bg-white/5 rounded-2xl flex flex-col items-center gap-3 hover:bg-white/10 transition-colors border border-dashed border-white/20"
                 >
-                  <ImageIcon size={32} className="text-brand-caribbeanSea" />
-                  <span className="text-sm font-bold text-white">Choose {mode}</span>
+                  <div className="w-14 h-14 rounded-full bg-brand-caribbeanSea/20 flex items-center justify-center text-brand-caribbeanSea">
+                    <ImageIcon size={28} />
+                  </div>
+                  <div className="text-center">
+                    <span className="text-sm font-bold text-white block">Choose {mode === 'photo' ? 'Photo' : 'Video'}</span>
+                    <span className="text-xs text-white/50">High resolution JPEG, PNG, WebP, HEIC</span>
+                  </div>
                 </button>
               )}
               <input
@@ -122,20 +237,16 @@ export default function StoryCreatorModal({ isOpen, onClose, onStoryCreated }: S
                 ref={fileInputRef}
                 className="hidden"
                 accept={mode === 'photo' ? 'image/*' : 'video/*'}
-                onChange={(e) => {
-                  if (e.target.files?.[0]) {
-                    setMediaUrl(URL.createObjectURL(e.target.files[0]));
-                  }
-                }}
+                onChange={handleFileChange}
               />
-              {mediaUrl && (
-                <div className="absolute inset-0 bg-black/20 flex flex-col justify-end p-4">
+              {previewUrl && (
+                <div className="absolute inset-0 pointer-events-none flex flex-col justify-end p-4 bg-gradient-to-t from-black/80 via-black/20 to-transparent">
                    <input
                      type="text"
                      placeholder="Add a caption..."
                      value={textContent}
                      onChange={(e) => setTextContent(e.target.value)}
-                     className="w-full bg-black/50 text-white rounded-xl px-4 py-3 placeholder:text-white/70 border border-white/20"
+                     className="w-full pointer-events-auto bg-black/60 text-white rounded-xl px-4 py-3 placeholder:text-white/70 border border-white/20 backdrop-blur-sm"
                    />
                 </div>
               )}
@@ -231,10 +342,10 @@ export default function StoryCreatorModal({ isOpen, onClose, onStoryCreated }: S
         <div className="p-4 pt-0">
           <button
             onClick={handlePublish}
-            disabled={isPending}
+            disabled={isPending || Boolean(uploadStatus)}
             className="w-full bg-gradient-to-r from-brand-caribbeanSea to-brand-sunriseCoral text-black font-black py-4 rounded-2xl flex items-center justify-center gap-2 shadow-lg shadow-brand-caribbeanSea/20 hover:brightness-110 disabled:opacity-50"
           >
-            {isPending ? 'Publishing...' : <><Send size={18} /> Publish Story</>}
+            {uploadStatus || (isPending ? 'Publishing...' : <><Send size={18} /> Publish Story</>)}
           </button>
         </div>
       </div>

@@ -57,6 +57,10 @@ export const KNOWN_SIGNATURES: MagicByteSignature[] = [
   { mime: 'image/gif', bytes: [0x47, 0x49, 0x46, 0x38] },
   // WEBP: RIFF....WEBP (offset 0: 'RIFF', offset 8: 'WEBP')
   { mime: 'image/webp', bytes: [0x52, 0x49, 0x46, 0x46] },
+  // AVIF: offset 4 'ftypavif'
+  { mime: 'image/avif', bytes: [0x66, 0x74, 0x79, 0x70, 0x61, 0x76, 0x69, 0x66], offset: 4 },
+  // HEIC / HEIF: offset 4 'ftypheic'
+  { mime: 'image/heic', bytes: [0x66, 0x74, 0x79, 0x70, 0x68, 0x65, 0x69, 0x63], offset: 4 },
   // MP4 / MOV / ISO base media: offset 4 'ftyp'
   { mime: 'video/mp4', bytes: [0x66, 0x74, 0x79, 0x70], offset: 4 },
   // MP3: ID3
@@ -230,3 +234,4 @@ export class StorageService {
 export * from './streaming';
 export * from './image-optimizer';
 export * from './captions';
+export * from './media-utils';

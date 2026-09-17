@@ -64,8 +64,10 @@ export default function UserAvatar({
           fill
           sizes="120px"
           fallbackText={initials}
+          objectFit="cover"
           onError={() => setImgError(true)}
-          className={`w-full h-full object-cover rounded-full ${isTukubiBrand && !src && !avatarUrl ? 'bg-[#110D17] p-1' : ''}`}
+          className={`w-full h-full rounded-full ${isTukubiBrand && !src && !avatarUrl ? 'bg-[#110D17] p-1' : ''}`}
+          imageClassName="rounded-full"
         />
       ) : (
         <div

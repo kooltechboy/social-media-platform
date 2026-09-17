@@ -31,6 +31,7 @@ import ReactionPicker, { type ReactionType } from '../reactions/reaction-picker'
 import EmojiPickerPopover from '../emoji/emoji-picker-popover';
 import TukubiImage from '../ui/tukubi-image';
 import TukubiVideoPlayer from '../media/tukubi-video-player';
+import TukubiGallery from '../media/tukubi-gallery';
 import ShoppablePostWidget from '../shoppable-post-widget';
 import InteractivePollWidget from '../polls/interactive-poll-widget';
 import { useTranslation, LOCALE_DETAILS, LOCALES, type Locale } from '@caribbean/localization';
@@ -397,30 +398,12 @@ export default function FeedPost({
       {/* 3. POST MEDIA GALLERY                                     */}
       {/* ────────────────────────────────────────────────────────── */}
       {post.mediaUrls && post.mediaUrls.length > 0 && (
-        <div
-          className={`grid gap-2 rounded-2xl overflow-hidden ${
-            post.mediaUrls.length === 1 ? 'grid-cols-1' : 'grid-cols-2'
-          }`}
-        >
-          {post.mediaUrls.map((url, idx) => (
-            <div
-              key={idx}
-              className="relative bg-brand-twilight rounded-xl overflow-hidden min-h-[240px] max-h-[540px]"
-            >
-              {url.endsWith('.mp4') || url.includes('video') || url.endsWith('.m3u8') ? (
-                <TukubiVideoPlayer src={url} altText="Post video playback" className="w-full h-full" />
-              ) : (
-                <TukubiImage
-                  src={url}
-                  alt="Post media"
-                  fill
-                  sizes="(max-width: 768px) 100vw, 50vw"
-                  className="w-full h-full object-cover hover:scale-103 transition-transform duration-300"
-                />
-              )}
-            </div>
-          ))}
-        </div>
+        <TukubiGallery
+          mediaUrls={post.mediaUrls}
+          altText={`Post by ${post.author}`}
+          authorName={post.author}
+          className="w-full"
+        />
       )}
 
       {/* Shoppable Tagged Product Widget */}

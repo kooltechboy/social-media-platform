@@ -133,7 +133,8 @@ export default function SponsoredFeedCard({ post }: SponsoredFeedCardProps) {
             src={primaryMedia}
             alt={post.headline || post.author}
             fill
-            className="object-cover"
+            objectFit="cover"
+            className="w-full h-full"
           />
         </div>
       )}

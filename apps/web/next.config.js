@@ -37,6 +37,9 @@ const nextConfig = {
   transpilePackages: ["@caribbean/ui", "@caribbean/design-system", "@caribbean/payments", "@caribbean/ai", "@caribbean/media"],
   reactStrictMode: true,
   images: {
+    formats: ['image/avif', 'image/webp'],
+    deviceSizes: [320, 420, 640, 750, 828, 1080, 1200, 1920, 2048, 3840],
+    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
     remotePatterns: [
       {
         protocol: 'https',
@@ -66,6 +69,14 @@ const nextConfig = {
         protocol: 'https',
         hostname: 'res.cloudinary.com',
       },
+      {
+        protocol: 'http',
+        hostname: '127.0.0.1',
+      },
+      {
+        protocol: 'http',
+        hostname: 'localhost',
+      },
     ],
   },
   async headers() {
@@ -82,7 +93,7 @@ const nextConfig = {
           },
           {
             key: 'Permissions-Policy',
-            value: 'camera=(), microphone=(), geolocation=()',
+            value: 'camera=(self), microphone=(self), geolocation=()',
           },
           {
             key: 'Content-Security-Policy',

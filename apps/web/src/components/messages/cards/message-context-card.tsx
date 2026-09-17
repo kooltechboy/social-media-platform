@@ -29,13 +29,13 @@ import type {
   OrderContextPayload,
   ShipmentTrackingContextPayload,
   EventContextPayload,
-
   LivestreamContextPayload,
   StoreContextPayload,
   ProfileContextPayload,
   CommunityContextPayload,
   AiResponsePayload,
 } from '@caribbean/messaging';
+import TukubiImage from '../../ui/tukubi-image';
 
 interface MessageContextCardProps {
   kind: MessageKind;
@@ -72,11 +72,14 @@ export default function MessageContextCard({
 
         <div className="flex gap-3 items-center">
           {product.imageUrl ? (
-            /* eslint-disable-next-line @next/next/no-img-element */
-            <img
+            <TukubiImage
               src={product.imageUrl}
               alt={product.title}
-              className="w-16 h-16 rounded-xl object-cover border border-white/10 bg-slate-900"
+              width={64}
+              height={64}
+              objectFit="cover"
+              className="w-16 h-16 rounded-xl border border-white/10 bg-slate-900 overflow-hidden flex-shrink-0"
+              imageClassName="rounded-xl"
             />
           ) : (
             <div className="w-16 h-16 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-brand-caribbeanSea">
@@ -215,11 +218,14 @@ export default function MessageContextCard({
 
         <div className="flex gap-3 items-center">
           {event.coverUrl ? (
-            /* eslint-disable-next-line @next/next/no-img-element */
-            <img
+            <TukubiImage
               src={event.coverUrl}
               alt={event.title}
-              className="w-16 h-16 rounded-xl object-cover border border-white/10"
+              width={64}
+              height={64}
+              objectFit="cover"
+              className="w-16 h-16 rounded-xl border border-white/10 overflow-hidden flex-shrink-0"
+              imageClassName="rounded-xl"
             />
           ) : (
             <div className="w-16 h-16 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-brand-goldenHour">
@@ -292,11 +298,14 @@ export default function MessageContextCard({
 
         <div className="flex gap-3 items-center">
           {store.logoUrl ? (
-            /* eslint-disable-next-line @next/next/no-img-element */
-            <img
+            <TukubiImage
               src={store.logoUrl}
               alt={store.name}
-              className="w-12 h-12 rounded-xl object-cover border border-white/10"
+              width={48}
+              height={48}
+              objectFit="cover"
+              className="w-12 h-12 rounded-xl border border-white/10 overflow-hidden flex-shrink-0"
+              imageClassName="rounded-xl"
             />
           ) : (
             <div className="w-12 h-12 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-brand-caribbeanSea">
@@ -366,11 +375,14 @@ export default function MessageContextCard({
 
         <div className="flex gap-3 items-center">
           {prof.avatarUrl ? (
-            /* eslint-disable-next-line @next/next/no-img-element */
-            <img
+            <TukubiImage
               src={prof.avatarUrl}
               alt={prof.displayName}
-              className="w-12 h-12 rounded-full object-cover border border-white/10"
+              width={48}
+              height={48}
+              objectFit="cover"
+              className="w-12 h-12 rounded-full border border-white/10 overflow-hidden flex-shrink-0"
+              imageClassName="rounded-full"
             />
           ) : (
             <div className="w-12 h-12 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-white font-bold">
