@@ -93,6 +93,27 @@ export async function buildRankedFeed(
         // Show posts from public communities so new users can discover hubs
         postQuery = postQuery.not('community_id', 'is', null);
       }
+    } else if (mode === 'favorites') {
+      const { data: favs } = await supabase
+        .from('user_favorites')
+        .select('target_id')
+        .eq('user_id', userId);
+      const favIds = favs?.map((f: any) => f.target_id) || [];
+      if (favIds.length > 0) {
+        postQuery = postQuery.in('author_id', favIds);
+      } else {
+        postQuery = postQuery.in('author_id', ['00000000-0000-0000-0000-000000000000']);
+      }
+    } else if (mode === 'pages') {
+      const { data: biz } = await supabase
+        .from('businesses')
+        .select('owner_id');
+      const pageOwnerIds = biz?.map((b: any) => b.owner_id).filter(Boolean) || [];
+      if (pageOwnerIds.length > 0) {
+        postQuery = postQuery.in('author_id', pageOwnerIds);
+      } else {
+        postQuery = postQuery.in('author_id', ['00000000-0000-0000-0000-000000000000']);
+      }
     } else if (mode === 'for_you') {
       const { data: follows } = await supabase.from('follows').select('following_id').eq('follower_id', userId);
       const followingIds = follows?.map((f: any) => f.following_id) || [];

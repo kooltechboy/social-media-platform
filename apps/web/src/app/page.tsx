@@ -1,8 +1,18 @@
 import React, { Suspense } from 'react';
 import Link from 'next/link';
-import { redirect } from 'next/navigation';
 import {
   Sparkles,
+  Compass,
+  Film,
+  ShoppingBag,
+  Calendar,
+  Layers,
+  ArrowRight,
+  TrendingUp,
+  Play,
+  Flame,
+  CheckCircle,
+  Radio,
 } from 'lucide-react';
 import {
   createSupabaseServerClient,
@@ -10,20 +20,20 @@ import {
   checkIsOfficialOperator,
 } from '../lib/supabase/server';
 import { isFeedMode, type FeedMode } from '@caribbean/social';
-import { decodeCursor, encodeCursor } from '@caribbean/database';
+import { encodeCursor } from '@caribbean/database';
 import UniversalComposer from '../components/universal-composer';
 import FeedStream, { type FeedPostData } from '../components/feed-stream';
 import TukubiLiveSidebar from '../components/caribbean-now-sidebar';
 import RightRail from '../components/right-rail';
 import { buildRankedFeed } from '../lib/feed/ranking';
 import MomentsCinemaRail from '../components/moments/moments-cinema-rail';
-import FeedNavigation from '../components/feed/feed-navigation';
 import LiveBroadcastDiscovery from '../components/feed/live-broadcast-discovery';
 import { fetchActiveStoriesAction } from '../lib/social/actions';
 import { ErrorBoundary } from '../components/error-boundary';
 import FeedSkeleton from '../components/ui/skeletons/feed-skeleton';
 import SidebarSkeleton from '../components/ui/skeletons/sidebar-skeleton';
 import PublicFrontDoor from '../components/public-front-door';
+import IdentitySwitcher from '../components/identity-switcher';
 
 export const dynamic = 'force-dynamic';
 
@@ -37,12 +47,14 @@ function relativeTime(iso: string): string {
   return `${Math.floor(hours / 24)}d ago`;
 }
 
-export default async function HomePage(props: { searchParams?: Promise<{ mode?: string; feed?: string; cursor?: string }> }) {
+export default async function HomePage(props: {
+  searchParams?: Promise<{ mode?: string; feed?: string; cursor?: string }>;
+}) {
   const searchParams = await props.searchParams;
-  const rawMode = searchParams?.feed || searchParams?.mode;
-  let normalizedMode = typeof rawMode === 'string' ? rawMode.toLowerCase().replace(/-/g, '_') : undefined;
+  const rawMode = searchParams?.feed || searchParams?.mode || 'for_you';
+  let normalizedMode = typeof rawMode === 'string' ? rawMode.toLowerCase().replace(/-/g, '_') : 'for_you';
   if (normalizedMode === 'foryou') normalizedMode = 'for_you';
-  const mode = normalizedMode && isFeedMode(normalizedMode) ? (normalizedMode as FeedMode) : 'for_you';
+  const mode = isFeedMode(normalizedMode) ? (normalizedMode as FeedMode) : 'for_you';
   const cursor = typeof searchParams?.cursor === 'string' ? searchParams.cursor : undefined;
 
   const user = await getCurrentUser();
@@ -60,9 +72,14 @@ export default async function HomePage(props: { searchParams?: Promise<{ mode?: 
   let isOfficialOperator = false;
   let nextCursor: string | undefined = undefined;
 
+  // Discovery Horizon Data
+  let topReels: any[] = [];
+  let marketProducts: any[] = [];
+  let culturalEvents: any[] = [];
+
   if (supabase) {
     const sixHoursAgo = new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString();
-    const [postsRes, liveRes, officialProfileRes, operatorStatus] = await Promise.all([
+    const [postsRes, liveRes, officialProfileRes, operatorStatus, reelsRes, marketRes, eventsRes] = await Promise.all([
       buildRankedFeed(user.id, mode, supabase, cursor),
       supabase
         .from('livestreams')
@@ -78,11 +95,36 @@ export default async function HomePage(props: { searchParams?: Promise<{ mode?: 
         .ilike('username', 'tukubi')
         .maybeSingle(),
       checkIsOfficialOperator(user.id),
+      // Discovery: Reels preview
+      supabase
+        .from('videos')
+        .select('id, title, duration_seconds, view_count, profiles(id, display_name, username, avatar_url)')
+        .eq('video_kind', 'reel')
+        .eq('visibility', 'public')
+        .order('view_count', { ascending: false })
+        .limit(4),
+      // Discovery: Marketplace items
+      supabase
+        .from('products')
+        .select('id, title, price_minor, currency, businesses(name, country_iso)')
+        .eq('is_active', true)
+        .order('created_at', { ascending: false })
+        .limit(3),
+      // Discovery: Cultural events
+      supabase
+        .from('events')
+        .select('id, title, start_time, location_name')
+        .gte('start_time', new Date().toISOString())
+        .order('start_time', { ascending: true })
+        .limit(2),
     ]);
 
     isOfficialOperator = operatorStatus;
     activeLiveStream = liveRes.data;
     officialProfile = officialProfileRes.data;
+    topReels = reelsRes.data || [];
+    marketProducts = marketRes.data || [];
+    culturalEvents = eventsRes.data || [];
 
     let data = postsRes.data;
     if (!data && postsRes.error) {
@@ -153,7 +195,7 @@ export default async function HomePage(props: { searchParams?: Promise<{ mode?: 
       });
     }
 
-    // Guarantee official launch post appears on home feed if not yet returned
+    // Guarantee official welcome post
     const hasOfficialPost = livePosts.some((p) => p.handle?.toLowerCase() === 'tukubi' || p.id === 'd23f3e75-0dfa-47c6-8df9-2c0fa299d7ff');
     if (!hasOfficialPost) {
       const officialLaunchPost: FeedPostData = {
@@ -181,13 +223,11 @@ export default async function HomePage(props: { searchParams?: Promise<{ mode?: 
     }
   }
 
-  const combinedPosts = livePosts;
-
   return (
     <div className="flex flex-col lg:flex-row gap-6 xl:gap-8 items-start w-full">
-      {/* Main Stream — Fluid width, bounded for optimal desktop readability (65-75 chars/line) */}
+      {/* Main Discovery Engine Stream */}
       <div className="flex-1 min-w-0 space-y-6 w-full max-w-[740px] xl:max-w-[760px] mx-auto lg:mx-0">
-        {/* 1. Caribbean Moments Cinema Rail */}
+        {/* 1. Caribbean Moments Cinema Rail (Ephemeral Stories) */}
         <ErrorBoundary sectionName="Moments Cinema Rail">
           <MomentsCinemaRail
             initialStories={liveStories}
@@ -197,12 +237,40 @@ export default async function HomePage(props: { searchParams?: Promise<{ mode?: 
           />
         </ErrorBoundary>
 
-        {/* 2. Feed Mode Navigation Tabs (For You / Following / Caribbean / Communities) */}
-        <ErrorBoundary sectionName="Feed Navigation">
-          <FeedNavigation currentMode={mode} />
-        </ErrorBoundary>
+        {/* 2. Discovery vs Feeds Distinct Switching Banner */}
+        <div className="glass-aerospace rounded-3xl p-4 sm:p-5 flex items-center justify-between gap-4 border border-white/12 shadow-lg">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-brand-caribbeanSea to-brand-sunriseCoral flex items-center justify-center text-slate-950 font-black shadow-md shadow-brand-caribbeanSea/30 shrink-0">
+              <Sparkles className="w-5 h-5" />
+            </div>
+            <div className="min-w-0">
+              <div className="flex items-center gap-2">
+                <h2 className="text-sm sm:text-base font-black text-white truncate">
+                  Discovery Engine
+                </h2>
+                <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-brand-caribbeanSea/20 text-brand-caribbeanSea border border-brand-caribbeanSea/30">
+                  Live Horizon
+                </span>
+              </div>
+              <p className="text-xs text-brand-sandstone/70 truncate">
+                Curated Caribbean culture, trending media, and recommended creators
+              </p>
+            </div>
+          </div>
 
-        {/* 3. Primary Universal Inline Composer */}
+          <div className="flex items-center gap-2 shrink-0">
+            <Link
+              href="/feeds"
+              className="flex items-center gap-1.5 px-3.5 py-2 rounded-2xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs transition-all border border-white/10 hover:border-brand-sunriseCoral/40 min-h-[38px]"
+            >
+              <Layers className="w-4 h-4 text-brand-sunriseCoral" />
+              <span className="hidden sm:inline">My Feeds</span>
+            </Link>
+            <IdentitySwitcher variant="compact" />
+          </div>
+        </div>
+
+        {/* 3. Primary Universal Inline Composer ("What's happening?") */}
         <section aria-label="Create Post" className="space-y-4">
           <ErrorBoundary sectionName="Composer">
             <UniversalComposer
@@ -213,16 +281,105 @@ export default async function HomePage(props: { searchParams?: Promise<{ mode?: 
           </ErrorBoundary>
         </section>
 
-        {/* 4. Live Broadcast Discovery (Intelligent: Active Stream Highlight or Clean Strip) */}
+        {/* 4. Live Broadcast Discovery */}
         <ErrorBoundary sectionName="Live Broadcasts">
           <LiveBroadcastDiscovery activeStream={activeLiveStream} />
         </ErrorBoundary>
 
-        {/* 5. Caribbean Feed Stream */}
-        <section aria-label="Caribbean Feed Stream">
+        {/* 5. Reels Horizon Cinema Preview (Discovery Module) */}
+        {topReels.length > 0 && (
+          <section aria-label="Top Caribbean Reels" className="glass rounded-3xl p-4 sm:p-5 space-y-3 border border-white/10">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Film className="w-4 h-4 text-pink-400" />
+                <h3 className="text-xs sm:text-sm font-black text-white uppercase tracking-wider">
+                  Trending Caribbean Reels
+                </h3>
+              </div>
+              <Link href="/reels" className="text-xs font-bold text-brand-caribbeanSea hover:underline flex items-center gap-1">
+                Watch All <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-1">
+              {topReels.map((reel) => {
+                const creator = Array.isArray(reel.profiles) ? reel.profiles[0] : reel.profiles;
+                return (
+                  <Link
+                    key={reel.id}
+                    href={`/reels?id=${reel.id}`}
+                    className="group relative aspect-[9/14] rounded-2xl overflow-hidden bg-brand-twilight/80 border border-white/10 hover:border-pink-500/50 transition-all block shadow-md"
+                  >
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent z-10" />
+                    <div className="absolute top-2 right-2 z-20 w-6 h-6 rounded-full bg-black/50 backdrop-blur-md flex items-center justify-center text-white">
+                      <Play className="w-3 h-3 fill-white" />
+                    </div>
+                    <div className="absolute bottom-2.5 left-2.5 right-2.5 z-20 space-y-0.5">
+                      <p className="text-xs font-black text-white line-clamp-1 group-hover:text-pink-300 transition-colors">
+                        {reel.title || 'Caribbean Reel'}
+                      </p>
+                      <p className="text-[10px] text-white/60 truncate">
+                        @{creator?.username || 'creator'}
+                      </p>
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          </section>
+        )}
+
+        {/* 6. Marketplace & Events Horizon Spotlight */}
+        {marketProducts.length > 0 && (
+          <section aria-label="Caribbean Marketplace Discovery" className="glass rounded-3xl p-4 sm:p-5 space-y-3 border border-white/10">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <ShoppingBag className="w-4 h-4 text-brand-goldenHour" />
+                <h3 className="text-xs sm:text-sm font-black text-white uppercase tracking-wider">
+                  Marketplace Discoveries
+                </h3>
+              </div>
+              <Link href="/marketplace" className="text-xs font-bold text-brand-goldenHour hover:underline flex items-center gap-1">
+                Explore Market <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
+              {marketProducts.map((p) => {
+                const biz = Array.isArray(p.businesses) ? p.businesses[0] : p.businesses;
+                const formattedPrice = `$${(p.price_minor / 100).toFixed(2)} ${p.currency || 'USD'}`;
+                return (
+                  <Link
+                    key={p.id}
+                    href={`/marketplace/${p.id}`}
+                    className="p-3.5 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 transition-all block group"
+                  >
+                    <p className="text-xs font-black text-white truncate group-hover:text-brand-goldenHour transition-colors">
+                      {p.title}
+                    </p>
+                    <p className="text-sm font-extrabold text-brand-sunriseCoral mt-1">
+                      {formattedPrice}
+                    </p>
+                    <p className="text-[10px] text-brand-sandstone/60 truncate mt-0.5">
+                      {biz?.name || 'Verified Merchant'} • {biz?.country_iso || 'Caribbean'}
+                    </p>
+                  </Link>
+                );
+              })}
+            </div>
+          </section>
+        )}
+
+        {/* 7. Caribbean Discovery Feed Stream */}
+        <section aria-label="Discovery Feed Stream">
           <ErrorBoundary sectionName="Feed Stream">
             <Suspense fallback={<FeedSkeleton />}>
-              <FeedStream initialPosts={combinedPosts} currentUserId={user?.id} mode={mode} nextCursor={nextCursor} />
+              <FeedStream
+                initialPosts={livePosts}
+                currentUserId={user?.id}
+                mode={mode}
+                nextCursor={nextCursor}
+              />
             </Suspense>
           </ErrorBoundary>
         </section>
@@ -245,6 +402,3 @@ export default async function HomePage(props: { searchParams?: Promise<{ mode?: 
     </div>
   );
 }
-
-
-

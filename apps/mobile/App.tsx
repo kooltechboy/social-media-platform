@@ -21,6 +21,7 @@ import { SoundsScreen } from './src/screens/SoundsScreen';
 import { LiveScreen } from './src/screens/LiveScreen';
 import { PodcastsScreen } from './src/screens/PodcastsScreen';
 import { FriendsScreen } from './src/screens/FriendsScreen';
+import { FeedsScreen } from './src/screens/FeedsScreen';
 import { supabase } from './src/lib/supabase';
 
 export const navigationRef = createNavigationContainerRef<any>();
@@ -81,6 +82,7 @@ export default function App() {
     config: {
       screens: {
         Home: 'home',
+        Feeds: 'feeds',
         Explore: 'explore',
         Marketplace: 'marketplace',
         Reels: 'reels',
@@ -172,6 +174,7 @@ export default function App() {
             tabBarIcon: ({ focused }: any) => {
               let iconStr = '🏠';
               if (route.name === 'Home') iconStr = '🏠';
+              else if (route.name === 'Feeds') iconStr = '📑';
               else if (route.name === 'Explore') iconStr = '🧭';
               else if (route.name === 'Messages') iconStr = '💬';
               else if (route.name === 'Profile') iconStr = '👤';
@@ -254,6 +257,11 @@ export default function App() {
           <Screen 
             name="Friends" 
             component={FriendsScreen} 
+            options={{ tabBarButton: () => null }} 
+          />
+          <Screen 
+            name="Feeds" 
+            component={FeedsScreen} 
             options={{ tabBarButton: () => null }} 
           />
         </Navigator>

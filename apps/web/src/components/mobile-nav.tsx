@@ -20,15 +20,17 @@ import {
   X,
   Sparkles,
   HelpCircle,
+  Layers,
 } from 'lucide-react';
 import { useAuth } from './auth-provider';
 import UserAvatar from './user-avatar';
+import IdentitySwitcher from './identity-switcher';
 import { useUnreadMessagesCount } from './notifications-realtime-provider';
 import { useTranslation, TranslationKey } from '@caribbean/localization';
 
 interface MobileTab {
   href: string;
-  labelKey: TranslationKey;
+  labelKey?: TranslationKey;
   fallbackLabel: string;
   icon: React.ComponentType<{ className?: string }>;
   matchExact?: boolean;
@@ -36,8 +38,9 @@ interface MobileTab {
 
 const TABS: MobileTab[] = [
   { href: '/', labelKey: 'nav.home', fallbackLabel: 'Home', icon: Home, matchExact: true },
-  { href: '/explore', labelKey: 'nav.explore', fallbackLabel: 'Explore', icon: Compass },
+  { href: '/feeds', fallbackLabel: 'Feeds', icon: Layers },
   { href: '/create', labelKey: 'nav.create_hub', fallbackLabel: 'Create', icon: PlusCircle },
+  { href: '/reels', labelKey: 'nav.reels', fallbackLabel: 'Reels', icon: Film },
   { href: '/messages', labelKey: 'nav.messages', fallbackLabel: 'Messages', icon: MessageSquare },
 ];
 
@@ -213,8 +216,24 @@ export default function MobileNav() {
 
             <div className="h-px bg-white/10" />
 
+            {/* Identity Switcher */}
+            <div className="py-1">
+              <IdentitySwitcher variant="full" />
+            </div>
+
+            <div className="h-px bg-white/10" />
+
             {/* Ecosystem Navigation Links */}
             <div className="space-y-1.5">
+              <Link
+                href="/explore"
+                className="flex items-center gap-3 w-full px-4 py-3 rounded-2xl bg-brand-twilight/70 hover:bg-brand-dusk border border-white/5 text-white text-sm font-bold transition-colors min-h-[44px]"
+                onClick={() => setIsProfileSheetOpen(false)}
+              >
+                <Compass className="w-5 h-5 text-brand-goldenHour flex-shrink-0" />
+                <span>{t('nav.explore')} &amp; Diaspora</span>
+              </Link>
+
               <Link
                 href="/profile"
                 className="flex items-center gap-3 w-full px-4 py-3 rounded-2xl bg-brand-twilight/70 hover:bg-brand-dusk border border-white/5 text-white text-sm font-bold transition-colors min-h-[44px]"

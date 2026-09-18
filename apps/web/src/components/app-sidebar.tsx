@@ -27,6 +27,8 @@ import {
   Radio,
   ArrowRight,
   HelpCircle,
+  Layers,
+  UserCheck,
 } from 'lucide-react';
 
 import { useTranslation, TranslationKey } from '@caribbean/localization';
@@ -41,13 +43,15 @@ interface NavItem {
 }
 
 const PRIMARY_NAV: NavItem[] = [
-  { href: '/', labelKey: 'nav.home', fallbackLabel: 'Home Feed', icon: <Home className="w-5 h-5 text-brand-caribbeanSea" /> },
+  { href: '/', labelKey: 'nav.home', fallbackLabel: 'Home (Discovery)', icon: <Home className="w-5 h-5 text-brand-caribbeanSea" /> },
+  { href: '/feeds', fallbackLabel: 'Feeds (Connections)', icon: <Layers className="w-5 h-5 text-brand-sunriseCoral" />, badge: 'FEEDS' },
+  { href: '/friends', fallbackLabel: 'Friends', icon: <UserCheck className="w-5 h-5 text-emerald-400" /> },
   { href: '/people', fallbackLabel: 'People & Network', icon: <Users className="w-5 h-5 text-brand-caribbeanSea" /> },
-  { href: '/create', labelKey: 'nav.create_hub', fallbackLabel: 'Create Hub', icon: <PlusCircle className="w-5 h-5 text-brand-sunriseCoral" />, badge: 'NEW' },
+  { href: '/create', labelKey: 'nav.create_hub', fallbackLabel: 'Create Hub', icon: <PlusCircle className="w-5 h-5 text-brand-sunriseCoral" /> },
   { href: '/explore', labelKey: 'nav.explore', fallbackLabel: 'Explore & Diaspora', icon: <Compass className="w-5 h-5 text-brand-goldenHour" /> },
   { href: '/map', labelKey: 'nav.map', fallbackLabel: 'Caribbean Map', icon: <MapPin className="w-5 h-5 text-rose-400" /> },
   { href: '/reels', labelKey: 'nav.reels_shorts', fallbackLabel: 'Reels & Shorts', icon: <Video className="w-5 h-5 text-pink-400" /> },
-  { href: '/sounds', labelKey: 'nav.sounds', fallbackLabel: 'Caribbean Sounds', icon: <Music className="w-5 h-5 text-rose-400" />, badge: 'NEW' },
+  { href: '/sounds', labelKey: 'nav.sounds', fallbackLabel: 'Caribbean Sounds', icon: <Music className="w-5 h-5 text-rose-400" /> },
   { href: '/live', labelKey: 'nav.live_streams', fallbackLabel: 'Live Streams', icon: <Tv className="w-5 h-5 text-red-400" />, badge: 'LIVE' },
   { href: '/podcasts', labelKey: 'nav.podcasts', fallbackLabel: 'Podcasts Network', icon: <Mic className="w-5 h-5 text-purple-400" /> },
   { href: '/communities', labelKey: 'nav.communities', fallbackLabel: 'Diaspora Hubs', icon: <Users className="w-5 h-5 text-cyan-400" /> },

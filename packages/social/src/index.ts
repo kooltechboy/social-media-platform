@@ -1,6 +1,6 @@
 import { encodeCursor, decodeCursor, type SqlStatement, type Visibility } from '@caribbean/database';
 
-export const FEED_MODES = ['for_you', 'following', 'friends', 'caribbean', 'local', 'communities', 'latest'] as const;
+export const FEED_MODES = ['for_you', 'following', 'friends', 'favorites', 'pages', 'caribbean', 'local', 'communities', 'latest'] as const;
 export type FeedMode = (typeof FEED_MODES)[number];
 
 export const POST_MAX_LENGTH = 3000;
@@ -48,6 +48,16 @@ export function buildFeedQuery(input: FeedQueryInput): FeedQuery {
         SELECT addressee_id FROM public.friendships WHERE requester_id = ${param(input.viewerId)} AND status = 'accepted'
         UNION
         SELECT requester_id FROM public.friendships WHERE addressee_id = ${param(input.viewerId)} AND status = 'accepted'
+      )`);
+      break;
+    case 'favorites':
+      where.push(`author_id IN (
+        SELECT target_id FROM public.user_favorites WHERE user_id = ${param(input.viewerId)}
+      )`);
+      break;
+    case 'pages':
+      where.push(`author_id IN (
+        SELECT owner_id FROM public.businesses
       )`);
       break;
     case 'caribbean':
@@ -349,3 +359,28 @@ export function resolveRelationshipBadge(rel: {
   return { type: 'member', label: 'Member' };
 }
 
+// =============================================================================
+// FAVORITES & MULTI-IDENTITY TYPES
+// =============================================================================
+
+export type FavoriteTargetType = 'profile' | 'friend' | 'creator' | 'page' | 'business' | 'community';
+
+export interface UserFavoriteItem {
+  id: string;
+  userId: string;
+  targetId: string;
+  targetType: FavoriteTargetType;
+  createdAt: string;
+}
+
+export type OperatingIdentityType = 'personal' | 'creator' | 'business' | 'community';
+
+export interface OperatingIdentity {
+  id: string;
+  type: OperatingIdentityType;
+  displayName: string;
+  handle: string;
+  avatarUrl?: string | null;
+  isVerified?: boolean;
+  badge?: string | null;
+}

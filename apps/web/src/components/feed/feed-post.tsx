@@ -24,11 +24,15 @@ import {
   Pin,
   Smile,
   MessageSquare,
+  Star,
+  EyeOff,
+  ThumbsDown,
 } from 'lucide-react';
 import UserAvatar from '../user-avatar';
 import OfficialBadge from '../official/official-badge';
 import ReactionPicker, { type ReactionType } from '../reactions/reaction-picker';
 import EmojiPickerPopover from '../emoji/emoji-picker-popover';
+import { createSupabaseBrowserClient } from '../../lib/supabase/browser';
 import TukubiImage from '../ui/tukubi-image';
 import TukubiVideoPlayer from '../media/tukubi-video-player';
 import TukubiGallery from '../media/tukubi-gallery';
@@ -113,9 +117,42 @@ export default function FeedPost({
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isEmojiPickerOpen, setIsEmojiPickerOpen] = useState(false);
   const [isCommentEmojiPickerOpen, setIsCommentEmojiPickerOpen] = useState(false);
+  const [isHidden, setIsHidden] = useState(false);
+  const [isNotInterested, setIsNotInterested] = useState(false);
+  const [isFavorite, setIsFavorite] = useState(false);
 
   const isAuthor = Boolean(currentUserId && post.authorId === currentUserId);
   const rootComments = commentList.filter((c) => !c.parent_id);
+
+  if (isHidden) {
+    return (
+      <div className="glass rounded-2xl p-4 text-center text-xs text-brand-sandstone/60 border border-white/5 flex items-center justify-between">
+        <span>Post hidden from your current feed session.</span>
+        <button
+          type="button"
+          onClick={() => setIsHidden(false)}
+          className="text-brand-caribbeanSea font-bold hover:underline"
+        >
+          Undo
+        </button>
+      </div>
+    );
+  }
+
+  if (isNotInterested) {
+    return (
+      <div className="glass rounded-2xl p-4 text-center text-xs text-brand-sandstone/60 border border-white/5 flex items-center justify-between">
+        <span>Thanks for your feedback. We will show fewer posts like this.</span>
+        <button
+          type="button"
+          onClick={() => setIsNotInterested(false)}
+          className="text-brand-goldenHour font-bold hover:underline"
+        >
+          Undo
+        </button>
+      </div>
+    );
+  }
 
   return (
     <article
@@ -247,6 +284,51 @@ export default function FeedPost({
               >
                 <Bookmark className={`w-4 h-4 ${isSaved ? 'fill-brand-caribbeanSea text-brand-caribbeanSea' : 'text-slate-400'}`} />
                 <span>{isSaved ? 'Remove Bookmark' : 'Save Post'}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={async () => {
+                  setIsFavorite(!isFavorite);
+                  setIsMenuOpen(false);
+                  try {
+                    const supabase = createSupabaseBrowserClient();
+                    if (supabase && currentUserId) {
+                      await supabase.rpc('toggle_favorite', {
+                        p_target_id: post.authorId,
+                        p_target_type: 'creator',
+                      });
+                    }
+                  } catch {}
+                }}
+                className="w-full text-left px-3 py-2.5 rounded-xl text-slate-200 hover:bg-white/10 flex items-center gap-2.5 font-semibold transition-colors min-h-[40px]"
+              >
+                <Star className={`w-4 h-4 ${isFavorite ? 'fill-brand-goldenHour text-brand-goldenHour' : 'text-slate-400'}`} />
+                <span>{isFavorite ? 'Remove from Favorites' : 'Add Author to Favorites'}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setIsHidden(true);
+                  setIsMenuOpen(false);
+                }}
+                className="w-full text-left px-3 py-2.5 rounded-xl text-slate-200 hover:bg-white/10 flex items-center gap-2.5 font-semibold transition-colors min-h-[40px]"
+              >
+                <EyeOff className="w-4 h-4 text-slate-400" />
+                <span>Hide Post</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setIsNotInterested(true);
+                  setIsMenuOpen(false);
+                }}
+                className="w-full text-left px-3 py-2.5 rounded-xl text-slate-200 hover:bg-white/10 flex items-center gap-2.5 font-semibold transition-colors min-h-[40px]"
+              >
+                <ThumbsDown className="w-4 h-4 text-slate-400" />
+                <span>Not Interested</span>
               </button>
 
               {currentUserId !== post.authorId && post.handle && (

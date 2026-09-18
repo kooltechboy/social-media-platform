@@ -11,6 +11,9 @@ export interface MobileProfile {
 export interface MobilePost {
   id: string;
   author: string;
+  authorHandle?: string;
+  authorAvatar?: string | null;
+  isVerified?: boolean;
   location: string;
   time: string;
   body: string;

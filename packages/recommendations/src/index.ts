@@ -147,6 +147,7 @@ export interface RecommendationContext {
   viewerInterests?: string[];
   friendIds?: Set<string>;
   followingIds?: Set<string>;
+  favoriteIds?: Set<string>;
   blockedIds?: Set<string>;
   dismissedIds?: Set<string>;
 }
@@ -167,6 +168,13 @@ export function scoreRecommendationCandidate<T>(
   let baseScore = 10;
   let reason = 'Suggested for you';
   let badgeIcon: ScoredRecommendation['badgeIcon'] = 'trending';
+
+  // 0. Explicit Favorites Boost
+  if (context.favoriteIds?.has(candidate.id)) {
+    baseScore += 35;
+    reason = '⭐ In your Favorites';
+    badgeIcon = 'verified';
+  }
 
   // 1. Social Graph Signals (Mutual Connections)
   const mutuals = candidate.mutualCount ?? 0;
