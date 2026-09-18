@@ -6,7 +6,7 @@ export const ISLAND_VIBES_THEME = {
   id: 'island-vibes',
   name: 'Island Vibes',
   url: '/backgrounds/island-vibes.jpg',
-  fallbackUrl: 'https://images.unsplash.com/photo-1531761535209-180857e963b9?auto=format&fit=crop&w=2400&q=90',
+  fallbackUrl: '/backgrounds/sunset-shore.jpg',
   description: 'Tropical beach gathering, warm festive energy, and vibrant Caribbean culture',
   overlayGradient: `linear-gradient(to bottom,
     rgba(17, 13, 23, 0.60) 0%,

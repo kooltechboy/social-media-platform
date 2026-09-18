@@ -26,8 +26,14 @@ export async function POST(req: NextRequest) {
 
   const expectedSecret = process.env.CARRIER_WEBHOOK_SECRET;
 
-  // Strict secret check unless in test/dev environment without configured secret
-  if (expectedSecret && secretHeader !== expectedSecret) {
+  if (!expectedSecret) {
+    return NextResponse.json(
+      { error: 'Carrier webhook endpoint is not configured (missing secret)' },
+      { status: 503 }
+    );
+  }
+
+  if (secretHeader !== expectedSecret) {
     return NextResponse.json(
       { error: 'Unauthorized: Invalid carrier webhook secret' },
       { status: 401 }

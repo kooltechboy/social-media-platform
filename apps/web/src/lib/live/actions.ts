@@ -165,7 +165,32 @@ export async function createLivestreamAction(
     return { error: 'Database service unavailable.' };
   }
 
-  const isScheduled = Boolean(params.scheduledFor && new Date(params.scheduledFor).getTime() > Date.now());
+  let cloudflareUid: string | null = null;
+  let rtmpsUrl: string | null = null;
+  let rtmpsKey: string | null = null;
+  let playbackHlsUrl: string | null = null;
+  let webRtcUrl: string | null = null;
+
+  try {
+    const { createCloudflareStreamClient } = await import('@caribbean/live');
+    const cfClient = createCloudflareStreamClient();
+    if (cfClient) {
+      const liveInput = await cfClient.createLiveInput({
+        name: params.title.trim(),
+        creatorId: user.id,
+      });
+      cloudflareUid = liveInput.uid;
+      rtmpsUrl = liveInput.rtmpsUrl;
+      rtmpsKey = liveInput.rtmpsKey;
+      playbackHlsUrl = liveInput.playbackHlsUrl;
+      webRtcUrl = liveInput.webRtcUrl;
+    }
+  } catch (cfErr) {
+    // Graceful fallback if Cloudflare Stream credentials are unconfigured in environment
+  }
+
+  const effectiveStreamUrl = playbackHlsUrl || params.streamUrl?.trim() || null;
+  const isScheduled = Boolean(params.scheduledFor && new Date(params.scheduledFor) > new Date());
 
   const { data, error } = await supabase
     .from('livestreams')
@@ -177,8 +202,13 @@ export async function createLivestreamAction(
       scheduled_for: isScheduled && params.scheduledFor ? new Date(params.scheduledFor).toISOString() : null,
       started_at: isScheduled ? null : new Date().toISOString(),
       peak_viewers: 0,
-      stream_url: params.streamUrl?.trim() || null,
-      playback_path: params.streamUrl?.trim() || null,
+      cloudflare_uid: cloudflareUid,
+      rtmps_url: rtmpsUrl,
+      rtmps_key: rtmpsKey,
+      playback_hls_url: playbackHlsUrl,
+      webrtc_url: webRtcUrl,
+      stream_url: effectiveStreamUrl,
+      playback_path: effectiveStreamUrl,
       category: params.category || 'Culture & Talk',
       country_id: params.countryId || null,
       country_iso: params.countryIso || null,
@@ -318,7 +348,7 @@ export async function saveLiveReplayToReelAction(
       creator_id: user.id,
       title: customTitle || replay.title,
       description: replay.description,
-      video_kind: 'short',
+      video_kind: 'reel',
       visibility: 'public',
       aspect_ratio: '9:16',
       storage_path: replay.replay_storage_path,

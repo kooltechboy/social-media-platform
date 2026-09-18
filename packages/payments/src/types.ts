@@ -114,6 +114,7 @@ export interface PolicyRequest {
   platform: Platform;
   productType: ProductType;
   amountMinor: number;
+  currency?: string;
 }
 
 export interface PolicyDecision {

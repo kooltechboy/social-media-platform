@@ -120,6 +120,8 @@ export default function LiveHostStudio({ user }: LiveHostStudioProps) {
   const animationFrameRef = useRef<number | null>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const chatScrollRef = useRef<HTMLDivElement | null>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const recordedChunksRef = useRef<Blob[]>([]);
 
   // Realtime Presence for Broadcaster Telemetry
   useEffect(() => {
@@ -387,6 +389,28 @@ export default function LiveHostStudio({ user }: LiveHostStudioProps) {
         return;
       }
 
+      // Start local stream recording for replay & clipping
+      if (stream) {
+        try {
+          recordedChunksRef.current = [];
+          const mimeType = typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSupported('video/webm;codecs=vp9,opus')
+            ? 'video/webm;codecs=vp9,opus'
+            : typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSupported('video/webm')
+            ? 'video/webm'
+            : 'video/mp4';
+          const mr = new MediaRecorder(stream, { mimeType });
+          mr.ondataavailable = (e) => {
+            if (e.data && e.data.size > 0) {
+              recordedChunksRef.current.push(e.data);
+            }
+          };
+          mr.start(1000);
+          mediaRecorderRef.current = mr;
+        } catch (recErr) {
+          console.warn('[Studio] Local media recording not supported or failed to start:', recErr);
+        }
+      }
+
       setLivestreamId(res.streamId || 'stream-active');
       setIsLive(true);
       setElapsedSeconds(0);
@@ -412,9 +436,34 @@ export default function LiveHostStudio({ user }: LiveHostStudioProps) {
   async function handleConfirmEnd() {
     setIsEnding(true);
     try {
+      if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+        mediaRecorderRef.current.stop();
+      }
+
+      let replayPath: string | null = null;
+      if (livestreamId && recordedChunksRef.current.length > 0) {
+        try {
+          const mimeType = mediaRecorderRef.current?.mimeType || 'video/webm';
+          const ext = mimeType.includes('mp4') ? 'mp4' : 'webm';
+          const blob = new Blob(recordedChunksRef.current, { type: mimeType });
+          const storagePath = `${user.id}/${livestreamId}.${ext}`;
+          const supabase = createSupabaseBrowserClient();
+          if (supabase) {
+            const { error: upErr } = await supabase.storage
+              .from('live-replays')
+              .upload(storagePath, blob, { contentType: mimeType, upsert: true });
+
+            if (!upErr) {
+              replayPath = storagePath;
+            }
+          }
+        } catch (uploadErr) {
+          console.warn('[Studio] Replay video upload failed:', uploadErr);
+        }
+      }
+
       if (livestreamId) {
-        const replayPath = `live-replays/${user.id}/${livestreamId}.mp4`;
-        const res = await endLivestreamAction(livestreamId, peakViewers, replayPath);
+        const res = await endLivestreamAction(livestreamId, peakViewers, replayPath || undefined);
         if (res.replayId) {
           setReplayId(res.replayId);
         }

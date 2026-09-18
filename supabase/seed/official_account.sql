@@ -4,7 +4,7 @@
 
 DO $$
 DECLARE
-    official_id uuid := 'a0000000-0000-4000-8000-000000000001';
+    official_id uuid := 'ff1e8b1f-7796-4424-b341-3b39e1c993bd';
     lounge_id uuid;
 BEGIN
     -- Official platform identity
@@ -16,29 +16,33 @@ BEGIN
             '{"provider":"email","providers":["email"]}', '{"official":true}', 'authenticated', 'authenticated')
     ON CONFLICT (id) DO NOTHING;
 
-    INSERT INTO public.profiles (id, username, display_name, bio)
+    INSERT INTO public.profiles (id, username, display_name, bio, is_official, is_verified)
     VALUES (official_id, 'tukubi', 'TUKUBI',
-            'The digital home of the Caribbean and its global diaspora. Social, creators, businesses, events and commerce — one ecosystem.')
-    ON CONFLICT (id) DO NOTHING;
-
+            'The digital home of the Caribbean and its global diaspora. Social, creators, businesses, events and commerce — one ecosystem.',
+            true, true)
+    ON CONFLICT (id) DO UPDATE SET
+        is_official = true,
+        is_verified = true;
 
     -- Flagship community
     INSERT INTO public.communities (name, slug, description, join_policy, created_by)
-    VALUES ('Tukubi Lounge', 'caribbean-one-lounge',
+    VALUES ('Tukubi Lounge', 'tukubi-lounge',
             'The official town square: announcements, feedback, and diaspora introductions.',
             'public', official_id)
     ON CONFLICT (slug) DO NOTHING
     RETURNING id INTO lounge_id;
 
     IF lounge_id IS NULL THEN
-        SELECT id INTO lounge_id FROM public.communities WHERE slug = 'caribbean-one-lounge';
+        SELECT id INTO lounge_id FROM public.communities WHERE slug = 'tukubi-lounge';
     END IF;
 
-    INSERT INTO public.community_members (community_id, profile_id, role_id, membership_status)
-    SELECT lounge_id, official_id, r.id, 'active'
-    FROM public.community_roles r
-    WHERE r.community_id = lounge_id AND r.name = 'owner'
-    ON CONFLICT (community_id, profile_id) DO NOTHING;
+    IF lounge_id IS NOT NULL THEN
+        INSERT INTO public.community_members (community_id, profile_id, role_id, membership_status)
+        SELECT lounge_id, official_id, r.id, 'active'
+        FROM public.community_roles r
+        WHERE r.community_id = lounge_id AND r.name = 'owner'
+        ON CONFLICT (community_id, profile_id) DO NOTHING;
+    END IF;
 
     RAISE NOTICE 'Seed complete: official account + launch content ready';
 END $$;

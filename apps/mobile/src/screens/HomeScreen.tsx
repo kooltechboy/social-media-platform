@@ -10,6 +10,8 @@ import {
   SafeAreaView,
   ActivityIndicator,
   Image,
+  Share,
+  Alert,
 } from 'react-native';
 import { TOKENS } from '../theme/tokens';
 import { supabase, type MobilePost } from '../lib/supabase';
@@ -43,18 +45,14 @@ export function HomeScreen({ navigation }: any) {
   const [reels, setReels] = useState<ReelPreview[]>([]);
   const [products, setProducts] = useState<MarketPreview[]>([]);
 
-  const sampleStories: StoryItem[] = [
-    { id: '1', name: 'Your Moment', handle: 'you', hasUnseen: false },
-    { id: '2', name: 'TUKUBI Live', handle: 'tukubi', hasUnseen: true },
-    { id: '3', name: 'Soca Vibes', handle: 'soca', hasUnseen: true },
-    { id: '4', name: 'Reggae Sun', handle: 'reggae', hasUnseen: true },
-    { id: '5', name: 'Haiti Art', handle: 'ayiti', hasUnseen: true },
-    { id: '6', name: 'Trini Carnival', handle: 'carnival', hasUnseen: true },
-  ];
+  const [stories, setStories] = useState<StoryItem[]>([
+    { id: 'add_story', name: 'Your Moment', handle: 'you', hasUnseen: false },
+  ]);
+  const [likedPosts, setLikedPosts] = useState<Record<string, boolean>>({});
 
   const fetchDiscoveryData = async () => {
     try {
-      const [postsRes, reelsRes, productsRes] = await Promise.all([
+      const [postsRes, reelsRes, productsRes, storiesRes] = await Promise.all([
         supabase
           .from('posts')
           .select(`
@@ -88,6 +86,11 @@ export function HomeScreen({ navigation }: any) {
           .eq('is_active', true)
           .order('created_at', { ascending: false })
           .limit(3),
+        supabase
+          .from('stories')
+          .select('id, profiles(display_name, username)')
+          .gt('expires_at', new Date().toISOString())
+          .limit(10),
       ]);
 
       if (postsRes.data) {
@@ -137,6 +140,22 @@ export function HomeScreen({ navigation }: any) {
           })
         );
       }
+
+      const realStories: StoryItem[] = [
+        { id: 'add_story', name: 'Your Moment', handle: 'you', hasUnseen: false },
+      ];
+      if (storiesRes.data && storiesRes.data.length > 0) {
+        storiesRes.data.forEach((s: any) => {
+          const p = Array.isArray(s.profiles) ? s.profiles[0] : s.profiles;
+          realStories.push({
+            id: s.id,
+            name: p?.display_name || p?.username || 'Creator',
+            handle: p?.username || 'creator',
+            hasUnseen: true,
+          });
+        });
+      }
+      setStories(realStories);
     } catch (err) {
       console.warn('Discovery fetch error', err);
     } finally {
@@ -152,6 +171,49 @@ export function HomeScreen({ navigation }: any) {
   const onRefresh = async () => {
     setRefreshing(true);
     await fetchDiscoveryData();
+  };
+
+  const handleToggleLike = async (postId: string) => {
+    const isCurrentlyLiked = Boolean(likedPosts[postId]);
+    setLikedPosts((prev) => ({ ...prev, [postId]: !isCurrentlyLiked }));
+    setPosts((prev) =>
+      prev.map((p) =>
+        p.id === postId
+          ? { ...p, likes: Math.max(0, isCurrentlyLiked ? p.likes - 1 : p.likes + 1) }
+          : p
+      )
+    );
+
+    try {
+      const { data: userData } = await supabase.auth.getUser();
+      if (userData?.user) {
+        if (!isCurrentlyLiked) {
+          await supabase.from('post_reactions').insert({
+            post_id: postId,
+            profile_id: userData.user.id,
+            reaction_type: 'like',
+          });
+        } else {
+          await supabase
+            .from('post_reactions')
+            .delete()
+            .eq('post_id', postId)
+            .eq('profile_id', userData.user.id);
+        }
+      }
+    } catch {
+      // Non-blocking
+    }
+  };
+
+  const handleSharePost = async (post: MobilePost) => {
+    try {
+      await Share.share({
+        message: `${post.author} on TUKUBI: "${post.body}"\nhttps://tukubi.com/post/${post.id}`,
+      });
+    } catch {
+      // Cancelled
+    }
   };
 
   const handleQuickPublish = async () => {
@@ -228,12 +290,23 @@ export function HomeScreen({ navigation }: any) {
         {/* 2. Ephemeral Moments & Stories Rail */}
         <View style={styles.storiesContainer}>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.storiesScroll}>
-            {sampleStories.map((story) => (
-              <TouchableOpacity key={story.id} style={styles.storyItem} activeOpacity={0.8}>
+            {stories.map((story) => (
+              <TouchableOpacity
+                key={story.id}
+                style={styles.storyItem}
+                activeOpacity={0.8}
+                onPress={() => {
+                  if (story.id === 'add_story') {
+                    navigation?.navigate('Create');
+                  } else {
+                    Alert.alert('Story', `${story.name}'s story`);
+                  }
+                }}
+              >
                 <View style={[styles.storyRing, story.hasUnseen && styles.storyRingActive]}>
                   <View style={styles.storyInner}>
                     <Text style={styles.storyAvatarText}>
-                      {story.id === '1' ? '+' : story.name.slice(0, 1)}
+                      {story.id === 'add_story' ? '+' : story.name.slice(0, 1)}
                     </Text>
                   </View>
                 </View>
@@ -382,14 +455,39 @@ export function HomeScreen({ navigation }: any) {
 
               <Text style={styles.postBody}>{post.body}</Text>
 
+              {post.mediaUrls && post.mediaUrls.length > 0 && (
+                <Image
+                  source={{ uri: post.mediaUrls[0] }}
+                  style={{ width: '100%', height: 220, borderRadius: 12, marginBottom: 12 }}
+                  resizeMode="cover"
+                />
+              )}
+
               <View style={styles.actionRow}>
-                <TouchableOpacity style={styles.actionBtn}>
-                  <Text style={styles.actionBtnText}>❤️ {post.likes}</Text>
+                <TouchableOpacity
+                  style={styles.actionBtn}
+                  onPress={() => handleToggleLike(post.id)}
+                  accessibilityRole="button"
+                  accessibilityLabel="Like post"
+                >
+                  <Text style={[styles.actionBtnText, likedPosts[post.id] && { color: TOKENS.coral, fontWeight: '900' }]}>
+                    {likedPosts[post.id] ? '❤️' : '🤍'} {post.likes}
+                  </Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.actionBtn}>
+                <TouchableOpacity
+                  style={styles.actionBtn}
+                  onPress={() => Alert.alert('Comments', `View comments on post by ${post.author}`)}
+                  accessibilityRole="button"
+                  accessibilityLabel="Comment on post"
+                >
                   <Text style={styles.actionBtnText}>💬 {post.comments}</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.actionBtn}>
+                <TouchableOpacity
+                  style={styles.actionBtn}
+                  onPress={() => handleSharePost(post)}
+                  accessibilityRole="button"
+                  accessibilityLabel="Share post"
+                >
                   <Text style={styles.actionBtnText}>🔁 Share</Text>
                 </TouchableOpacity>
               </View>

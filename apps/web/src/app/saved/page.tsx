@@ -25,7 +25,7 @@ export default async function SavedPostsPage() {
       .select(`
         post_id,
         posts (
-          id, content, created_at, visibility,
+          id, content, created_at, visibility, likes_count, comments_count, shares_count, media_urls, cultural_tags, location_tag,
           profiles ( id, display_name, username, avatar_url, is_verified )
         )
       `)
@@ -48,9 +48,12 @@ export default async function SavedPostsPage() {
             verified: prof?.is_verified,
             content: p.content,
             time: p.created_at,
-            likes: 0,
-            reposts: 0,
-            comments: 0,
+            mediaUrls: Array.isArray(p.media_urls) ? p.media_urls : [],
+            culturalTags: Array.isArray(p.cultural_tags) ? p.cultural_tags : [],
+            locationTag: p.location_tag || undefined,
+            likes: Number(p.likes_count) || 0,
+            reposts: Number(p.shares_count) || 0,
+            comments: Number(p.comments_count) || 0,
             isUserLiked: false,
           };
         });

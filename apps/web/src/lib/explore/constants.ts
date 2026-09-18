@@ -33,6 +33,8 @@ export interface ExploreCounts {
   livestreams: number;
   sounds: number;
   stories: number;
+  officialStories?: number;
+  trendingSignals?: number;
 }
 
 export interface ExploreQueryResult {

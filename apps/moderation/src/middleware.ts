@@ -19,9 +19,30 @@ export async function middleware(request: NextRequest) {
   });
 
   const { data: { user } } = await supabase.auth.getUser();
+  const isLoginRoute = request.nextUrl.pathname.startsWith('/login');
 
-  if (!user && !request.nextUrl.pathname.startsWith('/login')) {
-    return NextResponse.redirect(new URL('/login', request.url));
+  if (!user) {
+    if (!isLoginRoute) {
+      return NextResponse.redirect(new URL('/login', request.url));
+    }
+    return response;
+  }
+
+  // Defense-in-depth: Verify moderator role authorization in middleware
+  const { data: account } = await supabase
+    .from('accounts')
+    .select('role, status')
+    .or(`profile_id.eq.${user.id},id.eq.${user.id}`)
+    .maybeSingle();
+
+  const isAuthorized = account && account.status === 'active' && ['moderator', 'admin', 'management', 'superadmin', 'super_admin'].includes(account.role);
+
+  if (!isAuthorized) {
+    if (!isLoginRoute) {
+      return NextResponse.redirect(new URL('/login?error=unauthorized', request.url));
+    }
+  } else if (isLoginRoute) {
+    return NextResponse.redirect(new URL('/', request.url));
   }
 
   return response;

@@ -9,6 +9,7 @@ import {
   SafeAreaView,
   RefreshControl,
   Image,
+  Alert,
 } from 'react-native';
 import { Audio } from 'expo-av';
 import { TOKENS } from '../theme/tokens';
@@ -86,15 +87,23 @@ export function PodcastsScreen() {
       const { data, error } = await query;
       if (!error && data && data.length > 0) {
         const mapped: PodcastShow[] = data.map((d: any) => {
-          const eps = (d.podcast_episodes || []).map((ep: any) => ({
-            id: ep.id,
-            title: ep.title,
-            durationFormatted: `${Math.floor((ep.duration_seconds || 1800) / 60)} mins`,
-            audioUrl: ep.audio_path?.startsWith('http')
-              ? ep.audio_path
-              : 'https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3',
-            showNotes: ep.show_notes,
-          }));
+          const eps = (d.podcast_episodes || []).map((ep: any) => {
+            let resolvedUrl = '';
+            if (ep.audio_path) {
+              if (ep.audio_path.startsWith('http')) {
+                resolvedUrl = ep.audio_path;
+              } else {
+                resolvedUrl = supabase.storage.from('podcast-audio').getPublicUrl(ep.audio_path).data.publicUrl;
+              }
+            }
+            return {
+              id: ep.id,
+              title: ep.title,
+              durationFormatted: `${Math.floor((ep.duration_seconds || 1800) / 60)} mins`,
+              audioUrl: resolvedUrl,
+              showNotes: ep.show_notes,
+            };
+          });
 
           return {
             id: d.id,
@@ -161,9 +170,14 @@ export function PodcastsScreen() {
       setPlayingTitle(`${showTitle} • ${ep.title}`);
       setIsPlaying(true);
 
-      const targetUrl = ep.audioUrl || 'https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3';
+      if (!ep.audioUrl) {
+        Alert.alert('Audio Unavailable', 'This episode does not have an audio file attached yet.');
+        setIsPlaying(false);
+        return;
+      }
+
       const { sound } = await Audio.Sound.createAsync(
-        { uri: targetUrl },
+        { uri: ep.audioUrl },
         { shouldPlay: true }
       );
       soundRef.current = sound;

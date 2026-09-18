@@ -19,7 +19,9 @@ export type NotificationKind =
   | 'award_nominated'
   | 'award_won'
   | 'certification_completed'
-  | 'labs_invited';
+  | 'labs_invited'
+  | 'friend_request'
+  | 'friend_accepted';
 
 export type NotificationChannel = 'in_app' | 'push' | 'email' | 'sms';
 
@@ -51,6 +53,8 @@ export const TEMPLATES: Record<NotificationKind, NotificationTemplate> = {
   award_won: { kind: 'award_won', channels: ['in_app', 'push', 'email'], batchSize: 1 },
   certification_completed: { kind: 'certification_completed', channels: ['in_app', 'push', 'email'], batchSize: 1 },
   labs_invited: { kind: 'labs_invited', channels: ['in_app', 'push'], batchSize: 1 },
+  friend_request: { kind: 'friend_request', channels: ['in_app', 'push'], batchSize: 1 },
+  friend_accepted: { kind: 'friend_accepted', channels: ['in_app', 'push'], batchSize: 1 },
 };
 
 export interface PendingNotification {

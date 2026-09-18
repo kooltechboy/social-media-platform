@@ -37,8 +37,9 @@
       "@caribbean/recommendations": ["./packages/recommendations/src"],
       "@caribbean/advertising": ["./packages/advertising/src"],
       "@caribbean/business": ["./packages/business/src"],
-      "@caribbean/marketplace": ["./packages/marketplace/src"]
+      "@caribbean/marketplace": ["./packages/marketplace/src"],
+      "@/*": ["./apps/web/src/*"]
     }
   },
-  "exclude": ["node_modules", "dist", ".next"]
+  "exclude": ["node_modules", "dist", ".next", "apps", "supabase/functions", "scripts"]
 }

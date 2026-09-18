@@ -26,7 +26,7 @@ describe('Caribbean Sounds Registry & Architecture', () => {
       expect(sound.id).toMatch(/^sound-[a-z0-9-]+$/);
       expect(sound.title.length).toBeGreaterThan(0);
       expect(sound.artist.length).toBeGreaterThan(0);
-      expect(sound.artistHandle.length).toBeGreaterThan(0);
+      expect(sound.artistHandle?.length).toBeGreaterThan(0);
       expect(sound.countryIso).toMatch(/^[A-Z]{3}$/);
       expect(sound.flag.length).toBeGreaterThan(0);
 

@@ -137,3 +137,48 @@ export async function resolveAppealAction(
   return { error: null, success: `Appeal ${decision}.` };
 }
 
+export interface ModeratorApplicationData {
+  fullName: string;
+  email: string;
+  country: string;
+  experience: string;
+  reasons: string;
+  dialects: string[];
+}
+
+export async function submitModeratorApplicationAction(
+  data: ModeratorApplicationData
+): Promise<{ success: boolean; error: string | null }> {
+  if (!data.fullName || !data.email || !data.country) {
+    return { success: false, error: 'Full name, email, and country are required.' };
+  }
+
+  const { getCurrentUser } = await import('../supabase/server');
+  const user = await getCurrentUser();
+  const serviceClient = await createServiceSupabaseClient();
+  if (!serviceClient) {
+    return { success: false, error: 'Database service unavailable.' };
+  }
+
+  const { error } = await serviceClient.from('audit_logs').insert({
+    action: 'moderator_application_submitted',
+    target_table: 'moderator_applications',
+    actor_id: user?.id || null,
+    new_values: {
+      fullName: data.fullName,
+      email: data.email,
+      country: data.country,
+      experience: data.experience,
+      reasons: data.reasons,
+      dialects: data.dialects,
+      submittedAt: new Date().toISOString(),
+    },
+  });
+
+  if (error) {
+    return { success: false, error: error.message };
+  }
+
+  return { success: true, error: null };
+}
+

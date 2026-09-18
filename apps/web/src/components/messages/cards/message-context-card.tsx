@@ -129,7 +129,7 @@ export default function MessageContextCard({
           <p className="font-bold text-white truncate">{order.itemsSummary || `${order.itemsCount} items`}</p>
           <div className="flex items-center justify-between text-[11px] text-slate-300">
             <span>Total: <strong className="text-brand-goldenHour">{totalFormatted}</strong></span>
-            <span className="capitalize">{order.fulfillmentType.replace('_', ' ')}</span>
+            <span className="capitalize">{(order.fulfillmentType || 'shipping').replace('_', ' ')}</span>
           </div>
         </div>
 

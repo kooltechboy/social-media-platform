@@ -13,6 +13,7 @@
   "dependencies": {
     "@caribbean/ai": "workspace:*",
     "@caribbean/design-system": "workspace:*",
+    "@caribbean/localization": "workspace:*",
     "@caribbean/payments": "workspace:*",
     "@expo/vector-icons": "^15.1.1",
     "@react-navigation/bottom-tabs": "^7.18.17",

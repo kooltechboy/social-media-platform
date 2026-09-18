@@ -5,6 +5,7 @@ export const TOKENS = {
   textPrimary: '#FDF2E9', // Warm sandstone white
   textMuted: '#A1A1AA',   // Muted sandstone slate
   action: '#FF7A59',      // Vibrant sunrise coral (primary action)
+  coral: '#FF7A59',       // Sunrise coral
   actionSecondary: '#00B4D8', // Tropical Caribbean Sea
   accent: '#FFB347',      // Warm golden hour
   purple: '#8B5CF6',      // Sunset purple

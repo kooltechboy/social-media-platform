@@ -68,9 +68,13 @@ export async function GET(request: Request | NextRequest) {
     }
   }
 
-  const host = request.headers.get('host') || 'tukubi.caribbean';
-  const protocol = request.headers.get('x-forwarded-proto') || 'https';
-  const baseUrl = `${protocol}://${host}`;
+  const allowedHostnames = ['tukubi.caribbean', 'tukubi.com', 'localhost', '127.0.0.1'];
+  const isAllowedHost = allowedHostnames.some(
+    (h) => parsedTargetUrl.hostname === h || parsedTargetUrl.hostname.endsWith(`.${h}`)
+  );
+  const baseUrl = isAllowedHost
+    ? parsedTargetUrl.origin
+    : (process.env.NEXT_PUBLIC_APP_URL || 'https://tukubi.com').replace(/\/$/, '');
   const embedSrc = `${baseUrl}/embed/${resourceType}/${resourceId}`;
 
   const titles: Record<string, string> = {

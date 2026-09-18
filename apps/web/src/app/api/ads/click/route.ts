@@ -35,7 +35,9 @@ export async function POST(request: NextRequest) {
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const impressionIdStr = searchParams.get('impressionId');
-  const destination = searchParams.get('to') || '/';
+  const destinationParam = searchParams.get('to');
+
+  let verifiedDestination: string | null = null;
 
   if (impressionIdStr) {
     const impressionId = parseInt(impressionIdStr, 10);
@@ -46,6 +48,20 @@ export async function GET(request: NextRequest) {
           await supabase.from('ad_clicks').insert({
             impression_id: impressionId,
           });
+
+          // Fetch verified destination URL from the database ad record
+          const { data: impression } = await supabase
+            .from('ad_impressions')
+            .select('ad_id, ads(destination_url)')
+            .eq('id', impressionId)
+            .maybeSingle();
+
+          if (impression && impression.ads) {
+            const ad = Array.isArray(impression.ads) ? impression.ads[0] : impression.ads;
+            if (ad?.destination_url) {
+              verifiedDestination = (ad as any).destination_url;
+            }
+          }
         }
       } catch {
         // Non-blocking telemetry failure
@@ -53,15 +69,27 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  // Safe redirect validation
-  let targetUrl = destination;
-  try {
-    const parsed = new URL(destination, request.url);
-    if (parsed.protocol === 'http:' || parsed.protocol === 'https:') {
-      targetUrl = parsed.toString();
+  // Determine final safe target URL
+  let targetUrl = '/';
+
+  if (verifiedDestination) {
+    try {
+      const parsed = new URL(verifiedDestination, request.url);
+      if (parsed.protocol === 'http:' || parsed.protocol === 'https:') {
+        targetUrl = parsed.toString();
+      }
+    } catch {
+      targetUrl = '/';
     }
-  } catch {
-    targetUrl = '/';
+  } else if (destinationParam) {
+    // Only allow safe internal relative paths when not backed by an ad record
+    if (
+      destinationParam.startsWith('/') &&
+      !destinationParam.startsWith('//') &&
+      !destinationParam.includes('\\')
+    ) {
+      targetUrl = destinationParam;
+    }
   }
 
   return NextResponse.redirect(new URL(targetUrl, request.url));

@@ -14,16 +14,21 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'Missing query parameter' }, { status: 400 });
     }
 
-    // Simple rate limiting
+    // Per-client rate limiting (IP-aware for unauthenticated callers)
+    const ip = request.headers.get('cf-connecting-ip') ||
+      request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+      request.headers.get('x-real-ip') ||
+      'unknown-ip';
     const cookieStore = await cookies();
-    const sessionId = cookieStore.get('sb-tukubi-auth-token')?.value || 'anonymous';
+    const token = cookieStore.get('sb-tukubi-auth-token')?.value;
+    const clientKey = token ? `user-${token.slice(-16)}` : `ip-${ip}`;
     const now = Date.now();
-    const lastCall = rateLimits.get(`${sessionId}-search`) || 0;
+    const lastCall = rateLimits.get(`${clientKey}-search`) || 0;
     
     if (now - lastCall < 6000) { // 10 searches per minute -> ~6 seconds between searches
       return NextResponse.json({ error: 'Rate limit exceeded. Please wait a moment.' }, { status: 429 });
     }
-    rateLimits.set(`${sessionId}-search`, now);
+    rateLimits.set(`${clientKey}-search`, now);
 
     const searchResponse = await askCaribbean(q);
     const results = searchResponse.results;

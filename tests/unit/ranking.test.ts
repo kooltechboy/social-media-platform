@@ -7,7 +7,7 @@ import {
   MIN_SAFETY_SCORE,
 } from '../../packages/recommendations/src/index';
 import { buildRankedFeed } from '../../apps/web/src/lib/feed/ranking';
-import { type SupabaseClient } from '@supabase/supabase-js';
+type SupabaseClient = any;
 import { encodeCursor } from '../../packages/database/src/index'; // assume it's here or similar
 
 const safeSignals = {

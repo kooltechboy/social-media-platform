@@ -2,6 +2,7 @@
 // Implements versioned rules, transparent buyer/seller economics, and immutable snapshots.
 
 import type { AccountCategory, CommissionRule, CommissionSnapshot } from './types';
+export type { CommissionRule, CommissionSnapshot } from './types';
 
 export interface CommissionCalculationInput {
   grossMinor: number;

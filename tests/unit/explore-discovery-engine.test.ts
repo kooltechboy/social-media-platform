@@ -183,6 +183,10 @@ describe('Zero-Mock Empty State Guarantees', () => {
       sounds: [],
       officialStories: [],
       trendingSignals: [],
+      selectedVibe: null,
+      selectedCountry: null,
+      selectedHub: null,
+      selectedGeography: null,
       totalMatches: 0,
       counts: {
         posts: 0,
@@ -195,6 +199,7 @@ describe('Zero-Mock Empty State Guarantees', () => {
         podcasts: 0,
         livestreams: 0,
         sounds: 0,
+        stories: 0,
         officialStories: 0,
         trendingSignals: 0,
       },

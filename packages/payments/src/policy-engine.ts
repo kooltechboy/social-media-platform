@@ -3,6 +3,8 @@
 import type { CapabilityRule, PolicyDecision, PolicyRequest, ProductType } from './types';
 import { DEFAULT_CAPABILITY_RULES } from './capability-registry';
 
+export const DEFAULT_ROUTING_RULES = DEFAULT_CAPABILITY_RULES;
+
 const DIGITAL_PRODUCT_TYPES: ProductType[] = ['digital_subscription', 'live_gift'];
 
 export class PaymentPolicyEngine {

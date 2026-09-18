@@ -5,6 +5,7 @@ export interface PSPChargeParams {
   currency: string;
   idempotencyKey: string;
   paymentMethodToken?: string;
+  sourceToken?: string;
   metadata?: Record<string, string>;
   customerEmail?: string;
   customerName?: string;

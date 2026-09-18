@@ -21,8 +21,8 @@ describe('Saved posts logic', () => {
   });
 
   it('saved_posts RLS: other user cannot read saves', () => {
-    const authUid = 'user-xyz';
-    const savedByUserId = 'user-abc';
+    const authUid: string = 'user-xyz';
+    const savedByUserId: string = 'user-abc';
     const canRead = savedByUserId === authUid;
     expect(canRead).toBe(false);
   });

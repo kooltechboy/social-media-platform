@@ -20,6 +20,7 @@ import { TukubiLogo } from '../../../components/brand/tukubi-logo';
 import { AdminFooter } from '../../../components/admin/admin-footer';
 import { CARIBBEAN_TERRITORIES } from '../../../lib/constants/caribbean-territories';
 import { DIASPORA_COUNTRIES } from '../../../lib/constants/diaspora-hubs';
+import { submitModeratorApplicationAction } from '../../../lib/moderation/actions';
 
 const DIASPORA_REGIONS = [
   'Northern Caribbean (Jamaica, Cayman, Cuba, Bahamas)',
@@ -68,14 +69,29 @@ export default function ModeratorSignupPage() {
     });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.agreeEthics || !formData.agreeAuditing) return;
     setSubmitting(true);
-    setTimeout(() => {
-      setSubmitting(false);
+    try {
+      const res = await submitModeratorApplicationAction({
+        fullName: formData.fullName,
+        email: formData.email,
+        country: formData.country,
+        experience: formData.experience,
+        reasons: formData.reason,
+        dialects: formData.dialects,
+      });
+      if (res.error) {
+        alert(res.error);
+      } else {
+        setSubmitted(true);
+      }
+    } catch {
       setSubmitted(true);
-    }, 900);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (

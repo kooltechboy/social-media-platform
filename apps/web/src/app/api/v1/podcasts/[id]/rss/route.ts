@@ -63,18 +63,32 @@ export async function GET(
   const podcastUrl = `${baseUrl}/podcasts/${pod.slug}`;
   const feedUrl = `${baseUrl}/api/v1/podcasts/${pod.id}/rss`;
 
+  const resolvePublicAudioUrl = (path: string): string => {
+    if (!path) return '';
+    if (path.startsWith('http://') || path.startsWith('https://')) return path;
+    const { data } = supabase.storage.from('podcast-audio').getPublicUrl(path);
+    return data?.publicUrl || `${baseUrl}/${path}`;
+  };
+
+  const resolvePublicCoverUrl = (path: string | null): string => {
+    if (!path) return `${baseUrl}/default-cover.jpg`;
+    if (path.startsWith('http://') || path.startsWith('https://')) return path;
+    const { data } = supabase.storage.from('podcast-audio').getPublicUrl(path);
+    return data?.publicUrl || `${baseUrl}/${path}`;
+  };
+
   const rssXml = buildRssFeed({
     podcastTitle: pod.title,
     podcastDescription: pod.description ?? '',
     siteUrl: podcastUrl,
     feedUrl: feedUrl,
     language: pod.language ?? 'en',
-    coverUrl: pod.cover_path ? `${baseUrl}/${pod.cover_path}` : `${baseUrl}/default-cover.jpg`,
+    coverUrl: resolvePublicCoverUrl(pod.cover_path),
     episodes: eps.map((ep) => ({
       guid: ep.id,
       title: ep.title,
       description: ep.show_notes ?? '',
-      audioUrl: `${baseUrl}/${ep.audio_path}`,
+      audioUrl: resolvePublicAudioUrl(ep.audio_path),
       durationSeconds: ep.duration_seconds,
       publishedAt: ep.published_at,
     })),

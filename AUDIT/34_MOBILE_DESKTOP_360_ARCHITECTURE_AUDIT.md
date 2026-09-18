@@ -16,7 +16,7 @@ TUKUBI has evolved from an ambitious multi-package prototype into a production-h
 * **Codebase Health:** 103 Vitest test suites executing 1,025 unit tests with 100% pass rate. 31/31 workspaces compile under TypeScript `strict: true` with zero `any` leaks in public APIs.
 * **Security & RLS:** Row Level Security (RLS) enabled across 100% of public schema tables with restrictive tenancy and ownership predicates.
 * **Financial Integrity:** Zero mutable column balance mutations. Double-entry ledger architecture with idempotency keys and ledger audit reconciliation guarantees.
-* **Zero-Tolerance Inviolable Gate:** Zero prohibited legacy references (including SpotPay) verified by automated AST scanner in CI.
+* **Zero-Tolerance Inviolable Gate:** Zero prohibited legacy references (including legacy payment naming) verified by automated AST scanner in CI.
 * **Cultural Grounding:** First-class Caribbean island identity (country ISOs, territory flags, diaspora hubs, dialect-aware captions, regional pricing).
 
 ---

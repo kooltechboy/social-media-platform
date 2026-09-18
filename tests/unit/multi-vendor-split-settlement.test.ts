@@ -286,7 +286,7 @@ describe('Multi-Vendor Split-Checkout & Double-Entry Ledger Safety (Phase 16)', 
   });
 
   it('correctly allocates creator affiliate commission without breaking zero-sum ledger balance', () => {
-    const cart: CartLineItem[] = [
+    const cart: CartLine[] = [
       {
         productId: 'p-creator-1',
         sellerId: 'seller-artisan',

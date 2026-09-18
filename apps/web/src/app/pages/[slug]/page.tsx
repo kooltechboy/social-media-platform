@@ -21,7 +21,8 @@ import {
 import VerificationBadge, { type VerificationLevel } from '../../../components/verification-badge';
 import OrderButton from '../../../components/order-button';
 import PageCommerceActions from '../../../components/page-commerce-actions';
-import { getCurrentUser } from '../../../lib/supabase/server';
+import PageFollowButton from '../../../components/page-follow-button';
+import { getCurrentUser, createSupabaseServerClient } from '../../../lib/supabase/server';
 
 export const dynamic = 'force-dynamic';
 
@@ -37,7 +38,10 @@ interface PageDetails {
   contactEmail: string;
   avatar: string;
   coverGradient: string;
+  ownerId?: string;
   ownerUsername?: string;
+  isFollowing?: boolean;
+  followerCount?: number;
   products: Array<{
     id: string;
     title: string;
@@ -66,13 +70,39 @@ export default async function ModularPageView({ params }: { params: Promise<{ sl
     const { fetchBusinessPageAction } = await import('../../../lib/business/actions');
     const { business, products } = await fetchBusinessPageAction(slug);
     if (business) {
+      let isFollowing = false;
+      let followerCount = 0;
+
+      const supabase = await createSupabaseServerClient();
+      if (supabase && business.owner_id) {
+        const { data: countRow } = await supabase
+          .from('profile_counts')
+          .select('followers_count')
+          .eq('id', business.owner_id)
+          .maybeSingle();
+        followerCount = countRow?.followers_count || 0;
+
+        if (user) {
+          const { data: followRow } = await supabase
+            .from('follows')
+            .select('following_id')
+            .eq('follower_id', user.id)
+            .eq('following_id', business.owner_id)
+            .maybeSingle();
+          isFollowing = Boolean(followRow);
+        }
+      }
+
       dbPage = {
         slug: business.slug,
         name: business.name,
         category: business.category || 'Verified Caribbean Business',
         verification: 'business_verified' as VerificationLevel,
         location: `${business.country_iso || 'Caribbean'} 🌴`,
-        followers: '0',
+        followers: followerCount.toString(),
+        followerCount,
+        isFollowing,
+        ownerId: business.owner_id,
         description: business.description || 'Verified Caribbean Business page on TUKUBI. The Caribbean Connected.',
         website: business.website || 'https://tukubi.com',
         contactEmail: 'contact@tukubi.com',
@@ -134,9 +164,17 @@ export default async function ModularPageView({ params }: { params: Promise<{ sl
               category={page.category}
               location={page.location}
             />
-            <button className="flex-1 md:flex-initial bg-gradient-to-r from-orange-500 via-amber-500 to-emerald-400 hover:brightness-110 text-slate-950 font-black px-6 py-3 rounded-2xl text-xs sm:text-sm transition-all shadow-md shadow-orange-500/20 min-h-[44px] flex items-center justify-center">
-              Follow ({page.followers})
-            </button>
+            {page.ownerId ? (
+              <PageFollowButton
+                targetUserId={page.ownerId}
+                initialIsFollowing={page.isFollowing ?? false}
+                initialFollowerCount={page.followerCount ?? 0}
+              />
+            ) : (
+              <button disabled className="flex-1 md:flex-initial bg-white/10 text-white/50 font-bold px-6 py-3 rounded-2xl text-xs sm:text-sm min-h-[44px] flex items-center justify-center">
+                Follow ({page.followers})
+              </button>
+            )}
             <Link
               href={`/messages?u=${encodeURIComponent(page.ownerUsername || page.slug)}`}
               className="bg-white/10 hover:bg-white/20 text-white font-black px-5 py-3 rounded-2xl text-xs sm:text-sm border border-white/15 transition-colors min-h-[44px] flex items-center justify-center"
@@ -272,12 +310,26 @@ export default async function ModularPageView({ params }: { params: Promise<{ sl
             </p>
 
             <div className="space-y-3 pt-3 border-t border-white/10 text-xs">
-              <p className="flex items-center gap-2.5 text-brand-sandstone/75">
-                <Globe className="w-4 h-4 text-orange-400 shrink-0" />
-                <a href={page.website} target="_blank" rel="noopener noreferrer" className="text-orange-300 hover:underline font-bold">
-                  {page.website.replace('https://', '')}
-                </a>
-              </p>
+              {(() => {
+                let safeUrl: string | null = null;
+                try {
+                  const parsed = new URL(page.website.startsWith('http://') || page.website.startsWith('https://') ? page.website : `https://${page.website}`);
+                  if (parsed.protocol === 'http:' || parsed.protocol === 'https:') {
+                    safeUrl = parsed.toString();
+                  }
+                } catch {}
+
+                if (!safeUrl) return null;
+
+                return (
+                  <p className="flex items-center gap-2.5 text-brand-sandstone/75">
+                    <Globe className="w-4 h-4 text-orange-400 shrink-0" />
+                    <a href={safeUrl} target="_blank" rel="noopener noreferrer" className="text-orange-300 hover:underline font-bold">
+                      {safeUrl.replace(/^https?:\/\//, '')}
+                    </a>
+                  </p>
+                );
+              })()}
               <p className="flex items-center gap-2.5 text-brand-sandstone/75">
                 <Mail className="w-4 h-4 text-orange-400 shrink-0" />
                 <span className="font-medium">{page.contactEmail}</span>

@@ -23,6 +23,9 @@ const PUBLIC_EXEMPT_ROUTES = [
   '/api/v1/health',
   '/api/webhooks/stripe',
   '/api/payments/providers',
+  '/api/oembed',
+  '/api/webhooks/carriers',
+  '/embed',
   '/manifest.webmanifest',
   '/manifest.json',
   '/robots.txt',
@@ -136,6 +139,9 @@ export async function middleware(request: NextRequest) {
       setAll(cookiesToSet) {
         cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
         response = NextResponse.next({ request });
+        for (const [k, v] of Object.entries(rateLimitHeaders)) {
+          response.headers.set(k, v);
+        }
         cookiesToSet.forEach(({ name, value, options }) => response.cookies.set(name, value, options));
       },
     },

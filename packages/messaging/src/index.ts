@@ -52,7 +52,7 @@ export interface ProductContextPayload {
   title: string;
   priceMinor: number;
   currency: string;
-  sellerId: string;
+  sellerId?: string;
   sellerName?: string;
   imageUrl?: string | null;
   sku?: string;
@@ -67,11 +67,11 @@ export interface OrderContextPayload {
   totalMinor: number;
   currency: string;
   status: 'pending' | 'confirmed' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
-  itemsCount: number;
-  itemsSummary: string;
-  buyerId: string;
-  sellerId: string;
-  fulfillmentType: 'shipping' | 'local_pickup';
+  itemsCount?: number;
+  itemsSummary?: string;
+  buyerId?: string;
+  sellerId?: string;
+  fulfillmentType?: 'shipping' | 'local_pickup';
   orderUrl: string;
 }
 
@@ -79,9 +79,9 @@ export interface EventContextPayload {
   eventId: string;
   title: string;
   startDate: string;
-  location: string;
+  location?: string;
   islandCountry?: string;
-  organizerName: string;
+  organizerName?: string;
   coverUrl?: string | null;
   ticketPriceMinor?: number;
   currency?: string;
@@ -177,7 +177,7 @@ export interface MessageMetadata {
 
 
 export interface MessageDraft {
-  senderId: string;
+  senderId?: string;
   conversationId: string;
   body: string;
   messageKind?: MessageKind;

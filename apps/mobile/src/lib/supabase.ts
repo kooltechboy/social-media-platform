@@ -20,6 +20,7 @@ export interface MobilePost {
   likes: number;
   comments: number;
   isLiked?: boolean;
+  mediaUrls?: string[];
 }
 
 const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL || 'http://localhost:54321';

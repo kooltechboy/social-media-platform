@@ -55,10 +55,7 @@ export function LiveScreen({ navigation }: any) {
   const [broadcasting, setBroadcasting] = useState(false);
 
   // Live Chat state
-  const [chatMessages, setChatMessages] = useState<Array<{ id: string; user: string; text: string }>>([
-    { id: '1', user: 'RasKofi', text: 'Big sound from Kingston! 🌴🔊' },
-    { id: '2', user: 'SocaQueen_TT', text: 'Carnival vibes everywhere! 💃' },
-  ]);
+  const [chatMessages, setChatMessages] = useState<Array<{ id: string; user: string; text: string }>>([]);
   const [chatInput, setChatInput] = useState('');
 
   const fetchStreams = async () => {
@@ -114,13 +111,85 @@ export function LiveScreen({ navigation }: any) {
     fetchStreams();
   }, [selectedCategory]);
 
-  const handleSendChat = () => {
-    if (!chatInput.trim()) return;
-    setChatMessages((prev) => [
-      ...prev,
-      { id: Date.now().toString(), user: 'You', text: chatInput.trim() },
-    ]);
+  useEffect(() => {
+    if (!activeStream?.id) {
+      setChatMessages([]);
+      return;
+    }
+    const fetchChat = async () => {
+      const { data } = await supabase
+        .from('live_messages')
+        .select(`
+          id,
+          body,
+          sender_id,
+          profiles:sender_id (display_name, username)
+        `)
+        .eq('livestream_id', activeStream.id)
+        .order('created_at', { ascending: true })
+        .limit(50);
+
+      if (data) {
+        setChatMessages(
+          data.map((m: any) => ({
+            id: String(m.id),
+            user: m.profiles?.display_name || m.profiles?.username || 'Viewer',
+            text: m.body,
+          }))
+        );
+      }
+    };
+    fetchChat();
+
+    const channel = supabase
+      .channel(`live_chat_${activeStream.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'live_messages',
+          filter: `livestream_id=eq.${activeStream.id}`,
+        },
+        (payload) => {
+          setChatMessages((prev) => [
+            ...prev,
+            {
+              id: String(payload.new.id),
+              user: 'Viewer',
+              text: payload.new.body,
+            },
+          ]);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [activeStream?.id]);
+
+  const handleSendChat = async () => {
+    if (!chatInput.trim() || !activeStream) return;
+    const text = chatInput.trim();
     setChatInput('');
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        await supabase.from('live_messages').insert({
+          livestream_id: activeStream.id,
+          sender_id: user.id,
+          body: text,
+        });
+      } else {
+        setChatMessages((prev) => [
+          ...prev,
+          { id: Date.now().toString(), user: 'You (Guest)', text },
+        ]);
+      }
+    } catch {
+      // Non-blocking
+    }
   };
 
   const handleStartBroadcast = async () => {

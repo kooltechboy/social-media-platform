@@ -402,7 +402,7 @@ export default async function CreatorHubPage() {
               <span className="text-[11px] md:text-xs font-bold text-white">Post / Story</span>
             </Link>
             <Link
-              href="/podcasts/create"
+              href="/creator-studio?tab=podcasts"
               className="p-3 md:p-3.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 flex flex-col items-center text-center gap-1.5 transition-all"
             >
               <Mic className="w-4 h-4 md:w-5 md:h-5 text-purple-400" />

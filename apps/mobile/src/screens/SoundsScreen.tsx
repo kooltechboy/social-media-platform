@@ -51,60 +51,6 @@ const TERRITORIES = [
   { iso: 'GUY', name: 'Guyana', flag: '🇬🇾' },
 ];
 
-const VERIFIED_STEMS: SoundItem[] = [
-  {
-    id: 'stem-1',
-    title: 'Sunrise Soca Riddim (Brass Stems)',
-    artist: 'Port of Spain Sound Collective',
-    genre: 'Soca',
-    durationFormatted: '0:32',
-    audioUrl: 'https://cdn.pixabay.com/download/audio/2022/03/15/audio_c8bbf7b9a5.mp3',
-    usageCount: 142,
-    countryIso: 'TTO',
-    flag: '🇹🇹',
-    licenseType: 'CC-BY-4.0',
-    bpm: 128,
-  },
-  {
-    id: 'stem-2',
-    title: 'Blue Mountain Dub Bassline',
-    artist: 'Kingston Soundworks',
-    genre: 'Reggae',
-    durationFormatted: '0:38',
-    audioUrl: 'https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3',
-    usageCount: 89,
-    countryIso: 'JAM',
-    flag: '🇯🇲',
-    licenseType: 'CC-BY-4.0',
-    bpm: 78,
-  },
-  {
-    id: 'stem-3',
-    title: 'Carnival J’Ouvert Percussion Loop',
-    artist: 'Laventille Iron Rhythm Band',
-    genre: 'Calypso',
-    durationFormatted: '0:28',
-    audioUrl: 'https://cdn.pixabay.com/download/audio/2021/08/04/audio_12b0c7443c.mp3',
-    usageCount: 65,
-    countryIso: 'TTO',
-    flag: '🇹🇹',
-    licenseType: 'Royalty-Free',
-    bpm: 132,
-  },
-  {
-    id: 'stem-4',
-    title: 'Ayiti Tanbou & Ti-Bwa Groove',
-    artist: 'Port-au-Prince Folk Arts',
-    genre: 'Kompa',
-    durationFormatted: '0:35',
-    audioUrl: 'https://cdn.pixabay.com/download/audio/2022/01/18/audio_d0a13f69d2.mp3',
-    usageCount: 51,
-    countryIso: 'HTI',
-    flag: '🇭🇹',
-    licenseType: 'CC-BY-4.0',
-    bpm: 104,
-  },
-];
 
 export function SoundsScreen({ navigation }: any) {
   const [sounds, setSounds] = useState<SoundItem[]>([]);
@@ -153,21 +99,11 @@ export function SoundsScreen({ navigation }: any) {
         }));
         setSounds(mapped);
       } else {
-        // Fallback to verified rhythm stems filtered
-        const filtered = VERIFIED_STEMS.filter((s) => {
-          if (activeGenre !== 'All Genres' && s.genre !== activeGenre) return false;
-          if (activeTerritory !== 'ALL' && s.countryIso !== activeTerritory) return false;
-          if (searchQuery.trim()) {
-            const q = searchQuery.toLowerCase();
-            return s.title.toLowerCase().includes(q) || s.artist.toLowerCase().includes(q);
-          }
-          return true;
-        });
-        setSounds(filtered);
+        setSounds([]);
       }
     } catch (err) {
       console.warn('Could not fetch sounds:', err);
-      setSounds(VERIFIED_STEMS);
+      setSounds([]);
     } finally {
       setLoading(false);
       setRefreshing(false);

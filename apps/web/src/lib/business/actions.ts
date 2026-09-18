@@ -21,7 +21,22 @@ export async function createBusinessPageAction(
   const description = String(formData.get('description') ?? '').trim();
   const countryIso = String(formData.get('countryIso') ?? 'JM').trim().substring(0, 3).toUpperCase();
   const phone = String(formData.get('phone') ?? '').trim();
-  const website = String(formData.get('website') ?? '').trim();
+  const rawWebsite = String(formData.get('website') ?? '').trim();
+  let safeWebsite: string | null = null;
+  if (rawWebsite) {
+    try {
+      const normalizedUrl = rawWebsite.startsWith('http://') || rawWebsite.startsWith('https://')
+        ? rawWebsite
+        : `https://${rawWebsite}`;
+      const parsed = new URL(normalizedUrl);
+      if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+        return { error: 'Website URL must start with http:// or https://' };
+      }
+      safeWebsite = parsed.toString();
+    } catch {
+      return { error: 'Please enter a valid website URL.' };
+    }
+  }
 
   if (!name) return { error: 'Page name is required.' };
   if (!slug) return { error: 'Page custom URL slug is required.' };
@@ -40,7 +55,7 @@ export async function createBusinessPageAction(
       description: description || null,
       country_iso: countryIso || 'JM',
       phone: phone || null,
-      website: website || null,
+      website: safeWebsite,
       is_verified: true,
     })
     .select('id, slug')
@@ -98,7 +113,8 @@ export async function fetchBusinessPageAction(slug: string): Promise<{ business:
 
 export async function upgradeSellerPlanAction(
   businessSlug: string,
-  planId: 'business_free' | 'seller_pro' | 'business_plus' | 'enterprise'
+  planId: 'business_free' | 'seller_pro' | 'business_plus' | 'enterprise',
+  paymentIntentId?: string
 ): Promise<{ success: boolean; error: string | null }> {
   const user = await getCurrentUser();
   if (!user) return { success: false, error: 'Sign in to manage your seller subscription.' };
@@ -114,6 +130,23 @@ export async function upgradeSellerPlanAction(
 
   if (!business || business.owner_id !== user.id) {
     return { success: false, error: 'You do not have permission to manage this business.' };
+  }
+
+  // Security gate: Paid subscription upgrades require a verified, succeeded payment intent
+  if (planId !== 'business_free') {
+    if (!paymentIntentId) {
+      return { success: false, error: 'Paid subscription upgrades require a valid paymentIntentId.' };
+    }
+
+    const { data: intent } = await supabase
+      .from('payment_intents')
+      .select('id, payer_id, status')
+      .eq('id', paymentIntentId)
+      .maybeSingle();
+
+    if (!intent || intent.payer_id !== user.id || intent.status !== 'succeeded') {
+      return { success: false, error: 'Payment could not be verified or is not completed.' };
+    }
   }
 
   // Insert or update business subscription
@@ -136,4 +169,3 @@ export async function upgradeSellerPlanAction(
   revalidatePath('/pages');
   return { success: true, error: null };
 }
-

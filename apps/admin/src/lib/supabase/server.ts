@@ -42,26 +42,27 @@ export async function getAdminSession(): Promise<AdminUser | null> {
 
   // Verify staff role via service client
   const adminClient = await createAdminSupabaseClient();
-  let role = 'admin';
-  if (adminClient) {
-    const { data: account } = await adminClient
-      .from('accounts')
-      .select('role, status')
-      .or(`profile_id.eq.${data.user.id},id.eq.${data.user.id}`)
-      .maybeSingle();
-
-    if (account) {
-      if (account.status && account.status !== 'active') {
-        return null; // Account suspended or deactivated
-      }
-      if (!['admin', 'management', 'superadmin', 'super_admin'].includes(account.role)) {
-        return null; // Not authorized as admin
-      }
-      role = account.role;
-    } else {
-      return null; // No account record — user has no admin privileges
-    }
+  if (!adminClient) {
+    return null; // Without service role client, deny admin access
   }
 
-  return { id: data.user.id, email: data.user.email ?? '', role };
+  const { data: account } = await adminClient
+    .from('accounts')
+    .select('role, status')
+    .or(`profile_id.eq.${data.user.id},id.eq.${data.user.id}`)
+    .maybeSingle();
+
+  if (!account) {
+    return null; // No account record — user has no admin privileges
+  }
+
+  if (account.status && account.status !== 'active') {
+    return null; // Account suspended or deactivated
+  }
+
+  if (!['admin', 'management', 'superadmin', 'super_admin'].includes(account.role)) {
+    return null; // Not authorized as admin
+  }
+
+  return { id: data.user.id, email: data.user.email ?? '', role: account.role };
 }

@@ -1,4 +1,9 @@
 // Identity & Authentication Abstraction for TUKUBI
+/**
+ * @module @caribbean/auth
+ * @deprecated For Next.js Server Components and Server Actions in apps/web,
+ * use `createSupabaseServerClient` and `getCurrentUser` from `apps/web/src/lib/supabase/server.ts`.
+ */
 
 // ---------------------------------------------------------------------------
 // The caller passes in a Supabase client; we avoid a direct dependency on

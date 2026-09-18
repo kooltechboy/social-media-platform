@@ -29,7 +29,7 @@ describe('Friendship Security, Integrity & Core Product Rules', () => {
       const followerOnly = {
         isFollowing: false,
         isFollower: true,
-        friendshipStatus: 'none',
+        friendshipStatus: 'none' as const,
       };
       expect(isAcceptedFriend(followerOnly.friendshipStatus)).toBe(false);
       expect(resolvePrimaryRelationshipState(followerOnly)).not.toBe('friends');
@@ -39,7 +39,7 @@ describe('Friendship Security, Integrity & Core Product Rules', () => {
       const followingOnly = {
         isFollowing: true,
         isFollower: false,
-        friendshipStatus: 'none',
+        friendshipStatus: 'none' as const,
       };
       expect(isAcceptedFriend(followingOnly.friendshipStatus)).toBe(false);
       expect(resolvePrimaryRelationshipState(followingOnly)).not.toBe('friends');
@@ -49,7 +49,7 @@ describe('Friendship Security, Integrity & Core Product Rules', () => {
       const mutualFollow = {
         isFollowing: true,
         isFollower: true,
-        friendshipStatus: 'none',
+        friendshipStatus: 'none' as const,
       };
       expect(isAcceptedFriend(mutualFollow.friendshipStatus)).toBe(false);
       expect(resolvePrimaryRelationshipState(mutualFollow)).toBe('mutual_follow');
@@ -59,7 +59,7 @@ describe('Friendship Security, Integrity & Core Product Rules', () => {
       const memberOnly = {
         isFollowing: false,
         isFollower: false,
-        friendshipStatus: 'none',
+        friendshipStatus: 'none' as const,
       };
       expect(isAcceptedFriend(memberOnly.friendshipStatus)).toBe(false);
       expect(resolvePrimaryRelationshipState(memberOnly)).toBe('none');

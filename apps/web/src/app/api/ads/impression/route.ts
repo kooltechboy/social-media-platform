@@ -17,14 +17,28 @@ export async function POST(request: NextRequest) {
 
     const user = await getCurrentUser();
 
-    // Insert impression record
+    // Authoritative pricing: derive cost from ad set configuration, preventing client manipulation
+    const { data: adRecord } = await supabase
+      .from('ads')
+      .select('ad_sets(bid_cpm_minor)')
+      .eq('id', adId)
+      .maybeSingle();
+
+    let serverCostMinor = 0;
+    if (adRecord && adRecord.ad_sets) {
+      const adSet = Array.isArray(adRecord.ad_sets) ? adRecord.ad_sets[0] : adRecord.ad_sets;
+      const cpm = Number((adSet as any)?.bid_cpm_minor) || 0;
+      serverCostMinor = Math.max(0, Math.round(cpm / 1000));
+    }
+
+    // Insert impression record with authoritative pricing
     const { data, error } = await supabase
       .from('ad_impressions')
       .insert({
         ad_id: adId,
         viewer_id: user?.id || null,
         placement,
-        cost_minor: Math.max(0, Number(costMinor) || 0),
+        cost_minor: serverCostMinor,
       })
       .select('id')
       .single();

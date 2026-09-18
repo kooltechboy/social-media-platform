@@ -92,7 +92,7 @@ describe('TUKUBI Public Front Door, SEO & Social Discovery Suite', () => {
     });
 
     it('configures Open Graph card with required social discovery attributes', () => {
-      expect(metadata.openGraph?.type).toBe('website');
+      expect((metadata.openGraph as any)?.type).toBe('website');
       expect(metadata.openGraph?.siteName).toBe('TUKUBI');
       expect(metadata.openGraph?.title).toBe('TUKUBI — The Caribbean Connected.');
       expect(metadata.openGraph?.url?.toString()).toBe('https://www.tukubi.com');
@@ -100,7 +100,7 @@ describe('TUKUBI Public Front Door, SEO & Social Discovery Suite', () => {
     });
 
     it('configures Twitter summary_large_image card', () => {
-      expect(metadata.twitter?.card).toBe('summary_large_image');
+      expect((metadata.twitter as any)?.card).toBe('summary_large_image');
       expect(metadata.twitter?.title).toBe('TUKUBI — The Caribbean Connected.');
     });
 

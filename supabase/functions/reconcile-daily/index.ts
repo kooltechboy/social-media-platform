@@ -9,7 +9,8 @@ serve(async (req) => {
 
   // Auth: require service role key in Authorization header
   const authHeader = req.headers.get('Authorization');
-  if (!authHeader || authHeader !== \Bearer \ + Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')) {
+  const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+  if (!authHeader || !serviceRoleKey || authHeader !== `Bearer ${serviceRoleKey}`) {
     return new Response('Unauthorized', { status: 401 });
   }
 
@@ -50,7 +51,7 @@ serve(async (req) => {
         (e: { reference_id?: string }) => e.reference_id === intent.id
       );
       if (relatedEntries.length === 0) {
-        discrepancies.push(\Intent \ (\ \) has no ledger entries\);
+        discrepancies.push(`Intent ${intent.id} (${intent.amount_minor} ${intent.currency}) has no ledger entries`);
       }
     }
 

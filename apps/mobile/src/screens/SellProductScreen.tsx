@@ -137,7 +137,7 @@ export function SellProductScreen({ navigation }: any) {
           is_active: true,
           status: 'active',
           product_kind: categorySlug === 'digital-sounds' ? 'digital' : categorySlug === 'services-bookings' ? 'service' : 'physical',
-          media_urls: mediaList.length > 0 ? mediaList : ['https://images.unsplash.com/photo-1544816155-12df9643f363?w=800&auto=format&fit=crop'],
+          media_urls: mediaList.length > 0 ? mediaList : [],
         })
         .select()
         .single();

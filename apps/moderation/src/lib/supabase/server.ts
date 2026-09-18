@@ -43,23 +43,29 @@ export async function getModeratorSession(): Promise<ModeratorUser | null> {
 
   // Verify moderator or admin role via service client
   const modClient = await createModerationSupabaseClient();
-  let role = 'moderator';
-  if (modClient) {
-    const { data: account } = await modClient
-      .from('accounts')
-      .select('role')
-      .or(`profile_id.eq.${data.user.id},id.eq.${data.user.id}`)
-      .maybeSingle();
-
-    if (account) {
-      if (!['moderator', 'admin', 'management', 'superadmin'].includes(account.role)) {
-        return null; // Not authorized as moderator
-      }
-      role = account.role;
-    } else {
-      return null; // No account record — user has no moderator privileges
-    }
+  if (!modClient) {
+    return null; // Without service role client, deny moderation access
   }
+
+  const { data: account } = await modClient
+    .from('accounts')
+    .select('role, status')
+    .or(`profile_id.eq.${data.user.id},id.eq.${data.user.id}`)
+    .maybeSingle();
+
+  if (!account) {
+    return null; // No account record — user has no moderator privileges
+  }
+
+  if (account.status && account.status !== 'active') {
+    return null; // Account suspended or deactivated
+  }
+
+  if (!['moderator', 'admin', 'management', 'superadmin', 'super_admin'].includes(account.role)) {
+    return null; // Not authorized as moderator
+  }
+
+  const role = account.role;
 
   const profileResult = await anonClient
     .from('profiles')

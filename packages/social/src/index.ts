@@ -363,14 +363,18 @@ export function resolveRelationshipBadge(rel: {
 // FAVORITES & MULTI-IDENTITY TYPES
 // =============================================================================
 
-export type FavoriteTargetType = 'profile' | 'friend' | 'creator' | 'page' | 'business' | 'community';
+export type FavoriteTargetType = 'profile' | 'friend' | 'creator' | 'page' | 'business' | 'community' | 'topic';
 
 export interface UserFavoriteItem {
   id: string;
-  userId: string;
-  targetId: string;
-  targetType: FavoriteTargetType;
-  createdAt: string;
+  userId?: string;
+  targetId?: string;
+  targetType?: FavoriteTargetType;
+  createdAt?: string;
+  user_id?: string;
+  target_id?: string;
+  target_type?: FavoriteTargetType;
+  created_at?: string;
 }
 
 export type OperatingIdentityType = 'personal' | 'creator' | 'business' | 'community';
@@ -378,9 +382,13 @@ export type OperatingIdentityType = 'personal' | 'creator' | 'business' | 'commu
 export interface OperatingIdentity {
   id: string;
   type: OperatingIdentityType;
-  displayName: string;
+  displayName?: string;
   handle: string;
   avatarUrl?: string | null;
   isVerified?: boolean;
   badge?: string | null;
+  name?: string;
+  role?: string;
+  unreadBadgeCount?: number;
+  verified?: boolean;
 }
