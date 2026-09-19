@@ -2,6 +2,8 @@ import React from 'react';
 import { fetchExploreDataAction, fetchTrendingSignalsAction } from '../../lib/explore/actions';
 import ExploreDiscoveryClient from '../../components/explore-discovery-client';
 import { resolveGeography } from '../../lib/explore/canonical-geography';
+import RightRail from '../../components/right-rail';
+import ExploreRail from '../../components/rails/explore-rail';
 
 export const dynamic = 'force-dynamic';
 
@@ -36,15 +38,25 @@ export default async function ExplorePage({
   ]);
 
   return (
-    <div className="w-full space-y-8 animate-fadeIn">
-      <ExploreDiscoveryClient
-        initialResult={exploreData}
-        trendingSignals={trendingSignals}
-        activeVibeKey={vibe}
-        activeCountryKey={targetGeo}
-        activeHubKey={hub}
-        activeQueryText={q}
-      />
+    <div className="flex flex-col lg:flex-row gap-6 xl:gap-8 items-start w-full">
+      <div className="flex-1 min-w-0 space-y-8 w-full max-w-[820px] xl:max-w-[860px] mx-auto lg:mx-0 animate-fadeIn">
+        <ExploreDiscoveryClient
+          initialResult={exploreData}
+          trendingSignals={trendingSignals}
+          activeVibeKey={vibe}
+          activeCountryKey={targetGeo}
+          activeHubKey={hub}
+          activeQueryText={q}
+        />
+      </div>
+
+      <RightRail ariaLabel="Explore Caribbean Context">
+        <ExploreRail
+          activeGeoKey={targetGeo}
+          activeContentType={type}
+          trendingSignals={trendingSignals}
+        />
+      </RightRail>
     </div>
   );
 }

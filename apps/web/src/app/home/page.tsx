@@ -1,13 +1,13 @@
 import React from 'react';
+import { redirect } from 'next/navigation';
 import {
   createSupabaseServerClient,
   getCurrentUser,
-} from '../lib/supabase/server';
-import { buildRankedFeed } from '../lib/feed/ranking';
-import { fetchActiveStoriesAction } from '../lib/social/actions';
-import PublicFrontDoor from '../components/public-front-door';
-import HomeDashboard from '../components/home/home-dashboard';
-import { type FeedPostData } from '../components/feed-stream';
+} from '../../lib/supabase/server';
+import { buildRankedFeed } from '../../lib/feed/ranking';
+import { fetchActiveStoriesAction } from '../../lib/social/actions';
+import HomeDashboard from '../../components/home/home-dashboard';
+import { type FeedPostData } from '../../components/feed-stream';
 
 export const dynamic = 'force-dynamic';
 
@@ -21,10 +21,10 @@ function relativeTime(iso: string): string {
   return `${Math.floor(hours / 24)}d ago`;
 }
 
-export default async function RootPage() {
+export default async function HomePage() {
   const user = await getCurrentUser();
   if (!user) {
-    return <PublicFrontDoor />;
+    redirect('/login?next=/home');
   }
 
   const supabase = await createSupabaseServerClient();

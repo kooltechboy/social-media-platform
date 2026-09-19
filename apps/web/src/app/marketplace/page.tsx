@@ -28,6 +28,8 @@ import {
 import OrderButton from '../../components/order-button';
 import WishlistButton from '../../components/marketplace/wishlist-button';
 import AiShoppingAssistant from '../../components/marketplace/ai-shopping-assistant';
+import RightRail from '../../components/right-rail';
+import MarketplaceRail from '../../components/rails/marketplace-rail';
 
 export const dynamic = 'force-dynamic';
 
@@ -177,7 +179,8 @@ export default async function MarketplacePage({
   const launchMessaging = getMarketplaceLaunchMessaging();
 
   return (
-    <div className="w-full space-y-8 animate-fadeIn">
+    <div className="flex flex-col lg:flex-row gap-6 xl:gap-8 items-start w-full">
+      <div className="flex-1 min-w-0 space-y-8 w-full max-w-[820px] xl:max-w-[860px] mx-auto lg:mx-0 animate-fadeIn">
       {/* Top Header Banner */}
       <div className="surface-header rounded-3xl p-6 sm:p-8 flex flex-col md:flex-row md:items-center justify-between gap-4 border border-orange-500/30 shadow-xl relative overflow-hidden">
         <div className="space-y-1 max-w-2xl">
@@ -538,6 +541,14 @@ export default async function MarketplacePage({
           </div>
         )}
       </div>
+      </div>
+
+      <RightRail ariaLabel="Marketplace Contextual Actions">
+        <MarketplaceRail
+          activeCategory={activeCategorySlug !== 'all' ? activeCategorySlug : null}
+          activeTerritory={selectedTerritory !== 'ALL' ? selectedTerritory : null}
+        />
+      </RightRail>
     </div>
   );
 }

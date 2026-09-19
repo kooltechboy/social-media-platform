@@ -11,14 +11,15 @@ interface RightRailProps {
 export default function RightRail({
   children,
   className = '',
-  ariaLabel = 'Contextual sidebar',
+  ariaLabel = 'Contextual discovery and actions',
 }: RightRailProps) {
   return (
     <aside
-      className={`hidden lg:block w-[320px] xl:w-[340px] 3xl:w-[360px] shrink-0 space-y-6 ${className}`}
+      className={`hidden lg:block w-[310px] xl:w-[340px] 2xl:w-[360px] shrink-0 ${className}`}
       aria-label={ariaLabel}
+      role="complementary"
     >
-      <div className="sticky top-[76px] space-y-6 max-h-[calc(100vh-88px)] overflow-y-auto scrollbar-none pb-8">
+      <div className="sticky top-[68px] space-y-5 max-h-[calc(100vh-80px)] overflow-y-auto scrollbar-none pb-8 pr-0.5">
         {children}
       </div>
     </aside>

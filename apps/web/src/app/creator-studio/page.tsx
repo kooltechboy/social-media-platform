@@ -34,6 +34,8 @@ import CreatorContentManager, {
 } from "../../components/creator/creator-content-manager";
 import type { CreatorDraftItem } from "../../lib/creator/draft-actions";
 import CreatorAiInsightsPanel from "../../components/creator/creator-ai-insights-panel";
+import RightRail from "../../components/right-rail";
+import CreatorStudioRail from "../../components/rails/creator-studio-rail";
 
 export const dynamic = "force-dynamic";
 
@@ -262,7 +264,8 @@ export default async function CreatorStudioPage({
   const creatorLaunch = getCreatorLaunchMessaging();
 
   return (
-    <div className="w-full space-y-8 animate-fadeIn">
+    <div className="flex flex-col lg:flex-row gap-6 xl:gap-8 items-start w-full">
+      <div className="flex-1 min-w-0 space-y-8 w-full max-w-[820px] xl:max-w-[860px] mx-auto lg:mx-0 animate-fadeIn">
       {/* Surface Header */}
       <div className="surface-header p-6 sm:p-8 rounded-3xl flex flex-col md:flex-row md:items-center justify-between gap-6 border border-white/15 shadow-2xl">
         <div className="space-y-2 max-w-xl">
@@ -467,6 +470,11 @@ export default async function CreatorStudioPage({
           })(),
         }}
       />
+      </div>
+
+      <RightRail ariaLabel="Creator Studio Modules & Actions">
+        <CreatorStudioRail />
+      </RightRail>
     </div>
   );
 }

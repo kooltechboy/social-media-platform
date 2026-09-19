@@ -4,6 +4,8 @@ import { Mic, Radio, Globe } from 'lucide-react';
 import Link from 'next/link';
 import { createSupabaseServerClient, getCurrentUser } from '../../lib/supabase/server';
 import PodcastNetworkFeed, { type PodcastShowItem } from '../../components/podcasts/podcast-network-feed';
+import RightRail from '../../components/right-rail';
+import PodcastsRail from '../../components/rails/podcasts-rail';
 
 export const dynamic = 'force-dynamic';
 
@@ -139,7 +141,8 @@ export default async function PodcastsPage({
   }
 
   return (
-    <div className="w-full space-y-8 animate-fadeIn">
+    <div className="flex flex-col lg:flex-row gap-6 xl:gap-8 items-start w-full">
+      <div className="flex-1 min-w-0 space-y-8 w-full max-w-[820px] xl:max-w-[860px] mx-auto lg:mx-0 animate-fadeIn">
       {/* Top Header */}
       <div className="surface-header rounded-3xl p-6 sm:p-8 flex flex-col md:flex-row md:items-center justify-between gap-4 border border-purple-500/30 shadow-xl">
         <div>
@@ -240,6 +243,11 @@ export default async function PodcastsPage({
             : null
         }
       />
+      </div>
+
+      <RightRail ariaLabel="Podcasts Shows & Actions">
+        <PodcastsRail />
+      </RightRail>
     </div>
   );
 }
