@@ -5,6 +5,7 @@ import {
 import { isFeedMode, type FeedMode } from '@caribbean/social';
 import { encodeCursor } from '@caribbean/database';
 import { buildRankedFeed } from './ranking';
+import { hydratePostsEngagement } from './hydrate-posts';
 import { type FeedPostData } from '../../components/feed-stream';
 
 function relativeTime(iso: string): string {
@@ -92,46 +93,10 @@ export async function loadFeedPageData(rawMode?: string, cursor?: string) {
       nextCursor = encodeCursor({ sortKey: lastPost.created_at, id: lastPost.id });
     }
 
-    if (data && data.length > 0) {
-      const postIds = data.map((p: any) => p.id);
-      const { data: reactions } = await supabase
-        .from('post_reactions')
-        .select('post_id')
-        .eq('user_id', user.id)
-        .in('post_id', postIds);
-
-      const userLikedSet = new Set(reactions?.map((r: any) => r.post_id) || []);
-
-      posts = data.map((p: any) => {
-        const rawProfile = p.profiles;
-        const profile = Array.isArray(rawProfile) ? rawProfile[0] : rawProfile;
-        const isPostOfficial =
-          profile?.username?.toLowerCase() === 'tukubi' || profile?.is_verified || false;
-
-        return {
-          id: p.id,
-          authorId: p.author_id,
-          author: profile?.display_name || 'Caribbean Member',
-          handle: profile?.username || 'member',
-          avatarUrl:
-            profile?.avatar_url || (isPostOfficial ? '/brand/tukubi-emblem.png' : null),
-          verified: profile?.is_verified ?? false,
-          isOfficial: isPostOfficial,
-          isPinned: p.is_pinned || false,
-          officialContentType: p.official_content_type,
-          location: 'Caribbean 🌴',
-          time: relativeTime(p.created_at),
-          content: p.content || '',
-          mediaUrls: p.media_urls || [],
-          culturalTags: p.cultural_tags || [],
-          likes: p.likes_count || 0,
-          reposts: p.shares_count || 0,
-          comments: p.comments_count || 0,
-          isUserLiked: userLikedSet.has(p.id),
-          category: 'caribbean',
-        };
-      });
-    }
+    const rawData = data || [];
+    posts = await hydratePostsEngagement(rawData, supabase, {
+      currentUserId: user.id,
+    });
   }
 
   return {

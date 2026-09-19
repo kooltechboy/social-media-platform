@@ -6,6 +6,7 @@ import { validateComposer, type FeedMode } from '@caribbean/social';
 import { createSupabaseServerClient, getCurrentUser } from '../supabase/server';
 import { ensureUserProfile } from '../auth/user-sync';
 import { buildRankedFeed } from '../feed/ranking';
+import { hydratePostsEngagement } from '../feed/hydrate-posts';
 import {
   rankAndSelectAds,
   formatSponsoredFeedItem,
@@ -239,47 +240,9 @@ export async function fetchFeedPostsAction(params: {
       return { posts: [], error: String(res.error?.message || res.error) };
     }
 
-    const data = res.data || [];
-    let userLikedPostIds = new Set<string>();
-    if (data.length > 0) {
-      const postIds = data.map((p: any) => p.id);
-      const { data: reactions } = await supabase
-        .from('post_reactions')
-        .select('post_id')
-        .eq('user_id', user.id)
-        .in('post_id', postIds);
-      if (reactions) {
-        userLikedPostIds = new Set(reactions.map((r: any) => r.post_id));
-      }
-    }
-
-    const normalizedPosts = data.map((p: any) => {
-      const rawProfile = p.profiles;
-      const profile = Array.isArray(rawProfile) ? rawProfile[0] : rawProfile;
-      const isPostOfficial = profile?.username?.toLowerCase() === 'tukubi' || profile?.is_verified || false;
-      return {
-        id: p.id,
-        authorId: p.author_id,
-        author: profile?.display_name || 'Caribbean Member',
-        handle: profile?.username || 'member',
-        avatarUrl: profile?.avatar_url || (profile?.username?.toLowerCase() === 'tukubi' ? '/brand/tukubi-emblem.png' : null),
-        verified: profile?.is_verified ?? false,
-        isOfficial: isPostOfficial,
-        isPinned: isPostOfficial,
-        officialContentType: isPostOfficial ? 'welcome' : undefined,
-        location: 'Caribbean 🌴',
-        time: 'just now',
-        content: p.content || '',
-        mediaUrls: p.media_urls || [],
-        culturalTags: p.cultural_tags || [],
-        likes: p.likes_count || 0,
-        reposts: p.shares_count || 0,
-        comments: p.comments_count || 0,
-        isUserLiked: userLikedPostIds.has(p.id),
-        category: 'caribbean',
-        communityId: p.community_id || undefined,
-        countryId: p.country_id || undefined,
-      };
+    const rawData = res.data || [];
+    const normalizedPosts = await hydratePostsEngagement(rawData, supabase, {
+      currentUserId: user.id,
     });
 
     // Phase 3: Inject eligible sponsored items into head of feed
@@ -525,54 +488,12 @@ export async function deleteStoryAction(storyId: string): Promise<{ success: boo
 }
 
 export async function toggleLikeAction(postId: string): Promise<{ liked: boolean; likesCount: number; error: string | null }> {
-  const user = await getCurrentUser();
-  if (!user) return { liked: false, likesCount: 0, error: 'Sign in to like posts.' };
-
-  const supabase = await createSupabaseServerClient();
-  if (!supabase) return { liked: false, likesCount: 0, error: 'Database is not configured.' };
-
-  await ensureUserProfile(supabase, {
-    id: user.id,
-    email: user.email,
-    user_metadata: { username: user.username, display_name: user.displayName, avatar_url: user.avatarUrl },
-  });
-
-  // Check if already liked
-  const { data: existing } = await supabase
-    .from('post_reactions')
-    .select('post_id')
-    .eq('post_id', postId)
-    .eq('user_id', user.id)
-    .maybeSingle();
-
-  if (existing) {
-    // Remove reaction
-    await supabase.from('post_reactions').delete().eq('post_id', postId).eq('user_id', user.id);
-
-    // Fetch updated count
-    const { count } = await supabase
-      .from('post_reactions')
-      .select('*', { count: 'exact', head: true })
-      .eq('post_id', postId);
-
-    revalidatePath('/');
-    return { liked: false, likesCount: count ?? 0, error: null };
-  } else {
-    // Add reaction
-    await supabase.from('post_reactions').insert({
-      post_id: postId,
-      user_id: user.id,
-      reaction_type: 'like',
-    });
-
-    const { count } = await supabase
-      .from('post_reactions')
-      .select('*', { count: 'exact', head: true })
-      .eq('post_id', postId);
-
-    revalidatePath('/');
-    return { liked: true, likesCount: count ?? 1, error: null };
+  const res = await toggleReactionAction(postId, 'like');
+  if (res.error) {
+    return { liked: false, likesCount: 0, error: res.error };
   }
+  const summary = await fetchPostReactionSummaryAction(postId);
+  return { liked: res.liked, likesCount: summary.total, error: null };
 }
 
 export async function createCommentAction(
@@ -615,22 +536,15 @@ export async function createCommentAction(
     return { success: false, error: "Couldn't publish comment right now. Please try again." };
   }
 
-  // Increment comments_count on posts
-  const { data: currentPost } = await supabase
-    .from('posts')
-    .select('comments_count')
-    .eq('id', postId)
-    .maybeSingle();
-
-  if (currentPost) {
-    await supabase
-      .from('posts')
-      .update({ comments_count: (currentPost.comments_count || 0) + 1 })
-      .eq('id', postId);
-  }
+  const rawProfile = (data as any)?.profiles;
+  const profile = Array.isArray(rawProfile) ? rawProfile[0] : rawProfile;
+  const normalizedComment = {
+    ...data,
+    profiles: profile,
+  };
 
   revalidatePath('/');
-  return { success: true, comment: data, error: null };
+  return { success: true, comment: normalizedComment, error: null };
 }
 
 export async function fetchPostCommentsAction(postId: string): Promise<{ comments: any[]; error: string | null }> {
@@ -695,22 +609,6 @@ export async function deleteCommentAction(commentId: string, postId?: string): P
     return { success: false, error: error.message };
   }
 
-  // Decrement comments_count on post if postId is available
-  if (postId) {
-    const { data: currentPost } = await supabase
-      .from('posts')
-      .select('comments_count')
-      .eq('id', postId)
-      .maybeSingle();
-
-    if (currentPost && currentPost.comments_count > 0) {
-      await supabase
-        .from('posts')
-        .update({ comments_count: Math.max(0, currentPost.comments_count - 1) })
-        .eq('id', postId);
-    }
-  }
-
   revalidatePath('/');
   return { success: true, error: null };
 }
@@ -727,7 +625,7 @@ export async function incrementPostShareAction(
 
   const user = await getCurrentUser();
 
-  // If user is authenticated, record in post_shares table
+  // If user is authenticated, record in post_shares table (trigger updates posts.shares_count)
   if (user) {
     await supabase.from('post_shares').insert({
       post_id: postId,
@@ -736,26 +634,16 @@ export async function incrementPostShareAction(
     });
   }
 
-  // Fetch and increment current shares count
+  // Authoritative count from posts table (synced by trigger)
   const { data: post } = await supabase
     .from('posts')
     .select('shares_count')
     .eq('id', postId)
     .maybeSingle();
 
-  const newCount = (post?.shares_count ?? 0) + 1;
-
-  const { error } = await supabase
-    .from('posts')
-    .update({ shares_count: newCount })
-    .eq('id', postId);
-
-  if (error) {
-    return { success: false, sharesCount: post?.shares_count ?? 0, error: error.message };
-  }
-
+  const currentShares = Number(post?.shares_count ?? 0);
   revalidatePath('/');
-  return { success: true, sharesCount: newCount, error: null };
+  return { success: true, sharesCount: currentShares, error: null };
 }
 
 /**
@@ -966,5 +854,49 @@ export async function getSavedPostIdsAction(): Promise<string[]> {
     .order('created_at', { ascending: false });
 
   return (data || []).map((r: any) => r.post_id as string);
+}
+
+// ===== HIDDEN POSTS & NOT INTERESTED =====
+
+export async function hidePostAction(
+  postId: string,
+  reason: 'hide' | 'not_interested' = 'hide'
+): Promise<{ success: boolean; error?: string }> {
+  const user = await getCurrentUser();
+  if (!user) return { success: false, error: 'Please sign in.' };
+
+  const supabase = await createSupabaseServerClient();
+  if (!supabase) return { success: false, error: 'Database unavailable.' };
+
+  const { error } = await supabase
+    .from('hidden_posts')
+    .upsert(
+      { user_id: user.id, post_id: postId, reason },
+      { onConflict: 'user_id,post_id' }
+    );
+
+  if (error) return { success: false, error: error.message };
+  revalidatePath('/');
+  return { success: true };
+}
+
+export async function unhidePostAction(
+  postId: string
+): Promise<{ success: boolean; error?: string }> {
+  const user = await getCurrentUser();
+  if (!user) return { success: false, error: 'Please sign in.' };
+
+  const supabase = await createSupabaseServerClient();
+  if (!supabase) return { success: false, error: 'Database unavailable.' };
+
+  const { error } = await supabase
+    .from('hidden_posts')
+    .delete()
+    .eq('user_id', user.id)
+    .eq('post_id', postId);
+
+  if (error) return { success: false, error: error.message };
+  revalidatePath('/');
+  return { success: true };
 }
 

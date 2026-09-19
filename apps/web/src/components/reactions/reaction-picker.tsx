@@ -74,7 +74,7 @@ export default function ReactionPicker({ currentReaction, onSelect, className = 
     >
       <button
         type="button"
-        className={`flex items-center gap-1.5 px-2 py-1.5 md:px-2.5 md:py-2 min-h-[38px] md:min-h-[42px] rounded-xl text-sm font-medium transition-colors ${
+        className={`flex items-center gap-1.5 px-2.5 py-2 min-h-[44px] rounded-xl text-sm font-medium transition-colors ${
           current ? current.color : 'text-slate-400 hover:text-slate-200'
         }`}
         onClick={() => {

@@ -40,6 +40,8 @@ import {
   getRelationshipBatchAction,
   fetchProfileFriendsAction,
 } from '../../../lib/social/relationship-actions';
+import FeedStream, { type FeedPostData } from '../../../components/feed-stream';
+import { hydratePostsEngagement } from '@/lib/feed/hydrate-posts';
 
 export const dynamic = 'force-dynamic';
 
@@ -200,7 +202,7 @@ export default async function ProfilePage({
       : Promise.resolve({} as Record<string, any>),
     supabase
       .from('posts')
-      .select('id, content, created_at, media_urls')
+      .select('id, author_id, content, created_at, media_urls, cultural_tags, likes_count, comments_count, shares_count, profiles:profiles!posts_author_id_fkey(display_name, username, avatar_url, is_verified)')
       .eq('author_id', profileData.id)
       .order('created_at', { ascending: false })
       .limit(20),
@@ -218,19 +220,32 @@ export default async function ProfilePage({
     isBlocked: false,
   };
   const isFollowing = !!viewerRelationship.isFollowing;
-  let posts = (postsResult.data ?? []) as PostRow[];
+  const rawPosts = postsResult.data ?? [];
+  let posts: FeedPostData[] = rawPosts.length > 0
+    ? await hydratePostsEngagement(rawPosts, supabase, { currentUserId: currentUser?.id })
+    : [];
 
   // Guarantee official launch post appears on @tukubi profile
   if (posts.length === 0 && profileData.username.toLowerCase() === 'tukubi') {
     posts = [
       {
         id: 'd23f3e75-0dfa-47c6-8df9-2c0fa299d7ff',
+        authorId: profileData.id,
+        author: profileData.display_name,
+        handle: profileData.username,
+        avatarUrl: profileData.avatar_url || '/brand/tukubi-emblem.png',
+        verified: true,
+        isOfficial: true,
+        officialContentType: 'welcome',
+        location: 'Pan-Caribbean',
+        time: 'Official Launch',
         content: `🌴 Welcome to TUKUBI — The Caribbean Connected.\n\nConnecting Caribbean people, culture, creators, businesses & the global diaspora in one unified digital ecosystem.\n\n🌎 Born in the Caribbean. Built for the World.\n\nJoin conversations across the islands, explore live audio/video broadcasts, discover local creators, support Caribbean merchants, and build the future of our digital heritage together. ☀️🌊🎶`,
-        created_at: new Date().toISOString(),
-        media_urls: [],
-        is_pinned: true,
-        is_official: true,
-        official_content_type: 'welcome',
+        mediaUrls: [],
+        likes: 0,
+        reposts: 0,
+        comments: 0,
+        culturalTags: ['caribbean', 'welcome', 'community'],
+        category: 'caribbean',
       },
     ];
   }
@@ -744,55 +759,11 @@ export default async function ProfilePage({
                 )}
               </div>
             ) : (
-              posts.map((post) => (
-                <article key={post.id} className="surface-card surface-card-interactive rounded-3xl p-6 md:p-7 space-y-4 border border-white/10 shadow-xl">
-                  <div className="flex items-center justify-between gap-3">
-                    <div className="flex items-center gap-3.5">
-                      <UserAvatar
-                        src={profileData.avatar_url}
-                        name={profileData.display_name}
-                        size="md"
-                      />
-                      <div>
-                        <div className="flex items-center gap-1.5 flex-wrap">
-                          <span className="text-sm md:text-base font-black text-white">{profileData.display_name}</span>
-                          {profileData.is_official && (
-                            <OfficialBadge size="xs" showLabel={false} />
-                          )}
-                        </div>
-                        <div className="flex items-center gap-2 text-xs md:text-sm text-brand-sandstone/50 font-medium">
-                          <span>{relativeTime(post.created_at)}</span>
-                          {post.official_content_type && (
-                            <>
-                              <span>•</span>
-                              <span className="text-orange-400 font-bold capitalize">
-                                {post.official_content_type.replace('_', ' ')}
-                              </span>
-                            </>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                    {post.is_pinned && (
-                      <span className="inline-flex items-center gap-1.5 text-xs md:text-sm font-black text-orange-400 bg-orange-500/15 px-3 py-1 rounded-full border border-orange-500/30">
-                        <Pin className="w-3 h-3 md:w-3.5 md:h-3.5" />
-                        Pinned
-                      </span>
-                    )}
-                  </div>
-                  {post.content && (
-                    <p className="text-sm sm:text-base md:text-[17px] text-brand-sandstone/95 leading-relaxed md:leading-[1.6] whitespace-pre-wrap font-normal">{post.content}</p>
-                  )}
-                  {post.media_urls && post.media_urls.length > 0 && (
-                    <TukubiGallery
-                      mediaUrls={post.media_urls}
-                      altText={`Post by ${profileData.display_name}`}
-                      authorName={profileData.display_name}
-                      className="w-full"
-                    />
-                  )}
-                </article>
-              ))
+              <FeedStream
+                initialPosts={posts}
+                currentUserId={currentUser?.id}
+                mode="profile"
+              />
             )}
           </section>
         )}

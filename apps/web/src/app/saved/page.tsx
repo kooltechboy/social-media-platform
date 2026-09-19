@@ -2,6 +2,7 @@ import React from 'react';
 import { redirect } from 'next/navigation';
 import { Bookmark } from 'lucide-react';
 import { createSupabaseServerClient, getCurrentUser } from '../../lib/supabase/server';
+import { hydratePostsEngagement } from '../../lib/feed/hydrate-posts';
 import FeedStream, { type FeedPostData } from '../../components/feed-stream';
 import type { Metadata } from 'next';
 
@@ -34,29 +35,12 @@ export default async function SavedPostsPage() {
       .limit(50);
 
     if (saves) {
-      savedPosts = saves
-        .filter((s: any) => s.posts)
-        .map((s: any) => {
-          const p = s.posts;
-          const prof = p.profiles;
-          return {
-            id: p.id,
-            authorId: prof?.id,
-            author: prof?.display_name || 'Caribbean Member',
-            handle: prof?.username || 'member',
-            avatarUrl: prof?.avatar_url,
-            verified: prof?.is_verified,
-            content: p.content,
-            time: p.created_at,
-            mediaUrls: Array.isArray(p.media_urls) ? p.media_urls : [],
-            culturalTags: Array.isArray(p.cultural_tags) ? p.cultural_tags : [],
-            locationTag: p.location_tag || undefined,
-            likes: Number(p.likes_count) || 0,
-            reposts: Number(p.shares_count) || 0,
-            comments: Number(p.comments_count) || 0,
-            isUserLiked: false,
-          };
-        });
+      const rawPosts = saves.filter((s: any) => s.posts).map((s: any) => s.posts);
+      const hydrated = await hydratePostsEngagement(rawPosts, supabase, {
+        currentUserId: user.id,
+        includeHidden: true,
+      });
+      savedPosts = hydrated.map((p) => ({ ...p, isSaved: true }));
     }
   }
 

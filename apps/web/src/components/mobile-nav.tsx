@@ -103,7 +103,11 @@ export default function MobileNav() {
     { href: '/feeds', fallbackLabel: 'Feeds', icon: Layers },
     { href: '/create', fallbackLabel: 'Create', icon: PlusCircle, isAction: true },
     { href: '/explore', labelKey: 'nav.explore', fallbackLabel: 'Explore', icon: Compass },
+    { href: '/messages', labelKey: 'nav.messages', fallbackLabel: 'Messages', icon: MessageSquare },
   ];
+
+  // Indicator condition for message touchpoints:
+  const hasUnreadMessagesTab = MOBILE_TABS.some((tab) => tab.href === '/messages' && unreadMessagesCount > 0);
 
   return (
     <>

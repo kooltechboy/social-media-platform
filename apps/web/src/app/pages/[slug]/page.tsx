@@ -25,8 +25,10 @@ import PageFollowButton from '../../../components/page-follow-button';
 import PagePostComposer from '../../../components/pages/page-post-composer';
 import RightRail from '../../../components/right-rail';
 import PagesRail from '../../../components/rails/pages-rail';
+import FeedStream from '../../../components/feed-stream';
 import { fetchPageDetailsAction, fetchMyPagesAction } from '../../../lib/pages/actions';
-import { getCurrentUser } from '../../../lib/supabase/server';
+import { createSupabaseServerClient, getCurrentUser } from '../../../lib/supabase/server';
+import { hydratePostsEngagement } from '@/lib/feed/hydrate-posts';
 
 export const dynamic = 'force-dynamic';
 
@@ -42,6 +44,7 @@ export default async function UniversalPageView({
   const activeTab = resolvedSearchParams.tab || 'home';
 
   const user = await getCurrentUser();
+  const supabase = await createSupabaseServerClient();
   const pageData = await fetchPageDetailsAction(slug);
 
   if (!pageData.page || pageData.error) {
@@ -57,6 +60,10 @@ export default async function UniversalPageView({
     currentUserRole,
     canManage,
   } = pageData;
+
+  const hydratedPosts = supabase && posts && posts.length > 0
+    ? await hydratePostsEngagement(posts, supabase, { currentUserId: user?.id })
+    : [];
 
   const myPages = user ? await fetchMyPagesAction() : [];
 
@@ -257,7 +264,7 @@ export default async function UniversalPageView({
             )}
 
             {/* Page Posts Stream */}
-            {posts.length === 0 ? (
+            {hydratedPosts.length === 0 ? (
               <div className="surface-card rounded-3xl p-10 text-center space-y-3 border border-white/10">
                 <FileText className="w-10 h-10 text-brand-sandstone/40 mx-auto" />
                 <h3 className="text-base font-black text-white">No posts published yet</h3>
@@ -268,67 +275,11 @@ export default async function UniversalPageView({
                 </p>
               </div>
             ) : (
-              <div className="space-y-4">
-                {posts.map((post: any) => (
-                  <article
-                    key={post.id}
-                    className="surface-card rounded-3xl p-6 border border-white/10 shadow-xl space-y-4"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-2xl bg-white/10 border border-white/15 flex items-center justify-center overflow-hidden shrink-0">
-                        {page.avatar_url ? (
-                          <img src={page.avatar_url} alt={page.name} className="w-full h-full object-cover" />
-                        ) : (
-                          <span className="text-base font-black text-white">{page.name.charAt(0)}</span>
-                        )}
-                      </div>
-                      <div>
-                        <h4 className="text-sm font-black text-white leading-tight">{page.name}</h4>
-                        <span className="text-[10px] text-brand-sandstone/60">
-                          {new Date(post.created_at).toLocaleDateString(undefined, {
-                            month: 'short',
-                            day: 'numeric',
-                            year: 'numeric',
-                          })}
-                        </span>
-                      </div>
-                    </div>
-
-                    <p className="text-xs sm:text-sm text-slate-200 leading-relaxed whitespace-pre-wrap">
-                      {post.content}
-                    </p>
-
-                    {post.media_urls && post.media_urls.length > 0 && (
-                      <div className="rounded-2xl overflow-hidden border border-white/10 max-h-96">
-                        <img
-                          src={post.media_urls[0]}
-                          alt="Post Media"
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                    )}
-
-                    {post.cultural_tags && post.cultural_tags.length > 0 && (
-                      <div className="flex flex-wrap gap-1.5 pt-1">
-                        {post.cultural_tags.map((t: string) => (
-                          <span
-                            key={t}
-                            className="px-2 py-0.5 rounded-lg bg-white/5 text-[10px] font-bold text-brand-caribbeanSea"
-                          >
-                            #{t}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-
-                    <div className="pt-3 border-t border-white/5 flex items-center gap-4 text-xs font-bold text-brand-sandstone/60">
-                      <span>{post.likes_count || 0} likes</span>
-                      <span>{post.comments_count || 0} comments</span>
-                      <span>{post.shares_count || 0} shares</span>
-                    </div>
-                  </article>
-                ))}
-              </div>
+              <FeedStream
+                initialPosts={hydratedPosts}
+                currentUserId={user?.id}
+                mode="page"
+              />
             )}
           </div>
         )}

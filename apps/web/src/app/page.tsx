@@ -4,6 +4,7 @@ import {
   getCurrentUser,
 } from '../lib/supabase/server';
 import { buildRankedFeed } from '../lib/feed/ranking';
+import { hydratePostsEngagement } from '../lib/feed/hydrate-posts';
 import { fetchActiveStoriesAction } from '../lib/social/actions';
 import { fetchTrendingSignalsAction } from '../lib/explore/actions';
 import PublicFrontDoor from '../components/public-front-door';
@@ -111,45 +112,38 @@ export default async function RootPage() {
     }));
 
     const rawPosts = postsRes.data || [];
-    if (rawPosts.length > 0) {
-      const postIds = rawPosts.map((p: any) => p.id);
-      const { data: reactions } = await supabase
-        .from('post_reactions')
-        .select('post_id')
-        .eq('user_id', user.id)
-        .in('post_id', postIds);
+    livePosts = await hydratePostsEngagement(rawPosts, supabase, {
+      currentUserId: user.id,
+    });
 
-      const userLikedSet = new Set(reactions?.map((r: any) => r.post_id) || []);
-
-      livePosts = rawPosts.map((p: any) => {
-        const rawProfile = p.profiles;
-        const profile = Array.isArray(rawProfile) ? rawProfile[0] : rawProfile;
-        const isPostOfficial =
-          profile?.username?.toLowerCase() === 'tukubi' || profile?.is_verified || false;
-
-        return {
-          id: p.id,
-          authorId: p.author_id,
-          author: profile?.display_name || 'Caribbean Member',
-          handle: profile?.username || 'member',
-          avatarUrl:
-            profile?.avatar_url || (isPostOfficial ? '/brand/tukubi-emblem.png' : null),
-          verified: profile?.is_verified ?? false,
-          isOfficial: isPostOfficial,
-          isPinned: p.is_pinned || false,
-          officialContentType: p.official_content_type,
-          location: 'Caribbean 🌴',
-          time: relativeTime(p.created_at),
-          content: p.content || '',
-          mediaUrls: p.media_urls || [],
-          culturalTags: p.cultural_tags || [],
-          likes: p.likes_count || 0,
-          reposts: p.shares_count || 0,
-          comments: p.comments_count || 0,
-          isUserLiked: userLikedSet.has(p.id),
-          category: 'caribbean',
-        };
-      });
+    // Authoritative Official Post fallback column selection contract:
+    // profiles:profiles!posts_author_id_fkey(display_name, username, avatar_url, is_verified)
+    const hasOfficialPost = livePosts.some(
+      (p) => p.handle?.toLowerCase() === 'tukubi' || p.id === 'd23f3e75-0dfa-47c6-8df9-2c0fa299d7ff'
+    );
+    if (!hasOfficialPost) {
+      const officialLaunchPost: FeedPostData = {
+        id: 'd23f3e75-0dfa-47c6-8df9-2c0fa299d7ff',
+        authorId: 'ff1e8b1f-7796-4424-b341-3b39e1c993bd',
+        author: 'TUKUBI',
+        handle: 'tukubi',
+        avatarUrl: '/brand/tukubi-emblem.png',
+        verified: true,
+        isOfficial: true,
+        isPinned: true,
+        officialContentType: 'welcome',
+        location: 'Tukubi Network 🌴',
+        time: 'Inaugural Launch',
+        content: `🌴 Welcome to TUKUBI — The Caribbean Connected.\n\nConnecting Caribbean people, culture, creators, businesses & the global diaspora in one unified digital ecosystem.\n\n🌎 Born in the Caribbean. Built for the World.\n\nJoin conversations across the islands, explore live audio/video broadcasts, discover local creators, support Caribbean merchants, and build the future of our digital heritage together. ☀️🌊🎶`,
+        mediaUrls: [],
+        culturalTags: ['caribbean', 'tukubiofficial', 'welcome', 'diaspora', 'culture'],
+        likes: 0,
+        reposts: 0,
+        comments: 0,
+        isUserLiked: false,
+        category: 'caribbean',
+      };
+      livePosts = [officialLaunchPost, ...livePosts];
     }
   }
 

@@ -2,6 +2,7 @@ import React from 'react';
 import Link from 'next/link';
 import { ArrowLeft, MessageSquare } from 'lucide-react';
 import { createSupabaseServerClient, getCurrentUser } from '../../../lib/supabase/server';
+import { hydratePostsEngagement } from '../../../lib/feed/hydrate-posts';
 import FeedStream, { type FeedPostData } from '../../../components/feed-stream';
 import type { Metadata } from 'next';
 
@@ -65,24 +66,10 @@ export default async function SinglePostPage({
     );
   }
 
-  const prof = (postRow as any).profiles;
-  const postData: FeedPostData = {
-    id: postRow.id,
-    authorId: prof?.id,
-    author: prof?.display_name || 'Caribbean Member',
-    handle: prof?.username || 'member',
-    avatarUrl: prof?.avatar_url,
-    verified: prof?.is_verified,
-    content: postRow.content,
-    time: postRow.created_at,
-    mediaUrls: Array.isArray(postRow.media_urls) ? postRow.media_urls : [],
-    culturalTags: Array.isArray(postRow.cultural_tags) ? postRow.cultural_tags : [],
-    location: postRow.location_tag || undefined,
-    likes: Number(postRow.likes_count) || 0,
-    reposts: Number(postRow.shares_count) || 0,
-    comments: Number(postRow.comments_count) || 0,
-    isUserLiked: false,
-  };
+  const [postData] = await hydratePostsEngagement([postRow], supabase, {
+    currentUserId: user?.id,
+    includeHidden: true,
+  });
 
   return (
     <div className="min-h-screen max-w-2xl mx-auto px-4 py-6 space-y-6">

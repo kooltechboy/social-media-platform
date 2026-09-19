@@ -19,6 +19,7 @@ import { createSupabaseServerClient, getCurrentUser } from '../../../lib/supabas
 import CommunityJoinButton from '../../../components/community-join-button';
 import FeedStream, { type FeedPostData } from '../../../components/feed-stream';
 import UniversalComposer from '../../../components/universal-composer';
+import { hydratePostsEngagement } from '@/lib/feed/hydrate-posts';
 
 export const dynamic = 'force-dynamic';
 
@@ -102,25 +103,8 @@ export default async function CommunityHubPage({
       isCreatorOrAdmin = !!user && (user.id === dbComm.created_by || memberRes.data?.role === 'admin');
 
       if (postsRes.data && postsRes.data.length > 0) {
-        communityPosts = postsRes.data.map((p: any) => {
-          const rawProfile = p.profiles;
-          const profile = Array.isArray(rawProfile) ? rawProfile[0] : rawProfile;
-          return {
-            id: p.id,
-            authorId: p.author_id,
-            author: profile?.display_name || 'Caribbean Member',
-            handle: profile?.username || 'member',
-            verified: profile?.is_verified ?? true,
-            location: community?.name || 'Community Hub',
-            time: 'Recent',
-            content: p.content || '',
-            mediaUrls: p.media_urls || [],
-            culturalTags: p.cultural_tags || [],
-            likes: p.likes_count || 0,
-            reposts: p.shares_count || 0,
-            comments: p.comments_count || 0,
-            category: 'caribbean',
-          };
+        communityPosts = await hydratePostsEngagement(postsRes.data, supabase, {
+          currentUserId: user?.id,
         });
       }
     }

@@ -48,6 +48,8 @@ import {
   unsavePostAction,
   getSavedPostIdsAction,
   fetchFeedPostsAction,
+  hidePostAction,
+  unhidePostAction,
 } from '../lib/social/actions';
 import { translatePostAction } from '../lib/social/translate-actions';
 import { createSupabaseBrowserClient } from '../lib/supabase/browser';
@@ -87,6 +89,9 @@ export interface FeedPostData {
   tag?: string;
   culturalTags?: string[];
   isUserLiked?: boolean;
+  userReaction?: ReactionType | null;
+  isSaved?: boolean;
+  isAuthorFavorited?: boolean;
   category?: 'caribbean' | 'foryou' | 'diaspora' | 'creator';
   taggedProduct?: TaggedProduct;
   poll?: PollData;
@@ -134,6 +139,26 @@ export default function FeedStream({
   useEffect(() => {
     setCurrentCursor(nextCursor);
     setPosts(initialPosts);
+    setPostReactions((prev) => ({
+      ...Object.fromEntries(
+        initialPosts.map((p) => [
+          p.id,
+          p.userReaction ?? (p.isUserLiked ? ('like' as ReactionType) : null),
+        ])
+      ),
+      ...prev,
+    }));
+    setPostLikeCounts((prev) => ({
+      ...Object.fromEntries(initialPosts.map((p) => [p.id, p.likes])),
+      ...prev,
+    }));
+    setSavedPosts((prev) => {
+      const next = new Set(prev);
+      for (const p of initialPosts) {
+        if (p.isSaved) next.add(p.id);
+      }
+      return next;
+    });
   }, [nextCursor, initialPosts]);
 
   async function handleLoadMore() {
@@ -151,6 +176,26 @@ export default function FeedStream({
           const existingIds = new Set(prev.map((p) => p.id));
           const newUnique = res.posts.filter((p) => !existingIds.has(p.id));
           return [...prev, ...newUnique];
+        });
+        setPostReactions((prev) => ({
+          ...Object.fromEntries(
+            res.posts.map((p: any) => [
+              p.id,
+              p.userReaction ?? (p.isUserLiked ? ('like' as ReactionType) : null),
+            ])
+          ),
+          ...prev,
+        }));
+        setPostLikeCounts((prev) => ({
+          ...Object.fromEntries(res.posts.map((p: any) => [p.id, p.likes || 0])),
+          ...prev,
+        }));
+        setSavedPosts((prev) => {
+          const next = new Set(prev);
+          for (const p of res.posts) {
+            if (p.isSaved) next.add(p.id);
+          }
+          return next;
         });
       }
       setCurrentCursor(res.nextCursor);
@@ -193,12 +238,8 @@ export default function FeedStream({
   const [confirmDeletePostId, setConfirmDeletePostId] = useState<string | null>(null);
   const [activeEmojiPickerPostId, setActiveEmojiPickerPostId] = useState<string | null>(null);
   const [activeCommentEmojiPickerPostId, setActiveCommentEmojiPickerPostId] = useState<string | null>(null);
-  const [customEmojiReactions, setCustomEmojiReactions] = useState<
-    Record<string, Array<{ emoji: string; count: number; users: string[] }>>
-  >({});
-
   const [postReactions, setPostReactions] = useState<Record<string, ReactionType | null>>(
-    () => Object.fromEntries(initialPosts.map(p => [p.id, p.isUserLiked ? 'like' as ReactionType : null]))
+    () => Object.fromEntries(initialPosts.map(p => [p.id, p.userReaction ?? (p.isUserLiked ? 'like' as ReactionType : null)]))
   );
   const [postLikeCounts, setPostLikeCounts] = useState<Record<string, number>>(
     () => Object.fromEntries(initialPosts.map(p => [p.id, p.likes]))
@@ -219,35 +260,22 @@ export default function FeedStream({
     }
   };
 
-  function handleReactToPost(postId: string, emoji: string) {
-    setCustomEmojiReactions((prev) => {
-      const currentList = prev[postId] || [];
-      const existing = currentList.find((r) => r.emoji === emoji);
+  const handleHidePost = async (postId: string, reason: 'hide' | 'not_interested') => {
+    setPosts((prev) => prev.filter((p) => p.id !== postId));
+    try {
+      await hidePostAction(postId, reason);
+    } catch (err) {
+      console.error('[handleHidePost] Error hiding post:', err);
+    }
+  };
 
-      let nextList;
-      if (existing) {
-        if (currentUserId && existing.users.includes(currentUserId)) {
-          nextList = currentList
-            .map((r) =>
-              r.emoji === emoji
-                ? { ...r, count: r.count - 1, users: r.users.filter((u) => u !== currentUserId) }
-                : r
-            )
-            .filter((r) => r.count > 0);
-        } else {
-          nextList = currentList.map((r) =>
-            r.emoji === emoji
-              ? { ...r, count: r.count + 1, users: [...r.users, currentUserId || 'anon'] }
-              : r
-          );
-        }
-      } else {
-        nextList = [...currentList, { emoji, count: 1, users: [currentUserId || 'anon'] }];
-      }
-
-      return { ...prev, [postId]: nextList };
-    });
-  }
+  const handleUnhidePost = async (postId: string) => {
+    try {
+      await unhidePostAction(postId);
+    } catch (err) {
+      console.error('[handleUnhidePost] Error unhiding post:', err);
+    }
+  };
 
   // Content Translation State with full multilingual target support
   const [postTranslations, setPostTranslations] = useState<
@@ -450,6 +478,32 @@ export default function FeedStream({
           const oldRow = payload.old as any;
           if (oldRow?.id) {
             setPosts((prev) => prev.filter((p) => p.id !== oldRow.id));
+          }
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'posts' },
+        (payload) => {
+          const updatedRow = payload.new as any;
+          if (updatedRow?.id) {
+            setPosts((prev) =>
+              prev.map((p) => {
+                if (p.id !== updatedRow.id) return p;
+                return {
+                  ...p,
+                  likes: typeof updatedRow.likes_count === 'number' ? updatedRow.likes_count : p.likes,
+                  comments: typeof updatedRow.comments_count === 'number' ? updatedRow.comments_count : p.comments,
+                  reposts: typeof updatedRow.shares_count === 'number' ? updatedRow.shares_count : p.reposts,
+                };
+              })
+            );
+            if (typeof updatedRow.likes_count === 'number') {
+              setPostLikeCounts((prev) => ({
+                ...prev,
+                [updatedRow.id]: updatedRow.likes_count,
+              }));
+            }
           }
         }
       )
@@ -852,8 +906,8 @@ export default function FeedStream({
                   onToggleReaction={handleReaction}
                   currentReaction={postReactions[post.id]}
                   likeCount={postLikeCounts[post.id]}
-                  onReactWithEmoji={handleReactToPost}
-                  customEmojiList={customEmojiReactions[post.id]}
+                  onHidePost={handleHidePost}
+                  onUnhidePost={handleUnhidePost}
                   onShare={handleShare}
                   onDeletePost={handleDeletePost}
                   onReportPost={(postId) => {

@@ -27,6 +27,7 @@ import {
   HelpCircle,
   ChevronDown,
   Sparkles,
+  ArrowRight,
 } from 'lucide-react';
 import { useTranslation, TranslationKey } from '@caribbean/localization';
 import { useUnreadNotificationsCount, useUnreadMessagesCount } from './notifications-realtime-provider';
@@ -154,6 +155,12 @@ export default function AppSidebar({ currentPath }: { currentPath?: string }) {
       labelKey: 'nav.map',
       fallbackLabel: 'Caribbean Map',
       icon: MapPin,
+    },
+    {
+      href: '/creator-hub',
+      fallbackLabel: 'Creator Hub',
+      icon: Sparkles,
+      badge: 'HUB',
     },
     {
       href: '/creator-studio',
@@ -310,6 +317,45 @@ export default function AppSidebar({ currentPath }: { currentPath?: string }) {
               {renderNavList(ECOSYSTEM_NAV)}
             </div>
           )}
+        </div>
+
+        <div className="h-px bg-white/10 my-2" />
+
+        {/* Creator Ecosystem Action Card */}
+        <div className="glass rounded-2xl p-4 space-y-3">
+          <div className="flex items-center justify-center gap-1.5 text-xs font-black text-brand-caribbeanSea uppercase tracking-wide">
+            <Sparkles className="w-3.5 h-3.5 text-brand-goldenHour" /> Caribbean Creator Ecosystem
+          </div>
+          <p className="text-[11px] text-slate-300 leading-relaxed text-center">
+            Grow your presence, connect with fans, and operate your media business on TUKUBI.
+          </p>
+
+          <div className="space-y-2 pt-1">
+            <Link
+              href="/creator-hub"
+              className="w-full flex items-center justify-between p-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 transition-all text-left group min-h-[44px]"
+            >
+              <div>
+                <p className="text-xs font-black text-brand-goldenHour flex items-center gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5" /> Creator Hub
+                </p>
+                <p className="text-[10px] text-brand-sandstone/70">
+                  Your home base, audience &amp; business
+                </p>
+              </div>
+              <ArrowRight className="w-3.5 h-3.5 text-brand-goldenHour opacity-0 group-hover:opacity-100 transition-opacity" />
+            </Link>
+
+            <Link
+              href="/creator-studio"
+              className="w-full block bg-gradient-to-r from-brand-caribbeanSea to-brand-sunriseCoral hover:brightness-110 text-slate-950 font-black text-xs py-2.5 rounded-xl transition-all shadow-md shadow-brand-caribbeanSea/20 text-center min-h-[40px] flex items-center justify-center"
+            >
+              Open Creator Studio
+            </Link>
+            <p className="text-[10px] text-center text-brand-sandstone/60">
+              Create, manage, analyze &amp; monetize content
+            </p>
+          </div>
         </div>
       </div>
 

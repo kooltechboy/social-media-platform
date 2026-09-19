@@ -73,7 +73,7 @@ export default function UniversalPageCreateWizard() {
   const [coverImageUrl, setCoverImageUrl] = useState<string>('');
 
   // Step 3: Location
-  const [countryIso, setCountryIso] = useState<string>('JM');
+  const [countryIso, setCountryIso] = useState('');
   const [city, setCity] = useState<string>('');
   const [address, setAddress] = useState<string>('');
   const [isGlobalDiaspora, setIsGlobalDiaspora] = useState<boolean>(false);
@@ -396,6 +396,7 @@ export default function UniversalPageCreateWizard() {
                   onChange={(e) => setCountryIso(e.target.value)}
                   className="w-full px-4 py-3 rounded-2xl bg-brand-dusk border border-white/10 text-white text-xs font-bold focus:outline-none focus:border-brand-sunriseCoral transition-colors"
                 >
+                  <option value="">Select Country / Territory...</option>
                   <optgroup label="Caribbean Territories">
                     {CARIBBEAN_TERRITORIES.map((t) => (
                       <option key={t.iso} value={t.iso}>

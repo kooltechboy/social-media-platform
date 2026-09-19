@@ -33,6 +33,7 @@ import OfficialBadge from '../official/official-badge';
 import ReactionPicker, { type ReactionType } from '../reactions/reaction-picker';
 import EmojiPickerPopover from '../emoji/emoji-picker-popover';
 import { createSupabaseBrowserClient } from '../../lib/supabase/browser';
+import { hidePostAction, unhidePostAction } from '../../lib/social/actions';
 import TukubiImage from '../ui/tukubi-image';
 import TukubiVideoPlayer from '../media/tukubi-video-player';
 import TukubiGallery from '../media/tukubi-gallery';
@@ -49,12 +50,14 @@ export interface FeedPostProps {
   onToggleReaction: (postId: string, type: ReactionType) => void;
   currentReaction?: ReactionType | null;
   likeCount?: number;
-  onReactWithEmoji: (postId: string, emoji: string) => void;
+  onReactWithEmoji?: (postId: string, emoji: string) => void;
   customEmojiList?: Array<{ emoji: string; count: number; users: string[] }>;
   onShare: (post: FeedPostData) => void;
   onDeletePost: (postId: string) => void;
   onReportPost: (postId: string) => void;
   onTipCreator: (target: { name: string; handle: string }) => void;
+  onHidePost?: (postId: string, reason: 'hide' | 'not_interested') => void;
+  onUnhidePost?: (postId: string) => void;
 
   // Comments
   isCommentsExpanded?: boolean;
@@ -95,6 +98,8 @@ export default function FeedPost({
   onDeletePost,
   onReportPost,
   onTipCreator,
+  onHidePost,
+  onUnhidePost,
 
   // Comments
   isCommentsExpanded = false,
@@ -119,18 +124,25 @@ export default function FeedPost({
   const [isCommentEmojiPickerOpen, setIsCommentEmojiPickerOpen] = useState(false);
   const [isHidden, setIsHidden] = useState(false);
   const [isNotInterested, setIsNotInterested] = useState(false);
-  const [isFavorite, setIsFavorite] = useState(false);
+  const [isFavorite, setIsFavorite] = useState(Boolean(post.isAuthorFavorited));
 
   const isAuthor = Boolean(currentUserId && post.authorId === currentUserId);
   const rootComments = commentList.filter((c) => !c.parent_id);
 
   if (isHidden) {
     return (
-      <div className="glass rounded-2xl p-4 text-center text-xs text-brand-sandstone/60 border border-white/5 flex items-center justify-between">
-        <span>Post hidden from your current feed session.</span>
+      <div className="glass rounded-2xl p-4 text-center text-xs text-brand-sandstone/60 border border-white/5 flex items-center justify-between animate-fadeIn">
+        <span>Post hidden from your feed.</span>
         <button
           type="button"
-          onClick={() => setIsHidden(false)}
+          onClick={async () => {
+            setIsHidden(false);
+            if (onUnhidePost) {
+              onUnhidePost(post.id);
+            } else {
+              await unhidePostAction(post.id);
+            }
+          }}
           className="text-brand-caribbeanSea font-bold hover:underline"
         >
           Undo
@@ -141,11 +153,18 @@ export default function FeedPost({
 
   if (isNotInterested) {
     return (
-      <div className="glass rounded-2xl p-4 text-center text-xs text-brand-sandstone/60 border border-white/5 flex items-center justify-between">
+      <div className="glass rounded-2xl p-4 text-center text-xs text-brand-sandstone/60 border border-white/5 flex items-center justify-between animate-fadeIn">
         <span>Thanks for your feedback. We will show fewer posts like this.</span>
         <button
           type="button"
-          onClick={() => setIsNotInterested(false)}
+          onClick={async () => {
+            setIsNotInterested(false);
+            if (onUnhidePost) {
+              onUnhidePost(post.id);
+            } else {
+              await unhidePostAction(post.id);
+            }
+          }}
           className="text-brand-goldenHour font-bold hover:underline"
         >
           Undo
@@ -309,9 +328,14 @@ export default function FeedPost({
 
               <button
                 type="button"
-                onClick={() => {
+                onClick={async () => {
                   setIsHidden(true);
                   setIsMenuOpen(false);
+                  if (onHidePost) {
+                    onHidePost(post.id, 'hide');
+                  } else {
+                    await hidePostAction(post.id, 'hide');
+                  }
                 }}
                 className="w-full text-left px-3 py-2.5 rounded-xl text-slate-200 hover:bg-white/10 flex items-center gap-2.5 font-semibold transition-colors min-h-[40px]"
               >
@@ -321,9 +345,14 @@ export default function FeedPost({
 
               <button
                 type="button"
-                onClick={() => {
+                onClick={async () => {
                   setIsNotInterested(true);
                   setIsMenuOpen(false);
+                  if (onHidePost) {
+                    onHidePost(post.id, 'not_interested');
+                  } else {
+                    await hidePostAction(post.id, 'not_interested');
+                  }
                 }}
                 className="w-full text-left px-3 py-2.5 rounded-xl text-slate-200 hover:bg-white/10 flex items-center gap-2.5 font-semibold transition-colors min-h-[40px]"
               >
@@ -494,23 +523,6 @@ export default function FeedPost({
       {/* Interactive Poll Widget */}
       {post.poll && <InteractivePollWidget initialPoll={post.poll} currentUserId={currentUserId} />}
 
-      {/* Custom Emoji Reactions Display */}
-      {customEmojiList.length > 0 && (
-        <div className="flex flex-wrap items-center gap-1.5 pt-1">
-          {customEmojiList.map((r, i) => (
-            <button
-              key={`${r.emoji}-${i}`}
-              type="button"
-              onClick={() => onReactWithEmoji(post.id, r.emoji)}
-              className="px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/20 border border-white/10 text-xs sm:text-sm flex items-center gap-1.5 text-white shadow-sm transition-transform active:scale-95 min-h-[36px]"
-            >
-              <span className="text-base">{r.emoji}</span>
-              <span className="text-xs font-black">{r.count}</span>
-            </button>
-          ))}
-        </div>
-      )}
-
       {/* ────────────────────────────────────────────────────────── */}
       {/* 4. INTERACTION BAR                                        */}
       {/* ────────────────────────────────────────────────────────── */}
@@ -524,30 +536,6 @@ export default function FeedPost({
           <span className="text-xs sm:text-sm font-semibold text-slate-200 tabular-nums">
             {likeCount || 0}
           </span>
-        </div>
-
-        {/* Quick Emoji Reaction Trigger */}
-        <div className="relative">
-          <button
-            type="button"
-            onClick={() => setIsEmojiPickerOpen(!isEmojiPickerOpen)}
-            className="flex items-center gap-1.5 hover:text-amber-300 transition-colors px-2.5 py-2 min-h-[44px] rounded-xl font-semibold select-none"
-            title="React with Emoji"
-            aria-label="React with Emoji"
-          >
-            <Smile className="w-5 h-5 text-amber-400" />
-            <span className="hidden sm:inline">React</span>
-          </button>
-
-          <EmojiPickerPopover
-            isOpen={isEmojiPickerOpen}
-            onClose={() => setIsEmojiPickerOpen(false)}
-            onSelectEmoji={(emoji) => {
-              onReactWithEmoji(post.id, emoji);
-              setIsEmojiPickerOpen(false);
-            }}
-            position="top"
-          />
         </div>
 
         {/* Comments Toggle */}
@@ -612,6 +600,7 @@ export default function FeedPost({
               </p>
             ) : (
               rootComments.map((c, i) => {
+                const cProfile = Array.isArray(c.profiles) ? c.profiles[0] : c.profiles;
                 const isCommentAuthor = Boolean(currentUserId && c.author_id === currentUserId);
                 const replies = commentList.filter((r) => r.parent_id === c.id);
 
@@ -620,16 +609,16 @@ export default function FeedPost({
                     {/* Root Comment Card */}
                     <div className="p-3.5 rounded-2xl bg-black/30 border border-white/8 space-y-1.5 group hover:border-white/15 transition-colors">
                       <div className="flex items-center justify-between">
-                        {c.profiles?.username ? (
+                        {cProfile?.username ? (
                           <Link
-                            href={`/profile/${c.profiles.username}`}
+                            href={`/profile/${cProfile.username}`}
                             className="text-xs sm:text-sm font-bold text-slate-200 hover:text-brand-caribbeanSea transition-colors"
                           >
-                            {c.profiles?.display_name || 'Caribbean Member'}
+                            {cProfile?.display_name || 'Caribbean Member'}
                           </Link>
                         ) : (
                           <span className="text-xs sm:text-sm font-bold text-slate-200">
-                            {c.profiles?.display_name || 'Caribbean Member'}
+                            {cProfile?.display_name || 'Caribbean Member'}
                           </span>
                         )}
 
@@ -639,7 +628,7 @@ export default function FeedPost({
                             onClick={() =>
                               onSetReplyingTo(post.id, {
                                 commentId: c.id,
-                                authorName: c.profiles?.display_name || 'Member',
+                                authorName: cProfile?.display_name || 'Member',
                               })
                             }
                             className="text-xs text-brand-caribbeanSea hover:underline font-semibold min-h-[32px] flex items-center"
@@ -647,9 +636,9 @@ export default function FeedPost({
                             Reply
                           </button>
 
-                          {!isCommentAuthor && c.profiles?.username && (
+                          {!isCommentAuthor && cProfile?.username && (
                             <Link
-                              href={`/messages?u=${encodeURIComponent(c.profiles.username)}`}
+                              href={`/messages?u=${encodeURIComponent(cProfile.username)}`}
                               className="text-xs text-slate-400 hover:text-brand-caribbeanSea font-semibold flex items-center gap-1 min-h-[32px]"
                               title="Direct message author"
                             >
@@ -681,6 +670,7 @@ export default function FeedPost({
                     {replies.length > 0 && (
                       <div className="ml-5 pl-3.5 border-l-2 border-brand-caribbeanSea/25 space-y-2">
                         {replies.map((r, ri) => {
+                          const rProfile = Array.isArray(r.profiles) ? r.profiles[0] : r.profiles;
                           const isReplyAuthor = Boolean(currentUserId && r.author_id === currentUserId);
                           return (
                             <div
@@ -688,23 +678,23 @@ export default function FeedPost({
                               className="p-3 rounded-xl bg-black/20 border border-white/5 space-y-1 group"
                             >
                               <div className="flex items-center justify-between">
-                                {r.profiles?.username ? (
+                                {rProfile?.username ? (
                                   <Link
-                                    href={`/profile/${r.profiles.username}`}
+                                    href={`/profile/${rProfile.username}`}
                                     className="text-xs font-bold text-brand-sandstone hover:text-brand-caribbeanSea transition-colors"
                                   >
-                                    {r.profiles?.display_name || 'Caribbean Member'}
+                                    {rProfile?.display_name || 'Caribbean Member'}
                                   </Link>
                                 ) : (
                                   <span className="text-xs font-bold text-brand-sandstone">
-                                    {r.profiles?.display_name || 'Caribbean Member'}
+                                    {rProfile?.display_name || 'Caribbean Member'}
                                   </span>
                                 )}
 
                                 <div className="flex items-center gap-2">
-                                  {!isReplyAuthor && r.profiles?.username && (
+                                  {!isReplyAuthor && rProfile?.username && (
                                     <Link
-                                      href={`/messages?u=${encodeURIComponent(r.profiles.username)}`}
+                                      href={`/messages?u=${encodeURIComponent(rProfile.username)}`}
                                       className="text-[11px] text-slate-400 hover:text-brand-caribbeanSea font-semibold flex items-center gap-0.5"
                                       title="Direct message author"
                                     >
