@@ -20,7 +20,16 @@ function relativeTime(iso: string): string {
 export async function loadFeedPageData(rawMode?: string, cursor?: string) {
   const user = await getCurrentUser();
   if (!user) {
-    return { user: null, mode: 'for_you' as FeedMode, posts: [], friendsCount: 0, followingCount: 0, favoritesCount: 0, suggestedCreators: [] };
+    return {
+      user: null,
+      mode: 'for_you' as FeedMode,
+      posts: [],
+      friendsCount: 0,
+      followingCount: 0,
+      favoritesCount: 0,
+      suggestedCreators: [],
+      trendingTopics: [],
+    };
   }
 
   let normalizedMode = typeof rawMode === 'string' ? rawMode.toLowerCase().replace(/-/g, '_') : 'for_you';
@@ -34,9 +43,10 @@ export async function loadFeedPageData(rawMode?: string, cursor?: string) {
   let followingCount = 0;
   let favoritesCount = 0;
   let suggestedCreators: any[] = [];
+  let trendingTopics: Array<{ tag: string; post_count?: number }> = [];
 
   if (supabase) {
-    const [postsRes, friendsRes, followsRes, favsRes, creatorsRes] = await Promise.all([
+    const [postsRes, friendsRes, followsRes, favsRes, creatorsRes, trendingRes] = await Promise.all([
       buildRankedFeed(user.id, mode, supabase, cursor, { skipCache: true }),
       supabase
         .from('friendships')
@@ -57,12 +67,22 @@ export async function loadFeedPageData(rawMode?: string, cursor?: string) {
         .neq('id', user.id)
         .eq('is_verified', true)
         .limit(3),
+      supabase
+        .from('trending_signals')
+        .select('*')
+        .gt('expires_at', new Date().toISOString())
+        .order('score', { ascending: false })
+        .limit(8),
     ]);
 
     friendsCount = friendsRes.count || 0;
     followingCount = followsRes.count || 0;
     favoritesCount = favsRes.count || 0;
     suggestedCreators = creatorsRes.data || [];
+    trendingTopics = (trendingRes.data || []).map((s: any) => ({
+      tag: (s.entity_label || '').replace(/^#/, ''),
+      post_count: s.post_count_last_24h,
+    })).filter((t: any) => Boolean(t.tag));
 
     const data = postsRes.data;
     if (postsRes.nextCursor) {
@@ -123,5 +143,6 @@ export async function loadFeedPageData(rawMode?: string, cursor?: string) {
     followingCount,
     favoritesCount,
     suggestedCreators,
+    trendingTopics,
   };
 }

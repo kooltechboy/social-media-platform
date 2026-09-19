@@ -24,6 +24,7 @@ export default async function FeedsTabRoute(props: FeedsTabRouteProps) {
     followingCount,
     favoritesCount,
     suggestedCreators,
+    trendingTopics,
   } = await loadFeedPageData(params.tab, cursor);
 
   if (!user) {
@@ -40,6 +41,7 @@ export default async function FeedsTabRoute(props: FeedsTabRouteProps) {
       followingCount={followingCount}
       favoritesCount={favoritesCount}
       suggestedCreators={suggestedCreators}
+      trendingTopics={trendingTopics}
     />
   );
 }

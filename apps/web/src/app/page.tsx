@@ -5,6 +5,7 @@ import {
 } from '../lib/supabase/server';
 import { buildRankedFeed } from '../lib/feed/ranking';
 import { fetchActiveStoriesAction } from '../lib/social/actions';
+import { fetchTrendingSignalsAction } from '../lib/explore/actions';
 import PublicFrontDoor from '../components/public-front-door';
 import HomeDashboard from '../components/home/home-dashboard';
 import { type FeedPostData } from '../components/feed-stream';
@@ -36,12 +37,13 @@ export default async function RootPage() {
   let marketProducts: any[] = [];
   let culturalEvents: any[] = [];
   let suggestedPeople: any[] = [];
+  let trendingTopics: Array<{ tag: string; post_count?: number }> = [];
 
   if (supabase) {
     const sixHoursAgo = new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString();
     const nowIso = new Date().toISOString();
 
-    const [postsRes, liveRes, reelsRes, marketRes, eventsRes, peopleRes, followsRes] =
+    const [postsRes, liveRes, reelsRes, marketRes, eventsRes, peopleRes, followsRes, trendingSignals] =
       await Promise.all([
         buildRankedFeed(user.id, 'for_you', supabase),
         supabase
@@ -81,7 +83,13 @@ export default async function RootPage() {
           .from('follows')
           .select('following_id')
           .eq('follower_id', user.id),
+        fetchTrendingSignalsAction(),
       ]);
+
+    trendingTopics = (trendingSignals || []).map((s) => ({
+      tag: s.entity_label.replace(/^#/, ''),
+      post_count: s.post_count_last_24h,
+    }));
 
     activeLiveStream = liveRes.data
       ? {
@@ -160,6 +168,7 @@ export default async function RootPage() {
       culturalEvents={culturalEvents}
       recentPosts={livePosts}
       suggestedPeople={suggestedPeople}
+      trendingTopics={trendingTopics}
     />
   );
 }

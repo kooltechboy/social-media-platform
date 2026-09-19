@@ -58,17 +58,7 @@ export default function HomeRail({
   marketplaceItems = [],
   activeLiveStream = null,
 }: HomeRailProps) {
-  // Default authentic Caribbean trending topics if none loaded
-  const displayTrends =
-    trendingTopics.length > 0
-      ? trendingTopics
-      : [
-          { tag: 'Carnival2026', post_count: 1420 },
-          { tag: 'ReggaeMonth', post_count: 890 },
-          { tag: 'SocaVibes', post_count: 650 },
-          { tag: 'HaitianCulture', post_count: 512 },
-          { tag: 'CaribbeanDiaspora', post_count: 480 },
-        ];
+  const displayTrends = trendingTopics;
 
   return (
     <div className="space-y-5">
@@ -177,29 +167,35 @@ export default function HomeRail({
           </Link>
         </div>
 
-        <div className="space-y-2 pt-0.5">
-          {displayTrends.slice(0, 5).map((trend, idx) => (
-            <Link
-              key={trend.tag}
-              href={`/search?q=${encodeURIComponent(trend.tag)}`}
-              className="flex items-center justify-between p-2 rounded-xl hover:bg-white/5 transition-colors group"
-            >
-              <div className="min-w-0">
-                <span className="text-[10px] text-brand-sandstone/50 font-bold">
-                  #{idx + 1} Trending
-                </span>
-                <p className="text-xs font-black text-white group-hover:text-brand-goldenHour transition-colors truncate">
-                  #{trend.tag}
-                </p>
-              </div>
-              {trend.post_count !== undefined && (
-                <span className="text-[10px] font-bold text-brand-sandstone/60 shrink-0">
-                  {trend.post_count} posts
-                </span>
-              )}
-            </Link>
-          ))}
-        </div>
+        {displayTrends.length === 0 ? (
+          <p className="text-xs text-brand-sandstone/60 py-2">
+            Trending topics will appear here as the TUKUBI community grows.
+          </p>
+        ) : (
+          <div className="space-y-2 pt-0.5">
+            {displayTrends.slice(0, 5).map((trend, idx) => (
+              <Link
+                key={trend.tag}
+                href={`/explore?q=${encodeURIComponent('#' + trend.tag)}`}
+                className="flex items-center justify-between p-2 rounded-xl hover:bg-white/5 transition-colors group"
+              >
+                <div className="min-w-0">
+                  <span className="text-[10px] text-brand-sandstone/50 font-bold">
+                    #{idx + 1} Trending
+                  </span>
+                  <p className="text-xs font-black text-white group-hover:text-brand-goldenHour transition-colors truncate">
+                    #{trend.tag}
+                  </p>
+                </div>
+                {trend.post_count !== undefined && (
+                  <span className="text-[10px] font-bold text-brand-sandstone/60 shrink-0">
+                    {trend.post_count} posts
+                  </span>
+                )}
+              </Link>
+            ))}
+          </div>
+        )}
       </section>
 
       {/* 4. Upcoming Cultural Events Spotlight */}

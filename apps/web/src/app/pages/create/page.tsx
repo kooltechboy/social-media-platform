@@ -10,7 +10,6 @@ import {
   Users,
   Radio,
   Palette,
-  HeartHandshake,
   Store,
   MapPin,
   Camera,
@@ -21,588 +20,708 @@ import {
   ArrowLeft,
   CheckCircle,
   ShieldCheck,
+  Search,
+  Music,
+  Tv,
+  GraduationCap,
+  Trophy,
   Compass,
+  Laptop,
+  Check,
 } from 'lucide-react';
 import { CARIBBEAN_TERRITORIES } from '../../../lib/constants/caribbean-territories';
 import { DIASPORA_COUNTRIES } from '../../../lib/constants/diaspora-hubs';
-import { createBusinessPageAction } from '../../../lib/business/actions';
-import { createSupabaseBrowserClient } from '../../../lib/supabase/browser';
+import { createUniversalPageAction } from '../../../lib/pages/actions';
+import {
+  UNIVERSAL_CATEGORY_GROUPS,
+  type UniversalPageCategory,
+  searchCategories,
+  PageCategoryGroupKey,
+} from '../../../lib/pages/categories';
 
-type PageEntityType =
-  | 'business'
-  | 'creator'
-  | 'organization'
-  | 'brand'
-  | 'media'
-  | 'cultural'
-  | 'community'
-  | 'other';
-
-interface EntityClass {
-  id: PageEntityType;
-  title: string;
-  description: string;
-  icon: React.ReactNode;
-  badge: string;
-}
-
-const ENTITY_CLASSES: EntityClass[] = [
-  {
-    id: 'business',
-    title: 'Business & Storefront',
-    description: 'Retail, restaurants, hotels, services, trade, and culinary brands.',
-    icon: <Store className="w-6 h-6 text-brand-sunriseCoral" />,
-    badge: 'COMMERCE',
-  },
-  {
-    id: 'creator',
-    title: 'Creator & Artist Hub',
-    description: 'Musicians, DJs, painters, designers, performers, and writers.',
-    icon: <Sparkles className="w-6 h-6 text-brand-caribbeanSea" />,
-    badge: 'CREATIVE',
-  },
-  {
-    id: 'organization',
-    title: 'Organization & NGO',
-    description: 'Non-profits, foundations, educational bodies, and diaspora societies.',
-    icon: <Landmark className="w-6 h-6 text-brand-goldenHour" />,
-    badge: 'OFFICIAL',
-  },
-  {
-    id: 'brand',
-    title: 'Brand or Product Line',
-    description: 'Fashion labels, rum distilleries, coffee roasters, cosmetics, and lifestyle goods.',
-    icon: <Palette className="w-6 h-6 text-purple-400" />,
-    badge: 'BRAND',
-  },
-  {
-    id: 'media',
-    title: 'Media & Publication',
-    description: 'Radio networks, podcasts, news outlets, magazines, and content channels.',
-    icon: <Radio className="w-6 h-6 text-rose-400" />,
-    badge: 'BROADCAST',
-  },
-  {
-    id: 'cultural',
-    title: 'Cultural Group / Mas Band',
-    description: 'Carnival mas bands, folklore troupes, steelpan orchestras, and heritage groups.',
-    icon: <Users className="w-6 h-6 text-yellow-400" />,
-    badge: 'HERITAGE',
-  },
-];
-
-const CATEGORY_PRESETS: Record<PageEntityType, string[]> = {
-  business: ['Restaurant & Bar', 'Retail & Boutique', 'Hotel & Hospitality', 'Professional Services', 'Tourism & Travel', 'Health & Wellness', 'Other Business'],
-  creator: ['Musician & DJ', 'Visual Artist', 'Fashion Designer', 'Content Creator', 'Culinary Chef', 'Author / Poet', 'Photographer', 'Other Creator'],
-  organization: ['Diaspora Association', 'Youth & Education', 'Community Development', 'Cultural Heritage', 'Charity / Relief', 'Professional Guild'],
-  brand: ['Apparel & Island Wear', 'Spices & Culinary', 'Artisan Goods', 'Beverage & Rum', 'Beauty & Sea Moss', 'Technology & Audio'],
-  media: ['Radio Station', 'Podcast Show', 'News & Diaspora Media', 'Entertainment Channel', 'Magazine & Blog'],
-  cultural: ['Carnival Mas Band', 'Steelpan Orchestra', 'Folklore & Dance', 'Festival & Carnival', 'Cultural Heritage Archive'],
-  community: ['Island Alumni Network', 'Neighborhood Guild', 'Diaspora City Circle'],
-  other: ['General Community Page', 'Public Interest'],
+const GROUP_ICONS: Record<PageCategoryGroupKey, React.ElementType> = {
+  creator: Sparkles,
+  business: Building2,
+  media: Tv,
+  community: Users,
+  education: GraduationCap,
+  institution: Landmark,
+  sports: Trophy,
+  faith: Compass,
+  events: Sparkles,
+  travel: MapPin,
+  technology: Laptop,
+  other: Globe,
 };
 
-export default function CreatePageWizard() {
+export default function UniversalPageCreateWizard() {
   const router = useRouter();
-  const [step, setStep] = useState(1);
-  const [pageName, setPageName] = useState('');
-  const [pageSlug, setPageSlug] = useState('');
-  const [entityType, setEntityType] = useState<PageEntityType>('business');
-  const [category, setCategory] = useState('Retail & Boutique');
-  const [country, setCountry] = useState('');
-  const [city, setCity] = useState('');
-  const [avatarUrl, setAvatarUrl] = useState('');
-  const [coverImageUrl, setCoverImageUrl] = useState('');
-  const [description, setDescription] = useState('');
-  const [website, setWebsite] = useState('');
-  const [contactEmail, setContactEmail] = useState('');
-  const [phone, setPhone] = useState('');
 
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [createdSlug, setCreatedSlug] = useState<string | null>(null);
+  // Wizard Step (1 - 6)
+  const [currentStep, setCurrentStep] = useState<number>(1);
 
+  // Form State
+  const [selectedGroup, setSelectedGroup] = useState<PageCategoryGroupKey>('creator');
+  const [selectedCategory, setSelectedCategory] = useState<string>('Creator');
+  const [categorySearchQuery, setCategorySearchQuery] = useState<string>('');
+
+  // Step 2: Identity
+  const [name, setName] = useState<string>('');
+  const [slug, setSlug] = useState<string>('');
+  const [description, setDescription] = useState<string>('');
+  const [avatarUrl, setAvatarUrl] = useState<string>('');
+  const [coverImageUrl, setCoverImageUrl] = useState<string>('');
+
+  // Step 3: Location
+  const [countryIso, setCountryIso] = useState<string>('JM');
+  const [city, setCity] = useState<string>('');
+  const [address, setAddress] = useState<string>('');
+  const [isGlobalDiaspora, setIsGlobalDiaspora] = useState<boolean>(false);
+
+  // Step 4: Contact
+  const [website, setWebsite] = useState<string>('');
+  const [contactEmail, setContactEmail] = useState<string>('');
+  const [phone, setPhone] = useState<string>('');
+
+  // Step 5: Specialized
+  const [specializedField1, setSpecializedField1] = useState<string>(''); // e.g. Genre, Specialty, Mission
+  const [specializedField2, setSpecializedField2] = useState<string>(''); // e.g. Portfolio, Hours, Programs
+
+  // Submission State
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  // Auto-generate slug from name
   function handleNameChange(val: string) {
-    setPageName(val);
-    const slugified = val
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/(^-|-$)/g, '');
-    setPageSlug(slugified);
-  }
-
-  function handleEntityTypeChange(type: PageEntityType) {
-    setEntityType(type);
-    const presets = CATEGORY_PRESETS[type] || CATEGORY_PRESETS.other;
-    if (presets && presets.length > 0) {
-      setCategory(presets[0]);
+    setName(val);
+    if (!slug || slug === name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')) {
+      const generated = val.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+      setSlug(generated);
     }
   }
 
-  async function handleSubmit(e: React.FormEvent) {
+  // Handle final page launch
+  async function handleCreatePage(e: React.FormEvent) {
     e.preventDefault();
-    if (!pageName.trim() || !pageSlug.trim()) {
-      setErrorMessage('Page name and URL slug are required.');
-      return;
-    }
-
+    setErrorMsg(null);
     setIsSubmitting(true);
-    setErrorMessage(null);
-
-    // Resolve country ISO
-    const matchedTerritory = CARIBBEAN_TERRITORIES.find((t) => t.name === country || t.iso === country);
-    const matchedDiaspora = DIASPORA_COUNTRIES.find((d) => d.name === country || d.iso === country);
-    const resolvedIso = matchedTerritory?.iso || matchedDiaspora?.iso || 'JM';
-
-    const formData = new FormData();
-    formData.set('name', pageName.trim());
-    formData.set('slug', pageSlug.trim());
-    formData.set('category', category || entityType);
-    formData.set('description', description.trim());
-    formData.set('countryIso', resolvedIso);
-    formData.set('phone', phone.trim());
-    formData.set('website', website.trim());
-    formData.set('contactEmail', contactEmail.trim());
-    formData.set('avatarUrl', avatarUrl.trim());
-    formData.set('coverImageUrl', coverImageUrl.trim());
 
     try {
-      const res = await createBusinessPageAction({ error: null }, formData);
+      const formData = new FormData();
+      formData.set('name', name.trim());
+      formData.set('slug', slug.trim());
+      formData.set('category', selectedCategory);
+      formData.set('description', description.trim());
+      formData.set('countryIso', countryIso);
+      formData.set('phone', phone.trim());
+      formData.set('website', website.trim());
+      formData.set('contactEmail', contactEmail.trim());
+      formData.set('avatarUrl', avatarUrl.trim());
+      formData.set('coverImageUrl', coverImageUrl.trim());
+
+      const res = await createUniversalPageAction({ error: null }, formData);
       if (res.error) {
-        setErrorMessage(res.error);
+        setErrorMsg(res.error);
+        setIsSubmitting(false);
       } else if (res.slug) {
-        setCreatedSlug(res.slug);
+        router.push(`/pages/${res.slug}`);
       }
     } catch (err: any) {
-      setErrorMessage(err.message || 'Failed to create Page. Please check your connection.');
-    } finally {
+      setErrorMsg(err?.message || 'Failed to create Page. Please try again.');
       setIsSubmitting(false);
     }
   }
 
-  async function handleSwitchToPage() {
-    if (!createdSlug) return;
-    try {
-      const supabase = createSupabaseBrowserClient();
-      if (supabase) {
-        const { data: business } = await supabase
-          .from('businesses')
-          .select('id')
-          .eq('slug', createdSlug)
-          .maybeSingle();
+  // Active Category Group Object
+  const currentGroupObj = UNIVERSAL_CATEGORY_GROUPS.find((g) => g.key === selectedGroup);
+  const filteredCategories = categorySearchQuery
+    ? searchCategories(categorySearchQuery)
+    : currentGroupObj?.categories || [];
 
-        if (business) {
-          await supabase.rpc('switch_active_identity', {
-            p_identity_id: business.id,
-            p_identity_type: 'business',
-          });
-          if (typeof window !== 'undefined') {
-            localStorage.setItem('tukubi_active_identity_id', business.id);
-            localStorage.setItem('tukubi_active_identity_type', 'business');
-          }
-        }
-      }
-    } catch {
-      // non-blocking
-    }
-    router.push(`/pages/${createdSlug}/manage`);
-  }
-
-  // ──────────────────────────────────────────────────────────────────────────
-  // SUCCESS STATE: Page is published
-  // ──────────────────────────────────────────────────────────────────────────
-  if (createdSlug) {
-    return (
-      <div className="min-h-screen bg-transparent text-white p-4 sm:p-6 max-w-2xl mx-auto flex flex-col items-center justify-center text-center space-y-6 animate-fadeIn">
-        <div className="w-20 h-20 rounded-3xl bg-brand-caribbeanSea/20 border-2 border-brand-caribbeanSea flex items-center justify-center text-brand-caribbeanSea shadow-2xl shadow-brand-caribbeanSea/30">
-          <CheckCircle className="w-10 h-10" />
-        </div>
-
-        <div className="space-y-2">
-          <span className="text-xs font-black uppercase tracking-widest text-brand-caribbeanSea">
-            Official Page Published
-          </span>
-          <h1 className="text-2xl sm:text-3xl font-black text-white">{pageName}</h1>
-          <p className="text-xs sm:text-sm text-brand-sandstone/70 max-w-md mx-auto">
-            Your Page is live on TUKUBI! You can manage posts, update info, add products or events, and operate under your Page identity.
-          </p>
-        </div>
-
-        <div className="p-4 rounded-2xl bg-white/5 border border-white/10 w-full max-w-md text-left space-y-2">
-          <p className="text-xs text-brand-sandstone/60">Direct Page Address:</p>
-          <p className="text-sm font-mono font-bold text-brand-goldenHour truncate">
-            tukubi.com/pages/{createdSlug}
-          </p>
-        </div>
-
-        <div className="flex flex-col sm:flex-row items-center gap-3 w-full max-w-md">
-          <button
-            onClick={handleSwitchToPage}
-            className="w-full sm:flex-1 bg-gradient-to-r from-brand-caribbeanSea to-brand-sunriseCoral text-slate-950 font-black py-3 rounded-2xl text-xs sm:text-sm shadow-xl shadow-brand-caribbeanSea/20 hover:brightness-110 transition-all flex items-center justify-center gap-2"
-          >
-            <ShieldCheck className="w-4 h-4" /> Manage Page Now
-          </button>
-          <Link
-            href={`/pages/${createdSlug}`}
-            className="w-full sm:flex-1 bg-white/10 hover:bg-white/15 text-white font-bold py-3 rounded-2xl text-xs sm:text-sm border border-white/15 transition-colors flex items-center justify-center gap-2"
-          >
-            View Live Page →
-          </Link>
-        </div>
-      </div>
-    );
-  }
-
-  // ──────────────────────────────────────────────────────────────────────────
-  // WIZARD FORM
-  // ──────────────────────────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen bg-transparent text-white p-4 sm:p-6 lg:p-8 max-w-3xl mx-auto space-y-8 animate-fadeIn">
-      {/* Step Header */}
-      <div className="border-b border-white/10 pb-5 flex items-center justify-between">
-        <div>
-          <div className="flex items-center gap-2">
-            <span className="text-[10px] sm:text-xs font-black uppercase tracking-widest text-brand-sunriseCoral">
-              Create a Caribbean Page • Step {step} of 4
-            </span>
-          </div>
-          <h1 className="text-xl sm:text-2xl font-black text-white mt-1">
-            {step === 1 && 'What kind of Page are you creating?'}
-            {step === 2 && 'Category & Geography'}
-            {step === 3 && 'Visuals & Mission'}
-            {step === 4 && 'Contact Details & Review'}
-          </h1>
-        </div>
-
+    <div className="max-w-3xl mx-auto py-6 sm:py-10 px-4 space-y-8 animate-fadeIn">
+      {/* Header & Back */}
+      <div className="flex items-center justify-between">
         <Link
           href="/pages"
-          className="text-xs text-brand-sandstone/60 hover:text-white px-3 py-1.5 rounded-xl border border-white/10 hover:bg-white/5 transition-colors"
+          className="inline-flex items-center gap-2 text-xs font-bold text-brand-sandstone/70 hover:text-white transition-colors"
         >
-          Cancel
+          <ArrowLeft className="w-4 h-4" /> Back to Pages
         </Link>
+        <span className="text-xs font-black uppercase tracking-wider text-brand-sunriseCoral">
+          Step {currentStep} of 6
+        </span>
       </div>
 
-      {errorMessage && (
-        <div className="p-3.5 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs font-semibold">
-          {errorMessage}
-        </div>
-      )}
+      {/* Progress Bar */}
+      <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden">
+        <div
+          className="h-full bg-gradient-to-r from-orange-500 via-amber-400 to-emerald-400 transition-all duration-300"
+          style={{ width: `${(currentStep / 6) * 100}%` }}
+        />
+      </div>
 
-      {/* ── STEP 1: Entity Type & Name ── */}
-      {step === 1 && (
-        <div className="space-y-6">
-          <div className="space-y-3">
-            <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider">
-              1. Choose Page Type
-            </label>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {ENTITY_CLASSES.map((opt) => (
-                <div
-                  key={opt.id}
-                  onClick={() => handleEntityTypeChange(opt.id)}
-                  className={`p-4 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between space-y-2.5 ${
-                    entityType === opt.id
-                      ? 'bg-brand-caribbeanSea/15 border-brand-caribbeanSea shadow-lg shadow-brand-caribbeanSea/10'
-                      : 'bg-[#140C22]/80 border-white/10 hover:border-white/20'
-                  }`}
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="p-2 rounded-xl bg-white/5 border border-white/10">
-                      {opt.icon}
-                    </div>
-                    <span className="text-[9px] font-black px-2 py-0.5 rounded-full bg-white/10 text-slate-300">
-                      {opt.badge}
-                    </span>
-                  </div>
-                  <div>
-                    <h3 className="font-extrabold text-sm text-white">{opt.title}</h3>
-                    <p className="text-[11px] text-brand-sandstone/65 mt-1 leading-snug">
-                      {opt.description}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
+      {/* Step Container Card */}
+      <div className="surface-card rounded-3xl p-6 sm:p-10 border border-white/15 shadow-2xl space-y-6">
+        {errorMsg && (
+          <div className="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs font-bold animate-shake">
+            {errorMsg}
           </div>
+        )}
 
-          <div className="space-y-4 pt-2">
-            <div>
-              <label className="block text-xs font-bold text-slate-300 mb-1">
-                Page / Organization Name *
-              </label>
+        {/* ── STEP 1: What is this Page? ── */}
+        {currentStep === 1 && (
+          <div className="space-y-6">
+            <div className="space-y-1.5">
+              <span className="text-xs font-black uppercase tracking-wider text-orange-400">
+                Step 1 · Categorization
+              </span>
+              <h2 className="text-2xl sm:text-3xl font-black text-white">What is this Page?</h2>
+              <p className="text-xs sm:text-sm text-brand-sandstone/70">
+                Select the broad category that best represents this Page. You can always refine this later.
+              </p>
+            </div>
+
+            {/* Category Search */}
+            <div className="relative">
+              <Search className="w-4 h-4 text-brand-sandstone/50 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
               <input
                 type="text"
-                value={pageName}
-                onChange={(e) => handleNameChange(e.target.value)}
-                placeholder="e.g. Kingston Artisan Coffee Co. or Soca Kingdom"
-                className="w-full bg-[#140C22] border border-white/15 rounded-2xl px-4 py-3 text-sm text-white placeholder-white/40 focus:outline-none focus:border-brand-caribbeanSea transition-colors"
+                value={categorySearchQuery}
+                onChange={(e) => setCategorySearchQuery(e.target.value)}
+                placeholder="Search categories (e.g., Musician, Restaurant, Non-profit, DJ, School)..."
+                className="w-full pl-10 pr-4 py-2.5 rounded-2xl bg-white/5 border border-white/10 text-white placeholder:text-brand-sandstone/40 text-xs focus:outline-none focus:border-brand-sunriseCoral transition-colors"
               />
             </div>
 
-            <div>
-              <label className="block text-xs font-bold text-slate-300 mb-1">
-                Custom Page Link (URL Slug) *
-              </label>
-              <div className="flex items-center bg-[#0D0817] border border-white/15 rounded-2xl px-4 py-2.5 text-xs text-brand-sandstone/60 font-mono">
-                <span>tukubi.com/pages/</span>
+            {/* Group Selector Pills (if not searching) */}
+            {!categorySearchQuery && (
+              <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
+                {UNIVERSAL_CATEGORY_GROUPS.map((grp) => {
+                  const Icon = GROUP_ICONS[grp.key] || Building2;
+                  const isSelected = selectedGroup === grp.key;
+                  return (
+                    <button
+                      key={grp.key}
+                      type="button"
+                      onClick={() => {
+                        setSelectedGroup(grp.key);
+                        if (grp.categories[0]) {
+                          setSelectedCategory(grp.categories[0].name);
+                        }
+                      }}
+                      className={`px-3 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 shrink-0 transition-all ${
+                        isSelected
+                          ? 'bg-brand-sunriseCoral text-slate-950 shadow-md font-black'
+                          : 'bg-white/5 text-brand-sandstone/80 hover:bg-white/10 hover:text-white border border-white/5'
+                      }`}
+                    >
+                      <Icon className="w-3.5 h-3.5" />
+                      <span>{grp.name}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* Categories Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 max-h-[300px] overflow-y-auto pr-1">
+              {filteredCategories.map((cat: UniversalPageCategory) => {
+                const isSelected = selectedCategory === cat.name;
+                return (
+                  <button
+                    key={cat.id}
+                    type="button"
+                    onClick={() => setSelectedCategory(cat.name)}
+                    className={`p-3.5 rounded-2xl border text-left transition-all flex items-start justify-between ${
+                      isSelected
+                        ? 'bg-brand-sunriseCoral/15 border-brand-sunriseCoral text-white shadow-inner'
+                        : 'bg-white/5 border-white/5 hover:border-white/20 text-slate-300'
+                    }`}
+                  >
+                    <div>
+                      <p className="text-xs font-black text-white">{cat.name}</p>
+                      <p className="text-[11px] text-brand-sandstone/60 leading-tight mt-0.5">
+                        {cat.description}
+                      </p>
+                    </div>
+                    {isSelected && (
+                      <Check className="w-4 h-4 text-brand-sunriseCoral shrink-0 ml-2" />
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className="flex items-center justify-end pt-4 border-t border-white/10">
+              <button
+                type="button"
+                onClick={() => setCurrentStep(2)}
+                className="px-6 py-3 rounded-2xl bg-brand-sunriseCoral hover:brightness-110 text-slate-950 font-black text-xs flex items-center gap-2 transition-all shadow-md"
+              >
+                <span>Continue: Page Identity</span>
+                <ArrowRight className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* ── STEP 2: Page Identity ── */}
+        {currentStep === 2 && (
+          <div className="space-y-6">
+            <div className="space-y-1.5">
+              <span className="text-xs font-black uppercase tracking-wider text-orange-400">
+                Step 2 · Identity
+              </span>
+              <h2 className="text-2xl sm:text-3xl font-black text-white">Page Identity</h2>
+              <p className="text-xs sm:text-sm text-brand-sandstone/70">
+                Provide the public name, unique handle, and visual assets for your Page.
+              </p>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-xs font-black text-white uppercase tracking-wider mb-1.5">
+                  Page Name *
+                </label>
                 <input
                   type="text"
-                  value={pageSlug}
-                  onChange={(e) => setPageSlug(e.target.value.toLowerCase().replace(/[^a-z0-9]+/g, '-'))}
-                  className="bg-transparent text-brand-goldenHour font-bold focus:outline-none flex-1 ml-1"
+                  required
+                  value={name}
+                  onChange={(e) => handleNameChange(e.target.value)}
+                  placeholder="e.g. Island Pulse Media, Kingston Jerk Hut, Blue Mountain Coffee"
+                  className="w-full px-4 py-3 rounded-2xl bg-white/5 border border-white/10 text-white placeholder:text-brand-sandstone/40 text-sm focus:outline-none focus:border-brand-sunriseCoral transition-colors"
                 />
               </div>
-            </div>
-          </div>
 
-          <div className="pt-4 flex justify-end">
-            <button
-              type="button"
-              disabled={!pageName.trim() || !pageSlug.trim()}
-              onClick={() => {
-                setErrorMessage(null);
-                setStep(2);
-              }}
-              className="bg-gradient-to-r from-brand-caribbeanSea to-brand-sunriseCoral text-slate-950 font-black px-6 py-2.5 rounded-2xl text-xs flex items-center gap-2 transition-all shadow-md shadow-brand-caribbeanSea/20 disabled:opacity-50"
-            >
-              Continue to Category &amp; Location <ArrowRight className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* ── STEP 2: Category & Geography ── */}
-      {step === 2 && (
-        <div className="space-y-6">
-          <div className="space-y-4">
-            <div>
-              <label className="block text-xs font-bold text-slate-300 mb-1">
-                Category
-              </label>
-              <select
-                value={category}
-                onChange={(e) => setCategory(e.target.value)}
-                className="w-full bg-[#140C22] border border-white/15 rounded-2xl px-4 py-3 text-xs text-white focus:outline-none focus:border-brand-caribbeanSea cursor-pointer"
-              >
-                {(CATEGORY_PRESETS[entityType] || CATEGORY_PRESETS.other).map((cat) => (
-                  <option key={cat} value={cat}>
-                    {cat}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-bold text-slate-300 mb-1">
-                  Island Nation / Diaspora Hub *
+                <label className="block text-xs font-black text-white uppercase tracking-wider mb-1.5">
+                  Page Handle / Custom URL *
+                </label>
+                <div className="flex items-center bg-white/5 border border-white/10 rounded-2xl px-4 py-2.5 focus-within:border-brand-sunriseCoral transition-colors">
+                  <span className="text-xs text-brand-sandstone/60 font-bold mr-1">tukubi.com/pages/</span>
+                  <input
+                    type="text"
+                    required
+                    value={slug}
+                    onChange={(e) => setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]+/g, ''))}
+                    placeholder="island-pulse"
+                    className="flex-1 bg-transparent text-white placeholder:text-brand-sandstone/40 text-xs font-bold focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-black text-white uppercase tracking-wider mb-1.5">
+                  Short Description / Bio
+                </label>
+                <textarea
+                  rows={3}
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder="What is this Page about? Tell the Caribbean community what you do..."
+                  className="w-full px-4 py-3 rounded-2xl bg-white/5 border border-white/10 text-white placeholder:text-brand-sandstone/40 text-xs focus:outline-none focus:border-brand-sunriseCoral transition-colors resize-none"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-black text-white uppercase tracking-wider mb-1.5">
+                    Avatar Image URL (Optional)
+                  </label>
+                  <input
+                    type="url"
+                    value={avatarUrl}
+                    onChange={(e) => setAvatarUrl(e.target.value)}
+                    placeholder="https://.../avatar.jpg"
+                    className="w-full px-4 py-2.5 rounded-2xl bg-white/5 border border-white/10 text-white placeholder:text-brand-sandstone/40 text-xs focus:outline-none focus:border-brand-sunriseCoral transition-colors"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-black text-white uppercase tracking-wider mb-1.5">
+                    Cover Banner URL (Optional)
+                  </label>
+                  <input
+                    type="url"
+                    value={coverImageUrl}
+                    onChange={(e) => setCoverImageUrl(e.target.value)}
+                    placeholder="https://.../cover.jpg"
+                    className="w-full px-4 py-2.5 rounded-2xl bg-white/5 border border-white/10 text-white placeholder:text-brand-sandstone/40 text-xs focus:outline-none focus:border-brand-sunriseCoral transition-colors"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between pt-4 border-t border-white/10">
+              <button
+                type="button"
+                onClick={() => setCurrentStep(1)}
+                className="px-5 py-2.5 rounded-2xl bg-white/10 text-white font-bold text-xs flex items-center gap-2 hover:bg-white/15 transition-all"
+              >
+                <ArrowLeft className="w-4 h-4" /> Back
+              </button>
+              <button
+                type="button"
+                disabled={!name.trim() || !slug.trim()}
+                onClick={() => setCurrentStep(3)}
+                className="px-6 py-3 rounded-2xl bg-brand-sunriseCoral hover:brightness-110 disabled:opacity-50 text-slate-950 font-black text-xs flex items-center gap-2 transition-all shadow-md"
+              >
+                <span>Continue: Location</span>
+                <ArrowRight className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* ── STEP 3: Location ── */}
+        {currentStep === 3 && (
+          <div className="space-y-6">
+            <div className="space-y-1.5">
+              <span className="text-xs font-black uppercase tracking-wider text-orange-400">
+                Step 3 · Geography
+              </span>
+              <h2 className="text-2xl sm:text-3xl font-black text-white">Location &amp; Reach</h2>
+              <p className="text-xs sm:text-sm text-brand-sandstone/70">
+                Anchor your Page in an island territory, diaspora hub, or select global presence.
+              </p>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-xs font-black text-white uppercase tracking-wider mb-1.5">
+                  Primary Country / Island Territory
                 </label>
                 <select
-                  value={country}
-                  onChange={(e) => setCountry(e.target.value)}
-                  className="w-full bg-[#140C22] border border-white/15 rounded-2xl px-4 py-3 text-xs text-white focus:outline-none focus:border-brand-caribbeanSea cursor-pointer"
+                  value={countryIso}
+                  onChange={(e) => setCountryIso(e.target.value)}
+                  className="w-full px-4 py-3 rounded-2xl bg-brand-dusk border border-white/10 text-white text-xs font-bold focus:outline-none focus:border-brand-sunriseCoral transition-colors"
                 >
-                  <option value="">Select Country / Territory...</option>
-                  <optgroup label="Caribbean Nations & Territories">
+                  <optgroup label="Caribbean Territories">
                     {CARIBBEAN_TERRITORIES.map((t) => (
-                      <option key={t.iso} value={t.name}>
-                        {t.flag} {t.name}
+                      <option key={t.iso} value={t.iso}>
+                        {t.flag} {t.name} ({t.iso})
                       </option>
                     ))}
                   </optgroup>
-                  <optgroup label="Global Diaspora Hubs">
-                    {DIASPORA_COUNTRIES.map((c) => (
-                      <option key={c.iso} value={c.name}>
-                        {c.flag} {c.name}
+                  <optgroup label="Diaspora Hubs">
+                    {DIASPORA_COUNTRIES.map((d) => (
+                      <option key={d.iso} value={d.iso}>
+                        {d.flag} {d.name} ({d.iso})
                       </option>
                     ))}
-                    <option value="Global Diaspora 🌍">🌍 Global Diaspora</option>
                   </optgroup>
                 </select>
               </div>
 
-              <div>
-                <label className="block text-xs font-bold text-slate-300 mb-1">
-                  City / Parish / District (Optional)
-                </label>
-                <input
-                  type="text"
-                  value={city}
-                  onChange={(e) => setCity(e.target.value)}
-                  placeholder="e.g. Kingston, Port of Spain, Brooklyn, London"
-                  className="w-full bg-[#140C22] border border-white/15 rounded-2xl px-4 py-3 text-xs text-white focus:outline-none focus:border-brand-caribbeanSea"
-                />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-black text-white uppercase tracking-wider mb-1.5">
+                    City, Town, or Parish (Optional)
+                  </label>
+                  <input
+                    type="text"
+                    value={city}
+                    onChange={(e) => setCity(e.target.value)}
+                    placeholder="e.g. Kingston, Port of Spain, Bridgetown"
+                    className="w-full px-4 py-2.5 rounded-2xl bg-white/5 border border-white/10 text-white placeholder:text-brand-sandstone/40 text-xs focus:outline-none focus:border-brand-sunriseCoral transition-colors"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-black text-white uppercase tracking-wider mb-1.5">
+                    Street Address (Optional)
+                  </label>
+                  <input
+                    type="text"
+                    value={address}
+                    onChange={(e) => setAddress(e.target.value)}
+                    placeholder="e.g. 12 Hope Road"
+                    className="w-full px-4 py-2.5 rounded-2xl bg-white/5 border border-white/10 text-white placeholder:text-brand-sandstone/40 text-xs focus:outline-none focus:border-brand-sunriseCoral transition-colors"
+                  />
+                </div>
               </div>
+
+              <label className="flex items-center gap-3 p-3.5 rounded-2xl bg-white/5 border border-white/5 cursor-pointer hover:bg-white/10 transition-colors">
+                <input
+                  type="checkbox"
+                  checked={isGlobalDiaspora}
+                  onChange={(e) => setIsGlobalDiaspora(e.target.checked)}
+                  className="rounded border-white/20 text-brand-sunriseCoral focus:ring-brand-sunriseCoral"
+                />
+                <div>
+                  <p className="text-xs font-black text-white">Global Diaspora Outreach</p>
+                  <p className="text-[11px] text-brand-sandstone/60">
+                    This Page actively serves Caribbean diaspora communities worldwide.
+                  </p>
+                </div>
+              </label>
+            </div>
+
+            <div className="flex items-center justify-between pt-4 border-t border-white/10">
+              <button
+                type="button"
+                onClick={() => setCurrentStep(2)}
+                className="px-5 py-2.5 rounded-2xl bg-white/10 text-white font-bold text-xs flex items-center gap-2 hover:bg-white/15 transition-all"
+              >
+                <ArrowLeft className="w-4 h-4" /> Back
+              </button>
+              <button
+                type="button"
+                onClick={() => setCurrentStep(4)}
+                className="px-6 py-3 rounded-2xl bg-brand-sunriseCoral hover:brightness-110 text-slate-950 font-black text-xs flex items-center gap-2 transition-all shadow-md"
+              >
+                <span>Continue: Contact Info</span>
+                <ArrowRight className="w-4 h-4" />
+              </button>
             </div>
           </div>
+        )}
 
-          <div className="pt-4 flex items-center justify-between">
-            <button
-              type="button"
-              onClick={() => setStep(1)}
-              className="text-xs font-bold text-brand-sandstone/70 hover:text-white flex items-center gap-1.5"
-            >
-              <ArrowLeft className="w-4 h-4" /> Back
-            </button>
-            <button
-              type="button"
-              disabled={!country}
-              onClick={() => setStep(3)}
-              className="bg-gradient-to-r from-brand-caribbeanSea to-brand-sunriseCoral text-slate-950 font-black px-6 py-2.5 rounded-2xl text-xs flex items-center gap-2 transition-all shadow-md shadow-brand-caribbeanSea/20 disabled:opacity-50"
-            >
-              Continue to Visuals &amp; Bio <ArrowRight className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* ── STEP 3: Visuals & Mission ── */}
-      {step === 3 && (
-        <div className="space-y-6">
-          <div className="space-y-4">
-            <div>
-              <label className="block text-xs font-bold text-slate-300 mb-1">
-                Profile Image or Logo (Image URL)
-              </label>
-              <input
-                type="url"
-                value={avatarUrl}
-                onChange={(e) => setAvatarUrl(e.target.value)}
-                placeholder="https://images.unsplash.com/... or direct image link"
-                className="w-full bg-[#140C22] border border-white/15 rounded-2xl px-4 py-3 text-xs text-white placeholder-white/35 focus:outline-none focus:border-brand-caribbeanSea"
-              />
-              <p className="text-[10px] text-brand-sandstone/50 mt-1">
-                Leave empty to use the default vibrant island badge.
+        {/* ── STEP 4: Contact & Social Info ── */}
+        {currentStep === 4 && (
+          <div className="space-y-6">
+            <div className="space-y-1.5">
+              <span className="text-xs font-black uppercase tracking-wider text-orange-400">
+                Step 4 · Contact Channels
+              </span>
+              <h2 className="text-2xl sm:text-3xl font-black text-white">Contact &amp; External Links</h2>
+              <p className="text-xs sm:text-sm text-brand-sandstone/70">
+                Provide public contact details so followers, customers, and partners can reach you.
               </p>
             </div>
 
-            <div>
-              <label className="block text-xs font-bold text-slate-300 mb-1">
-                Cover Banner Image (Image URL)
-              </label>
-              <input
-                type="url"
-                value={coverImageUrl}
-                onChange={(e) => setCoverImageUrl(e.target.value)}
-                placeholder="https://images.unsplash.com/... (1200x400 recommended)"
-                className="w-full bg-[#140C22] border border-white/15 rounded-2xl px-4 py-3 text-xs text-white placeholder-white/35 focus:outline-none focus:border-brand-caribbeanSea"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-bold text-slate-300 mb-1">
-                About &amp; Mission Description
-              </label>
-              <textarea
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder="Tell the Caribbean community about your story, mission, offerings, or cultural roots..."
-                rows={4}
-                className="w-full bg-[#140C22] border border-white/15 rounded-2xl p-4 text-xs text-white placeholder-white/35 focus:outline-none focus:border-brand-caribbeanSea resize-none"
-              />
-            </div>
-          </div>
-
-          <div className="pt-4 flex items-center justify-between">
-            <button
-              type="button"
-              onClick={() => setStep(2)}
-              className="text-xs font-bold text-brand-sandstone/70 hover:text-white flex items-center gap-1.5"
-            >
-              <ArrowLeft className="w-4 h-4" /> Back
-            </button>
-            <button
-              type="button"
-              onClick={() => setStep(4)}
-              className="bg-gradient-to-r from-brand-caribbeanSea to-brand-sunriseCoral text-slate-950 font-black px-6 py-2.5 rounded-2xl text-xs flex items-center gap-2 transition-all shadow-md shadow-brand-caribbeanSea/20"
-            >
-              Continue to Contact &amp; Review <ArrowRight className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* ── STEP 4: Contact Information & Review ── */}
-      {step === 4 && (
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="space-y-4">
-            <p className="text-xs text-brand-sandstone/70">
-              Optional public contact info so supporters and customers can connect directly:
-            </p>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-4">
               <div>
-                <label className="block text-xs font-bold text-slate-300 mb-1 flex items-center gap-1.5">
-                  <Globe className="w-3.5 h-3.5 text-brand-caribbeanSea" /> Website URL (Optional)
+                <label className="block text-xs font-black text-white uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                  <Globe className="w-3.5 h-3.5 text-brand-caribbeanSea" /> Official Website (Optional)
+                </label>
+                <input
+                  type="url"
+                  value={website}
+                  onChange={(e) => setWebsite(e.target.value)}
+                  placeholder="https://myislandbrand.com"
+                  className="w-full px-4 py-3 rounded-2xl bg-white/5 border border-white/10 text-white placeholder:text-brand-sandstone/40 text-xs focus:outline-none focus:border-brand-sunriseCoral transition-colors"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-black text-white uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                    <Mail className="w-3.5 h-3.5 text-orange-400" /> Public Contact Email (Optional)
+                  </label>
+                  <input
+                    type="email"
+                    value={contactEmail}
+                    onChange={(e) => setContactEmail(e.target.value)}
+                    placeholder="contact@myislandbrand.com"
+                    className="w-full px-4 py-2.5 rounded-2xl bg-white/5 border border-white/10 text-white placeholder:text-brand-sandstone/40 text-xs focus:outline-none focus:border-brand-sunriseCoral transition-colors"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-black text-white uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                    <Phone className="w-3.5 h-3.5 text-emerald-400" /> Phone Number (Optional)
+                  </label>
+                  <input
+                    type="tel"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    placeholder="+1 (876) 555-0199"
+                    className="w-full px-4 py-2.5 rounded-2xl bg-white/5 border border-white/10 text-white placeholder:text-brand-sandstone/40 text-xs focus:outline-none focus:border-brand-sunriseCoral transition-colors"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between pt-4 border-t border-white/10">
+              <button
+                type="button"
+                onClick={() => setCurrentStep(3)}
+                className="px-5 py-2.5 rounded-2xl bg-white/10 text-white font-bold text-xs flex items-center gap-2 hover:bg-white/15 transition-all"
+              >
+                <ArrowLeft className="w-4 h-4" /> Back
+              </button>
+              <button
+                type="button"
+                onClick={() => setCurrentStep(5)}
+                className="px-6 py-3 rounded-2xl bg-brand-sunriseCoral hover:brightness-110 text-slate-950 font-black text-xs flex items-center gap-2 transition-all shadow-md"
+              >
+                <span>Continue: Specialized Info</span>
+                <ArrowRight className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* ── STEP 5: Specialized Category Fields ── */}
+        {currentStep === 5 && (
+          <div className="space-y-6">
+            <div className="space-y-1.5">
+              <span className="text-xs font-black uppercase tracking-wider text-orange-400">
+                Step 5 · Category Details
+              </span>
+              <h2 className="text-2xl sm:text-3xl font-black text-white">
+                {selectedCategory} Details
+              </h2>
+              <p className="text-xs sm:text-sm text-brand-sandstone/70">
+                Optional custom fields tailored to your category: {selectedCategory}.
+              </p>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-xs font-black text-white uppercase tracking-wider mb-1.5">
+                  {selectedGroup === 'creator'
+                    ? 'Primary Genre or Creative Discipline'
+                    : selectedGroup === 'business'
+                    ? 'Main Speciality or Cuisine / Goods'
+                    : selectedGroup === 'media'
+                    ? 'Broadcast Frequency or Format'
+                    : 'Primary Mission Focus'}
                 </label>
                 <input
                   type="text"
-                  value={website}
-                  onChange={(e) => setWebsite(e.target.value)}
-                  placeholder="e.g. https://yourbrand.com"
-                  className="w-full bg-[#140C22] border border-white/15 rounded-2xl px-4 py-2.5 text-xs text-white placeholder-white/35 focus:outline-none focus:border-brand-caribbeanSea"
+                  value={specializedField1}
+                  onChange={(e) => setSpecializedField1(e.target.value)}
+                  placeholder="e.g. Roots Reggae, Authentic Jerk Chicken, Diaspora Advocacy..."
+                  className="w-full px-4 py-3 rounded-2xl bg-white/5 border border-white/10 text-white placeholder:text-brand-sandstone/40 text-xs focus:outline-none focus:border-brand-sunriseCoral transition-colors"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-300 mb-1 flex items-center gap-1.5">
-                  <Mail className="w-3.5 h-3.5 text-brand-goldenHour" /> Contact Email (Optional)
+                <label className="block text-xs font-black text-white uppercase tracking-wider mb-1.5">
+                  {selectedGroup === 'business'
+                    ? 'Hours of Operation'
+                    : selectedGroup === 'creator'
+                    ? 'Notable Work or Portfolio Link'
+                    : 'Key Programs & Initiatives'}
                 </label>
                 <input
-                  type="email"
-                  value={contactEmail}
-                  onChange={(e) => setContactEmail(e.target.value)}
-                  placeholder="contact@yourbrand.com"
-                  className="w-full bg-[#140C22] border border-white/15 rounded-2xl px-4 py-2.5 text-xs text-white placeholder-white/35 focus:outline-none focus:border-brand-caribbeanSea"
+                  type="text"
+                  value={specializedField2}
+                  onChange={(e) => setSpecializedField2(e.target.value)}
+                  placeholder="e.g. Mon-Sat 10am - 9pm, Annual Carnival Mas Camp, Caribbean Youth Relief..."
+                  className="w-full px-4 py-3 rounded-2xl bg-white/5 border border-white/10 text-white placeholder:text-brand-sandstone/40 text-xs focus:outline-none focus:border-brand-sunriseCoral transition-colors"
                 />
               </div>
             </div>
 
-            <div>
-              <label className="block text-xs font-bold text-slate-300 mb-1 flex items-center gap-1.5">
-                <Phone className="w-3.5 h-3.5 text-brand-sunriseCoral" /> Phone Number (Optional)
-              </label>
-              <input
-                type="tel"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                placeholder="+1 (876) 555-0199"
-                className="w-full bg-[#140C22] border border-white/15 rounded-2xl px-4 py-2.5 text-xs text-white placeholder-white/35 focus:outline-none focus:border-brand-caribbeanSea"
-              />
+            <div className="flex items-center justify-between pt-4 border-t border-white/10">
+              <button
+                type="button"
+                onClick={() => setCurrentStep(4)}
+                className="px-5 py-2.5 rounded-2xl bg-white/10 text-white font-bold text-xs flex items-center gap-2 hover:bg-white/15 transition-all"
+              >
+                <ArrowLeft className="w-4 h-4" /> Back
+              </button>
+              <button
+                type="button"
+                onClick={() => setCurrentStep(6)}
+                className="px-6 py-3 rounded-2xl bg-brand-sunriseCoral hover:brightness-110 text-slate-950 font-black text-xs flex items-center gap-2 transition-all shadow-md"
+              >
+                <span>Continue: Review &amp; Launch</span>
+                <ArrowRight className="w-4 h-4" />
+              </button>
             </div>
           </div>
+        )}
 
-          {/* Quick Review Card */}
-          <div className="p-4 rounded-2xl bg-white/5 border border-white/10 space-y-2">
-            <h4 className="text-xs font-black uppercase tracking-wider text-brand-goldenHour">
-              Page Summary
-            </h4>
-            <div className="text-xs space-y-1 text-brand-sandstone/80">
-              <p><span className="text-white font-bold">Name:</span> {pageName}</p>
-              <p><span className="text-white font-bold">Link:</span> tukubi.com/pages/{pageSlug}</p>
-              <p><span className="text-white font-bold">Classification:</span> {category} ({entityType})</p>
-              <p><span className="text-white font-bold">Location:</span> {city ? `${city}, ` : ''}{country}</p>
+        {/* ── STEP 6: Review & Finish ── */}
+        {currentStep === 6 && (
+          <form onSubmit={handleCreatePage} className="space-y-6">
+            <div className="space-y-1.5">
+              <span className="text-xs font-black uppercase tracking-wider text-emerald-400">
+                Step 6 · Final Review
+              </span>
+              <h2 className="text-2xl sm:text-3xl font-black text-white">Review &amp; Launch Page</h2>
+              <p className="text-xs sm:text-sm text-brand-sandstone/70">
+                Review your Page identity. You will be designated as the Page Owner with full management access.
+              </p>
             </div>
-          </div>
 
-          <div className="pt-4 flex items-center justify-between">
-            <button
-              type="button"
-              onClick={() => setStep(3)}
-              className="text-xs font-bold text-brand-sandstone/70 hover:text-white flex items-center gap-1.5"
-            >
-              <ArrowLeft className="w-4 h-4" /> Back
-            </button>
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="bg-gradient-to-r from-brand-caribbeanSea to-brand-sunriseCoral text-slate-950 font-black px-8 py-3 rounded-2xl text-xs sm:text-sm flex items-center gap-2 transition-all shadow-xl shadow-brand-caribbeanSea/30 disabled:opacity-50 hover:brightness-110"
-            >
-              {isSubmitting ? 'Publishing Page…' : 'Publish Page →'}
-            </button>
-          </div>
-        </form>
-      )}
+            {/* Summary Preview Card */}
+            <div className="p-5 rounded-2xl bg-white/5 border border-white/10 space-y-4">
+              <div className="flex items-center gap-3">
+                <div className="w-14 h-14 rounded-2xl bg-white/10 border border-white/15 flex items-center justify-center overflow-hidden shrink-0">
+                  {avatarUrl ? (
+                    <img src={avatarUrl} alt={name} className="w-full h-full object-cover" />
+                  ) : (
+                    <span className="text-2xl">🌴</span>
+                  )}
+                </div>
+                <div className="min-w-0">
+                  <h3 className="text-lg font-black text-white truncate">{name}</h3>
+                  <p className="text-xs text-brand-sunriseCoral font-bold">tukubi.com/pages/{slug}</p>
+                  <p className="text-[11px] text-brand-sandstone/60">
+                    {selectedCategory} · {countryIso} 🌴
+                  </p>
+                </div>
+              </div>
+
+              {description && (
+                <p className="text-xs text-brand-sandstone/80 leading-relaxed italic border-t border-white/5 pt-3">
+                  "{description}"
+                </p>
+              )}
+
+              <div className="grid grid-cols-2 gap-2 text-xs pt-2 border-t border-white/5">
+                <div>
+                  <span className="text-brand-sandstone/60 block text-[10px] uppercase font-bold">Category</span>
+                  <span className="text-white font-bold">{selectedCategory}</span>
+                </div>
+                <div>
+                  <span className="text-brand-sandstone/60 block text-[10px] uppercase font-bold">Territory</span>
+                  <span className="text-white font-bold">{countryIso}</span>
+                </div>
+                {website && (
+                  <div>
+                    <span className="text-brand-sandstone/60 block text-[10px] uppercase font-bold">Website</span>
+                    <span className="text-white font-bold truncate block">{website}</span>
+                  </div>
+                )}
+                {contactEmail && (
+                  <div>
+                    <span className="text-brand-sandstone/60 block text-[10px] uppercase font-bold">Email</span>
+                    <span className="text-white font-bold truncate block">{contactEmail}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs space-y-1">
+              <p className="font-black flex items-center gap-1.5">
+                <ShieldCheck className="w-4 h-4" /> Ready for Caribbean Discovery
+              </p>
+              <p className="text-emerald-300/80">
+                Immediately after launching, your Page Dashboard will open with publishing tools, team roles, and customization options.
+              </p>
+            </div>
+
+            <div className="flex items-center justify-between pt-4 border-t border-white/10">
+              <button
+                type="button"
+                onClick={() => setCurrentStep(5)}
+                disabled={isSubmitting}
+                className="px-5 py-2.5 rounded-2xl bg-white/10 text-white font-bold text-xs flex items-center gap-2 hover:bg-white/15 transition-all"
+              >
+                <ArrowLeft className="w-4 h-4" /> Back
+              </button>
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="px-8 py-3 rounded-2xl bg-gradient-to-r from-orange-500 via-amber-500 to-emerald-400 hover:brightness-110 text-slate-950 font-black text-sm flex items-center gap-2 transition-all shadow-xl shadow-orange-500/20"
+              >
+                {isSubmitting ? (
+                  <span>Launching Page...</span>
+                ) : (
+                  <>
+                    <CheckCircle className="w-4 h-4" />
+                    <span>Launch Page Now</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </form>
+        )}
+      </div>
     </div>
   );
 }

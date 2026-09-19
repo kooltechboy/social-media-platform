@@ -23,6 +23,7 @@ export default async function FeedsPage(props: FeedsPageProps) {
     followingCount,
     favoritesCount,
     suggestedCreators,
+    trendingTopics,
   } = await loadFeedPageData(rawMode, cursor);
 
   if (!user) {
@@ -39,6 +40,7 @@ export default async function FeedsPage(props: FeedsPageProps) {
       followingCount={followingCount}
       favoritesCount={favoritesCount}
       suggestedCreators={suggestedCreators}
+      trendingTopics={trendingTopics}
     />
   );
 }

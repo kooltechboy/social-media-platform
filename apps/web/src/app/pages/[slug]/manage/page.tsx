@@ -1,8 +1,8 @@
 import React from 'react';
 import { notFound, redirect } from 'next/navigation';
 import Link from 'next/link';
-import { getCurrentUser, createSupabaseServerClient } from '../../../../lib/supabase/server';
-import { fetchBusinessPageAction } from '../../../../lib/business/actions';
+import { getCurrentUser } from '../../../../lib/supabase/server';
+import { fetchPageDetailsAction } from '../../../../lib/pages/actions';
 import PageManagementClient from './page-management-client';
 
 export const dynamic = 'force-dynamic';
@@ -19,14 +19,14 @@ export default async function PageManageRoute({
     redirect(`/login?next=/pages/${slug}/manage`);
   }
 
-  const { business, products } = await fetchBusinessPageAction(slug);
+  const pageData = await fetchPageDetailsAction(slug);
 
-  if (!business) {
+  if (!pageData.page || pageData.error) {
     notFound();
   }
 
-  // Security authorization: Only the owner can access this management console
-  if (business.owner_id !== user.id) {
+  // Security authorization: Only Owner or Admin can access management console
+  if (!pageData.canManage) {
     return (
       <div className="min-h-[60vh] flex flex-col items-center justify-center p-6 text-center text-white space-y-4">
         <div className="w-14 h-14 rounded-2xl bg-rose-500/20 text-rose-400 flex items-center justify-center text-2xl font-bold">
@@ -34,7 +34,7 @@ export default async function PageManageRoute({
         </div>
         <h1 className="text-xl font-black">Access Denied</h1>
         <p className="text-xs text-brand-sandstone/70 max-w-sm">
-          You do not have administrative ownership of this Page.
+          You must be an Owner or Administrator of this Page to access the management dashboard.
         </p>
         <Link
           href={`/pages/${slug}`}
@@ -46,23 +46,13 @@ export default async function PageManageRoute({
     );
   }
 
-  // Fetch follower count
-  let followerCount = 0;
-  const supabase = await createSupabaseServerClient();
-  if (supabase && business.owner_id) {
-    const { data: countRow } = await supabase
-      .from('profile_counts')
-      .select('followers_count')
-      .eq('id', business.owner_id)
-      .maybeSingle();
-    followerCount = countRow?.followers_count || 0;
-  }
-
   return (
     <PageManagementClient
-      business={business}
-      products={products || []}
-      followerCount={followerCount}
+      business={pageData.page}
+      products={pageData.products || []}
+      members={pageData.members || []}
+      followerCount={pageData.followerCount}
+      currentUserRole={pageData.currentUserRole || 'admin'}
       currentUser={user}
     />
   );

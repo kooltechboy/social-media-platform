@@ -52,15 +52,7 @@ export default function FeedsRail({
   trendingTopics = [],
   suggestedCreators = [],
 }: FeedsRailProps) {
-  const displayTrends =
-    trendingTopics.length > 0
-      ? trendingTopics
-      : [
-          { tag: 'CaribbeanMusic', post_count: 980 },
-          { tag: 'IslandLife', post_count: 740 },
-          { tag: 'DiasporaRoots', post_count: 610 },
-          { tag: 'CarnivalFete', post_count: 530 },
-        ];
+  const displayTrends = trendingTopics;
 
   return (
     <div className="space-y-5">
@@ -219,24 +211,30 @@ export default function FeedsRail({
           </div>
         </div>
 
-        <div className="space-y-2 pt-0.5">
-          {displayTrends.slice(0, 4).map((trend, idx) => (
-            <Link
-              key={trend.tag}
-              href={`/search?q=${encodeURIComponent(trend.tag)}`}
-              className="flex items-center justify-between p-2 rounded-xl hover:bg-white/5 transition-colors group"
-            >
-              <p className="text-xs font-black text-white group-hover:text-brand-caribbeanSea transition-colors truncate">
-                #{trend.tag}
-              </p>
-              {trend.post_count !== undefined && (
-                <span className="text-[10px] text-brand-sandstone/50 font-bold">
-                  {trend.post_count} posts
-                </span>
-              )}
-            </Link>
-          ))}
-        </div>
+        {displayTrends.length === 0 ? (
+          <p className="text-xs text-brand-sandstone/60 py-2">
+            Trending topics will appear here as the TUKUBI community grows.
+          </p>
+        ) : (
+          <div className="space-y-2 pt-0.5">
+            {displayTrends.slice(0, 5).map((trend) => (
+              <Link
+                key={trend.tag}
+                href={`/explore?q=${encodeURIComponent('#' + trend.tag)}`}
+                className="flex items-center justify-between p-2 rounded-xl hover:bg-white/5 transition-colors group"
+              >
+                <p className="text-xs font-black text-white group-hover:text-brand-caribbeanSea transition-colors truncate">
+                  #{trend.tag}
+                </p>
+                {trend.post_count !== undefined && (
+                  <span className="text-[10px] text-brand-sandstone/50 font-bold">
+                    {trend.post_count} posts
+                  </span>
+                )}
+              </Link>
+            ))}
+          </div>
+        )}
       </section>
 
       {/* 5. Switch to Home Prompt */}

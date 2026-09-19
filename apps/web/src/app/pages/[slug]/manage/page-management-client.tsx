@@ -21,14 +21,25 @@ import {
   Phone,
   Camera,
   RefreshCw,
+  UserPlus,
+  Shield,
+  AlertTriangle,
+  FileText,
+  Clock,
+  Send,
+  UserMinus,
 } from 'lucide-react';
 import {
-  updateBusinessPageAction,
-  archiveBusinessPageAction,
-  deleteBusinessPageAction,
-} from '../../../../lib/business/actions';
-import { createSupabaseBrowserClient } from '../../../../lib/supabase/browser';
+  updatePageDetailsAction,
+  togglePageDeactivationAction,
+  deletePagePermanentlyAction,
+  updatePageRoleAction,
+  removePageRoleAction,
+  type PageMemberSummary,
+  type PageRoleType,
+} from '../../../../lib/pages/actions';
 import { CARIBBEAN_TERRITORIES } from '../../../../lib/constants/caribbean-territories';
+import { ALL_UNIVERSAL_CATEGORIES } from '../../../../lib/pages/categories';
 
 interface PageManagementClientProps {
   business: {
@@ -36,6 +47,7 @@ interface PageManagementClientProps {
     name: string;
     slug: string;
     category?: string;
+    page_type?: string;
     description?: string;
     country_iso?: string;
     phone?: string;
@@ -43,11 +55,14 @@ interface PageManagementClientProps {
     contact_email?: string;
     avatar_url?: string;
     cover_image_url?: string;
+    is_deactivated?: boolean;
     is_archived?: boolean;
     created_at: string;
   };
   products: any[];
+  members: PageMemberSummary[];
   followerCount: number;
+  currentUserRole: PageRoleType;
   currentUser: {
     id: string;
     displayName: string;
@@ -57,15 +72,17 @@ interface PageManagementClientProps {
 export default function PageManagementClient({
   business,
   products,
+  members,
   followerCount,
+  currentUserRole,
   currentUser,
 }: PageManagementClientProps) {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<'overview' | 'edit' | 'products' | 'danger'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'edit' | 'roles' | 'danger'>('overview');
 
   // Edit form state
   const [name, setName] = useState(business.name);
-  const [category, setCategory] = useState(business.category || '');
+  const [category, setCategory] = useState(business.category || 'Creator');
   const [description, setDescription] = useState(business.description || '');
   const [countryIso, setCountryIso] = useState(business.country_iso || 'JM');
   const [phone, setPhone] = useState(business.phone || '');
@@ -74,97 +91,138 @@ export default function PageManagementClient({
   const [avatarUrl, setAvatarUrl] = useState(business.avatar_url || '');
   const [coverImageUrl, setCoverImageUrl] = useState(business.cover_image_url || '');
 
-  const [isArchived, setIsArchived] = useState(Boolean(business.is_archived));
+  // Lifecycle & Status
+  const [isDeactivated, setIsDeactivated] = useState(
+    Boolean(business.is_deactivated || business.is_archived)
+  );
   const [statusMessage, setStatusMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [isPending, startTransition] = useTransition();
+
+  // Role management state
+  const [newMemberUsername, setNewMemberUsername] = useState('');
+  const [newMemberRole, setNewMemberRole] = useState<PageRoleType>('editor');
+  const [isAddingMember, setIsAddingMember] = useState(false);
 
   // Delete modal state
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [deleteConfirmationInput, setDeleteConfirmationInput] = useState('');
   const [isDeleting, setIsDeleting] = useState(false);
 
-  // Identity Switcher Handler
-  const [isSwitchingIdentity, setIsSwitchingIdentity] = useState(false);
+  const isOwner = currentUserRole === 'owner';
 
-  async function handleSwitchToPageIdentity() {
-    setIsSwitchingIdentity(true);
-    try {
-      const supabase = createSupabaseBrowserClient();
-      if (supabase) {
-        await supabase.rpc('switch_active_identity', {
-          p_identity_id: business.id,
-          p_identity_type: 'business',
-        });
-        if (typeof window !== 'undefined') {
-          localStorage.setItem('tukubi_active_identity_id', business.id);
-          localStorage.setItem('tukubi_active_identity_type', 'business');
-        }
-        setStatusMessage({ type: 'success', text: `You are now operating as "${business.name}".` });
-      }
-    } catch (err: any) {
-      setStatusMessage({ type: 'error', text: err.message || 'Could not switch identity.' });
-    } finally {
-      setIsSwitchingIdentity(false);
-    }
-  }
-
-  async function handleSaveDetails(e: React.FormEvent) {
+  // Handle Save Page Details
+  async function handleUpdatePage(e: React.FormEvent) {
     e.preventDefault();
     setStatusMessage(null);
 
-    const formData = new FormData();
-    formData.set('name', name);
-    formData.set('category', category);
-    formData.set('description', description);
-    formData.set('countryIso', countryIso);
-    formData.set('phone', phone);
-    formData.set('website', website);
-    formData.set('contactEmail', contactEmail);
-    formData.set('avatarUrl', avatarUrl);
-    formData.set('coverImageUrl', coverImageUrl);
-
     startTransition(async () => {
-      const res = await updateBusinessPageAction(business.id, formData);
-      if (res.error) {
-        setStatusMessage({ type: 'error', text: res.error });
-      } else {
-        setStatusMessage({ type: 'success', text: 'Page information saved successfully.' });
+      try {
+        const formData = new FormData();
+        formData.set('name', name.trim());
+        formData.set('category', category.trim());
+        formData.set('description', description.trim());
+        formData.set('countryIso', countryIso);
+        formData.set('phone', phone.trim());
+        formData.set('website', website.trim());
+        formData.set('contactEmail', contactEmail.trim());
+        formData.set('avatarUrl', avatarUrl.trim());
+        formData.set('coverImageUrl', coverImageUrl.trim());
+
+        const res = await updatePageDetailsAction(business.id, formData);
+        if (res.error) {
+          setStatusMessage({ type: 'error', text: res.error });
+        } else {
+          setStatusMessage({ type: 'success', text: 'Page information saved successfully!' });
+        }
+      } catch (err: any) {
+        setStatusMessage({ type: 'error', text: err?.message || 'Failed to update Page.' });
       }
     });
   }
 
-  async function handleToggleArchive() {
+  // Handle Deactivate / Reactivate
+  async function handleToggleDeactivation() {
+    if (!isOwner) {
+      setStatusMessage({ type: 'error', text: 'Only the Page Owner can deactivate or reactivate.' });
+      return;
+    }
+
+    startTransition(async () => {
+      try {
+        const res = await togglePageDeactivationAction(business.id);
+        if (res.error) {
+          setStatusMessage({ type: 'error', text: res.error });
+        } else {
+          setIsDeactivated(Boolean(res.isDeactivated));
+          setStatusMessage({
+            type: 'success',
+            text: res.isDeactivated
+              ? 'Page deactivated. It is now hidden from public discovery.'
+              : 'Page reactivated! It is now live for all Caribbean visitors.',
+          });
+        }
+      } catch (err: any) {
+        setStatusMessage({ type: 'error', text: err?.message || 'Failed to change page status.' });
+      }
+    });
+  }
+
+  // Handle Add Member Role
+  async function handleAddMemberRole(e: React.FormEvent) {
+    e.preventDefault();
+    if (!newMemberUsername.trim()) return;
+
+    setIsAddingMember(true);
     setStatusMessage(null);
-    startTransition(async () => {
-      const res = await archiveBusinessPageAction(business.id);
+    try {
+      const res = await updatePageRoleAction(business.id, newMemberUsername.trim(), newMemberRole);
       if (res.error) {
         setStatusMessage({ type: 'error', text: res.error });
       } else {
-        setIsArchived(Boolean(res.isArchived));
-        setStatusMessage({
-          type: 'success',
-          text: res.isArchived
-            ? 'Page is now archived and hidden from public search.'
-            : 'Page is now restored and visible to the public.',
-        });
+        setStatusMessage({ type: 'success', text: `Added @${newMemberUsername.trim()} as ${newMemberRole}!` });
+        setNewMemberUsername('');
+        router.refresh();
       }
-    });
+    } catch (err: any) {
+      setStatusMessage({ type: 'error', text: err?.message || 'Failed to add team member.' });
+    } finally {
+      setIsAddingMember(false);
+    }
   }
 
-  async function handleConfirmDelete() {
+  // Handle Remove Member Role
+  async function handleRemoveMemberRole(targetUserId: string, username: string) {
+    if (!confirm(`Are you sure you want to remove @${username} from this Page?`)) return;
+
+    setStatusMessage(null);
+    try {
+      const res = await removePageRoleAction(business.id, targetUserId);
+      if (res.error) {
+        setStatusMessage({ type: 'error', text: res.error });
+      } else {
+        setStatusMessage({ type: 'success', text: `Removed @${username} from Page roles.` });
+        router.refresh();
+      }
+    } catch (err: any) {
+      setStatusMessage({ type: 'error', text: err?.message || 'Failed to remove member.' });
+    }
+  }
+
+  // Handle Permanent Delete
+  async function handlePermanentDelete(e: React.FormEvent) {
+    e.preventDefault();
     if (deleteConfirmationInput.trim().toLowerCase() !== business.slug.toLowerCase()) {
       setStatusMessage({
         type: 'error',
-        text: `Confirmation slug "${deleteConfirmationInput}" does not match "${business.slug}".`,
+        text: `Please enter "${business.slug}" exactly to confirm deletion.`,
       });
       return;
     }
 
     setIsDeleting(true);
     setStatusMessage(null);
-
     try {
-      const res = await deleteBusinessPageAction(business.id, deleteConfirmationInput);
+      const res = await deletePagePermanentlyAction(business.id, deleteConfirmationInput.trim());
       if (res.error) {
         setStatusMessage({ type: 'error', text: res.error });
         setIsDeleting(false);
@@ -172,474 +230,557 @@ export default function PageManagementClient({
         router.push('/pages');
       }
     } catch (err: any) {
-      setStatusMessage({ type: 'error', text: err.message || 'Deletion failed.' });
+      setStatusMessage({ type: 'error', text: err?.message || 'Failed to delete Page.' });
       setIsDeleting(false);
     }
   }
 
   return (
-    <div className="min-h-screen bg-transparent text-white p-4 sm:p-6 lg:p-8 max-w-5xl mx-auto space-y-6 animate-fadeIn">
-      {/* Top Breadcrumb & Actions */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/10 pb-4">
+    <div className="max-w-4xl mx-auto py-6 sm:py-10 px-4 space-y-8 animate-fadeIn">
+      {/* Top Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <Link
             href={`/pages/${business.slug}`}
-            className="p-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-brand-sandstone/70 hover:text-white transition-colors"
-            title="Return to public page"
+            className="w-10 h-10 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center text-white transition-colors"
           >
-            <ArrowLeft className="w-4 h-4" />
+            <ArrowLeft className="w-5 h-5" />
           </Link>
           <div>
             <div className="flex items-center gap-2">
               <h1 className="text-xl sm:text-2xl font-black text-white">{business.name}</h1>
-              {isArchived && (
-                <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 uppercase">
-                  Archived
-                </span>
-              )}
+              <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-brand-sunriseCoral/20 text-brand-sunriseCoral border border-brand-sunriseCoral/30">
+                {currentUserRole}
+              </span>
             </div>
             <p className="text-xs text-brand-sandstone/60">
-              Page Management &amp; Administrative Console
+              tukubi.com/pages/{business.slug} · Dashboard &amp; Administration
             </p>
           </div>
         </div>
 
         <div className="flex items-center gap-2.5">
-          <button
-            type="button"
-            onClick={handleSwitchToPageIdentity}
-            disabled={isSwitchingIdentity}
-            className="px-4 py-2 rounded-xl bg-gradient-to-r from-brand-caribbeanSea to-brand-sunriseCoral text-slate-950 font-black text-xs shadow-md shadow-brand-caribbeanSea/20 hover:brightness-110 transition-all flex items-center gap-1.5 disabled:opacity-50"
-          >
-            <RefreshCw className={`w-3.5 h-3.5 ${isSwitchingIdentity ? 'animate-spin' : ''}`} />
-            <span>Operate as Page</span>
-          </button>
           <Link
             href={`/pages/${business.slug}`}
-            className="px-3.5 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-white font-bold text-xs flex items-center gap-1.5 transition-colors"
+            className="px-4 py-2.5 rounded-2xl bg-white/10 hover:bg-white/15 text-white font-bold text-xs flex items-center gap-1.5 transition-all min-h-[40px]"
           >
-            <span>Live View</span>
             <ExternalLink className="w-3.5 h-3.5" />
+            <span>View Public Page</span>
           </Link>
         </div>
       </div>
 
-      {statusMessage && (
-        <div
-          role="alert"
-          className={`p-4 rounded-2xl border text-xs font-bold flex items-center justify-between animate-fadeIn ${
-            statusMessage.type === 'success'
-              ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300'
-              : 'bg-rose-500/10 border-rose-500/30 text-rose-300'
-          }`}
-        >
-          <span>{statusMessage.text}</span>
-          <button onClick={() => setStatusMessage(null)} className="text-white/50 hover:text-white">
-            ✕
-          </button>
+      {/* Deactivated Notice */}
+      {isDeactivated && (
+        <div className="p-4 rounded-3xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <AlertTriangle className="w-5 h-5 text-amber-400 shrink-0" />
+            <div>
+              <p className="font-black text-white">Page is Deactivated</p>
+              <p className="text-amber-300/80">
+                This Page is hidden from search, directory, and feeds. Only team members can view it.
+              </p>
+            </div>
+          </div>
+          {isOwner && (
+            <button
+              type="button"
+              onClick={handleToggleDeactivation}
+              disabled={isPending}
+              className="px-4 py-2 rounded-xl bg-amber-500 hover:brightness-110 text-slate-950 font-black text-xs shrink-0 transition-all shadow-md"
+            >
+              Reactivate Page
+            </button>
+          )}
         </div>
       )}
 
-      {/* Tabs Navigation Rail */}
-      <div className="flex border-b border-white/10 gap-2 sm:gap-4 overflow-x-auto scrollbar-none text-xs sm:text-sm font-bold">
+      {/* Feedback Message */}
+      {statusMessage && (
+        <div
+          className={`p-4 rounded-2xl text-xs font-bold ${
+            statusMessage.type === 'success'
+              ? 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/30'
+              : 'bg-rose-500/10 text-rose-300 border border-rose-500/30'
+          }`}
+        >
+          {statusMessage.text}
+        </div>
+      )}
+
+      {/* Tab Navigation */}
+      <div className="flex items-center gap-2 border-b border-white/10 pb-2 overflow-x-auto scrollbar-none">
         <button
+          type="button"
           onClick={() => setActiveTab('overview')}
-          className={`py-3 px-3 border-b-2 whitespace-nowrap transition-colors ${
+          className={`px-4 py-2.5 rounded-2xl text-xs font-black transition-all flex items-center gap-2 shrink-0 ${
             activeTab === 'overview'
-              ? 'border-brand-caribbeanSea text-brand-caribbeanSea font-black'
-              : 'border-transparent text-brand-sandstone/70 hover:text-white'
+              ? 'bg-brand-sunriseCoral text-slate-950 shadow-md'
+              : 'text-brand-sandstone/70 hover:text-white hover:bg-white/5'
           }`}
         >
-          Overview &amp; Insights
+          <Building2 className="w-3.5 h-3.5" />
+          <span>Overview</span>
         </button>
+
         <button
+          type="button"
           onClick={() => setActiveTab('edit')}
-          className={`py-3 px-3 border-b-2 whitespace-nowrap transition-colors ${
+          className={`px-4 py-2.5 rounded-2xl text-xs font-black transition-all flex items-center gap-2 shrink-0 ${
             activeTab === 'edit'
-              ? 'border-brand-caribbeanSea text-brand-caribbeanSea font-black'
-              : 'border-transparent text-brand-sandstone/70 hover:text-white'
+              ? 'bg-brand-sunriseCoral text-slate-950 shadow-md'
+              : 'text-brand-sandstone/70 hover:text-white hover:bg-white/5'
           }`}
         >
-          Edit Page Info
+          <Edit3 className="w-3.5 h-3.5" />
+          <span>Edit Profile</span>
         </button>
+
         <button
-          onClick={() => setActiveTab('products')}
-          className={`py-3 px-3 border-b-2 whitespace-nowrap transition-colors ${
-            activeTab === 'products'
-              ? 'border-brand-caribbeanSea text-brand-caribbeanSea font-black'
-              : 'border-transparent text-brand-sandstone/70 hover:text-white'
+          type="button"
+          onClick={() => setActiveTab('roles')}
+          className={`px-4 py-2.5 rounded-2xl text-xs font-black transition-all flex items-center gap-2 shrink-0 ${
+            activeTab === 'roles'
+              ? 'bg-brand-sunriseCoral text-slate-950 shadow-md'
+              : 'text-brand-sandstone/70 hover:text-white hover:bg-white/5'
           }`}
         >
-          Storefront &amp; Catalog ({products.length})
+          <Users className="w-3.5 h-3.5" />
+          <span>Team &amp; Roles ({members.length})</span>
         </button>
-        <button
-          onClick={() => setActiveTab('danger')}
-          className={`py-3 px-3 border-b-2 whitespace-nowrap transition-colors ${
-            activeTab === 'danger'
-              ? 'border-rose-500 text-rose-400 font-black'
-              : 'border-transparent text-brand-sandstone/70 hover:text-rose-400'
-          }`}
-        >
-          Settings &amp; Danger Zone
-        </button>
+
+        {isOwner && (
+          <button
+            type="button"
+            onClick={() => setActiveTab('danger')}
+            className={`px-4 py-2.5 rounded-2xl text-xs font-black transition-all flex items-center gap-2 shrink-0 ${
+              activeTab === 'danger'
+                ? 'bg-rose-500 text-white shadow-md'
+                : 'text-rose-400 hover:text-rose-300 hover:bg-rose-500/10'
+            }`}
+          >
+            <ShieldAlert className="w-3.5 h-3.5" />
+            <span>Lifecycle &amp; Delete</span>
+          </button>
+        )}
       </div>
 
       {/* ── TAB 1: OVERVIEW ── */}
       {activeTab === 'overview' && (
         <div className="space-y-6">
+          {/* Key Metrics Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div className="p-5 rounded-3xl bg-[#140C22]/90 border border-white/10 space-y-1 shadow-lg">
-              <p className="text-[10px] font-black uppercase text-brand-sandstone/50">Followers</p>
-              <h3 className="text-2xl font-black text-white">{followerCount}</h3>
-              <p className="text-[11px] text-brand-sandstone/60">Diaspora supporters following your updates</p>
+            <div className="surface-card rounded-3xl p-5 border border-white/10 space-y-1">
+              <span className="text-[10px] font-black uppercase text-brand-sandstone/60 tracking-wider">
+                Followers
+              </span>
+              <p className="text-2xl font-black text-white">{followerCount}</p>
+              <p className="text-[10px] text-brand-sandstone/50">Verified platform followers</p>
             </div>
-            <div className="p-5 rounded-3xl bg-[#140C22]/90 border border-white/10 space-y-1 shadow-lg">
-              <p className="text-[10px] font-black uppercase text-brand-sandstone/50">Listed Products</p>
-              <h3 className="text-2xl font-black text-white">{products.length}</h3>
-              <p className="text-[11px] text-brand-sandstone/60">Active items in Caribbean Marketplace</p>
+
+            <div className="surface-card rounded-3xl p-5 border border-white/10 space-y-1">
+              <span className="text-[10px] font-black uppercase text-brand-sandstone/60 tracking-wider">
+                Team Members
+              </span>
+              <p className="text-2xl font-black text-brand-sunriseCoral">{members.length}</p>
+              <p className="text-[10px] text-brand-sandstone/50">Active administrators &amp; editors</p>
             </div>
-            <div className="p-5 rounded-3xl bg-[#140C22]/90 border border-white/10 space-y-1 shadow-lg">
-              <p className="text-[10px] font-black uppercase text-brand-sandstone/50">Page Status</p>
-              <h3 className="text-2xl font-black text-white">
-                {isArchived ? 'Archived' : 'Active & Live'}
-              </h3>
-              <p className="text-[11px] text-brand-sandstone/60">
-                {isArchived ? 'Hidden from search' : 'Discoverable across Caribbean network'}
+
+            <div className="surface-card rounded-3xl p-5 border border-white/10 space-y-1">
+              <span className="text-[10px] font-black uppercase text-brand-sandstone/60 tracking-wider">
+                Status
+              </span>
+              <p className={`text-2xl font-black ${isDeactivated ? 'text-amber-400' : 'text-emerald-400'}`}>
+                {isDeactivated ? 'Deactivated' : 'Active'}
+              </p>
+              <p className="text-[10px] text-brand-sandstone/50">
+                {isDeactivated ? 'Hidden from discovery' : 'Public across the Caribbean'}
               </p>
             </div>
           </div>
 
-          <div className="p-6 rounded-3xl bg-[#140C22]/90 border border-white/10 space-y-4">
+          {/* Quick Actions Card */}
+          <div className="surface-card rounded-3xl p-6 border border-white/10 shadow-xl space-y-4">
             <h3 className="text-sm font-black text-white uppercase tracking-wider">
-              Quick Management Shortcuts
+              Quick Actions
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Link
-                href="/create"
-                className="p-4 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-between text-xs font-bold transition-all"
+                href={`/pages/${business.slug}?tab=home`}
+                className="p-4 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/5 flex items-center justify-between transition-colors group"
               >
-                <span>Publish Update or Event</span>
-                <span className="text-brand-caribbeanSea">→</span>
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-xl bg-orange-500/10 text-orange-400 flex items-center justify-center">
+                    <FileText className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-black text-white group-hover:text-brand-sunriseCoral transition-colors">
+                      Publish Page Post
+                    </p>
+                    <p className="text-[10px] text-brand-sandstone/60">Post an update to your followers</p>
+                  </div>
+                </div>
+                <ArrowLeft className="w-4 h-4 text-white/40 rotate-180" />
               </Link>
-              <Link
-                href="/marketplace/seller-center/create"
-                className="p-4 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-between text-xs font-bold transition-all"
+
+              <button
+                type="button"
+                onClick={() => setActiveTab('roles')}
+                className="p-4 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/5 flex items-center justify-between transition-colors group text-left"
               >
-                <span>Add Marketplace Product</span>
-                <span className="text-brand-goldenHour">→</span>
-              </Link>
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-xl bg-purple-500/10 text-purple-400 flex items-center justify-center">
+                    <UserPlus className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-black text-white group-hover:text-purple-400 transition-colors">
+                      Invite Team Member
+                    </p>
+                    <p className="text-[10px] text-brand-sandstone/60">Add an administrator or editor</p>
+                  </div>
+                </div>
+                <ArrowLeft className="w-4 h-4 text-white/40 rotate-180" />
+              </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* ── TAB 2: EDIT INFORMATION ── */}
+      {/* ── TAB 2: EDIT PROFILE ── */}
       {activeTab === 'edit' && (
-        <form onSubmit={handleSaveDetails} className="space-y-6">
-          <div className="p-6 rounded-3xl bg-[#140C22]/90 border border-white/10 space-y-4">
-            <h3 className="text-sm font-black text-white uppercase tracking-wider">
-              Basic Information
-            </h3>
+        <form onSubmit={handleUpdatePage} className="surface-card rounded-3xl p-6 sm:p-8 border border-white/10 shadow-xl space-y-6">
+          <div className="flex items-center justify-between border-b border-white/10 pb-4">
+            <div>
+              <h2 className="text-lg font-black text-white">Edit Page Profile</h2>
+              <p className="text-xs text-brand-sandstone/60">Update public identity and contact channels.</p>
+            </div>
+            <button
+              type="submit"
+              disabled={isPending}
+              className="px-6 py-2.5 rounded-2xl bg-brand-sunriseCoral hover:brightness-110 disabled:opacity-50 text-slate-950 font-black text-xs flex items-center gap-1.5 transition-all shadow-md"
+            >
+              <Save className="w-4 h-4" />
+              <span>Save Changes</span>
+            </button>
+          </div>
 
+          <div className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-bold text-slate-300 mb-1">
+                <label className="block text-xs font-black text-white uppercase tracking-wider mb-1.5">
                   Page Name *
                 </label>
                 <input
                   type="text"
+                  required
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  required
-                  className="w-full bg-black/40 border border-white/15 rounded-2xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-brand-caribbeanSea"
+                  className="w-full px-4 py-2.5 rounded-2xl bg-white/5 border border-white/10 text-white text-xs focus:outline-none focus:border-brand-sunriseCoral"
                 />
               </div>
-
               <div>
-                <label className="block text-xs font-bold text-slate-300 mb-1">
+                <label className="block text-xs font-black text-white uppercase tracking-wider mb-1.5">
                   Category
                 </label>
-                <input
-                  type="text"
+                <select
                   value={category}
                   onChange={(e) => setCategory(e.target.value)}
-                  className="w-full bg-black/40 border border-white/15 rounded-2xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-brand-caribbeanSea"
-                />
+                  className="w-full px-4 py-2.5 rounded-2xl bg-brand-dusk border border-white/10 text-white text-xs font-bold focus:outline-none focus:border-brand-sunriseCoral"
+                >
+                  {ALL_UNIVERSAL_CATEGORIES.map((cat) => (
+                    <option key={cat.id} value={cat.name}>
+                      {cat.groupName} · {cat.name}
+                    </option>
+                  ))}
+                </select>
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-300 mb-1">
-                Description &amp; Story
+              <label className="block text-xs font-black text-white uppercase tracking-wider mb-1.5">
+                Description / Bio
               </label>
               <textarea
+                rows={3}
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                rows={4}
-                className="w-full bg-black/40 border border-white/15 rounded-2xl p-3.5 text-xs text-white focus:outline-none focus:border-brand-caribbeanSea resize-none"
+                className="w-full p-4 rounded-2xl bg-white/5 border border-white/10 text-white text-xs focus:outline-none focus:border-brand-sunriseCoral resize-none"
               />
             </div>
-
-            <div>
-              <label className="block text-xs font-bold text-slate-300 mb-1">
-                Island Nation / Territory
-              </label>
-              <select
-                value={countryIso}
-                onChange={(e) => setCountryIso(e.target.value)}
-                className="w-full bg-black/40 border border-white/15 rounded-2xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-brand-caribbeanSea"
-              >
-                {CARIBBEAN_TERRITORIES.map((t) => (
-                  <option key={t.iso} value={t.iso}>
-                    {t.flag} {t.name} ({t.iso})
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          <div className="p-6 rounded-3xl bg-[#140C22]/90 border border-white/10 space-y-4">
-            <h3 className="text-sm font-black text-white uppercase tracking-wider">
-              Branding &amp; Visuals
-            </h3>
-
-            <div>
-              <label className="block text-xs font-bold text-slate-300 mb-1">
-                Profile Avatar URL
-              </label>
-              <input
-                type="url"
-                value={avatarUrl}
-                onChange={(e) => setAvatarUrl(e.target.value)}
-                placeholder="https://..."
-                className="w-full bg-black/40 border border-white/15 rounded-2xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-brand-caribbeanSea"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-bold text-slate-300 mb-1">
-                Cover Image URL
-              </label>
-              <input
-                type="url"
-                value={coverImageUrl}
-                onChange={(e) => setCoverImageUrl(e.target.value)}
-                placeholder="https://..."
-                className="w-full bg-black/40 border border-white/15 rounded-2xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-brand-caribbeanSea"
-              />
-            </div>
-          </div>
-
-          <div className="p-6 rounded-3xl bg-[#140C22]/90 border border-white/10 space-y-4">
-            <h3 className="text-sm font-black text-white uppercase tracking-wider">
-              Contact Channels
-            </h3>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
-                <label className="block text-xs font-bold text-slate-300 mb-1">
-                  Website
+                <label className="block text-xs font-black text-white uppercase tracking-wider mb-1.5">
+                  Territory ISO
                 </label>
-                <input
-                  type="text"
-                  value={website}
-                  onChange={(e) => setWebsite(e.target.value)}
-                  placeholder="https://yourpage.com"
-                  className="w-full bg-black/40 border border-white/15 rounded-2xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-brand-caribbeanSea"
-                />
+                <select
+                  value={countryIso}
+                  onChange={(e) => setCountryIso(e.target.value)}
+                  className="w-full px-4 py-2.5 rounded-2xl bg-brand-dusk border border-white/10 text-white text-xs font-bold focus:outline-none focus:border-brand-sunriseCoral"
+                >
+                  {CARIBBEAN_TERRITORIES.map((t) => (
+                    <option key={t.iso} value={t.iso}>
+                      {t.flag} {t.name} ({t.iso})
+                    </option>
+                  ))}
+                </select>
               </div>
-
               <div>
-                <label className="block text-xs font-bold text-slate-300 mb-1">
-                  Contact Email
-                </label>
-                <input
-                  type="email"
-                  value={contactEmail}
-                  onChange={(e) => setContactEmail(e.target.value)}
-                  placeholder="info@yourpage.com"
-                  className="w-full bg-black/40 border border-white/15 rounded-2xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-brand-caribbeanSea"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-slate-300 mb-1">
+                <label className="block text-xs font-black text-white uppercase tracking-wider mb-1.5">
                   Phone
                 </label>
                 <input
                   type="tel"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
-                  placeholder="+1 (876) 555-0199"
-                  className="w-full bg-black/40 border border-white/15 rounded-2xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-brand-caribbeanSea"
+                  className="w-full px-4 py-2.5 rounded-2xl bg-white/5 border border-white/10 text-white text-xs focus:outline-none focus:border-brand-sunriseCoral"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-black text-white uppercase tracking-wider mb-1.5">
+                  Contact Email
+                </label>
+                <input
+                  type="email"
+                  value={contactEmail}
+                  onChange={(e) => setContactEmail(e.target.value)}
+                  className="w-full px-4 py-2.5 rounded-2xl bg-white/5 border border-white/10 text-white text-xs focus:outline-none focus:border-brand-sunriseCoral"
                 />
               </div>
             </div>
-          </div>
 
-          <div className="flex justify-end">
-            <button
-              type="submit"
-              disabled={isPending}
-              className="px-6 py-2.5 rounded-2xl bg-gradient-to-r from-brand-caribbeanSea to-brand-sunriseCoral text-slate-950 font-black text-xs flex items-center gap-2 shadow-lg shadow-brand-caribbeanSea/20 hover:brightness-110 transition-all disabled:opacity-50"
-            >
-              <Save className="w-4 h-4" />
-              <span>{isPending ? 'Saving…' : 'Save Changes'}</span>
-            </button>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-black text-white uppercase tracking-wider mb-1.5">
+                  Website URL
+                </label>
+                <input
+                  type="url"
+                  value={website}
+                  onChange={(e) => setWebsite(e.target.value)}
+                  className="w-full px-4 py-2.5 rounded-2xl bg-white/5 border border-white/10 text-white text-xs focus:outline-none focus:border-brand-sunriseCoral"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-black text-white uppercase tracking-wider mb-1.5">
+                  Avatar URL
+                </label>
+                <input
+                  type="url"
+                  value={avatarUrl}
+                  onChange={(e) => setAvatarUrl(e.target.value)}
+                  className="w-full px-4 py-2.5 rounded-2xl bg-white/5 border border-white/10 text-white text-xs focus:outline-none focus:border-brand-sunriseCoral"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-black text-white uppercase tracking-wider mb-1.5">
+                Cover Banner URL
+              </label>
+              <input
+                type="url"
+                value={coverImageUrl}
+                onChange={(e) => setCoverImageUrl(e.target.value)}
+                className="w-full px-4 py-2.5 rounded-2xl bg-white/5 border border-white/10 text-white text-xs focus:outline-none focus:border-brand-sunriseCoral"
+              />
+            </div>
           </div>
         </form>
       )}
 
-      {/* ── TAB 3: PRODUCTS & CATALOG ── */}
-      {activeTab === 'products' && (
+      {/* ── TAB 3: TEAM & ROLES ── */}
+      {activeTab === 'roles' && (
         <div className="space-y-6">
-          <div className="flex items-center justify-between">
-            <p className="text-xs text-brand-sandstone/70">
-              Manage items linked to this Page storefront:
+          {/* Add Team Member Card */}
+          <form onSubmit={handleAddMemberRole} className="surface-card rounded-3xl p-6 border border-white/10 shadow-xl space-y-4">
+            <h3 className="text-sm font-black text-white uppercase tracking-wider flex items-center gap-2">
+              <UserPlus className="w-4 h-4 text-brand-sunriseCoral" />
+              <span>Add Page Team Member</span>
+            </h3>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div className="sm:col-span-2">
+                <input
+                  type="text"
+                  required
+                  value={newMemberUsername}
+                  onChange={(e) => setNewMemberUsername(e.target.value)}
+                  placeholder="Username (e.g. carib_dj or @carib_dj)..."
+                  className="w-full px-4 py-2.5 rounded-2xl bg-white/5 border border-white/10 text-white text-xs placeholder:text-brand-sandstone/40 focus:outline-none focus:border-brand-sunriseCoral"
+                />
+              </div>
+              <div>
+                <select
+                  value={newMemberRole}
+                  onChange={(e) => setNewMemberRole(e.target.value as PageRoleType)}
+                  className="w-full px-4 py-2.5 rounded-2xl bg-brand-dusk border border-white/10 text-white text-xs font-bold focus:outline-none focus:border-brand-sunriseCoral"
+                >
+                  <option value="admin">Administrator</option>
+                  <option value="editor">Editor / Content Mgr</option>
+                  <option value="moderator">Moderator</option>
+                  <option value="analyst">Analyst</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between pt-1">
+              <p className="text-[11px] text-brand-sandstone/60">
+                Team members can manage content or settings according to their assigned role.
+              </p>
+              <button
+                type="submit"
+                disabled={isAddingMember || !newMemberUsername.trim()}
+                className="px-5 py-2.5 rounded-2xl bg-brand-sunriseCoral hover:brightness-110 disabled:opacity-50 text-slate-950 font-black text-xs flex items-center gap-1.5 transition-all shadow-md"
+              >
+                <span>Add Member</span>
+              </button>
+            </div>
+          </form>
+
+          {/* Members List */}
+          <div className="surface-card rounded-3xl p-6 border border-white/10 shadow-xl space-y-4">
+            <h3 className="text-sm font-black text-white uppercase tracking-wider">
+              Active Team Members ({members.length})
+            </h3>
+
+            <div className="divide-y divide-white/5">
+              {members.map((member) => {
+                const isPrimaryOwner = member.role === 'owner';
+                const canRemove = isOwner && !isPrimaryOwner;
+
+                return (
+                  <div key={member.id} className="py-3 flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-2xl bg-white/10 border border-white/10 flex items-center justify-center overflow-hidden">
+                        {member.avatarUrl ? (
+                          <img src={member.avatarUrl} alt={member.displayName} className="w-full h-full object-cover" />
+                        ) : (
+                          <span className="text-xs font-black text-white">{member.displayName.charAt(0)}</span>
+                        )}
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <p className="text-xs font-black text-white">{member.displayName}</p>
+                          <span className="text-[10px] text-brand-sandstone/60">@{member.username}</span>
+                        </div>
+                        <span className="text-[10px] font-black uppercase text-brand-sunriseCoral">
+                          {member.role}
+                        </span>
+                      </div>
+                    </div>
+
+                    {canRemove && (
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveMemberRole(member.userId, member.username)}
+                        className="p-2 rounded-xl bg-white/5 hover:bg-rose-500/20 text-brand-sandstone/60 hover:text-rose-300 transition-colors"
+                        title="Remove member"
+                      >
+                        <UserMinus className="w-4 h-4" />
+                      </button>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── TAB 4: DANGER ZONE (OWNER ONLY) ── */}
+      {activeTab === 'danger' && isOwner && (
+        <div className="surface-card rounded-3xl p-6 sm:p-8 border border-rose-500/30 shadow-xl space-y-6">
+          <div className="space-y-1">
+            <h2 className="text-lg font-black text-white flex items-center gap-2">
+              <ShieldAlert className="w-5 h-5 text-rose-400" />
+              <span>Page Lifecycle &amp; Deletion</span>
+            </h2>
+            <p className="text-xs text-brand-sandstone/60">
+              Control the active visibility of your Page or permanently remove it from TUKUBI.
             </p>
-            <Link
-              href="/marketplace/seller-center/create"
-              className="px-4 py-2 rounded-xl bg-brand-goldenHour hover:bg-amber-400 text-slate-950 font-black text-xs flex items-center gap-1.5 transition-all"
-            >
-              <span>+ Add New Product</span>
-            </Link>
           </div>
 
-          {products.length === 0 ? (
-            <div className="p-8 rounded-3xl bg-[#140C22]/90 border border-white/10 text-center space-y-3">
-              <ShoppingBag className="w-8 h-8 text-brand-goldenHour/70 mx-auto" />
-              <p className="text-xs text-brand-sandstone/60">
-                No products are currently attached to this Page storefront.
+          {/* Deactivation Box */}
+          <div className="p-5 rounded-2xl bg-white/5 border border-white/10 space-y-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <h4 className="text-xs font-black text-white">
+                  {isDeactivated ? 'Reactivate Page' : 'Deactivate Page'}
+                </h4>
+                <p className="text-[11px] text-brand-sandstone/70 leading-relaxed max-w-lg mt-0.5">
+                  {isDeactivated
+                    ? 'Reactivate this Page to make it publicly discoverable in Search, Explore, and Feeds again.'
+                    : 'Temporarily hide this Page from public view. All your posts, followers, and products are preserved. You can reactivate anytime.'}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={handleToggleDeactivation}
+                disabled={isPending}
+                className={`px-5 py-2.5 rounded-2xl font-black text-xs transition-all ${
+                  isDeactivated
+                    ? 'bg-emerald-500 hover:brightness-110 text-slate-950 shadow-md'
+                    : 'bg-amber-500 hover:brightness-110 text-slate-950 shadow-md'
+                }`}
+              >
+                {isDeactivated ? 'Reactivate' : 'Deactivate'}
+              </button>
+            </div>
+          </div>
+
+          {/* Permanent Deletion Box */}
+          <div className="p-5 rounded-2xl bg-rose-500/10 border border-rose-500/30 space-y-4">
+            <div>
+              <h4 className="text-xs font-black text-rose-300">Permanently Delete Page</h4>
+              <p className="text-[11px] text-rose-300/80 leading-relaxed mt-0.5">
+                Permanently deletes this Page, team roles, and removes it from followers. This action is irreversible.
               </p>
             </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {products.map((p) => (
-                <div
-                  key={p.id}
-                  className="p-4 rounded-2xl bg-[#140C22]/90 border border-white/10 flex items-center justify-between gap-3 text-xs"
-                >
-                  <div>
-                    <h4 className="font-bold text-white">{p.title}</h4>
-                    <p className="text-brand-goldenHour font-black">
-                      ${(p.price_minor / 100).toFixed(2)} {p.currency || 'USD'}
-                    </p>
-                  </div>
-                  <Link
-                    href={`/marketplace/${p.id}`}
-                    className="text-brand-caribbeanSea hover:underline font-bold"
+
+            {!isDeleteModalOpen ? (
+              <button
+                type="button"
+                onClick={() => setIsDeleteModalOpen(true)}
+                className="px-5 py-2.5 rounded-2xl bg-rose-500 hover:bg-rose-600 text-white font-black text-xs flex items-center gap-1.5 transition-all shadow-md"
+              >
+                <Trash2 className="w-4 h-4" />
+                <span>Begin Permanent Deletion</span>
+              </button>
+            ) : (
+              <form onSubmit={handlePermanentDelete} className="space-y-3 pt-2 border-t border-rose-500/30">
+                <p className="text-xs text-white font-bold">
+                  Type <span className="font-mono text-rose-400 bg-rose-500/20 px-1.5 py-0.5 rounded">{business.slug}</span> to confirm:
+                </p>
+                <input
+                  type="text"
+                  required
+                  value={deleteConfirmationInput}
+                  onChange={(e) => setDeleteConfirmationInput(e.target.value)}
+                  placeholder={business.slug}
+                  className="w-full px-4 py-2.5 rounded-2xl bg-brand-dusk border border-rose-500/40 text-white text-xs font-mono focus:outline-none"
+                />
+                <div className="flex items-center gap-2">
+                  <button
+                    type="submit"
+                    disabled={isDeleting || deleteConfirmationInput.trim().toLowerCase() !== business.slug.toLowerCase()}
+                    className="px-5 py-2.5 rounded-2xl bg-rose-600 hover:bg-rose-700 disabled:opacity-50 text-white font-black text-xs transition-all shadow-md"
                   >
-                    View →
-                  </Link>
+                    {isDeleting ? 'Deleting...' : 'I understand, delete permanently'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsDeleteModalOpen(false);
+                      setDeleteConfirmationInput('');
+                    }}
+                    className="px-4 py-2.5 rounded-2xl bg-white/10 text-white font-bold text-xs hover:bg-white/15 transition-all"
+                  >
+                    Cancel
+                  </button>
                 </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* ── TAB 4: DANGER ZONE ── */}
-      {activeTab === 'danger' && (
-        <div className="space-y-6">
-          {/* Archive / Pause Section */}
-          <div className="p-6 rounded-3xl bg-amber-500/5 border border-amber-500/20 space-y-3">
-            <div className="flex items-center gap-2 text-amber-400 font-black text-sm">
-              <Archive className="w-5 h-5" />
-              <span>Archive or Pause Page</span>
-            </div>
-            <p className="text-xs text-brand-sandstone/70 leading-relaxed">
-              Archiving your Page hides it from public discovery, search results, and feed recommendations.
-              All your products, followers, and content are preserved. You can restore your Page at any time.
-            </p>
-            <button
-              type="button"
-              disabled={isPending}
-              onClick={handleToggleArchive}
-              className={`px-5 py-2 rounded-xl font-black text-xs transition-colors ${
-                isArchived
-                  ? 'bg-amber-400 hover:bg-amber-300 text-slate-950'
-                  : 'bg-amber-500/20 hover:bg-amber-500/30 text-amber-200 border border-amber-500/40'
-              }`}
-            >
-              {isPending
-                ? 'Updating…'
-                : isArchived
-                ? 'Restore & Unarchive Page'
-                : 'Archive This Page'}
-            </button>
-          </div>
-
-          {/* Permanent Deletion Section */}
-          <div className="p-6 rounded-3xl bg-rose-500/5 border border-rose-500/20 space-y-3">
-            <div className="flex items-center gap-2 text-rose-400 font-black text-sm">
-              <Trash2 className="w-5 h-5" />
-              <span>Permanent Deletion</span>
-            </div>
-            <p className="text-xs text-brand-sandstone/70 leading-relaxed">
-              Permanently delete this Page. Once deleted, this Page, its URL slug, its storefront references,
-              and all administrative history cannot be recovered.
-            </p>
-            <button
-              type="button"
-              onClick={() => setIsDeleteModalOpen(true)}
-              className="px-5 py-2 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 text-rose-200 border border-rose-500/40 font-black text-xs transition-colors"
-            >
-              Delete Page…
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* ── CONFIRMATION MODAL FOR DELETION ── */}
-      {isDeleteModalOpen && (
-        <div
-          role="dialog"
-          aria-modal="true"
-          className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-fadeIn"
-        >
-          <div className="w-full max-w-md bg-[#160E24] border border-rose-500/40 rounded-3xl p-6 space-y-4 shadow-2xl">
-            <div className="flex items-center gap-3 text-rose-400 font-black">
-              <ShieldAlert className="w-6 h-6" />
-              <h3 className="text-base">Confirm Permanent Deletion</h3>
-            </div>
-
-            <p className="text-xs text-brand-sandstone/80 leading-relaxed">
-              This action is <strong className="text-rose-400">irreversible</strong>. To confirm, please type
-              the exact Page slug below:
-            </p>
-
-            <div className="p-2.5 rounded-xl bg-black/50 border border-white/10 text-center font-mono text-xs text-brand-goldenHour font-bold select-all">
-              {business.slug}
-            </div>
-
-            <input
-              type="text"
-              value={deleteConfirmationInput}
-              onChange={(e) => setDeleteConfirmationInput(e.target.value)}
-              placeholder="Type slug here..."
-              className="w-full bg-black/60 border border-white/15 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-rose-400"
-            />
-
-            <div className="flex items-center justify-end gap-3 pt-2">
-              <button
-                type="button"
-                onClick={() => {
-                  setIsDeleteModalOpen(false);
-                  setDeleteConfirmationInput('');
-                }}
-                className="px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-white font-bold text-xs"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                disabled={deleteConfirmationInput.trim().toLowerCase() !== business.slug.toLowerCase() || isDeleting}
-                onClick={handleConfirmDelete}
-                className="px-5 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-black text-xs disabled:opacity-40 transition-colors"
-              >
-                {isDeleting ? 'Deleting Page…' : 'I Understand, Delete This Page'}
-              </button>
-            </div>
+              </form>
+            )}
           </div>
         </div>
       )}

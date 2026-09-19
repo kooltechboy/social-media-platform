@@ -1,8 +1,8 @@
 import React from 'react';
 import Link from 'next/link';
+import { notFound } from 'next/navigation';
 import {
   Building2,
-  Landmark,
   Sparkles,
   MapPin,
   Globe,
@@ -13,385 +13,414 @@ import {
   Heart,
   MessageCircle,
   Share2,
-  Wallet,
-  ShieldCheck,
-  Star,
-  CheckCircle,
+  Settings,
+  AlertTriangle,
+  FileText,
+  Store,
+  ChevronRight,
+  Plus,
 } from 'lucide-react';
-import VerificationBadge, { type VerificationLevel } from '../../../components/verification-badge';
-import OrderButton from '../../../components/order-button';
-import PageCommerceActions from '../../../components/page-commerce-actions';
+import VerificationBadge from '../../../components/verification-badge';
 import PageFollowButton from '../../../components/page-follow-button';
-import { getCurrentUser, createSupabaseServerClient } from '../../../lib/supabase/server';
+import PagePostComposer from '../../../components/pages/page-post-composer';
+import RightRail from '../../../components/right-rail';
+import PagesRail from '../../../components/rails/pages-rail';
+import { fetchPageDetailsAction, fetchMyPagesAction } from '../../../lib/pages/actions';
+import { getCurrentUser } from '../../../lib/supabase/server';
 
 export const dynamic = 'force-dynamic';
 
-interface PageDetails {
-  slug: string;
-  name: string;
-  category: string;
-  verification: VerificationLevel;
-  location: string;
-  followers: string;
-  description: string;
-  website: string;
-  contactEmail: string;
-  avatar: string;
-  coverGradient: string;
-  ownerId?: string;
-  ownerUsername?: string;
-  isFollowing?: boolean;
-  followerCount?: number;
-  isArchived?: boolean;
-  products: Array<{
-    id: string;
-    title: string;
-    price: string;
-    kind: string;
-    rating?: number;
-  }>;
-  posts: Array<{
-    id: string;
-    title: string;
-    time: string;
-    content: string;
-    likes: number;
-  }>;
-}
-
-import { notFound } from 'next/navigation';
-
-export default async function ModularPageView({ params }: { params: Promise<{ slug: string }> }) {
+export default async function UniversalPageView({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ slug: string }>;
+  searchParams?: Promise<{ tab?: string }>;
+}) {
   const { slug } = await params;
+  const resolvedSearchParams = searchParams ? await searchParams : {};
+  const activeTab = resolvedSearchParams.tab || 'home';
+
   const user = await getCurrentUser();
+  const pageData = await fetchPageDetailsAction(slug);
 
-  // Load live business page from database
-  let dbPage: PageDetails | null = null;
-  try {
-    const { fetchBusinessPageAction } = await import('../../../lib/business/actions');
-    const { business, products } = await fetchBusinessPageAction(slug);
-    if (business) {
-      let isFollowing = false;
-      let followerCount = 0;
-
-      const supabase = await createSupabaseServerClient();
-      if (supabase && business.owner_id) {
-        const { data: countRow } = await supabase
-          .from('profile_counts')
-          .select('followers_count')
-          .eq('id', business.owner_id)
-          .maybeSingle();
-        followerCount = countRow?.followers_count || 0;
-
-        if (user) {
-          const { data: followRow } = await supabase
-            .from('follows')
-            .select('following_id')
-            .eq('follower_id', user.id)
-            .eq('following_id', business.owner_id)
-            .maybeSingle();
-          isFollowing = Boolean(followRow);
-        }
-      }
-
-      dbPage = {
-        slug: business.slug,
-        name: business.name,
-        category: business.category || 'Verified Caribbean Business',
-        verification: 'business_verified' as VerificationLevel,
-        location: `${business.country_iso || 'Caribbean'} 🌴`,
-        followers: followerCount.toString(),
-        followerCount,
-        isFollowing,
-        ownerId: business.owner_id,
-        description: business.description || 'Verified Caribbean Business page on TUKUBI. The Caribbean Connected.',
-        website: business.website || 'https://tukubi.com',
-        contactEmail: business.contact_email || 'contact@tukubi.com',
-        avatar: business.avatar_url || '🏪',
-        coverGradient: business.cover_image_url
-          ? `url('${business.cover_image_url}') bg-cover bg-center`
-          : 'from-amber-900/50 via-slate-900 to-[#110D17]',
-        ownerUsername: business.owner?.username || undefined,
-        isArchived: Boolean(business.is_archived),
-        products: (products || []).map((p: any) => ({
-          id: p.id,
-          title: p.title,
-          price: `$${(p.price_minor / 100).toFixed(2)} USD`,
-          kind: p.product_kind || 'physical',
-        })),
-        posts: [],
-      };
-    }
-  } catch {
-    // DB error
-  }
-
-  if (!dbPage) {
+  if (!pageData.page || pageData.error) {
     notFound();
   }
 
-  const page = dbPage;
-  const isOwner = Boolean(user && user.id === page.ownerId);
+  const {
+    page,
+    products,
+    posts,
+    followerCount,
+    isFollowing,
+    currentUserRole,
+    canManage,
+  } = pageData;
+
+  const myPages = user ? await fetchMyPagesAction() : [];
+
+  const isDeactivated = Boolean(page.is_deactivated || page.is_archived);
+  const canPost = ['owner', 'admin', 'editor'].includes(currentUserRole || '');
 
   return (
-    <div className="min-h-screen bg-transparent text-brand-sandstone p-4 md:p-6 lg:p-8 max-w-7xl mx-auto space-y-6">
-      {/* Owner Management Quick Bar */}
-      {isOwner && (
-        <div className="surface-card rounded-2xl p-4 border border-brand-goldenHour/40 bg-brand-goldenHour/10 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-lg">
-          <div className="flex items-center gap-2 text-xs text-white">
-            <span className="text-base">👑</span>
-            <span className="font-extrabold">You are an administrator of this Page.</span>
-            {page.isArchived && (
-              <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 uppercase">
-                Archived &amp; Hidden
-              </span>
+    <div className="flex flex-col lg:flex-row gap-6 xl:gap-8 items-start w-full">
+      <div className="flex-1 min-w-0 space-y-6 w-full max-w-[840px] xl:max-w-[880px] mx-auto lg:mx-0 animate-fadeIn">
+        {/* Deactivation Notice (if page is deactivated and viewer is team member) */}
+        {isDeactivated && (
+          <div className="p-4 rounded-3xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <AlertTriangle className="w-5 h-5 text-amber-400 shrink-0" />
+              <div>
+                <p className="font-black text-white">This Page is Currently Deactivated</p>
+                <p className="text-amber-300/80">
+                  It is hidden from public discovery. Only team members can view it. You can reactivate it anytime in Page Management.
+                </p>
+              </div>
+            </div>
+            {canManage && (
+              <Link
+                href={`/pages/${page.slug}/manage`}
+                className="px-4 py-2 rounded-xl bg-amber-500 text-slate-950 font-black text-xs shrink-0 hover:brightness-110 transition-all"
+              >
+                Manage
+              </Link>
             )}
           </div>
-          <div className="flex items-center gap-2 w-full sm:w-auto">
-            <Link
-              href={`/pages/${page.slug}/manage`}
-              className="flex-1 sm:flex-initial bg-brand-goldenHour hover:bg-amber-400 text-slate-950 font-black px-4 py-2 rounded-xl text-xs flex items-center justify-center gap-1.5 transition-all shadow-md shadow-brand-goldenHour/20"
-            >
-              Manage Page &amp; Settings →
-            </Link>
+        )}
+
+        {/* ── Page Profile Header ── */}
+        <div className="surface-card rounded-3xl overflow-hidden border border-white/10 shadow-2xl">
+          {/* Cover Banner */}
+          <div
+            className="h-44 sm:h-56 w-full relative bg-gradient-to-r from-amber-900/40 via-purple-900/40 to-slate-950 bg-cover bg-center"
+            style={{
+              backgroundImage: page.cover_image_url ? `url('${page.cover_image_url}')` : undefined,
+            }}
+          >
+            <div className="absolute inset-0 bg-gradient-to-t from-[#120B1C] via-transparent to-black/30" />
           </div>
-        </div>
-      )}
 
-      {/* Public Archived Notice if viewer is not owner */}
-      {!isOwner && page.isArchived && (
-        <div className="surface-card rounded-2xl p-4 border border-amber-500/30 bg-amber-500/10 text-amber-300 text-xs font-bold text-center">
-          ⚠️ This Caribbean Page is currently archived by its owner and is not accepting public inquiries.
-        </div>
-      )}
+          {/* Identity & Actions Bar */}
+          <div className="p-6 sm:p-8 pt-0 relative space-y-5">
+            {/* Avatar & Action Row */}
+            <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 -mt-16 sm:-mt-20">
+              <div className="w-28 h-28 sm:w-32 sm:h-32 rounded-3xl bg-[#120B1C] border-4 border-[#120B1C] shadow-2xl flex items-center justify-center overflow-hidden shrink-0">
+                {page.avatar_url ? (
+                  <img
+                    src={page.avatar_url}
+                    alt={page.name}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-gradient-to-tr from-brand-sunriseCoral to-amber-500 flex items-center justify-center text-slate-950 text-4xl font-black">
+                    {page.name.charAt(0)}
+                  </div>
+                )}
+              </div>
 
-      {/* Page Header & Cover */}
-      <div className="surface-header border border-white/15 rounded-3xl overflow-hidden shadow-2xl relative">
-        {/* Cover Banner */}
-        <div
-          className={`h-48 md:h-64 relative ${
-            page.coverGradient.startsWith('url') ? page.coverGradient : `bg-gradient-to-r ${page.coverGradient}`
-          }`}
-          style={page.coverGradient.startsWith('url') ? { backgroundImage: page.coverGradient.replace(/ bg-cover.*$/, '') } : undefined}
-        >
-          <div className="absolute inset-0 bg-black/40" />
-          <div className="absolute top-4 right-4 flex items-center gap-2 z-10">
-            <VerificationBadge level={page.verification} showLabel={true} />
-          </div>
-        </div>
+              {/* Action Buttons */}
+              <div className="flex flex-wrap items-center gap-2.5">
+                <PageFollowButton
+                  pageId={page.id}
+                  initialIsFollowing={isFollowing}
+                  initialFollowerCount={followerCount}
+                />
 
-        {/* Profile Info Bar */}
-        <div className="p-6 pt-0 relative flex flex-col md:flex-row items-start md:items-end justify-between gap-6 -mt-16 z-10">
-          <div className="flex flex-col md:flex-row items-start md:items-end gap-5">
-            <div className="w-28 h-28 rounded-3xl bg-slate-900 border-4 border-slate-950 flex items-center justify-center text-5xl shadow-2xl shrink-0 overflow-hidden">
-              {page.avatar.startsWith('http') ? (
-                /* eslint-disable-next-line @next/next/no-img-element */
-                <img src={page.avatar} alt={page.name} className="w-full h-full object-cover" />
-              ) : (
-                page.avatar
+                {page.contact_email && (
+                  <a
+                    href={`mailto:${page.contact_email}`}
+                    className="px-4 py-3 rounded-2xl bg-white/10 hover:bg-white/15 text-white font-black text-xs flex items-center gap-1.5 transition-all min-h-[44px]"
+                  >
+                    <Mail className="w-4 h-4 text-brand-sandstone" />
+                    <span>Contact</span>
+                  </a>
+                )}
+
+                {canManage && (
+                  <Link
+                    href={`/pages/${page.slug}/manage`}
+                    className="px-5 py-3 rounded-2xl bg-brand-sunriseCoral/10 hover:bg-brand-sunriseCoral/20 border border-brand-sunriseCoral/30 text-brand-sunriseCoral font-black text-xs flex items-center gap-1.5 transition-all min-h-[44px]"
+                  >
+                    <Settings className="w-4 h-4" />
+                    <span>Manage Page</span>
+                  </Link>
+                )}
+              </div>
+            </div>
+
+            {/* Title & Metadata */}
+            <div className="space-y-2">
+              <div className="flex flex-wrap items-center gap-2">
+                <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
+                  {page.name}
+                </h1>
+                <VerificationBadge
+                  level={page.is_verified ? 'business_verified' : 'unverified'}
+                  showLabel={true}
+                />
+                {currentUserRole && (
+                  <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-brand-sunriseCoral/20 text-brand-sunriseCoral border border-brand-sunriseCoral/30">
+                    {currentUserRole}
+                  </span>
+                )}
+              </div>
+
+              <div className="flex flex-wrap items-center gap-3 text-xs text-brand-sandstone/70 font-bold">
+                <span className="text-brand-sunriseCoral">{page.category || 'Universal Page'}</span>
+                <span>·</span>
+                <span className="flex items-center gap-1 text-white/90">
+                  <MapPin className="w-3.5 h-3.5 text-orange-400" />
+                  {page.country_iso ? `${page.country_iso} 🌴` : 'Caribbean Basin 🌴'}
+                </span>
+                <span>·</span>
+                <span>
+                  {followerCount} {followerCount === 1 ? 'follower' : 'followers'}
+                </span>
+              </div>
+
+              {page.description && (
+                <p className="text-xs sm:text-sm text-brand-sandstone/90 leading-relaxed max-w-3xl pt-1">
+                  {page.description}
+                </p>
+              )}
+
+              {/* Links Row */}
+              <div className="flex flex-wrap items-center gap-4 pt-2 text-xs font-bold text-brand-sandstone/60">
+                {page.website && (
+                  <a
+                    href={page.website}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-1 text-brand-caribbeanSea hover:underline"
+                  >
+                    <Globe className="w-3.5 h-3.5" />
+                    <span>{page.website.replace(/^https?:\/\//, '')}</span>
+                  </a>
+                )}
+                {page.phone && (
+                  <span className="flex items-center gap-1 text-slate-300">
+                    <Phone className="w-3.5 h-3.5 text-emerald-400" />
+                    <span>{page.phone}</span>
+                  </span>
+                )}
+              </div>
+            </div>
+
+            {/* Navigation Tabs */}
+            <div className="flex items-center gap-2 border-t border-white/10 pt-4 overflow-x-auto scrollbar-none">
+              <Link
+                href={`/pages/${page.slug}?tab=home`}
+                className={`px-4 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 shrink-0 ${
+                  activeTab === 'home'
+                    ? 'bg-white/15 text-white'
+                    : 'text-brand-sandstone/70 hover:text-white hover:bg-white/5'
+                }`}
+              >
+                <FileText className="w-3.5 h-3.5" />
+                <span>Home &amp; Posts</span>
+              </Link>
+              <Link
+                href={`/pages/${page.slug}?tab=about`}
+                className={`px-4 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 shrink-0 ${
+                  activeTab === 'about'
+                    ? 'bg-white/15 text-white'
+                    : 'text-brand-sandstone/70 hover:text-white hover:bg-white/5'
+                }`}
+              >
+                <Building2 className="w-3.5 h-3.5" />
+                <span>About</span>
+              </Link>
+              {products.length > 0 && (
+                <Link
+                  href={`/pages/${page.slug}?tab=store`}
+                  className={`px-4 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 shrink-0 ${
+                    activeTab === 'store'
+                      ? 'bg-white/15 text-white'
+                      : 'text-brand-sandstone/70 hover:text-white hover:bg-white/5'
+                  }`}
+                >
+                  <Store className="w-3.5 h-3.5 text-brand-sunriseCoral" />
+                  <span>Storefront ({products.length})</span>
+                </Link>
               )}
             </div>
-            <div className="space-y-1.5">
-              <h1 className="text-2xl md:text-3xl lg:text-4xl font-black text-white leading-tight flex items-center gap-2">
-                {page.name}
-              </h1>
-              <p className="text-xs sm:text-sm font-bold text-brand-sandstone/80">{page.category}</p>
-              <p className="text-xs text-orange-400 font-bold flex items-center gap-1.5">
-                <MapPin className="w-3.5 h-3.5 text-orange-400 shrink-0" /> {page.location}
-              </p>
-            </div>
           </div>
+        </div>
 
-          <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
-            <PageCommerceActions
-              businessName={page.name}
-              businessSlug={page.slug}
-              category={page.category}
-              location={page.location}
-            />
-            {page.ownerId ? (
-              <PageFollowButton
-                targetUserId={page.ownerId}
-                initialIsFollowing={page.isFollowing ?? false}
-                initialFollowerCount={page.followerCount ?? 0}
-              />
-            ) : (
-              <button disabled className="flex-1 md:flex-initial bg-white/10 text-white/50 font-bold px-6 py-3 rounded-2xl text-xs sm:text-sm min-h-[44px] flex items-center justify-center">
-                Follow ({page.followers})
-              </button>
+        {/* ── TAB: HOME & POSTS ── */}
+        {activeTab === 'home' && (
+          <div className="space-y-6">
+            {/* Publisher Box for Admins/Editors */}
+            {canPost && (
+              <PagePostComposer pageId={page.id} pageName={page.name} />
             )}
-            <Link
-              href={`/messages?u=${encodeURIComponent(page.ownerUsername || page.slug)}`}
-              className="bg-white/10 hover:bg-white/20 text-white font-black px-5 py-3 rounded-2xl text-xs sm:text-sm border border-white/15 transition-colors min-h-[44px] flex items-center justify-center"
-            >
-              Message
-            </Link>
-          </div>
-        </div>
 
-        {/* Tab Navigation Rail */}
-        <div className="px-6 border-t border-white/10 flex gap-6 overflow-x-auto scrollbar-none text-xs font-black text-brand-sandstone/70">
-          <button className="py-3 text-orange-400 border-b-2 border-orange-400 whitespace-nowrap">
-            Overview &amp; Feed
-          </button>
-          {page.products.length > 0 && (
-            <Link
-              href={`/store/${page.slug}`}
-              className="py-3 text-brand-sandstone/80 hover:text-white whitespace-nowrap flex items-center gap-1.5 transition-colors"
-            >
-              <ShoppingBag className="w-3.5 h-3.5 text-orange-400" /> Shop &amp; Storefront ({page.products.length})
-            </Link>
-          )}
-          <button className="py-3 hover:text-white whitespace-nowrap">
-            Events &amp; Notices
-          </button>
-          <button className="py-3 hover:text-white whitespace-nowrap">
-            About &amp; Verified Info
-          </button>
-        </div>
-      </div>
-
-      {/* Main Grid: Content & Storefront vs Sidebar */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        {/* Main Feed & Store (Col 8) */}
-        <div className="lg:col-span-8 space-y-6">
-          {/* Storefront Shelf if products exist */}
-          {page.products.length > 0 && (
-            <section className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h3 className="text-sm font-black text-white flex items-center gap-2 uppercase tracking-wider">
-                  <ShoppingBag className="w-4 h-4 text-orange-400" /> Verified Storefront
-                </h3>
-                <Link
-                  href={`/store/${page.slug}`}
-                  className="text-xs text-orange-400 hover:text-orange-300 font-bold flex items-center gap-1"
-                >
-                  Open Full Storefront →
-                </Link>
+            {/* Page Posts Stream */}
+            {posts.length === 0 ? (
+              <div className="surface-card rounded-3xl p-10 text-center space-y-3 border border-white/10">
+                <FileText className="w-10 h-10 text-brand-sandstone/40 mx-auto" />
+                <h3 className="text-base font-black text-white">No posts published yet</h3>
+                <p className="text-xs text-brand-sandstone/70 max-w-sm mx-auto">
+                  {canPost
+                    ? 'Publish your first official post above to connect with Caribbean followers!'
+                    : 'Follow this Page to stay updated when new announcements and content are published.'}
+                </p>
               </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {page.products.map((prod) => (
-                  <div
-                    key={prod.id}
-                    className="surface-card surface-card-interactive rounded-3xl p-5 space-y-4 flex flex-col justify-between"
+            ) : (
+              <div className="space-y-4">
+                {posts.map((post: any) => (
+                  <article
+                    key={post.id}
+                    className="surface-card rounded-3xl p-6 border border-white/10 shadow-xl space-y-4"
                   >
-                    <div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-[10px] font-black px-2.5 py-0.5 rounded-full bg-orange-500/10 text-orange-300 border border-orange-500/25 uppercase">
-                          {prod.kind}
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-2xl bg-white/10 border border-white/15 flex items-center justify-center overflow-hidden shrink-0">
+                        {page.avatar_url ? (
+                          <img src={page.avatar_url} alt={page.name} className="w-full h-full object-cover" />
+                        ) : (
+                          <span className="text-base font-black text-white">{page.name.charAt(0)}</span>
+                        )}
+                      </div>
+                      <div>
+                        <h4 className="text-sm font-black text-white leading-tight">{page.name}</h4>
+                        <span className="text-[10px] text-brand-sandstone/60">
+                          {new Date(post.created_at).toLocaleDateString(undefined, {
+                            month: 'short',
+                            day: 'numeric',
+                            year: 'numeric',
+                          })}
                         </span>
                       </div>
-                      <h4 className="font-black text-base text-white mt-2 leading-snug">{prod.title}</h4>
-                      <p className="text-xl font-black text-orange-400 mt-1">{prod.price}</p>
                     </div>
 
-                    <OrderButton
-                      productId={prod.id}
-                      isAuthenticated={!!user}
-                      disabled={!user}
-                      isSeller={false}
-                    />
-                  </div>
+                    <p className="text-xs sm:text-sm text-slate-200 leading-relaxed whitespace-pre-wrap">
+                      {post.content}
+                    </p>
+
+                    {post.media_urls && post.media_urls.length > 0 && (
+                      <div className="rounded-2xl overflow-hidden border border-white/10 max-h-96">
+                        <img
+                          src={post.media_urls[0]}
+                          alt="Post Media"
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    )}
+
+                    {post.cultural_tags && post.cultural_tags.length > 0 && (
+                      <div className="flex flex-wrap gap-1.5 pt-1">
+                        {post.cultural_tags.map((t: string) => (
+                          <span
+                            key={t}
+                            className="px-2 py-0.5 rounded-lg bg-white/5 text-[10px] font-bold text-brand-caribbeanSea"
+                          >
+                            #{t}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+
+                    <div className="pt-3 border-t border-white/5 flex items-center gap-4 text-xs font-bold text-brand-sandstone/60">
+                      <span>{post.likes_count || 0} likes</span>
+                      <span>{post.comments_count || 0} comments</span>
+                      <span>{post.shares_count || 0} shares</span>
+                    </div>
+                  </article>
                 ))}
               </div>
-            </section>
-          )}
-
-          {/* Posts & Announcements */}
-          <section className="space-y-4">
-            <h3 className="text-sm font-black text-white uppercase tracking-wider">
-              Official Updates &amp; Announcements
-            </h3>
-
-            {page.posts.length === 0 ? (
-              <div className="surface-card rounded-3xl p-8 text-center space-y-2 border border-white/10">
-                <p className="text-sm text-brand-sandstone/70">No official announcements posted yet.</p>
-              </div>
-            ) : (
-              page.posts.map((post) => (
-                <article
-                  key={post.id}
-                  className="surface-card surface-card-interactive rounded-3xl p-6 space-y-4 shadow-xl"
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <span className="text-2xl">{page.avatar}</span>
-                      <div>
-                        <h4 className="font-black text-sm text-white">{page.name}</h4>
-                        <time className="text-[11px] text-brand-sandstone/50">{post.time}</time>
-                      </div>
-                    </div>
-                  </div>
-
-                  <h4 className="font-black text-base sm:text-lg text-white leading-snug">{post.title}</h4>
-                  <p className="text-sm text-brand-sandstone/85 leading-relaxed font-medium">{post.content}</p>
-
-                  <div className="flex items-center gap-6 pt-3 border-t border-white/10 text-brand-sandstone/70 text-xs font-bold">
-                    <button className="flex items-center gap-1.5 hover:text-rose-400 transition-colors min-h-[36px]">
-                      <Heart className="w-4 h-4" /> <span>{post.likes}</span>
-                    </button>
-                    <button className="flex items-center gap-1.5 hover:text-orange-400 transition-colors min-h-[36px]">
-                      <MessageCircle className="w-4 h-4" /> <span>Discuss</span>
-                    </button>
-                    <button className="flex items-center gap-1.5 hover:text-emerald-400 transition-colors min-h-[36px]">
-                      <Share2 className="w-4 h-4" /> <span>Share</span>
-                    </button>
-                  </div>
-                </article>
-              ))
             )}
-          </section>
-        </div>
+          </div>
+        )}
 
-        {/* Right Info Box (Col 4) */}
-        <div className="lg:col-span-4 space-y-5">
-          <div className="surface-card rounded-3xl p-6 space-y-4 shadow-xl">
-            <h3 className="font-black text-sm text-white uppercase tracking-wider">
-              Verified Information
-            </h3>
-            <p className="text-xs sm:text-sm text-brand-sandstone/80 leading-relaxed font-medium">
-              {page.description}
-            </p>
+        {/* ── TAB: ABOUT ── */}
+        {activeTab === 'about' && (
+          <div className="surface-card rounded-3xl p-6 sm:p-8 border border-white/10 shadow-xl space-y-6">
+            <h3 className="text-lg font-black text-white">About {page.name}</h3>
 
-            <div className="space-y-3 pt-3 border-t border-white/10 text-xs">
-              {(() => {
-                let safeUrl: string | null = null;
-                try {
-                  const parsed = new URL(page.website.startsWith('http://') || page.website.startsWith('https://') ? page.website : `https://${page.website}`);
-                  if (parsed.protocol === 'http:' || parsed.protocol === 'https:') {
-                    safeUrl = parsed.toString();
-                  }
-                } catch {}
+            <div className="space-y-4 text-xs sm:text-sm text-brand-sandstone/80 leading-relaxed">
+              <p>{page.description || 'Verified Caribbean entity profile on TUKUBI.'}</p>
+            </div>
 
-                if (!safeUrl) return null;
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t border-white/10">
+              <div className="space-y-1">
+                <span className="text-[10px] font-black uppercase text-brand-sandstone/50 tracking-wider">
+                  Category
+                </span>
+                <p className="text-xs font-bold text-white">{page.category}</p>
+              </div>
 
-                return (
-                  <p className="flex items-center gap-2.5 text-brand-sandstone/75">
-                    <Globe className="w-4 h-4 text-orange-400 shrink-0" />
-                    <a href={safeUrl} target="_blank" rel="noopener noreferrer" className="text-orange-300 hover:underline font-bold">
-                      {safeUrl.replace(/^https?:\/\//, '')}
-                    </a>
+              <div className="space-y-1">
+                <span className="text-[10px] font-black uppercase text-brand-sandstone/50 tracking-wider">
+                  Location &amp; Basin
+                </span>
+                <p className="text-xs font-bold text-white">
+                  {page.country_iso ? `${page.country_iso} 🌴` : 'Caribbean Basin'}
+                </p>
+              </div>
+
+              {page.website && (
+                <div className="space-y-1">
+                  <span className="text-[10px] font-black uppercase text-brand-sandstone/50 tracking-wider">
+                    Official Website
+                  </span>
+                  <p className="text-xs font-bold text-brand-caribbeanSea truncate">{page.website}</p>
+                </div>
+              )}
+
+              {page.contact_email && (
+                <div className="space-y-1">
+                  <span className="text-[10px] font-black uppercase text-brand-sandstone/50 tracking-wider">
+                    Contact Email
+                  </span>
+                  <p className="text-xs font-bold text-white truncate">{page.contact_email}</p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* ── TAB: STOREFRONT ── */}
+        {activeTab === 'store' && products.length > 0 && (
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {products.map((p: any) => (
+                <div
+                  key={p.id}
+                  className="surface-card rounded-3xl p-5 border border-white/10 shadow-xl space-y-3"
+                >
+                  <h4 className="text-sm font-black text-white">{p.title}</h4>
+                  <p className="text-xs text-brand-sandstone/70 line-clamp-2">
+                    {p.description || 'Authentic island product.'}
                   </p>
-                );
-              })()}
-              <p className="flex items-center gap-2.5 text-brand-sandstone/75">
-                <Mail className="w-4 h-4 text-orange-400 shrink-0" />
-                <span className="font-medium">{page.contactEmail}</span>
-              </p>
+                  <div className="pt-2 border-t border-white/10 flex items-center justify-between">
+                    <span className="text-sm font-black text-brand-sunriseCoral">
+                      ${(p.price_minor / 100).toFixed(2)} {p.currency || 'USD'}
+                    </span>
+                    <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-white/5 text-brand-sandstone/60">
+                      {p.product_kind}
+                    </span>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
-
-          <div className="surface-card border border-orange-500/30 rounded-3xl p-6 space-y-2.5 shadow-lg bg-orange-950/20">
-            <div className="flex items-center gap-2 text-xs font-black text-orange-300 uppercase tracking-wider">
-              <ShieldCheck className="w-4 h-4 text-orange-400" /> Escrow Protected
-            </div>
-            <p className="text-xs text-brand-sandstone/80 leading-relaxed">
-              Orders and contracts placed on this Page are protected with direct double-entry ledger settlement.
-            </p>
-          </div>
-        </div>
+        )}
       </div>
+
+      {/* Right Rail */}
+      <RightRail ariaLabel="Page Directory & Quick Navigation">
+        <PagesRail
+          myPages={myPages}
+          activePage={{
+            id: page.id,
+            name: page.name,
+            slug: page.slug,
+            category: page.category,
+            is_admin: canManage,
+          }}
+        />
+      </RightRail>
     </div>
   );
 }

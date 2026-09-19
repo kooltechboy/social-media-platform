@@ -12,6 +12,7 @@ import {
   ShoppingBag,
   User,
   Users,
+  Building2,
   Wallet,
   Music,
   Radio,
@@ -301,6 +302,15 @@ export default function MobileNav() {
               </p>
 
               <div className="grid grid-cols-2 gap-2">
+                <Link
+                  href="/pages"
+                  onClick={() => setIsMenuSheetOpen(false)}
+                  className="flex items-center gap-2.5 p-3 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 text-white text-xs font-bold transition-colors"
+                >
+                  <Building2 className="w-4 h-4 text-orange-400 shrink-0" />
+                  <span>Pages</span>
+                </Link>
+
                 <Link
                   href="/communities"
                   onClick={() => setIsMenuSheetOpen(false)}

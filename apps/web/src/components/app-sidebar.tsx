@@ -10,6 +10,7 @@ import {
   Compass,
   Film,
   Users,
+  Building2,
   ShoppingBag,
   Calendar,
   Mic,
@@ -81,6 +82,11 @@ export default function AppSidebar({ currentPath }: { currentPath?: string }) {
       labelKey: 'nav.communities',
       fallbackLabel: 'Communities',
       icon: Users,
+    },
+    {
+      href: '/pages',
+      fallbackLabel: 'Pages',
+      icon: Building2,
     },
     {
       href: '/marketplace',

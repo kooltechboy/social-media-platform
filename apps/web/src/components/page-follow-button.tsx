@@ -1,16 +1,19 @@
-﻿'use client';
+'use client';
 
 import React, { useState, useTransition } from 'react';
 import { UserPlus, UserCheck, Loader2 } from 'lucide-react';
+import { togglePageFollowAction } from '../lib/pages/actions';
 import { followUserAction, unfollowUserAction } from '../lib/social/relationship-actions';
 
 interface PageFollowButtonProps {
-  targetUserId: string;
+  pageId?: string;
+  targetUserId?: string;
   initialIsFollowing: boolean;
   initialFollowerCount: number;
 }
 
 export default function PageFollowButton({
+  pageId,
   targetUserId,
   initialIsFollowing,
   initialFollowerCount,
@@ -20,7 +23,7 @@ export default function PageFollowButton({
   const [isPending, startTransition] = useTransition();
 
   async function handleToggleFollow() {
-    if (!targetUserId || isPending) return;
+    if (isPending) return;
 
     const nextState = !isFollowing;
     setIsFollowing(nextState);
@@ -28,17 +31,32 @@ export default function PageFollowButton({
 
     startTransition(async () => {
       try {
-        if (nextState) {
-          const res = await followUserAction(targetUserId);
+        if (pageId) {
+          // Page follow toggle
+          const res = await togglePageFollowAction(pageId);
           if (res.error) {
             setIsFollowing(!nextState);
             setCount((prev) => Math.max(0, !nextState ? prev + 1 : prev - 1));
+          } else if (res.followerCount !== undefined) {
+            setCount(res.followerCount);
+            if (res.isFollowing !== undefined) {
+              setIsFollowing(res.isFollowing);
+            }
           }
-        } else {
-          const res = await unfollowUserAction(targetUserId);
-          if (res.error) {
-            setIsFollowing(!nextState);
-            setCount((prev) => Math.max(0, !nextState ? prev + 1 : prev - 1));
+        } else if (targetUserId) {
+          // User follow toggle
+          if (nextState) {
+            const res = await followUserAction(targetUserId);
+            if (res.error) {
+              setIsFollowing(!nextState);
+              setCount((prev) => Math.max(0, !nextState ? prev + 1 : prev - 1));
+            }
+          } else {
+            const res = await unfollowUserAction(targetUserId);
+            if (res.error) {
+              setIsFollowing(!nextState);
+              setCount((prev) => Math.max(0, !nextState ? prev + 1 : prev - 1));
+            }
           }
         }
       } catch {

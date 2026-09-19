@@ -60,7 +60,9 @@ export default function TrendingPanel({ signals, territory, className = '' }: Tr
           <TrendingUp className="w-4 h-4 text-brand-sunriseCoral" />
           <h3 className="text-sm font-black text-brand-sandstone">Trending in the Caribbean</h3>
         </div>
-        <p className="text-xs text-slate-500">No trending topics yet. Check back soon! 🌴</p>
+        <p className="text-xs text-brand-sandstone/60">
+          Trending topics will appear here as the TUKUBI community grows.
+        </p>
       </div>
     );
   }
