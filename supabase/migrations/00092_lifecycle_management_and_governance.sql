@@ -58,18 +58,22 @@ CREATE POLICY "Creator or admin updates community"
         auth.uid() = created_by
         OR EXISTS (
             SELECT 1 FROM public.community_members cm
-            WHERE cm.community_id = id
+            JOIN public.community_roles cr ON cr.id = cm.role_id
+            WHERE cm.community_id = communities.id
               AND cm.profile_id = auth.uid()
-              AND cm.role IN ('admin', 'moderator')
+              AND cm.membership_status = 'active'
+              AND (cr.name IN ('admin', 'moderator') OR cr.can_moderate = true)
         )
     )
     WITH CHECK (
         auth.uid() = created_by
         OR EXISTS (
             SELECT 1 FROM public.community_members cm
-            WHERE cm.community_id = id
+            JOIN public.community_roles cr ON cr.id = cm.role_id
+            WHERE cm.community_id = communities.id
               AND cm.profile_id = auth.uid()
-              AND cm.role IN ('admin', 'moderator')
+              AND cm.membership_status = 'active'
+              AND (cr.name IN ('admin', 'moderator') OR cr.can_moderate = true)
         )
     );
 

@@ -141,21 +141,27 @@ ALTER TABLE public.sounds ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.sound_licenses ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.sound_usage ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "sounds_public_select" ON public.sounds;
 CREATE POLICY "sounds_public_select" ON public.sounds
     FOR SELECT USING (true);
 
+DROP POLICY IF EXISTS "sounds_creator_insert" ON public.sounds;
 CREATE POLICY "sounds_creator_insert" ON public.sounds
     FOR INSERT WITH CHECK (auth.uid() = creator_id OR creator_id IS NULL);
 
+DROP POLICY IF EXISTS "sounds_creator_update" ON public.sounds;
 CREATE POLICY "sounds_creator_update" ON public.sounds
     FOR UPDATE USING (auth.uid() = creator_id);
 
+DROP POLICY IF EXISTS "sound_licenses_public_select" ON public.sound_licenses;
 CREATE POLICY "sound_licenses_public_select" ON public.sound_licenses
     FOR SELECT USING (true);
 
+DROP POLICY IF EXISTS "sound_usage_public_select" ON public.sound_usage;
 CREATE POLICY "sound_usage_public_select" ON public.sound_usage
     FOR SELECT USING (true);
 
+DROP POLICY IF EXISTS "sound_usage_auth_insert" ON public.sound_usage;
 CREATE POLICY "sound_usage_auth_insert" ON public.sound_usage
     FOR INSERT WITH CHECK (auth.uid() = used_by);
 
@@ -221,29 +227,37 @@ ALTER TABLE public.live_viewers ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.live_moderators ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.live_replays ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "live_viewers_select" ON public.live_viewers;
 CREATE POLICY "live_viewers_select" ON public.live_viewers
     FOR SELECT USING (true);
 
+DROP POLICY IF EXISTS "live_viewers_insert_self" ON public.live_viewers;
 CREATE POLICY "live_viewers_insert_self" ON public.live_viewers
     FOR INSERT WITH CHECK (auth.uid() = viewer_id);
 
+DROP POLICY IF EXISTS "live_viewers_update_self" ON public.live_viewers;
 CREATE POLICY "live_viewers_update_self" ON public.live_viewers
     FOR UPDATE USING (auth.uid() = viewer_id);
 
+DROP POLICY IF EXISTS "live_viewers_delete_self" ON public.live_viewers;
 CREATE POLICY "live_viewers_delete_self" ON public.live_viewers
     FOR DELETE USING (auth.uid() = viewer_id);
 
+DROP POLICY IF EXISTS "live_moderators_select" ON public.live_moderators;
 CREATE POLICY "live_moderators_select" ON public.live_moderators
     FOR SELECT USING (true);
 
+DROP POLICY IF EXISTS "live_moderators_manage_host" ON public.live_moderators;
 CREATE POLICY "live_moderators_manage_host" ON public.live_moderators
     FOR ALL USING (EXISTS (
         SELECT 1 FROM public.livestreams s WHERE s.id = livestream_id AND s.creator_id = auth.uid()
     ));
 
+DROP POLICY IF EXISTS "live_replays_select" ON public.live_replays;
 CREATE POLICY "live_replays_select" ON public.live_replays
     FOR SELECT USING (is_published = true OR auth.uid() = creator_id);
 
+DROP POLICY IF EXISTS "live_replays_creator_all" ON public.live_replays;
 CREATE POLICY "live_replays_creator_all" ON public.live_replays
     FOR ALL USING (auth.uid() = creator_id);
 
@@ -296,10 +310,12 @@ CREATE INDEX IF NOT EXISTS idx_podcast_analytics_episode ON public.podcast_analy
 ALTER TABLE public.podcast_progress ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.podcast_analytics ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "podcast_progress_user_all" ON public.podcast_progress;
 CREATE POLICY "podcast_progress_user_all" ON public.podcast_progress
     FOR ALL USING (auth.uid() = user_id)
     WITH CHECK (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "podcast_analytics_creator_select" ON public.podcast_analytics;
 CREATE POLICY "podcast_analytics_creator_select" ON public.podcast_analytics
     FOR SELECT USING (EXISTS (
         SELECT 1 FROM public.podcast_episodes ep
@@ -307,6 +323,7 @@ CREATE POLICY "podcast_analytics_creator_select" ON public.podcast_analytics
         WHERE ep.id = episode_id AND p.creator_id = auth.uid()
     ));
 
+DROP POLICY IF EXISTS "podcast_analytics_insert_all" ON public.podcast_analytics;
 CREATE POLICY "podcast_analytics_insert_all" ON public.podcast_analytics
     FOR INSERT WITH CHECK (auth.uid() = listener_id OR listener_id IS NULL);
 
