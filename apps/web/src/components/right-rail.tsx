@@ -15,11 +15,11 @@ export default function RightRail({
 }: RightRailProps) {
   return (
     <aside
-      className={`hidden lg:block w-[310px] xl:w-[340px] 2xl:w-[360px] shrink-0 ${className}`}
+      className={`hidden lg:block w-[310px] xl:w-[340px] 2xl:w-[360px] shrink-0 sticky top-[76px] self-start max-h-[calc(100vh-90px)] overflow-y-auto scrollbar-none z-20 pb-8 pr-0.5 ${className}`}
       aria-label={ariaLabel}
       role="complementary"
     >
-      <div className="sticky top-[68px] space-y-5 max-h-[calc(100vh-80px)] overflow-y-auto scrollbar-none pb-8 pr-0.5">
+      <div className="space-y-5">
         {children}
       </div>
     </aside>

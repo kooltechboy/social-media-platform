@@ -115,7 +115,7 @@ export default async function RootLayout({
   return (
     <html lang={activeLocale} dir={dir} className="dark" suppressHydrationWarning>
       <body
-        className="min-h-screen relative overflow-x-hidden antialiased text-white selection:bg-[#FF7A59]/30 selection:text-white"
+        className="min-h-screen relative overflow-x-clip antialiased text-white selection:bg-[#FF7A59]/30 selection:text-white"
         suppressHydrationWarning
       >
         {/* Full-screen Caribbean background — always fills the entire viewport */}
