@@ -658,7 +658,7 @@ export default function UniversalPageCreateWizard() {
 
               {description && (
                 <p className="text-xs text-brand-sandstone/80 leading-relaxed italic border-t border-white/5 pt-3">
-                  "{description}"
+                  &ldquo;{description}&rdquo;
                 </p>
               )}
 

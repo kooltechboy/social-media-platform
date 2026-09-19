@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useTransition } from 'react';
-import { Send, Image, Hash, Loader2, Sparkles } from 'lucide-react';
+import { Send, Image as ImageIcon, Hash, Loader2, Sparkles } from 'lucide-react';
 import { createPagePostAction } from '../../lib/pages/actions';
 
 interface PagePostComposerProps {
@@ -110,7 +110,7 @@ export default function PagePostComposer({ pageId, pageName }: PagePostComposerP
                   : 'bg-white/5 text-brand-sandstone/70 hover:text-white border-white/5'
               }`}
             >
-              <Image className="w-3.5 h-3.5" />
+              <ImageIcon className="w-3.5 h-3.5" />
               <span>Photo</span>
             </button>
             <button
