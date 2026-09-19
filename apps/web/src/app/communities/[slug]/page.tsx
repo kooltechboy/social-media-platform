@@ -13,6 +13,7 @@ import {
   Share2,
   Lock,
   Plus,
+  Settings,
 } from 'lucide-react';
 import { createSupabaseServerClient, getCurrentUser } from '../../../lib/supabase/server';
 import CommunityJoinButton from '../../../components/community-join-button';
@@ -26,10 +27,13 @@ interface CommunityDetail {
   name: string;
   slug: string;
   description: string | null;
+  rules?: string | null;
   join_policy: 'public' | 'private' | 'invite_only';
   member_count: number;
   country_iso: string | null;
   created_by: string | null;
+  avatar_url?: string | null;
+  is_archived?: boolean;
   locationTag?: string;
   activeNow?: number;
   flag?: string;
@@ -50,12 +54,13 @@ export default async function CommunityHubPage({
 
   let community: CommunityDetail | null = null;
   let isMember = false;
+  let isCreatorOrAdmin = false;
   let communityPosts: FeedPostData[] = [];
 
   if (supabase) {
     const { data: dbComm } = await supabase
       .from('communities')
-      .select('id, name, slug, description, join_policy, member_count, country_iso, created_by, countries(name, flag_emoji)')
+      .select('id, name, slug, description, rules, join_policy, member_count, country_iso, created_by, avatar_url, is_archived, countries(name, flag_emoji)')
       .eq('slug', decodedSlug)
       .maybeSingle();
 
@@ -65,10 +70,13 @@ export default async function CommunityHubPage({
         name: dbComm.name,
         slug: dbComm.slug,
         description: dbComm.description,
+        rules: dbComm.rules,
         join_policy: dbComm.join_policy,
         member_count: dbComm.member_count || 1,
         country_iso: dbComm.country_iso,
         created_by: dbComm.created_by,
+        avatar_url: dbComm.avatar_url,
+        is_archived: Boolean(dbComm.is_archived),
         locationTag: (dbComm.countries as any)?.name || 'Pan-Caribbean',
         flag: (dbComm.countries as any)?.flag_emoji || '🌴',
       };
@@ -77,7 +85,7 @@ export default async function CommunityHubPage({
         user
           ? supabase
               .from('community_members')
-              .select('community_id')
+              .select('community_id, role')
               .eq('community_id', dbComm.id)
               .eq('profile_id', user.id)
               .maybeSingle()
@@ -91,6 +99,7 @@ export default async function CommunityHubPage({
       ]);
 
       isMember = !!memberRes.data;
+      isCreatorOrAdmin = !!user && (user.id === dbComm.created_by || memberRes.data?.role === 'admin');
 
       if (postsRes.data && postsRes.data.length > 0) {
         communityPosts = postsRes.data.map((p: any) => {
@@ -132,6 +141,36 @@ export default async function CommunityHubPage({
           <ArrowLeft className="w-4 h-4" /> Back to Communities
         </Link>
       </div>
+
+      {/* Admin Management Toolbar */}
+      {isCreatorOrAdmin && (
+        <div className="flex items-center justify-between p-3.5 px-5 rounded-2xl bg-cyan-500/10 border border-cyan-500/30 text-xs text-brand-sandstone">
+          <div className="flex items-center gap-2">
+            <ShieldCheck className="w-4 h-4 text-cyan-400 shrink-0" />
+            <span className="font-bold">You are a Leader / Admin of this Community Hub</span>
+            {community.is_archived && (
+              <span className="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-black text-[10px] border border-amber-500/30">
+                Archived
+              </span>
+            )}
+          </div>
+          <div className="flex items-center gap-2">
+            <Link
+              href={`/communities/${community.slug}/manage`}
+              className="px-3.5 py-1.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-black text-xs transition-colors flex items-center gap-1.5 cursor-pointer shadow-sm shadow-cyan-500/30"
+            >
+              <Settings className="w-3.5 h-3.5" /> Manage Hub
+            </Link>
+          </div>
+        </div>
+      )}
+
+      {/* Archived Notice */}
+      {community.is_archived && (
+        <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs flex items-center gap-2">
+          <span>⚠️ This Community Hub is currently archived and hidden from public explore and search.</span>
+        </div>
+      )}
 
       {/* Community Banner Card */}
       <div className="bg-brand-dusk border border-slate-800 rounded-3xl p-6 md:p-8 relative overflow-hidden shadow-2xl space-y-6">
@@ -224,12 +263,18 @@ export default async function CommunityHubPage({
             <h3 className="text-xs font-black uppercase tracking-wider text-brand-sandstone/60 flex items-center gap-2">
               <ShieldCheck className="w-4 h-4 text-brand-goldenHour" /> Community Rules
             </h3>
-            <ul className="text-xs text-slate-300 space-y-2.5 list-disc list-inside">
-              <li>Respect cultural identity and diaspora diversity.</li>
-              <li>No harassment, hate speech, or unverified claims.</li>
-              <li>Marketplace commerce must use verified merchant escrow.</li>
-              <li>Keep discussions constructive, supportive, and authentic.</li>
-            </ul>
+            {community.rules ? (
+              <div className="text-xs text-slate-300 whitespace-pre-wrap leading-relaxed">
+                {community.rules}
+              </div>
+            ) : (
+              <ul className="text-xs text-slate-300 space-y-2.5 list-disc list-inside">
+                <li>Respect cultural identity and diaspora diversity.</li>
+                <li>No harassment, hate speech, or unverified claims.</li>
+                <li>Marketplace commerce must use verified merchant escrow.</li>
+                <li>Keep discussions constructive, supportive, and authentic.</li>
+              </ul>
+            )}
           </div>
 
           <div className="bg-brand-dusk/70 border border-slate-800 rounded-3xl p-6 space-y-3 text-xs text-slate-300">

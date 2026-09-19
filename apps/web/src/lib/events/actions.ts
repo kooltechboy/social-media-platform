@@ -96,3 +96,127 @@ export async function rsvpAction(
 export async function rsvpEventFormAction(eventId: string): Promise<void> {
   await rsvpAction(eventId, 'going');
 }
+
+export async function updateEventAction(
+  eventId: string,
+  formData: FormData
+): Promise<{ error: string | null; success?: boolean }> {
+  const user = await getCurrentUser();
+  if (!user) return { error: 'Sign in required.' };
+
+  const supabase = await createSupabaseServerClient();
+  if (!supabase) return { error: 'Database unavailable.' };
+
+  const { data: event } = await supabase
+    .from('events')
+    .select('id, host_id')
+    .eq('id', eventId)
+    .maybeSingle();
+
+  if (!event || event.host_id !== user.id) {
+    return { error: 'Only the event host can edit this event.' };
+  }
+
+  const title = String(formData.get('title') ?? '').trim();
+  const venue = String(formData.get('venue') ?? '').trim();
+  const startsAt = String(formData.get('startsAt') ?? '');
+  const capacityRaw = String(formData.get('capacity') ?? '');
+
+  if (!title) return { error: 'Event title is required.' };
+
+  const updatePayload: any = {
+    title,
+    venue: venue || null,
+  };
+
+  if (startsAt) {
+    const startsAtDate = new Date(startsAt);
+    if (!Number.isNaN(startsAtDate.getTime())) {
+      updatePayload.starts_at = startsAtDate.toISOString();
+    }
+  }
+
+  if (capacityRaw !== '') {
+    const cap = Number.parseInt(capacityRaw, 10);
+    updatePayload.capacity = Number.isInteger(cap) && cap > 0 ? cap : null;
+  }
+
+  const { error: updateErr } = await supabase
+    .from('events')
+    .update(updatePayload)
+    .eq('id', eventId)
+    .eq('host_id', user.id);
+
+  if (updateErr) return { error: updateErr.message };
+
+  revalidatePath('/events');
+  return { error: null, success: true };
+}
+
+export async function cancelEventAction(
+  eventId: string,
+  reason?: string
+): Promise<{ error: string | null; success?: boolean }> {
+  const user = await getCurrentUser();
+  if (!user) return { error: 'Sign in required.' };
+
+  const supabase = await createSupabaseServerClient();
+  if (!supabase) return { error: 'Database unavailable.' };
+
+  const { data: event } = await supabase
+    .from('events')
+    .select('id, host_id')
+    .eq('id', eventId)
+    .maybeSingle();
+
+  if (!event || event.host_id !== user.id) {
+    return { error: 'Only the event host can cancel this event.' };
+  }
+
+  const { error: updateErr } = await supabase
+    .from('events')
+    .update({
+      is_cancelled: true,
+      cancelled_at: new Date().toISOString(),
+      cancellation_reason: reason || 'Cancelled by host',
+    })
+    .eq('id', eventId)
+    .eq('host_id', user.id);
+
+  if (updateErr) return { error: updateErr.message };
+
+  revalidatePath('/events');
+  return { error: null, success: true };
+}
+
+export async function deleteEventAction(
+  eventId: string
+): Promise<{ error: string | null; success?: boolean }> {
+  const user = await getCurrentUser();
+  if (!user) return { error: 'Sign in required.' };
+
+  const supabase = await createSupabaseServerClient();
+  if (!supabase) return { error: 'Database unavailable.' };
+
+  const { data: event } = await supabase
+    .from('events')
+    .select('id, host_id')
+    .eq('id', eventId)
+    .maybeSingle();
+
+  if (!event || event.host_id !== user.id) {
+    return { error: 'Only the event host can delete this event.' };
+  }
+
+  const { error: delErr } = await supabase
+    .from('events')
+    .delete()
+    .eq('id', eventId)
+    .eq('host_id', user.id);
+
+  if (delErr) return { error: delErr.message };
+
+  revalidatePath('/events');
+  return { error: null, success: true };
+}
+

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Search, Wallet, CreditCard, Bell, MessageSquare, User, CheckCircle, Users, Calendar, ShoppingBag, X } from 'lucide-react';
 import SessionWidget from './session-widget';
+import IdentitySwitcher from './identity-switcher';
 import { createSupabaseBrowserClient } from '../lib/supabase/browser';
 import { followAction, unfollowAction } from '../lib/social/profile-actions';
 import UserAvatar from './user-avatar';
@@ -307,6 +308,8 @@ export default function AppHeader() {
             <span className="absolute top-2 right-2 w-2.5 h-2.5 bg-brand-caribbeanSea rounded-full animate-pulse shadow-[0_0_8px_rgba(0,168,150,0.9)]" />
           )}
         </Link>
+
+        <IdentitySwitcher />
 
         <SessionWidget />
       </div>

@@ -42,6 +42,7 @@ interface PageDetails {
   ownerUsername?: string;
   isFollowing?: boolean;
   followerCount?: number;
+  isArchived?: boolean;
   products: Array<{
     id: string;
     title: string;
@@ -105,10 +106,13 @@ export default async function ModularPageView({ params }: { params: Promise<{ sl
         ownerId: business.owner_id,
         description: business.description || 'Verified Caribbean Business page on TUKUBI. The Caribbean Connected.',
         website: business.website || 'https://tukubi.com',
-        contactEmail: 'contact@tukubi.com',
-        avatar: '🏪',
-        coverGradient: 'from-amber-900/50 via-slate-900 to-[#110D17]',
+        contactEmail: business.contact_email || 'contact@tukubi.com',
+        avatar: business.avatar_url || '🏪',
+        coverGradient: business.cover_image_url
+          ? `url('${business.cover_image_url}') bg-cover bg-center`
+          : 'from-amber-900/50 via-slate-900 to-[#110D17]',
         ownerUsername: business.owner?.username || undefined,
+        isArchived: Boolean(business.is_archived),
         products: (products || []).map((p: any) => ({
           id: p.id,
           title: p.title,
@@ -127,13 +131,49 @@ export default async function ModularPageView({ params }: { params: Promise<{ sl
   }
 
   const page = dbPage;
+  const isOwner = Boolean(user && user.id === page.ownerId);
 
   return (
-    <div className="min-h-screen bg-transparent text-brand-sandstone p-4 md:p-6 lg:p-8 max-w-7xl mx-auto space-y-8">
+    <div className="min-h-screen bg-transparent text-brand-sandstone p-4 md:p-6 lg:p-8 max-w-7xl mx-auto space-y-6">
+      {/* Owner Management Quick Bar */}
+      {isOwner && (
+        <div className="surface-card rounded-2xl p-4 border border-brand-goldenHour/40 bg-brand-goldenHour/10 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-lg">
+          <div className="flex items-center gap-2 text-xs text-white">
+            <span className="text-base">👑</span>
+            <span className="font-extrabold">You are an administrator of this Page.</span>
+            {page.isArchived && (
+              <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 uppercase">
+                Archived &amp; Hidden
+              </span>
+            )}
+          </div>
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            <Link
+              href={`/pages/${page.slug}/manage`}
+              className="flex-1 sm:flex-initial bg-brand-goldenHour hover:bg-amber-400 text-slate-950 font-black px-4 py-2 rounded-xl text-xs flex items-center justify-center gap-1.5 transition-all shadow-md shadow-brand-goldenHour/20"
+            >
+              Manage Page &amp; Settings →
+            </Link>
+          </div>
+        </div>
+      )}
+
+      {/* Public Archived Notice if viewer is not owner */}
+      {!isOwner && page.isArchived && (
+        <div className="surface-card rounded-2xl p-4 border border-amber-500/30 bg-amber-500/10 text-amber-300 text-xs font-bold text-center">
+          ⚠️ This Caribbean Page is currently archived by its owner and is not accepting public inquiries.
+        </div>
+      )}
+
       {/* Page Header & Cover */}
       <div className="surface-header border border-white/15 rounded-3xl overflow-hidden shadow-2xl relative">
         {/* Cover Banner */}
-        <div className={`h-48 md:h-64 bg-gradient-to-r ${page.coverGradient} relative`}>
+        <div
+          className={`h-48 md:h-64 relative ${
+            page.coverGradient.startsWith('url') ? page.coverGradient : `bg-gradient-to-r ${page.coverGradient}`
+          }`}
+          style={page.coverGradient.startsWith('url') ? { backgroundImage: page.coverGradient.replace(/ bg-cover.*$/, '') } : undefined}
+        >
           <div className="absolute inset-0 bg-black/40" />
           <div className="absolute top-4 right-4 flex items-center gap-2 z-10">
             <VerificationBadge level={page.verification} showLabel={true} />
@@ -143,8 +183,13 @@ export default async function ModularPageView({ params }: { params: Promise<{ sl
         {/* Profile Info Bar */}
         <div className="p-6 pt-0 relative flex flex-col md:flex-row items-start md:items-end justify-between gap-6 -mt-16 z-10">
           <div className="flex flex-col md:flex-row items-start md:items-end gap-5">
-            <div className="w-28 h-28 rounded-3xl bg-slate-900 border-4 border-slate-950 flex items-center justify-center text-5xl shadow-2xl shrink-0">
-              {page.avatar}
+            <div className="w-28 h-28 rounded-3xl bg-slate-900 border-4 border-slate-950 flex items-center justify-center text-5xl shadow-2xl shrink-0 overflow-hidden">
+              {page.avatar.startsWith('http') ? (
+                /* eslint-disable-next-line @next/next/no-img-element */
+                <img src={page.avatar} alt={page.name} className="w-full h-full object-cover" />
+              ) : (
+                page.avatar
+              )}
             </div>
             <div className="space-y-1.5">
               <h1 className="text-2xl md:text-3xl lg:text-4xl font-black text-white leading-tight flex items-center gap-2">

@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { Money } from '@caribbean/payments';
 import { createSupabaseServerClient, getCurrentUser } from '../../../lib/supabase/server';
+import ListingActionsMenu from '../../../components/marketplace/listing-actions-menu';
 
 export const dynamic = 'force-dynamic';
 
@@ -248,24 +249,39 @@ export default async function SellerCenterDashboardPage() {
                         </td>
                         <td className="py-3.5 px-4">{item.views_count || 0}</td>
                         <td className="py-3.5 px-4">
-                          <span
-                            className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase border ${
-                              item.is_active
-                                ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
-                                : 'bg-slate-500/10 text-slate-400 border-slate-500/30'
-                            }`}
-                          >
-                            {item.is_active ? 'Active' : 'Inactive'}
-                          </span>
+                          {(() => {
+                            const st = item.status || (item.is_active ? 'active' : 'paused');
+                            switch (st) {
+                              case 'active':
+                                return (
+                                  <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase border bg-emerald-500/10 text-emerald-400 border-emerald-500/30">
+                                    Active
+                                  </span>
+                                );
+                              case 'sold':
+                                return (
+                                  <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase border bg-slate-500/10 text-slate-300 border-slate-500/30">
+                                    Sold
+                                  </span>
+                                );
+                              case 'archived':
+                                return (
+                                  <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase border bg-purple-500/10 text-purple-300 border-purple-500/30">
+                                    Archived
+                                  </span>
+                                );
+                              case 'paused':
+                              default:
+                                return (
+                                  <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase border bg-amber-500/10 text-amber-300 border-amber-500/30">
+                                    Paused
+                                  </span>
+                                );
+                            }
+                          })()}
                         </td>
                         <td className="py-3.5 px-4 text-right">
-                          <Link
-                            href={`/marketplace/${item.id}`}
-                            className="inline-flex items-center gap-1 text-orange-400 hover:text-orange-300 font-bold"
-                          >
-                            <span>View</span>
-                            <ExternalLink className="w-3 h-3" />
-                          </Link>
+                          <ListingActionsMenu product={item} />
                         </td>
                       </tr>
                     );

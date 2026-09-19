@@ -38,9 +38,8 @@ interface MobileTab {
 
 const TABS: MobileTab[] = [
   { href: '/', labelKey: 'nav.home', fallbackLabel: 'Home', icon: Home, matchExact: true },
-  { href: '/feeds', fallbackLabel: 'Feeds', icon: Layers },
+  { href: '/explore', labelKey: 'nav.explore', fallbackLabel: 'Explore', icon: Compass },
   { href: '/create', labelKey: 'nav.create_hub', fallbackLabel: 'Create', icon: PlusCircle },
-  { href: '/reels', labelKey: 'nav.reels', fallbackLabel: 'Reels', icon: Film },
   { href: '/messages', labelKey: 'nav.messages', fallbackLabel: 'Messages', icon: MessageSquare },
 ];
 
@@ -128,45 +127,95 @@ export default function MobileNav() {
               </button>
             </div>
 
-            <div className="grid grid-cols-2 gap-3 pt-2">
+            <div className="grid grid-cols-3 gap-2.5 pt-2">
               <Link
                 href="/create"
                 onClick={() => setIsCreateSheetOpen(false)}
-                className="flex flex-col items-center justify-center p-4 rounded-2xl bg-brand-twilight/80 hover:bg-brand-dusk border border-white/5 text-center min-h-[90px] transition-all hover:border-brand-sunriseCoral/40"
+                className="flex flex-col items-center justify-center p-3 rounded-2xl bg-brand-twilight/80 hover:bg-brand-dusk border border-white/5 text-center min-h-[85px] transition-all hover:border-brand-sunriseCoral/40"
               >
                 <span className="text-2xl mb-1">📝</span>
-                <span className="text-xs font-black text-white">Community Post</span>
-                <span className="text-[10px] text-brand-sandstone/60">Story & Discussion</span>
+                <span className="text-xs font-black text-white">Post</span>
+                <span className="text-[9px] text-brand-sandstone/60">Story & Discussion</span>
               </Link>
 
               <Link
                 href="/reels"
                 onClick={() => setIsCreateSheetOpen(false)}
-                className="flex flex-col items-center justify-center p-4 rounded-2xl bg-brand-twilight/80 hover:bg-brand-dusk border border-white/5 text-center min-h-[90px] transition-all hover:border-brand-sunriseCoral/40"
+                className="flex flex-col items-center justify-center p-3 rounded-2xl bg-brand-twilight/80 hover:bg-brand-dusk border border-white/5 text-center min-h-[85px] transition-all hover:border-brand-sunriseCoral/40"
               >
                 <span className="text-2xl mb-1">🎬</span>
-                <span className="text-xs font-black text-white">Caribbean Reel</span>
-                <span className="text-[10px] text-brand-sandstone/60">9:16 Vertical Video</span>
+                <span className="text-xs font-black text-white">Reel</span>
+                <span className="text-[9px] text-brand-sandstone/60">9:16 Video</span>
               </Link>
 
               <Link
-                href="/marketplace/seller-center"
+                href="/pages/create"
                 onClick={() => setIsCreateSheetOpen(false)}
-                className="flex flex-col items-center justify-center p-4 rounded-2xl bg-brand-twilight/80 hover:bg-brand-dusk border border-white/5 text-center min-h-[90px] transition-all hover:border-brand-sunriseCoral/40"
+                className="flex flex-col items-center justify-center p-3 rounded-2xl bg-brand-twilight/80 hover:bg-brand-dusk border border-white/5 text-center min-h-[85px] transition-all hover:border-brand-sunriseCoral/40"
+              >
+                <span className="text-2xl mb-1">🏢</span>
+                <span className="text-xs font-black text-white">Page</span>
+                <span className="text-[9px] text-brand-sandstone/60">Brand & Store</span>
+              </Link>
+
+              <Link
+                href="/communities/create"
+                onClick={() => setIsCreateSheetOpen(false)}
+                className="flex flex-col items-center justify-center p-3 rounded-2xl bg-brand-twilight/80 hover:bg-brand-dusk border border-white/5 text-center min-h-[85px] transition-all hover:border-brand-sunriseCoral/40"
+              >
+                <span className="text-2xl mb-1">🌴</span>
+                <span className="text-xs font-black text-white">Hub</span>
+                <span className="text-[9px] text-brand-sandstone/60">Diaspora Guild</span>
+              </Link>
+
+              <Link
+                href="/events"
+                onClick={() => setIsCreateSheetOpen(false)}
+                className="flex flex-col items-center justify-center p-3 rounded-2xl bg-brand-twilight/80 hover:bg-brand-dusk border border-white/5 text-center min-h-[85px] transition-all hover:border-brand-sunriseCoral/40"
+              >
+                <span className="text-2xl mb-1">🎟️</span>
+                <span className="text-xs font-black text-white">Event</span>
+                <span className="text-[9px] text-brand-sandstone/60">Fete & Gathering</span>
+              </Link>
+
+              <Link
+                href="/marketplace/seller-center/create"
+                onClick={() => setIsCreateSheetOpen(false)}
+                className="flex flex-col items-center justify-center p-3 rounded-2xl bg-brand-twilight/80 hover:bg-brand-dusk border border-white/5 text-center min-h-[85px] transition-all hover:border-brand-sunriseCoral/40"
               >
                 <span className="text-2xl mb-1">🛒</span>
-                <span className="text-xs font-black text-white">Sell on Market</span>
-                <span className="text-[10px] text-brand-sandstone/60">List Products & Trade</span>
+                <span className="text-xs font-black text-white">Market</span>
+                <span className="text-[9px] text-brand-sandstone/60">Sell Product</span>
+              </Link>
+
+              <Link
+                href="/sounds"
+                onClick={() => setIsCreateSheetOpen(false)}
+                className="flex flex-col items-center justify-center p-3 rounded-2xl bg-brand-twilight/80 hover:bg-brand-dusk border border-white/5 text-center min-h-[85px] transition-all hover:border-brand-sunriseCoral/40"
+              >
+                <span className="text-2xl mb-1">🎵</span>
+                <span className="text-xs font-black text-white">Sound</span>
+                <span className="text-[9px] text-brand-sandstone/60">Beats & Stems</span>
               </Link>
 
               <Link
                 href="/live"
                 onClick={() => setIsCreateSheetOpen(false)}
-                className="flex flex-col items-center justify-center p-4 rounded-2xl bg-brand-twilight/80 hover:bg-brand-dusk border border-white/5 text-center min-h-[90px] transition-all hover:border-brand-sunriseCoral/40"
+                className="flex flex-col items-center justify-center p-3 rounded-2xl bg-brand-twilight/80 hover:bg-brand-dusk border border-white/5 text-center min-h-[85px] transition-all hover:border-brand-sunriseCoral/40"
               >
                 <span className="text-2xl mb-1">🔴</span>
-                <span className="text-xs font-black text-white">Broadcast Live</span>
-                <span className="text-[10px] text-brand-sandstone/60">Stream to Diaspora</span>
+                <span className="text-xs font-black text-white">Live</span>
+                <span className="text-[9px] text-brand-sandstone/60">Broadcast Live</span>
+              </Link>
+
+              <Link
+                href="/podcasts"
+                onClick={() => setIsCreateSheetOpen(false)}
+                className="flex flex-col items-center justify-center p-3 rounded-2xl bg-brand-twilight/80 hover:bg-brand-dusk border border-white/5 text-center min-h-[85px] transition-all hover:border-brand-sunriseCoral/40"
+              >
+                <span className="text-2xl mb-1">🎙️</span>
+                <span className="text-xs font-black text-white">Podcast</span>
+                <span className="text-[9px] text-brand-sandstone/60">Audio Episode</span>
               </Link>
             </div>
 

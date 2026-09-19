@@ -1064,3 +1064,137 @@ export async function createMultiVendorOrderAction(
   };
 }
 
+export async function updateProductListingAction(
+  productId: string,
+  formData: FormData
+): Promise<{ error: string | null; success?: boolean }> {
+  const user = await getCurrentUser();
+  if (!user) return { error: 'Sign in required.' };
+
+  const supabase = await createSupabaseServerClient();
+  if (!supabase) return { error: 'Database unavailable.' };
+
+  const { data: product } = await supabase
+    .from('products')
+    .select('id, seller_id')
+    .eq('id', productId)
+    .maybeSingle();
+
+  if (!product || product.seller_id !== user.id) {
+    return { error: 'Only the seller can edit this listing.' };
+  }
+
+  const title = String(formData.get('title') ?? '').trim();
+  const description = String(formData.get('description') ?? '').trim();
+  const priceRaw = String(formData.get('price') ?? '').trim();
+  const condition = String(formData.get('condition') ?? 'new').trim();
+  const inventoryRaw = String(formData.get('inventoryCount') ?? '').trim();
+
+  if (!title) return { error: 'Product title is required.' };
+
+  const updatePayload: any = {
+    title,
+    description: description || null,
+    condition,
+  };
+
+  if (priceRaw) {
+    const num = parseFloat(priceRaw);
+    if (!isNaN(num) && num > 0) {
+      updatePayload.price_minor = Math.round(num * 100);
+    }
+  }
+
+  if (inventoryRaw !== '') {
+    const inv = parseInt(inventoryRaw, 10);
+    updatePayload.inventory_count = !isNaN(inv) && inv >= 0 ? inv : null;
+  }
+
+  const { error: updateErr } = await supabase
+    .from('products')
+    .update(updatePayload)
+    .eq('id', productId)
+    .eq('seller_id', user.id);
+
+  if (updateErr) return { error: updateErr.message };
+
+  revalidateMarketplacePaths();
+  revalidatePath(`/marketplace/${productId}`);
+  return { error: null, success: true };
+}
+
+export async function toggleProductStatusAction(
+  productId: string,
+  newStatus: 'active' | 'paused' | 'sold'
+): Promise<{ error: string | null; success?: boolean }> {
+  const user = await getCurrentUser();
+  if (!user) return { error: 'Sign in required.' };
+
+  const supabase = await createSupabaseServerClient();
+  if (!supabase) return { error: 'Database unavailable.' };
+
+  const { data: product } = await supabase
+    .from('products')
+    .select('id, seller_id')
+    .eq('id', productId)
+    .maybeSingle();
+
+  if (!product || product.seller_id !== user.id) {
+    return { error: 'Only the seller can modify listing status.' };
+  }
+
+  const isActive = newStatus === 'active';
+  const updatePayload: any = {
+    status: newStatus,
+    is_active: isActive,
+  };
+
+  if (newStatus === 'sold') {
+    updatePayload.inventory_count = 0;
+  }
+
+  const { error: updateErr } = await supabase
+    .from('products')
+    .update(updatePayload)
+    .eq('id', productId)
+    .eq('seller_id', user.id);
+
+  if (updateErr) return { error: updateErr.message };
+
+  revalidateMarketplacePaths();
+  revalidatePath(`/marketplace/${productId}`);
+  return { error: null, success: true };
+}
+
+export async function deleteProductListingAction(
+  productId: string
+): Promise<{ error: string | null; success?: boolean }> {
+  const user = await getCurrentUser();
+  if (!user) return { error: 'Sign in required.' };
+
+  const supabase = await createSupabaseServerClient();
+  if (!supabase) return { error: 'Database unavailable.' };
+
+  const { data: product } = await supabase
+    .from('products')
+    .select('id, seller_id')
+    .eq('id', productId)
+    .maybeSingle();
+
+  if (!product || product.seller_id !== user.id) {
+    return { error: 'Only the seller can delete this listing.' };
+  }
+
+  const { error: delErr } = await supabase
+    .from('products')
+    .delete()
+    .eq('id', productId)
+    .eq('seller_id', user.id);
+
+  if (delErr) return { error: delErr.message };
+
+  revalidateMarketplacePaths();
+  return { error: null, success: true };
+}
+
+

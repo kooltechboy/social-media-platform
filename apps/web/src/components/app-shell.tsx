@@ -6,6 +6,7 @@ import { useAuth } from './auth-provider';
 import AppHeader from './app-header';
 import AppSidebar from './app-sidebar';
 import MobileNav from './mobile-nav';
+import OperatingIdentityBanner from './operating-identity-banner';
 const GATEWAY_ROUTES = [
   '/login',
   '/signup',
@@ -42,6 +43,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="relative z-10 flex flex-col min-h-screen">
+      <OperatingIdentityBanner />
       <AppHeader />
       <div className="flex-1 w-full max-w-[2560px] 5xl:max-w-[2800px] mx-auto flex">
         {/* Left Navigation: Fixed 240-260px width, sticky on desktop with independent scroll */}

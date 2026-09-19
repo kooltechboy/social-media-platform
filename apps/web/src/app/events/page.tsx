@@ -4,32 +4,9 @@ import Link from 'next/link';
 import { createSupabaseServerClient, getCurrentUser } from '../../lib/supabase/server';
 import { rsvpEventFormAction } from '../../lib/events/actions';
 import EventCreateForm, { type CityOption } from '../../components/event-create-form';
+import EventCard, { type LiveEventItem } from '../../components/events/event-card';
 
 export const dynamic = 'force-dynamic';
-
-interface LiveEvent {
-  id: string;
-  title: string;
-  description: string | null;
-  event_kind: 'in_person' | 'livestream' | 'hybrid';
-  venue: string | null;
-  starts_at: string;
-  capacity: number | null;
-  price?: string;
-  cities: { name: string; country_iso: string } | null;
-  event_attendees: Array<{ profile_id: string; rsvp_status: string }>;
-}
-
-function formatEventDate(iso: string): string {
-  return new Date(iso).toLocaleString('en-US', {
-    weekday: 'short',
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-    hour: 'numeric',
-    minute: '2-digit',
-  });
-}
 
 export default async function EventsPage({
   searchParams,
@@ -42,13 +19,13 @@ export default async function EventsPage({
   const user = await getCurrentUser();
   const supabase = await createSupabaseServerClient();
 
-  let events: LiveEvent[] = [];
+  let events: LiveEventItem[] = [];
   let cities: CityOption[] = [];
 
   if (supabase) {
     let query = supabase
       .from('events')
-      .select('id, title, description, event_kind, venue, starts_at, capacity, cities(name, country_iso), event_attendees(profile_id, rsvp_status)')
+      .select('id, title, description, event_kind, venue, starts_at, capacity, host_id, is_cancelled, cancellation_reason, cities(name, country_iso), event_attendees(profile_id, rsvp_status)')
       .gte('starts_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
       .order('starts_at', { ascending: true })
       .limit(30);
@@ -65,7 +42,7 @@ export default async function EventsPage({
       supabase.from('cities').select('id, name, country_iso').order('name'),
     ]);
     if (eventsResult.data && eventsResult.data.length > 0) {
-      events = eventsResult.data as unknown as LiveEvent[];
+      events = eventsResult.data as unknown as LiveEventItem[];
     }
     cities = (citiesResult.data ?? []) as CityOption[];
   }
@@ -111,85 +88,10 @@ export default async function EventsPage({
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 3xl:grid-cols-4 4xl:grid-cols-5 gap-6">
-          {events.map((event) => {
-          const going = event.event_attendees?.filter((attendee) => attendee.rsvp_status === 'going') ?? [];
-          const userGoing = user ? going.some((attendee) => attendee.profile_id === user.id) : false;
-          return (
-            <div
-              key={event.id}
-              className="surface-card surface-card-interactive rounded-3xl p-6 space-y-4 flex flex-col justify-between transition-all shadow-xl group border border-white/10"
-            >
-              <div className="space-y-3.5">
-                <div className="flex items-center justify-between">
-                  <span className="text-[10px] md:text-xs font-black px-2.5 md:px-3 py-1 md:py-1.5 rounded-full bg-brand-caribbeanSea/15 text-brand-caribbeanSea border border-brand-caribbeanSea/30 uppercase tracking-wider">
-                    {event.event_kind.replace('_', ' ')}
-                  </span>
-                  {event.event_kind !== 'in_person' && (
-                    <span className="flex items-center gap-1.5 text-[10px] md:text-xs font-black text-rose-300 bg-rose-500/15 px-2.5 md:px-3 py-1 md:py-1.5 rounded-full border border-rose-500/30 animate-pulse">
-                      <Radio className="w-3 h-3 md:w-3.5 md:h-3.5" /> Live Stream
-                    </span>
-                  )}
-                </div>
-
-                <div className="flex items-center gap-2 text-xs sm:text-sm md:text-[15px] font-black text-amber-300">
-                  <Clock className="w-4 h-4 md:w-4.5 md:h-4.5" />
-                  <span>{formatEventDate(event.starts_at)}</span>
-                </div>
-
-                <h3 className="font-black text-base sm:text-lg md:text-xl text-white group-hover:text-amber-300 transition-colors leading-snug">
-                  {event.title}
-                </h3>
-
-                {event.description && (
-                  <p className="text-xs sm:text-sm md:text-[15px] text-brand-sandstone/85 leading-relaxed md:leading-[1.6] line-clamp-2 font-medium">
-                    {event.description}
-                  </p>
-                )}
-
-                <div className="space-y-2 pt-1 text-xs md:text-sm text-brand-sandstone/70">
-                  <p className="flex items-center gap-2">
-                    <MapPin className="w-3.5 h-3.5 md:w-4 md:h-4 text-brand-caribbeanSea flex-shrink-0" />
-                    <span>{event.venue ? `${event.venue} — ` : ''}{event.cities ? `${event.cities.name}, ${event.cities.country_iso}` : 'Caribbean'}</span>
-                  </p>
-                  <p className="flex items-center justify-between">
-                    <span className="flex items-center gap-2 font-semibold">
-                      <Users className="w-3.5 h-3.5 md:w-4 md:h-4 text-brand-sunriseCoral flex-shrink-0" />
-                      <span>{going.length > 0 ? `${going.length} attending` : 'Open RSVP'}</span>
-                    </span>
-                    {event.price && (
-                      <span className="font-black text-white text-xs md:text-sm">{event.price}</span>
-                    )}
-                  </p>
-                </div>
-              </div>
-
-              <div className="pt-4 border-t border-white/10">
-                {user ? (
-                  <form action={rsvpEventFormAction.bind(null, event.id)}>
-                    <button
-                      type="submit"
-                      className={`w-full font-black py-3 rounded-xl text-xs sm:text-sm md:text-base transition-all shadow-md min-h-[44px] md:min-h-[46px] flex items-center justify-center ${
-                        userGoing
-                          ? 'bg-emerald-500/20 text-emerald-200 border border-emerald-500/40 hover:bg-emerald-500/30'
-                          : 'bg-yellow-400 hover:brightness-110 text-slate-950 shadow-yellow-500/20'
-                      }`}
-                    >
-                      {userGoing ? '✓ You Are Going (Booking Confirmed)' : 'RSVP / Get Ticket'}
-                    </button>
-                  </form>
-                ) : (
-                  <Link
-                    href="/login"
-                    className="w-full block text-center bg-white/10 hover:bg-white/15 text-white font-black py-3 rounded-xl text-xs sm:text-sm md:text-base border border-white/15 transition-colors min-h-[44px] md:min-h-[46px] flex items-center justify-center"
-                  >
-                    Sign in to RSVP
-                  </Link>
-                )}
-              </div>
-            </div>
-          );
-        })}
-      </div>
+          {events.map((event) => (
+            <EventCard key={event.id} event={event} currentUserId={user?.id} />
+          ))}
+        </div>
       )}
     </div>
   );

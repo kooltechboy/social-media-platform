@@ -60,6 +60,16 @@ export function CreateActionSheet({ visible, onClose, onSelectOption }: CreateAc
       },
     },
     {
+      id: 'community',
+      title: 'Diaspora Hub / Guild',
+      subtitle: 'Create or join island communities, cultural groups & clubs',
+      icon: '🌴',
+      onPress: () => {
+        onClose();
+        onSelectOption('Communities');
+      },
+    },
+    {
       id: 'sound',
       title: 'Caribbean Sounds & Stems',
       subtitle: 'Explore or upload reggae, soca, dancehall & kompa audio',

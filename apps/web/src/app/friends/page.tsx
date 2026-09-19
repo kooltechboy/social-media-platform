@@ -1,6 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
-import { Users, UserPlus, Compass, ArrowLeft, Search } from 'lucide-react';
+import { Users, ArrowLeft, Search } from 'lucide-react';
 import { getCurrentUser } from '../../lib/supabase/server';
 import {
   fetchMembersDirectoryAction,
@@ -14,10 +14,16 @@ export const dynamic = 'force-dynamic';
 export default async function FriendsPage({
   searchParams,
 }: {
-  searchParams?: Promise<{ tab?: string; q?: string }>;
+  searchParams?: Promise<{
+    tab?: string;
+    country?: string;
+    category?: string;
+    q?: string;
+    page?: string;
+  }>;
 }) {
   const resolvedParams = searchParams ? await searchParams : {};
-  const { tab = 'friends', q } = resolvedParams;
+  const { tab = 'friends', country, category, q, page } = resolvedParams;
   const user = await getCurrentUser();
 
   const [overviewData, directoryData, pymkData] = await Promise.all([
@@ -26,18 +32,21 @@ export default async function FriendsPage({
       query: q,
     }),
     fetchMembersDirectoryAction({
+      countryIso: country,
+      category,
       query: q,
-      page: 1,
+      page: page ? parseInt(page, 10) : 1,
       limit: 24,
     }),
-    fetchPeopleYouMayKnowAction({ limit: 6 }),
+    fetchPeopleYouMayKnowAction({ limit: 6, countryIso: country }),
   ]);
 
   overviewData.pymk = pymkData;
 
-  const activeTabKey = (['friends', 'requests', 'following', 'followers', 'discover'].includes(tab)
-    ? tab
-    : 'friends') as PeopleTab;
+  const validTabs: PeopleTab[] = ['friends', 'requests', 'following', 'followers', 'discover'];
+  const activeTabKey: PeopleTab = validTabs.includes(tab as PeopleTab)
+    ? (tab as PeopleTab)
+    : 'friends';
 
   return (
     <div className="w-full space-y-6 animate-fadeIn">
@@ -59,7 +68,7 @@ export default async function FriendsPage({
                 <span>Friends &amp; Connections</span>
               </h1>
               <p className="text-xs sm:text-sm text-brand-sandstone/80 mt-1 leading-relaxed">
-                Manage your personal Caribbean network, friend requests, and social connections.
+                Connect with Caribbean members, manage your personal friends, discover diaspora creators, and expand your network.
               </p>
             </div>
           </div>
@@ -80,6 +89,8 @@ export default async function FriendsPage({
         initialTab={activeTabKey}
         initialOverview={overviewData}
         initialDirectory={directoryData}
+        initialCountry={country || 'ALL'}
+        initialCategory={category || 'all'}
         initialQuery={q || ''}
         currentUserId={user?.id}
       />
