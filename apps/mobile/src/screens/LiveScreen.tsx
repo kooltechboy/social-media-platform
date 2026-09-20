@@ -29,6 +29,9 @@ interface StreamItem {
   category: string;
   location: string;
   videoUrl?: string | null;
+  playbackHlsUrl?: string | null;
+  rtmpsUrl?: string | null;
+  webrtcUrl?: string | null;
   startedAt?: string;
 }
 
@@ -63,7 +66,8 @@ export function LiveScreen({ navigation }: any) {
       let query = supabase
         .from('livestreams')
         .select(`
-          id, title, state, peak_viewers, started_at, category, location_tag, stream_url,
+          id, title, state, peak_viewers, started_at, category, location_tag,
+          playback_hls_url, playback_dash_url, webrtc_url, rtmps_url,
           profiles:creator_id (id, display_name, username, avatar_url)
         `)
         .in('state', ['live', 'scheduled'])
@@ -78,6 +82,7 @@ export function LiveScreen({ navigation }: any) {
       if (!error && data && data.length > 0) {
         const mapped: StreamItem[] = data.map((d: any) => {
           const p = d.profiles;
+          const livePlaybackUrl = d.playback_hls_url || d.webrtc_url || d.playback_dash_url || null;
           return {
             id: d.id,
             title: d.title,
@@ -88,7 +93,10 @@ export function LiveScreen({ navigation }: any) {
             peakViewers: d.peak_viewers || 1,
             category: d.category || 'Culture & Talk',
             location: d.location_tag || 'Caribbean',
-            videoUrl: d.stream_url,
+            videoUrl: livePlaybackUrl,
+            playbackHlsUrl: d.playback_hls_url,
+            rtmpsUrl: d.rtmps_url,
+            webrtcUrl: d.webrtc_url,
             startedAt: d.started_at,
           };
         });

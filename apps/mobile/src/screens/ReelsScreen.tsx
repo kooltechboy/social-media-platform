@@ -22,6 +22,8 @@ import { Video as ExpoVideo, ResizeMode } from 'expo-av';
 import { Ionicons as ExpoIonicons } from '@expo/vector-icons';
 import { TOKENS } from '../theme/tokens';
 import { supabase } from '../lib/supabase';
+import { resolveReelMediaUrl } from '../lib/mediaUpload';
+export { resolveReelMediaUrl };
 
 const Video = ExpoVideo as unknown as React.ComponentType<any>;
 const Ionicons = ExpoIonicons as unknown as React.ComponentType<any>;
@@ -35,6 +37,8 @@ interface ReelItem {
   storage_path: string;
   duration_seconds?: number;
   thumbnail_path?: string;
+  resolvedVideoUrl?: string | null;
+  resolvedThumbnailUrl?: string | null;
   likes_count: number;
   comments_count: number;
   audio_track?: string;
@@ -120,9 +124,14 @@ export function ReelsScreen({ navigation }: any) {
         .limit(25);
 
       if (!error && data) {
-        setReels(data as unknown as ReelItem[]);
-        if (data.length > 0 && !currentlyPlayingId) {
-          setCurrentlyPlayingId(data[0].id);
+        const mapped = (data as any[]).map((r) => ({
+          ...r,
+          resolvedVideoUrl: resolveReelMediaUrl(r.storage_path, 'videos'),
+          resolvedThumbnailUrl: resolveReelMediaUrl(r.thumbnail_path, 'videos'),
+        }));
+        setReels(mapped as unknown as ReelItem[]);
+        if (mapped.length > 0 && !currentlyPlayingId) {
+          setCurrentlyPlayingId(mapped[0].id);
         }
       }
     } catch (err) {
@@ -301,13 +310,14 @@ export function ReelsScreen({ navigation }: any) {
     const sound = item.sounds;
     const creatorHandle = creator?.username ? `@${creator.username}` : '@caribbean_creator';
     const soundTitle = sound ? `${sound.title} • ${sound.artist_name}` : (item.audio_track || 'Original Audio — Caribbean');
+    const videoUri = item.resolvedVideoUrl || resolveReelMediaUrl(item.storage_path, 'videos');
 
     return (
       <View style={styles.reelContainer}>
-        {item.storage_path ? (
+        {videoUri ? (
           <Video
             ref={(ref: InstanceType<typeof ExpoVideo> | null) => { videoRefs.current[item.id] = ref; }}
-            source={{ uri: item.storage_path }}
+            source={{ uri: videoUri }}
             style={StyleSheet.absoluteFill}
             resizeMode={ResizeMode.COVER}
             isLooping

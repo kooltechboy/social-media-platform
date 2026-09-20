@@ -207,7 +207,11 @@ export default function App() {
           <Screen 
             name="Create" 
             component={CreateScreen} 
-            options={{ tabBarButton: () => null }} 
+            options={{ 
+              tabBarButton: () => null,
+              headerShown: false,
+              tabBarStyle: { display: 'none' },
+            }} 
           />
           <Screen 
             name="Marketplace" 
@@ -217,12 +221,20 @@ export default function App() {
           <Screen 
             name="SellProduct" 
             component={SellProductScreen} 
-            options={{ tabBarButton: () => null }} 
+            options={{ 
+              tabBarButton: () => null,
+              headerShown: false,
+              tabBarStyle: { display: 'none' },
+            }} 
           />
           <Screen 
             name="Reels" 
             component={ReelsScreen} 
-            options={{ tabBarButton: () => null }} 
+            options={{ 
+              tabBarButton: () => null,
+              headerShown: false,
+              tabBarStyle: { display: 'none' },
+            }} 
           />
           <Screen 
             name="Sounds" 
@@ -232,7 +244,11 @@ export default function App() {
           <Screen 
             name="Live" 
             component={LiveScreen} 
-            options={{ tabBarButton: () => null }} 
+            options={{ 
+              tabBarButton: () => null,
+              headerShown: false,
+              tabBarStyle: { display: 'none' },
+            }} 
           />
           <Screen 
             name="Podcasts" 

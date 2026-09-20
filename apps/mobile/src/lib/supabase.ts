@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import { mobileAuthStorage } from './storage';
 
 // Mobile Supabase Client with graceful fallback for offline / development
 export interface MobileProfile {
@@ -26,4 +27,12 @@ export interface MobilePost {
 const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL || 'http://localhost:54321';
 const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || 'public-anon-key';
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  auth: {
+    storage: mobileAuthStorage,
+    autoRefreshToken: true,
+    persistSession: true,
+    detectSessionInUrl: false,
+  },
+});
+

@@ -315,10 +315,24 @@ export function FinancialCenterScreen({ navigation }: any) {
           </View>
         </View>
 
+        {/* APP STORE COMPLIANCE & PAYMENT POLICY ENGINE NOTICE (§3.1.1) */}
+        <View style={styles.complianceCard}>
+          <View style={styles.complianceHeader}>
+            <Ionicons name="shield-checkmark" size={16} color={TOKENS.success} />
+            <Text style={styles.complianceTitle}>Mobile Store Policy &amp; Rails Compliance (§3.1.1)</Text>
+          </View>
+          <Text style={styles.complianceText}>
+            • <Text style={styles.complianceBold}>Digital Goods &amp; Creator Tips:</Text> Routed strictly through Apple In-App Purchase / Google Play Billing on mobile devices.
+          </Text>
+          <Text style={styles.complianceText}>
+            • <Text style={styles.complianceBold}>Marketplace &amp; Seller Payouts:</Text> Direct merchant settlements via verified Caribbean processors (WiPay, CX Pay), Stripe Connect, or local bank ACH.
+          </Text>
+        </View>
+
         {/* SECTION 1: CONNECTED PAYMENT METHODS & RAILS */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Connected Caribbean & Global Rails</Text>
+            <Text style={styles.sectionTitle}>Connected Caribbean &amp; Global Rails (Marketplace / Payouts)</Text>
             <TouchableOpacity onPress={() => setConnectModalVisible(true)}>
               <Text style={styles.addText}>+ Add</Text>
             </TouchableOpacity>
@@ -614,6 +628,37 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   btnSecondaryText: { color: TOKENS.textPrimary, fontWeight: '800', fontSize: 13 },
+
+  complianceCard: {
+    backgroundColor: 'rgba(5, 150, 105, 0.08)',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(5, 150, 105, 0.3)',
+    padding: 16,
+    marginBottom: 24,
+  },
+  complianceHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 8,
+  },
+  complianceTitle: {
+    color: TOKENS.success,
+    fontSize: 13,
+    fontWeight: '800',
+    letterSpacing: 0.3,
+  },
+  complianceText: {
+    color: TOKENS.textMuted,
+    fontSize: 12,
+    lineHeight: 18,
+    marginTop: 4,
+  },
+  complianceBold: {
+    color: TOKENS.textPrimary,
+    fontWeight: '700',
+  },
 
   section: { marginBottom: 26 },
   sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },

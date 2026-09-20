@@ -13,6 +13,8 @@ import {
 } from 'react-native';
 import { TOKENS } from '../theme/tokens';
 import { supabase } from '../lib/supabase';
+import * as ImagePicker from 'expo-image-picker';
+import { uploadMedia } from '../lib/mediaUpload';
 
 const CARIBBEAN_COUNTRIES = [
   'Jamaica', 'Trinidad and Tobago', 'Barbados', 'Bahamas', 
@@ -26,11 +28,58 @@ export function CreateScreen({ navigation }: any) {
   const [country, setCountry] = useState('Jamaica');
   const [tags, setTags] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [uploadingMedia, setUploadingMedia] = useState(false);
   const [photoUrlInput, setPhotoUrlInput] = useState('');
   const [mediaUrls, setMediaUrls] = useState<string[]>([]);
 
   const scrollViewRef = useRef<ScrollView>(null);
   const tagsInputRef = useRef<TextInput>(null);
+
+  const handlePickImage = async () => {
+    try {
+      const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (!permissionResult.granted) {
+        Alert.alert(
+          'Permission Required',
+          'Camera roll permissions are needed to select photos from your device.'
+        );
+        return;
+      }
+
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images'],
+        allowsEditing: true,
+        quality: 0.85,
+      });
+
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        const asset = result.assets[0];
+        setUploadingMedia(true);
+
+        const response = await fetch(asset.uri);
+        const blob = await response.blob();
+        const fileName = asset.fileName || `mobile_post_${Date.now()}.jpg`;
+
+        const uploadRes = await uploadMedia(blob, fileName, {
+          bucket: 'post-media',
+          folder: 'posts',
+          contentType: asset.mimeType || 'image/jpeg',
+        });
+
+        if (uploadRes.url) {
+          setMediaUrls((prev) => [...prev, uploadRes.url]);
+        } else if (uploadRes.error) {
+          Alert.alert('Upload Error', uploadRes.error);
+        }
+      }
+    } catch (err: any) {
+      console.warn('Image picker error:', err);
+      // Fallback to URL prompt if native picker is unavailable
+      handleAddPhotoUrl();
+    } finally {
+      setUploadingMedia(false);
+    }
+  };
 
   const handleAddPhotoUrl = () => {
     if (!photoUrlInput.trim()) {
@@ -160,10 +209,27 @@ export function CreateScreen({ navigation }: any) {
 
         {/* Media Attach Input */}
         <Text style={styles.label}>Attached Photos &amp; Visuals</Text>
+        <View style={styles.mediaActionsRow}>
+          <TouchableOpacity
+            style={styles.pickImageBtn}
+            onPress={handlePickImage}
+            disabled={uploadingMedia}
+            activeOpacity={0.8}
+            accessibilityRole="button"
+            accessibilityLabel="Choose photo from camera roll"
+          >
+            {uploadingMedia ? (
+              <ActivityIndicator size="small" color="#090D1A" />
+            ) : (
+              <Text style={styles.pickImageBtnText}>📸 Choose from Camera Roll</Text>
+            )}
+          </TouchableOpacity>
+        </View>
+
         <View style={styles.mediaRow}>
           <TextInput
             style={[styles.tagInput, { flex: 1 }]}
-            placeholder="Paste photo URL (https://...)"
+            placeholder="Or paste photo URL (https://...)"
             placeholderTextColor={TOKENS.textMuted}
             value={photoUrlInput}
             onChangeText={setPhotoUrlInput}
@@ -301,6 +367,27 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     marginBottom: 8,
     marginTop: 14,
+  },
+  mediaActionsRow: {
+    marginBottom: 10,
+  },
+  pickImageBtn: {
+    backgroundColor: TOKENS.action,
+    borderRadius: 14,
+    paddingVertical: 13,
+    paddingHorizontal: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: TOKENS.action,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  pickImageBtnText: {
+    color: '#090D1A',
+    fontSize: 14,
+    fontWeight: '800',
   },
   mediaRow: {
     flexDirection: 'row',

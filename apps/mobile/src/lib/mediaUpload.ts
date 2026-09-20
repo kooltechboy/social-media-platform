@@ -77,3 +77,18 @@ export function base64ToArrayBuffer(base64: string): ArrayBuffer {
   }
   return bytes.buffer;
 }
+
+/**
+ * Resolves a storage path or external URL to a full playable CDN/public URL.
+ * Handles both absolute URLs (e.g. Cloudflare Stream / external) and relative Supabase Storage paths.
+ */
+export function resolveReelMediaUrl(pathOrUrl?: string | null, bucket: string = 'videos'): string | null {
+  if (!pathOrUrl) return null;
+  const trimmed = pathOrUrl.trim();
+  if (!trimmed) return null;
+  if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
+    return trimmed;
+  }
+  return supabase.storage.from(bucket).getPublicUrl(trimmed).data.publicUrl;
+}
+
