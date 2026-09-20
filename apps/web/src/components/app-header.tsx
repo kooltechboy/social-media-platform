@@ -267,20 +267,22 @@ export default function AppHeader() {
         </div>
       </div>
 
-      <div className="flex items-center gap-2 sm:gap-3">
+      <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
         <Link
           href="/search"
-          className="md:hidden p-2 text-white/70 hover:text-white rounded-full hover:bg-white/10 transition-colors"
+          className="md:hidden p-2 text-white/70 hover:text-white rounded-full hover:bg-white/10 transition-colors min-h-[40px] min-w-[40px] flex items-center justify-center"
           aria-label={t('a11y.search')}
         >
           <Search className="w-5 h-5" aria-hidden="true" />
         </Link>
 
-        <LanguageDropdown variant="compact" />
+        <div className="hidden sm:block">
+          <LanguageDropdown variant="compact" />
+        </div>
 
         <Link
           href="/financial-center"
-          className="flex items-center gap-1.5 bg-gradient-to-r from-brand-sunriseCoral/15 to-brand-goldenHour/15 hover:from-brand-sunriseCoral/25 hover:to-brand-goldenHour/25 text-brand-sunriseCoral px-3.5 md:px-4 py-2 rounded-full border border-brand-sunriseCoral/30 text-xs md:text-sm font-black transition-all shadow-md shadow-brand-sunriseCoral/10 min-h-[40px] md:min-h-[42px]"
+          className="hidden sm:flex items-center gap-1.5 bg-gradient-to-r from-brand-sunriseCoral/15 to-brand-goldenHour/15 hover:from-brand-sunriseCoral/25 hover:to-brand-goldenHour/25 text-brand-sunriseCoral px-3.5 md:px-4 py-2 rounded-full border border-brand-sunriseCoral/30 text-xs md:text-sm font-black transition-all shadow-md shadow-brand-sunriseCoral/10 min-h-[40px] md:min-h-[42px]"
           aria-label={t('nav.financial_center')}
         >
           <CreditCard className="w-4 h-4 md:w-4.5 md:h-4.5 text-brand-sunriseCoral" aria-hidden="true" />
@@ -289,7 +291,7 @@ export default function AppHeader() {
 
         <Link
           href="/notifications"
-          className="p-2.5 md:p-3 text-white/70 hover:text-white rounded-full hover:bg-white/10 relative transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
+          className="p-2 sm:p-2.5 md:p-3 text-white/70 hover:text-white rounded-full hover:bg-white/10 relative transition-colors min-h-[40px] min-w-[40px] md:min-h-[44px] md:min-w-[44px] flex items-center justify-center"
           aria-label={t('nav.notifications')}
         >
           <Bell className="w-5 h-5 md:w-[22px] md:h-[22px]" aria-hidden="true" />
@@ -309,7 +311,9 @@ export default function AppHeader() {
           )}
         </Link>
 
-        <IdentitySwitcher />
+        <div className="hidden sm:block">
+          <IdentitySwitcher />
+        </div>
 
         <SessionWidget />
       </div>

@@ -143,6 +143,7 @@ export default function HomeDashboard({
                 displayName={user.displayName}
                 avatarInitials={user.username.slice(0, 2).toUpperCase()}
                 userId={user.id}
+                defaultExpanded={true}
               />
             </div>
           )}

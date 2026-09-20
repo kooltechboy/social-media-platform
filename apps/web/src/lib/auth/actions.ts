@@ -187,3 +187,92 @@ export async function signOutAction() {
   }
   redirect('/login');
 }
+
+export type OperatingMode = 'personal' | 'creator' | 'business' | 'community';
+
+export interface UserOperatingIdentity {
+  id: string;
+  type: OperatingMode;
+  name: string;
+  handle: string;
+  avatarUrl?: string | null;
+  badge: string;
+  isVerified?: boolean;
+}
+
+export async function fetchUserOperatingIdentitiesAction(): Promise<UserOperatingIdentity[]> {
+  const { getCurrentUser } = await import('../supabase/server');
+  const user = await getCurrentUser();
+  if (!user) return [];
+
+  const supabase = await createSupabaseServerClient();
+  if (!supabase) return [];
+
+  const personal: UserOperatingIdentity = {
+    id: user.id,
+    type: 'personal',
+    name: user.displayName || `@${user.username}`,
+    handle: user.username,
+    avatarUrl: user.avatarUrl,
+    badge: user.isOfficial ? 'Official' : 'Personal',
+    isVerified: user.isOfficial,
+  };
+
+  const list: UserOperatingIdentity[] = [personal];
+
+  try {
+    const [creatorRes, bizRes, commRes] = await Promise.all([
+      supabase.from('creator_accounts').select('id, is_verified, category').eq('profile_id', user.id).maybeSingle(),
+      supabase.from('businesses').select('id, name, slug, is_verified').eq('owner_id', user.id).limit(10),
+      supabase.from('community_members').select('community_id, communities(id, name, slug, cover_storage_path)').eq('profile_id', user.id).in('role', ['admin', 'moderator']).limit(10),
+    ]);
+
+    if (creatorRes.data) {
+      list.push({
+        id: creatorRes.data.id,
+        type: 'creator',
+        name: `${user.displayName || user.username} (Creator)`,
+        handle: user.username,
+        avatarUrl: user.avatarUrl,
+        badge: 'Creator Studio',
+        isVerified: creatorRes.data.is_verified,
+      });
+    }
+
+    if (bizRes.data) {
+      bizRes.data.forEach((b) => {
+        list.push({
+          id: b.id,
+          type: 'business',
+          name: b.name,
+          handle: b.slug,
+          avatarUrl: null,
+          badge: 'Business Page',
+          isVerified: b.is_verified,
+        });
+      });
+    }
+
+    if (commRes.data) {
+      commRes.data.forEach((cm: any) => {
+        const c = cm.communities;
+        if (c) {
+          list.push({
+            id: c.id,
+            type: 'community',
+            name: c.name,
+            handle: c.slug,
+            avatarUrl: c.cover_storage_path,
+            badge: 'Hub Lead',
+            isVerified: false,
+          });
+        }
+      });
+    }
+  } catch (err) {
+    console.warn('Error fetching user operating identities:', err);
+  }
+
+  return list;
+}
+

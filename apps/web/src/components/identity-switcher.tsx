@@ -15,7 +15,7 @@ import {
 import Link from 'next/link';
 import { useAuth } from './auth-provider';
 import UserAvatar from './user-avatar';
-import { createSupabaseBrowserClient } from '../lib/supabase/browser';
+import { fetchUserOperatingIdentitiesAction } from '../lib/auth/actions';
 
 export type OperatingMode = 'personal' | 'creator' | 'business' | 'community';
 
@@ -60,110 +60,38 @@ export default function IdentitySwitcher({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isOpen]);
 
-  // Load identities from user and Supabase
+  // Load identities from secure server action
   useEffect(() => {
     if (!user) return;
 
+    let isMounted = true;
     async function loadIdentities() {
       setLoading(true);
-      const personal: IdentityProfile = {
-        id: user!.id,
-        type: 'personal',
-        name: user!.displayName || `@${user!.username}`,
-        handle: user!.username,
-        avatarUrl: user!.avatarUrl,
-        badge: user!.isOfficial ? 'Official' : 'Personal',
-        isVerified: user!.isOfficial,
-      };
-
-      const identityList: IdentityProfile[] = [personal];
-
       try {
-        const supabase = createSupabaseBrowserClient();
-        if (supabase) {
-          // Check for creator account
-          const { data: creatorAcc } = await supabase
-            .from('creator_accounts')
-            .select('id, is_verified, category')
-            .eq('profile_id', user!.id)
-            .maybeSingle();
+        const identityList = await fetchUserOperatingIdentitiesAction();
+        if (isMounted && identityList.length > 0) {
+          setIdentities(identityList);
 
-          if (creatorAcc) {
-            identityList.push({
-              id: creatorAcc.id,
-              type: 'creator',
-              name: `${user!.displayName || user!.username} (Creator)`,
-              handle: user!.username,
-              avatarUrl: user!.avatarUrl,
-              badge: 'Creator Studio',
-              isVerified: creatorAcc.is_verified,
-            });
-          }
-
-          // Check for owned businesses
-          const { data: businesses } = await supabase
-            .from('businesses')
-            .select('id, name, slug, is_verified')
-            .eq('owner_id', user!.id)
-            .limit(10);
-
-          if (businesses) {
-            businesses.forEach((b) => {
-              identityList.push({
-                id: b.id,
-                type: 'business',
-                name: b.name,
-                handle: b.slug,
-                avatarUrl: null,
-                badge: 'Business Page',
-                isVerified: b.is_verified,
-              });
-            });
-          }
-
-          // Check for managed communities
-          const { data: communities } = await supabase
-            .from('community_members')
-            .select('community_id, communities(id, name, slug, cover_image_url)')
-            .eq('profile_id', user!.id)
-            .in('role', ['admin', 'moderator'])
-            .limit(10);
-
-          if (communities) {
-            communities.forEach((cm: any) => {
-              const c = cm.communities;
-              if (c) {
-                identityList.push({
-                  id: c.id,
-                  type: 'community',
-                  name: c.name,
-                  handle: c.slug,
-                  avatarUrl: c.cover_image_url,
-                  badge: 'Hub Lead',
-                  isVerified: false,
-                });
-              }
-            });
+          // Check active identity in localStorage
+          const stored = typeof window !== 'undefined' ? localStorage.getItem('tukubi_active_identity_id') : null;
+          const found = stored ? identityList.find((i) => i.id === stored) : null;
+          const selected = found || identityList[0];
+          setActiveIdentity(selected);
+          if (onIdentityChange) {
+            onIdentityChange(selected);
           }
         }
-      } catch {
-        // fallback to personal only
+      } catch (err) {
+        console.warn('Failed to load identities via server action:', err);
       } finally {
-        setIdentities(identityList);
-
-        // Check active identity in localStorage
-        const stored = typeof window !== 'undefined' ? localStorage.getItem('tukubi_active_identity_id') : null;
-        const matching = identityList.find((i) => i.id === stored);
-        const selected = matching || personal;
-        setActiveIdentity(selected);
-        if (onIdentityChange) {
-          onIdentityChange(selected);
-        }
-        setLoading(false);
+        if (isMounted) setLoading(false);
       }
     }
 
     loadIdentities();
+    return () => {
+      isMounted = false;
+    };
   }, [user]);
 
   function handleSelectIdentity(identity: IdentityProfile) {
