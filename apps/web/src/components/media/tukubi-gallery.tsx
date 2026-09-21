@@ -1,15 +1,57 @@
 'use client';
 
 import React, { useState } from 'react';
+import { getClampedAspectRatio } from '@caribbean/media';
 import TukubiImage from '../ui/tukubi-image';
 import TukubiVideoPlayer from './tukubi-video-player';
 import TukubiMediaViewer from './tukubi-media-viewer';
 
 export interface TukubiGalleryProps {
   mediaUrls: string[];
+  mediaItems?: Array<{
+    url: string;
+    width?: number;
+    height?: number;
+    aspectRatio?: string | number;
+    type?: 'image' | 'video';
+    posterUrl?: string;
+  }>;
   altText?: string;
   authorName?: string;
   className?: string;
+}
+
+export function computeSinglePhotoContainerStyle(
+  width?: number,
+  height?: number,
+  aspectRatio?: number | string
+): { aspectRatio: string; needsAmbientBackdrop: boolean; clampedRatio: number } {
+  let numRatio = 1.0;
+  if (typeof aspectRatio === 'number' && aspectRatio > 0) {
+    numRatio = aspectRatio;
+  } else if (typeof aspectRatio === 'string') {
+    if (aspectRatio.includes(':') || aspectRatio.includes('/')) {
+      const parts = aspectRatio.split(/[:/]/).map(Number);
+      if (parts.length === 2 && parts[0] > 0 && parts[1] > 0) {
+        numRatio = parts[0] / parts[1];
+      }
+    } else {
+      const parsed = parseFloat(aspectRatio);
+      if (!isNaN(parsed) && parsed > 0) numRatio = parsed;
+    }
+  } else if (width && height && width > 0 && height > 0) {
+    numRatio = width / height;
+  } else {
+    // Default fallback is 4:5 (0.8) as feed default
+    return { aspectRatio: '4 / 5', needsAmbientBackdrop: false, clampedRatio: 0.8 };
+  }
+
+  const clamped = getClampedAspectRatio(numRatio, 0.8, 16 / 9);
+  return {
+    aspectRatio: clamped.cssAspectRatio,
+    needsAmbientBackdrop: clamped.isClamped,
+    clampedRatio: clamped.clampedRatio,
+  };
 }
 
 /**
@@ -19,6 +61,7 @@ export interface TukubiGalleryProps {
  */
 export default function TukubiGallery({
   mediaUrls,
+  mediaItems,
   altText = 'Post media',
   authorName,
   className = '',
@@ -41,37 +84,56 @@ export default function TukubiGallery({
   // bounded between a safe portrait (4:5) and safe landscape (16:9 / 2:1).
   if (mediaUrls.length === 1) {
     const url = mediaUrls[0];
-    const isVid = isVideo(url);
+    const firstItem = mediaItems?.[0];
+    const isVid = isVideo(url) || firstItem?.type === 'video';
 
     if (isVid) {
       return (
         <div className={`relative rounded-2xl overflow-hidden bg-black aspect-video w-full ${className}`}>
-          <TukubiVideoPlayer src={url} altText={altText} className="w-full h-full" />
+          <TukubiVideoPlayer
+            src={url}
+            posterUrl={firstItem?.posterUrl}
+            altText={altText}
+            className="w-full h-full"
+          />
         </div>
       );
     }
 
+    const containerStyle = computeSinglePhotoContainerStyle(
+      firstItem?.width,
+      firstItem?.height,
+      firstItem?.aspectRatio
+    );
+
     return (
       <>
         <div
-          className={`relative rounded-2xl overflow-hidden bg-gradient-to-br from-[#0D0818] via-[#150D24] to-[#081220] border border-white/10 shadow-lg group cursor-pointer ${className}`}
+          className={`relative w-full rounded-2xl overflow-hidden bg-gradient-to-br from-[#0D0818] via-[#150D24] to-[#081220] border border-white/10 shadow-lg group cursor-pointer max-h-[640px] sm:max-h-[720px] ${className}`}
+          style={{ aspectRatio: containerStyle.aspectRatio }}
           onClick={() => openViewer(0)}
         >
-          {/* Ambient blurred backdrop for letterbox safety */}
-          <div className="relative w-full max-h-[580px] sm:max-h-[640px] flex items-center justify-center overflow-hidden">
-            <TukubiImage
-              src={url}
-              alt={altText}
-              fill={false}
-              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 75vw, 680px"
-              objectFit="contain"
-              className="w-full max-h-[580px] sm:max-h-[640px] transition-transform duration-300 group-hover:scale-[1.01]"
-              imageClassName="w-full h-auto max-h-[580px] sm:max-h-[640px] object-contain mx-auto"
+          {/* Ambient blurred backdrop if image exceeds ergonomic clamp */}
+          {containerStyle.needsAmbientBackdrop && (
+            <div
+              className="absolute inset-0 bg-cover bg-center filter blur-xl opacity-35 scale-110 pointer-events-none"
+              style={{ backgroundImage: `url(${url})` }}
+              aria-hidden="true"
             />
-          </div>
+          )}
+
+          <TukubiImage
+            src={url}
+            alt={altText}
+            fill
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 75vw, 680px"
+            objectFit="contain"
+            className="w-full h-full relative z-10 transition-transform duration-300 group-hover:scale-[1.01]"
+            imageClassName="w-full h-full object-contain mx-auto"
+          />
 
           {/* Subtle click-to-expand prompt on hover */}
-          <div className="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-black/60 backdrop-blur-md border border-white/10 text-[10px] font-bold text-white opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+          <div className="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-black/60 backdrop-blur-md border border-white/10 text-[10px] font-bold text-white opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-20">
             Tap to expand
           </div>
         </div>

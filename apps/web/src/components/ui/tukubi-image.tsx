@@ -9,6 +9,7 @@ export interface TukubiImageProps extends Omit<ImageProps, 'src' | 'alt' | 'onLo
   alt?: string;
   aspectRatio?: string | number;
   preserveAspect?: boolean;
+  ambientBackdrop?: boolean;
   objectFit?: 'cover' | 'contain' | 'fill' | 'scale-down' | 'none';
   objectPosition?: string;
   className?: string;
@@ -34,6 +35,7 @@ export default function TukubiImage({
   alt = 'TUKUBI Media',
   aspectRatio,
   preserveAspect = false,
+  ambientBackdrop = false,
   objectFit = 'cover',
   objectPosition = 'center',
   className = '',
@@ -87,12 +89,15 @@ export default function TukubiImage({
   const isBlob = cleanSrc.startsWith('blob:');
   const shouldUseNative = !useNextImage || isSvgOrData || isBlob || triedNativeFallback;
 
+  const hasPredefinedRatio = Boolean(aspectRatio || style?.aspectRatio);
+
   // Compute computed style for aspect ratio container
   const containerStyle: React.CSSProperties = { ...style };
   if (aspectRatio) {
     containerStyle.aspectRatio = typeof aspectRatio === 'number' ? `${aspectRatio}` : aspectRatio;
-  } else if (preserveAspect && detectedRatio) {
+  } else if (!hasPredefinedRatio && detectedRatio) {
     containerStyle.aspectRatio = `${detectedRatio}`;
+    containerStyle.transition = 'aspect-ratio 0.25s ease-out';
   }
 
   const handleImageLoad = (e: React.SyntheticEvent<HTMLImageElement>) => {
@@ -140,6 +145,15 @@ export default function TukubiImage({
           : undefined
       }
     >
+      {/* Ambient blurred backdrop if image requests letterbox backdrop */}
+      {ambientBackdrop && cleanSrc && (
+        <div
+          className="absolute inset-0 bg-cover bg-center filter blur-xl opacity-35 scale-110 pointer-events-none"
+          style={{ backgroundImage: `url(${cleanSrc})` }}
+          aria-hidden="true"
+        />
+      )}
+
       {/* Caribbean Futurism gradient placeholder while image is hydrating/loading */}
       {isLoading && showGradientPlaceholder && (
         <div
@@ -162,7 +176,7 @@ export default function TukubiImage({
             objectFit,
             objectPosition,
           }}
-          className={`w-full h-full transition-opacity duration-300 ${
+          className={`w-full h-full relative z-[1] transition-opacity duration-300 ${
             isLoading ? 'opacity-0' : 'opacity-100'
           } ${imageClassName}`}
         />
@@ -179,7 +193,7 @@ export default function TukubiImage({
             objectFit,
             objectPosition,
           }}
-          className={`transition-opacity duration-300 ${
+          className={`transition-opacity duration-300 relative z-[1] ${
             isLoading ? 'opacity-0' : 'opacity-100'
           } ${imageClassName}`}
           {...restProps}
@@ -198,7 +212,7 @@ export default function TukubiImage({
             objectFit,
             objectPosition,
           }}
-          className={`transition-opacity duration-300 ${
+          className={`transition-opacity duration-300 relative z-[1] ${
             isLoading ? 'opacity-0' : 'opacity-100'
           } ${imageClassName}`}
           {...restProps}
