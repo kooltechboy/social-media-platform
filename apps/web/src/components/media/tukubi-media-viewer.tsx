@@ -50,6 +50,31 @@ export function clampZoomLevel(zoom: number, min: number = 1, max: number = 4): 
 }
 
 /**
+ * Clamps pan coordinates so a zoomed media asset cannot be dragged completely offscreen.
+ * Automatically resets to (0, 0) whenever zoom level is <= 1.
+ */
+export function clampPanPosition(
+  pan: { x: number; y: number },
+  zoom: number,
+  containerSize?: { width: number; height: number }
+): { x: number; y: number } {
+  if (zoom <= 1) {
+    return { x: 0, y: 0 };
+  }
+  const width = containerSize?.width && containerSize.width > 0 ? containerSize.width : 1000;
+  const height = containerSize?.height && containerSize.height > 0 ? containerSize.height : 800;
+
+  // Maximum pan allowable: bounds proportional to scale expansion
+  const maxX = (width * (zoom - 1)) / 2;
+  const maxY = (height * (zoom - 1)) / 2;
+
+  return {
+    x: Math.min(Math.max(pan.x, -maxX), maxX),
+    y: Math.min(Math.max(pan.y, -maxY), maxY),
+  };
+}
+
+/**
  * Wraps an index safely around array length boundaries.
  */
 export function wrapViewerIndex(index: number, total: number): number {
@@ -152,6 +177,12 @@ export default function TukubiMediaViewer({
   const [overlayVisible, setOverlayVisible] = useState(true);
   const inactivityTimerRef = useRef<NodeJS.Timeout | null>(null);
 
+  // Maintain zoomLevelRef to avoid React hook dependency cycle
+  const zoomLevelRef = useRef(zoomLevel);
+  useEffect(() => {
+    zoomLevelRef.current = zoomLevel;
+  }, [zoomLevel]);
+
   // Touch tracking refs
   const touchStartXRef = useRef<number | null>(null);
   const touchStartYRef = useRef<number | null>(null);
@@ -162,7 +193,7 @@ export default function TukubiMediaViewer({
 
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Inactivity overlay timer
+  // Inactivity overlay timer (stable reference, reads zoomLevel from ref)
   const resetInactivityTimer = useCallback(() => {
     setOverlayVisible(true);
     if (inactivityTimerRef.current) {
@@ -170,11 +201,11 @@ export default function TukubiMediaViewer({
     }
     inactivityTimerRef.current = setTimeout(() => {
       // Keep overlay visible when zoomed in so controls remain accessible
-      setOverlayVisible((prev) => (zoomLevel > 1 ? true : false));
+      setOverlayVisible(zoomLevelRef.current > 1);
     }, 2500);
-  }, [zoomLevel]);
+  }, []);
 
-  // Sync initial index
+  // Sync initial index only when dialog opens or initialIndex/items change
   useEffect(() => {
     if (isOpen) {
       setCurrentIndex(Math.max(0, Math.min(initialIndex, normalizedItems.length - 1)));
@@ -188,7 +219,7 @@ export default function TukubiMediaViewer({
         clearTimeout(inactivityTimerRef.current);
       }
     };
-  }, [isOpen, initialIndex, normalizedItems.length, resetInactivityTimer]);
+  }, [isOpen, initialIndex, normalizedItems.length]);
 
   // Lock document scroll when viewer is open
   useEffect(() => {
@@ -227,7 +258,18 @@ export default function TukubiMediaViewer({
         const delta = -e.deltaY * 0.01;
         setZoomLevel((prev) => {
           const next = clampZoomLevel(prev + delta, 1, 4);
-          if (next === 1) setPanPosition({ x: 0, y: 0 });
+          if (next <= 1) {
+            setPanPosition({ x: 0, y: 0 });
+          } else {
+            const containerRect = container?.getBoundingClientRect();
+            setPanPosition((curPan) =>
+              clampPanPosition(
+                curPan,
+                next,
+                containerRect ? { width: containerRect.width, height: containerRect.height } : undefined
+              )
+            );
+          }
           return next;
         });
         resetInactivityTimer();
@@ -262,7 +304,18 @@ export default function TukubiMediaViewer({
         e.preventDefault();
         setZoomLevel((z) => {
           const next = clampZoomLevel(z - 0.5, 1, 4);
-          if (next === 1) setPanPosition({ x: 0, y: 0 });
+          if (next <= 1) {
+            setPanPosition({ x: 0, y: 0 });
+          } else {
+            const containerRect = containerRef.current?.getBoundingClientRect();
+            setPanPosition((prev) =>
+              clampPanPosition(
+                prev,
+                next,
+                containerRect ? { width: containerRect.width, height: containerRect.height } : undefined
+              )
+            );
+          }
           return next;
         });
       } else if (e.key === '0') {
@@ -286,7 +339,18 @@ export default function TukubiMediaViewer({
     resetInactivityTimer();
     setZoomLevel((z) => {
       const next = clampZoomLevel(z - 0.5, 1, 4);
-      if (next === 1) setPanPosition({ x: 0, y: 0 });
+      if (next <= 1) {
+        setPanPosition({ x: 0, y: 0 });
+      } else {
+        const containerRect = containerRef.current?.getBoundingClientRect();
+        setPanPosition((prev) =>
+          clampPanPosition(
+            prev,
+            next,
+            containerRect ? { width: containerRect.width, height: containerRect.height } : undefined
+          )
+        );
+      }
       return next;
     });
   };
@@ -303,7 +367,9 @@ export default function TukubiMediaViewer({
     resetInactivityTimer();
     setZoomLevel((prev) => {
       const next = toggleDoubleTapZoom(prev);
-      if (next === 1) setPanPosition({ x: 0, y: 0 });
+      if (next <= 1) {
+        setPanPosition({ x: 0, y: 0 });
+      }
       return next;
     });
   };
@@ -319,10 +385,17 @@ export default function TukubiMediaViewer({
   const handleMouseMove = (e: React.MouseEvent) => {
     resetInactivityTimer();
     if (!isDragging || zoomLevel <= 1) return;
-    setPanPosition({
+    const rawPan = {
       x: e.clientX - dragStart.x,
       y: e.clientY - dragStart.y,
-    });
+    };
+    const containerRect = containerRef.current?.getBoundingClientRect();
+    const clamped = clampPanPosition(
+      rawPan,
+      zoomLevel,
+      containerRect ? { width: containerRect.width, height: containerRect.height } : undefined
+    );
+    setPanPosition(clamped);
   };
 
   const handleMouseUp = () => setIsDragging(false);
@@ -336,7 +409,9 @@ export default function TukubiMediaViewer({
     if (e.touches.length === 1 && now - lastTapTimestampRef.current < 300) {
       setZoomLevel((prev) => {
         const next = toggleDoubleTapZoom(prev);
-        if (next === 1) setPanPosition({ x: 0, y: 0 });
+        if (next <= 1) {
+          setPanPosition({ x: 0, y: 0 });
+        }
         return next;
       });
       lastTapTimestampRef.current = 0;
@@ -375,6 +450,18 @@ export default function TukubiMediaViewer({
       const ratio = dist / touchDistanceStartRef.current;
       const targetZoom = clampZoomLevel(touchZoomStartRef.current * ratio, 1, 4);
       setZoomLevel(targetZoom);
+      if (targetZoom <= 1) {
+        setPanPosition({ x: 0, y: 0 });
+      } else {
+        const containerRect = containerRef.current?.getBoundingClientRect();
+        setPanPosition((prev) =>
+          clampPanPosition(
+            prev,
+            targetZoom,
+            containerRect ? { width: containerRect.width, height: containerRect.height } : undefined
+          )
+        );
+      }
       return;
     }
 
@@ -385,10 +472,17 @@ export default function TukubiMediaViewer({
 
       // Panning when zoomed in
       if (zoomLevel > 1) {
-        setPanPosition({
+        const rawPan = {
           x: touchPanStartRef.current.x + deltaX,
           y: touchPanStartRef.current.y + deltaY,
-        });
+        };
+        const containerRect = containerRef.current?.getBoundingClientRect();
+        const clamped = clampPanPosition(
+          rawPan,
+          zoomLevel,
+          containerRect ? { width: containerRect.width, height: containerRect.height } : undefined
+        );
+        setPanPosition(clamped);
         return;
       }
 
@@ -404,6 +498,9 @@ export default function TukubiMediaViewer({
 
     if (e.touches.length < 2) {
       touchDistanceStartRef.current = null;
+      if (zoomLevelRef.current <= 1) {
+        setPanPosition({ x: 0, y: 0 });
+      }
     }
 
     // Process swipe-down dismissal

@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   clampZoomLevel,
+  clampPanPosition,
   wrapViewerIndex,
   getNextViewerIndex,
   getPrevViewerIndex,
@@ -36,6 +37,36 @@ describe('TukubiMediaViewer Helper Functions & Logic', () => {
       expect(clampZoomLevel(0.5, 0.8, 3)).toBe(0.8);
       expect(clampZoomLevel(3.5, 0.8, 3)).toBe(3);
       expect(clampZoomLevel(2, 0.8, 3)).toBe(2);
+    });
+  });
+
+  describe('clampPanPosition', () => {
+    it('resets pan to (0, 0) whenever zoom is less than or equal to 1', () => {
+      expect(clampPanPosition({ x: 120, y: 80 }, 1)).toEqual({ x: 0, y: 0 });
+      expect(clampPanPosition({ x: -250, y: -180 }, 0.8)).toEqual({ x: 0, y: 0 });
+      expect(clampPanPosition({ x: 0, y: 0 }, 1)).toEqual({ x: 0, y: 0 });
+    });
+
+    it('preserves pan coordinates that fall within boundary bounds when zoomed in', () => {
+      // Default container: 1000x800. At 2x zoom: maxX = 500, maxY = 400.
+      const pan = { x: 200, y: -150 };
+      expect(clampPanPosition(pan, 2)).toEqual({ x: 200, y: -150 });
+    });
+
+    it('clamps pan coordinates that exceed container boundaries at given zoom level', () => {
+      // Default container: 1000x800. At 2x zoom: maxX = 500, maxY = 400.
+      const excessivePan = { x: 750, y: -650 };
+      expect(clampPanPosition(excessivePan, 2)).toEqual({ x: 500, y: -400 });
+
+      const negativeExcess = { x: -900, y: 800 };
+      expect(clampPanPosition(negativeExcess, 2)).toEqual({ x: -500, y: 400 });
+    });
+
+    it('respects custom container dimensions for pan clamping', () => {
+      const customContainer = { width: 600, height: 400 };
+      // At 3x zoom with 600x400: maxX = (600 * 2) / 2 = 600, maxY = (400 * 2) / 2 = 400.
+      expect(clampPanPosition({ x: 800, y: -500 }, 3, customContainer)).toEqual({ x: 600, y: -400 });
+      expect(clampPanPosition({ x: 300, y: 200 }, 3, customContainer)).toEqual({ x: 300, y: 200 });
     });
   });
 
@@ -154,12 +185,27 @@ describe('TukubiMediaViewer Helper Functions & Logic', () => {
     });
   });
 
-  describe('toggleDoubleTapZoom', () => {
+  describe('toggleDoubleTapZoom and index persistence', () => {
     it('toggles between 1x and 2x zoom', () => {
       expect(toggleDoubleTapZoom(1)).toBe(2);
       expect(toggleDoubleTapZoom(2)).toBe(1);
       expect(toggleDoubleTapZoom(3.5)).toBe(1);
       expect(toggleDoubleTapZoom(4)).toBe(1);
+    });
+
+    it('preserves current index independently when zoom level toggles', () => {
+      let activeIndex = 3;
+      let currentZoom = 1;
+
+      // User double-taps to zoom in
+      currentZoom = toggleDoubleTapZoom(currentZoom);
+      expect(currentZoom).toBe(2);
+      expect(activeIndex).toBe(3); // index is completely unaffected
+
+      // User zooms out or resets
+      currentZoom = toggleDoubleTapZoom(currentZoom);
+      expect(currentZoom).toBe(1);
+      expect(activeIndex).toBe(3); // index remains intact
     });
   });
 });
