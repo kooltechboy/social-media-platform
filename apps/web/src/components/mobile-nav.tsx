@@ -396,6 +396,25 @@ export default function MobileNav() {
               </p>
 
               <Link
+                href="/messages"
+                onClick={() => setIsMenuSheetOpen(false)}
+                className="flex items-center justify-between p-3 rounded-2xl bg-brand-caribbeanSea/10 hover:bg-brand-caribbeanSea/20 border border-brand-caribbeanSea/30 text-white text-xs font-bold transition-colors"
+              >
+                <div className="flex items-center gap-2.5">
+                  <MessageSquare className="w-4 h-4 text-brand-caribbeanSea" />
+                  <span>Messages &amp; Direct Chat</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  {unreadMessagesCount > 0 && (
+                    <span className="px-2 py-0.5 rounded-full bg-brand-caribbeanSea text-slate-950 text-[10px] font-black">
+                      {unreadMessagesCount}
+                    </span>
+                  )}
+                  <ChevronRight className="w-4 h-4 text-white/40" />
+                </div>
+              </Link>
+
+              <Link
                 href="/creator-studio"
                 onClick={() => setIsMenuSheetOpen(false)}
                 className="flex items-center justify-between p-3 rounded-2xl bg-gradient-to-r from-brand-goldenHour/15 to-transparent border border-brand-goldenHour/30 text-white text-xs font-bold"
@@ -555,7 +574,12 @@ export default function MobileNav() {
                   : 'text-brand-sandstone/60 hover:text-slate-200 font-bold'
               }`}
             >
-              <Menu className="w-5 h-5" />
+              <div className="relative">
+                <Menu className="w-5 h-5" />
+                {unreadMessagesCount > 0 && (
+                  <span className="absolute -top-1 -right-1 w-2 h-2 bg-brand-caribbeanSea rounded-full animate-pulse shadow-[0_0_6px_rgba(0,168,150,0.9)]" />
+                )}
+              </div>
               <span className="text-[10px]">Menu</span>
             </button>
           </li>

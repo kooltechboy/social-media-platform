@@ -1,25 +1,26 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('Critical journeys', () => {
-  test('home page loads with navigation and feed modes', async ({ page }) => {
+  test('home page loads with public front door and discovery portals', async ({ page }) => {
     await page.goto('/');
     await page.waitForLoadState('networkidle');
     await expect(page.getByRole('link', { name: /(TUKUBI|TUKUBI)/i }).first()).toBeVisible();
-    await expect(page.getByRole('tab', { name: 'Caribbean Now' })).toBeVisible();
-    await expect(page.getByRole('tab', { name: 'For You' })).toBeVisible();
-    await expect(page.getByRole('tab', { name: 'Diaspora Hubs' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /Born in the Caribbean/i })).toBeVisible();
+    await expect(page.getByRole('link', { name: /Join the Caribbean Network/i })).toBeVisible();
+    await expect(page.getByRole('link', { name: /Explore Culture & Islands/i })).toBeVisible();
   });
 
   test('explore renders the Caribbean country grid', async ({ page }) => {
     await page.goto('/explore');
     await page.waitForLoadState('networkidle');
-    await expect(page.getByRole('heading', { name: /Caribbean Discovery Engine/i })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /Explore Caribbean Vibes/i })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /Discover Caribbean Nations & Territories/i })).toBeVisible();
   });
 
   test('explore renders diaspora hubs', async ({ page }) => {
     await page.goto('/explore');
     await page.waitForLoadState('networkidle');
-    await expect(page.getByText(/Global Diaspora Hubs/i)).toBeVisible();
+    await expect(page.getByRole('heading', { name: /Global Diaspora Hubs/i })).toBeVisible();
     await expect(page.getByText(/Toronto/i).first()).toBeVisible();
   });
 

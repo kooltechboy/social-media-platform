@@ -10,7 +10,7 @@ test.describe('TUKUBI Content Pages', () => {
       await page.waitForLoadState('networkidle');
       
       await expect(page.getByText(/(Tukubi|Tukubi) Discovery Engine/i)).toBeVisible();
-      await expect(page.getByText(/Global Diaspora Hubs/i)).toBeVisible();
+      await expect(page.getByRole('heading', { name: /Global Diaspora Hubs/i })).toBeVisible();
     });
 
     test('Events Page loads correctly', async ({ page }) => {

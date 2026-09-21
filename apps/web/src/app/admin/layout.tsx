@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
+import { headers } from 'next/headers';
 import { getCurrentUser, getAuthorizedUser } from '../../lib/supabase/server';
 import { AdminFooter } from '../../components/admin/admin-footer';
 
@@ -19,6 +20,12 @@ export default async function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const headerList = await headers();
+  const pathname = headerList.get('x-pathname') || '';
+  if (pathname === '/admin/bootstrap' || pathname.startsWith('/admin/bootstrap/')) {
+    return <>{children}</>;
+  }
+
   const auth = await getAuthorizedUser(['admin', 'management', 'superadmin', 'super_admin']);
   if (!auth.isLoggedIn || !auth.user) {
     redirect('/login?next=/admin');

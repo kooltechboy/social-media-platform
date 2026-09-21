@@ -109,7 +109,7 @@ export function TukubiLogo({
           <span className="text-xl sm:text-2xl font-black bg-gradient-to-r from-brand-caribbeanSea via-brand-goldenHour to-brand-sunriseCoral bg-clip-text text-transparent tracking-wider">
             TUKUBI
           </span>
-          <span className="text-[10.5px] sm:text-[11px] font-bold text-brand-sandstone/85 tracking-wide -mt-0.5 group-hover:text-brand-caribbeanSea transition-colors">
+          <span className="hidden sm:inline text-[10.5px] sm:text-[11px] font-bold text-brand-sandstone/85 tracking-wide -mt-0.5 group-hover:text-brand-caribbeanSea transition-colors">
             The Caribbean Connected.
           </span>
         </div>

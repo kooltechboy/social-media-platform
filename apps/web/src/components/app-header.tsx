@@ -139,7 +139,7 @@ export default function AppHeader() {
 
   return (
     <header
-      className="sticky top-0 z-50 glass-aerospace border-b border-white/12 px-4 sm:px-6 lg:px-8 3xl:px-10 py-3 flex items-center justify-between gap-4 backdrop-blur-3xl shadow-xl shadow-black/30"
+      className="sticky top-0 z-50 glass-aerospace border-b border-white/12 px-3 sm:px-6 lg:px-8 3xl:px-10 py-3 flex items-center justify-between gap-2 sm:gap-4 backdrop-blur-3xl shadow-xl shadow-black/30"
       role="banner"
     >
       {/* ────────────────────────────────────────────────────────── */}
@@ -267,7 +267,7 @@ export default function AppHeader() {
         </div>
       </div>
 
-      <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
+      <div className="flex items-center gap-1 sm:gap-2.5 shrink-0">
         <Link
           href="/search"
           className="md:hidden p-2 text-white/70 hover:text-white rounded-full hover:bg-white/10 transition-colors min-h-[40px] min-w-[40px] flex items-center justify-center"
@@ -302,7 +302,7 @@ export default function AppHeader() {
 
         <Link
           href="/messages"
-          className="hidden md:flex p-2.5 md:p-3 text-white/70 hover:text-white rounded-full hover:bg-white/10 relative transition-colors min-h-[44px] min-w-[44px] items-center justify-center"
+          className="p-2 sm:p-2.5 md:p-3 text-white/70 hover:text-white rounded-full hover:bg-white/10 relative transition-colors min-h-[40px] min-w-[40px] md:min-h-[44px] md:min-w-[44px] flex items-center justify-center"
           aria-label={t('nav.messages')}
         >
           <MessageSquare className="w-5 h-5 md:w-[22px] md:h-[22px]" aria-hidden="true" />

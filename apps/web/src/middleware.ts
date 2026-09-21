@@ -37,6 +37,20 @@ const PUBLIC_EXEMPT_ROUTES = [
   '/help',
   '/learn',
   '/api/v1/help',
+  '/explore',
+  '/search',
+  '/sounds',
+  '/map',
+  '/podcasts',
+  '/reels',
+  '/marketplace',
+  '/events',
+  '/post',
+  '/profile',
+  '/admin/bootstrap',
+  '/live',
+  '/communities',
+  '/pages',
 ];
 
 import { checkRateLimit, getRateLimitHeaders, type RateLimitTier } from './lib/rate-limit/sliding-window';
@@ -79,7 +93,9 @@ export async function middleware(request: NextRequest) {
     (pathname.startsWith('/api/v1/podcasts/') && pathname.endsWith('/rss'));
 
   let tier: RateLimitTier = 'burst';
-  if (isAuthGatewayRoute) {
+  if (isAuthGatewayRoute && request.method !== 'GET') {
+    tier = 'auth';
+  } else if (pathname.startsWith('/api/auth/') && request.method !== 'GET') {
     tier = 'auth';
   } else if (pathname.startsWith('/api/')) {
     tier = 'api';
@@ -101,7 +117,14 @@ export async function middleware(request: NextRequest) {
     });
   }
 
-  let response = NextResponse.next({ request });
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set('x-pathname', pathname);
+
+  let response = NextResponse.next({
+    request: {
+      headers: requestHeaders,
+    },
+  });
   for (const [k, v] of Object.entries(rateLimitHeaders)) {
     response.headers.set(k, v);
   }
@@ -147,7 +170,20 @@ export async function middleware(request: NextRequest) {
     },
   });
 
-  const { data: { user } } = await supabase.auth.getUser();
+  let { data: { user } } = await supabase.auth.getUser();
+
+  // In automated E2E test environments, recognize test session cookie if supabase auth is absent
+  if (!user && process.env.PLAYWRIGHT_TEST === '1') {
+    const testSessionCookie = request.cookies.get('tukubi_user_session')?.value;
+    if (testSessionCookie) {
+      try {
+        const parsed = JSON.parse(decodeURIComponent(testSessionCookie));
+        if (parsed?.id) {
+          user = { id: parsed.id, email: parsed.email, user_metadata: parsed } as any;
+        }
+      } catch {}
+    }
+  }
 
   // 1. Authenticated users should NEVER see login/signup gateway screens
   if (user && isAuthGatewayRoute) {

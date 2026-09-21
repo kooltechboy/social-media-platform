@@ -1,5 +1,8 @@
 import { test, expect } from '@playwright/test';
 
+// Use unauthenticated state to test public header navigation and gateway isolation
+test.use({ storageState: { cookies: [], origins: [] } });
+
 /**
  * TUKUBI App Header & Search E2E Tests
  *

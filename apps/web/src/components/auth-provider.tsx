@@ -27,9 +27,31 @@ export interface AuthProviderProps {
   initialUser?: SessionUser | null;
 }
 
+function getLocalStorageUser(): SessionUser | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = localStorage.getItem('tukubi_user_session');
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (parsed?.id && parsed?.username) {
+      return {
+        id: parsed.id,
+        email: parsed.email || '',
+        username: parsed.username,
+        displayName: parsed.displayName || parsed.username,
+        avatarUrl: parsed.avatarUrl,
+        role: parsed.role || 'user',
+        isOfficial: parsed.isOfficial || false,
+        isVerified: parsed.isVerified ?? true,
+      };
+    }
+  } catch {}
+  return null;
+}
+
 export function AuthProvider({ children, initialUser = null }: AuthProviderProps) {
-  const [user, setUser] = useState<SessionUser | null>(initialUser);
-  const [loading, setLoading] = useState<boolean>(!initialUser);
+  const [user, setUser] = useState<SessionUser | null>(() => initialUser || getLocalStorageUser());
+  const [loading, setLoading] = useState<boolean>(!initialUser && !getLocalStorageUser());
 
   const fetchCurrentProfile = useCallback(async (authUserId: string, authEmail?: string, userMeta?: any) => {
     const supabase = createSupabaseBrowserClient();
@@ -80,7 +102,8 @@ export function AuthProvider({ children, initialUser = null }: AuthProviderProps
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.user) {
-        setUser(null);
+        const localUser = getLocalStorageUser();
+        setUser(localUser);
         setLoading(false);
         return;
       }
@@ -92,7 +115,10 @@ export function AuthProvider({ children, initialUser = null }: AuthProviderProps
       );
       setUser(sessionUser);
     } catch {
-      // Keep existing user if network fails
+      const localUser = getLocalStorageUser();
+      if (localUser) {
+        setUser(localUser);
+      }
     } finally {
       setLoading(false);
     }
@@ -110,9 +136,20 @@ export function AuthProvider({ children, initialUser = null }: AuthProviderProps
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event: AuthChangeEvent, session: Session | null) => {
-      if (event === 'SIGNED_OUT' || !session?.user) {
+      if (event === 'SIGNED_OUT') {
+        if (typeof window !== 'undefined') {
+          try {
+            localStorage.removeItem('tukubi_user_session');
+          } catch {}
+        }
         if (!ignore) {
           setUser(null);
+          setLoading(false);
+        }
+      } else if (!session?.user) {
+        if (!ignore) {
+          const localUser = getLocalStorageUser();
+          setUser(localUser);
           setLoading(false);
         }
       } else if (session?.user) {
@@ -143,6 +180,11 @@ export function AuthProvider({ children, initialUser = null }: AuthProviderProps
 
   const signOut = useCallback(async () => {
     setUser(null);
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.removeItem('tukubi_user_session');
+      } catch {}
+    }
     const supabase = createSupabaseBrowserClient();
     if (supabase) {
       await supabase.auth.signOut();

@@ -36,7 +36,8 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     return (
       <div className="relative z-10 flex flex-col min-h-screen">
         <AppHeader />
-        <main className="flex-1 w-full">{children}</main>
+        <main className="flex-1 w-full pb-20 md:pb-0">{children}</main>
+        <MobileNav />
       </div>
     );
   }

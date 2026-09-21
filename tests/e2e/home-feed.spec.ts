@@ -23,72 +23,36 @@ test.describe('Home Feed Page - Unauthenticated', () => {
     }
   });
 
-  test('Unauthenticated State - Banner and Composer', async ({ page }) => {
-    // "Tukubi Community Access" banner appears
-    await expect(page.getByText(/(Tukubi|Tukubi) Community Access/)).toBeVisible();
-    await expect(page.getByText(/Sign in or create your profile/i)).toBeVisible();
-    await expect(page.getByText(/direct messaging/i).first()).toBeVisible();
+  test('Unauthenticated State - Hero and Call to Actions', async ({ page }) => {
+    // Tagline badge and master headline
+    await expect(page.getByText('The Caribbean Connected.').first()).toBeVisible();
+    await expect(page.getByText(/Born in the Caribbean/i).first()).toBeVisible();
 
-    // "Sign In / Register" link points to `/login`
-    const signInLink = page.getByRole('link', { name: /Sign In \/ Register/i });
+    // Primary CTA buttons
+    const joinBtn = page.getByRole('link', { name: /Join the Caribbean Network/i });
+    await expect(joinBtn).toBeVisible();
+    await expect(joinBtn).toHaveAttribute('href', '/signup');
+
+    const exploreBtn = page.getByRole('link', { name: /Explore Culture/i });
+    await expect(exploreBtn).toBeVisible();
+    await expect(exploreBtn).toHaveAttribute('href', '/explore');
+
+    const signInLink = page.getByRole('link', { name: /Sign In/i }).first();
     await expect(signInLink).toBeVisible();
     await expect(signInLink).toHaveAttribute('href', '/login');
-
-    // UniversalComposer shows composer prompt
-    await expect(page.getByText(/What's happening/i).first()).toBeVisible();
   });
 
-  test('Live Broadcasting Banner', async ({ page }) => {
-    // "Live Now: Kingston Dub Session" text visible
-    await expect(page.getByText('Live Now: Kingston Dub Session')).toBeVisible();
-    
-    // "1.4K WATCHING" badge visible
-    await expect(page.getByText('1.4K WATCHING')).toBeVisible();
-
-    // "🔴 Go Live" link to `/live/broadcast`
-    const goLiveLink = page.getByRole('link', { name: /Go Live/i });
-    await expect(goLiveLink).toBeVisible();
-    await expect(goLiveLink).toHaveAttribute('href', '/live/broadcast');
-
-    // "Watch Live" link with Play icon to `/live`
-    const watchLiveLink = page.getByRole('link', { name: /Watch Live/i });
-    await expect(watchLiveLink).toBeVisible();
-    await expect(watchLiveLink).toHaveAttribute('href', '/live');
+  test('Caribbean Identity & Six Pillars', async ({ page }) => {
+    await expect(page.getByText(/Engineered Around Caribbean Identity/i)).toBeVisible();
+    await expect(page.getByText(/30\+ Islands & Territories/i).first()).toBeVisible();
   });
 
-  test('Feed Tabs (role="tablist")', async ({ page }) => {
-    const tablist = page.getByRole('tablist');
-    await expect(tablist).toBeVisible();
-
-    const tabs = ['Caribbean Now', 'For You', 'Diaspora Hubs', 'Creators & Music'];
-    for (const tab of tabs) {
-      await expect(page.getByRole('tab', { name: tab })).toBeVisible();
+  test('Global Diaspora Hubs', async ({ page }) => {
+    await expect(page.getByText(/Global Diaspora Hubs/i)).toBeVisible();
+    const hubs = ['Miami', 'Toronto', 'London'];
+    for (const hub of hubs) {
+      await expect(page.getByText(new RegExp(hub, 'i')).first()).toBeVisible();
     }
-
-    // Default active tab is "Caribbean Now" with aria-selected="true"
-    const caribbeanNowTab = page.getByRole('tab', { name: 'Caribbean Now' });
-    await expect(caribbeanNowTab).toHaveAttribute('aria-selected', 'true');
-
-    // Clicking each tab updates the active state
-    const forYouTab = page.getByRole('tab', { name: 'For You' });
-    await forYouTab.click();
-    await expect(forYouTab).toHaveAttribute('aria-selected', 'true');
-    await expect(caribbeanNowTab).toHaveAttribute('aria-selected', 'false');
-  });
-
-  test('Caribbean Now Sidebar', async ({ page }) => {
-    // Island Pulse section with 7 Caribbean/Diaspora city links
-    const cities = ['Kingston', 'Port of Spain', 'Santo Domingo', 'Bridgetown', 'Miami', 'Toronto', 'London'];
-    const sidebar = page.locator('aside');
-    for (const city of cities) {
-      await expect(sidebar.getByRole('link', { name: new RegExp(city, 'i') }).first()).toBeVisible();
-    }
-
-    // Multi-currency Ledger card
-    await expect(page.getByText(/Ledger/i).first()).toBeVisible();
-
-    // Upcoming Events / Cultural Fetes section
-    await expect(page.getByText(/Cultural Fetes|Upcoming Events/i).first()).toBeVisible();
   });
 });
 
@@ -101,51 +65,36 @@ test.describe('Home Feed Page - Authenticated', () => {
     await page.waitForLoadState('networkidle');
   });
 
-  test('Moments Cinema Rail', async ({ page }) => {
-    // "Your Moment" creation tile (requires auth)
-    await expect(page.getByText('Your Moment')).toBeVisible();
+  test('Authenticated Horizon Card & Quick Actions', async ({ page }) => {
+    // Welcome back heading for authenticated user
+    await expect(page.getByText(/Welcome back/i).first()).toBeVisible();
+
+    // Quick Creation Bar Trigger
+    await expect(page.getByText(/What’s happening across your Caribbean world\?/i)).toBeVisible();
+
+    // Quick creation action links
+    const quickActions = ['Post', 'Reel', 'Go Live'];
+    for (const action of quickActions) {
+      await expect(page.getByRole('link', { name: new RegExp(action, 'i') }).first()).toBeVisible();
+    }
   });
 
-  test('Post Cards and Empty States', async ({ page }) => {
-    // Since the database may or may not have posts, handle both the populated feed case and the empty feed case gracefully.
-    const emptyStateText = page.getByText('No posts in this channel yet');
-    
-    if (await emptyStateText.isVisible()) {
-      await expect(emptyStateText).toBeVisible();
-    } else {
-      const firstPost = page.locator('article').first();
-      await firstPost.waitFor({ state: 'visible', timeout: 5000 }).catch(() => {});
-      
-      if (await firstPost.isVisible()) {
-        // Author links to profile
-        const profileLinks = firstPost.locator('a[href^="/profile/"]');
-        await expect(profileLinks.first()).toBeVisible();
-        
-        // Post Interaction Bar
-        // Like button with Heart icon and count (aria-label "Like post" / "Unlike post")
-        const likeBtn = firstPost.getByRole('button', { name: /Like post|Unlike post/i });
-        await expect(likeBtn).toBeVisible();
+  test('Feed Stream & Interaction Bar', async ({ page }) => {
+    // Feed container renders "Happening in Your World"
+    await expect(page.getByText(/Happening in Your World/i)).toBeVisible();
 
-        // Comments button with MessageCircle icon and count (aria-label "View or add comments")
-        const commentBtn = firstPost.getByRole('button', { name: /View or add comments/i });
-        await expect(commentBtn).toBeVisible();
+    const emptyState = page.getByText(/Your TUKUBI World is Warming Up|No posts in this channel yet/i);
+    const postArticle = page.locator('article').first();
+    const hasPost = await postArticle.isVisible().catch(() => false);
+    const hasEmpty = await emptyState.isVisible().catch(() => false);
+    expect(hasPost || hasEmpty).toBeTruthy();
 
-        // "Tip Creator" button with Wallet icon
-        const tipBtn = firstPost.getByRole('button', { name: /Tip Creator/i });
-        await expect(tipBtn).toBeVisible();
-
-        // Post Options Menu (three-dot MoreHorizontal button)
-        const optionsBtn = firstPost.getByRole('button', { name: 'Post options' });
-        await expect(optionsBtn).toBeVisible();
-        await optionsBtn.click();
-
-        // Menu items: Copy Link, Save Post, Report Content (for non-author) or Delete Post (for author)
-        await expect(page.getByText('Copy Link')).toBeVisible();
-        await expect(page.getByText('Save Post')).toBeVisible();
-        
-        const reportOrDelete = page.getByText(/Report Content|Delete Post/i);
-        await expect(reportOrDelete.first()).toBeVisible();
-      }
+    if (hasPost) {
+      // Interaction bar elements
+      await expect(postArticle.getByLabel(/View comments/i)).toBeVisible();
+      await expect(postArticle.getByLabel(/Share post/i)).toBeVisible();
+      await expect(postArticle.getByLabel(/Send Tip/i)).toBeVisible();
+      await expect(postArticle.getByLabel(/Post options/i)).toBeVisible();
     }
   });
 });

@@ -83,7 +83,7 @@ export default function PublicFrontDoor() {
   };
 
   return (
-    <div className="w-full text-white selection:bg-[#FF7A59]/30 selection:text-white">
+    <div className="w-full max-w-full overflow-x-hidden text-white selection:bg-[#FF7A59]/30 selection:text-white">
       {/* Schema.org Structured Data */}
       <script
         type="application/ld+json"

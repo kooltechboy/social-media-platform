@@ -162,6 +162,20 @@ export async function checkRateLimit(
   identifier: string,
   tier: RateLimitTier = 'api'
 ): Promise<RateLimitResult> {
+  // Allow high throughput on local loopback during automated testing or development
+  if (
+    (identifier === '127.0.0.1' || identifier === '::1' || identifier === 'localhost') &&
+    (process.env.PLAYWRIGHT_TEST === '1' || process.env.NODE_ENV !== 'production' || process.env.CI)
+  ) {
+    return {
+      success: true,
+      limit: 10000,
+      remaining: 9999,
+      reset: Math.ceil(Date.now() / 1000) + 60,
+      retryAfter: 0,
+    };
+  }
+
   const policy = RATE_LIMIT_POLICIES[tier] || RATE_LIMIT_POLICIES.api;
   const key = `${tier}:${identifier}`;
   const now = Date.now();

@@ -13,7 +13,23 @@ setup('authenticate', async ({ page }) => {
 
   // Set up the authenticated storage state for E2E tests
   const storageState = {
-    cookies: [],
+    cookies: [
+      {
+        name: 'tukubi_user_session',
+        value: encodeURIComponent(JSON.stringify({
+          id: 'usr_playwright_test_01',
+          email: 'testuser@tukubi.com',
+          username: 'tukubi_tester',
+          displayName: 'Tukubi Tester',
+          role: 'user',
+        })),
+        domain: 'localhost',
+        path: '/',
+        httpOnly: false,
+        secure: false,
+        sameSite: 'Lax' as const,
+      },
+    ],
     origins: [
       {
         origin: 'http://localhost:3100',

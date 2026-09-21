@@ -22,9 +22,12 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: `${pnpmBin} --filter caribbean-web exec next dev -p 3100`,
+    command: `${pnpmBin} --filter caribbean-web run start:e2e`,
     url: 'http://localhost:3100',
     reuseExistingServer: !process.env.CI,
     timeout: 120000,
+    env: {
+      PLAYWRIGHT_TEST: '1',
+    },
   },
 });

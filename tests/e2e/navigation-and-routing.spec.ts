@@ -85,51 +85,41 @@ test.describe('Navigation & Routing - Authenticated', () => {
 
   test('Sidebar Ecosystem Group links exist and have correct badges', async ({ page }) => {
     const links = [
-      { name: 'Home Feed', href: '/' },
-      { name: 'Create Hub', href: '/create', badge: 'NEW' },
-      { name: 'Explore & Diaspora', href: '/explore' },
-      { name: 'Caribbean Map', href: '/map' },
-      { name: 'Reels & Shorts', href: '/reels' },
-      { name: 'Caribbean Sounds', href: '/sounds', badge: 'NEW' },
-      { name: 'Live Streams', href: '/live', badge: 'LIVE' },
+      { name: 'Home', href: '/' },
+      { name: 'Feeds', href: '/feeds' },
+      { name: 'Explore', href: '/explore' },
+      { name: 'Reels', href: '/reels' },
+      { name: 'Communities', href: '/communities' },
+      { name: 'Pages', href: '/pages' },
+      { name: 'Marketplace', href: '/marketplace' },
+      { name: 'Events', href: '/events' },
       { name: 'Podcasts Network', href: '/podcasts' },
-      { name: 'Diaspora Hubs', href: '/communities' },
     ];
 
     for (const link of links) {
-      const linkLocator = page.getByRole('link', { name: new RegExp(link.name, 'i') }).first();
+      const linkLocator = page.locator('aside').getByRole('link', { name: new RegExp(`^${link.name}$`, 'i') }).first();
       await expect(linkLocator).toBeVisible();
       await expect(linkLocator).toHaveAttribute('href', link.href);
-
-      if (link.badge) {
-        // Find badge within the link
-        const badge = linkLocator.getByText(link.badge, { exact: true });
-        await expect(badge).toBeVisible();
-      }
     }
-    
-    // Check pulse animation on LIVE badge
-    const liveLink = page.getByRole('link', { name: /Live Streams/i }).first();
-    const liveBadge = liveLink.getByText('LIVE', { exact: true });
-    await expect(liveBadge).toHaveClass(/animate-pulse/);
   });
 
-  test('Economy & Culture Accordion toggles and contains links', async ({ page }) => {
-    const summary = page.locator('aside summary').filter({ hasText: 'Economy & Culture' });
-    await expect(summary).toBeVisible();
-    await summary.click();
+  test('More Ecosystem Features Accordion toggles and contains links', async ({ page }) => {
+    const moreBtn = page.locator('aside').getByRole('button', { name: /More Ecosystem Features/i });
+    await expect(moreBtn).toBeVisible();
+    await moreBtn.click();
     await page.waitForTimeout(300);
 
     const links = [
-      { name: 'Marketplace', href: '/marketplace' },
-      { name: 'Cultural Events', href: '/events' },
-      { name: 'Pages & Stores', href: '/pages', badge: 'VERIFIED' },
+      { name: 'Live Streams', href: '/live', badge: 'LIVE' },
+      { name: 'Caribbean Sounds', href: '/sounds' },
+      { name: 'Caribbean Map', href: '/map' },
+      { name: 'Creator Studio', href: '/creator-studio', badge: 'STUDIO' },
       { name: 'Financial Center', href: '/financial-center' },
-      { name: 'Creator Studio', href: '/creator-studio' },
+      { name: 'Settings', href: '/settings' },
     ];
 
     for (const link of links) {
-      const linkLocator = page.getByRole('link', { name: new RegExp(link.name, 'i') }).first();
+      const linkLocator = page.locator('aside').getByRole('link', { name: new RegExp(link.name, 'i') }).first();
       await expect(linkLocator).toBeVisible();
       await expect(linkLocator).toHaveAttribute('href', link.href);
 
@@ -138,17 +128,21 @@ test.describe('Navigation & Routing - Authenticated', () => {
         await expect(badge).toBeVisible();
       }
     }
+
+    // Check pulse animation on LIVE badge
+    const liveLink = page.locator('aside').getByRole('link', { name: /Live Streams/i }).first();
+    const liveBadge = liveLink.getByText('LIVE', { exact: true });
+    await expect(liveBadge).toHaveClass(/animate-pulse/);
   });
 
   test('Account Group links exist', async ({ page }) => {
     const links = [
       { name: 'Messages', href: '/messages' },
       { name: 'Notifications', href: '/notifications' },
-      { name: 'Settings', href: '/settings' },
     ];
 
     for (const link of links) {
-      const linkLocator = page.getByRole('link', { name: new RegExp(link.name, 'i') }).first();
+      const linkLocator = page.locator('aside').getByRole('link', { name: new RegExp(link.name, 'i') }).first();
       await expect(linkLocator).toBeVisible();
       await expect(linkLocator).toHaveAttribute('href', link.href);
     }
@@ -191,36 +185,20 @@ test.describe('Navigation & Routing - Authenticated', () => {
 
   test('Active state indicators work correctly', async ({ page }) => {
     // We are on '/'
-    const homeLink = page.getByRole('link', { name: /Home Feed/i }).first();
+    const homeLink = page.locator('aside').getByRole('link', { name: /^Home$/i }).first();
     await expect(homeLink).toHaveAttribute('aria-current', 'page');
 
     // Navigate to /explore
     await page.goto('/explore');
     await page.waitForLoadState('networkidle');
-    const exploreLink = page.getByRole('link', { name: /Explore & Diaspora/i }).first();
+    const exploreLink = page.locator('aside').getByRole('link', { name: /^Explore$/i }).first();
     await expect(exploreLink).toHaveAttribute('aria-current', 'page');
 
     // Navigate to /marketplace
     await page.goto('/marketplace');
     await page.waitForLoadState('networkidle');
-    
-    // Expand accordion if needed to see the active link
-    const summary = page.getByText('Economy & Culture');
-    const accordionBtn = page.getByRole('button', { name: /Economy & Culture/i });
-    if (await accordionBtn.count() > 0) {
-        const isExpanded = await accordionBtn.getAttribute('aria-expanded');
-        if (isExpanded !== 'true') {
-            await accordionBtn.click();
-        }
-    } else if (await summary.count() > 0) {
-        const detailsParent = summary.locator('..');
-        const isOpen = await detailsParent.getAttribute('open') !== null;
-        if (!isOpen) {
-            await summary.click();
-        }
-    }
 
-    const marketplaceLink = page.getByRole('link', { name: /Marketplace/i }).first();
+    const marketplaceLink = page.locator('aside').getByRole('link', { name: /^Marketplace$/i }).first();
     await expect(marketplaceLink).toHaveAttribute('aria-current', 'page');
   });
 });

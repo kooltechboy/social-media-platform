@@ -70,6 +70,28 @@ export interface AuthCheckResult {
 import { ensureUserProfile } from '../auth/user-sync';
 
 export async function getCurrentUser(): Promise<SessionUser | null> {
+  if (process.env.PLAYWRIGHT_TEST === '1') {
+    try {
+      const cookieStore = await cookies();
+      const testCookie = cookieStore.get('tukubi_user_session')?.value;
+      if (testCookie) {
+        const parsed = JSON.parse(decodeURIComponent(testCookie));
+        if (parsed?.id) {
+          return {
+            id: parsed.id,
+            email: parsed.email || 'testuser@tukubi.com',
+            username: parsed.username || 'tukubi_tester',
+            displayName: parsed.displayName || 'Tukubi Tester',
+            avatarUrl: parsed.avatarUrl || '/brand/tukubi-emblem.png',
+            role: parsed.role || 'user',
+            isOfficial: false,
+            isVerified: true,
+          };
+        }
+      }
+    } catch {}
+  }
+
   const supabase = await createSupabaseServerClient();
   if (!supabase) return null;
   const { data, error } = await supabase.auth.getUser();

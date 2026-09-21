@@ -36,6 +36,9 @@ const TUKUBI_CSP = [
 const nextConfig = {
   transpilePackages: ["@caribbean/ui", "@caribbean/design-system", "@caribbean/payments", "@caribbean/ai", "@caribbean/media"],
   reactStrictMode: true,
+  experimental: {
+    optimizePackageImports: ['lucide-react', '@caribbean/ui', '@caribbean/design-system'],
+  },
   images: {
     formats: ['image/avif', 'image/webp'],
     deviceSizes: [320, 420, 640, 750, 828, 1080, 1200, 1920, 2048, 3840],
