@@ -90,18 +90,21 @@ describe('TUKUBI Enterprise Media Pipeline', () => {
     });
 
     it('getClampedAspectRatio constrains extreme ratios to prevent feed blowout', () => {
-      // Instagram/Tukubi standard: min 4:5 (0.8), max 1.91:1
+      // Instagram/Tukubi standard: min 4:5 (0.8), max 16:9 (approx 1.777)
       const extremeTall = getClampedAspectRatio(0.4);
-      expect(extremeTall).toBe(0.8);
+      expect(extremeTall.clampedRatio).toBe(0.8);
+      expect(extremeTall.isClamped).toBe(true);
 
       const extremeWide = getClampedAspectRatio(3.0);
-      expect(extremeWide).toBe(1.91);
+      expect(extremeWide.clampedRatio).toBeCloseTo(16 / 9, 2);
+      expect(extremeWide.isClamped).toBe(true);
 
       const standardSquare = getClampedAspectRatio(1.0);
-      expect(standardSquare).toBe(1.0);
+      expect(standardSquare.clampedRatio).toBe(1.0);
+      expect(standardSquare.isClamped).toBe(false);
 
       const standardLandscape = getClampedAspectRatio(1.778);
-      expect(standardLandscape).toBeCloseTo(1.778, 2);
+      expect(standardLandscape.clampedRatio).toBeCloseTo(1.778, 2);
     });
   });
 

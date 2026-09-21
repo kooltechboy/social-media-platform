@@ -67,6 +67,12 @@ export function classifyAspectRatio(width: number, height: number): ImageDimensi
   };
 }
 
+export interface ClampedAspectRatioResult {
+  clampedRatio: number;
+  isClamped: boolean;
+  cssAspectRatio: string;
+}
+
 /**
  * Bounds aspect ratio within ergonomic feed display limits.
  * Default bounds: min 0.8 (4:5 portrait) to max 16/9 (approx 1.777 landscape).
@@ -76,7 +82,7 @@ export function getClampedAspectRatio(
   aspectRatio: number,
   minRatio: number = 0.8, // 4:5
   maxRatio: number = 16 / 9 // 16:9
-): { clampedRatio: number; isClamped: boolean; cssAspectRatio: string } {
+): ClampedAspectRatioResult {
   if (isNaN(aspectRatio) || aspectRatio <= 0) {
     return { clampedRatio: 1.0, isClamped: false, cssAspectRatio: '1 / 1' };
   }
