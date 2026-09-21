@@ -65,7 +65,7 @@ export interface UniversalComposerProps {
   defaultCountryId?: string;
 }
 
-interface UploadedMediaItem {
+export interface UploadedMediaItem {
   id: string;
   file: File;
   previewUrl: string;
@@ -74,7 +74,89 @@ interface UploadedMediaItem {
   uploadedUrl?: string;
   width?: number;
   height?: number;
-  aspectRatio?: number;
+  aspectRatio?: number | string;
+  posterBlob?: Blob;
+  posterUrl?: string;
+}
+
+export function extractVideoPosterFrame(
+  file: File
+): Promise<{ posterBlob: Blob; width: number; height: number; duration: number }> {
+  return new Promise((resolve, reject) => {
+    const video = document.createElement('video');
+    const objectUrl = URL.createObjectURL(file);
+    video.preload = 'metadata';
+    video.src = objectUrl;
+    video.muted = true;
+    video.playsInline = true;
+
+    let resolved = false;
+
+    const cleanup = () => {
+      URL.revokeObjectURL(objectUrl);
+      video.remove();
+    };
+
+    const timer = setTimeout(() => {
+      if (!resolved) {
+        cleanup();
+        reject(new Error('Video poster extraction timed out'));
+      }
+    }, 10000);
+
+    video.onloadedmetadata = () => {
+      const duration = video.duration || 0;
+      video.currentTime = Math.min(0.1, duration > 0 ? duration / 2 : 0.1);
+    };
+
+    video.onseeked = () => {
+      if (resolved) return;
+      try {
+        const width = video.videoWidth || 640;
+        const height = video.videoHeight || 360;
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          clearTimeout(timer);
+          cleanup();
+          reject(new Error('Canvas 2D context not available'));
+          return;
+        }
+        ctx.drawImage(video, 0, 0, width, height);
+        canvas.toBlob(
+          (blob) => {
+            clearTimeout(timer);
+            cleanup();
+            if (blob) {
+              resolved = true;
+              resolve({
+                posterBlob: blob,
+                width,
+                height,
+                duration: video.duration || 0,
+              });
+            } else {
+              reject(new Error('Failed to create poster blob from canvas'));
+            }
+          },
+          'image/jpeg',
+          0.85
+        );
+      } catch (err) {
+        clearTimeout(timer);
+        cleanup();
+        reject(err);
+      }
+    };
+
+    video.onerror = () => {
+      clearTimeout(timer);
+      cleanup();
+      reject(new Error('Failed to load video for poster frame extraction'));
+    };
+  });
 }
 
 const DRAFT_KEY = 'tukubi_composer_draft_v3';
@@ -237,6 +319,23 @@ export default function UniversalComposer({
 
       if (isVideo) {
         const previewUrl = URL.createObjectURL(file);
+        let posterBlob: Blob | undefined;
+        let width: number | undefined;
+        let height: number | undefined;
+        let aspectRatio: number | undefined;
+
+        try {
+          const poster = await extractVideoPosterFrame(file);
+          posterBlob = poster.posterBlob;
+          width = poster.width;
+          height = poster.height;
+          if (width && height) {
+            aspectRatio = width / height;
+          }
+        } catch (err) {
+          console.warn('[UniversalComposer] Video poster extraction fallback:', err);
+        }
+
         setMediaList((prev) => [
           ...prev,
           {
@@ -245,6 +344,10 @@ export default function UniversalComposer({
             previewUrl,
             type: 'video',
             caption: '',
+            posterBlob,
+            width,
+            height,
+            aspectRatio,
           },
         ]);
       } else {
@@ -319,6 +422,23 @@ export default function UniversalComposer({
       }
     } else {
       const previewUrl = URL.createObjectURL(file);
+      let posterBlob: Blob | undefined;
+      let width: number | undefined;
+      let height: number | undefined;
+      let aspectRatio: number | undefined;
+
+      try {
+        const poster = await extractVideoPosterFrame(file);
+        posterBlob = poster.posterBlob;
+        width = poster.width;
+        height = poster.height;
+        if (width && height) {
+          aspectRatio = width / height;
+        }
+      } catch (err) {
+        console.warn('[UniversalComposer] Video poster extraction fallback:', err);
+      }
+
       setMediaList((prev) => [
         ...prev,
         {
@@ -327,6 +447,10 @@ export default function UniversalComposer({
           previewUrl,
           type: 'video',
           caption: '',
+          posterBlob,
+          width,
+          height,
+          aspectRatio,
         },
       ]);
     }
@@ -418,8 +542,32 @@ export default function UniversalComposer({
           const { data: pubData } = supabase.storage.from('post-media').getPublicUrl(filePath);
           if (pubData && pubData.publicUrl) {
             uploadedUrls.push(pubData.publicUrl);
+            item.uploadedUrl = pubData.publicUrl;
           } else {
             throw new Error('Failed to resolve public URL for uploaded media.');
+          }
+
+          // For videos with posterBlob, also upload the poster to post-media bucket (with .jpg extension) and record posterUrl
+          if (item.type === 'video' && item.posterBlob) {
+            try {
+              const posterPath = `${effectiveUserId}/${Date.now()}_${Math.random().toString(36).substring(2, 8)}_${cleanBase}_poster.jpg`;
+              const { error: posterError } = await supabase.storage
+                .from('post-media')
+                .upload(posterPath, item.posterBlob, {
+                  cacheControl: '31536000, immutable',
+                  contentType: 'image/jpeg',
+                  upsert: false,
+                });
+
+              if (!posterError) {
+                const { data: posterData } = supabase.storage.from('post-media').getPublicUrl(posterPath);
+                if (posterData?.publicUrl) {
+                  item.posterUrl = posterData.publicUrl;
+                }
+              }
+            } catch (pErr) {
+              console.warn('[UniversalComposer] Poster upload error:', pErr);
+            }
           }
         } catch (err) {
           throw err instanceof Error ? err : new Error('Storage media upload failed.');
@@ -523,10 +671,33 @@ export default function UniversalComposer({
           break;
       }
 
+      const structuredMediaItems = uploadedMediaUrls.map((url, i) => {
+        const original = mediaList[i];
+        return {
+          url,
+          width: original?.width,
+          height: original?.height,
+          aspectRatio: original?.aspectRatio
+            ? typeof original.aspectRatio === 'number'
+              ? Math.abs(original.aspectRatio - 0.8) < 0.05
+                ? '4:5'
+                : Math.abs(original.aspectRatio - 1) < 0.05
+                  ? '1:1'
+                  : Math.abs(original.aspectRatio - 16 / 9) < 0.05
+                    ? '16:9'
+                    : `${Math.round(original.aspectRatio * 100) / 100}`
+              : original.aspectRatio
+            : undefined,
+          type: original?.type || 'image',
+          posterUrl: original?.posterUrl,
+        };
+      });
+
       const formData = new FormData();
       formData.set('content', finalContent);
       formData.set('visibility', backendVisibility);
       formData.set('media_urls', JSON.stringify(uploadedMediaUrls));
+      formData.set('media_items', JSON.stringify(structuredMediaItems));
       formData.set('cultural_tags', JSON.stringify(culturalTags));
       if (selectedCommunityId) {
         formData.set('community_id', selectedCommunityId);

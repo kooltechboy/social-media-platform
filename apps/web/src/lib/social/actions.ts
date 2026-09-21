@@ -14,6 +14,85 @@ import {
   type AdCandidate,
 } from '@caribbean/advertising';
 
+export interface StructuredMediaItem {
+  url: string;
+  width?: number;
+  height?: number;
+  aspectRatio?: string;
+  type?: 'image' | 'video';
+  posterUrl?: string;
+}
+
+export function parseMediaPayload(raw: unknown): StructuredMediaItem[] {
+  if (raw === null || raw === undefined || raw === '') return [];
+
+  const mapObjectItem = (item: any): StructuredMediaItem => {
+    const url = item?.url ? String(item.url) : '';
+    const isVideo = item?.type === 'video' || (!item?.type && (url.endsWith('.mp4') || url.includes('video')));
+    return {
+      url,
+      width: item?.width !== undefined ? Number(item.width) : undefined,
+      height: item?.height !== undefined ? Number(item.height) : undefined,
+      aspectRatio: item?.aspectRatio !== undefined ? String(item.aspectRatio) : undefined,
+      type: (item?.type || (isVideo ? 'video' : 'image')) as 'image' | 'video',
+      posterUrl: item?.posterUrl !== undefined ? String(item.posterUrl) : undefined,
+    };
+  };
+
+  const mapStringItem = (u: string): StructuredMediaItem => {
+    const isVideo = u.endsWith('.mp4') || u.includes('video');
+    return {
+      url: u,
+      type: isVideo ? 'video' : 'image',
+    };
+  };
+
+  if (Array.isArray(raw)) {
+    return raw
+      .map((item) => {
+        if (typeof item === 'string') {
+          return mapStringItem(item);
+        }
+        if (typeof item === 'object' && item !== null) {
+          return mapObjectItem(item);
+        }
+        return null;
+      })
+      .filter((item): item is StructuredMediaItem => Boolean(item && item.url));
+  }
+
+  if (typeof raw === 'string') {
+    const trimmed = raw.trim();
+    if (!trimmed) return [];
+
+    try {
+      const parsed = JSON.parse(trimmed);
+      if (Array.isArray(parsed)) {
+        return parsed
+          .map((item) => {
+            if (typeof item === 'string') {
+              return mapStringItem(item);
+            }
+            if (typeof item === 'object' && item !== null) {
+              return mapObjectItem(item);
+            }
+            return null;
+          })
+          .filter((item): item is StructuredMediaItem => Boolean(item && item.url));
+      }
+      return [];
+    } catch {
+      return trimmed
+        .split(',')
+        .map((u) => u.trim())
+        .filter(Boolean)
+        .map((u) => mapStringItem(u));
+    }
+  }
+
+  return [];
+}
+
 export interface PostActionState {
   error: string | null;
   postId?: string;
@@ -26,6 +105,7 @@ export interface PostActionState {
     time: string;
     content: string;
     mediaUrls?: string[];
+    mediaItems?: StructuredMediaItem[];
     culturalTags?: string[];
     likes: number;
     reposts: number;
@@ -62,18 +142,15 @@ export async function createPostAction(_prev: PostActionState, formData: FormDat
   if (!user) return { error: 'Please sign in to publish a post.' };
 
   const content = String(formData.get('content') ?? '').trim();
+  const mediaItemsRaw = formData.get('media_items');
   const mediaUrlsRaw = formData.get('media_urls');
   const culturalTagsRaw = formData.get('cultural_tags');
   const visibility = (formData.get('visibility') as 'public' | 'followers' | 'friends' | 'private') || 'public';
 
-  let mediaUrls: string[] = [];
-  if (typeof mediaUrlsRaw === 'string' && mediaUrlsRaw.trim()) {
-    try {
-      mediaUrls = JSON.parse(mediaUrlsRaw);
-    } catch {
-      mediaUrls = mediaUrlsRaw.split(',').map((u) => u.trim()).filter(Boolean);
-    }
-  }
+  const mediaItems: StructuredMediaItem[] = mediaItemsRaw
+    ? parseMediaPayload(mediaItemsRaw)
+    : parseMediaPayload(mediaUrlsRaw);
+  const mediaUrls: string[] = mediaItems.map((item) => item.url);
 
   let culturalTags: string[] = [];
   if (typeof culturalTagsRaw === 'string' && culturalTagsRaw.trim()) {
@@ -187,6 +264,20 @@ export async function createPostAction(_prev: PostActionState, formData: FormDat
     return { error: "We couldn't publish your post right now. Please try again." };
   }
 
+  if (supabase && mediaItems.length > 0) {
+    const postMediaRows = mediaItems.map((item, idx) => ({
+      post_id: data.id,
+      media_url: item.url,
+      media_type: item.type || 'image',
+      aspect_ratio: item.aspectRatio || null,
+      width: item.width || null,
+      height: item.height || null,
+      thumbnail_url: item.posterUrl || null,
+      position: idx,
+    }));
+    await supabase.from('post_media').insert(postMediaRows);
+  }
+
   const rawProfile = data?.profiles;
   const profile = Array.isArray(rawProfile) ? rawProfile[0] : rawProfile;
   const isPostOfficial = profile?.username?.toLowerCase() === 'tukubi' || profile?.is_verified || false;
@@ -203,6 +294,7 @@ export async function createPostAction(_prev: PostActionState, formData: FormDat
     time: 'just now',
     content: data.content || '',
     mediaUrls: data.media_urls || [],
+    mediaItems,
     culturalTags: data.cultural_tags || [],
     likes: data.likes_count || 0,
     reposts: data.shares_count || 0,
