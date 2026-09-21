@@ -31,11 +31,11 @@ export function parseMediaPayload(raw: unknown): StructuredMediaItem[] {
     const isVideo = item?.type === 'video' || (!item?.type && (url.endsWith('.mp4') || url.includes('video')));
     return {
       url,
-      width: item?.width !== undefined ? Number(item.width) : undefined,
-      height: item?.height !== undefined ? Number(item.height) : undefined,
-      aspectRatio: item?.aspectRatio !== undefined ? String(item.aspectRatio) : undefined,
+      width: item?.width !== undefined && item?.width !== null ? Number(item.width) : undefined,
+      height: item?.height !== undefined && item?.height !== null ? Number(item.height) : undefined,
+      aspectRatio: item?.aspectRatio ? String(item.aspectRatio) : undefined,
       type: (item?.type || (isVideo ? 'video' : 'image')) as 'image' | 'video',
-      posterUrl: item?.posterUrl !== undefined ? String(item.posterUrl) : undefined,
+      posterUrl: item?.posterUrl ? String(item.posterUrl) : undefined,
     };
   };
 
@@ -268,6 +268,8 @@ export async function createPostAction(_prev: PostActionState, formData: FormDat
     const postMediaRows = mediaItems.map((item, idx) => ({
       post_id: data.id,
       media_url: item.url,
+      storage_path: item.url,
+      media_kind: item.type || 'image',
       media_type: item.type || 'image',
       aspect_ratio: item.aspectRatio || null,
       width: item.width || null,
@@ -275,7 +277,10 @@ export async function createPostAction(_prev: PostActionState, formData: FormDat
       thumbnail_url: item.posterUrl || null,
       position: idx,
     }));
-    await supabase.from('post_media').insert(postMediaRows);
+    const { error: postMediaError } = await supabase.from('post_media').insert(postMediaRows);
+    if (postMediaError) {
+      console.warn('[createPostAction] Failed to insert post_media rows:', postMediaError.message);
+    }
   }
 
   const rawProfile = data?.profiles;
