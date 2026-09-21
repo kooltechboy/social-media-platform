@@ -69,17 +69,28 @@ export function classifyAspectRatio(width: number, height: number): ImageDimensi
 
 /**
  * Bounds aspect ratio within ergonomic feed display limits.
- * Default bounds: min 0.8 (4:5 portrait) to max 1.91 (approx 16:9 / 1.91:1 landscape).
- * This prevents a tall 9:16 photo from monopolizing entire screens or a panoramic photo
- * from becoming an unreadable 10px strip.
+ * Default bounds: min 0.8 (4:5 portrait) to max 16/9 (approx 1.777 landscape).
+ * Returns structured clamp details including cssAspectRatio string.
  */
 export function getClampedAspectRatio(
   aspectRatio: number,
-  minRatio: number = 0.8,
-  maxRatio: number = 1.91
-): number {
-  if (isNaN(aspectRatio) || aspectRatio <= 0) return 1.0;
-  return Math.min(Math.max(aspectRatio, minRatio), maxRatio);
+  minRatio: number = 0.8, // 4:5
+  maxRatio: number = 16 / 9 // 16:9
+): { clampedRatio: number; isClamped: boolean; cssAspectRatio: string } {
+  if (isNaN(aspectRatio) || aspectRatio <= 0) {
+    return { clampedRatio: 1.0, isClamped: false, cssAspectRatio: '1 / 1' };
+  }
+  const isClamped = aspectRatio < minRatio || aspectRatio > maxRatio;
+  const clampedRatio = Math.min(Math.max(aspectRatio, minRatio), maxRatio);
+
+  let cssAspectRatio = `${Math.round(clampedRatio * 100) / 100}`;
+  if (Math.abs(clampedRatio - 0.8) < 0.02) cssAspectRatio = '4 / 5';
+  else if (Math.abs(clampedRatio - 1) < 0.02) cssAspectRatio = '1 / 1';
+  else if (Math.abs(clampedRatio - 16 / 9) < 0.02) cssAspectRatio = '16 / 9';
+  else if (Math.abs(clampedRatio - 4 / 3) < 0.02) cssAspectRatio = '4 / 3';
+  else if (Math.abs(clampedRatio - 3 / 4) < 0.02) cssAspectRatio = '3 / 4';
+
+  return { clampedRatio, isClamped, cssAspectRatio };
 }
 
 /**

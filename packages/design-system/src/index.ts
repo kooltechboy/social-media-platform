@@ -136,4 +136,25 @@ export const desktopTokens = {
   },
 };
 
+export const ASPECT_RATIOS = {
+  feedDefault: '4 / 5',
+  square: '1 / 1',
+  landscape: '16 / 9',
+  camera: '4 / 3',
+  cameraPortrait: '3 / 4',
+  reels: '9 / 16',
+  cover: '16 / 5',
+} as const;
+
+export const RECOMMENDED_MEDIA_DIMENSIONS = {
+  feedDefault: { width: 1080, height: 1350 },
+  square: { width: 1080, height: 1080 },
+  landscape: { width: 1920, height: 1080 },
+  camera: { width: 1440, height: 1080 },
+  cameraPortrait: { width: 1080, height: 1440 },
+  reels: { width: 1080, height: 1920 },
+  avatar: { width: 512, height: 512 },
+  cover: { width: 1920, height: 600 },
+} as const;
+
 
