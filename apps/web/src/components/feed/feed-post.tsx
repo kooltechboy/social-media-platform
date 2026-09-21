@@ -511,6 +511,7 @@ export default function FeedPost({
       {post.mediaUrls && post.mediaUrls.length > 0 && (
         <TukubiGallery
           mediaUrls={post.mediaUrls}
+          mediaItems={post.mediaItems}
           altText={`Post by ${post.author}`}
           authorName={post.author}
           className="w-full"

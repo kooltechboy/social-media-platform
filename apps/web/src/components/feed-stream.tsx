@@ -50,6 +50,8 @@ import {
   fetchFeedPostsAction,
   hidePostAction,
   unhidePostAction,
+  toggleReactionAction,
+  type StructuredMediaItem,
 } from '../lib/social/actions';
 import { translatePostAction } from '../lib/social/translate-actions';
 import { createSupabaseBrowserClient } from '../lib/supabase/browser';
@@ -61,7 +63,6 @@ import EmojiPickerPopover from './emoji/emoji-picker-popover';
 import { useTranslation, LOCALE_DETAILS, LOCALES, Locale } from '@caribbean/localization';
 import ReactionPicker from './reactions/reaction-picker';
 import type { ReactionType } from './reactions/reaction-picker';
-import { toggleReactionAction } from '../lib/social/actions';
 import TukubiImage from './ui/tukubi-image';
 import TukubiVideoPlayer from './media/tukubi-video-player';
 import InteractivePollWidget from './polls/interactive-poll-widget';
@@ -83,6 +84,7 @@ export interface FeedPostData {
   time: string;
   content: string;
   mediaUrls?: string[];
+  mediaItems?: StructuredMediaItem[];
   likes: number;
   reposts: number;
   comments: number;
