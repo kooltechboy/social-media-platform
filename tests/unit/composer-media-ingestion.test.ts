@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parseMediaPayload, type StructuredMediaItem } from '../../apps/web/src/lib/social/actions';
+import { parseMediaPayload, type StructuredMediaItem } from '../../apps/web/src/lib/social/media-utils';
 
 describe('Composer Media Ingestion - parseMediaPayload', () => {
   it('returns an empty array when input is null, undefined, or empty string', () => {
