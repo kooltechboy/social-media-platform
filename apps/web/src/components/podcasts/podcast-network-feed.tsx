@@ -28,10 +28,12 @@ import {
   ExternalLink,
   ChevronDown,
   ChevronUp,
+  AlertCircle,
 } from 'lucide-react';
 import FollowPodcastButton from '../follow-podcast-button';
 import CreatePodcastModal from './create-podcast-modal';
 import { formatTimestamp, type Chapter } from '@caribbean/podcasts';
+import { AudioManager } from '../../lib/media/audio-manager';
 import {
   savePodcastProgressAction,
   getPodcastProgressAction,
@@ -92,9 +94,28 @@ export default function PodcastNetworkFeed({ podcasts, user }: PodcastNetworkFee
   const [sleepTimerSeconds, setSleepTimerSeconds] = useState<number>(0);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [copiedShareId, setCopiedShareId] = useState<string | null>(null);
+  const [playbackError, setPlaybackError] = useState<string | null>(null);
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const sleepTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Register with global AudioManager to guarantee single-audio playback
+  useEffect(() => {
+    AudioManager.register('tukubi-podcast-network-deck', {
+      kind: 'podcast',
+      onPause: () => {
+        audioRef.current?.pause();
+        setIsPlaying(false);
+      },
+      onMute: () => {
+        if (audioRef.current) audioRef.current.muted = true;
+        setIsMuted(true);
+      },
+    });
+    return () => {
+      AudioManager.unregister('tukubi-podcast-network-deck');
+    };
+  }, []);
 
   // Active episode chapters
   const activeChapters: Chapter[] = activePodcast?.chapters || [];
@@ -209,8 +230,9 @@ export default function PodcastNetworkFeed({ podcasts, user }: PodcastNetworkFee
   }, [sleepTimerSeconds]);
 
   function handleTogglePlay(podcast: PodcastShowItem) {
+    setPlaybackError(null);
     if (!podcast.audioUrl) {
-      alert('No audio file has been published for this podcast episode yet.');
+      setPlaybackError('No audio stream has been published for this podcast episode yet.');
       return;
     }
     if (activePodcast?.id === podcast.id) {
@@ -218,13 +240,17 @@ export default function PodcastNetworkFeed({ podcasts, user }: PodcastNetworkFee
         audioRef.current?.pause();
         setIsPlaying(false);
       } else {
-        audioRef.current?.play().catch(() => {});
-        setIsPlaying(true);
+        AudioManager.claimAudio('tukubi-podcast-network-deck', 'podcast');
+        audioRef.current?.play().catch((err: unknown) => {
+          setIsPlaying(false);
+          setPlaybackError(err instanceof Error ? err.message : 'Playback failed to start.');
+        });
       }
     } else {
       setActivePodcast(podcast);
-      setIsPlaying(true);
       setCurrentTime(0);
+      AudioManager.claimAudio('tukubi-podcast-network-deck', 'podcast');
+      setIsPlaying(true);
       if (podcast.podcast_episodes?.[0]?.id) {
         void recordPodcastPlayAction(podcast.podcast_episodes[0].id, 1, false);
       }
@@ -259,6 +285,7 @@ export default function PodcastNetworkFeed({ podcasts, user }: PodcastNetworkFee
       audioRef.current.currentTime = seconds;
       setCurrentTime(seconds);
       if (!isPlaying) {
+        AudioManager.claimAudio('tukubi-podcast-network-deck', 'podcast');
         audioRef.current.play().catch(() => {});
         setIsPlaying(true);
       }
@@ -299,6 +326,17 @@ export default function PodcastNetworkFeed({ podcasts, user }: PodcastNetworkFee
         <audio
           ref={audioRef}
           src={activePodcast.audioUrl}
+          onPlay={() => setIsPlaying(true)}
+          onPause={() => setIsPlaying(false)}
+          onError={() => {
+            setIsPlaying(false);
+            setPlaybackError('Audio stream error: Unable to load podcast media from storage.');
+          }}
+          onLoadedMetadata={() => {
+            if (audioRef.current) {
+              setDuration(audioRef.current.duration || 1800);
+            }
+          }}
           onTimeUpdate={handleTimeUpdate}
           onEnded={() => {
             if (sleepTimerSeconds === -1) setSleepTimerSeconds(0);
@@ -309,6 +347,27 @@ export default function PodcastNetworkFeed({ podcasts, user }: PodcastNetworkFee
             }
           }}
         />
+      )}
+
+      {/* Truthful error banner */}
+      {playbackError && (
+        <div
+          role="alert"
+          aria-live="assertive"
+          className="p-4 rounded-2xl bg-brand-sunsetCoral/15 border border-brand-sunsetCoral/40 text-brand-sunsetCoral flex items-center justify-between text-sm animate-in fade-in"
+        >
+          <div className="flex items-center gap-2">
+            <AlertCircle className="w-5 h-5 flex-shrink-0" />
+            <span>{playbackError}</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setPlaybackError(null)}
+            className="text-xs underline hover:text-white ml-3"
+          >
+            Dismiss
+          </button>
+        </div>
       )}
 
       {/* Top Header & Actions */}

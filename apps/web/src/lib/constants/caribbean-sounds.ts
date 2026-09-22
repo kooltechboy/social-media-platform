@@ -42,7 +42,7 @@ export interface CaribbeanSound {
 const SOUNDS_BUCKET_BASE =
   (typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_SUPABASE_URL
     ? process.env.NEXT_PUBLIC_SUPABASE_URL
-    : 'https://tukubi.supabase.co') + '/storage/v1/object/public/caribbean-sounds/stems';
+    : 'https://qixlaqwohhrynownvqwp.supabase.co') + '/storage/v1/object/public/caribbean-sounds/stems';
 
 export const CARIBBEAN_SOUNDS: CaribbeanSound[] = [
   {

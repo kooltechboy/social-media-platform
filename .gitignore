@@ -48,3 +48,4 @@ playwright/.auth/
 .vercel
 .env*
 .superpowers/
+scripts/generated_audio/

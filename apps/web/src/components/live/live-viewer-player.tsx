@@ -30,6 +30,7 @@ import { createSupabaseBrowserClient } from '../../lib/supabase/browser';
 import { sendLiveMessageAction, deleteLiveMessageAction, recordLiveViewerHeartbeatAction, type LiveActionState } from '../../lib/live/actions';
 import { LiveGiftModal } from '../live-gift-modal';
 import { followAction, unfollowAction } from '../../lib/social/profile-actions';
+import { AudioManager } from '../../lib/media/audio-manager';
 
 export interface LivestreamViewItem {
   id: string;
@@ -335,6 +336,24 @@ function ActiveLivePlayer({
     chatScrollRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
+  // Register with global AudioManager
+  useEffect(() => {
+    AudioManager.register(`tukubi-live-${stream.id}`, {
+      kind: 'live',
+      onPause: () => {
+        videoRef.current?.pause();
+        setIsPlaying(false);
+      },
+      onMute: () => {
+        if (videoRef.current) videoRef.current.muted = true;
+        setIsMuted(true);
+      },
+    });
+    return () => {
+      AudioManager.unregister(`tukubi-live-${stream.id}`);
+    };
+  }, [stream.id]);
+
   // Video Controls
   function togglePlay() {
     if (!videoRef.current) return;
@@ -342,15 +361,24 @@ function ActiveLivePlayer({
       videoRef.current.pause();
       setIsPlaying(false);
     } else {
-      videoRef.current.play().catch(() => {});
+      if (!isMuted) {
+        AudioManager.claimAudio(`tukubi-live-${stream.id}`, 'live');
+      }
+      videoRef.current.play().catch(() => {
+        setIsPlaying(false);
+      });
       setIsPlaying(true);
     }
   }
 
   function toggleMute() {
     if (!videoRef.current) return;
-    videoRef.current.muted = !isMuted;
-    setIsMuted(!isMuted);
+    const nextMuted = !isMuted;
+    videoRef.current.muted = nextMuted;
+    setIsMuted(nextMuted);
+    if (!nextMuted && isPlaying) {
+      AudioManager.claimAudio(`tukubi-live-${stream.id}`, 'live');
+    }
   }
 
   function handleVolumeChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -361,6 +389,9 @@ function ActiveLivePlayer({
       if (val > 0 && isMuted) {
         videoRef.current.muted = false;
         setIsMuted(false);
+        if (isPlaying) {
+          AudioManager.claimAudio(`tukubi-live-${stream.id}`, 'live');
+        }
       }
     }
   }
@@ -473,19 +504,23 @@ function ActiveLivePlayer({
                   muted={isMuted}
                   className="w-full h-full object-cover cursor-pointer"
                   onClick={togglePlay}
+                  onPlay={() => {
+                    setIsPlaying(true);
+                    if (!isMuted) {
+                      AudioManager.claimAudio(`tukubi-live-${stream.id}`, 'live');
+                    }
+                  }}
+                  onPause={() => setIsPlaying(false)}
                 />
               ) : (
-                <div className="absolute inset-0 bg-gradient-to-br from-slate-950 via-slate-900 to-red-950/40 flex flex-col items-center justify-center p-6 text-center space-y-4">
-                  <div className="relative">
-                    <span className="w-16 h-16 rounded-full bg-red-600/30 animate-ping absolute inset-0" />
-                    <div className="w-16 h-16 rounded-2xl bg-red-600/20 border border-red-500/50 flex items-center justify-center text-red-400 relative z-10">
-                      <Radio className="w-8 h-8 animate-pulse" />
-                    </div>
+                <div className="absolute inset-0 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex flex-col items-center justify-center p-6 text-center space-y-3">
+                  <div className="w-14 h-14 rounded-2xl bg-brand-surface border border-white/10 flex items-center justify-center text-brand-sandstone/70">
+                    <Radio className="w-7 h-7 text-amber-400/80" />
                   </div>
                   <div className="space-y-1">
-                    <h3 className="text-base font-black text-white">Live Broadcast Active</h3>
+                    <h3 className="text-base font-bold text-white">Broadcast Signal Standby</h3>
                     <p className="text-xs text-brand-sandstone/75 max-w-sm">
-                      Host is transmitting live from the Caribbean. Audio &amp; live chat are connected.
+                      Session is open, awaiting live video feed from host. Live chat and engagement are active.
                     </p>
                   </div>
                 </div>

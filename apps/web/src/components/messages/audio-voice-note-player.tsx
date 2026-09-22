@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Play, Pause, Volume2, VolumeX, RotateCcw } from 'lucide-react';
+import { Play, Pause, Volume2, VolumeX, RotateCcw, AlertCircle } from 'lucide-react';
+import { AudioManager } from '../../lib/media/audio-manager';
 
 export interface AudioVoiceNotePlayerProps {
   audioUrl: string;
@@ -23,13 +24,35 @@ export default function AudioVoiceNotePlayer({
   const [duration, setDuration] = useState(durationSeconds || 0);
   const [playbackSpeed, setPlaybackSpeed] = useState<1 | 1.5 | 2>(1);
   const [isMuted, setIsMuted] = useState(false);
+  const [hasError, setHasError] = useState(false);
 
   const isOwner = isOwn || isCurrentUser;
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const playerId = useRef(`voicenote-${Math.random().toString(36).substring(2, 9)}`).current;
+
+  // Guarantee single-audio playback with global AudioManager
+  useEffect(() => {
+    AudioManager.register(playerId, {
+      kind: 'voice_note',
+      onPause: () => {
+        audioRef.current?.pause();
+        setIsPlaying(false);
+      },
+      onMute: () => {
+        if (audioRef.current) audioRef.current.muted = true;
+        setIsMuted(true);
+      },
+    });
+    return () => {
+      AudioManager.unregister(playerId);
+    };
+  }, [playerId]);
 
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
+
+    setHasError(false);
 
     const handleLoadedMetadata = () => {
       if (audio.duration && !isNaN(audio.duration) && isFinite(audio.duration)) {
@@ -46,26 +69,36 @@ export default function AudioVoiceNotePlayer({
       setCurrentTime(0);
     };
 
+    const handleError = () => {
+      setHasError(true);
+      setIsPlaying(false);
+    };
+
     audio.addEventListener('loadedmetadata', handleLoadedMetadata);
     audio.addEventListener('timeupdate', handleTimeUpdate);
     audio.addEventListener('ended', handleEnded);
+    audio.addEventListener('error', handleError);
 
     return () => {
       audio.removeEventListener('loadedmetadata', handleLoadedMetadata);
       audio.removeEventListener('timeupdate', handleTimeUpdate);
       audio.removeEventListener('ended', handleEnded);
+      audio.removeEventListener('error', handleError);
     };
   }, [audioUrl]);
 
   function togglePlay() {
-    if (!audioRef.current) return;
+    if (!audioRef.current || hasError) return;
     if (isPlaying) {
       audioRef.current.pause();
       setIsPlaying(false);
     } else {
+      AudioManager.claimAudio(playerId, 'voice_note');
       audioRef.current.playbackRate = playbackSpeed;
       audioRef.current.play().then(() => setIsPlaying(true)).catch((e) => {
         console.warn('Audio play failed:', e);
+        setIsPlaying(false);
+        setHasError(true);
       });
     }
   }
@@ -100,6 +133,19 @@ export default function AudioVoiceNotePlayer({
   ];
 
   const progressPercent = duration > 0 ? (currentTime / duration) * 100 : 0;
+
+  if (hasError) {
+    return (
+      <div
+        role="alert"
+        aria-live="polite"
+        className="p-3 rounded-2xl bg-brand-sunsetCoral/15 border border-brand-sunsetCoral/30 text-brand-sunsetCoral flex items-center gap-2 text-xs min-w-[240px] max-w-sm"
+      >
+        <AlertCircle className="w-4 h-4 flex-shrink-0" />
+        <span>Voice note audio could not be loaded.</span>
+      </div>
+    );
+  }
 
   return (
     <div

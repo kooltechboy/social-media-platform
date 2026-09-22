@@ -48,6 +48,7 @@ export default function CreateReelModal({
   const [visibility, setVisibility] = useState<'public' | 'followers' | 'subscribers'>('public');
   const [originalAudioVolume, setOriginalAudioVolume] = useState(100);
   const [trackVolume, setTrackVolume] = useState(80);
+  const [videoDuration, setVideoDuration] = useState<number>(30);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -72,6 +73,11 @@ export default function CreateReelModal({
 
     if (!file.type.startsWith('video/')) {
       setErrorMessage('Please select a valid video file (.mp4, .mov, .webm).');
+      return;
+    }
+
+    if (file.size > 500 * 1024 * 1024) {
+      setErrorMessage('Video file exceeds the 500MB size limit.');
       return;
     }
 
@@ -131,7 +137,7 @@ export default function CreateReelModal({
         formData.set('soundId', selectedSound.id);
         formData.set('soundTitle', `${selectedSound.title} — ${selectedSound.artist}`);
       }
-      formData.set('durationSeconds', '30');
+      formData.set('durationSeconds', String(videoDuration));
 
       const res = await publishReelAction(formData);
       if (res.success) {
@@ -208,6 +214,11 @@ export default function CreateReelModal({
                   src={videoPreviewUrl}
                   controls
                   className="w-full h-full object-contain"
+                  onLoadedMetadata={(e) => {
+                    if (e.currentTarget.duration && isFinite(e.currentTarget.duration)) {
+                      setVideoDuration(Math.max(1, Math.round(e.currentTarget.duration)));
+                    }
+                  }}
                 />
                 <button
                   type="button"
@@ -418,6 +429,9 @@ export default function CreateReelModal({
         onCaptureComplete={(file, _type, meta) => {
           setVideoFile(file);
           setVideoPreviewUrl(URL.createObjectURL(file));
+          if (meta?.durationSeconds) {
+            setVideoDuration(Math.max(1, meta.durationSeconds));
+          }
           if (meta?.soundId && !selectedSound) {
             const matched = CARIBBEAN_SOUNDS.find((s) => s.id === meta.soundId);
             if (matched) setSelectedSound(matched);

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import {
@@ -22,9 +22,11 @@ import {
   MessageCircle,
   FileCheck,
   AlertCircle,
+  X,
 } from 'lucide-react';
 import type { CaribbeanSound } from '../../lib/constants/caribbean-sounds';
 import CreateReelModal from '../reels/create-reel-modal';
+import AudioManager from '../../lib/media/audio-manager';
 
 interface SoundDetailViewerProps {
   sound: CaribbeanSound;
@@ -61,28 +63,69 @@ export default function SoundDetailViewer({
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
-  const [duration, setDuration] = useState(sound.durationSeconds || 48);
+  const [duration, setDuration] = useState(sound.durationSeconds || 15);
   const [isFavorite, setIsFavorite] = useState(false);
   const [copied, setCopied] = useState(false);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [playbackError, setPlaybackError] = useState<string | null>(null);
+  const [isBuffering, setIsBuffering] = useState(false);
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const playerIdRef = useRef(`sound-detail-${sound.id}`);
 
-  const togglePlay = () => {
+  useEffect(() => {
+    const audioMgr = AudioManager.getInstance();
+    const unregister = audioMgr.register(playerIdRef.current, {
+      onPause: () => {
+        if (audioRef.current && !audioRef.current.paused) {
+          audioRef.current.pause();
+        }
+        setIsPlaying(false);
+      },
+      onMute: () => {
+        if (audioRef.current) {
+          audioRef.current.muted = true;
+        }
+        setIsMuted(true);
+      },
+      kind: 'sound',
+    });
+
+    return () => {
+      unregister();
+      audioMgr.releaseAudio(playerIdRef.current);
+    };
+  }, [sound.id]);
+
+  const togglePlay = async () => {
     if (!audioRef.current) return;
     if (isPlaying) {
       audioRef.current.pause();
       setIsPlaying(false);
+      AudioManager.getInstance().releaseAudio(playerIdRef.current);
     } else {
-      audioRef.current.play().catch(() => setIsPlaying(false));
-      setIsPlaying(true);
+      setPlaybackError(null);
+      setIsBuffering(true);
+      AudioManager.getInstance().claimAudio(playerIdRef.current, 'sound');
+      try {
+        await audioRef.current.play();
+        setIsPlaying(true);
+      } catch (err: any) {
+        setIsPlaying(false);
+        AudioManager.getInstance().releaseAudio(playerIdRef.current);
+        if (err.name !== 'AbortError') {
+          setPlaybackError(`Unable to play stem. Please check audio connection.`);
+        }
+      } finally {
+        setIsBuffering(false);
+      }
     }
   };
 
   const handleTimeUpdate = () => {
     if (audioRef.current) {
       setCurrentTime(audioRef.current.currentTime);
-      setDuration(audioRef.current.duration || sound.durationSeconds || 48);
+      setDuration(audioRef.current.duration || sound.durationSeconds || 15);
     }
   };
 
@@ -117,13 +160,63 @@ export default function SoundDetailViewer({
 
   return (
     <div className="w-full space-y-8 animate-fadeIn max-w-6xl mx-auto">
-      {/* Audio element */}
+      {/* Audio element with full event handling */}
       <audio
         ref={audioRef}
         src={sound.audioUrl}
+        preload="metadata"
+        onPlay={() => {
+          setIsPlaying(true);
+          setPlaybackError(null);
+          AudioManager.getInstance().claimAudio(playerIdRef.current, 'sound');
+        }}
+        onPause={() => {
+          setIsPlaying(false);
+          setIsBuffering(false);
+        }}
+        onWaiting={() => setIsBuffering(true)}
+        onPlaying={() => {
+          setIsBuffering(false);
+          setIsPlaying(true);
+        }}
         onTimeUpdate={handleTimeUpdate}
-        onEnded={() => setIsPlaying(false)}
+        onLoadedMetadata={() => {
+          if (audioRef.current) {
+            setDuration(audioRef.current.duration || sound.durationSeconds || 15);
+          }
+        }}
+        onEnded={() => {
+          setIsPlaying(false);
+          setIsBuffering(false);
+          AudioManager.getInstance().releaseAudio(playerIdRef.current);
+        }}
+        onError={(e) => {
+          const mediaErr = (e.target as HTMLAudioElement).error;
+          console.error('[SoundDetailViewer] Audio element error:', mediaErr);
+          setIsPlaying(false);
+          setIsBuffering(false);
+          AudioManager.getInstance().releaseAudio(playerIdRef.current);
+          setPlaybackError(`Audio stream failed to load (${mediaErr?.message || 'Network / format error'}).`);
+        }}
       />
+
+      {/* Truthful Playback Error Alert */}
+      {playbackError && (
+        <div role="alert" className="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-300 flex items-center justify-between gap-3 text-xs font-bold animate-fadeIn">
+          <span className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
+            {playbackError}
+          </span>
+          <button
+            type="button"
+            onClick={() => setPlaybackError(null)}
+            className="p-1 hover:text-white transition-colors cursor-pointer"
+            aria-label="Dismiss error"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
 
       {/* Back button */}
       <div className="flex items-center justify-between">
@@ -156,12 +249,14 @@ export default function SoundDetailViewer({
             <div className={`absolute inset-0 bg-gradient-to-t ${sound.coverGradient}`} />
             <Disc
               className={`w-20 h-20 text-rose-400 z-10 transition-transform ${
-                isPlaying ? 'animate-spin' : 'group-hover:scale-105'
+                isPlaying && !isBuffering ? 'animate-spin' : 'group-hover:scale-105'
               }`}
               style={{ animationDuration: '4s' }}
             />
             <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-20">
-              {isPlaying ? (
+              {isBuffering ? (
+                <div className="w-8 h-8 border-2 border-rose-500 border-t-transparent rounded-full animate-spin" />
+              ) : isPlaying ? (
                 <Pause className="w-10 h-10 text-white fill-current" />
               ) : (
                 <Play className="w-10 h-10 text-white fill-current translate-x-0.5" />

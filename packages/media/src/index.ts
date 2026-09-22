@@ -1,6 +1,85 @@
 export type MediaKind = 'image' | 'video' | 'audio';
 export type MediaSurface = 'post' | 'story' | 'reel' | 'long_form' | 'podcast' | 'live_replay' | 'message' | 'product';
 
+export type MediaPlaybackState =
+  | 'idle'
+  | 'loading'
+  | 'ready'
+  | 'playing'
+  | 'paused'
+  | 'buffering'
+  | 'ended'
+  | 'error';
+
+export interface MediaTrackMetadata {
+  id: string;
+  title: string;
+  artist?: string;
+  audioUrl: string;
+  durationSeconds: number;
+  mimeType: string;
+  license?: string;
+  waveform?: number[];
+  coverUrl?: string;
+  genre?: string;
+  bpm?: number;
+  keySignature?: string;
+}
+
+export interface MediaAccessibilityCheck {
+  accessible: boolean;
+  status?: number;
+  contentType?: string | null;
+  contentLength?: number | null;
+  error?: string;
+}
+
+export async function verifyMediaUrlAccessible(
+  url: string,
+  timeoutMs: number = 8000
+): Promise<MediaAccessibilityCheck> {
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+    let res: Response;
+    try {
+      res = await fetch(url, { method: 'HEAD', signal: controller.signal });
+      if (res.status === 405 || !res.ok) {
+        res = await fetch(url, {
+          method: 'GET',
+          headers: { Range: 'bytes=0-1023' },
+          signal: controller.signal,
+        });
+      }
+    } catch {
+      res = await fetch(url, {
+        method: 'GET',
+        headers: { Range: 'bytes=0-1023' },
+        signal: controller.signal,
+      });
+    } finally {
+      clearTimeout(timeoutId);
+    }
+
+    const contentType = res.headers.get('content-type');
+    const lengthHeader = res.headers.get('content-length');
+    const contentLength = lengthHeader ? parseInt(lengthHeader, 10) : null;
+
+    return {
+      accessible: res.ok || res.status === 206,
+      status: res.status,
+      contentType,
+      contentLength,
+    };
+  } catch (err: any) {
+    return {
+      accessible: false,
+      error: err?.message || String(err),
+    };
+  }
+}
+
 export type ProcessingStage =
   | 'uploaded' | 'quarantined' | 'processing' | 'transcoding'
   | 'thumbnailing' | 'captioning' | 'ready' | 'failed';

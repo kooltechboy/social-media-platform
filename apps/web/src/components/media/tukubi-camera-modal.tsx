@@ -31,7 +31,7 @@ export interface TukubiCameraModalProps {
   initialMode?: StudioCaptureMode;
   mode?: StudioCaptureMode;
   onClose: () => void;
-  onCaptureComplete: (file: File, type: 'image' | 'video', meta?: { coverBlob?: Blob; soundId?: string; soundTitle?: string }) => void;
+  onCaptureComplete: (file: File, type: 'image' | 'video', meta?: { coverBlob?: Blob; soundId?: string; soundTitle?: string; durationSeconds?: number }) => void;
   onFallbackToFilePicker?: (mode: StudioCaptureMode) => void;
   initialSoundId?: string;
 }
@@ -439,6 +439,7 @@ export default function TukubiCameraModal({
       coverBlob,
       soundId: selectedSound?.id,
       soundTitle: selectedSound ? `${selectedSound.title} — ${selectedSound.artist}` : undefined,
+      durationSeconds: isVid ? Math.max(1, recordSeconds) : undefined,
     });
     onClose();
   }

@@ -11,7 +11,7 @@ import {
   Heart,
   PictureInPicture2,
 } from 'lucide-react';
-import { getClampedAspectRatio } from '@caribbean/media';
+import { getClampedAspectRatio, type MediaPlaybackState } from '@caribbean/media';
 import AudioManager from '../../lib/media/audio-manager';
 
 export interface TukubiVideoPlayerProps {
@@ -141,6 +141,7 @@ export default function TukubiVideoPlayer({
 
   // Playback state
   const [isPlaying, setIsPlaying] = useState(false);
+  const [playbackState, setPlaybackState] = useState<MediaPlaybackState>('idle');
   const [isMuted, setIsMuted] = useState(() => {
     if (typeof window !== 'undefined' && AudioManager.getInstance().isGloballyUnmuted()) {
       return false;
@@ -178,12 +179,23 @@ export default function TukubiVideoPlayer({
   // Register with AudioManager singleton for single-audio master control
   useEffect(() => {
     const audioMgr = AudioManager.getInstance();
-    const unregister = audioMgr.register(playerIdRef.current, () => {
-      const video = videoRef.current;
-      if (video) {
-        video.muted = true;
-      }
-      setIsMuted(true);
+    const unregister = audioMgr.register(playerIdRef.current, {
+      onMute: () => {
+        const video = videoRef.current;
+        if (video) {
+          video.muted = true;
+        }
+        setIsMuted(true);
+      },
+      onPause: () => {
+        const video = videoRef.current;
+        if (video && !video.paused) {
+          video.pause();
+          setIsPlaying(false);
+          setPlaybackState('paused');
+        }
+      },
+      kind: 'feed_video',
     });
 
     return () => {
@@ -204,7 +216,7 @@ export default function TukubiVideoPlayer({
         if (entry.isIntersecting) {
           const isGlobalUnmuted = AudioManager.getInstance().isGloballyUnmuted();
           if (isGlobalUnmuted) {
-            AudioManager.getInstance().claimAudio(playerIdRef.current);
+            AudioManager.getInstance().claimAudio(playerIdRef.current, 'feed_video');
             video.muted = false;
             setIsMuted(false);
           } else {
@@ -213,12 +225,19 @@ export default function TukubiVideoPlayer({
           }
           video
             .play()
-            .then(() => setIsPlaying(true))
-            .catch(() => {});
+            .then(() => {
+              setIsPlaying(true);
+              setPlaybackState('playing');
+            })
+            .catch(() => {
+              setIsPlaying(false);
+              setPlaybackState('paused');
+            });
         } else {
           if (!video.paused) {
             video.pause();
             setIsPlaying(false);
+            setPlaybackState('paused');
           }
         }
       },
@@ -244,19 +263,28 @@ export default function TukubiVideoPlayer({
     if (!video) return;
 
     if (video.paused) {
+      if (!isMuted) {
+        AudioManager.getInstance().claimAudio(playerIdRef.current, 'feed_video');
+      }
       video
         .play()
         .then(() => {
           setIsPlaying(true);
+          setPlaybackState('playing');
           flashIndicator('play');
         })
-        .catch(() => {});
+        .catch((err) => {
+          console.warn('[TukubiVideoPlayer] Play interrupted:', err);
+          setIsPlaying(false);
+          setPlaybackState('paused');
+        });
     } else {
       video.pause();
       setIsPlaying(false);
+      setPlaybackState('paused');
       flashIndicator('pause');
     }
-  }, []);
+  }, [isMuted]);
 
   const toggleMute = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -265,7 +293,7 @@ export default function TukubiVideoPlayer({
 
     if (isMuted) {
       // User tapped unmute: claim single audio master
-      AudioManager.getInstance().claimAudio(playerIdRef.current);
+      AudioManager.getInstance().claimAudio(playerIdRef.current, 'feed_video');
       video.muted = false;
       setIsMuted(false);
     } else {
@@ -274,6 +302,41 @@ export default function TukubiVideoPlayer({
       AudioManager.getInstance().setGloballyUnmuted(false);
       video.muted = true;
       setIsMuted(true);
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    if (e.code === 'Space' || e.code === 'KeyK') {
+      e.preventDefault();
+      togglePlay();
+    } else if (e.code === 'KeyM') {
+      e.preventDefault();
+      if (isMuted) {
+        AudioManager.getInstance().claimAudio(playerIdRef.current, 'feed_video');
+        video.muted = false;
+        setIsMuted(false);
+      } else {
+        AudioManager.getInstance().releaseAudio(playerIdRef.current);
+        AudioManager.getInstance().setGloballyUnmuted(false);
+        video.muted = true;
+        setIsMuted(true);
+      }
+    } else if (e.code === 'KeyF') {
+      e.preventDefault();
+      if (!document.fullscreenElement && containerRef.current) {
+        containerRef.current.requestFullscreen?.().catch(() => {});
+      } else if (document.exitFullscreen) {
+        document.exitFullscreen().catch(() => {});
+      }
+    } else if (e.code === 'ArrowLeft') {
+      e.preventDefault();
+      video.currentTime = Math.max(0, video.currentTime - 5);
+    } else if (e.code === 'ArrowRight') {
+      e.preventDefault();
+      video.currentTime = Math.min(video.duration || 0, video.currentTime + 5);
     }
   };
 
@@ -417,7 +480,9 @@ export default function TukubiVideoPlayer({
     <div
       ref={containerRef}
       onClick={handleContainerClick}
-      className={`relative group overflow-hidden rounded-2xl bg-black select-none cursor-pointer max-h-[640px] sm:max-h-[720px] ${className}`}
+      onKeyDown={handleKeyDown}
+      tabIndex={0}
+      className={`relative group overflow-hidden rounded-2xl bg-black select-none cursor-pointer max-h-[640px] sm:max-h-[720px] focus:outline-none focus:ring-2 focus:ring-brand-caribbeanSea/50 ${className}`}
       style={{ aspectRatio: containerStyle.aspectRatio }}
       role="region"
       aria-label={altText}
@@ -452,12 +517,38 @@ export default function TukubiVideoPlayer({
         muted={isMuted}
         playsInline
         preload="metadata"
+        onPlay={() => {
+          setIsPlaying(true);
+          setPlaybackState('playing');
+        }}
+        onPause={() => {
+          setIsPlaying(false);
+          setPlaybackState('paused');
+        }}
+        onWaiting={() => setPlaybackState('buffering')}
+        onPlaying={() => {
+          setIsPlaying(true);
+          setPlaybackState('playing');
+        }}
+        onCanPlayThrough={() => setPlaybackState(isPlaying ? 'playing' : 'ready')}
         onTimeUpdate={handleTimeUpdate}
         onLoadedMetadata={handleLoadedMetadata}
-        onLoadedData={() => setIsLoaded(true)}
-        onCanPlay={() => setIsLoaded(true)}
-        onEnded={() => setIsPlaying(false)}
-        onError={() => setHasError(true)}
+        onLoadedData={() => {
+          setIsLoaded(true);
+          setPlaybackState('ready');
+        }}
+        onCanPlay={() => {
+          setIsLoaded(true);
+          setPlaybackState('ready');
+        }}
+        onEnded={() => {
+          setIsPlaying(false);
+          setPlaybackState('ended');
+        }}
+        onError={() => {
+          setHasError(true);
+          setPlaybackState('error');
+        }}
         className="w-full h-full object-contain relative z-10"
       />
 

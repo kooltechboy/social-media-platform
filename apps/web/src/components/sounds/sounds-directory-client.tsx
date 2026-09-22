@@ -33,6 +33,7 @@ import {
   fetchSoundsAction,
   uploadSoundAction,
 } from '../../lib/sounds/actions';
+import AudioManager from '../../lib/media/audio-manager';
 import CreateReelModal from '../reels/create-reel-modal';
 
 interface SoundsDirectoryClientProps {
@@ -105,6 +106,33 @@ export default function SoundsDirectoryClient({
   const [uploadFile, setUploadFile] = useState<File | null>(null);
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const [playbackError, setPlaybackError] = useState<string | null>(null);
+  const [isBuffering, setIsBuffering] = useState(false);
+
+  // Register with AudioManager singleton for platform-wide single-audio master
+  useEffect(() => {
+    const audioMgr = AudioManager.getInstance();
+    const unregister = audioMgr.register('sounds-directory-player', {
+      onPause: () => {
+        if (audioRef.current && !audioRef.current.paused) {
+          audioRef.current.pause();
+        }
+        setIsPlaying(false);
+      },
+      onMute: () => {
+        if (audioRef.current) {
+          audioRef.current.muted = true;
+        }
+        setIsMuted(true);
+      },
+      kind: 'sound',
+    });
+
+    return () => {
+      unregister();
+      audioMgr.releaseAudio('sounds-directory-player');
+    };
+  }, []);
 
   // Filter sounds
   const filteredSounds = sounds.filter((s) => {
@@ -136,27 +164,62 @@ export default function SoundsDirectoryClient({
   });
 
   useEffect(() => {
-    if (activeSound && audioRef.current) {
-      audioRef.current.currentTime = 0;
-      setCurrentTime(0);
-      if (isPlaying) {
-        audioRef.current.play().catch(() => setIsPlaying(false));
-      }
-    }
+    if (!activeSound || !audioRef.current) return;
+    audioRef.current.currentTime = 0;
+    setCurrentTime(0);
+    setPlaybackError(null);
+    setIsBuffering(true);
+    AudioManager.getInstance().claimAudio('sounds-directory-player', 'sound');
+
+    audioRef.current
+      .play()
+      .then(() => {
+        setIsPlaying(true);
+        setIsBuffering(false);
+      })
+      .catch((err) => {
+        setIsBuffering(false);
+        if (err.name !== 'AbortError') {
+          console.warn('[SoundsDirectory] Playback failed:', err);
+          setIsPlaying(false);
+          setPlaybackError(`Could not play "${activeSound.title}". Audio stream error.`);
+          AudioManager.getInstance().releaseAudio('sounds-directory-player');
+        }
+      });
   }, [activeSound]);
 
-  function handlePlaySound(sound: CaribbeanSound) {
+  async function handlePlaySound(sound: CaribbeanSound) {
+    setPlaybackError(null);
+
     if (activeSound?.id === sound.id) {
       if (isPlaying) {
-        audioRef.current?.pause();
+        if (audioRef.current) {
+          audioRef.current.pause();
+        }
         setIsPlaying(false);
+        AudioManager.getInstance().releaseAudio('sounds-directory-player');
       } else {
-        audioRef.current?.play().catch(() => {});
-        setIsPlaying(true);
+        setIsBuffering(true);
+        AudioManager.getInstance().claimAudio('sounds-directory-player', 'sound');
+        try {
+          if (audioRef.current) {
+            await audioRef.current.play();
+            setIsPlaying(true);
+          }
+        } catch (err: any) {
+          setIsPlaying(false);
+          AudioManager.getInstance().releaseAudio('sounds-directory-player');
+          if (err.name !== 'AbortError') {
+            setPlaybackError(`Unable to play "${sound.title}". Please check audio connection.`);
+          }
+        } finally {
+          setIsBuffering(false);
+        }
       }
     } else {
       setActiveSound(sound);
-      setIsPlaying(true);
+      setIsPlaying(false);
+      setIsBuffering(true);
     }
   }
 
@@ -274,14 +337,64 @@ export default function SoundsDirectoryClient({
 
   return (
     <div className="w-full space-y-8">
-      {/* Hidden Audio Player Element */}
+      {/* Audio Player Element with complete media events */}
       {activeSound && (
         <audio
           ref={audioRef}
           src={activeSound.audioUrl}
+          preload="metadata"
+          onPlay={() => {
+            setIsPlaying(true);
+            setPlaybackError(null);
+            AudioManager.getInstance().claimAudio('sounds-directory-player', 'sound');
+          }}
+          onPause={() => {
+            setIsPlaying(false);
+            setIsBuffering(false);
+          }}
+          onWaiting={() => setIsBuffering(true)}
+          onPlaying={() => {
+            setIsBuffering(false);
+            setIsPlaying(true);
+          }}
           onTimeUpdate={handleTimeUpdate}
-          onEnded={() => setIsPlaying(false)}
+          onLoadedMetadata={() => {
+            if (audioRef.current) {
+              setDuration(audioRef.current.duration || activeSound.durationSeconds || 15);
+            }
+          }}
+          onEnded={() => {
+            setIsPlaying(false);
+            setIsBuffering(false);
+            AudioManager.getInstance().releaseAudio('sounds-directory-player');
+          }}
+          onError={(e) => {
+            const mediaErr = (e.target as HTMLAudioElement).error;
+            console.error('[SoundsDirectory] HTMLAudioElement error:', mediaErr);
+            setIsPlaying(false);
+            setIsBuffering(false);
+            AudioManager.getInstance().releaseAudio('sounds-directory-player');
+            setPlaybackError(`Audio stream failed to load (${mediaErr?.message || 'Network / format error'}).`);
+          }}
         />
+      )}
+
+      {/* Truthful Playback Error Alert */}
+      {playbackError && (
+        <div role="alert" className="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-300 flex items-center justify-between gap-3 text-xs font-bold animate-fadeIn">
+          <span className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
+            {playbackError}
+          </span>
+          <button
+            type="button"
+            onClick={() => setPlaybackError(null)}
+            className="p-1 hover:text-white transition-colors cursor-pointer"
+            aria-label="Dismiss error"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
       )}
 
       {/* Top Header */}
@@ -331,12 +444,14 @@ export default function SoundsDirectoryClient({
               <div className={`absolute inset-0 bg-gradient-to-t ${activeSound.coverGradient}`} />
               <Disc
                 className={`w-14 h-14 text-rose-400 z-10 transition-transform ${
-                  isPlaying ? 'animate-spin' : 'group-hover:scale-110'
+                  isPlaying && !isBuffering ? 'animate-spin' : 'group-hover:scale-110'
                 }`}
                 style={{ animationDuration: '4s' }}
               />
               <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-20">
-                {isPlaying ? (
+                {isBuffering ? (
+                  <div className="w-6 h-6 border-2 border-rose-500 border-t-transparent rounded-full animate-spin" />
+                ) : isPlaying ? (
                   <Pause className="w-8 h-8 text-white fill-current" />
                 ) : (
                   <Play className="w-8 h-8 text-white fill-current translate-x-0.5" />

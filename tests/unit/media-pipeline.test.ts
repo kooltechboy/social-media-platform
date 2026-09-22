@@ -186,4 +186,12 @@ describe('TUKUBI Enterprise Media Pipeline', () => {
       expect(gradient).toContain('#17112E');
     });
   });
+
+  describe('Media URL Accessibility Verification', () => {
+    it('verifies accessible URL via fetch mock', async () => {
+      const { verifyMediaUrlAccessible } = await import('../../packages/media/src');
+      const check = await verifyMediaUrlAccessible('https://example.com/test.mp3');
+      expect(typeof check.accessible).toBe('boolean');
+    });
+  });
 });

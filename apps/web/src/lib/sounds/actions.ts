@@ -108,9 +108,10 @@ export async function fetchSoundsAction(params: FetchSoundsParams = {}): Promise
     }
   }
 
-  // Combine with verified royalty-free rhythm stems from CARIBBEAN_SOUNDS
+  // Combine with verified royalty-free rhythm stems from CARIBBEAN_SOUNDS without duplicate titles
   const existingIds = new Set(dbSounds.map((s) => s.id));
-  const verifiedStems = CARIBBEAN_SOUNDS.filter((s) => !existingIds.has(s.id)).filter((s) => {
+  const existingTitles = new Set(dbSounds.map((s) => s.title.toLowerCase().trim()));
+  const verifiedStems = CARIBBEAN_SOUNDS.filter((s) => !existingIds.has(s.id) && !existingTitles.has(s.title.toLowerCase().trim())).filter((s) => {
     if (params.genre && params.genre !== 'All Genres' && s.genre !== params.genre) {
       return false;
     }
@@ -153,13 +154,23 @@ export async function getSoundDetailsAction(soundId: string): Promise<{
 
   if (supabase) {
     try {
-      // 1. Fetch Sound row if UUID
+      // 1. Fetch Sound row (by UUID or slug matching audio_url / storage_path)
       const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(soundId);
       if (isUuid) {
         const { data: dbSound } = await supabase
           .from('sounds')
           .select('*')
           .eq('id', soundId)
+          .maybeSingle();
+
+        if (dbSound) {
+          sound = mapDbSoundToCaribbeanSound(dbSound);
+        }
+      } else {
+        const { data: dbSound } = await supabase
+          .from('sounds')
+          .select('*')
+          .or(`audio_url.ilike.%${soundId}%,storage_path.ilike.%${soundId}%`)
           .maybeSingle();
 
         if (dbSound) {

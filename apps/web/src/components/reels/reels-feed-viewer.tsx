@@ -21,6 +21,7 @@ import { followAction, unfollowAction } from '../../lib/social/profile-actions';
 import UseThisSoundButton from '../sounds/use-this-sound-button';
 import CreateReelModal from './create-reel-modal';
 import ReelSubtitleOverlay from './reel-subtitle-overlay';
+import AudioManager from '../../lib/media/audio-manager';
 
 export interface ReelItem {
   id: string;
@@ -97,14 +98,42 @@ function ReelCard({
   const [isCaptionExpanded, setIsCaptionExpanded] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [captionsEnabled, setCaptionsEnabled] = useState(true);
+  const [videoError, setVideoError] = useState(false);
+
+  // Register Reel with global AudioManager
+  useEffect(() => {
+    const audioMgr = AudioManager.getInstance();
+    const unregister = audioMgr.register(reel.id, {
+      onMute: () => {
+        if (!isMuted) toggleMute();
+      },
+      onPause: () => {
+        if (videoRef.current && !videoRef.current.paused) {
+          videoRef.current.pause();
+          setIsPlaying(false);
+        }
+      },
+      kind: 'reel',
+    });
+
+    return () => {
+      unregister();
+      audioMgr.releaseAudio(reel.id);
+    };
+  }, [reel.id, isMuted, toggleMute]);
 
   useEffect(() => {
     if (isActive) {
       if (videoRef.current) {
         videoRef.current.currentTime = 0;
+        if (!isMuted) {
+          AudioManager.getInstance().claimAudio(reel.id, 'reel');
+        }
         const playPromise = videoRef.current.play();
         if (playPromise !== undefined) {
-          playPromise.then(() => setIsPlaying(true)).catch(() => setIsPlaying(false));
+          playPromise
+            .then(() => setIsPlaying(true))
+            .catch(() => setIsPlaying(false));
         }
       }
     } else {
@@ -112,8 +141,9 @@ function ReelCard({
         videoRef.current.pause();
         setIsPlaying(false);
       }
+      AudioManager.getInstance().releaseAudio(reel.id);
     }
-  }, [isActive]);
+  }, [isActive, isMuted, reel.id]);
 
   const handleTimeUpdate = () => {
     if (videoRef.current) {
@@ -124,14 +154,20 @@ function ReelCard({
     }
   };
 
-
   const handleTogglePlay = () => {
     if (!videoRef.current) return;
     if (isPlaying) {
       videoRef.current.pause();
       setIsPlaying(false);
+      AudioManager.getInstance().releaseAudio(reel.id);
     } else {
-      videoRef.current.play().then(() => setIsPlaying(true)).catch(() => {});
+      if (!isMuted) {
+        AudioManager.getInstance().claimAudio(reel.id, 'reel');
+      }
+      videoRef.current
+        .play()
+        .then(() => setIsPlaying(true))
+        .catch(() => setIsPlaying(false));
     }
   };
 
@@ -157,13 +193,18 @@ function ReelCard({
   const isFollowed = followingState[reel.handle] ?? false;
 
   const preloadState = isActive || isNext ? 'auto' : 'none';
-  const displayUrl = reel.videoUrl?.startsWith('http') ? reel.videoUrl : reel.videoUrl ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/${reel.videoUrl}` : undefined;
+  const supabaseBase = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://qixlaqwohhrynownvqwp.supabase.co';
+  const displayUrl = reel.videoUrl?.startsWith('http')
+    ? reel.videoUrl
+    : reel.videoUrl
+    ? `${supabaseBase}/storage/v1/object/public/${reel.videoUrl}`
+    : undefined;
 
   return (
     <div className="h-full w-full snap-start snap-always relative overflow-hidden bg-black reel-container" data-reel-id={reel.id}>
       {/* Video or Fallback */}
       <div onClick={handleTogglePlay} className="absolute inset-0 cursor-pointer flex items-center justify-center">
-        {displayUrl ? (
+        {displayUrl && !videoError ? (
           <video
             ref={videoRef}
             src={displayUrl}
@@ -172,13 +213,30 @@ function ReelCard({
             loop
             muted={isMuted}
             onTimeUpdate={handleTimeUpdate}
+            onPlay={() => {
+              setIsPlaying(true);
+              if (!isMuted) {
+                AudioManager.getInstance().claimAudio(reel.id, 'reel');
+              }
+            }}
+            onPause={() => setIsPlaying(false)}
+            onError={() => {
+              console.warn('[ReelCard] Video playback error for reel:', reel.id);
+              setVideoError(true);
+              setIsPlaying(false);
+              AudioManager.getInstance().releaseAudio(reel.id);
+            }}
             className="w-full h-full object-cover"
           />
         ) : (
-          <div className={`absolute inset-0 bg-gradient-to-t ${reel.gradient} flex items-center justify-center`}>
-             <div className="w-20 h-20 rounded-full bg-black/40 flex items-center justify-center text-white">
-                <Play className="w-8 h-8 fill-current translate-x-1" />
+          <div className={`absolute inset-0 bg-gradient-to-t ${reel.gradient} flex flex-col items-center justify-center p-6 text-center space-y-3`}>
+             <div className="w-16 h-16 rounded-full bg-white/10 flex items-center justify-center text-white/60 border border-white/15">
+                <Video className="w-8 h-8 opacity-60" />
              </div>
+             <p className="text-sm font-bold text-white/90">Video Unavailable</p>
+             <p className="text-xs text-white/60 max-w-xs">
+               This video stream is currently being transcoded or is temporarily offline.
+             </p>
           </div>
         )}
       </div>
