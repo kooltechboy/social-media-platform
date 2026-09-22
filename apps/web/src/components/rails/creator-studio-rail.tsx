@@ -13,6 +13,7 @@ import {
   PlusCircle,
   ChevronRight,
   Sparkles,
+  Megaphone,
 } from 'lucide-react';
 
 export default function CreatorStudioRail() {
@@ -23,6 +24,7 @@ export default function CreatorStudioRail() {
     { href: '/creator-studio/monetization', label: 'Monetization & Tips', icon: DollarSign },
     { href: '/creator-studio/repurpose', label: 'Content Repurposing', icon: Sparkles },
     { href: '/creator-hub', label: 'Creator Hub Overview', icon: Users },
+    { href: '/ads', label: 'Ads & Campaigns', icon: Megaphone },
   ];
 
   return (

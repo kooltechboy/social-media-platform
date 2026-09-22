@@ -151,7 +151,7 @@ export default async function NotificationsPage() {
 
       <main className="max-w-4xl 3xl:max-w-5xl mx-auto py-4 space-y-3 md:space-y-4">
         {notifications.length === 0 ? (
-          <div className="surface-card rounded-3xl p-12 text-center space-y-4 max-w-md mx-auto mt-8 border border-white/10">
+          <div className="surface-card rounded-3xl p-10 sm:p-12 text-center space-y-5 max-w-md mx-auto mt-8 border border-white/10">
             <div className="w-16 h-16 rounded-2xl bg-white/5 border border-white/15 flex items-center justify-center mx-auto text-brand-sandstone/60">
               <Bell className="w-8 h-8" />
             </div>
@@ -160,6 +160,14 @@ export default async function NotificationsPage() {
               <p className="text-sm md:text-base text-brand-sandstone/70 leading-relaxed md:leading-[1.6]">
                 When Caribbean creators and friends interact with your content, tips, or orders, they&apos;ll appear here.
               </p>
+            </div>
+            <div className="pt-2">
+              <Link
+                href="/"
+                className="inline-flex items-center justify-center bg-gradient-to-r from-orange-500 via-amber-500 to-emerald-400 hover:brightness-110 text-slate-950 font-black px-5 py-2.5 rounded-xl text-xs md:text-sm transition-all shadow-md shadow-orange-500/20 min-h-[42px]"
+              >
+                Explore Caribbean Feed
+              </Link>
             </div>
           </div>
         ) : (

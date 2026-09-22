@@ -28,6 +28,7 @@ import {
   ChevronDown,
   Sparkles,
   ArrowRight,
+  Megaphone,
 } from 'lucide-react';
 import { useTranslation, TranslationKey } from '@caribbean/localization';
 import { useUnreadNotificationsCount, useUnreadMessagesCount } from './notifications-realtime-provider';
@@ -174,6 +175,11 @@ export default function AppSidebar({ currentPath }: { currentPath?: string }) {
       labelKey: 'nav.financial_center',
       fallbackLabel: 'Financial Center',
       icon: Wallet,
+    },
+    {
+      href: '/ads',
+      fallbackLabel: 'Ads & Promotion',
+      icon: Megaphone,
     },
     {
       href: '/settings',

@@ -139,12 +139,32 @@ export default async function CommunitiesPage({
 
         {/* Communities Grid */}
         {communities.length === 0 ? (
-          <div className="surface-card rounded-3xl p-12 text-center space-y-4 max-w-xl mx-auto border border-white/10">
+          <div className="surface-card rounded-3xl p-10 sm:p-12 text-center space-y-5 max-w-xl mx-auto border border-white/10">
             <Users className="w-12 h-12 text-brand-sunriseCoral/70 mx-auto" />
-            <h3 className="text-lg font-black text-white">No diaspora communities found</h3>
-            <p className="text-xs sm:text-sm text-brand-sandstone/80 leading-relaxed">
-              No communities currently match your search or filter. Create your own island guild or diaspora city hub!
-            </p>
+            <div className="space-y-2">
+              <h3 className="text-lg sm:text-xl font-black text-white">No diaspora communities found</h3>
+              <p className="text-xs sm:text-sm text-brand-sandstone/80 leading-relaxed">
+                {hub || country || q
+                  ? 'No communities currently match your search or filter. Try clearing filters or create a new hub!'
+                  : 'Be the first to launch an island guild or diaspora city hub for your community!'}
+              </p>
+            </div>
+            <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
+              {(hub || country || q) && (
+                <Link
+                  href="/communities"
+                  className="px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/15 text-white text-xs sm:text-sm font-bold border border-white/15 transition-all"
+                >
+                  Reset Filters
+                </Link>
+              )}
+              <Link
+                href="/communities/create"
+                className="bg-brand-sunriseCoral hover:brightness-110 text-slate-950 font-black px-5 py-2.5 rounded-xl text-xs sm:text-sm inline-flex items-center gap-2 transition-all shadow-md shadow-brand-sunriseCoral/20 min-h-[42px]"
+              >
+                <Plus className="w-4 h-4 stroke-[3]" /> Create Diaspora Hub
+              </Link>
+            </div>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">

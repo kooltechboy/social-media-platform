@@ -2,6 +2,6 @@ import { redirect } from 'next/navigation';
 
 export const dynamic = 'force-dynamic';
 
-export default function ModerationSignupPage() {
-  redirect('/moderator/signup');
+export default function ExploreDiasporaRedirect() {
+  redirect('/diaspora');
 }

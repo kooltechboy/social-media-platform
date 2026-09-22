@@ -220,7 +220,7 @@ export default async function ProductDetailPage({
 
               <div className="flex items-center gap-2">
                 <Link
-                  href={`/messages?u=${prod.seller_id}`}
+                  href={`/messages?u=${prod.profiles?.username || prod.seller_id}`}
                   className="text-xs font-bold text-brand-caribbeanSea hover:text-white px-2.5 py-1.5 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors flex items-center gap-1.5"
                 >
                   <MessageCircle className="w-3.5 h-3.5" />

@@ -564,16 +564,30 @@ export default function MessagesCenterClient({
             ) : filteredConversations.length === 0 ? (
               <div className="p-8 text-center text-slate-400 text-xs space-y-3">
                 <MessageSquare className="w-8 h-8 text-slate-600 mx-auto" />
-                <p className="font-semibold text-slate-300">No conversations yet</p>
-                <p className="text-[11px] text-slate-400">
-                  Start a private chat with members of the Caribbean diaspora.
+                <p className="font-semibold text-slate-300">
+                  {filter === 'all' ? 'No conversations yet' : `No ${filter} conversations`}
                 </p>
-                <button
-                  onClick={() => setIsComposeOpen(true)}
-                  className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/15 text-white font-bold text-xs inline-flex items-center gap-1.5 transition-all cursor-pointer"
-                >
-                  <Plus className="w-3.5 h-3.5 text-brand-caribbeanSea" /> New Conversation
-                </button>
+                <p className="text-[11px] text-slate-400">
+                  {filter === 'all'
+                    ? 'Start a private chat with members of the Caribbean diaspora.'
+                    : `You don't have any conversations in the ${filter} folder.`}
+                </p>
+                <div className="flex flex-col gap-2 pt-1">
+                  <button
+                    onClick={() => setIsComposeOpen(true)}
+                    className="px-4 py-2 rounded-xl bg-gradient-to-r from-brand-caribbeanSea to-brand-sunriseCoral text-slate-950 font-black text-xs inline-flex items-center justify-center gap-1.5 shadow-md shadow-brand-caribbeanSea/20 hover:brightness-110 transition-all cursor-pointer"
+                  >
+                    <Plus className="w-3.5 h-3.5" /> New Conversation
+                  </button>
+                  {filter !== 'all' && (
+                    <button
+                      onClick={() => setFilter('all')}
+                      className="px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 font-bold text-[11px] transition-all cursor-pointer"
+                    >
+                      View All Chats
+                    </button>
+                  )}
+                </div>
               </div>
             ) : (
               filteredConversations.map((c) => {
@@ -679,23 +693,32 @@ export default function MessagesCenterClient({
                   </Link>
                 </div>
 
-                <div className="flex items-center gap-3 overflow-x-auto pb-2 no-scrollbar">
-                  {onlineMembers.slice(0, 8).map((member) => (
-                    <button
-                      key={member.id}
-                      onClick={() => handleStartChatWithUser(member)}
-                      className="flex flex-col items-center gap-1 min-w-[56px] group cursor-pointer"
-                    >
-                      <div className="relative">
-                        <UserAvatar name={member.name} avatarUrl={member.avatarUrl} size="md" />
-                        <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 border border-[#120B1E]" />
-                      </div>
-                      <span className="text-[10px] text-slate-300 font-bold group-hover:text-brand-caribbeanSea truncate max-w-[56px]">
-                        {member.name.split(' ')[0]}
-                      </span>
-                    </button>
-                  ))}
-                </div>
+                {onlineMembers.length > 0 ? (
+                  <div className="flex items-center gap-3 overflow-x-auto pb-2 no-scrollbar">
+                    {onlineMembers.slice(0, 8).map((member) => (
+                      <button
+                        key={member.id}
+                        onClick={() => handleStartChatWithUser(member)}
+                        className="flex flex-col items-center gap-1 min-w-[56px] group cursor-pointer"
+                      >
+                        <div className="relative">
+                          <UserAvatar name={member.name} avatarUrl={member.avatarUrl} size="md" />
+                          <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 border border-[#120B1E]" />
+                        </div>
+                        <span className="text-[10px] text-slate-300 font-bold group-hover:text-brand-caribbeanSea truncate max-w-[56px]">
+                          {member.name.split(' ')[0]}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="py-2 text-center text-xs text-slate-400">
+                    <span>No members currently online. </span>
+                    <Link href="/friends" className="text-brand-caribbeanSea font-bold hover:underline">
+                      Find Caribbean friends to message →
+                    </Link>
+                  </div>
+                )}
               </div>
 
               {/* Action Button */}

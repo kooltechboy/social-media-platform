@@ -19,6 +19,7 @@ export default function robots(): MetadataRoute.Robots {
           '/privacy',
           '/login',
           '/signup',
+          '/communities',
         ],
         disallow: [
           '/api/',

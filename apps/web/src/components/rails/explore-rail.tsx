@@ -310,7 +310,7 @@ export default function ExploreRail({
           Explore thriving Caribbean communities in New York, Miami, London, Toronto, and beyond.
         </p>
         <Link
-          href="/explore/diaspora"
+          href="/diaspora"
           className="inline-flex items-center gap-1 text-xs font-bold text-brand-caribbeanSea hover:underline pt-1"
         >
           View Diaspora Hubs →

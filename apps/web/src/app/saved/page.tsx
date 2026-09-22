@@ -1,4 +1,5 @@
 import React from 'react';
+import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { Bookmark } from 'lucide-react';
 import { createSupabaseServerClient, getCurrentUser } from '../../lib/supabase/server';
@@ -52,10 +53,20 @@ export default async function SavedPostsPage() {
       </div>
 
       {savedPosts.length === 0 ? (
-        <div className="p-12 text-center text-slate-400 bg-brand-dusk/40 border border-slate-800 rounded-3xl space-y-3">
+        <div className="p-10 sm:p-12 text-center text-slate-400 bg-brand-dusk/40 border border-slate-800 rounded-3xl space-y-4">
           <Bookmark className="w-10 h-10 mx-auto text-slate-600" />
-          <p className="font-bold text-brand-sandstone">No saved posts yet.</p>
-          <p className="text-sm">Tap the bookmark icon on any post to save it here.</p>
+          <div className="space-y-1">
+            <p className="font-bold text-brand-sandstone text-base">No saved posts yet.</p>
+            <p className="text-xs sm:text-sm">Tap the bookmark icon on any post in your feed to save it here for later.</p>
+          </div>
+          <div className="pt-2">
+            <Link
+              href="/"
+              className="inline-flex items-center justify-center bg-gradient-to-r from-brand-caribbeanSea to-brand-sunriseCoral hover:brightness-110 text-slate-950 font-black px-5 py-2.5 rounded-xl text-xs sm:text-sm transition-all shadow-md shadow-brand-caribbeanSea/20 min-h-[42px]"
+            >
+              Discover Posts to Save
+            </Link>
+          </div>
         </div>
       ) : (
         <FeedStream initialPosts={savedPosts} currentUserId={user.id} mode="saved" />

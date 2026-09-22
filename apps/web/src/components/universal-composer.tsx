@@ -33,7 +33,7 @@ import { generateCaptionAction, generateHashtagsAction } from '../lib/ai/creatio
 import { createSupabaseBrowserClient } from '../lib/supabase/browser';
 import { useTranslation } from '@caribbean/localization';
 import { generateCreatorContentPlan } from '@caribbean/ai';
-import DeviceMediaCaptureModal, { type CaptureMode } from './media/device-media-capture-modal';
+import TukubiCameraModal, { type StudioCaptureMode as CaptureMode } from './media/tukubi-camera-modal';
 import EmojiPickerPopover from './emoji/emoji-picker-popover';
 import { createPollAction } from '../lib/polls/actions';
 import { normalizeExifAndCompressImage } from '@caribbean/media';
@@ -831,9 +831,9 @@ export default function UniversalComposer({
   return (
     <>
       {/* Device Media Live Camera Modal */}
-      <DeviceMediaCaptureModal
+      <TukubiCameraModal
         isOpen={cameraModalOpen}
-        mode={cameraModalMode}
+        initialMode={cameraModalMode}
         onClose={() => setCameraModalOpen(false)}
         onCaptureComplete={handleDirectCapture}
         onFallbackToFilePicker={() => {
