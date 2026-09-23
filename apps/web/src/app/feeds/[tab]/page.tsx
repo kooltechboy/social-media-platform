@@ -1,7 +1,4 @@
-import React from 'react';
-import { loadFeedPageData } from '../../../lib/feed/load-feed';
-import FeedsView from '../../../components/feed/feeds-view';
-import PublicFrontDoor from '../../../components/public-front-door';
+import { redirect } from 'next/navigation';
 
 export const dynamic = 'force-dynamic';
 
@@ -10,38 +7,18 @@ interface FeedsTabRouteProps {
   searchParams?: Promise<{ cursor?: string }>;
 }
 
+/**
+ * FeedsTabRoute — Permanent Redirect to Canonical Home with Filter (/?tab=[tab])
+ *
+ * Directs segmented feed tabs (e.g. /feeds/friends, /feeds/following,
+ * /feeds/communities, /feeds/caribbean) to Home views.
+ */
 export default async function FeedsTabRoute(props: FeedsTabRouteProps) {
-  const params = await props.params;
-  const searchParams = props.searchParams ? await props.searchParams : {};
-  const cursor = typeof searchParams?.cursor === 'string' ? searchParams.cursor : undefined;
+  const { tab } = await props.params;
 
-  const {
-    user,
-    mode,
-    posts,
-    nextCursor,
-    friendsCount,
-    followingCount,
-    favoritesCount,
-    suggestedCreators,
-    trendingTopics,
-  } = await loadFeedPageData(params.tab, cursor);
-
-  if (!user) {
-    return <PublicFrontDoor />;
+  if (tab && tab !== 'for_you' && tab !== 'for-you') {
+    redirect(`/?tab=${encodeURIComponent(tab)}`);
   }
 
-  return (
-    <FeedsView
-      mode={mode}
-      initialPosts={posts}
-      currentUserId={user.id}
-      nextCursor={nextCursor}
-      friendsCount={friendsCount}
-      followingCount={followingCount}
-      favoritesCount={favoritesCount}
-      suggestedCreators={suggestedCreators}
-      trendingTopics={trendingTopics}
-    />
-  );
+  redirect('/');
 }

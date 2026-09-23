@@ -4,7 +4,8 @@ import { test, expect } from '@playwright/test';
  * TUKUBI Feed Stream Interactions E2E Tests
  *
  * Tests all interactive elements within the FeedStream component:
- * - Feed filter tabs on /feeds (For You, Following, Friends, Caribbean, Communities)
+ * - Feed filter tabs on / (Home) (For You, Following, Friends, Caribbean, Communities)
+
  * - Post interaction bar (Like/Reactions, Comment, Share, Tip Creator)
  * - Post options menu (Copy Link, Save Post, Report Content, Delete Post)
  * - Comment system (inline comments, comment submission, empty comments state)
@@ -16,8 +17,8 @@ import { test, expect } from '@playwright/test';
  */
 
 test.describe('Feed Stream — Tab Navigation', () => {
-  test('renders feed filter tabs in a tablist on /feeds', async ({ page }) => {
-    await page.goto('/feeds');
+  test('renders feed filter tabs in a tablist on / (Home)', async ({ page }) => {
+    await page.goto('/');
     await page.waitForLoadState('networkidle');
 
     const tablist = page.getByRole('tablist');
@@ -29,16 +30,16 @@ test.describe('Feed Stream — Tab Navigation', () => {
     }
   });
 
-  test('For You tab is active by default on /feeds', async ({ page }) => {
-    await page.goto('/feeds');
+  test('For You tab is active by default on / (Home)', async ({ page }) => {
+    await page.goto('/');
     await page.waitForLoadState('networkidle');
 
     const forYouTab = page.getByRole('tab', { name: 'For You' });
     await expect(forYouTab).toHaveAttribute('aria-selected', 'true');
   });
 
-  test('clicking a tab changes the active state on /feeds', async ({ page }) => {
-    await page.goto('/feeds');
+  test('clicking a tab changes the active state on / (Home)', async ({ page }) => {
+    await page.goto('/');
     await page.waitForLoadState('networkidle');
 
     // Click "Following" tab
@@ -52,15 +53,15 @@ test.describe('Feed Stream — Tab Navigation', () => {
     await expect(forYouTab).toHaveAttribute('aria-selected', 'false');
   });
 
-  test('switching tabs displays either posts or empty state', async ({ page }) => {
+  test('switching tabs displays either posts or empty state on / (Home)', async ({ page }) => {
     const tabs = [
-      { name: 'Following', path: '/feeds/following' },
-      { name: 'Friends', path: '/feeds/friends' },
-      { name: 'Caribbean', path: '/feeds/caribbean' },
-      { name: 'Communities', path: '/feeds/communities' },
+      { name: 'Following', queryTab: 'following' },
+      { name: 'Friends', queryTab: 'friends' },
+      { name: 'Caribbean', queryTab: 'caribbean' },
+      { name: 'Communities', queryTab: 'communities' },
     ];
     for (const tab of tabs) {
-      await page.goto(tab.path);
+      await page.goto(`/?tab=${tab.queryTab}`);
       await page.waitForLoadState('networkidle');
 
       const articles = page.locator('article');

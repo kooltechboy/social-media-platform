@@ -86,7 +86,6 @@ test.describe('Navigation & Routing - Authenticated', () => {
   test('Sidebar Ecosystem Group links exist and have correct badges', async ({ page }) => {
     const links = [
       { name: 'Home', href: '/' },
-      { name: 'Feeds', href: '/feeds' },
       { name: 'Explore', href: '/explore' },
       { name: 'Reels', href: '/reels' },
       { name: 'Communities', href: '/communities' },

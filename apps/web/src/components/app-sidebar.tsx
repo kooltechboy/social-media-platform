@@ -63,11 +63,6 @@ export default function AppSidebar({ currentPath }: { currentPath?: string }) {
       icon: Home,
     },
     {
-      href: '/feeds',
-      fallbackLabel: 'Feeds',
-      icon: Layers,
-    },
-    {
       href: '/explore',
       labelKey: 'nav.explore',
       fallbackLabel: 'Explore',
@@ -196,10 +191,12 @@ export default function AppSidebar({ currentPath }: { currentPath?: string }) {
 
   function isItemActive(href: string): boolean {
     if (href === '/') {
-      return activePath === '/' || activePath === '/home';
-    }
-    if (href === '/feeds') {
-      return activePath === '/feeds' || activePath.startsWith('/feeds/');
+      return (
+        activePath === '/' ||
+        activePath === '/home' ||
+        activePath === '/feeds' ||
+        activePath.startsWith('/feeds/')
+      );
     }
     if (href === '/profile') {
       return activePath.startsWith('/profile');

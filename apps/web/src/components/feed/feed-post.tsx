@@ -27,13 +27,14 @@ import {
   Star,
   EyeOff,
   ThumbsDown,
+  Edit3,
 } from 'lucide-react';
 import UserAvatar from '../user-avatar';
 import OfficialBadge from '../official/official-badge';
 import ReactionPicker, { type ReactionType } from '../reactions/reaction-picker';
 import EmojiPickerPopover from '../emoji/emoji-picker-popover';
 import { createSupabaseBrowserClient } from '../../lib/supabase/browser';
-import { hidePostAction, unhidePostAction } from '../../lib/social/actions';
+import { hidePostAction, unhidePostAction, updatePostAction } from '../../lib/social/actions';
 import TukubiImage from '../ui/tukubi-image';
 import TukubiVideoPlayer from '../media/tukubi-video-player';
 import TukubiGallery from '../media/tukubi-gallery';
@@ -128,6 +129,31 @@ export default function FeedPost({
 
   const isAuthor = Boolean(currentUserId && post.authorId === currentUserId);
   const rootComments = commentList.filter((c) => !c.parent_id);
+
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedContent, setEditedContent] = useState(post.content || '');
+  const [displayedContent, setDisplayedContent] = useState(post.content || '');
+  const [isSubmittingEdit, setIsSubmittingEdit] = useState(false);
+  const [editError, setEditError] = useState<string | null>(null);
+
+  const handleSaveEdit = async () => {
+    if (isSubmittingEdit) return;
+    setIsSubmittingEdit(true);
+    setEditError(null);
+    try {
+      const res = await updatePostAction(post.id, { content: editedContent });
+      if (res.error) {
+        setEditError(res.error);
+      } else {
+        setDisplayedContent(editedContent);
+        setIsEditing(false);
+      }
+    } catch (err: any) {
+      setEditError(err?.message || 'Failed to update post');
+    } finally {
+      setIsSubmittingEdit(false);
+    }
+  };
 
   if (isHidden) {
     return (
@@ -372,17 +398,30 @@ export default function FeedPost({
               )}
 
               {isAuthor ? (
-                <button
-                  type="button"
-                  onClick={() => {
-                    onDeletePost(post.id);
-                    setIsMenuOpen(false);
-                  }}
-                  className="w-full text-left px-3 py-2.5 rounded-xl text-rose-400 hover:bg-rose-950/50 flex items-center gap-2.5 font-bold transition-colors min-h-[40px]"
-                >
-                  <Trash2 className="w-4 h-4 text-rose-400" />
-                  <span>Delete Post</span>
-                </button>
+                <>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsEditing(true);
+                      setIsMenuOpen(false);
+                    }}
+                    className="w-full text-left px-3 py-2.5 rounded-xl text-slate-200 hover:bg-white/10 flex items-center gap-2.5 font-semibold transition-colors min-h-[40px]"
+                  >
+                    <Edit3 className="w-4 h-4 text-brand-caribbeanSea" />
+                    <span>Edit Post</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onDeletePost(post.id);
+                      setIsMenuOpen(false);
+                    }}
+                    className="w-full text-left px-3 py-2.5 rounded-xl text-rose-400 hover:bg-rose-950/50 flex items-center gap-2.5 font-bold transition-colors min-h-[40px]"
+                  >
+                    <Trash2 className="w-4 h-4 text-rose-400" />
+                    <span>Delete Post</span>
+                  </button>
+                </>
               ) : (
                 <button
                   type="button"
@@ -404,11 +443,56 @@ export default function FeedPost({
       {/* ────────────────────────────────────────────────────────── */}
       {/* 2. POST CONTENT BODY                                      */}
       {/* ────────────────────────────────────────────────────────── */}
-      <p className="text-base md:text-[17px] text-slate-100 leading-[1.6] font-medium whitespace-pre-wrap">
-        {translation?.translatedText && !translation?.isShowingOriginal
-          ? translation.translatedText
-          : post.content}
-      </p>
+      {isEditing ? (
+        <div className="space-y-3 p-4 rounded-2xl bg-black/40 border border-brand-caribbeanSea/30 animate-fadeIn">
+          <textarea
+            value={editedContent}
+            onChange={(e) => setEditedContent(e.target.value)}
+            rows={4}
+            className="w-full bg-transparent text-slate-100 placeholder-slate-500 text-sm md:text-base leading-relaxed resize-none focus:outline-none"
+            placeholder="Edit your post..."
+            aria-label="Edit post content"
+          />
+          {editError && (
+            <p className="text-xs text-rose-400 font-bold">{editError}</p>
+          )}
+          <div className="flex items-center justify-end gap-2 pt-1 border-t border-white/10">
+            <button
+              type="button"
+              onClick={() => {
+                setEditedContent(displayedContent);
+                setIsEditing(false);
+                setEditError(null);
+              }}
+              disabled={isSubmittingEdit}
+              className="px-3 py-1.5 rounded-xl text-xs font-bold text-brand-sandstone/80 hover:text-white hover:bg-white/10 transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={handleSaveEdit}
+              disabled={isSubmittingEdit || !editedContent.trim()}
+              className="px-4 py-1.5 rounded-xl bg-gradient-to-r from-brand-caribbeanSea to-brand-sunriseCoral text-slate-950 font-black text-xs hover:brightness-110 transition-all disabled:opacity-50 flex items-center gap-1.5"
+            >
+              {isSubmittingEdit ? (
+                <>
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  <span>Saving...</span>
+                </>
+              ) : (
+                <span>Save</span>
+              )}
+            </button>
+          </div>
+        </div>
+      ) : (
+        <p className="text-base md:text-[17px] text-slate-100 leading-[1.6] font-medium whitespace-pre-wrap">
+          {translation?.translatedText && !translation?.isShowingOriginal
+            ? translation.translatedText
+            : displayedContent}
+        </p>
+      )}
 
       {/* Cultural Tags Rail */}
       {post.culturalTags && post.culturalTags.length > 0 && (

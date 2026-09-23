@@ -37,6 +37,8 @@ interface MarketPreview {
   country: string;
 }
 
+type HomeFeedMode = 'for_you' | 'friends' | 'following' | 'communities' | 'caribbean';
+
 export function HomeScreen({ navigation }: any) {
   const [posts, setPosts] = useState<MobilePost[]>([]);
   const [refreshing, setRefreshing] = useState(false);
@@ -44,35 +46,49 @@ export function HomeScreen({ navigation }: any) {
   const [draft, setDraft] = useState('');
   const [reels, setReels] = useState<ReelPreview[]>([]);
   const [products, setProducts] = useState<MarketPreview[]>([]);
+  const [feedMode, setFeedMode] = useState<HomeFeedMode>('for_you');
 
   const [stories, setStories] = useState<StoryItem[]>([
     { id: 'add_story', name: 'Your Moment', handle: 'you', hasUnseen: false },
   ]);
   const [likedPosts, setLikedPosts] = useState<Record<string, boolean>>({});
 
-  const fetchDiscoveryData = async () => {
+  const fetchDiscoveryData = async (mode: HomeFeedMode = 'for_you') => {
     try {
-      const [postsRes, reelsRes, productsRes, storiesRes] = await Promise.all([
-        supabase
-          .from('posts')
-          .select(`
+      let postsQuery = supabase
+        .from('posts')
+        .select(`
+          id,
+          content,
+          media_urls,
+          created_at,
+          likes_count,
+          comments_count,
+          location_name,
+          visibility,
+          cultural_tags,
+          profiles!author_id (
             id,
-            content,
-            media_urls,
-            created_at,
-            likes_count,
-            comments_count,
-            location_name,
-            profiles!author_id (
-              id,
-              display_name,
-              username,
-              avatar_url,
-              is_verified
-            )
-          `)
-          .order('created_at', { ascending: false })
-          .limit(20),
+            display_name,
+            username,
+            avatar_url,
+            is_verified
+          )
+        `)
+        .eq('post_status', 'published')
+        .order('created_at', { ascending: false })
+        .limit(20);
+
+      // Apply mode-specific filters
+      if (mode === 'caribbean') {
+        postsQuery = postsQuery.contains('cultural_tags', ['caribbean']);
+      } else if (mode === 'communities') {
+        postsQuery = postsQuery.not('community_id', 'is', null);
+      }
+      // friends / following require auth joins — fall through to general feed for now
+
+      const [postsRes, reelsRes, productsRes, storiesRes] = await Promise.all([
+        postsQuery,
         supabase
           .from('videos')
           .select('id, title, view_count, profiles(display_name, username)')
@@ -92,6 +108,7 @@ export function HomeScreen({ navigation }: any) {
           .gt('expires_at', new Date().toISOString())
           .limit(10),
       ]);
+
 
       if (postsRes.data) {
         const formatted = postsRes.data.map((item: any) => {
@@ -165,12 +182,13 @@ export function HomeScreen({ navigation }: any) {
   };
 
   useEffect(() => {
-    fetchDiscoveryData();
-  }, []);
+    setLoading(true);
+    fetchDiscoveryData(feedMode);
+  }, [feedMode]);
 
   const onRefresh = async () => {
     setRefreshing(true);
-    await fetchDiscoveryData();
+    await fetchDiscoveryData(feedMode);
   };
 
   const handleToggleLike = async (postId: string) => {
@@ -264,21 +282,42 @@ export function HomeScreen({ navigation }: any) {
         <View style={styles.brandRow}>
           <Text style={styles.brandText}>TUKUBI</Text>
           <View style={styles.discoveryTag}>
-            <Text style={styles.discoveryTagText}>DISCOVERY</Text>
+            <Text style={styles.discoveryTagText}>HOME</Text>
           </View>
         </View>
-
-        <View style={styles.topRightActions}>
-          <TouchableOpacity
-            style={styles.feedsToggle}
-            onPress={() => navigation?.navigate('Feeds')}
-            accessibilityRole="button"
-            accessibilityLabel="Switch to Feeds"
-          >
-            <Text style={styles.feedsToggleText}>📑 Feeds</Text>
-          </TouchableOpacity>
-        </View>
       </View>
+
+      {/* Feed Filter Tabs */}
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={styles.feedTabsScroll}
+        contentContainerStyle={styles.feedTabsContent}
+        accessibilityRole="tablist"
+      >
+        {(
+          [
+            { key: 'for_you', label: '✨ For You' },
+            { key: 'friends', label: '👥 Friends' },
+            { key: 'following', label: '📡 Following' },
+            { key: 'communities', label: '🌴 Communities' },
+            { key: 'caribbean', label: '🌊 Caribbean' },
+          ] as Array<{ key: HomeFeedMode; label: string }>
+        ).map((tab) => (
+          <TouchableOpacity
+            key={tab.key}
+            style={[styles.feedTab, feedMode === tab.key && styles.feedTabActive]}
+            onPress={() => setFeedMode(tab.key)}
+            accessibilityRole="tab"
+            accessibilityState={{ selected: feedMode === tab.key }}
+            accessibilityLabel={tab.label}
+          >
+            <Text style={[styles.feedTabText, feedMode === tab.key && styles.feedTabTextActive]}>
+              {tab.label}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </ScrollView>
 
       <ScrollView
         style={styles.mainScroll}
@@ -839,5 +878,36 @@ const styles = StyleSheet.create({
     color: TOKENS.textMuted,
     fontSize: 12,
     fontWeight: '700',
+  },
+  feedTabsScroll: {
+    backgroundColor: 'rgba(255,255,255,0.03)',
+    borderBottomWidth: 1,
+    borderBottomColor: TOKENS.border,
+  },
+  feedTabsContent: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    gap: 8,
+  },
+  feedTab: {
+    paddingHorizontal: 14,
+    paddingVertical: 7,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: TOKENS.border,
+    backgroundColor: 'transparent',
+  },
+  feedTabActive: {
+    backgroundColor: TOKENS.action,
+    borderColor: TOKENS.action,
+  },
+  feedTabText: {
+    color: TOKENS.textMuted,
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  feedTabTextActive: {
+    color: '#FFFFFF',
+    fontWeight: '900',
   },
 });

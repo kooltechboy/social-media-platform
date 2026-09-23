@@ -610,6 +610,62 @@ export async function deletePostAction(postId: string): Promise<{ success: boole
 }
 
 /**
+ * Updates an existing post owned by the authenticated user.
+ */
+export async function updatePostAction(
+  postId: string,
+  input: {
+    content?: string;
+    visibility?: 'public' | 'followers' | 'friends' | 'private';
+    culturalTags?: string[];
+  }
+): Promise<{ success: boolean; post?: any; error: string | null }> {
+  const user = await getCurrentUser();
+  if (!user) return { success: false, error: 'Please sign in to edit this post.' };
+
+  const supabase = await createSupabaseServerClient();
+  if (!supabase) return { success: false, error: 'Database is not configured.' };
+
+  const cleanContent = typeof input.content === 'string' ? input.content.trim() : undefined;
+  if (cleanContent !== undefined && cleanContent.length > 3000) {
+    return { success: false, error: 'Post content cannot exceed 3000 characters.' };
+  }
+
+  const updatePayload: Record<string, any> = {
+    updated_at: new Date().toISOString(),
+  };
+
+  if (cleanContent !== undefined) {
+    updatePayload.content = cleanContent || null;
+  }
+  if (input.visibility) {
+    updatePayload.visibility = input.visibility;
+  }
+  if (input.culturalTags) {
+    updatePayload.cultural_tags = input.culturalTags;
+  }
+
+  const { data, error } = await supabase
+    .from('posts')
+    .update(updatePayload)
+    .eq('id', postId)
+    .eq('author_id', user.id)
+    .select('id, content, updated_at, visibility, cultural_tags')
+    .single();
+
+  if (error) {
+    console.error('[updatePostAction] Error updating post:', error);
+    return { success: false, error: error.message };
+  }
+
+  revalidatePath('/');
+  revalidatePath('/create');
+  revalidatePath(`/post/${postId}`);
+  return { success: true, post: data, error: null };
+}
+
+
+/**
  * Deletes a comment owned by the authenticated user.
  */
 export async function deleteCommentAction(commentId: string, postId?: string): Promise<{ success: boolean; error: string | null }> {

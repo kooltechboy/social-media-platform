@@ -1,7 +1,4 @@
-import React from 'react';
-import { loadFeedPageData } from '../../lib/feed/load-feed';
-import FeedsView from '../../components/feed/feeds-view';
-import PublicFrontDoor from '../../components/public-front-door';
+import { redirect } from 'next/navigation';
 
 export const dynamic = 'force-dynamic';
 
@@ -9,38 +6,20 @@ interface FeedsPageProps {
   searchParams?: Promise<{ mode?: string; filter?: string; tab?: string; cursor?: string }>;
 }
 
+/**
+ * FeedsPage — Permanent Redirect to Canonical Home (/)
+ *
+ * HOME is TUKUBI's primary personalized feed destination.
+ * Any legacy links, bookmarks, or API requests to /feeds are seamlessly
+ * forwarded to the canonical Home feed stream, preserving tab filter context.
+ */
 export default async function FeedsPage(props: FeedsPageProps) {
-  const searchParams = await props.searchParams;
-  const rawMode = searchParams?.tab || searchParams?.filter || searchParams?.mode || 'for_you';
-  const cursor = typeof searchParams?.cursor === 'string' ? searchParams.cursor : undefined;
+  const searchParams = props.searchParams ? await props.searchParams : {};
+  const rawMode = searchParams?.tab || searchParams?.filter || searchParams?.mode;
 
-  const {
-    user,
-    mode,
-    posts,
-    nextCursor,
-    friendsCount,
-    followingCount,
-    favoritesCount,
-    suggestedCreators,
-    trendingTopics,
-  } = await loadFeedPageData(rawMode, cursor);
-
-  if (!user) {
-    return <PublicFrontDoor />;
+  if (rawMode && rawMode !== 'for_you' && rawMode !== 'for-you') {
+    redirect(`/?tab=${encodeURIComponent(rawMode)}`);
   }
 
-  return (
-    <FeedsView
-      mode={mode}
-      initialPosts={posts}
-      currentUserId={user.id}
-      nextCursor={nextCursor}
-      friendsCount={friendsCount}
-      followingCount={followingCount}
-      favoritesCount={favoritesCount}
-      suggestedCreators={suggestedCreators}
-      trendingTopics={trendingTopics}
-    />
-  );
+  redirect('/');
 }

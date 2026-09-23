@@ -93,16 +93,15 @@ export default function MobileNav() {
     await signOut();
   };
 
-  const isHomeActive = pathname === '/' || pathname === '/home';
-  const isFeedsActive = pathname === '/feeds' || pathname.startsWith('/feeds/');
+  const isHomeActive = pathname === '/' || pathname === '/home' || pathname === '/feeds' || pathname.startsWith('/feeds/');
   const isExploreActive = pathname === '/explore' || pathname.startsWith('/explore/');
+  const isMessagesActive = pathname === '/messages' || pathname.startsWith('/messages/');
 
-  // Core 5 mobile navigation items
+  // Core 5 mobile navigation items (Home, Explore, Create, Messages, Profile/Menu)
   const MOBILE_TABS: MobileTab[] = [
     { href: '/', labelKey: 'nav.home', fallbackLabel: 'Home', icon: Home },
-    { href: '/feeds', fallbackLabel: 'Feeds', icon: Layers },
-    { href: '/create', fallbackLabel: 'Create', icon: PlusCircle, isAction: true },
     { href: '/explore', labelKey: 'nav.explore', fallbackLabel: 'Explore', icon: Compass },
+    { href: '/create', fallbackLabel: 'Create', icon: PlusCircle, isAction: true },
     { href: '/messages', labelKey: 'nav.messages', fallbackLabel: 'Messages', icon: MessageSquare },
   ];
 
@@ -506,41 +505,7 @@ export default function MobileNav() {
             </Link>
           </li>
 
-          {/* Tab 2: Feeds */}
-          <li role="presentation">
-            <Link
-              href="/feeds"
-              role="tab"
-              aria-selected={isFeedsActive}
-              aria-label="Feeds"
-              className={`flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-2xl transition-all min-w-[44px] min-h-[44px] justify-center ${
-                isFeedsActive
-                  ? 'text-brand-caribbeanSea font-black'
-                  : 'text-brand-sandstone/60 hover:text-slate-200 font-bold'
-              }`}
-            >
-              <Layers className="w-5 h-5" />
-              <span className="text-[10px]">Feeds</span>
-            </Link>
-          </li>
-
-          {/* Tab 3: Create (Floating Action Button) */}
-          <li role="presentation">
-            <button
-              type="button"
-              role="tab"
-              aria-label="Create on TUKUBI"
-              onClick={() => setIsCreateSheetOpen(true)}
-              className="flex flex-col items-center gap-0.5 px-2 py-1 rounded-2xl transition-all min-w-[44px] min-h-[44px] justify-center"
-            >
-              <span className="w-11 h-11 rounded-full bg-gradient-to-tr from-brand-caribbeanSea to-brand-sunriseCoral flex items-center justify-center -mt-4 shadow-lg shadow-brand-caribbeanSea/40 border-2 border-[#110D17] text-slate-950 hover:scale-105 active:scale-95 transition-transform">
-                <PlusCircle className="w-6 h-6 text-slate-950" />
-              </span>
-              <span className="text-[10px] font-black text-brand-caribbeanSea">Create</span>
-            </button>
-          </li>
-
-          {/* Tab 4: Explore */}
+          {/* Tab 2: Explore */}
           <li role="presentation">
             <Link
               href="/explore"
@@ -557,6 +522,47 @@ export default function MobileNav() {
               <span className="text-[10px]">Explore</span>
             </Link>
           </li>
+
+          {/* Tab 3: Create (Floating Action Button) */}
+
+          <li role="presentation">
+            <button
+              type="button"
+              role="tab"
+              aria-label="Create on TUKUBI"
+              onClick={() => setIsCreateSheetOpen(true)}
+              className="flex flex-col items-center gap-0.5 px-2 py-1 rounded-2xl transition-all min-w-[44px] min-h-[44px] justify-center"
+            >
+              <span className="w-11 h-11 rounded-full bg-gradient-to-tr from-brand-caribbeanSea to-brand-sunriseCoral flex items-center justify-center -mt-4 shadow-lg shadow-brand-caribbeanSea/40 border-2 border-[#110D17] text-slate-950 hover:scale-105 active:scale-95 transition-transform">
+                <PlusCircle className="w-6 h-6 text-slate-950" />
+              </span>
+              <span className="text-[10px] font-black text-brand-caribbeanSea">Create</span>
+            </button>
+          </li>
+
+          {/* Tab 4: Messages */}
+          <li role="presentation">
+            <Link
+              href="/messages"
+              role="tab"
+              aria-selected={isMessagesActive}
+              aria-label="Messages"
+              className={`flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-2xl transition-all min-w-[44px] min-h-[44px] justify-center ${
+                isMessagesActive
+                  ? 'text-brand-caribbeanSea font-black'
+                  : 'text-brand-sandstone/60 hover:text-slate-200 font-bold'
+              }`}
+            >
+              <div className="relative">
+                <MessageSquare className="w-5 h-5" />
+                {unreadMessagesCount > 0 && (
+                  <span className="absolute -top-1 -right-1 w-2 h-2 bg-brand-caribbeanSea rounded-full animate-pulse shadow-[0_0_6px_rgba(0,168,150,0.9)]" />
+                )}
+              </div>
+              <span className="text-[10px]">Messages</span>
+            </Link>
+          </li>
+
 
           {/* Tab 5: Menu */}
           <li role="presentation">

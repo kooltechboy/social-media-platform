@@ -663,7 +663,6 @@ export async function createPagePostAction(
 
   revalidatePath('/pages');
   revalidatePath(`/pages/${page.slug}`);
-  revalidatePath('/feeds');
   revalidatePath('/');
   return { error: null, slug: page.slug, success: true };
 }

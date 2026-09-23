@@ -2,7 +2,7 @@ import React from 'react';
 import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
 import { TOKENS } from '../theme/tokens';
 
-export type MobileTab = 'home' | 'feeds' | 'explore' | 'communities' | 'messages' | 'payments';
+export type MobileTab = 'home' | 'explore' | 'communities' | 'messages' | 'payments';
 
 interface BottomNavProps {
   currentTab: MobileTab;
@@ -13,7 +13,6 @@ interface BottomNavProps {
 export function BottomNav({ currentTab, onSelectTab, onCreatePress }: BottomNavProps) {
   const tabs: Array<{ key: MobileTab; label: string; icon: string }> = [
     { key: 'home', label: 'Home', icon: '🏠' },
-    { key: 'feeds', label: 'Feeds', icon: '📑' },
     { key: 'explore', label: 'Explore', icon: '🔍' },
     { key: 'communities', label: 'Hubs', icon: '🌴' },
     { key: 'messages', label: 'Chat', icon: '💬' },
