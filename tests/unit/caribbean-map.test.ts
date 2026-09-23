@@ -38,14 +38,17 @@ describe('Caribbean Geospatial Taxonomy & Canonical Registry', () => {
       expect(entity.y).toBeGreaterThanOrEqual(15);
       expect(entity.y).toBeLessThanOrEqual(720);
 
-      // Must have a valid interaction radius and stats
+      // Must have a valid interaction radius, trending tag, and cultural summary
       expect(entity.r).toBeGreaterThanOrEqual(4);
-      expect(entity.creatorsCount.length).toBeGreaterThan(0);
-      expect(entity.businessesCount.length).toBeGreaterThan(0);
-      expect(entity.eventsCount.length).toBeGreaterThan(0);
-      expect(entity.activeLive).toBeGreaterThanOrEqual(0);
       expect(entity.trendingTag.startsWith('#')).toBe(true);
       expect(entity.summary.length).toBeGreaterThan(20);
+
+      // Simulated stats (creatorsCount, businessesCount, eventsCount, activeLive) are
+      // intentionally removed — counts must come from the live database, not hardcoded constants.
+      expect((entity as any).creatorsCount).toBeUndefined();
+      expect((entity as any).businessesCount).toBeUndefined();
+      expect((entity as any).eventsCount).toBeUndefined();
+      expect((entity as any).activeLive).toBeUndefined();
     }
   });
 

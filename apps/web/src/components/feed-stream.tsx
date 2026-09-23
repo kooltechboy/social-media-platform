@@ -411,6 +411,7 @@ export default function FeedStream({
     if (!supabase) return;
 
     let filterStr = '';
+    let shouldSubscribe = true;
     
     // Self-executing async function to setup realtime correctly based on mode
     (async () => {
@@ -420,9 +421,12 @@ export default function FeedStream({
         if (followedIds.length > 0) {
            filterStr = `author_id=in.(${followedIds.join(',')})`;
         } else {
-           // Follows nobody, unfiltered fallback (though for_you we might want only caribbean fallback, but prompt says: "If followedIds is empty... fall back to unfiltered")
+           // User follows nobody — skip realtime entirely to avoid broadcasting ALL public posts
+           shouldSubscribe = false;
         }
       }
+
+      if (!shouldSubscribe) return;
 
       let channelOpts: any = { event: 'INSERT', schema: 'public', table: 'posts' };
       if (filterStr) {

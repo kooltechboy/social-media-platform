@@ -15,7 +15,7 @@ export default function RightRail({
 }: RightRailProps) {
   return (
     <aside
-      className={`hidden lg:block w-[310px] xl:w-[340px] 2xl:w-[360px] shrink-0 sticky top-[76px] self-start max-h-[calc(100vh-90px)] overflow-y-auto scrollbar-none z-20 pb-8 pr-0.5 ${className}`}
+      className={`hidden lg:block w-[310px] xl:w-[340px] 2xl:w-[360px] shrink-0 sticky top-[70px] self-start max-h-[calc(100vh-85px)] overflow-y-auto overscroll-contain scrollbar-none z-20 pb-8 pr-0.5 ${className}`}
       aria-label={ariaLabel}
       role="complementary"
     >

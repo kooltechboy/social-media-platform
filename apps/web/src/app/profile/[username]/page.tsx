@@ -245,30 +245,21 @@ export default async function ProfilePage({
     ? await hydratePostsEngagement(rawPosts, supabase, { currentUserId: currentUser?.id })
     : [];
 
-  // Guarantee official launch post appears on @tukubi profile
+  // Guarantee official launch post appears on @tukubi profile if present in database
   if (posts.length === 0 && profileData.username.toLowerCase() === 'tukubi') {
-    posts = [
-      {
-        id: 'd23f3e75-0dfa-47c6-8df9-2c0fa299d7ff',
-        authorId: profileData.id,
-        author: profileData.display_name,
-        handle: profileData.username,
-        avatarUrl: profileData.avatar_url || '/brand/tukubi-emblem.png',
-        verified: true,
-        isOfficial: true,
-        isPinned: false,
-        officialContentType: 'welcome',
-        location: 'Pan-Caribbean',
-        time: 'Official Launch',
-        content: `🌴 Welcome to TUKUBI — The Caribbean Connected.\n\nConnecting Caribbean people, culture, creators, businesses & the global diaspora in one unified digital ecosystem.\n\n🌎 Born in the Caribbean. Built for the World.\n\nJoin conversations across the islands, explore live audio/video broadcasts, discover local creators, support Caribbean merchants, and build the future of our digital heritage together. ☀️🌊🎶`,
-        mediaUrls: [],
-        likes: 0,
-        reposts: 0,
-        comments: 0,
-        culturalTags: ['caribbean', 'welcome', 'community'],
-        category: 'caribbean',
-      },
-    ];
+    const { data: dbOfficialPost } = await supabase
+      .from('posts')
+      .select(`
+        id, author_id, content, created_at, media_urls, cultural_tags, likes_count, comments_count, shares_count,
+        visibility, post_status, scheduled_at, is_official, official_content_type, is_pinned,
+        profiles:profiles!posts_author_id_fkey(id, display_name, username, avatar_url, is_verified, is_official)
+      `)
+      .eq('id', 'd23f3e75-0dfa-47c6-8df9-2c0fa299d7ff')
+      .maybeSingle();
+
+    if (dbOfficialPost) {
+      posts = await hydratePostsEngagement([dbOfficialPost], supabase, { currentUserId: currentUser?.id });
+    }
   }
 
   const counts = (countsResult.data as ProfileCountRow | null) || {

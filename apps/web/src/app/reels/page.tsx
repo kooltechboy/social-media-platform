@@ -67,11 +67,15 @@ export default async function ReelsPage({
 
     const { data: dbVideos } = await query;
 
-    if (dbVideos && dbVideos.length > 0) {
+    const validVideos = (dbVideos || []).filter(
+      (v: any) => typeof v.storage_path === 'string' && v.storage_path.trim().length > 0
+    );
+
+    if (validVideos.length > 0) {
       // Check which reels are liked by the current authenticated user
       let likedReelIds = new Set<string>();
       if (user) {
-        const videoIds = dbVideos.map((v) => v.id);
+        const videoIds = validVideos.map((v) => v.id);
         const { data: likedRows } = await supabase
           .from('video_views')
           .select('video_id')
@@ -82,7 +86,7 @@ export default async function ReelsPage({
         likedReelIds = new Set((likedRows || []).map((r) => r.video_id));
       }
 
-      dynamicReels = dbVideos.map((v: any, index: number) => {
+      dynamicReels = validVideos.map((v: any, index: number) => {
         const p = v.profiles;
         const durationSecs = v.duration_seconds || 30;
         const gradients = [
@@ -95,8 +99,8 @@ export default async function ReelsPage({
           id: v.id,
           title: v.title,
           creatorId: p?.id,
-          creator: p?.display_name || 'Caribbean Creator',
-          handle: p?.username || 'creator',
+          creator: p?.display_name || (p?.username ? `@${p.username}` : 'Creator'),
+          handle: p?.username || '',
           views: `${(v.view_count || 0).toLocaleString()} views`,
           likes: String(v.likes_count || 0),
           comments: String(v.comments_count || 0),

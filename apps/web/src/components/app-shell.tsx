@@ -54,7 +54,7 @@ function AppShellContent({ children }: { children: React.ReactNode }) {
       <div className="flex-1 w-full max-w-[2560px] 5xl:max-w-[2800px] mx-auto flex">
         {/* Left Navigation: Responsive 240-260px expanded, 72px compact rail when collapsed */}
         <aside
-          className={`hidden md:block shrink-0 sticky top-[58px] h-[calc(100vh-58px)] overflow-y-auto px-2 sm:px-3 py-6 scrollbar-none z-20 transition-all duration-300 ease-in-out ${
+          className={`hidden md:block shrink-0 sticky top-[58px] h-[calc(100vh-58px)] overflow-y-auto overscroll-contain px-2 sm:px-3 py-6 scrollbar-none z-20 transition-all duration-300 ease-in-out ${
             isCollapsed ? 'w-[72px]' : 'w-[240px] xl:w-[260px]'
           }`}
           aria-label="Desktop primary navigation"

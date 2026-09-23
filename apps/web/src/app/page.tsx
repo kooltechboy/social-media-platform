@@ -121,7 +121,7 @@ export default async function RootPage(props: RootPageProps) {
       const biz = Array.isArray(p.businesses) ? p.businesses[0] : p.businesses;
       return {
         ...p,
-        seller_name: biz?.name || 'Verified Merchant',
+        seller_name: biz?.name || 'Merchant',
       };
     });
     culturalEvents = eventsRes.data || [];
@@ -144,35 +144,30 @@ export default async function RootPage(props: RootPageProps) {
       currentUserId: user.id,
     });
 
-    // Authoritative Official Post fallback column selection contract:
-    // profiles:profiles!posts_author_id_fkey(display_name, username, avatar_url, is_verified)
+    // Authoritative Official Post contract: query persistent DB record if not in top ranked set
     if (activeMode === 'for_you') {
       const hasOfficialPost = livePosts.some(
         (p) => p.handle?.toLowerCase() === 'tukubi' || p.id === 'd23f3e75-0dfa-47c6-8df9-2c0fa299d7ff'
       );
       if (!hasOfficialPost && !cursor) {
-        const officialLaunchPost: FeedPostData = {
-          id: 'd23f3e75-0dfa-47c6-8df9-2c0fa299d7ff',
-          authorId: 'ff1e8b1f-7796-4424-b341-3b39e1c993bd',
-          author: 'TUKUBI',
-          handle: 'tukubi',
-          avatarUrl: '/brand/tukubi-emblem.png',
-          verified: true,
-          isOfficial: true,
-          isPinned: false,
-          officialContentType: 'welcome',
-          location: 'Tukubi Network 🌴',
-          time: 'Inaugural Launch',
-          content: `🌴 Welcome to TUKUBI — The Caribbean Connected.\n\nConnecting Caribbean people, culture, creators, businesses & the global diaspora in one unified digital ecosystem.\n\n🌎 Born in the Caribbean. Built for the World.\n\nJoin conversations across the islands, explore live audio/video broadcasts, discover local creators, support Caribbean merchants, and build the future of our digital heritage together. ☀️🌊🎶`,
-          mediaUrls: [],
-          culturalTags: ['caribbean', 'tukubiofficial', 'welcome', 'diaspora', 'culture'],
-          likes: 0,
-          reposts: 0,
-          comments: 0,
-          isUserLiked: false,
-          category: 'caribbean',
-        };
-        livePosts = [officialLaunchPost, ...livePosts];
+        const { data: dbOfficialPost } = await supabase
+          .from('posts')
+          .select(`
+            id, author_id, content, created_at, media_urls, cultural_tags, likes_count, comments_count, shares_count,
+            visibility, post_status, scheduled_at, is_official, official_content_type, is_pinned,
+            profiles:profiles!posts_author_id_fkey(id, display_name, username, avatar_url, is_verified, is_official)
+          `)
+          .eq('id', 'd23f3e75-0dfa-47c6-8df9-2c0fa299d7ff')
+          .maybeSingle();
+
+        if (dbOfficialPost) {
+          const hydrated = await hydratePostsEngagement([dbOfficialPost], supabase, {
+            currentUserId: user.id,
+          });
+          if (hydrated.length > 0) {
+            livePosts = [hydrated[0], ...livePosts];
+          }
+        }
       }
     }
   }
