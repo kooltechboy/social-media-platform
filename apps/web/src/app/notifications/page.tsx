@@ -13,6 +13,8 @@ interface DBNotification {
   payload: Record<string, string>;
   read_at: string | null;
   created_at: string;
+  actor_type?: string;
+  actor_entity_id?: string;
   actor: { display_name: string; username: string } | null;
 }
 
@@ -110,7 +112,7 @@ export default async function NotificationsPage() {
   if (supabase) {
     const { data } = await supabase
       .from('notifications')
-      .select('id, kind, entity_id, payload, read_at, created_at, actor:actor_id(display_name, username)')
+      .select('id, kind, entity_id, payload, read_at, created_at, actor_type, actor_entity_id, actor:actor_id(display_name, username)')
       .eq('recipient_id', user.id)
       .order('created_at', { ascending: false })
       .limit(50);
@@ -185,7 +187,23 @@ export default async function NotificationsPage() {
               </div>
               <div className="flex-1 min-w-0 space-y-1.5">
                 <p className="text-sm sm:text-base md:text-[16px] text-brand-sandstone/90 leading-snug md:leading-relaxed">
-                  {notification.actor ? (
+                  {notification.actor_type === 'official' ? (
+                    <Link
+                      href="/profile/tukubi"
+                      className="font-black text-brand-goldenHour hover:text-amber-300 transition-colors inline-flex items-center gap-1.5"
+                    >
+                      <span>TUKUBI</span>
+                      <span className="text-[10px] bg-brand-goldenHour/20 text-brand-goldenHour px-1.5 py-0.5 rounded-full border border-brand-goldenHour/40 font-bold">Official</span>
+                    </Link>
+                  ) : notification.actor_type === 'page' ? (
+                    <Link
+                      href={`/pages/${notification.payload?.page_slug || notification.actor_entity_id}`}
+                      className="font-black text-sky-400 hover:text-sky-300 transition-colors inline-flex items-center gap-1.5"
+                    >
+                      <span>{notification.payload?.page_name || notification.actor?.display_name || 'Page'}</span>
+                      <span className="text-[10px] bg-sky-400/20 text-sky-300 px-1.5 py-0.5 rounded-full border border-sky-400/40 font-bold">Page</span>
+                    </Link>
+                  ) : notification.actor ? (
                     <Link
                       href={`/profile/${notification.actor.username}`}
                       className="font-black text-white hover:text-orange-400 transition-colors"

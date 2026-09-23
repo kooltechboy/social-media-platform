@@ -23,6 +23,9 @@ import {
   UserPlus,
   Compass,
   Loader2,
+  Building2,
+  ShieldCheck,
+  Palette,
 } from 'lucide-react';
 import { type FeedMode } from '@caribbean/social';
 import UserAvatar from '../user-avatar';
@@ -89,12 +92,28 @@ const FEED_TABS: Array<{
     color: 'text-sky-400',
   },
   {
-    id: 'communities',
-    slug: 'communities',
-    label: 'Communities',
-    description: 'Discussions from your joined diaspora hubs',
-    icon: Flame,
-    color: 'text-rose-400',
+    id: 'pages',
+    slug: 'pages',
+    label: 'Pages',
+    description: 'Updates and content from verified Caribbean pages & businesses',
+    icon: Building2,
+    color: 'text-sky-400',
+  },
+  {
+    id: 'creators',
+    slug: 'creators',
+    label: 'Creators',
+    description: 'Original music, art, culture, and storytelling creators',
+    icon: Palette,
+    color: 'text-brand-sunriseCoral',
+  },
+  {
+    id: 'official',
+    slug: 'official',
+    label: 'Official',
+    description: 'Verified platform announcements and safety alerts from @tukubi',
+    icon: ShieldCheck,
+    color: 'text-brand-goldenHour',
   },
   {
     id: 'caribbean',
@@ -103,6 +122,14 @@ const FEED_TABS: Array<{
     description: 'Updates from island territories and regional cultural tags',
     icon: Globe,
     color: 'text-amber-400',
+  },
+  {
+    id: 'communities',
+    slug: 'communities',
+    label: 'Communities',
+    description: 'Discussions from your joined diaspora hubs',
+    icon: Flame,
+    color: 'text-rose-400',
   },
 ];
 

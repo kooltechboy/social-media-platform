@@ -48,9 +48,16 @@ export async function buildRankedFeed(
     const limitCount = shouldRank ? 60 : 30;
 
     // 3. Build the base query
+    // 3. Build the base query
     let postQuery = supabase
       .from('posts')
-      .select('id, author_id, content, created_at, media_urls, cultural_tags, likes_count, comments_count, shares_count, country_id, community_id, is_official, is_pinned, official_content_type, profiles:profiles!posts_author_id_fkey(display_name, username, avatar_url, is_verified, is_official)')
+      .select(`
+        id, author_id, content, created_at, media_urls, cultural_tags, likes_count, comments_count, shares_count, 
+        country_id, community_id, is_official, is_pinned, official_content_type, page_id, publisher_type, 
+        publisher_entity_id, created_by_user_id, shared_post_id,
+        profiles:profiles!posts_author_id_fkey(display_name, username, avatar_url, is_verified, is_official),
+        businesses:businesses!posts_page_id_fkey(id, name, slug, avatar_url, is_verified)
+      `)
       .order('created_at', { ascending: false })
       .limit(limitCount);
 
@@ -105,20 +112,25 @@ export async function buildRankedFeed(
         postQuery = postQuery.in('author_id', ['00000000-0000-0000-0000-000000000000']);
       }
     } else if (mode === 'pages') {
-      const { data: biz } = await supabase
-        .from('businesses')
-        .select('owner_id');
-      const pageOwnerIds = biz?.map((b: any) => b.owner_id).filter(Boolean) || [];
-      if (pageOwnerIds.length > 0) {
-        postQuery = postQuery.in('author_id', pageOwnerIds);
+      // True Page publishing filter
+      postQuery = postQuery.or('publisher_type.eq.page,page_id.not.is.null');
+    } else if (mode === 'creators') {
+      // Creator publishing filter
+      const { data: creators } = await supabase.from('creator_accounts').select('profile_id');
+      const creatorProfileIds = creators?.map((c: any) => c.profile_id).filter(Boolean) || [];
+      if (creatorProfileIds.length > 0) {
+        postQuery = postQuery.or(`publisher_type.eq.creator,author_id.in.(${creatorProfileIds.join(',')})`);
       } else {
-        postQuery = postQuery.in('author_id', ['00000000-0000-0000-0000-000000000000']);
+        postQuery = postQuery.eq('publisher_type', 'creator');
       }
+    } else if (mode === 'official') {
+      // Official TUKUBI platform announcements & updates
+      postQuery = postQuery.or('publisher_type.eq.official,is_official.eq.true');
     } else if (mode === 'for_you') {
       const { data: follows } = await supabase.from('follows').select('following_id').eq('follower_id', userId);
       const followingIds = follows?.map((f: any) => f.following_id) || [];
       if (followingIds.length > 0) {
-        postQuery = postQuery.or(`author_id.in.(${followingIds.join(',')}),country_id.not.is.null`);
+        postQuery = postQuery.or(`author_id.in.(${followingIds.join(',')}),country_id.not.is.null,is_official.eq.true`);
       }
     }
 
@@ -133,7 +145,13 @@ export async function buildRankedFeed(
       if (mode === 'for_you' && !cursor) {
         const { data: fallbackPosts } = await supabase
           .from('posts')
-          .select('id, author_id, content, created_at, media_urls, cultural_tags, likes_count, comments_count, shares_count, country_id, community_id, is_official, is_pinned, official_content_type, profiles:profiles!posts_author_id_fkey(display_name, username, avatar_url, is_verified, is_official)')
+          .select(`
+            id, author_id, content, created_at, media_urls, cultural_tags, likes_count, comments_count, shares_count, 
+            country_id, community_id, is_official, is_pinned, official_content_type, page_id, publisher_type, 
+            publisher_entity_id, created_by_user_id, shared_post_id,
+            profiles:profiles!posts_author_id_fkey(display_name, username, avatar_url, is_verified, is_official),
+            businesses:businesses!posts_page_id_fkey(id, name, slug, avatar_url, is_verified)
+          `)
           .order('created_at', { ascending: false })
           .limit(30);
         if (fallbackPosts && fallbackPosts.length > 0) {

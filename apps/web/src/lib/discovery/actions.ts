@@ -433,19 +433,25 @@ export async function universalSearchAction(params: {
     const hits: SearchHit[] = [];
 
     profilesData.forEach((p) => {
-      const score = Math.max(
+      let score = Math.max(
         computeMatchScore(p.display_name, query, 1.2),
         computeMatchScore(p.username, query, 1.3)
       );
+      const isOfficialAccount = p.is_official || p.username.toLowerCase() === 'tukubi';
+      if (isOfficialAccount) {
+        score = score * 1.5 + 5;
+      }
       const isCreator = p.account_type === 'creator';
       hits.push({
         entityType: isCreator ? 'creators' : 'profiles',
         entityId: p.id,
         title: p.display_name,
-        subtitle: `@${p.username}`,
+        subtitle: isOfficialAccount
+          ? `@${p.username} • Official TUKUBI Account`
+          : `@${p.username}`,
         snippet: p.bio || undefined,
         avatarUrl: p.avatar_url,
-        badge: p.is_official ? 'OFFICIAL' : p.is_verified ? 'VERIFIED' : undefined,
+        badge: isOfficialAccount ? 'OFFICIAL' : p.is_verified ? 'VERIFIED' : undefined,
         score,
         metadata: { ...p },
       });
@@ -457,8 +463,9 @@ export async function universalSearchAction(params: {
         entityType: 'businesses',
         entityId: b.id,
         title: b.name,
-        subtitle: b.category,
+        subtitle: `${b.category} • Page`,
         snippet: b.description || undefined,
+        badge: b.is_verified ? 'VERIFIED PAGE' : 'PAGE',
         score,
         metadata: { ...b },
       });

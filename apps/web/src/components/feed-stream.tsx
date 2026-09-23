@@ -51,6 +51,7 @@ import {
   hidePostAction,
   unhidePostAction,
   toggleReactionAction,
+  repostPostAction,
   type StructuredMediaItem,
 } from '../lib/social/actions';
 import { translatePostAction } from '../lib/social/translate-actions';
@@ -103,6 +104,19 @@ export interface FeedPostData {
   destinationUrl?: string;
   ctaText?: string;
   bidCpmMinor?: number;
+  publisherType?: 'personal' | 'official' | 'page' | 'community' | 'creator';
+  publisherId?: string;
+  pageId?: string;
+  pageSlug?: string;
+  pageName?: string;
+  createdByUserId?: string;
+  communityId?: string;
+  communityName?: string;
+  communitySlug?: string;
+  countryId?: string;
+  sharedPostId?: string;
+  sharedPost?: FeedPostData | null;
+  shareCommentary?: string;
 }
 
 export interface FeedStreamProps {
@@ -568,6 +582,8 @@ export default function FeedStream({
   const [shareModalPost, setShareModalPost] = useState<FeedPostData | null>(null);
   const [isCopied, setIsCopied] = useState(false);
   const [showQrCode, setShowQrCode] = useState(false);
+  const [repostCommentary, setRepostCommentary] = useState('');
+  const [isSubmittingRepost, setIsSubmittingRepost] = useState(false);
 
   async function handleSubmitComment(e: React.FormEvent, postId: string) {
     e.preventDefault();
@@ -643,7 +659,50 @@ export default function FeedStream({
   function handleShare(post: FeedPostData) {
     setIsCopied(false);
     setShowQrCode(false);
+    setRepostCommentary('');
     setShareModalPost(post);
+  }
+
+  async function handleRepostToTukubi() {
+    if (!shareModalPost || isSubmittingRepost) return;
+    setIsSubmittingRepost(true);
+    try {
+      const res = await repostPostAction(shareModalPost.id, repostCommentary);
+      if (res.error) {
+        setShareToast(res.error);
+      } else {
+        setShareToast('Post reposted on TUKUBI! 🌴');
+        setPosts((prev) =>
+          prev.map((p) =>
+            p.id === shareModalPost.id ? { ...p, reposts: p.reposts + 1 } : p
+          )
+        );
+        if (res.post) {
+          const liveRepost: FeedPostData = {
+            id: res.post.id,
+            authorId: currentUserId,
+            author: 'You',
+            handle: 'you',
+            time: 'just now',
+            content: repostCommentary || '',
+            likes: 0,
+            reposts: 0,
+            comments: 0,
+            sharedPostId: shareModalPost.id,
+            sharedPost: shareModalPost,
+            publisherType: (res.post.publisher_type as any) || 'personal',
+          };
+          setPosts((prev) => [liveRepost, ...prev]);
+        }
+        setShareModalPost(null);
+        setRepostCommentary('');
+      }
+    } catch (err: any) {
+      setShareToast(err?.message || 'Failed to repost on TUKUBI.');
+    } finally {
+      setIsSubmittingRepost(false);
+      setTimeout(() => setShareToast(null), 3000);
+    }
   }
 
   async function handleExecuteShare(
@@ -1045,6 +1104,42 @@ export default function FeedStream({
             </div>
 
             <div className="space-y-3.5 py-1">
+              {/* Repost on TUKUBI Section */}
+              <div className="p-3.5 rounded-2xl bg-white/5 border border-brand-caribbeanSea/30 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-xs font-black text-white">
+                    <Repeat className="w-4 h-4 text-brand-caribbeanSea" />
+                    <span>Repost on TUKUBI</span>
+                  </div>
+                  <span className="text-[10px] text-brand-sandstone/60">Share with your commentary</span>
+                </div>
+                <textarea
+                  value={repostCommentary}
+                  onChange={(e) => setRepostCommentary(e.target.value)}
+                  placeholder="Add your thoughts or commentary (optional)..."
+                  rows={2}
+                  className="w-full bg-black/40 border border-white/10 rounded-xl px-3 py-2 text-xs text-white placeholder-brand-sandstone/40 focus:outline-none focus:border-brand-caribbeanSea resize-none"
+                />
+                <button
+                  type="button"
+                  onClick={handleRepostToTukubi}
+                  disabled={isSubmittingRepost}
+                  className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-brand-caribbeanSea to-brand-sunriseCoral text-slate-950 font-black text-xs hover:brightness-110 transition-all disabled:opacity-50 flex items-center justify-center gap-1.5 shadow-md"
+                >
+                  {isSubmittingRepost ? (
+                    <>
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      <span>Reposting...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Repeat className="w-3.5 h-3.5" />
+                      <span>Repost on TUKUBI</span>
+                    </>
+                  )}
+                </button>
+              </div>
+
               {/* Copy Link Option */}
               <button
                 type="button"

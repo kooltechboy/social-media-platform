@@ -24,6 +24,7 @@ export interface PostActionState {
     id: string;
     author: string;
     handle: string;
+    avatarUrl?: string | null;
     verified?: boolean;
     location?: string;
     time: string;
@@ -38,6 +39,15 @@ export interface PostActionState {
     isPinned?: boolean;
     officialContentType?: string;
     category?: 'caribbean' | 'foryou' | 'diaspora' | 'creator';
+    publisherType?: 'personal' | 'official' | 'page' | 'community' | 'creator';
+    publisherId?: string;
+    pageId?: string;
+    pageSlug?: string;
+    pageName?: string;
+    createdByUserId?: string;
+    sharedPostId?: string;
+    sharedPost?: any;
+    shareCommentary?: string;
   };
 }
 
@@ -146,11 +156,159 @@ export async function createPostAction(_prev: PostActionState, formData: FormDat
 
   // Community destination
   const communityIdRaw = formData.get('community_id');
-  const communityId = typeof communityIdRaw === 'string' && communityIdRaw.trim() ? communityIdRaw.trim() : null;
+  let communityId = typeof communityIdRaw === 'string' && communityIdRaw.trim() ? communityIdRaw.trim() : null;
 
   // Island nation destination
   const countryIdRaw = formData.get('country_id');
   let countryId = typeof countryIdRaw === 'string' && countryIdRaw.trim() ? countryIdRaw.trim() : null;
+
+  // Shared/reposted post
+  const sharedPostIdRaw = formData.get('shared_post_id');
+  const sharedPostId = typeof sharedPostIdRaw === 'string' && sharedPostIdRaw.trim() ? sharedPostIdRaw.trim() : null;
+  const shareCommentaryRaw = formData.get('share_commentary');
+  const shareCommentary = typeof shareCommentaryRaw === 'string' && shareCommentaryRaw.trim() ? shareCommentaryRaw.trim() : null;
+
+  // Publisher Identity Validation & Actor Separation
+  const publishAsTypeRaw = String(formData.get('publish_as_type') || formData.get('publisher_type') || 'personal').toLowerCase().trim();
+  const publishAsIdRaw = String(formData.get('publish_as_id') || formData.get('publisher_entity_id') || user.id).trim();
+
+  let authorId = user.id;
+  let publisherType: 'personal' | 'official' | 'page' | 'community' | 'creator' = 'personal';
+  let publisherEntityId: string = user.id;
+  let pageId: string | null = null;
+  let isOfficialPost = false;
+  let officialContentType: string | null = null;
+
+  if (publishAsTypeRaw === 'official') {
+    // 1. Verify user is platform admin or authorized official account operator
+    const { data: adminAccount } = await supabase
+      .from('accounts')
+      .select('role')
+      .or(`profile_id.eq.${user.id},id.eq.${user.id}`)
+      .eq('status', 'active')
+      .maybeSingle();
+
+    const isPlatformAdmin = Boolean(
+      adminAccount &&
+      ['super_admin', 'superadmin', 'management', 'admin'].includes(adminAccount.role)
+    );
+
+    let isAuthorized = isPlatformAdmin;
+    if (!isAuthorized) {
+      const { data: opRows } = await supabase
+        .from('official_account_operators')
+        .select('role, official_accounts(profile_id, status)')
+        .eq('operator_profile_id', user.id);
+
+      isAuthorized = Boolean(
+        opRows?.some((op: any) =>
+          (op.official_accounts?.profile_id === publishAsIdRaw || op.official_account_id === publishAsIdRaw) &&
+          op.official_accounts?.status === 'active' &&
+          ['owner', 'administrator', 'editor', 'publisher'].includes(op.role)
+        )
+      );
+    }
+
+    if (!isAuthorized) {
+      return { error: 'You are not authorized to publish on behalf of TUKUBI.' };
+    }
+
+    // Resolve official target profile ID
+    let targetProfileId = publishAsIdRaw;
+    const { data: officialProfile } = await supabase
+      .from('profiles')
+      .select('id, is_official')
+      .eq('id', targetProfileId)
+      .maybeSingle();
+
+    if (!officialProfile?.is_official) {
+      const { data: activeOfficial } = await supabase
+        .from('official_accounts')
+        .select('profile_id')
+        .eq('status', 'active')
+        .maybeSingle();
+      if (activeOfficial?.profile_id) {
+        targetProfileId = activeOfficial.profile_id;
+      }
+    }
+
+    authorId = targetProfileId;
+    isOfficialPost = true;
+    publisherType = 'official';
+    publisherEntityId = targetProfileId;
+    officialContentType = (formData.get('official_content_type') as string) || 'announcement';
+  } else if (publishAsTypeRaw === 'page' || publishAsTypeRaw === 'business') {
+    // 2. Verify Page ownership or assigned team role
+    const { data: biz } = await supabase
+      .from('businesses')
+      .select('id, owner_id, slug, name')
+      .eq('id', publishAsIdRaw)
+      .maybeSingle();
+
+    if (!biz) {
+      return { error: 'Page not found.' };
+    }
+
+    let isPageAuthorized = biz.owner_id === user.id;
+    if (!isPageAuthorized) {
+      const { data: pageRole } = await supabase
+        .from('page_roles')
+        .select('role')
+        .eq('page_id', publishAsIdRaw)
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      isPageAuthorized = ['owner', 'admin', 'editor'].includes(pageRole?.role || '');
+    }
+
+    if (!isPageAuthorized) {
+      return { error: 'You do not have permission to publish content for this Page.' };
+    }
+
+    authorId = user.id;
+    pageId = publishAsIdRaw;
+    publisherType = 'page';
+    publisherEntityId = publishAsIdRaw;
+  } else if (publishAsTypeRaw === 'creator') {
+    // 3. Verify Creator account
+    const { data: creatorAcc } = await supabase
+      .from('creator_accounts')
+      .select('id, profile_id')
+      .or(`id.eq.${publishAsIdRaw},profile_id.eq.${publishAsIdRaw}`)
+      .eq('profile_id', user.id)
+      .maybeSingle();
+
+    if (!creatorAcc) {
+      return { error: 'Creator account not authorized.' };
+    }
+
+    authorId = user.id;
+    publisherType = 'creator';
+    publisherEntityId = creatorAcc.id;
+  } else if (publishAsTypeRaw === 'community') {
+    // 4. Community destination
+    const { data: commMember } = await supabase
+      .from('community_members')
+      .select('role')
+      .eq('community_id', publishAsIdRaw)
+      .eq('profile_id', user.id)
+      .eq('membership_status', 'active')
+      .maybeSingle();
+
+    if (!commMember) {
+      return { error: 'You are not a member of this community.' };
+    }
+
+    authorId = user.id;
+    communityId = publishAsIdRaw;
+    publisherType = 'community';
+    publisherEntityId = publishAsIdRaw;
+  } else {
+    // 5. Personal profile
+    authorId = user.id;
+    publisherType = 'personal';
+    publisherEntityId = user.id;
+  }
 
   // If country_id not explicitly supplied, fallback to profile's country
   if (!countryId) {
@@ -167,7 +325,10 @@ export async function createPostAction(_prev: PostActionState, formData: FormDat
   const { data, error } = await supabase
     .from('posts')
     .insert({
-      author_id: user.id,
+      author_id: authorId,
+      created_by_user_id: user.id,
+      publisher_type: publisherType,
+      publisher_entity_id: publisherEntityId,
       content: content || null,
       visibility,
       media_urls: mediaUrls,
@@ -176,8 +337,19 @@ export async function createPostAction(_prev: PostActionState, formData: FormDat
       post_status: postStatus,
       community_id: communityId,
       country_id: countryId,
+      page_id: pageId,
+      is_official: isOfficialPost,
+      official_content_type: officialContentType,
+      shared_post_id: sharedPostId,
+      share_commentary: shareCommentary,
     })
-    .select('id, content, created_at, media_urls, cultural_tags, likes_count, comments_count, shares_count, visibility, community_id, country_id, profiles:profiles!posts_author_id_fkey(display_name, username, avatar_url, is_verified)')
+    .select(`
+      id, content, created_at, media_urls, cultural_tags, likes_count, comments_count, shares_count, visibility, 
+      community_id, country_id, page_id, is_official, official_content_type, publisher_type, publisher_entity_id, 
+      created_by_user_id, shared_post_id,
+      profiles:profiles!posts_author_id_fkey(id, display_name, username, avatar_url, is_verified, is_official),
+      businesses:businesses!posts_page_id_fkey(id, name, slug, avatar_url, is_verified)
+    `)
     .single();
 
   if (error) {
@@ -207,18 +379,54 @@ export async function createPostAction(_prev: PostActionState, formData: FormDat
     }
   }
 
+  // If this was a re-share, record in post_shares table
+  if (sharedPostId) {
+    await supabase.from('post_shares').insert({
+      post_id: sharedPostId,
+      user_id: user.id,
+      share_type: 'internal',
+    });
+  }
+
   const rawProfile = data?.profiles;
   const profile = Array.isArray(rawProfile) ? rawProfile[0] : rawProfile;
-  const isPostOfficial = profile?.username?.toLowerCase() === 'tukubi' || profile?.is_verified || false;
+  const rawBiz = data?.businesses;
+  const business = Array.isArray(rawBiz) ? rawBiz[0] : rawBiz;
+
+  // Determine accurate public-facing display identity
+  let displayAuthor = profile?.display_name || user.displayName || 'Caribbean Member';
+  let displayHandle = profile?.username || user.username || 'member';
+  let displayAvatar = profile?.avatar_url || user.avatarUrl || null;
+  let isVerified = profile?.is_verified ?? true;
+
+  if (publisherType === 'page' && business) {
+    displayAuthor = business.name;
+    displayHandle = business.slug;
+    displayAvatar = business.avatar_url || null;
+    isVerified = business.is_verified ?? true;
+  } else if (publisherType === 'official' || isOfficialPost) {
+    displayAuthor = 'TUKUBI';
+    displayHandle = 'tukubi';
+    displayAvatar = profile?.avatar_url || '/brand/tukubi-emblem.png';
+    isVerified = true;
+  }
 
   const normalizedPost = {
     id: data.id,
-    author: profile?.display_name || user.displayName || 'Caribbean Member',
-    handle: profile?.username || user.username || 'member',
-    verified: profile?.is_verified ?? true,
-    isOfficial: isPostOfficial,
-    isPinned: isPostOfficial,
-    officialContentType: isPostOfficial ? 'welcome' : undefined,
+    author: displayAuthor,
+    handle: displayHandle,
+    avatarUrl: displayAvatar,
+    verified: isVerified,
+    isOfficial: isOfficialPost,
+    isPinned: isOfficialPost,
+    officialContentType: officialContentType || undefined,
+    publisherType,
+    publisherId: publisherEntityId,
+    pageId: pageId || undefined,
+    pageSlug: business?.slug,
+    pageName: business?.name,
+    createdByUserId: user.id,
+    sharedPostId: sharedPostId || undefined,
     location: 'Caribbean 🌴',
     time: 'just now',
     content: data.content || '',
@@ -235,9 +443,12 @@ export async function createPostAction(_prev: PostActionState, formData: FormDat
 
   revalidatePath('/');
   revalidatePath('/create');
+  if (pageId && business?.slug) {
+    revalidatePath(`/pages/${business.slug}`);
+  }
   
   const { track } = await import('../monitoring/analytics');
-  track('post_created', { postId: data.id, visibility }, user.id);
+  track('post_created', { postId: data.id, publisherType, visibility }, user.id);
   
   return { error: null, postId: data.id, post: normalizedPost };
 }
@@ -520,7 +731,8 @@ export async function toggleLikeAction(postId: string): Promise<{ liked: boolean
 export async function createCommentAction(
   postId: string,
   content: string,
-  parentId?: string
+  parentId?: string,
+  publishAs?: { type: 'personal' | 'official' | 'page' | 'creator'; id: string }
 ): Promise<{ success: boolean; comment?: any; error: string | null }> {
   const user = await getCurrentUser();
   if (!user) return { success: false, error: 'Sign in to comment.' };
@@ -537,9 +749,57 @@ export async function createCommentAction(
     user_metadata: { username: user.username, display_name: user.displayName, avatar_url: user.avatarUrl },
   });
 
+  let authorId = user.id;
+  let publisherType: 'personal' | 'official' | 'page' | 'creator' = 'personal';
+  let publisherEntityId: string = user.id;
+  let pageId: string | null = null;
+
+  if (publishAs) {
+    if (publishAs.type === 'page') {
+      const { data: biz } = await supabase
+        .from('businesses')
+        .select('id, owner_id')
+        .eq('id', publishAs.id)
+        .maybeSingle();
+
+      let isAuth = biz?.owner_id === user.id;
+      if (!isAuth && biz) {
+        const { data: roleRow } = await supabase
+          .from('page_roles')
+          .select('role')
+          .eq('page_id', publishAs.id)
+          .eq('user_id', user.id)
+          .maybeSingle();
+        isAuth = ['owner', 'admin', 'editor'].includes(roleRow?.role || '');
+      }
+
+      if (isAuth) {
+        publisherType = 'page';
+        publisherEntityId = publishAs.id;
+        pageId = publishAs.id;
+      }
+    } else if (publishAs.type === 'official') {
+      // Operator check
+      const { data: opRow } = await supabase
+        .from('official_account_operators')
+        .select('role')
+        .eq('operator_profile_id', user.id)
+        .maybeSingle();
+      if (opRow) {
+        publisherType = 'official';
+        publisherEntityId = publishAs.id;
+        authorId = publishAs.id;
+      }
+    }
+  }
+
   const insertPayload: any = {
     post_id: postId,
-    author_id: user.id,
+    author_id: authorId,
+    created_by_user_id: user.id,
+    publisher_type: publisherType,
+    publisher_entity_id: publisherEntityId,
+    page_id: pageId,
     content: cleanContent,
   };
   if (parentId) {
@@ -549,7 +809,11 @@ export async function createCommentAction(
   const { data, error } = await supabase
     .from('comments')
     .insert(insertPayload)
-    .select('id, post_id, author_id, parent_id, content, created_at, profiles(display_name, username, avatar_url)')
+    .select(`
+      id, post_id, author_id, parent_id, content, created_at, publisher_type, publisher_entity_id, page_id,
+      profiles(display_name, username, avatar_url),
+      businesses:businesses!comments_page_id_fkey(name, slug, avatar_url, is_verified)
+    `)
     .single();
 
   if (error) {
@@ -559,13 +823,81 @@ export async function createCommentAction(
 
   const rawProfile = (data as any)?.profiles;
   const profile = Array.isArray(rawProfile) ? rawProfile[0] : rawProfile;
+  const rawBiz = (data as any)?.businesses;
+  const business = Array.isArray(rawBiz) ? rawBiz[0] : rawBiz;
+
+  let displayAuthor = profile?.display_name || user.displayName || 'Caribbean Member';
+  let displayHandle = profile?.username || user.username || 'member';
+  let displayAvatar = profile?.avatar_url || user.avatarUrl || null;
+
+  if (publisherType === 'page' && business) {
+    displayAuthor = business.name;
+    displayHandle = business.slug;
+    displayAvatar = business.avatar_url || null;
+  }
+
   const normalizedComment = {
     ...data,
-    profiles: profile,
+    profiles: {
+      display_name: displayAuthor,
+      username: displayHandle,
+      avatar_url: displayAvatar,
+    },
+    publisherType,
+    publisherId: publisherEntityId,
+    pageSlug: business?.slug,
   };
 
   revalidatePath('/');
   return { success: true, comment: normalizedComment, error: null };
+}
+
+/**
+ * Creates a first-class shared post on TUKUBI referencing the original post.
+ * Clearly separates original publisher from the sharing user.
+ */
+export async function repostPostAction(
+  originalPostId: string,
+  commentary?: string,
+  publishAs?: { type: 'personal' | 'official' | 'page'; id?: string }
+): Promise<{ success: boolean; postId?: string; post?: any; error: string | null }> {
+  const user = await getCurrentUser();
+  if (!user) return { success: false, error: 'Sign in to share this post.' };
+
+  const supabase = await createSupabaseServerClient();
+  if (!supabase) return { success: false, error: 'Service is temporarily unavailable.' };
+
+  // 1. Verify original post exists and is visible
+  const { data: originalPost, error: fetchErr } = await supabase
+    .from('posts')
+    .select('id, visibility, author_id, content')
+    .eq('id', originalPostId)
+    .maybeSingle();
+
+  if (fetchErr || !originalPost) {
+    return { success: false, error: 'Original post not found or no longer available.' };
+  }
+
+  const publishType = publishAs?.type || 'personal';
+  const publishId = publishAs?.id || user.id;
+
+  const formData = new FormData();
+  formData.set('content', commentary || '');
+  formData.set('visibility', 'public');
+  formData.set('shared_post_id', originalPostId);
+  formData.set('share_commentary', commentary || '');
+  formData.set('publish_as_type', publishType);
+  formData.set('publish_as_id', publishId);
+
+  const res = await createPostAction({ error: null }, formData);
+  if (res.error) {
+    return { success: false, error: res.error };
+  }
+
+  // Atomically increment original post's shares_count
+  await incrementPostShareAction(originalPostId, 'internal');
+
+  return { success: true, postId: res.postId, post: res.post, error: null };
 }
 
 export async function fetchPostCommentsAction(postId: string): Promise<{ comments: any[]; error: string | null }> {

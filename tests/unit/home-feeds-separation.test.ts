@@ -41,10 +41,18 @@ describe('Home vs Feeds 360° Architectural Separation', () => {
       expect(statement.text).toContain('ORDER BY created_at DESC, id DESC');
     });
 
-    it('generates pages SQL filtering businesses / pages owner_id', () => {
+    it('generates pages SQL filtering publisher_type = page or page_id IS NOT NULL', () => {
       const { statement } = buildFeedQuery({ viewerId: 'user_123', mode: 'pages' });
-      expect(statement.text).toContain('SELECT owner_id FROM public.businesses');
+      expect(statement.text).toContain("publisher_type = 'page' OR page_id IS NOT NULL");
       expect(statement.text).toContain('ORDER BY created_at DESC, id DESC');
+    });
+
+    it('generates creators and official SQL with appropriate publisher filters', () => {
+      const creatorsQuery = buildFeedQuery({ viewerId: 'user_123', mode: 'creators' });
+      expect(creatorsQuery.statement.text).toContain("publisher_type = 'creator'");
+
+      const officialQuery = buildFeedQuery({ viewerId: 'user_123', mode: 'official' });
+      expect(officialQuery.statement.text).toContain("publisher_type = 'official' OR is_official = true");
     });
   });
 

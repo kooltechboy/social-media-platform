@@ -188,7 +188,7 @@ export async function signOutAction() {
   redirect('/login');
 }
 
-export type OperatingMode = 'personal' | 'creator' | 'business' | 'community';
+export type OperatingMode = 'personal' | 'creator' | 'business' | 'community' | 'official';
 
 export interface UserOperatingIdentity {
   id: string;
@@ -208,25 +208,85 @@ export async function fetchUserOperatingIdentitiesAction(): Promise<UserOperatin
   const supabase = await createSupabaseServerClient();
   if (!supabase) return [];
 
+  // Personal profile remains strictly personal — never conflated with official brand
   const personal: UserOperatingIdentity = {
     id: user.id,
     type: 'personal',
     name: user.displayName || `@${user.username}`,
     handle: user.username,
     avatarUrl: user.avatarUrl,
-    badge: user.isOfficial ? 'Official' : 'Personal',
-    isVerified: user.isOfficial,
+    badge: 'Personal',
+    isVerified: Boolean(user.isOfficial || user.isVerified || (user as any).verified),
   };
 
   const list: UserOperatingIdentity[] = [personal];
 
   try {
-    const [creatorRes, bizRes, commRes] = await Promise.all([
+    // 1. Check if user is platform admin / superadmin
+    const { data: adminAccount } = await supabase
+      .from('accounts')
+      .select('role, status')
+      .or(`profile_id.eq.${user.id},id.eq.${user.id}`)
+      .eq('status', 'active')
+      .maybeSingle();
+
+    const isPlatformAdmin = Boolean(
+      adminAccount &&
+      ['super_admin', 'superadmin', 'management', 'admin'].includes(adminAccount.role)
+    );
+
+    // 2. Parallel queries for Creator, Owned Businesses, Page Roles, Communities, and Official Accounts
+    const [creatorRes, ownedBizRes, pageRolesRes, commRes, operatorRes] = await Promise.all([
       supabase.from('creator_accounts').select('id, is_verified, category').eq('profile_id', user.id).maybeSingle(),
-      supabase.from('businesses').select('id, name, slug, is_verified').eq('owner_id', user.id).limit(10),
+      supabase.from('businesses').select('id, name, slug, avatar_url, is_verified').eq('owner_id', user.id).eq('is_archived', false).is('deleted_at', null).limit(10),
+      supabase.from('page_roles').select('page_id, role, businesses(id, name, slug, avatar_url, is_verified)').eq('user_id', user.id).in('role', ['owner', 'admin', 'editor']).limit(10),
       supabase.from('community_members').select('community_id, communities(id, name, slug, cover_storage_path)').eq('profile_id', user.id).in('role', ['admin', 'moderator']).limit(10),
+      supabase.from('official_account_operators').select('official_account_id, role, official_accounts(id, profile_id, classification, profiles(id, username, display_name, avatar_url, is_verified))').eq('operator_profile_id', user.id).limit(5),
     ]);
 
+    // 3. Official TUKUBI identity (for operators or platform admins)
+    if (isPlatformAdmin) {
+      const { data: officialAccounts } = await supabase
+        .from('official_accounts')
+        .select('id, profile_id, classification, profiles:profiles!official_accounts_profile_id_fkey(id, username, display_name, avatar_url, is_verified)')
+        .eq('status', 'active')
+        .limit(5);
+
+      if (officialAccounts) {
+        for (const oa of officialAccounts) {
+          const prof = Array.isArray(oa.profiles) ? oa.profiles[0] : oa.profiles;
+          if (prof && !list.some((i) => i.id === prof.id && i.type === 'official')) {
+            list.push({
+              id: prof.id,
+              type: 'official',
+              name: prof.display_name || 'TUKUBI',
+              handle: prof.username || 'tukubi',
+              avatarUrl: prof.avatar_url || '/brand/tukubi-emblem.png',
+              badge: 'Official Platform',
+              isVerified: true,
+            });
+          }
+        }
+      }
+    } else if (operatorRes.data && operatorRes.data.length > 0) {
+      for (const op of operatorRes.data) {
+        const oa: any = op.official_accounts;
+        const prof = Array.isArray(oa?.profiles) ? oa?.profiles[0] : oa?.profiles;
+        if (prof && !list.some((i) => i.id === prof.id && i.type === 'official')) {
+          list.push({
+            id: prof.id,
+            type: 'official',
+            name: prof.display_name || 'TUKUBI',
+            handle: prof.username || 'tukubi',
+            avatarUrl: prof.avatar_url || '/brand/tukubi-emblem.png',
+            badge: 'Official Platform',
+            isVerified: true,
+          });
+        }
+      }
+    }
+
+    // 4. Creator Identity
     if (creatorRes.data) {
       list.push({
         id: creatorRes.data.id,
@@ -239,20 +299,42 @@ export async function fetchUserOperatingIdentitiesAction(): Promise<UserOperatin
       });
     }
 
-    if (bizRes.data) {
-      bizRes.data.forEach((b) => {
+    // 5. Business / Universal Pages (combining owned and role-assigned)
+    const seenPages = new Set<string>();
+    if (ownedBizRes.data) {
+      ownedBizRes.data.forEach((b) => {
+        seenPages.add(b.id);
         list.push({
           id: b.id,
           type: 'business',
           name: b.name,
           handle: b.slug,
-          avatarUrl: null,
+          avatarUrl: b.avatar_url || null,
           badge: 'Business Page',
           isVerified: b.is_verified,
         });
       });
     }
 
+    if (pageRolesRes.data) {
+      pageRolesRes.data.forEach((pr: any) => {
+        const b = pr.businesses;
+        if (b && !seenPages.has(b.id)) {
+          seenPages.add(b.id);
+          list.push({
+            id: b.id,
+            type: 'business',
+            name: b.name,
+            handle: b.slug,
+            avatarUrl: b.avatar_url || null,
+            badge: pr.role === 'owner' ? 'Page Owner' : 'Page Editor',
+            isVerified: b.is_verified,
+          });
+        }
+      });
+    }
+
+    // 6. Managed Community Hubs
     if (commRes.data) {
       commRes.data.forEach((cm: any) => {
         const c = cm.communities;

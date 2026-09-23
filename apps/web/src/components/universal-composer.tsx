@@ -38,6 +38,8 @@ import EmojiPickerPopover from './emoji/emoji-picker-popover';
 import { createPollAction } from '../lib/polls/actions';
 import { normalizeExifAndCompressImage } from '@caribbean/media';
 import TukubiImage from './ui/tukubi-image';
+import UserAvatar from './user-avatar';
+import { fetchUserOperatingIdentitiesAction, type UserOperatingIdentity } from '../lib/auth/actions';
 
 export type ComposerMode =
   | 'text'
@@ -63,6 +65,8 @@ export interface UniversalComposerProps {
   userId?: string;
   defaultCommunityId?: string;
   defaultCountryId?: string;
+  defaultPublishAsType?: 'personal' | 'official' | 'page' | 'community' | 'creator';
+  defaultPublishAsId?: string;
 }
 
 export interface UploadedMediaItem {
@@ -171,6 +175,8 @@ export default function UniversalComposer({
   userId,
   defaultCommunityId,
   defaultCountryId,
+  defaultPublishAsType,
+  defaultPublishAsId,
 }: UniversalComposerProps) {
   const router = useRouter();
   const { t } = useTranslation();
@@ -185,6 +191,51 @@ export default function UniversalComposer({
   const [selectedCountryId, setSelectedCountryId] = useState<string | null>(defaultCountryId || null);
   const [userCommunities, setUserCommunities] = useState<Array<{ id: string; name: string }>>([]);
   const [allCountries, setAllCountries] = useState<Array<{ id: string; name: string; flag_emoji: string }>>([]);
+
+  // Operating / Publishing Identity State
+  const [identities, setIdentities] = useState<UserOperatingIdentity[]>([]);
+  const [selectedIdentity, setSelectedIdentity] = useState<UserOperatingIdentity | null>(null);
+  const [isIdentityDropdownOpen, setIsIdentityDropdownOpen] = useState(false);
+
+  useEffect(() => {
+    let isMounted = true;
+    async function loadIdentities() {
+      try {
+        const list = await fetchUserOperatingIdentitiesAction();
+        if (isMounted && list.length > 0) {
+          setIdentities(list);
+          if (defaultPublishAsId) {
+            const foundDefault = list.find((i) => i.id === defaultPublishAsId);
+            if (foundDefault) {
+              setSelectedIdentity(foundDefault);
+              return;
+            }
+          }
+          const storedId = typeof window !== 'undefined' ? localStorage.getItem('tukubi_active_identity_id') : null;
+          const foundStored = storedId ? list.find((i) => i.id === storedId) : null;
+          setSelectedIdentity(foundStored || list[0]);
+        }
+      } catch (err) {
+        console.warn('[UniversalComposer] Failed to load operating identities:', err);
+      }
+    }
+    loadIdentities();
+
+    function onIdentitySwitched(e: any) {
+      if (e?.detail) {
+        setSelectedIdentity(e.detail);
+      }
+    }
+    if (typeof window !== 'undefined') {
+      window.addEventListener('tukubi_identity_switched', onIdentitySwitched);
+    }
+    return () => {
+      isMounted = false;
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('tukubi_identity_switched', onIdentitySwitched);
+      }
+    };
+  }, [defaultPublishAsId]);
 
   // Media files
   const [mediaList, setMediaList] = useState<UploadedMediaItem[]>([]);
@@ -708,6 +759,13 @@ export default function UniversalComposer({
       if (scheduledAt) {
         formData.set('scheduled_at', scheduledAt);
       }
+      if (selectedIdentity) {
+        formData.set('publish_as_type', selectedIdentity.type);
+        formData.set('publish_as_id', selectedIdentity.id);
+        if (selectedIdentity.type === 'business') {
+          formData.set('page_id', selectedIdentity.id);
+        }
+      }
 
       const result = await createPostAction({ error: null }, formData);
 
@@ -1065,23 +1123,89 @@ export default function UniversalComposer({
             {/* Header: Author, Audience & Mode Badge */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 md:pb-4 border-b border-slate-800/80">
               <div className="flex items-center gap-3 md:gap-3.5">
-                <div className="w-10 h-10 md:w-12 md:h-12 rounded-2xl bg-gradient-to-tr from-brand-caribbeanSea to-brand-sunriseCoral text-slate-950 font-black flex items-center justify-center text-xs md:text-sm shadow-md flex-shrink-0">
-                  {avatarInitials}
+                <div className="w-10 h-10 md:w-12 md:h-12 rounded-2xl overflow-hidden bg-gradient-to-tr from-brand-caribbeanSea to-brand-sunriseCoral text-slate-950 font-black flex items-center justify-center text-xs md:text-sm shadow-md flex-shrink-0">
+                  {selectedIdentity?.avatarUrl ? (
+                    <img src={selectedIdentity.avatarUrl} alt={selectedIdentity.name} className="w-full h-full object-cover" />
+                  ) : (
+                    avatarInitials
+                  )}
                 </div>
                 <div>
-                  <h4 className="font-extrabold text-sm md:text-base text-brand-sandstone flex items-center gap-2">
-                    {displayName}
-                    {isReel && (
-                      <span className="text-[9px] md:text-xs font-black uppercase px-2 md:px-2.5 py-0.5 rounded-full bg-brand-goldenHour/20 text-amber-300 border border-brand-goldenHour/30">
-                        Reel
-                      </span>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h4 className="font-extrabold text-sm md:text-base text-brand-sandstone flex items-center gap-2">
+                      {selectedIdentity?.name || displayName}
+                      {isReel && (
+                        <span className="text-[9px] md:text-xs font-black uppercase px-2 md:px-2.5 py-0.5 rounded-full bg-brand-goldenHour/20 text-amber-300 border border-brand-goldenHour/30">
+                          Reel
+                        </span>
+                      )}
+                      {mode !== 'text' && mode !== 'reel' && (
+                        <span className="text-[9px] md:text-xs font-black uppercase px-2 md:px-2.5 py-0.5 rounded-full bg-brand-caribbeanSea/20 text-brand-caribbeanSea border border-brand-caribbeanSea/30">
+                          {mode}
+                        </span>
+                      )}
+                    </h4>
+
+                    {/* Publishing As Dropdown */}
+                    {identities.length > 1 && (
+                      <div className="relative inline-block">
+                        <button
+                          type="button"
+                          onClick={() => setIsIdentityDropdownOpen(!isIdentityDropdownOpen)}
+                          className="flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-white/10 hover:bg-white/20 border border-white/15 text-[10px] md:text-xs font-bold text-white transition-all cursor-pointer"
+                        >
+                          <span className="text-white/60 font-normal">Publishing as:</span>
+                          <span className="text-brand-caribbeanSea font-black truncate max-w-[120px]">{selectedIdentity?.name}</span>
+                          <ChevronDown className="w-3 h-3 text-white/60" />
+                        </button>
+
+                        {isIdentityDropdownOpen && (
+                          <div className="absolute left-0 top-8 z-50 w-64 rounded-2xl bg-[#110D17]/95 backdrop-blur-2xl border border-white/20 p-2 shadow-2xl space-y-1 animate-fadeIn">
+                            <p className="text-[10px] font-bold text-brand-sandstone/60 px-2 py-1 uppercase tracking-wider">
+                              Select Publisher Identity
+                            </p>
+                            {identities.map((item) => (
+                              <button
+                                key={`${item.type}-${item.id}`}
+                                type="button"
+                                onClick={() => {
+                                  setSelectedIdentity(item);
+                                  setIsIdentityDropdownOpen(false);
+                                  if (typeof window !== 'undefined') {
+                                    localStorage.setItem('tukubi_active_identity_id', item.id);
+                                    localStorage.setItem('tukubi_active_identity_type', item.type);
+                                    window.dispatchEvent(new CustomEvent('tukubi_identity_switched', { detail: item }));
+                                  }
+                                }}
+                                className={`w-full flex items-center justify-between p-2 rounded-xl text-left text-xs transition-colors ${
+                                  selectedIdentity?.id === item.id
+                                    ? 'bg-brand-caribbeanSea/20 text-white font-bold'
+                                    : 'text-brand-sandstone/80 hover:bg-white/5 hover:text-white'
+                                }`}
+                              >
+                                <div className="flex items-center gap-2 truncate">
+                                  <div className="w-6 h-6 rounded-full overflow-hidden bg-white/10 flex items-center justify-center shrink-0 text-[10px]">
+                                    {item.avatarUrl ? (
+                                      <img src={item.avatarUrl} alt={item.name} className="w-full h-full object-cover" />
+                                    ) : (
+                                      item.name.charAt(0)
+                                    )}
+                                  </div>
+                                  <div className="truncate">
+                                    <p className="truncate font-semibold">{item.name}</p>
+                                    <p className="text-[9px] text-white/40 truncate">@{item.handle}</p>
+                                  </div>
+                                </div>
+                                <span className="text-[8px] font-black uppercase px-1.5 py-0.5 rounded bg-white/10 shrink-0 ml-1">
+                                  {item.badge}
+                                </span>
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
                     )}
-                    {mode !== 'text' && mode !== 'reel' && (
-                      <span className="text-[9px] md:text-xs font-black uppercase px-2 md:px-2.5 py-0.5 rounded-full bg-brand-caribbeanSea/20 text-brand-caribbeanSea border border-brand-caribbeanSea/30">
-                        {mode}
-                      </span>
-                    )}
-                  </h4>
+                  </div>
 
                   {/* Audience & Destination Selectors */}
                   <div className="flex flex-wrap items-center gap-2 mt-1.5">

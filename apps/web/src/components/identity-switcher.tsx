@@ -17,7 +17,7 @@ import { useAuth } from './auth-provider';
 import UserAvatar from './user-avatar';
 import { fetchUserOperatingIdentitiesAction } from '../lib/auth/actions';
 
-export type OperatingMode = 'personal' | 'creator' | 'business' | 'community';
+export type OperatingMode = 'personal' | 'creator' | 'business' | 'community' | 'official';
 
 export interface IdentityProfile {
   id: string;
@@ -99,6 +99,8 @@ export default function IdentitySwitcher({
     if (typeof window !== 'undefined') {
       localStorage.setItem('tukubi_active_identity_id', identity.id);
       localStorage.setItem('tukubi_active_identity_type', identity.type);
+      localStorage.setItem('tukubi_active_identity_name', identity.name);
+      localStorage.setItem('tukubi_active_identity_handle', identity.handle);
       window.dispatchEvent(new CustomEvent('tukubi_identity_switched', { detail: identity }));
     }
     if (onIdentityChange) {
@@ -113,6 +115,8 @@ export default function IdentitySwitcher({
 
   const getBadgeStyle = (type: OperatingMode) => {
     switch (type) {
+      case 'official':
+        return 'bg-gradient-to-r from-amber-500/25 to-orange-500/25 text-orange-300 border-orange-500/40 shadow-sm';
       case 'creator':
         return 'bg-brand-goldenHour/20 text-brand-goldenHour border-brand-goldenHour/30';
       case 'business':
@@ -127,6 +131,8 @@ export default function IdentitySwitcher({
 
   const getIcon = (type: OperatingMode) => {
     switch (type) {
+      case 'official':
+        return <ShieldCheck className="w-3.5 h-3.5 text-orange-400 shrink-0" />;
       case 'creator':
         return <Sparkles className="w-3.5 h-3.5 text-brand-goldenHour shrink-0" />;
       case 'business':

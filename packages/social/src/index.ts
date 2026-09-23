@@ -1,7 +1,19 @@
 import { encodeCursor, decodeCursor, type SqlStatement, type Visibility } from '@caribbean/database';
 
-export const FEED_MODES = ['for_you', 'following', 'friends', 'favorites', 'pages', 'caribbean', 'local', 'communities', 'latest'] as const;
+export const FEED_MODES = ['for_you', 'following', 'friends', 'favorites', 'pages', 'creators', 'official', 'caribbean', 'local', 'communities', 'latest'] as const;
 export type FeedMode = (typeof FEED_MODES)[number];
+
+export type PublisherType = 'personal' | 'official' | 'page' | 'community' | 'creator';
+
+export interface PublisherEntity {
+  id: string;
+  type: PublisherType;
+  name: string;
+  handle: string;
+  avatarUrl?: string | null;
+  badge?: string;
+  isVerified?: boolean;
+}
 
 export const POST_MAX_LENGTH = 3000;
 export const POST_MAX_MEDIA = 10;
@@ -26,7 +38,7 @@ export interface FeedQuery {
   hasNextCursor: (lastRow: { created_at: string; id: string }) => string | null;
 }
 
-const FEED_COLUMNS = 'id, author_id, content, visibility, country_id, created_at';
+const FEED_COLUMNS = 'id, author_id, content, visibility, country_id, created_at, publisher_type, publisher_entity_id, page_id, community_id, is_official, shared_post_id';
 
 export function buildFeedQuery(input: FeedQueryInput): FeedQuery {
   const limit = Math.min(Math.max(input.limit ?? PAGE_SIZE, 1), 50);
@@ -37,7 +49,7 @@ export function buildFeedQuery(input: FeedQueryInput): FeedQuery {
     return `$${params.length}`;
   };
 
-  where.push(`visibility = 'public' OR author_id = ${param(input.viewerId)}`);
+  where.push(`visibility = 'public' OR author_id = ${param(input.viewerId)} OR created_by_user_id = ${param(input.viewerId)}`);
 
   switch (input.mode) {
     case 'following':
@@ -56,9 +68,13 @@ export function buildFeedQuery(input: FeedQueryInput): FeedQuery {
       )`);
       break;
     case 'pages':
-      where.push(`author_id IN (
-        SELECT owner_id FROM public.businesses
-      )`);
+      where.push(`(publisher_type = 'page' OR page_id IS NOT NULL)`);
+      break;
+    case 'creators':
+      where.push(`(publisher_type = 'creator' OR author_id IN (SELECT profile_id FROM public.creator_accounts))`);
+      break;
+    case 'official':
+      where.push(`(publisher_type = 'official' OR is_official = true OR author_id IN (SELECT profile_id FROM public.official_accounts WHERE status = 'active'))`);
       break;
     case 'caribbean':
       where.push(`country_id IS NOT NULL`);

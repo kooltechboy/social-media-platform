@@ -2,7 +2,7 @@
 
 import React, { useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Sparkles, Users, Globe, Flame } from 'lucide-react';
+import { Sparkles, Users, Globe, Flame, Building2, ShieldCheck, Palette } from 'lucide-react';
 import { useTranslation } from '@caribbean/localization';
 import type { FeedMode } from '@caribbean/social';
 
@@ -20,6 +20,9 @@ export const FEED_CHANNELS: Array<{
 }> = [
   { id: 'for_you', labelKey: 'feed.for_you', fallbackLabel: 'For You', icon: Sparkles },
   { id: 'following', labelKey: 'feed.following', fallbackLabel: 'Following', icon: Users },
+  { id: 'pages', labelKey: 'feed.pages', fallbackLabel: 'Pages', icon: Building2 },
+  { id: 'creators', labelKey: 'feed.creators', fallbackLabel: 'Creators', icon: Palette },
+  { id: 'official', labelKey: 'feed.official', fallbackLabel: 'Official', icon: ShieldCheck },
   { id: 'caribbean', labelKey: 'feed.caribbean', fallbackLabel: 'Caribbean', icon: Globe },
   { id: 'communities', labelKey: 'nav.communities', fallbackLabel: 'Communities', icon: Flame },
 ];

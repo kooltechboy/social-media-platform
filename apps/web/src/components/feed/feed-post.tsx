@@ -28,6 +28,7 @@ import {
   EyeOff,
   ThumbsDown,
   Edit3,
+  Building2,
 } from 'lucide-react';
 import UserAvatar from '../user-avatar';
 import OfficialBadge from '../official/official-badge';
@@ -199,6 +200,14 @@ export default function FeedPost({
     );
   }
 
+  const isPage = post.publisherType === 'page';
+  const isOfficialPost = post.isOfficial || post.publisherType === 'official';
+  const authorHref = isPage
+    ? `/pages/${post.pageSlug || post.handle || post.pageId}`
+    : isOfficialPost
+    ? `/profile/${post.handle || 'tukubi'}`
+    : `/profile/${post.handle}`;
+
   return (
     <article
       id={post.id}
@@ -214,9 +223,9 @@ export default function FeedPost({
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-3.5 min-w-0">
           <Link
-            href={`/profile/${post.handle}`}
+            href={authorHref}
             className="hover:scale-105 transition-transform shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-caribbeanSea rounded-2xl"
-            aria-label={`View profile for ${post.author}`}
+            aria-label={`View ${isPage ? 'page' : 'profile'} for ${post.author}`}
           >
             <UserAvatar
               src={post.avatarUrl}
@@ -228,18 +237,23 @@ export default function FeedPost({
           <div className="min-w-0">
             <div className="flex items-center gap-1.5 flex-wrap">
               <Link
-                href={`/profile/${post.handle}`}
+                href={authorHref}
                 className="font-black text-sm sm:text-base md:text-[17px] text-white hover:text-brand-caribbeanSea transition-colors tracking-tight truncate"
               >
                 {post.author}
               </Link>
 
-              {post.isOfficial ? (
+              {isOfficialPost ? (
                 <OfficialBadge
                   size="xs"
                   showLabel={true}
                   label={post.handle.toLowerCase() === 'tukubi' ? 'Official TUKUBI' : 'Official'}
                 />
+              ) : isPage ? (
+                <span className="inline-flex items-center gap-1 text-[11px] font-bold text-sky-400 bg-sky-400/10 px-2 py-0.5 rounded-full border border-sky-400/20">
+                  <Building2 className="w-3 h-3" />
+                  Page
+                </span>
               ) : post.verified ? (
                 <span title="Verified Member" aria-label="Verified Member" className="inline-flex items-center">
                   <CheckCircle className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-brand-caribbeanSea fill-brand-caribbeanSea/20 drop-shadow-[0_0_6px_rgba(0,180,216,0.5)]" />
@@ -247,7 +261,7 @@ export default function FeedPost({
               ) : null}
 
               <Link
-                href={`/profile/${post.handle}`}
+                href={authorHref}
                 className="text-xs sm:text-sm font-semibold text-white/50 hover:text-white/80 transition-colors"
               >
                 @{post.handle}
@@ -261,7 +275,21 @@ export default function FeedPost({
               )}
             </div>
 
-            <div className="flex items-center gap-2 text-xs font-medium text-white/60 mt-0.5">
+            <div className="flex items-center gap-2 text-xs font-medium text-white/60 mt-0.5 flex-wrap">
+              {post.communityName && (
+                <>
+                  <span className="flex items-center gap-1 text-white/80">
+                    <span className="text-white/40">in</span>
+                    <Link
+                      href={`/communities/${post.communitySlug || post.communityId}`}
+                      className="font-bold text-brand-caribbeanSea hover:underline"
+                    >
+                      {post.communityName}
+                    </Link>
+                  </span>
+                  <span className="text-white/30">•</span>
+                </>
+              )}
               {post.location && (
                 <span className="flex items-center gap-1 text-white/70">
                   <MapPin className="w-3.5 h-3.5 text-brand-sunriseCoral shrink-0" />
@@ -588,6 +616,77 @@ export default function FeedPost({
           </div>
         )}
       </div>
+
+      {/* ────────────────────────────────────────────────────────── */}
+      {/* Embedded Repost / Shared Post Card                         */}
+      {/* ────────────────────────────────────────────────────────── */}
+      {post.sharedPost && (
+        <div className="rounded-2xl p-4 bg-white/5 border border-white/12 hover:border-white/20 transition-all space-y-3">
+          <div className="flex items-center gap-2.5">
+            <Link
+              href={
+                post.sharedPost.publisherType === 'page'
+                  ? `/pages/${post.sharedPost.pageSlug || post.sharedPost.handle || post.sharedPost.pageId}`
+                  : post.sharedPost.isOfficial || post.sharedPost.publisherType === 'official'
+                  ? `/profile/${post.sharedPost.handle || 'tukubi'}`
+                  : `/profile/${post.sharedPost.handle}`
+              }
+              className="hover:scale-105 transition-transform shrink-0"
+            >
+              <UserAvatar
+                src={post.sharedPost.avatarUrl}
+                name={post.sharedPost.author}
+                size="sm"
+              />
+            </Link>
+            <div className="min-w-0">
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <Link
+                  href={
+                    post.sharedPost.publisherType === 'page'
+                      ? `/pages/${post.sharedPost.pageSlug || post.sharedPost.handle || post.sharedPost.pageId}`
+                      : post.sharedPost.isOfficial || post.sharedPost.publisherType === 'official'
+                      ? `/profile/${post.sharedPost.handle || 'tukubi'}`
+                      : `/profile/${post.sharedPost.handle}`
+                  }
+                  className="font-bold text-sm text-white hover:text-brand-caribbeanSea transition-colors truncate"
+                >
+                  {post.sharedPost.author}
+                </Link>
+                {post.sharedPost.isOfficial ? (
+                  <OfficialBadge size="xs" showLabel={false} />
+                ) : post.sharedPost.publisherType === 'page' ? (
+                  <span className="inline-flex items-center gap-1 text-[10px] font-bold text-sky-400 bg-sky-400/10 px-1.5 py-0.5 rounded-full border border-sky-400/20">
+                    <Building2 className="w-2.5 h-2.5" />
+                    Page
+                  </span>
+                ) : post.sharedPost.verified ? (
+                  <CheckCircle className="w-3.5 h-3.5 text-brand-caribbeanSea" />
+                ) : null}
+                <span className="text-xs text-white/50">@{post.sharedPost.handle}</span>
+                <span className="text-white/30">•</span>
+                <span className="text-xs text-white/50">{post.sharedPost.time}</span>
+              </div>
+            </div>
+          </div>
+
+          {post.sharedPost.content && (
+            <p className="text-sm text-slate-200 leading-relaxed font-normal whitespace-pre-wrap">
+              {post.sharedPost.content}
+            </p>
+          )}
+
+          {post.sharedPost.mediaUrls && post.sharedPost.mediaUrls.length > 0 && (
+            <TukubiGallery
+              mediaUrls={post.sharedPost.mediaUrls}
+              mediaItems={post.sharedPost.mediaItems}
+              altText={`Media from ${post.sharedPost.author}`}
+              authorName={post.sharedPost.author}
+              className="w-full rounded-xl overflow-hidden"
+            />
+          )}
+        </div>
+      )}
 
       {/* ────────────────────────────────────────────────────────── */}
       {/* 3. POST MEDIA GALLERY                                     */}
