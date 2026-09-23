@@ -282,7 +282,7 @@ export default function FeedsTimelineClient({
             {FEED_CHANNELS_LIST.map((channel) => {
               const isActive = channel.id === activeMode;
               const Icon = channel.icon;
-              const href = channel.id === 'for_you' ? '/feeds/for-you' : `/feeds/${channel.slug}`;
+              const href = channel.id === 'for_you' ? '/?tab=for_you' : `/?tab=${channel.slug}`;
 
               return (
                 <Link
@@ -354,7 +354,7 @@ export default function FeedsTimelineClient({
                   </button>
                 ) : (
                   <Link
-                    href="/login?next=/feeds"
+                    href="/login?next=/"
                     className="bg-brand-caribbeanSea hover:brightness-110 text-slate-950 font-black px-5 py-2.5 rounded-xl text-xs transition-all shadow-md"
                   >
                     Sign In to Connect

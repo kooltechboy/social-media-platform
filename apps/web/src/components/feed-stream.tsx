@@ -52,6 +52,7 @@ import {
   unhidePostAction,
   toggleReactionAction,
   repostPostAction,
+  togglePinPostAction,
   type StructuredMediaItem,
 } from '../lib/social/actions';
 import { translatePostAction } from '../lib/social/translate-actions';
@@ -636,6 +637,30 @@ export default function FeedStream({
     setConfirmDeletePostId(postId);
   }
 
+  async function handleTogglePin(postId: string, isPinned: boolean) {
+    setPosts((prev) =>
+      prev.map((p) => (p.id === postId ? { ...p, isPinned } : p))
+    );
+    try {
+      const res = await togglePinPostAction(postId, isPinned);
+      if (res.success) {
+        setShareToast(isPinned ? 'Post pinned to top of feed.' : 'Post unpinned.');
+      } else {
+        setPosts((prev) =>
+          prev.map((p) => (p.id === postId ? { ...p, isPinned: !isPinned } : p))
+        );
+        setShareToast(res.error || 'Failed to update pin.');
+      }
+    } catch {
+      setPosts((prev) =>
+        prev.map((p) => (p.id === postId ? { ...p, isPinned: !isPinned } : p))
+      );
+      setShareToast('Failed to update pin.');
+    } finally {
+      setTimeout(() => setShareToast(null), 3000);
+    }
+  }
+
   async function executeDeletePost(postId: string) {
     setConfirmDeletePostId(null);
 
@@ -971,6 +996,7 @@ export default function FeedStream({
                   onUnhidePost={handleUnhidePost}
                   onShare={handleShare}
                   onDeletePost={handleDeletePost}
+                  onTogglePin={handleTogglePin}
                   onReportPost={(postId) => {
                     setReportModalPostId(postId);
                     setActiveMenuPostId(null);

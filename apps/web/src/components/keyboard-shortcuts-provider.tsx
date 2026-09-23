@@ -70,9 +70,9 @@ export function KeyboardShortcutsProvider({ children }: { children: React.ReactN
     },
     {
       keys: ['g', 'f'],
-      description: 'Go to Dedicated Feeds timeline',
+      description: 'Go to Following feed view',
       category: 'Navigation',
-      action: () => router.push('/feeds'),
+      action: () => router.push('/?tab=following'),
     },
     {
       keys: ['g', 'c'],
@@ -222,7 +222,7 @@ export function KeyboardShortcutsProvider({ children }: { children: React.ReactN
             break;
           case 'f':
             e.preventDefault();
-            router.push('/feeds');
+            router.push('/?tab=following');
             break;
           case 'c':
             e.preventDefault();

@@ -38,8 +38,8 @@ export default function CreatorTipModal({
           </div>
           <div>
             <div className="flex items-center gap-1.5">
-              <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-300 border border-amber-500/30">
-                Coming Soon
+              <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-brand-goldenHour/15 text-brand-goldenHour border border-brand-goldenHour/30">
+                Payment Engine Certification
               </span>
             </div>
             <h3 className="font-black text-lg text-white flex items-center gap-1.5 pt-0.5">

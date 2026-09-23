@@ -41,7 +41,6 @@ describe('Unified Navigation & Operating Identity Parity', () => {
     const SIDEBAR_SECTIONS = {
       primary: [
         '/',
-        '/feeds',
         '/explore',
         '/caribbean',
         '/reels',
@@ -67,14 +66,15 @@ describe('Unified Navigation & Operating Identity Parity', () => {
       expect(uniqueRoutes.size).toBe(allRoutes.length);
     });
 
-    it('contains dedicated /feeds and /caribbean while eliminating legacy /people and /members', () => {
+    it('contains canonical Home / and /caribbean while eliminating legacy /feeds, /people and /members', () => {
       const allRoutes = [
         ...SIDEBAR_SECTIONS.primary,
         ...SIDEBAR_SECTIONS.personal,
         ...SIDEBAR_SECTIONS.ecosystem,
       ];
-      expect(allRoutes).toContain('/feeds');
+      expect(allRoutes).toContain('/');
       expect(allRoutes).toContain('/caribbean');
+      expect(allRoutes).not.toContain('/feeds');
       expect(allRoutes).not.toContain('/people');
       expect(allRoutes).not.toContain('/members');
     });

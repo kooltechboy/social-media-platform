@@ -59,19 +59,13 @@ export default function AppSidebar({ currentPath }: { currentPath?: string }) {
   const activePath = currentPath || pathname || '/';
   const isOfficialUser = user?.isOfficial || user?.username?.toLowerCase() === 'tukubi';
 
-  // 1. PRIMARY NAVIGATION (12 Unified Global Destinations)
+  // 1. PRIMARY NAVIGATION (11 Unified Global Destinations)
   const PRIMARY_NAV: NavItem[] = [
     {
       href: '/',
       labelKey: 'nav.home',
       fallbackLabel: 'Home',
       icon: Home,
-    },
-    {
-      href: '/feeds',
-      labelKey: 'nav.feeds',
-      fallbackLabel: 'Feeds',
-      icon: Layers,
     },
     {
       href: '/explore',
@@ -208,10 +202,7 @@ export default function AppSidebar({ currentPath }: { currentPath?: string }) {
 
   function isItemActive(href: string): boolean {
     if (href === '/') {
-      return activePath === '/' || activePath === '/home';
-    }
-    if (href === '/feeds') {
-      return activePath === '/feeds' || activePath.startsWith('/feeds/');
+      return activePath === '/' || activePath === '/home' || activePath.startsWith('/feeds');
     }
     if (href === '/caribbean') {
       return activePath === '/caribbean' || activePath.startsWith('/caribbean/') || activePath.startsWith('/diaspora');

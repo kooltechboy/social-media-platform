@@ -74,7 +74,7 @@ export default function FeedsRail({
           {FEED_CHANNELS.map((ch) => {
             const isActive = activeMode === ch.id;
             const Icon = ch.icon;
-            const targetUrl = ch.id === 'for_you' ? '/feeds/for-you' : `/feeds/${ch.id.replace('_', '-')}`;
+            const targetUrl = ch.id === 'for_you' ? '/?tab=for_you' : `/?tab=${ch.id.replace('_', '-')}`;
 
             return (
               <Link

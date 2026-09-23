@@ -218,8 +218,22 @@ export default function CartDrawer({
                 <span>Backed by TUKUBI 30-Day Escrow Guarantee</span>
               </div>
 
-              {canTransact ? (
-                <ComingSoonButton label="Payments Coming Soon" className="w-full" />
+              {canTransact || onProceedToCheckout ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (onProceedToCheckout) {
+                      onProceedToCheckout();
+                    } else {
+                      onClose();
+                    }
+                  }}
+                  className="w-full bg-gradient-to-r from-brand-sunriseCoral via-orange-500 to-brand-goldenHour hover:brightness-110 active:scale-[0.98] text-slate-950 font-black py-3 px-4 rounded-2xl text-xs sm:text-sm min-h-[44px] flex items-center justify-center gap-2 transition-all shadow-md shadow-brand-sunriseCoral/20"
+                >
+                  <Lock className="w-4 h-4 text-slate-950" />
+                  <span>Proceed to Secure Checkout</span>
+                  <ArrowRight className="w-4 h-4 text-slate-950" />
+                </button>
               ) : (
                 <button
                   type="button"

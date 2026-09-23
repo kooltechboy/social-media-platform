@@ -204,8 +204,10 @@ export default async function ProfilePage({
       : Promise.resolve({} as Record<string, any>),
     supabase
       .from('posts')
-      .select('id, author_id, content, created_at, media_urls, cultural_tags, likes_count, comments_count, shares_count, profiles:profiles!posts_author_id_fkey(display_name, username, avatar_url, is_verified)')
+      .select('id, author_id, content, created_at, media_urls, cultural_tags, likes_count, comments_count, shares_count, is_pinned, is_official, official_content_type, post_status, profiles:profiles!posts_author_id_fkey(display_name, username, avatar_url, is_verified)')
       .eq('author_id', profileData.id)
+      .or('post_status.is.null,post_status.eq.published')
+      .order('is_pinned', { ascending: false, nullsFirst: false })
       .order('created_at', { ascending: false })
       .limit(20),
     recognitionService.getProfileRecognition(profileData.id),
@@ -254,6 +256,7 @@ export default async function ProfilePage({
         avatarUrl: profileData.avatar_url || '/brand/tukubi-emblem.png',
         verified: true,
         isOfficial: true,
+        isPinned: false,
         officialContentType: 'welcome',
         location: 'Pan-Caribbean',
         time: 'Official Launch',

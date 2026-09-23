@@ -155,7 +155,7 @@ export default function FeedsView({
                 return (
                   <Link
                     key={tab.id}
-                    href={`/feeds/${tab.slug}`}
+                    href={tab.id === 'for_you' ? '/?tab=for_you' : `/?tab=${tab.slug}`}
                     role="tab"
                     aria-selected={isActive}
                     className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs sm:text-sm font-black whitespace-nowrap min-h-[42px] transition-all ${

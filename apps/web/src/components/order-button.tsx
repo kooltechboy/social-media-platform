@@ -64,7 +64,15 @@ export default function OrderButton({
 
   return (
     <>
-      <ComingSoonButton label="Payments Coming Soon" className="w-full" />
+      <button
+        type="button"
+        disabled={disabled}
+        onClick={() => setIsCheckoutOpen(true)}
+        className="w-full bg-gradient-to-r from-brand-sunriseCoral via-orange-500 to-brand-goldenHour hover:brightness-110 active:scale-[0.98] text-slate-950 font-black py-3 px-4 rounded-xl text-xs md:text-sm min-h-[44px] flex items-center justify-center gap-2 transition-all shadow-md shadow-brand-sunriseCoral/20 disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        <ShoppingBag className="w-4 h-4 md:w-5 md:h-5 text-slate-950 stroke-[2.5]" />
+        <span>Buy Now</span>
+      </button>
 
       <UnifiedCheckoutModal
         isOpen={isCheckoutOpen}

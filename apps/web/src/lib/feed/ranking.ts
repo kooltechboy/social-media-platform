@@ -2,7 +2,7 @@ import { type SupabaseClient } from '@supabase/supabase-js';
 import { type FeedMode } from '@caribbean/social';
 import { decodeCursor, encodeCursor } from '@caribbean/database';
 import { CaribbeanFeedRanker, type CaribbeanGraphSignals } from '@caribbean/recommendations';
-import { cacheGet, cacheSet } from '../cache/redis-cache';
+import { cacheGet, cacheSet, cacheDeletePattern } from '../cache/redis-cache';
 
 export interface RankedFeedResult {
   data: any[] | null;
@@ -65,6 +65,9 @@ export async function buildRankedFeed(
       const decoded = decodeCursor(cursor);
       postQuery = postQuery.lt('created_at', decoded.sortKey);
     }
+
+    // Apply status filter: published or null (not scheduled/draft/deleted)
+    postQuery = postQuery.or('post_status.is.null,post_status.eq.published');
 
     // Apply mode filters
     if (mode === 'following') {
@@ -129,9 +132,17 @@ export async function buildRankedFeed(
     } else if (mode === 'for_you') {
       const { data: follows } = await supabase.from('follows').select('following_id').eq('follower_id', userId);
       const followingIds = follows?.map((f: any) => f.following_id) || [];
+      // In for_you, always include the author's own posts, followed accounts, Caribbean tag, or official posts
+      const orConditions: string[] = [
+        `author_id.eq.${userId}`,
+        'country_id.not.is.null',
+        'is_official.eq.true',
+        'cultural_tags.cs.{"caribbean"}',
+      ];
       if (followingIds.length > 0) {
-        postQuery = postQuery.or(`author_id.in.(${followingIds.join(',')}),country_id.not.is.null,is_official.eq.true`);
+        orConditions.push(`author_id.in.(${followingIds.join(',')})`);
       }
+      postQuery = postQuery.or(orConditions.join(','));
     }
 
     const { data: candidates, error } = await postQuery;
@@ -141,9 +152,9 @@ export async function buildRankedFeed(
     }
     
     if (!candidates || candidates.length === 0) {
-      // Fallback for "for_you" if initial query yields 0: return general public posts
-      if (mode === 'for_you' && !cursor) {
-        const { data: fallbackPosts } = await supabase
+      // Fallback for "for_you": return public published posts so feed is never empty
+      if (mode === 'for_you') {
+        let fallbackQuery = supabase
           .from('posts')
           .select(`
             id, author_id, content, created_at, media_urls, cultural_tags, likes_count, comments_count, shares_count, 
@@ -152,10 +163,23 @@ export async function buildRankedFeed(
             profiles:profiles!posts_author_id_fkey(display_name, username, avatar_url, is_verified, is_official),
             businesses:businesses!posts_page_id_fkey(id, name, slug, avatar_url, is_verified)
           `)
+          .or('post_status.is.null,post_status.eq.published')
           .order('created_at', { ascending: false })
           .limit(30);
+
+        if (cursor) {
+          const decoded = decodeCursor(cursor);
+          fallbackQuery = fallbackQuery.lt('created_at', decoded.sortKey);
+        }
+
+        const { data: fallbackPosts } = await fallbackQuery;
         if (fallbackPosts && fallbackPosts.length > 0) {
-          return { data: fallbackPosts };
+          let nextCursor: string | undefined = undefined;
+          if (fallbackPosts.length === 30) {
+            const last = fallbackPosts[fallbackPosts.length - 1];
+            nextCursor = encodeCursor({ sortKey: last.created_at, id: last.id });
+          }
+          return { data: fallbackPosts, nextCursor };
         }
       }
       return { data: [] };
@@ -263,5 +287,20 @@ export async function buildRankedFeed(
     return rankedResult;
   } catch (error) {
     return { data: null, error };
+  }
+}
+
+/**
+ * Invalidates feed caches for a user or globally when content changes.
+ */
+export async function invalidateFeedCache(userId?: string): Promise<void> {
+  try {
+    if (userId) {
+      await cacheDeletePattern(`feed:${userId}:`);
+    } else {
+      await cacheDeletePattern('feed:');
+    }
+  } catch (err) {
+    console.warn('[ranking] Failed to invalidate feed cache:', err);
   }
 }

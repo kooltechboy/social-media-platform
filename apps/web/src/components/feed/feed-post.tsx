@@ -35,7 +35,7 @@ import OfficialBadge from '../official/official-badge';
 import ReactionPicker, { type ReactionType } from '../reactions/reaction-picker';
 import EmojiPickerPopover from '../emoji/emoji-picker-popover';
 import { createSupabaseBrowserClient } from '../../lib/supabase/browser';
-import { hidePostAction, unhidePostAction, updatePostAction } from '../../lib/social/actions';
+import { hidePostAction, unhidePostAction, updatePostAction, togglePinPostAction } from '../../lib/social/actions';
 import TukubiImage from '../ui/tukubi-image';
 import TukubiVideoPlayer from '../media/tukubi-video-player';
 import TukubiGallery from '../media/tukubi-gallery';
@@ -60,6 +60,7 @@ export interface FeedPostProps {
   onTipCreator: (target: { name: string; handle: string }) => void;
   onHidePost?: (postId: string, reason: 'hide' | 'not_interested') => void;
   onUnhidePost?: (postId: string) => void;
+  onTogglePin?: (postId: string, isPinned: boolean) => void;
 
   // Comments
   isCommentsExpanded?: boolean;
@@ -102,6 +103,7 @@ export default function FeedPost({
   onTipCreator,
   onHidePost,
   onUnhidePost,
+  onTogglePin,
 
   // Comments
   isCommentsExpanded = false,
@@ -127,9 +129,34 @@ export default function FeedPost({
   const [isHidden, setIsHidden] = useState(false);
   const [isNotInterested, setIsNotInterested] = useState(false);
   const [isFavorite, setIsFavorite] = useState(Boolean(post.isAuthorFavorited));
+  const [isPinned, setIsPinned] = useState(Boolean(post.isPinned));
+  const [isTogglingPin, setIsTogglingPin] = useState(false);
 
-  const isAuthor = Boolean(currentUserId && post.authorId === currentUserId);
+  const isAuthor = Boolean(currentUserId && (post.authorId === currentUserId || (post as any).createdByUserId === currentUserId));
   const rootComments = commentList.filter((c) => !c.parent_id);
+
+  const handlePinToggle = async () => {
+    if (isTogglingPin) return;
+    const targetState = !isPinned;
+    setIsPinned(targetState);
+    setIsTogglingPin(true);
+    setIsMenuOpen(false);
+
+    try {
+      if (onTogglePin) {
+        onTogglePin(post.id, targetState);
+      } else {
+        const res = await togglePinPostAction(post.id, targetState);
+        if (!res.success) {
+          setIsPinned(!targetState);
+        }
+      }
+    } catch {
+      setIsPinned(!targetState);
+    } finally {
+      setIsTogglingPin(false);
+    }
+  };
 
   const [isEditing, setIsEditing] = useState(false);
   const [editedContent, setEditedContent] = useState(post.content || '');
@@ -267,7 +294,7 @@ export default function FeedPost({
                 @{post.handle}
               </Link>
 
-              {post.isPinned && (
+              {isPinned && (
                 <span className="inline-flex items-center gap-1 text-[11px] font-black text-brand-sunriseCoral bg-brand-sunriseCoral/15 px-2.5 py-0.5 rounded-full border border-brand-sunriseCoral/30">
                   <Pin className="w-3 h-3" />
                   Pinned
@@ -427,6 +454,15 @@ export default function FeedPost({
 
               {isAuthor ? (
                 <>
+                  <button
+                    type="button"
+                    onClick={handlePinToggle}
+                    disabled={isTogglingPin}
+                    className="w-full text-left px-3 py-2.5 rounded-xl text-slate-200 hover:bg-white/10 flex items-center gap-2.5 font-semibold transition-colors min-h-[40px]"
+                  >
+                    <Pin className={`w-4 h-4 ${isPinned ? 'fill-brand-sunriseCoral text-brand-sunriseCoral' : 'text-slate-400'}`} />
+                    <span>{isPinned ? 'Unpin from Top' : 'Pin to Top of Feed'}</span>
+                  </button>
                   <button
                     type="button"
                     onClick={() => {

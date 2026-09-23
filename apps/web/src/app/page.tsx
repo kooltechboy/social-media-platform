@@ -117,7 +117,13 @@ export default async function RootPage(props: RootPageProps) {
       : null;
 
     topReels = reelsRes.data || [];
-    marketProducts = marketRes.data || [];
+    marketProducts = (marketRes.data || []).map((p: any) => {
+      const biz = Array.isArray(p.businesses) ? p.businesses[0] : p.businesses;
+      return {
+        ...p,
+        seller_name: biz?.name || 'Verified Merchant',
+      };
+    });
     culturalEvents = eventsRes.data || [];
 
     const followingSet = new Set(followsRes.data?.map((f: any) => f.following_id) || []);
@@ -153,7 +159,7 @@ export default async function RootPage(props: RootPageProps) {
           avatarUrl: '/brand/tukubi-emblem.png',
           verified: true,
           isOfficial: true,
-          isPinned: true,
+          isPinned: false,
           officialContentType: 'welcome',
           location: 'Tukubi Network 🌴',
           time: 'Inaugural Launch',

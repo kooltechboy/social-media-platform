@@ -116,3 +116,43 @@ export async function cacheDelete(key: string): Promise<void> {
 
   memoryCache.delete(prefixedKey);
 }
+
+/**
+ * Deletes cached entries matching a key prefix / pattern.
+ */
+export async function cacheDeletePattern(pattern: string): Promise<void> {
+  const prefix = `tukubi:cache:${pattern}`;
+
+  // 1. Purge from in-memory cache
+  for (const key of Array.from(memoryCache.keys())) {
+    if (key.startsWith(prefix) || key.includes(pattern)) {
+      memoryCache.delete(key);
+    }
+  }
+
+  // 2. Upstash Redis pattern scan & del if configured
+  const url = process.env.UPSTASH_REDIS_REST_URL;
+  const token = process.env.UPSTASH_REDIS_REST_TOKEN;
+
+  if (url && token) {
+    try {
+      const res = await fetch(`${url}/keys/${encodeURIComponent(`${prefix}*`)}`, {
+        headers: { Authorization: `Bearer ${token}` },
+        signal: AbortSignal.timeout(1000),
+      });
+      if (res.ok) {
+        const body = await res.json();
+        const keys: string[] = body.result || [];
+        for (const k of keys) {
+          await fetch(`${url}/del/${encodeURIComponent(k)}`, {
+            method: 'POST',
+            headers: { Authorization: `Bearer ${token}` },
+            signal: AbortSignal.timeout(500),
+          }).catch(() => {});
+        }
+      }
+    } catch {
+      // Non-blocking error
+    }
+  }
+}

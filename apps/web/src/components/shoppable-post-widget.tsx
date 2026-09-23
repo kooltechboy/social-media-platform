@@ -81,7 +81,13 @@ export default function ShoppablePostWidget({ product }: ShoppablePostWidgetProp
           </div>
         </div>
 
-        <ComingSoonButton label="Coming Soon" className="shrink-0" />
+        <button
+          type="button"
+          onClick={() => setIsOpen(true)}
+          className="shrink-0 px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-brand-sunriseCoral to-brand-goldenHour hover:brightness-110 text-slate-950 font-black text-xs transition-all shadow-md active:scale-95 min-h-[36px]"
+        >
+          Buy Now
+        </button>
       </div>
 
       {/* 1-Click Instant Checkout Modal */}

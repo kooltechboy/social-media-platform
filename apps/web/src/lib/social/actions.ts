@@ -5,7 +5,7 @@ import { CaribAIEngine } from '@caribbean/ai';
 import { validateComposer, type FeedMode } from '@caribbean/social';
 import { createSupabaseServerClient, getCurrentUser } from '../supabase/server';
 import { ensureUserProfile } from '../auth/user-sync';
-import { buildRankedFeed } from '../feed/ranking';
+import { buildRankedFeed, invalidateFeedCache } from '../feed/ranking';
 import { hydratePostsEngagement } from '../feed/hydrate-posts';
 import {
   rankAndSelectAds,
@@ -322,6 +322,9 @@ export async function createPostAction(_prev: PostActionState, formData: FormDat
     }
   }
 
+  // Explicit pinning check (official or author with permission)
+  const isPinnedExplicit = formData.get('is_pinned') === 'true';
+
   const { data, error } = await supabase
     .from('posts')
     .insert({
@@ -340,12 +343,13 @@ export async function createPostAction(_prev: PostActionState, formData: FormDat
       page_id: pageId,
       is_official: isOfficialPost,
       official_content_type: officialContentType,
+      is_pinned: isPinnedExplicit,
       shared_post_id: sharedPostId,
       share_commentary: shareCommentary,
     })
     .select(`
       id, content, created_at, media_urls, cultural_tags, likes_count, comments_count, shares_count, visibility, 
-      community_id, country_id, page_id, is_official, official_content_type, publisher_type, publisher_entity_id, 
+      community_id, country_id, page_id, is_official, official_content_type, is_pinned, publisher_type, publisher_entity_id, 
       created_by_user_id, shared_post_id,
       profiles:profiles!posts_author_id_fkey(id, display_name, username, avatar_url, is_verified, is_official),
       businesses:businesses!posts_page_id_fkey(id, name, slug, avatar_url, is_verified)
@@ -418,7 +422,7 @@ export async function createPostAction(_prev: PostActionState, formData: FormDat
     avatarUrl: displayAvatar,
     verified: isVerified,
     isOfficial: isOfficialPost,
-    isPinned: isOfficialPost,
+    isPinned: Boolean(data.is_pinned),
     officialContentType: officialContentType || undefined,
     publisherType,
     publisherId: publisherEntityId,
@@ -441,6 +445,7 @@ export async function createPostAction(_prev: PostActionState, formData: FormDat
     countryId: data.country_id || undefined,
   };
 
+  await invalidateFeedCache(user.id);
   revalidatePath('/');
   revalidatePath('/create');
   if (pageId && business?.slug) {
@@ -925,20 +930,124 @@ export async function deletePostAction(postId: string): Promise<{ success: boole
   const supabase = await createSupabaseServerClient();
   if (!supabase) return { success: false, error: 'Database is not configured.' };
 
+  // Fetch post to check permissions (author, creator, or page owner/admin)
+  const { data: post } = await supabase
+    .from('posts')
+    .select('id, author_id, created_by_user_id, page_id, is_official')
+    .eq('id', postId)
+    .maybeSingle();
+
+  if (!post) {
+    return { success: false, error: 'Post not found.' };
+  }
+
+  const isDirectAuthor = post.author_id === user.id || post.created_by_user_id === user.id;
+  let isAuthorized = isDirectAuthor;
+
+  if (!isAuthorized && post.page_id) {
+    const { data: pageRole } = await supabase
+      .from('page_roles')
+      .select('role')
+      .eq('page_id', post.page_id)
+      .eq('user_id', user.id)
+      .maybeSingle();
+    isAuthorized = ['owner', 'admin'].includes(pageRole?.role || '');
+  }
+
+  if (!isAuthorized && post.is_official) {
+    const { data: op } = await supabase
+      .from('official_account_operators')
+      .select('role')
+      .eq('operator_profile_id', user.id)
+      .maybeSingle();
+    isAuthorized = ['owner', 'administrator'].includes(op?.role || '');
+  }
+
+  if (!isAuthorized) {
+    return { success: false, error: 'You do not have permission to delete this post.' };
+  }
+
   const { error } = await supabase
     .from('posts')
     .delete()
-    .eq('id', postId)
-    .eq('author_id', user.id);
+    .eq('id', postId);
 
   if (error) {
     console.error('[deletePostAction] Error deleting post:', error);
     return { success: false, error: error.message };
   }
 
+  await invalidateFeedCache(user.id);
   revalidatePath('/');
   revalidatePath('/create');
+  revalidatePath('/profile');
   return { success: true, error: null };
+}
+
+/**
+ * Toggles the pinned status of a post explicitly and reversibly.
+ * Author, page admin, or official account publisher can pin/unpin their posts.
+ */
+export async function togglePinPostAction(
+  postId: string,
+  isPinned: boolean
+): Promise<{ success: boolean; isPinned: boolean; error: string | null }> {
+  const user = await getCurrentUser();
+  if (!user) return { success: false, isPinned: !isPinned, error: 'Please sign in to modify pinned status.' };
+
+  const supabase = await createSupabaseServerClient();
+  if (!supabase) return { success: false, isPinned: !isPinned, error: 'Database unavailable.' };
+
+  const { data: post, error: fetchError } = await supabase
+    .from('posts')
+    .select('id, author_id, created_by_user_id, page_id, is_official')
+    .eq('id', postId)
+    .maybeSingle();
+
+  if (fetchError || !post) {
+    return { success: false, isPinned: !isPinned, error: 'Post not found.' };
+  }
+
+  const isDirectAuthor = post.author_id === user.id || post.created_by_user_id === user.id;
+  let isAuthorized = isDirectAuthor;
+
+  if (!isAuthorized && post.page_id) {
+    const { data: pageRole } = await supabase
+      .from('page_roles')
+      .select('role')
+      .eq('page_id', post.page_id)
+      .eq('user_id', user.id)
+      .maybeSingle();
+    isAuthorized = ['owner', 'admin'].includes(pageRole?.role || '');
+  }
+
+  if (!isAuthorized && post.is_official) {
+    const { data: op } = await supabase
+      .from('official_account_operators')
+      .select('role')
+      .eq('operator_profile_id', user.id)
+      .maybeSingle();
+    isAuthorized = ['owner', 'administrator', 'editor', 'publisher'].includes(op?.role || '');
+  }
+
+  if (!isAuthorized) {
+    return { success: false, isPinned: !isPinned, error: 'You are not authorized to pin this post.' };
+  }
+
+  const { error: updateError } = await supabase
+    .from('posts')
+    .update({ is_pinned: isPinned })
+    .eq('id', postId);
+
+  if (updateError) {
+    console.error('[togglePinPostAction] Error updating post pin state:', updateError);
+    return { success: false, isPinned: !isPinned, error: updateError.message };
+  }
+
+  await invalidateFeedCache(user.id);
+  revalidatePath('/');
+  revalidatePath('/profile');
+  return { success: true, isPinned, error: null };
 }
 
 /**
