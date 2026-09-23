@@ -25,7 +25,7 @@ export type TranslationKey =
   | 'nav.notifications' | 'nav.events' | 'nav.marketplace' | 'nav.saved' | 'nav.settings'
   | 'nav.creator_studio' | 'nav.business_studio' | 'nav.payments' | 'nav.profile'
   | 'nav.reels_shorts' | 'nav.sounds' | 'nav.live_streams' | 'nav.podcasts'
-  | 'nav.cultural_events' | 'nav.pages_stores' | 'nav.financial_center' | 'nav.map' | 'nav.create_hub' | 'nav.sign_in'
+  | 'nav.cultural_events' | 'nav.pages_stores' | 'nav.financial_center' | 'nav.map' | 'nav.create_hub' | 'nav.sign_in' | 'nav.feeds' | 'nav.caribbean'
   | 'composer.placeholder' | 'composer.photo' | 'composer.video' | 'composer.live' | 'composer.poll' | 'composer.post'
   | 'feed.for_you' | 'feed.following' | 'feed.friends' | 'feed.caribbean' | 'feed.local' | 'feed.communities' | 'feed.latest'
   | 'feed.empty' | 'feed.loading' | 'feed.error'
@@ -55,6 +55,8 @@ export type TranslationKey =
 
 const en: Record<TranslationKey, string> = {
   'nav.home': 'Home',
+  'nav.feeds': 'Feeds',
+  'nav.caribbean': 'Caribbean',
   'nav.explore': 'Explore',
   'nav.reels': 'Reels',
   'nav.communities': 'Communities',
@@ -183,6 +185,8 @@ const en: Record<TranslationKey, string> = {
 
 const es: Record<TranslationKey, string> = {
   'nav.home': 'Inicio',
+  'nav.feeds': 'Canales',
+  'nav.caribbean': 'Caribe',
   'nav.explore': 'Explorar',
   'nav.reels': 'Reels',
   'nav.communities': 'Comunidades',
@@ -311,6 +315,8 @@ const es: Record<TranslationKey, string> = {
 
 const fr: Record<TranslationKey, string> = {
   'nav.home': 'Accueil',
+  'nav.feeds': "Fils d'actualité",
+  'nav.caribbean': 'Caraïbes',
   'nav.explore': 'Explorer',
   'nav.reels': 'Reels',
   'nav.communities': 'Communautés',
@@ -439,6 +445,8 @@ const fr: Record<TranslationKey, string> = {
 
 const ht: Record<TranslationKey, string> = {
   'nav.home': 'Akèy',
+  'nav.feeds': 'Fil Nouvèl',
+  'nav.caribbean': 'Karayib',
   'nav.explore': 'Eksplore',
   'nav.reels': 'Reels',
   'nav.communities': 'Kominote',
@@ -567,6 +575,8 @@ const ht: Record<TranslationKey, string> = {
 
 const nl: Record<TranslationKey, string> = {
   'nav.home': 'Home',
+  'nav.feeds': 'Feeds',
+  'nav.caribbean': 'Caraïben',
   'nav.explore': 'Ontdekken',
   'nav.reels': 'Reels',
   'nav.communities': 'Communities',
@@ -695,6 +705,8 @@ const nl: Record<TranslationKey, string> = {
 
 const pap: Record<TranslationKey, string> = {
   'nav.home': 'Kas',
+  'nav.feeds': 'Feeds',
+  'nav.caribbean': 'Karibe',
   'nav.explore': 'Buska',
   'nav.reels': 'Reels',
   'nav.communities': 'Komunidat',

@@ -37,33 +37,44 @@ describe('Unified Navigation & Operating Identity Parity', () => {
     });
   });
 
-  describe('Desktop Sidebar Grouping (4 Clean Human-Centered Sections)', () => {
+  describe('Desktop Sidebar Grouping (Primary, Personal & Ecosystem Sections)', () => {
     const SIDEBAR_SECTIONS = {
-      social: ['/', '/friends', '/messages', '/notifications'],
-      discovery: ['/explore', '/map', '/reels', '/sounds', '/live', '/podcasts'],
-      commerce: ['/communities', '/marketplace', '/events', '/pages'],
-      creatorAccount: ['/creator-hub', '/creator-studio', '/financial-center', '/profile', '/settings', '/help'],
+      primary: [
+        '/',
+        '/feeds',
+        '/explore',
+        '/caribbean',
+        '/reels',
+        '/live',
+        '/communities',
+        '/marketplace',
+        '/events',
+        '/pages',
+        '/podcasts',
+        '/creator-studio',
+      ],
+      personal: ['/friends', '/messages', '/notifications', '/bookmarks', '/financial-center', '/profile'],
+      ecosystem: ['/creator-hub', '/settings', '/help'],
     };
 
     it('contains no duplicate routes across sidebar groups', () => {
       const allRoutes = [
-        ...SIDEBAR_SECTIONS.social,
-        ...SIDEBAR_SECTIONS.discovery,
-        ...SIDEBAR_SECTIONS.commerce,
-        ...SIDEBAR_SECTIONS.creatorAccount,
+        ...SIDEBAR_SECTIONS.primary,
+        ...SIDEBAR_SECTIONS.personal,
+        ...SIDEBAR_SECTIONS.ecosystem,
       ];
       const uniqueRoutes = new Set(allRoutes);
       expect(uniqueRoutes.size).toBe(allRoutes.length);
     });
 
-    it('contains no deprecated duplicate routes like /feeds, /people, /members', () => {
+    it('contains dedicated /feeds and /caribbean while eliminating legacy /people and /members', () => {
       const allRoutes = [
-        ...SIDEBAR_SECTIONS.social,
-        ...SIDEBAR_SECTIONS.discovery,
-        ...SIDEBAR_SECTIONS.commerce,
-        ...SIDEBAR_SECTIONS.creatorAccount,
+        ...SIDEBAR_SECTIONS.primary,
+        ...SIDEBAR_SECTIONS.personal,
+        ...SIDEBAR_SECTIONS.ecosystem,
       ];
-      expect(allRoutes).not.toContain('/feeds');
+      expect(allRoutes).toContain('/feeds');
+      expect(allRoutes).toContain('/caribbean');
       expect(allRoutes).not.toContain('/people');
       expect(allRoutes).not.toContain('/members');
     });

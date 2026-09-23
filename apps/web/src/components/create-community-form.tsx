@@ -1,15 +1,28 @@
 'use client';
 
-import React, { useState, useTransition } from 'react';
+import React, { useState, useEffect, useTransition } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { Plus, X } from 'lucide-react';
 import { createCommunityAction, type CommunityActionState } from '../lib/communities/actions';
 
 const INITIAL: CommunityActionState = { error: null, success: null };
 
-export default function CreateCommunityForm() {
-  const [open, setOpen] = useState(false);
+export interface CreateCommunityFormProps {
+  initialOpen?: boolean;
+}
+
+export default function CreateCommunityForm({ initialOpen = false }: CreateCommunityFormProps) {
+  const searchParams = useSearchParams();
+  const shouldAutoOpen = initialOpen || searchParams?.get('create') === 'true';
+  const [open, setOpen] = useState(shouldAutoOpen);
   const [state, setState] = useState<CommunityActionState>(INITIAL);
   const [pending, startTransition] = useTransition();
+
+  useEffect(() => {
+    if (searchParams?.get('create') === 'true') {
+      setOpen(true);
+    }
+  }, [searchParams]);
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();

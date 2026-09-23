@@ -13,10 +13,10 @@ export const dynamic = 'force-dynamic';
 export default async function EventsPage({
   searchParams,
 }: {
-  searchParams?: Promise<{ kind?: string; city?: string; q?: string }>;
+  searchParams?: Promise<{ kind?: string; city?: string; q?: string; create?: string }>;
 }) {
   const resolvedParams = searchParams ? await searchParams : {};
-  const { kind, city, q } = resolvedParams;
+  const { kind, city, q, create } = resolvedParams;
 
   const user = await getCurrentUser();
   const supabase = await createSupabaseServerClient();
@@ -68,7 +68,7 @@ export default async function EventsPage({
 
           <div className="flex items-center gap-3 self-start md:self-auto">
             {user ? (
-              <EventCreateForm cities={cities} />
+              <EventCreateForm cities={cities} initialOpen={create === 'true'} />
             ) : (
               <Link
                 href="/login"

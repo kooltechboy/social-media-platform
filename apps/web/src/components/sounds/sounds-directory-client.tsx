@@ -34,6 +34,7 @@ import {
   uploadSoundAction,
 } from '../../lib/sounds/actions';
 import AudioManager from '../../lib/media/audio-manager';
+import CaribbeanSoundSynthesizer from '../../lib/media/sound-synthesizer';
 import CreateReelModal from '../reels/create-reel-modal';
 
 interface SoundsDirectoryClientProps {
@@ -164,6 +165,29 @@ export default function SoundsDirectoryClient({
   });
 
   useEffect(() => {
+    const unregister = AudioManager.getInstance().register('sounds-directory-player', {
+      onPause: () => {
+        if (audioRef.current && !audioRef.current.paused) {
+          audioRef.current.pause();
+        }
+        CaribbeanSoundSynthesizer.getInstance().stop();
+        setIsPlaying(false);
+      },
+      onMute: () => {
+        if (audioRef.current) {
+          audioRef.current.muted = true;
+        }
+        setIsMuted(true);
+      },
+      kind: 'sound',
+    });
+    return () => {
+      unregister();
+      CaribbeanSoundSynthesizer.getInstance().stop();
+    };
+  }, []);
+
+  useEffect(() => {
     if (!activeSound || !audioRef.current) return;
     audioRef.current.currentTime = 0;
     setCurrentTime(0);
@@ -180,10 +204,16 @@ export default function SoundsDirectoryClient({
       .catch((err) => {
         setIsBuffering(false);
         if (err.name !== 'AbortError') {
-          console.warn('[SoundsDirectory] Playback failed:', err);
-          setIsPlaying(false);
-          setPlaybackError(`Could not play "${activeSound.title}". Audio stream error.`);
-          AudioManager.getInstance().releaseAudio('sounds-directory-player');
+          const played = CaribbeanSoundSynthesizer.getInstance().playRhythm(activeSound.genre);
+          if (played) {
+            setIsPlaying(true);
+            setPlaybackError(null);
+          } else {
+            console.warn('[SoundsDirectory] Playback failed:', err);
+            setIsPlaying(false);
+            setPlaybackError(`Could not play "${activeSound.title}". Audio stream error.`);
+            AudioManager.getInstance().releaseAudio('sounds-directory-player');
+          }
         }
       });
   }, [activeSound]);
@@ -196,6 +226,7 @@ export default function SoundsDirectoryClient({
         if (audioRef.current) {
           audioRef.current.pause();
         }
+        CaribbeanSoundSynthesizer.getInstance().stop();
         setIsPlaying(false);
         AudioManager.getInstance().releaseAudio('sounds-directory-player');
       } else {
@@ -207,16 +238,23 @@ export default function SoundsDirectoryClient({
             setIsPlaying(true);
           }
         } catch (err: any) {
-          setIsPlaying(false);
-          AudioManager.getInstance().releaseAudio('sounds-directory-player');
           if (err.name !== 'AbortError') {
-            setPlaybackError(`Unable to play "${sound.title}". Please check audio connection.`);
+            const played = CaribbeanSoundSynthesizer.getInstance().playRhythm(sound.genre);
+            if (played) {
+              setIsPlaying(true);
+              setPlaybackError(null);
+            } else {
+              setIsPlaying(false);
+              AudioManager.getInstance().releaseAudio('sounds-directory-player');
+              setPlaybackError(`Unable to play "${sound.title}". Please check audio connection.`);
+            }
           }
         } finally {
           setIsBuffering(false);
         }
       }
     } else {
+      CaribbeanSoundSynthesizer.getInstance().stop();
       setActiveSound(sound);
       setIsPlaying(false);
       setIsBuffering(true);

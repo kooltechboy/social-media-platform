@@ -7,6 +7,9 @@ import AppHeader from './app-header';
 import AppSidebar from './app-sidebar';
 import MobileNav from './mobile-nav';
 import OperatingIdentityBanner from './operating-identity-banner';
+import { SidebarProvider, useSidebar } from './sidebar-context';
+import { KeyboardShortcutsProvider } from './keyboard-shortcuts-provider';
+
 const GATEWAY_ROUTES = [
   '/login',
   '/signup',
@@ -17,9 +20,10 @@ const GATEWAY_ROUTES = [
   '/embed',
 ];
 
-export default function AppShell({ children }: { children: React.ReactNode }) {
+function AppShellContent({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { user } = useAuth();
+  const { isCollapsed } = useSidebar();
   const isGateway = GATEWAY_ROUTES.some((route) => pathname === route || pathname?.startsWith(`${route}/`));
 
   if (isGateway) {
@@ -48,8 +52,13 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       <OperatingIdentityBanner />
       <AppHeader />
       <div className="flex-1 w-full max-w-[2560px] 5xl:max-w-[2800px] mx-auto flex">
-        {/* Left Navigation: Fixed 240-260px width, sticky on desktop with independent scroll */}
-        <aside className="hidden md:block w-[240px] xl:w-[260px] shrink-0 sticky top-[58px] h-[calc(100vh-58px)] overflow-y-auto px-2.5 sm:px-3.5 py-6 scrollbar-none z-20">
+        {/* Left Navigation: Responsive 240-260px expanded, 72px compact rail when collapsed */}
+        <aside
+          className={`hidden md:block shrink-0 sticky top-[58px] h-[calc(100vh-58px)] overflow-y-auto px-2 sm:px-3 py-6 scrollbar-none z-20 transition-all duration-300 ease-in-out ${
+            isCollapsed ? 'w-[72px]' : 'w-[240px] xl:w-[260px]'
+          }`}
+          aria-label="Desktop primary navigation"
+        >
           <AppSidebar />
         </aside>
 
@@ -66,5 +75,15 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       </div>
       <MobileNav />
     </div>
+  );
+}
+
+export default function AppShell({ children }: { children: React.ReactNode }) {
+  return (
+    <SidebarProvider>
+      <KeyboardShortcutsProvider>
+        <AppShellContent>{children}</AppShellContent>
+      </KeyboardShortcutsProvider>
+    </SidebarProvider>
   );
 }

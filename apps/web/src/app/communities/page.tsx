@@ -46,10 +46,10 @@ function JoinPolicyBadge({ policy }: { policy: string }) {
 export default async function CommunitiesPage({
   searchParams,
 }: {
-  searchParams?: Promise<{ hub?: string; country?: string; q?: string }>;
+  searchParams?: Promise<{ hub?: string; country?: string; q?: string; create?: string }>;
 }) {
   const resolvedParams = searchParams ? await searchParams : {};
-  const { hub, country, q } = resolvedParams;
+  const { hub, country, q, create } = resolvedParams;
 
   const [user, supabase] = await Promise.all([getCurrentUser(), createSupabaseServerClient()]);
 
@@ -125,7 +125,7 @@ export default async function CommunitiesPage({
           </div>
 
           <div className="flex items-center gap-3 self-start md:self-auto">
-            {user && <CreateCommunityForm />}
+            {user && <CreateCommunityForm initialOpen={create === 'true'} />}
             {!user && (
               <Link
                 href="/login"

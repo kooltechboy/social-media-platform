@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState, useTransition } from 'react';
+import React, { useState, useEffect, useTransition } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { createEventAction, type EventActionState } from '../lib/events/actions';
 
 export interface CityOption {
@@ -9,10 +10,23 @@ export interface CityOption {
   country_iso: string;
 }
 
-export default function EventCreateForm({ cities }: { cities: CityOption[] }) {
+export interface EventCreateFormProps {
+  cities: CityOption[];
+  initialOpen?: boolean;
+}
+
+export default function EventCreateForm({ cities, initialOpen = false }: EventCreateFormProps) {
+  const searchParams = useSearchParams();
+  const shouldAutoOpen = initialOpen || searchParams?.get('create') === 'true';
   const [state, setState] = useState<EventActionState>({ error: null });
   const [pending, startTransition] = useTransition();
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(shouldAutoOpen);
+
+  useEffect(() => {
+    if (searchParams?.get('create') === 'true') {
+      setOpen(true);
+    }
+  }, [searchParams]);
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();

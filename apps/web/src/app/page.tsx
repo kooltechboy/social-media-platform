@@ -138,7 +138,8 @@ export default async function RootPage(props: RootPageProps) {
       currentUserId: user.id,
     });
 
-    // Authoritative Official Post fallback for initial For You feed
+    // Authoritative Official Post fallback column selection contract:
+    // profiles:profiles!posts_author_id_fkey(display_name, username, avatar_url, is_verified)
     if (activeMode === 'for_you') {
       const hasOfficialPost = livePosts.some(
         (p) => p.handle?.toLowerCase() === 'tukubi' || p.id === 'd23f3e75-0dfa-47c6-8df9-2c0fa299d7ff'
