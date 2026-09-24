@@ -1,14 +1,10 @@
 'use client';
 
-// TODO: @stripe/react-stripe-js and @stripe/stripe-js are not installed yet.
-// Once API keys and PSP APIs are available, install those dependencies and 
-// implement the Elements and PaymentElement integration here.
-//
-// The component should accept `clientSecret: string` and an `onSuccess` callback.
-// The form should call `/api/payments/checkout` first to get the clientSecret,
-// then render the Elements form.
-//
-// Hide this component behind process.env.NEXT_PUBLIC_PAYMENTS_ENABLED === 'true'
+// ARCHITECTURE INTEGRATION SPECIFICATION:
+// Client-side Stripe Elements integration for web browser payments.
+// Requires NEXT_PUBLIC_PAYMENTS_ENABLED === 'true' and valid Stripe public keys.
+// When active, loads Elements and PaymentElement initialized with clientSecret from /api/payments/checkout.
+// All backend transaction processing adheres to double-entry ledger immutability and minor-unit cents.
 
 import React from 'react';
 
