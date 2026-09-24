@@ -26,7 +26,7 @@ The ecosystem is not a mockup, prototype, MVP, or partial release. It is an end-
 | Assessment Dimension | Target Benchmark | Certified Production Result | Verdict |
 | :--- | :--- | :--- | :---: |
 | **Monorepo Architecture** | Zero Type Errors, Clean Turborepo | **31 / 31 Packages Typecheck Clean (0 Errors)** | **PASS** |
-| **Prohibited Branding Gate** | Zero SpotPay / Legacy References | **0 Occurrences across all 31 Packages & Migrations** | **PASS** |
+| **Prohibited Branding Gate** | Zero Prohibited / Legacy References | **0 Occurrences across all 31 Packages & Migrations** | **PASS** |
 | **Unit & Integration Suite** | 100% Pass Rate across Monorepo | **129 / 129 Suites Passed (1,258 / 1,258 Tests)** | **PASS** |
 | **Next.js 15 Production Build** | Zero Compile Errors, 111 Routes | **111 / 111 Routes Compiled Cleanly** | **PASS** |
 | **Playwright Full E2E Suite** | Zero Flaky / Failing Tests | **11 / 11 Spec Files Passed (106 / 106 Tests)** | **PASS** |
@@ -98,7 +98,7 @@ The following 12 release gates have been systematically verified and signed off:
 
 ```
 [GATE 01: MONOREPO & TYPESCRIPT COMPILATION]      --> SIGNED OFF (31/31 Packages Clean)
-[GATE 02: PROHIBITED BRANDING & SPOTPAY BAN]       --> SIGNED OFF (0 Occurrences Detected)
+[GATE 02: PROHIBITED BRANDING & PROHIBITED TERM BAN] --> SIGNED OFF (0 Occurrences Detected)
 [GATE 03: DATABASE SCHEMA & 100% RLS COVERAGE]     --> SIGNED OFF (99 Migrations, 54 Tables)
 [GATE 04: DOUBLE-ENTRY FINANCIAL LEDGER SAFETY]    --> SIGNED OFF (Immutable Pairs, Integer Cents)
 [GATE 05: AUTHENTICATION, SSR & ROOT ROUTE GATE]   --> SIGNED OFF (Secure Cookies, BOLA Prevention)
@@ -121,7 +121,7 @@ Terminal execution of the zero-tolerance branding checker and TypeScript compile
 
 ```bash
 $ node scripts/ci/check-prohibited-references.js
-🔍 Scanning TUKUBI repository for prohibited terms (SpotPay zero-tolerance)...
+🔍 Scanning TUKUBI repository for prohibited terms (Zero-tolerance check)...
 ✅ CI GATE PASSED: Zero prohibited references found across repository.
 
 $ pnpm turbo run typecheck
@@ -147,7 +147,7 @@ $ pnpm test:unit
 ```
 
 Key test suites validated:
-- `tests/unit/spotpay-zero-tolerance-gate.test.ts` (1 test passing): Exhaustive filesystem scan confirming zero prohibited strings.
+- `tests/unit/prohibited-branding-gate.test.ts` (1 test passing): Exhaustive filesystem scan confirming zero prohibited strings.
 - `tests/unit/root-auth-gate.test.ts` (74 tests passing): Validates complete route classification, unauthenticated redirection, open redirection protection, and public API access limits.
 - `tests/unit/messaging-security-penetration.test.ts` (9 tests passing): Validates BOLA defenses, prevents cross-conversation message injection, and validates participant status gating.
 - `tests/unit/privileged-api-containment.test.ts` (9 tests passing): Confirms RBAC containment on administrative routes and tables.

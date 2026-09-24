@@ -172,7 +172,7 @@ describe('TUKUBI Connect — Conversational Commerce & Messaging Architecture', 
 
   describe('4. Anti-Spam Rate Limiting & Burst Protection', () => {
     it('protects against automated messaging flood attacks', () => {
-      const testUserId = 'usr_spam_tester_' + Date.now();
+      const testUserId = 'usr_spam_sender_' + Date.now();
       
       // Send allowed messages
       for (let i = 0; i < 15; i++) {

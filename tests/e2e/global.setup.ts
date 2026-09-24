@@ -19,8 +19,8 @@ setup('authenticate', async ({ page }) => {
         value: encodeURIComponent(JSON.stringify({
           id: 'usr_playwright_test_01',
           email: 'testuser@tukubi.com',
-          username: 'tukubi_tester',
-          displayName: 'Tukubi Tester',
+          username: 'tukubi_member',
+          displayName: 'Tukubi Member',
           role: 'user',
         })),
         domain: 'localhost',
@@ -40,8 +40,8 @@ setup('authenticate', async ({ page }) => {
             value: JSON.stringify({
               id: 'usr_playwright_test_01',
               email: 'testuser@tukubi.com',
-              username: 'tukubi_tester',
-              displayName: 'Tukubi Tester',
+              username: 'tukubi_member',
+              displayName: 'Tukubi Member',
               role: 'user',
             }),
           },

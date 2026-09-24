@@ -80,8 +80,8 @@ export async function getCurrentUser(): Promise<SessionUser | null> {
           return {
             id: parsed.id,
             email: parsed.email || 'testuser@tukubi.com',
-            username: parsed.username || 'tukubi_tester',
-            displayName: parsed.displayName || 'Tukubi Tester',
+            username: parsed.username || 'tukubi_member',
+            displayName: parsed.displayName || 'Tukubi Member',
             avatarUrl: parsed.avatarUrl || '/brand/tukubi-emblem.png',
             role: parsed.role || 'user',
             isOfficial: false,
