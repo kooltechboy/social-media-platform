@@ -28,6 +28,7 @@ setup('authenticate', async ({ page }) => {
         httpOnly: false,
         secure: false,
         sameSite: 'Lax' as const,
+        expires: Math.floor(Date.now() / 1000) + 86400,
       },
     ],
     origins: [

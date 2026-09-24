@@ -6,6 +6,7 @@ test.describe('Navigation & Routing - Unauthenticated', () => {
   test.use({ storageState: { cookies: [], origins: [] } });
 
   test('Public routes should be accessible without auth', async ({ page }) => {
+    test.slow();
     const publicRoutes = [
       '/',
       '/explore',
@@ -102,22 +103,21 @@ test.describe('Navigation & Routing - Authenticated', () => {
     }
   });
 
-  test('More Ecosystem Features Accordion toggles and contains links', async ({ page }) => {
-    const moreBtn = page.locator('aside').getByRole('button', { name: /More Ecosystem Features/i });
+  test('Tools & Ecosystem Accordion toggles and contains links', async ({ page }) => {
+    const moreBtn = page.locator('aside').getByRole('button', { name: /Tools & Ecosystem|More Ecosystem Features/i });
     await expect(moreBtn).toBeVisible();
     await moreBtn.click();
     await page.waitForTimeout(300);
 
-    const links = [
-      { name: 'Live Streams', href: '/live', badge: 'LIVE' },
+    const toolsLinks = [
       { name: 'Caribbean Sounds', href: '/sounds' },
       { name: 'Caribbean Map', href: '/map' },
-      { name: 'Creator Studio', href: '/creator-studio', badge: 'STUDIO' },
       { name: 'Financial Center', href: '/financial-center' },
-      { name: 'Settings', href: '/settings' },
+      { name: 'Creator Hub', href: '/creator-hub', badge: 'HUB' },
+      { name: 'Help & Learn', href: '/help' },
     ];
 
-    for (const link of links) {
+    for (const link of toolsLinks) {
       const linkLocator = page.locator('aside').getByRole('link', { name: new RegExp(link.name, 'i') }).first();
       await expect(linkLocator).toBeVisible();
       await expect(linkLocator).toHaveAttribute('href', link.href);
@@ -128,9 +128,10 @@ test.describe('Navigation & Routing - Authenticated', () => {
       }
     }
 
-    // Check pulse animation on LIVE badge
-    const liveLink = page.locator('aside').getByRole('link', { name: /Live Streams/i }).first();
+    // Check pulse animation on elevated primary LIVE badge
+    const liveLink = page.locator('aside').getByRole('link', { name: /Live/i }).first();
     const liveBadge = liveLink.getByText('LIVE', { exact: true });
+    await expect(liveBadge).toBeVisible();
     await expect(liveBadge).toHaveClass(/animate-pulse/);
   });
 

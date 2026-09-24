@@ -1,6 +1,8 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('Critical journeys', () => {
+  test.use({ storageState: { cookies: [], origins: [] } });
+
   test('home page loads with public front door and discovery portals', async ({ page }) => {
     await page.goto('/');
     await page.waitForLoadState('networkidle');

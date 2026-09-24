@@ -38,7 +38,7 @@ describe('TUKUBI — Avatar-First Header Identity & Official Post Recovery', () 
     const filePath = path.resolve(__dirname, '../../apps/web/src/app/page.tsx');
     const content = fs.readFileSync(filePath, 'utf-8');
 
-    expect(content).toContain("profiles:profiles!posts_author_id_fkey(display_name, username, avatar_url, is_verified)");
+    expect(content).toContain("profiles:profiles!posts_author_id_fkey(id, display_name, username, avatar_url, is_verified, is_official)");
     expect(content).toContain("tukubi");
   });
 
@@ -57,7 +57,7 @@ describe('TUKUBI — Avatar-First Header Identity & Official Post Recovery', () 
     // Home feed guarantees official launch post
     expect(pageContent).toContain('d23f3e75-0dfa-47c6-8df9-2c0fa299d7ff');
     expect(pageContent).toContain('hasOfficialPost');
-    expect(pageContent).toContain('officialLaunchPost');
+    expect(pageContent).toContain('dbOfficialPost');
 
     // Profile page guarantees official launch post
     expect(profileContent).toContain('d23f3e75-0dfa-47c6-8df9-2c0fa299d7ff');

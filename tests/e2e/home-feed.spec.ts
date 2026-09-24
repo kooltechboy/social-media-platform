@@ -80,11 +80,15 @@ test.describe('Home Feed Page - Authenticated', () => {
   });
 
   test('Feed Stream & Interaction Bar', async ({ page }) => {
-    // Feed container renders "Happening in Your World"
-    await expect(page.getByText(/Happening in Your World/i)).toBeVisible();
+    // Feed container renders "Home Stream"
+    await expect(page.getByText(/Home Stream|Happening in Your World/i).first()).toBeVisible();
 
-    const emptyState = page.getByText(/Your TUKUBI World is Warming Up|No posts in this channel yet/i);
+    const emptyState = page.getByText(/No Content Found in This Feed|Your Following Stream is Quiet|No Friends Posts Yet|No Community Posts Yet/i).first();
     const postArticle = page.locator('article').first();
+
+    // Wait deterministically for either post cards to hydrate or the empty state to appear
+    await expect(postArticle.or(emptyState)).toBeVisible({ timeout: 10000 });
+
     const hasPost = await postArticle.isVisible().catch(() => false);
     const hasEmpty = await emptyState.isVisible().catch(() => false);
     expect(hasPost || hasEmpty).toBeTruthy();

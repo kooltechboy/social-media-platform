@@ -217,7 +217,7 @@ export default async function NotificationsPage() {
                 </p>
                 {notification.payload?.post_id && (
                   <Link
-                    href={`/?post=${notification.payload.post_id}`}
+                    href={`/post/${notification.payload.post_id}`}
                     className="inline-flex items-center gap-1.5 text-xs md:text-sm font-black text-orange-400 hover:text-orange-300 mt-1 min-h-[36px] md:min-h-[40px]"
                   >
                     View Post →

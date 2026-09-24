@@ -11,7 +11,7 @@ export const dynamic = 'force-dynamic';
 export default async function MessagesPage({
   searchParams,
 }: {
-  searchParams: Promise<{ c?: string; u?: string; compose?: string; tab?: string }>;
+  searchParams: Promise<{ c?: string; u?: string; user?: string; compose?: string; tab?: string }>;
 }) {
   const user = await getCurrentUser();
   const supabase = await createSupabaseServerClient();
@@ -46,9 +46,10 @@ export default async function MessagesPage({
   let conversationError: string | null = null;
 
   // Authoritative Canonical Direct Conversation Resolution
-  if (params.u) {
+  const targetUserParam = params.u || params.user;
+  if (targetUserParam) {
     const { getOrCreateDirectConversation } = await import('../../lib/messaging/direct-conversations');
-    const convResult = await getOrCreateDirectConversation(params.u, user.id);
+    const convResult = await getOrCreateDirectConversation(targetUserParam, user.id);
     if (convResult.error) {
       conversationError = convResult.error;
     } else if (convResult.conversationId) {

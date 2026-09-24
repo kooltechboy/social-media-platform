@@ -33,7 +33,7 @@ test.describe('Mobile-First Production Certification Suite', () => {
       }
     });
 
-    test('bottom 5-tab bar renders Home, Feeds, Create (FAB), Explore, and Menu', async ({ page }) => {
+    test('bottom 5-tab bar renders Home, Explore, Create (FAB), Messages, and Menu', async ({ page }) => {
       await page.goto('/');
       await page.waitForLoadState('networkidle');
 
@@ -42,9 +42,9 @@ test.describe('Mobile-First Production Certification Suite', () => {
 
       // 5 tabs
       await expect(nav.getByRole('tab', { name: 'Home' })).toBeVisible();
-      await expect(nav.getByRole('tab', { name: 'Feeds' })).toBeVisible();
-      await expect(nav.getByRole('tab', { name: 'Create on TUKUBI' })).toBeVisible();
       await expect(nav.getByRole('tab', { name: 'Explore Caribbean' })).toBeVisible();
+      await expect(nav.getByRole('tab', { name: 'Create on TUKUBI' })).toBeVisible();
+      await expect(nav.getByRole('tab', { name: 'Messages' })).toBeVisible();
       await expect(nav.getByRole('tab', { name: 'Ecosystem Menu' })).toBeVisible();
     });
 

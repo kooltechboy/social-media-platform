@@ -595,29 +595,59 @@ export default function ReelsFeedViewer({ initialReels, user }: ReelsFeedViewerP
 
       {/* Snap Scroll Container */}
       <div className="flex-1 w-full h-full overflow-y-scroll snap-y snap-mandatory overscroll-none scrollbar-hide" style={{ touchAction: 'pan-y' }}>
-        {reels.map((reel, idx) => {
-          const isActive = activeReelId === reel.id;
-          const isNext = reels[idx - 1]?.id === activeReelId || reels[idx + 1]?.id === activeReelId;
-          return (
-            <ReelCard
-              key={reel.id}
-              reel={reel}
-              isActive={isActive}
-              isNext={isNext}
-              isMuted={isMuted}
-              toggleMute={toggleMute}
-              user={user}
-              likesState={likesState}
-              setLikesState={setLikesState}
-              followingState={followingState}
-              setFollowingState={setFollowingState}
-              onOpenComments={handleOpenComments}
-              onOpenShare={handleOpenShare}
-              isSaved={savedReels.has(reel.id)}
-              onSave={handleSaveReel}
-            />
-          );
-        })}
+        {reels.length === 0 ? (
+          <div className="w-full h-full flex flex-col items-center justify-center p-6 text-center z-10 relative">
+            <div className="surface-card rounded-3xl p-8 sm:p-10 max-w-md w-full border border-white/15 shadow-2xl space-y-5 bg-[#0D1322]/80 backdrop-blur-xl">
+              <div className="w-16 h-16 rounded-2xl bg-rose-500/10 border border-rose-500/30 flex items-center justify-center mx-auto text-rose-400">
+                <Video className="w-8 h-8" />
+              </div>
+              <div className="space-y-2">
+                <h2 className="text-xl sm:text-2xl font-black text-white">No Reels in this stream yet</h2>
+                <p className="text-sm text-brand-sandstone/80 leading-relaxed">
+                  Be the first creator to share short moments, carnival rhythm stems, and island vibes with the global diaspora.
+                </p>
+              </div>
+              <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
+                <button
+                  onClick={() => setIsCreateModalOpen(true)}
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-gradient-to-r from-rose-500 to-amber-500 hover:brightness-110 text-slate-950 font-black px-6 py-3 rounded-2xl text-sm transition-all shadow-md shadow-rose-500/20 min-h-[44px] cursor-pointer"
+                >
+                  <Plus className="w-4 h-4" /> Create your first Reel
+                </button>
+                <Link
+                  href="/feeds"
+                  className="w-full sm:w-auto inline-flex items-center justify-center border border-white/20 hover:bg-white/10 text-white font-bold px-5 py-3 rounded-2xl text-sm transition-all min-h-[44px]"
+                >
+                  Explore Feeds
+                </Link>
+              </div>
+            </div>
+          </div>
+        ) : (
+          reels.map((reel, idx) => {
+            const isActive = activeReelId === reel.id;
+            const isNext = reels[idx - 1]?.id === activeReelId || reels[idx + 1]?.id === activeReelId;
+            return (
+              <ReelCard
+                key={reel.id}
+                reel={reel}
+                isActive={isActive}
+                isNext={isNext}
+                isMuted={isMuted}
+                toggleMute={toggleMute}
+                user={user}
+                likesState={likesState}
+                setLikesState={setLikesState}
+                followingState={followingState}
+                setFollowingState={setFollowingState}
+                onOpenComments={handleOpenComments}
+                onOpenShare={handleOpenShare}
+                isSaved={savedReels.has(reel.id)}
+                onSave={handleSaveReel}
+              />
+            );
+          })
+        )}
       </div>
 
       {/* Slide-over Comments Drawer */}
