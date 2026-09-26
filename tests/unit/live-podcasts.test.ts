@@ -11,6 +11,9 @@ import {
 import {
   validateEpisode,
   validateChapters,
+  validateTimedLinks,
+  validateRssFeedXml,
+  parseWebVttTranscript,
   buildRssFeed,
   slugifyPodcast,
   formatTimestamp,
@@ -180,6 +183,83 @@ describe('Podcasting 2.0 & iTunes RSS feed generation', () => {
     expect(xml).toContain('<enclosure url="https://cdn.tukubi.com/ep14.mp3"');
     expect(xml).toContain('<itunes:duration>42:00</itunes:duration>');
     expect(xml).toContain('<podcast:transcript url="https://cdn.tukubi.com/podcasts/ep14-transcript.txt"');
+  });
+
+  it('validates RSS feeds and catches missing required tags', () => {
+    const validXml = buildRssFeed({
+      podcastTitle: 'Caribbean Voices',
+      podcastDescription: 'Culture and stories',
+      language: 'en',
+      siteUrl: 'https://tukubi.com/podcasts/caribbean-voices',
+      feedUrl: 'https://tukubi.com/api/v1/podcasts/1/rss',
+      coverUrl: 'https://tukubi.com/cover.jpg',
+      episodes: [],
+    });
+    expect(validateRssFeedXml(validXml).valid).toBe(true);
+
+    const invalidXml = '<rss><channel><title>No image or namespaces</title></channel></rss>';
+    const result = validateRssFeedXml(invalidXml);
+    expect(result.valid).toBe(false);
+    expect(result.errors.length).toBeGreaterThan(0);
+  });
+
+  it('validates timed links against episode duration boundaries', () => {
+    const links = [
+      { timestampSeconds: 120, title: 'Caribbean Rum Product', url: 'https://tukubi.com/product/123' },
+      { timestampSeconds: 600, title: 'Creator Page', url: 'https://tukubi.com/pages/carnival' },
+    ];
+    expect(validateTimedLinks(links, 1800).valid).toBe(true);
+
+    const invalidLinks = [
+      { timestampSeconds: 2000, title: 'Out of bounds', url: 'https://tukubi.com/bad' },
+      { timestampSeconds: 50, title: 'Bad url', url: 'not-a-url' },
+    ];
+    const res = validateTimedLinks(invalidLinks, 1800);
+    expect(res.valid).toBe(false);
+    expect(res.errors.length).toBe(2);
+  });
+
+  it('parses WebVTT transcripts with timestamps and speakers accurately', () => {
+    const vtt = `WEBVTT
+
+00:00:15.000 --> 00:00:20.000
+Host: Welcome back to Tukubi Podcasting Network!
+
+00:01:30.000 --> 00:01:35.000
+Guest: Glad to be here representing Trinidad & Tobago.`;
+
+    const parsed = parseWebVttTranscript(vtt);
+    expect(parsed.length).toBe(2);
+    expect(parsed[0].timestampSeconds).toBe(15);
+    expect(parsed[0].speaker).toBe('Host');
+    expect(parsed[0].text).toContain('Welcome back');
+    expect(parsed[1].timestampSeconds).toBe(90);
+    expect(parsed[1].speaker).toBe('Guest');
+  });
+
+  it('supports video enclosures in RSS feeds for video podcasting', () => {
+    const xml = buildRssFeed({
+      podcastTitle: 'Caribbean Visual Podcast',
+      podcastDescription: 'Studio video talk',
+      language: 'en',
+      siteUrl: 'https://tukubi.com/podcasts/visual',
+      feedUrl: 'https://tukubi.com/api/v1/podcasts/2/rss',
+      coverUrl: 'https://tukubi.com/cover.jpg',
+      episodes: [
+        {
+          guid: 'ep-vid-1',
+          title: 'Episode 1: Video Podcasting in Kingston',
+          description: 'HLS and MP4 video derivative',
+          audioUrl: 'https://cdn.tukubi.com/audio.mp3',
+          videoUrl: 'https://cdn.tukubi.com/video.mp4',
+          durationSeconds: 1200,
+          publishedAt: '2026-09-01T00:00:00Z',
+          episodeType: 'full',
+        },
+      ],
+    });
+    expect(xml).toContain('type="video/mp4"');
+    expect(xml).toContain('url="https://cdn.tukubi.com/video.mp4"');
   });
 
   it('slugifies podcast titles', () => {

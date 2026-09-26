@@ -20,11 +20,15 @@ import {
   Search,
   Filter,
   Loader2,
+  Rss,
+  Key,
+  Globe,
 } from 'lucide-react';
 import {
   deletePodcastAction,
   deletePodcastEpisodeAction,
   publishDraftEpisodeAction,
+  generateFeedTokenAction,
 } from '../../lib/podcasts/actions';
 import {
   deleteLivestreamAction,
@@ -108,6 +112,20 @@ export default function CreatorContentManager({
   const [isPodcastModalOpen, setIsPodcastModalOpen] = useState(false);
   const [scheduledItems, setScheduledItems] = useState<ScheduledPostItem[]>([]);
   const [isLoadingScheduled, setIsLoadingScheduled] = useState(false);
+  const [feedTokens, setFeedTokens] = useState<Record<string, string>>({});
+  const [expandedDistShowId, setExpandedDistShowId] = useState<string | null>(null);
+
+  function handleGenerateFeedToken(showId: string) {
+    startTransition(async () => {
+      const res = await generateFeedTokenAction(showId);
+      if (res.success && res.token) {
+        setFeedTokens((prev) => ({ ...prev, [showId]: res.token! }));
+        setFeedback({ type: 'success', message: 'Private subscriber feed token generated!' });
+      } else {
+        setFeedback({ type: 'error', message: res.error || 'Failed to generate token.' });
+      }
+    });
+  }
 
   const loadScheduledPosts = async () => {
     const supabase = createSupabaseBrowserClient();
@@ -381,30 +399,116 @@ export default function CreatorContentManager({
                         </p>
                       </div>
 
-                      <div className="flex items-center gap-2">
-                        <Link
-                          href={`/podcasts?slug=${show.slug}`}
-                          className="px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-brand-sandstone text-xs font-bold flex items-center gap-1 transition-colors"
-                        >
-                          <ExternalLink className="w-3.5 h-3.5" /> View Show
-                        </Link>
-                        <button
-                          disabled={isPending}
-                          onClick={() => handleDeletePodcast(show.id)}
-                          className="p-1.5 rounded-xl text-rose-400 hover:bg-rose-500/20 transition-colors"
-                          title="Delete Show"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => {
+                              navigator.clipboard.writeText(`${window.location.origin}/api/v1/podcasts/${show.id}/rss`);
+                              setFeedback({ type: 'success', message: 'Public RSS feed URL copied to clipboard!' });
+                            }}
+                            className="px-3 py-1.5 rounded-xl bg-purple-500/15 hover:bg-purple-500/25 text-purple-300 text-xs font-bold flex items-center gap-1 transition-colors"
+                            title="Copy Public RSS Feed URL"
+                          >
+                            <Rss className="w-3.5 h-3.5" /> RSS Feed
+                          </button>
+                          <button
+                            onClick={() => handleGenerateFeedToken(show.id)}
+                            disabled={isPending}
+                            className="px-3 py-1.5 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 text-xs font-bold flex items-center gap-1 transition-colors"
+                            title="Generate Private Subscriber Token"
+                          >
+                            <Key className="w-3.5 h-3.5" /> Member Feed
+                          </button>
+                          <button
+                            onClick={() => setExpandedDistShowId(expandedDistShowId === show.id ? null : show.id)}
+                            className="px-3 py-1.5 rounded-xl bg-blue-500/15 hover:bg-blue-500/25 text-blue-300 text-xs font-bold flex items-center gap-1 transition-colors"
+                            title="Syndication & Distribution Platforms"
+                          >
+                            <Globe className="w-3.5 h-3.5" /> Distribution
+                          </button>
+                          <Link
+                            href={`/podcasts?slug=${show.slug}`}
+                            className="px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-brand-sandstone text-xs font-bold flex items-center gap-1 transition-colors"
+                          >
+                            <ExternalLink className="w-3.5 h-3.5" /> View Show
+                          </Link>
+                          <button
+                            disabled={isPending}
+                            onClick={() => handleDeletePodcast(show.id)}
+                            className="p-1.5 rounded-xl text-rose-400 hover:bg-rose-500/20 transition-colors"
+                            title="Delete Show"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
                       </div>
-                    </div>
 
-                    {/* Episodes List */}
-                    {show.episodes.length === 0 ? (
-                      <p className="text-xs text-brand-sandstone/60 italic py-1">
-                        No episodes published under this show yet.
-                      </p>
-                    ) : (
+                      {/* Private Feed Token Notice */}
+                      {feedTokens[show.id] && (
+                        <div className="p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl text-xs space-y-1">
+                          <p className="font-bold text-amber-300 flex items-center gap-1.5">
+                            <Key className="w-3.5 h-3.5" /> Tokenized Subscriber Feed URL
+                          </p>
+                          <div className="flex items-center gap-2">
+                            <input
+                              readOnly
+                              value={`${typeof window !== 'undefined' ? window.location.origin : ''}/api/v1/podcasts/${show.id}/rss?token=${feedTokens[show.id]}`}
+                              className="w-full bg-slate-950 border border-amber-500/30 text-amber-200 text-[11px] px-2.5 py-1 rounded font-mono select-all"
+                            />
+                            <button
+                              onClick={() => {
+                                navigator.clipboard.writeText(`${window.location.origin}/api/v1/podcasts/${show.id}/rss?token=${feedTokens[show.id]}`);
+                                setFeedback({ type: 'success', message: 'Tokenized subscriber RSS URL copied!' });
+                              }}
+                              className="px-2.5 py-1 bg-amber-500 text-slate-950 font-black rounded text-[11px] hover:bg-amber-400 whitespace-nowrap"
+                            >
+                              Copy
+                            </button>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Distribution Center Drawer */}
+                      {expandedDistShowId === show.id && (
+                        <div className="p-4 bg-slate-900/90 border border-blue-500/30 rounded-2xl text-xs space-y-3">
+                          <div className="flex items-center justify-between">
+                            <h5 className="font-black text-white flex items-center gap-2 text-xs">
+                              <Globe className="w-4 h-4 text-blue-400" /> Platform Syndication &amp; Distribution
+                            </h5>
+                            <span className="text-[10px] text-blue-300 font-bold bg-blue-500/20 px-2 py-0.5 rounded-full">
+                              RSS 2.0 Compliant
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-brand-sandstone/70">
+                            Submit your public RSS feed to major platforms once; future episodes syndicate automatically.
+                          </p>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2">
+                            {[
+                              { name: 'Apple Podcasts', url: 'https://podcastsconnect.apple.com', color: 'hover:border-purple-400' },
+                              { name: 'Spotify for Podcasters', url: 'https://podcasters.spotify.com', color: 'hover:border-emerald-400' },
+                              { name: 'YouTube Music Pods', url: 'https://studio.youtube.com', color: 'hover:border-red-400' },
+                              { name: 'Amazon Music', url: 'https://podcasters.amazon.com', color: 'hover:border-amber-400' },
+                            ].map((platform) => (
+                              <a
+                                key={platform.name}
+                                href={platform.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className={`p-2.5 rounded-xl bg-slate-950 border border-white/10 ${platform.color} transition-all flex items-center justify-between group`}
+                              >
+                                <span className="font-bold text-white text-[11px]">{platform.name}</span>
+                                <ExternalLink className="w-3 h-3 text-brand-sandstone/50 group-hover:text-white transition-colors" />
+                              </a>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Episodes List */}
+                      {show.episodes.length === 0 ? (
+                        <p className="text-xs text-brand-sandstone/60 italic py-1">
+                          No episodes published under this show yet.
+                        </p>
+                      ) : (
                       <div className="space-y-2">
                         {show.episodes.map((ep) => {
                           const isDraft = !ep.published_at && !ep.scheduled_for;

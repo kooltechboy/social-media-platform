@@ -909,6 +909,53 @@ export default function ExploreDiscoveryClient({
             </div>
           </div>
         )}
+
+        {/* ── Podcasts ── */}
+        {(activeTab === 'all' || activeTab === 'podcasts') && (initialResult.podcasts?.length ?? 0) > 0 && (
+          <div className="space-y-4">
+            <h3 className="text-xs md:text-sm font-black uppercase tracking-wider text-purple-400 flex items-center gap-2">
+              <Radio className="w-3.5 h-3.5 md:w-4 md:h-4" /> Caribbean Podcasts &amp; Audio Shows
+            </h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              {initialResult.podcasts.map((pod: any) => {
+                const host = Array.isArray(pod.profiles) ? pod.profiles[0] : pod.profiles;
+                return (
+                  <Link
+                    key={pod.id}
+                    href={`/podcasts?slug=${pod.slug}`}
+                    className="surface-card surface-card-interactive rounded-2xl p-4 space-y-3 block border border-white/10 group shadow-md"
+                  >
+                    <div className="aspect-square bg-slate-950 rounded-xl overflow-hidden relative flex items-center justify-center border border-white/5">
+                      {pod.cover_path ? (
+                        <img
+                          src={pod.cover_path}
+                          alt={pod.title}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                        />
+                      ) : (
+                        <Radio className="w-10 h-10 text-purple-400/50" />
+                      )}
+                      <span className="absolute top-2 left-2 text-[10px] font-black bg-purple-950/80 border border-purple-500/30 px-2 py-0.5 rounded text-purple-300">
+                        {pod.category || 'Podcast'}
+                      </span>
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-sm text-white group-hover:text-purple-300 transition-colors truncate">
+                        {pod.title}
+                      </h4>
+                      <p className="text-xs text-brand-sandstone/70 line-clamp-1 mt-0.5">
+                        {pod.description || 'Authentic Caribbean talk and culture.'}
+                      </p>
+                      <p className="text-[11px] text-purple-300/80 mt-1">
+                        By {host?.display_name || 'Caribbean Creator'} • {pod.follower_count ?? 0} listeners
+                      </p>
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        )}
       </section>
     </div>
   );

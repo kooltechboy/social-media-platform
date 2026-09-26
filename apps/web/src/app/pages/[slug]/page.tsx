@@ -19,6 +19,11 @@ import {
   Store,
   ChevronRight,
   Plus,
+  Mic,
+  Radio,
+  Play,
+  Rss,
+  Video,
 } from 'lucide-react';
 import VerificationBadge from '../../../components/verification-badge';
 import PageFollowButton from '../../../components/page-follow-button';
@@ -29,6 +34,7 @@ import FeedStream from '../../../components/feed-stream';
 import { fetchPageDetailsAction, fetchMyPagesAction } from '../../../lib/pages/actions';
 import { createSupabaseServerClient, getCurrentUser } from '../../../lib/supabase/server';
 import { hydratePostsEngagement } from '@/lib/feed/hydrate-posts';
+import { formatTimestamp } from '@caribbean/podcasts';
 
 export const dynamic = 'force-dynamic';
 
@@ -61,6 +67,27 @@ export default async function UniversalPageView({
     canManage,
   } = pageData;
 
+  // Query podcasts associated with this Creator Page or its owner
+  let pagePodcasts: any[] = [];
+  if (supabase) {
+    const { data: podData } = await supabase
+      .from('podcasts')
+      .select(`
+        id, title, subtitle, slug, description, cover_path, follower_count, is_paid,
+        category, island_territory,
+        podcast_episodes(
+          id, title, duration_seconds, audio_path, video_path, published_at,
+          season_number, episode_number, is_subscriber_only, episode_type
+        )
+      `)
+      .or(`page_id.eq.${page.id},creator_id.eq.${page.owner_id}`)
+      .limit(10);
+
+    if (podData) {
+      pagePodcasts = podData;
+    }
+  }
+
   const hydratedPosts = supabase && posts && posts.length > 0
     ? await hydratePostsEngagement(posts, supabase, { currentUserId: user?.id })
     : [];
@@ -73,7 +100,7 @@ export default async function UniversalPageView({
   return (
     <div className="flex flex-col lg:flex-row gap-6 xl:gap-8 items-start w-full">
       <div className="flex-1 min-w-0 space-y-6 w-full max-w-[840px] xl:max-w-[880px] mx-auto lg:mx-0 animate-fadeIn">
-        {/* Deactivation Notice (if page is deactivated and viewer is team member) */}
+        {/* Deactivation Notice */}
         {isDeactivated && (
           <div className="p-4 rounded-3xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs flex items-center justify-between gap-3">
             <div className="flex items-center gap-2">
@@ -98,93 +125,58 @@ export default async function UniversalPageView({
 
         {/* ── Page Profile Header ── */}
         <div className="surface-card rounded-3xl overflow-hidden border border-white/10 shadow-2xl">
-          {/* Cover Banner */}
-          <div
-            className="h-44 sm:h-56 w-full relative bg-gradient-to-r from-amber-900/40 via-purple-900/40 to-slate-950 bg-cover bg-center"
-            style={{
-              backgroundImage: page.cover_image_url ? `url('${page.cover_image_url}')` : undefined,
-            }}
-          >
-            <div className="absolute inset-0 bg-gradient-to-t from-[#120B1C] via-transparent to-black/30" />
+          {/* Banner */}
+          <div className="h-44 sm:h-56 w-full bg-gradient-to-r from-purple-900 via-indigo-950 to-slate-900 relative">
+            {page.cover_url && (
+              <img
+                src={page.cover_url}
+                alt={page.name}
+                className="w-full h-full object-cover opacity-80"
+              />
+            )}
+            <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent" />
           </div>
 
-          {/* Identity & Actions Bar */}
-          <div className="p-6 sm:p-8 pt-0 relative space-y-5">
-            {/* Avatar & Action Row */}
+          <div className="px-6 sm:px-8 pb-6 sm:pb-8 pt-0 relative space-y-4">
+            {/* Avatar & Top Row */}
             <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 -mt-16 sm:-mt-20">
-              <div className="w-28 h-28 sm:w-32 sm:h-32 rounded-3xl bg-[#120B1C] border-4 border-[#120B1C] shadow-2xl flex items-center justify-center overflow-hidden shrink-0">
-                {page.avatar_url ? (
-                  <img
-                    src={page.avatar_url}
-                    alt={page.name}
-                    className="w-full h-full object-cover"
-                  />
+              <div className="w-28 h-28 sm:w-32 sm:h-32 rounded-3xl bg-slate-900 border-4 border-slate-950 flex items-center justify-center text-4xl shadow-2xl overflow-hidden shrink-0">
+                {page.logo_url ? (
+                  <img src={page.logo_url} alt={page.name} className="w-full h-full object-cover" />
                 ) : (
-                  <div className="w-full h-full bg-gradient-to-tr from-brand-sunriseCoral to-amber-500 flex items-center justify-center text-slate-950 text-4xl font-black">
-                    {page.name.charAt(0)}
-                  </div>
+                  <span>🌴</span>
                 )}
               </div>
 
-              {/* Action Buttons */}
-              <div className="flex flex-wrap items-center gap-2.5">
+              <div className="flex items-center gap-2.5 self-start sm:self-auto">
                 <PageFollowButton
                   pageId={page.id}
                   initialIsFollowing={isFollowing}
                   initialFollowerCount={followerCount}
                 />
 
-                {page.contact_email && (
-                  <a
-                    href={`mailto:${page.contact_email}`}
-                    className="px-4 py-3 rounded-2xl bg-white/10 hover:bg-white/15 text-white font-black text-xs flex items-center gap-1.5 transition-all min-h-[44px]"
-                  >
-                    <Mail className="w-4 h-4 text-brand-sandstone" />
-                    <span>Contact</span>
-                  </a>
-                )}
-
                 {canManage && (
                   <Link
                     href={`/pages/${page.slug}/manage`}
-                    className="px-5 py-3 rounded-2xl bg-brand-sunriseCoral/10 hover:bg-brand-sunriseCoral/20 border border-brand-sunriseCoral/30 text-brand-sunriseCoral font-black text-xs flex items-center gap-1.5 transition-all min-h-[44px]"
+                    className="p-2.5 rounded-2xl bg-white/10 hover:bg-white/15 text-white text-xs font-bold transition-all flex items-center gap-1.5 border border-white/15"
                   >
                     <Settings className="w-4 h-4" />
-                    <span>Manage Page</span>
+                    <span>Manage</span>
                   </Link>
                 )}
               </div>
             </div>
 
-            {/* Title & Metadata */}
-            <div className="space-y-2">
-              <div className="flex flex-wrap items-center gap-2">
-                <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
-                  {page.name}
-                </h1>
-                <VerificationBadge
-                  level={page.is_verified ? 'business_verified' : 'unverified'}
-                  showLabel={true}
-                />
-                {currentUserRole && (
-                  <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-brand-sunriseCoral/20 text-brand-sunriseCoral border border-brand-sunriseCoral/30">
-                    {currentUserRole}
-                  </span>
-                )}
+            {/* Title & Category */}
+            <div className="space-y-1 pt-1">
+              <div className="flex items-center gap-2">
+                <h1 className="text-xl sm:text-2xl font-black text-white">{page.name}</h1>
+                {page.is_verified && <VerificationBadge level="business_verified" />}
               </div>
-
-              <div className="flex flex-wrap items-center gap-3 text-xs text-brand-sandstone/70 font-bold">
-                <span className="text-brand-sunriseCoral">{page.category || 'Universal Page'}</span>
-                <span>·</span>
-                <span className="flex items-center gap-1 text-white/90">
-                  <MapPin className="w-3.5 h-3.5 text-orange-400" />
-                  {page.country_iso ? `${page.country_iso} 🌴` : 'Caribbean Basin 🌴'}
-                </span>
-                <span>·</span>
-                <span>
-                  {followerCount} {followerCount === 1 ? 'follower' : 'followers'}
-                </span>
-              </div>
+              <p className="text-xs text-brand-sandstone/70">
+                @{page.slug} · <span className="text-purple-400 font-bold">{page.category}</span>
+                {page.country_iso && ` · ${page.country_iso} 🌴`}
+              </p>
 
               {page.description && (
                 <p className="text-xs sm:text-sm text-brand-sandstone/90 leading-relaxed max-w-3xl pt-1">
@@ -238,6 +230,17 @@ export default async function UniversalPageView({
                 <Building2 className="w-3.5 h-3.5" />
                 <span>About</span>
               </Link>
+              <Link
+                href={`/pages/${page.slug}?tab=podcasts`}
+                className={`px-4 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 shrink-0 ${
+                  activeTab === 'podcasts'
+                    ? 'bg-purple-600 text-white shadow-md shadow-purple-600/30'
+                    : 'text-brand-sandstone/70 hover:text-white hover:bg-white/5'
+                }`}
+              >
+                <Mic className="w-3.5 h-3.5 text-purple-400" />
+                <span>Podcasts ({pagePodcasts.length})</span>
+              </Link>
               {products.length > 0 && (
                 <Link
                   href={`/pages/${page.slug}?tab=store`}
@@ -258,6 +261,29 @@ export default async function UniversalPageView({
         {/* ── TAB: HOME & POSTS ── */}
         {activeTab === 'home' && (
           <div className="space-y-6">
+            {/* Featured Podcast Card on Home */}
+            {pagePodcasts.length > 0 && (
+              <div className="p-5 rounded-3xl bg-gradient-to-r from-purple-950/40 via-indigo-950/30 to-slate-900 border border-purple-500/30 flex items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-2xl bg-purple-600/20 text-purple-400 flex items-center justify-center shrink-0">
+                    <Radio className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <span className="text-[10px] font-black uppercase text-purple-400">Featured Podcast</span>
+                    <h3 className="text-sm font-black text-white">{pagePodcasts[0].title}</h3>
+                    <p className="text-xs text-brand-sandstone/70 line-clamp-1">{pagePodcasts[0].description}</p>
+                  </div>
+                </div>
+                <Link
+                  href={`/podcasts/${pagePodcasts[0].slug}`}
+                  className="px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-black shrink-0 flex items-center gap-1.5"
+                >
+                  <Play className="w-3.5 h-3.5 fill-current" />
+                  <span>Listen</span>
+                </Link>
+              </div>
+            )}
+
             {/* Publisher Box for Admins/Editors */}
             {canPost && (
               <PagePostComposer pageId={page.id} pageName={page.name} />
@@ -280,6 +306,117 @@ export default async function UniversalPageView({
                 currentUserId={user?.id}
                 mode="page"
               />
+            )}
+          </div>
+        )}
+
+        {/* ── TAB: PODCASTS ── */}
+        {activeTab === 'podcasts' && (
+          <div className="space-y-6">
+            {pagePodcasts.length === 0 ? (
+              <div className="surface-card rounded-3xl p-10 text-center space-y-3 border border-white/10">
+                <Mic className="w-10 h-10 text-purple-400/60 mx-auto" />
+                <h3 className="text-base font-black text-white">No podcasts published by this creator yet</h3>
+                <p className="text-xs text-brand-sandstone/70 max-w-sm mx-auto">
+                  {canManage
+                    ? 'Create and broadcast your first Caribbean audio show or video podcast in Creator Studio.'
+                    : 'Check back soon for new audio documentary and podcast episodes.'}
+                </p>
+                {canManage && (
+                  <Link
+                    href="/creator-studio?tab=podcasts"
+                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-black text-xs shadow-md shadow-purple-600/30"
+                  >
+                    <Plus className="w-4 h-4" /> Host Podcast Show
+                  </Link>
+                )}
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {pagePodcasts.map((pod) => {
+                  const episodes = (pod.podcast_episodes || []) as any[];
+                  return (
+                    <div
+                      key={pod.id}
+                      className="surface-card rounded-3xl p-6 border border-white/10 space-y-4 shadow-xl"
+                    >
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/10 pb-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-purple-600 to-indigo-700 flex items-center justify-center text-2xl shrink-0">
+                            🎙️
+                          </div>
+                          <div>
+                            <span className="text-[10px] font-black uppercase text-purple-400">
+                              {pod.category || 'Culture & Talk'}
+                            </span>
+                            <h3 className="text-base sm:text-lg font-black text-white">{pod.title}</h3>
+                            <p className="text-xs text-brand-sandstone/70">
+                              {pod.follower_count || 0} Subscribers · {episodes.length} Episode{episodes.length === 1 ? '' : 's'}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          <Link
+                            href={`/podcasts/${pod.slug}`}
+                            className="px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-black flex items-center gap-1.5 shadow-md shadow-purple-600/30"
+                          >
+                            <Play className="w-3.5 h-3.5 fill-current" />
+                            <span>Listen Now</span>
+                          </Link>
+                          <a
+                            href={`/api/v1/podcasts/${pod.id}/rss`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="px-3 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-purple-300 text-xs font-bold flex items-center gap-1 border border-white/10"
+                          >
+                            <Rss className="w-3.5 h-3.5" />
+                            <span>RSS</span>
+                          </a>
+                        </div>
+                      </div>
+
+                      {pod.description && (
+                        <p className="text-xs sm:text-sm text-brand-sandstone/80 leading-relaxed">
+                          {pod.description}
+                        </p>
+                      )}
+
+                      {/* Episode Previews */}
+                      {episodes.length > 0 && (
+                        <div className="space-y-2 pt-2">
+                          <span className="text-[10px] font-black uppercase text-brand-sandstone/50 tracking-wider">
+                            Latest Episodes
+                          </span>
+                          <div className="space-y-1.5">
+                            {episodes.slice(0, 3).map((ep: any) => (
+                              <Link
+                                key={ep.id}
+                                href={`/podcasts/${pod.slug}`}
+                                className="p-3 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/5 flex items-center justify-between gap-3 text-xs transition-colors"
+                              >
+                                <div className="flex items-center gap-2 truncate">
+                                  {ep.video_path ? (
+                                    <Video className="w-4 h-4 text-indigo-400 shrink-0" />
+                                  ) : (
+                                    <Mic className="w-4 h-4 text-purple-400 shrink-0" />
+                                  )}
+                                  <span className="font-bold text-white truncate">
+                                    S{ep.season_number}E{ep.episode_number}: {ep.title}
+                                  </span>
+                                </div>
+                                <span className="text-brand-sandstone/60 font-mono text-[11px] shrink-0">
+                                  {formatTimestamp(ep.duration_seconds || 1800)}
+                                </span>
+                              </Link>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
             )}
           </div>
         )}

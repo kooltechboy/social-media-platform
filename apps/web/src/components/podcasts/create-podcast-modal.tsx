@@ -14,19 +14,27 @@ import {
   Radio,
   CheckCircle,
   AlertCircle,
-  ListPlus,
   Trash2,
   Calendar,
   Image as ImageIcon,
   Loader2,
+  Video,
+  Link2,
+  Layers,
 } from 'lucide-react';
 import {
   createPodcastAction,
   publishEpisodeAction,
+  generateCaribAiPodcastMetadataAction,
   type PodcastActionState,
 } from '../../lib/podcasts/actions';
 import { createSupabaseBrowserClient } from '../../lib/supabase/browser';
-import type { Chapter } from '@caribbean/podcasts';
+import {
+  CARIBBEAN_PODCAST_CATEGORIES,
+  CARIBBEAN_PODCAST_TERRITORIES,
+  type Chapter,
+  type TimedLink,
+} from '@caribbean/podcasts';
 
 interface CreatePodcastModalProps {
   isOpen: boolean;
@@ -51,9 +59,13 @@ export default function CreatePodcastModal({
 
   // Create Show Form State
   const [showTitle, setShowTitle] = useState('');
+  const [showSubtitle, setShowSubtitle] = useState('');
   const [showDescription, setShowDescription] = useState('');
+  const [authorName, setAuthorName] = useState(user?.displayName || '');
   const [languageIso, setLanguageIso] = useState('en');
-  const [category, setCategory] = useState('Culture & Society');
+  const [category, setCategory] = useState<string>(CARIBBEAN_PODCAST_CATEGORIES[0]);
+  const [islandTerritory, setIslandTerritory] = useState<string>('TTO');
+  const [showType, setShowType] = useState<'episodic' | 'serial'>('episodic');
   const [isShowPaid, setIsShowPaid] = useState(false);
   const [coverFile, setCoverFile] = useState<File | null>(null);
   const [coverPreview, setCoverPreview] = useState<string | null>(null);
@@ -61,11 +73,15 @@ export default function CreatePodcastModal({
   // Publish Episode Form State
   const [selectedPodcastId, setSelectedPodcastId] = useState(existingPodcasts[0]?.id || '');
   const [episodeTitle, setEpisodeTitle] = useState('');
+  const [episodeSubtitle, setEpisodeSubtitle] = useState('');
   const [seasonNumber, setSeasonNumber] = useState(1);
   const [episodeNumber, setEpisodeNumber] = useState(1);
+  const [episodeType, setEpisodeType] = useState<'full' | 'trailer' | 'bonus'>('full');
   const [durationMinutes, setDurationMinutes] = useState(30);
   const [audioFile, setAudioFile] = useState<File | null>(null);
   const [audioFileName, setAudioFileName] = useState<string | null>(null);
+  const [videoFile, setVideoFile] = useState<File | null>(null);
+  const [videoFileName, setVideoFileName] = useState<string | null>(null);
   const [showNotes, setShowNotes] = useState('');
   const [transcript, setTranscript] = useState('');
   const [isEpisodeSubscriberOnly, setIsEpisodeSubscriberOnly] = useState(false);
@@ -76,6 +92,12 @@ export default function CreatePodcastModal({
     { startSeconds: 0, title: 'Introduction & Welcome' },
   ]);
 
+  // Timed links state
+  const [timedLinks, setTimedLinks] = useState<TimedLink[]>([]);
+
+  // CaribAI Studio State
+  const [isGeneratingAi, setIsGeneratingAi] = useState(false);
+
   // Submission State
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<string | null>(null);
@@ -83,6 +105,7 @@ export default function CreatePodcastModal({
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   const audioInputRef = useRef<HTMLInputElement | null>(null);
+  const videoInputRef = useRef<HTMLInputElement | null>(null);
   const coverInputRef = useRef<HTMLInputElement | null>(null);
 
   if (!isOpen) return null;
@@ -101,7 +124,6 @@ export default function CreatePodcastModal({
       setAudioFile(file);
       setAudioFileName(file.name);
 
-      // Attempt reading duration from audio element
       const tempAudio = document.createElement('audio');
       tempAudio.preload = 'metadata';
       tempAudio.src = URL.createObjectURL(file);
@@ -110,6 +132,14 @@ export default function CreatePodcastModal({
           setDurationMinutes(Math.max(1, Math.round(tempAudio.duration / 60)));
         }
       };
+    }
+  }
+
+  function handleVideoChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (file) {
+      setVideoFile(file);
+      setVideoFileName(file.name);
     }
   }
 
@@ -122,10 +152,48 @@ export default function CreatePodcastModal({
     setChapters(chapters.filter((_, i) => i !== idx));
   }
 
-  function updateChapter(idx: number, field: 'startSeconds' | 'title', value: any) {
+  function updateChapter(idx: number, field: keyof Chapter, value: any) {
     const updated = [...chapters];
     updated[idx] = { ...updated[idx], [field]: value };
     setChapters(updated);
+  }
+
+  function addTimedLink() {
+    setTimedLinks([
+      ...timedLinks,
+      { timestampSeconds: 60, title: 'Context Link', url: 'https://tukubi.com' },
+    ]);
+  }
+
+  function removeTimedLink(idx: number) {
+    setTimedLinks(timedLinks.filter((_, i) => i !== idx));
+  }
+
+  function updateTimedLink(idx: number, field: keyof TimedLink, value: any) {
+    const updated = [...timedLinks];
+    updated[idx] = { ...updated[idx], [field]: value };
+    setTimedLinks(updated);
+  }
+
+  async function handleCaribAiGenerate() {
+    if (!episodeTitle.trim()) {
+      setErrorMessage('Please enter an episode title first to generate AI studio metadata.');
+      return;
+    }
+    setIsGeneratingAi(true);
+    setErrorMessage(null);
+    try {
+      const res = await generateCaribAiPodcastMetadataAction(episodeTitle, showNotes);
+      setShowNotes(res.summary);
+      if (res.chapters && res.chapters.length > 0) {
+        setChapters(res.chapters);
+      }
+      setSuccessMessage('CaribAI generated chapters and episode summary!');
+    } catch {
+      setErrorMessage('Could not generate AI metadata at this moment.');
+    } finally {
+      setIsGeneratingAi(false);
+    }
   }
 
   async function handleCreateShow(e: React.FormEvent) {
@@ -150,8 +218,13 @@ export default function CreatePodcastModal({
       setUploadProgress('Saving podcast show…');
       const fd = new FormData();
       fd.set('title', showTitle.trim());
+      if (showSubtitle) fd.set('subtitle', showSubtitle.trim());
       fd.set('description', showDescription.trim());
+      if (authorName) fd.set('authorName', authorName.trim());
       fd.set('languageIso', languageIso);
+      fd.set('category', category);
+      fd.set('islandTerritory', islandTerritory);
+      fd.set('showType', showType);
       fd.set('isPaid', isShowPaid ? 'true' : 'false');
       if (coverPath) fd.set('coverPath', coverPath);
 
@@ -159,7 +232,7 @@ export default function CreatePodcastModal({
       if (res.error) {
         setErrorMessage(res.error);
       } else {
-        setSuccessMessage('Podcast show created successfully!');
+        setSuccessMessage('Podcast show created successfully with Apple Podcasts & Spotify RSS!');
         setTimeout(() => {
           onClose();
           window.location.reload();
@@ -193,12 +266,11 @@ export default function CreatePodcastModal({
 
     try {
       let audioStoragePath = '';
+      let videoStoragePath: string | null = null;
+      const supabase = createSupabaseBrowserClient();
 
-      if (audioFile && user) {
-        setUploadProgress('Uploading master episode audio to storage…');
-        const supabase = createSupabaseBrowserClient();
-        if (!supabase) throw new Error('Storage client unavailable.');
-
+      if (audioFile && user && supabase) {
+        setUploadProgress('Uploading master audio stream…');
         const ext = audioFile.name.split('.').pop() || 'mp3';
         const cleanName = `${Date.now()}_ep_${episodeNumber}.${ext}`;
         const path = `${user.id}/${cleanName}`;
@@ -208,12 +280,24 @@ export default function CreatePodcastModal({
           upsert: false,
         });
 
-        if (upErr) {
-          throw new Error(`Audio upload failed: ${upErr.message}`);
-        }
+        if (upErr) throw new Error(`Audio upload failed: ${upErr.message}`);
         audioStoragePath = path;
       } else if (asDraft) {
         audioStoragePath = 'draft_pending_upload';
+      }
+
+      if (videoFile && user && supabase) {
+        setUploadProgress('Uploading video stream derivative…');
+        const vExt = videoFile.name.split('.').pop() || 'mp4';
+        const vName = `${Date.now()}_ep_${episodeNumber}_video.${vExt}`;
+        const vPath = `${user.id}/${vName}`;
+
+        const { error: vErr } = await supabase.storage.from('podcast-video').upload(vPath, videoFile, {
+          cacheControl: '3600',
+          upsert: false,
+        });
+
+        if (!vErr) videoStoragePath = vPath;
       }
 
       setUploadProgress(asDraft ? 'Saving episode draft…' : 'Publishing episode…');
@@ -223,11 +307,15 @@ export default function CreatePodcastModal({
         seasonNumber: Number(seasonNumber) || 1,
         episodeNumber: Number(episodeNumber) || 1,
         title: episodeTitle.trim(),
+        subtitle: episodeSubtitle.trim() || undefined,
         durationSeconds: (Number(durationMinutes) || 30) * 60,
         audioPath: audioStoragePath,
+        videoPath: videoStoragePath,
         showNotes: showNotes.trim() || undefined,
         transcript: transcript.trim() || undefined,
         chapters: chapters.length > 0 ? chapters : undefined,
+        timedLinks: timedLinks.length > 0 ? timedLinks : undefined,
+        episodeType,
         isSubscriberOnly: isEpisodeSubscriberOnly,
         isDraft: asDraft,
         scheduledFor: !asDraft && scheduledDate ? scheduledDate : null,
@@ -264,9 +352,9 @@ export default function CreatePodcastModal({
               <Mic className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-lg font-black text-white">Podcast Studio &amp; RSS Publisher</h2>
+              <h2 className="text-lg font-black text-white">Podcast Studio &amp; Universal Publisher</h2>
               <p className="text-xs text-brand-sandstone/70">
-                Host Caribbean shows with real audio storage, chapter markers, and iTunes RSS feeds.
+                Launch Caribbean audio &amp; video shows with RSS 2.0 syndication, chapter markers &amp; timed links.
               </p>
             </div>
           </div>
@@ -301,21 +389,7 @@ export default function CreatePodcastModal({
           </button>
         </div>
 
-        {/* Auth Gate */}
-        {!user && (
-          <div className="p-4 rounded-2xl bg-white/5 border border-white/10 text-center space-y-3">
-            <p className="text-xs text-brand-sandstone/80">
-              You must be signed in to create podcast shows or publish audio episodes.
-            </p>
-            <a
-              href="/login?redirect=/podcasts"
-              className="inline-block bg-purple-600 hover:bg-purple-500 text-white font-bold px-5 py-2.5 rounded-xl text-xs transition-colors shadow-md shadow-purple-600/30"
-            >
-              Sign In to Continue
-            </a>
-          </div>
-        )}
-
+        {/* Feedback banners */}
         {errorMessage && (
           <div className="p-3.5 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs flex items-center gap-2">
             <AlertCircle className="w-4 h-4 flex-shrink-0" />
@@ -337,7 +411,7 @@ export default function CreatePodcastModal({
           </div>
         )}
 
-        {/* Tab 1: Publish Episode */}
+        {/* TAB 1: PUBLISH EPISODE */}
         {user && tab === 'publish_episode' && (
           <div className="space-y-4">
             {existingPodcasts.length === 0 ? (
@@ -350,26 +424,22 @@ export default function CreatePodcastModal({
                 <button
                   type="button"
                   onClick={() => setTab('create_show')}
-                  className="bg-purple-600 hover:bg-purple-500 text-white font-black px-4 py-2 rounded-xl text-xs"
+                  className="px-5 py-2.5 rounded-xl bg-purple-600 text-white text-xs font-black shadow-md shadow-purple-600/30"
                 >
                   Create Show Now →
                 </button>
               </div>
             ) : (
-              <form
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  void handleEpisodeSubmit(false);
-                }}
-                className="space-y-4"
-              >
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-brand-sandstone/80">Select Podcast Show</label>
+              <div className="space-y-4">
+                {/* Select Show */}
+                <div>
+                  <label className="block text-xs font-black text-brand-sandstone/80 mb-1">
+                    Select Target Podcast Show *
+                  </label>
                   <select
                     value={selectedPodcastId}
                     onChange={(e) => setSelectedPodcastId(e.target.value)}
-                    className="w-full bg-slate-900 border border-white/15 rounded-2xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-purple-500"
-                    required
+                    className="w-full bg-slate-950/80 border border-white/20 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-purple-500"
                   >
                     {existingPodcasts.map((p) => (
                       <option key={p.id} value={p.id}>
@@ -379,269 +449,419 @@ export default function CreatePodcastModal({
                   </select>
                 </div>
 
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-brand-sandstone/80">Episode Title</label>
-                  <input
-                    type="text"
-                    value={episodeTitle}
-                    onChange={(e) => setEpisodeTitle(e.target.value)}
-                    placeholder="e.g. Episode 12: Island FinTech & Digital Trade Horizons"
-                    className="w-full bg-slate-900 border border-white/15 rounded-2xl px-4 py-2.5 text-xs text-white placeholder-brand-sandstone/40 focus:outline-none focus:border-purple-500"
-                    required
-                  />
+                {/* Title & Subtitle */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-black text-brand-sandstone/80 mb-1">
+                      Episode Title *
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g., Sound System History Part 1"
+                      value={episodeTitle}
+                      onChange={(e) => setEpisodeTitle(e.target.value)}
+                      className="w-full bg-slate-950/80 border border-white/20 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-purple-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-black text-brand-sandstone/80 mb-1">
+                      Episode Subtitle
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Brief one-line teaser"
+                      value={episodeSubtitle}
+                      onChange={(e) => setEpisodeSubtitle(e.target.value)}
+                      className="w-full bg-slate-950/80 border border-white/20 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-purple-500"
+                    />
+                  </div>
                 </div>
 
-                <div className="grid grid-cols-3 gap-3">
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-brand-sandstone/80">Season #</label>
+                {/* Season, Episode, Type, Duration */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  <div>
+                    <label className="block text-xs font-black text-brand-sandstone/80 mb-1">Season #</label>
                     <input
                       type="number"
                       min={1}
                       value={seasonNumber}
                       onChange={(e) => setSeasonNumber(parseInt(e.target.value, 10) || 1)}
-                      className="w-full bg-slate-900 border border-white/15 rounded-2xl px-3 py-2 text-xs text-white focus:outline-none focus:border-purple-500"
+                      className="w-full bg-slate-950/80 border border-white/20 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-purple-500"
                     />
                   </div>
-
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-brand-sandstone/80">Episode #</label>
+                  <div>
+                    <label className="block text-xs font-black text-brand-sandstone/80 mb-1">Episode #</label>
                     <input
                       type="number"
                       min={1}
                       value={episodeNumber}
                       onChange={(e) => setEpisodeNumber(parseInt(e.target.value, 10) || 1)}
-                      className="w-full bg-slate-900 border border-white/15 rounded-2xl px-3 py-2 text-xs text-white focus:outline-none focus:border-purple-500"
+                      className="w-full bg-slate-950/80 border border-white/20 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-purple-500"
                     />
                   </div>
-
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-brand-sandstone/80">Duration (Min)</label>
+                  <div>
+                    <label className="block text-xs font-black text-brand-sandstone/80 mb-1">Episode Type</label>
+                    <select
+                      value={episodeType}
+                      onChange={(e) => setEpisodeType(e.target.value as any)}
+                      className="w-full bg-slate-950/80 border border-white/20 rounded-xl px-2 py-2 text-xs text-white focus:outline-none focus:border-purple-500"
+                    >
+                      <option value="full">Full Episode</option>
+                      <option value="trailer">Trailer</option>
+                      <option value="bonus">Bonus</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-black text-brand-sandstone/80 mb-1">Duration (min)</label>
                     <input
                       type="number"
                       min={1}
                       value={durationMinutes}
-                      onChange={(e) => setDurationMinutes(parseInt(e.target.value, 10) || 1)}
-                      className="w-full bg-slate-900 border border-white/15 rounded-2xl px-3 py-2 text-xs text-white focus:outline-none focus:border-purple-500"
+                      onChange={(e) => setDurationMinutes(parseInt(e.target.value, 10) || 30)}
+                      className="w-full bg-slate-950/80 border border-white/20 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-purple-500"
                     />
                   </div>
                 </div>
 
-                {/* Direct Audio File Upload */}
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-brand-sandstone/80">Master Audio File (.mp3, .wav, .m4a)</label>
-                  <input
-                    type="file"
-                    ref={audioInputRef}
-                    accept="audio/*,.mp3,.wav,.m4a,.ogg"
-                    onChange={handleAudioChange}
-                    className="hidden"
-                  />
-                  <div
-                    onClick={() => audioInputRef.current?.click()}
-                    className="border-2 border-dashed border-white/20 hover:border-purple-500/50 rounded-2xl p-4 text-center cursor-pointer transition-colors bg-white/5"
-                  >
-                    <UploadCloud className="w-6 h-6 text-purple-400 mx-auto mb-1" />
-                    <p className="text-xs font-bold text-white">
-                      {audioFileName ? `Selected: ${audioFileName}` : 'Click to select master episode audio'}
-                    </p>
-                    <p className="text-[11px] text-brand-sandstone/60 mt-0.5">
-                      Uploaded directly to Supabase Storage. Max size: 2 GB.
-                    </p>
+                {/* Media Uploads (Audio & Video) */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {/* Audio Upload */}
+                  <div className="p-3.5 rounded-2xl bg-white/5 border border-white/10 space-y-2">
+                    <label className="block text-xs font-black text-white flex items-center gap-1.5">
+                      <Mic className="w-3.5 h-3.5 text-purple-400" /> Master Audio File *
+                    </label>
+                    <input
+                      ref={audioInputRef}
+                      type="file"
+                      accept="audio/*"
+                      onChange={handleAudioChange}
+                      className="hidden"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => audioInputRef.current?.click()}
+                      className="w-full py-3 px-3 rounded-xl border border-dashed border-purple-500/40 hover:bg-purple-600/10 text-xs font-bold text-brand-sandstone/80 hover:text-white flex items-center justify-center gap-2"
+                    >
+                      <UploadCloud className="w-4 h-4 text-purple-400" />
+                      <span>{audioFileName || 'Choose MP3, WAV or AAC'}</span>
+                    </button>
+                  </div>
+
+                  {/* Video Upload */}
+                  <div className="p-3.5 rounded-2xl bg-white/5 border border-white/10 space-y-2">
+                    <label className="block text-xs font-black text-white flex items-center gap-1.5">
+                      <Video className="w-3.5 h-3.5 text-indigo-400" /> Video Derivative (Optional)
+                    </label>
+                    <input
+                      ref={videoInputRef}
+                      type="file"
+                      accept="video/*"
+                      onChange={handleVideoChange}
+                      className="hidden"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => videoInputRef.current?.click()}
+                      className="w-full py-3 px-3 rounded-xl border border-dashed border-indigo-500/40 hover:bg-indigo-600/10 text-xs font-bold text-brand-sandstone/80 hover:text-white flex items-center justify-center gap-2"
+                    >
+                      <Video className="w-4 h-4 text-indigo-400" />
+                      <span>{videoFileName || 'Choose MP4 or WebM'}</span>
+                    </button>
                   </div>
                 </div>
 
-                {/* Show Notes */}
+                {/* Show Notes & CaribAI Assistant */}
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-brand-sandstone/80">Episode Description &amp; Show Notes</label>
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-black text-brand-sandstone/80">
+                      Show Notes &amp; Description
+                    </label>
+                    <button
+                      type="button"
+                      onClick={handleCaribAiGenerate}
+                      disabled={isGeneratingAi}
+                      className="text-[11px] font-black px-2.5 py-1 rounded-lg bg-purple-600/20 text-purple-300 border border-purple-500/40 hover:bg-purple-600/40 transition-colors flex items-center gap-1.5 cursor-pointer"
+                    >
+                      <Sparkles className="w-3 h-3 text-purple-400" />
+                      <span>{isGeneratingAi ? 'CaribAI Generating…' : 'CaribAI Smart Draft'}</span>
+                    </button>
+                  </div>
                   <textarea
-                    rows={3}
+                    rows={4}
+                    placeholder="Describe this episode, guests, talking points, and links…"
                     value={showNotes}
                     onChange={(e) => setShowNotes(e.target.value)}
-                    placeholder="Provide context, guest bios, and resource links..."
-                    className="w-full bg-slate-900 border border-white/15 rounded-2xl px-4 py-2 text-xs text-white placeholder-brand-sandstone/40 focus:outline-none focus:border-purple-500"
+                    className="w-full bg-slate-950/80 border border-white/20 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-purple-500"
                   />
                 </div>
 
-                {/* Transcript */}
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-brand-sandstone/80">Synchronized Transcript (Optional)</label>
-                  <textarea
-                    rows={2}
-                    value={transcript}
-                    onChange={(e) => setTranscript(e.target.value)}
-                    placeholder="Paste full episode transcript for search and accessibility..."
-                    className="w-full bg-slate-900 border border-white/15 rounded-2xl px-4 py-2 text-xs text-white placeholder-brand-sandstone/40 focus:outline-none focus:border-purple-500 font-mono"
-                  />
+                {/* Chapter Markers Editor */}
+                <div className="p-3.5 rounded-2xl bg-white/5 border border-white/10 space-y-2.5">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-black text-white flex items-center gap-1.5">
+                      <Layers className="w-3.5 h-3.5 text-purple-400" /> Chapter Markers ({chapters.length})
+                    </label>
+                    <button
+                      type="button"
+                      onClick={addChapter}
+                      className="text-[11px] text-purple-400 font-bold hover:underline flex items-center gap-1"
+                    >
+                      <Plus className="w-3 h-3" /> Add Chapter
+                    </button>
+                  </div>
+
+                  <div className="space-y-2 max-h-36 overflow-y-auto pr-1">
+                    {chapters.map((chap, idx) => (
+                      <div key={idx} className="flex items-center gap-2 text-xs">
+                        <input
+                          type="number"
+                          min={0}
+                          placeholder="Sec"
+                          value={chap.startSeconds}
+                          onChange={(e) => updateChapter(idx, 'startSeconds', parseInt(e.target.value, 10) || 0)}
+                          className="w-20 bg-slate-950/80 border border-white/20 rounded-lg px-2 py-1 text-white text-xs font-mono"
+                        />
+                        <input
+                          type="text"
+                          placeholder="Chapter Title"
+                          value={chap.title}
+                          onChange={(e) => updateChapter(idx, 'title', e.target.value)}
+                          className="flex-1 bg-slate-950/80 border border-white/20 rounded-lg px-2 py-1 text-white text-xs"
+                        />
+                        {chapters.length > 1 && (
+                          <button
+                            type="button"
+                            onClick={() => removeChapter(idx)}
+                            className="p-1 text-rose-400 hover:text-white"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
                 </div>
 
-                {/* Scheduling */}
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-brand-sandstone/80 flex items-center gap-1.5">
-                    <Calendar className="w-3.5 h-3.5 text-purple-400" /> Schedule Release (Optional)
-                  </label>
-                  <input
-                    type="datetime-local"
-                    value={scheduledDate}
-                    onChange={(e) => setScheduledDate(e.target.value)}
-                    className="w-full bg-slate-900 border border-white/15 rounded-2xl px-4 py-2 text-xs text-white focus:outline-none focus:border-purple-500"
-                  />
+                {/* Timed Links Editor */}
+                <div className="p-3.5 rounded-2xl bg-white/5 border border-white/10 space-y-2.5">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-black text-white flex items-center gap-1.5">
+                      <Link2 className="w-3.5 h-3.5 text-emerald-400" /> In-Stream Timed Links ({timedLinks.length})
+                    </label>
+                    <button
+                      type="button"
+                      onClick={addTimedLink}
+                      className="text-[11px] text-emerald-400 font-bold hover:underline flex items-center gap-1"
+                    >
+                      <Plus className="w-3 h-3" /> Add Timed Link
+                    </button>
+                  </div>
+
+                  {timedLinks.length > 0 && (
+                    <div className="space-y-2 max-h-36 overflow-y-auto pr-1">
+                      {timedLinks.map((tl, idx) => (
+                        <div key={idx} className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
+                          <input
+                            type="number"
+                            placeholder="Sec"
+                            value={tl.timestampSeconds}
+                            onChange={(e) => updateTimedLink(idx, 'timestampSeconds', parseInt(e.target.value, 10) || 0)}
+                            className="bg-slate-950/80 border border-white/20 rounded-lg px-2 py-1 text-white text-xs font-mono"
+                          />
+                          <input
+                            type="text"
+                            placeholder="Link Title"
+                            value={tl.title}
+                            onChange={(e) => updateTimedLink(idx, 'title', e.target.value)}
+                            className="bg-slate-950/80 border border-white/20 rounded-lg px-2 py-1 text-white text-xs"
+                          />
+                          <div className="flex items-center gap-1">
+                            <input
+                              type="url"
+                              placeholder="https://…"
+                              value={tl.url}
+                              onChange={(e) => updateTimedLink(idx, 'url', e.target.value)}
+                              className="flex-1 bg-slate-950/80 border border-white/20 rounded-lg px-2 py-1 text-white text-xs"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => removeTimedLink(idx)}
+                              className="p-1 text-rose-400 hover:text-white"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
-                {/* Member Only Toggle */}
-                <label className="flex items-center gap-3 p-3 rounded-2xl bg-white/5 border border-white/10 cursor-pointer">
+                {/* Subscriber Only Checkbox */}
+                <div className="flex items-center gap-2 pt-1">
                   <input
                     type="checkbox"
+                    id="isEpisodeSubscriberOnly"
                     checked={isEpisodeSubscriberOnly}
                     onChange={(e) => setIsEpisodeSubscriberOnly(e.target.checked)}
-                    className="rounded text-purple-600 focus:ring-purple-500"
+                    className="w-4 h-4 accent-purple-600 rounded"
                   />
-                  <div className="text-xs">
-                    <p className="font-black text-white flex items-center gap-1.5">
-                      <Lock className="w-3.5 h-3.5 text-amber-400" /> Subscriber-Exclusive Episode
-                    </p>
-                    <p className="text-brand-sandstone/60 text-[11px]">
-                      Only active paid community and creator members can stream this episode.
-                    </p>
-                  </div>
-                </label>
+                  <label htmlFor="isEpisodeSubscriberOnly" className="text-xs text-brand-sandstone/90 font-bold flex items-center gap-1">
+                    <Lock className="w-3 h-3 text-amber-300" /> Subscribers &amp; Members Only
+                  </label>
+                </div>
 
-                {/* Action Buttons */}
-                <div className="pt-2 flex flex-wrap items-center justify-between gap-3 border-t border-white/10">
+                {/* Actions Bar */}
+                <div className="pt-4 border-t border-white/10 flex items-center justify-end gap-3">
                   <button
                     type="button"
                     disabled={isSubmitting}
-                    onClick={() => void handleEpisodeSubmit(true)}
-                    className="px-4 py-2.5 rounded-xl border border-white/20 text-white font-bold text-xs hover:bg-white/10 transition-colors"
+                    onClick={() => handleEpisodeSubmit(true)}
+                    className="px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/15 text-white font-bold text-xs"
                   >
-                    Save as Draft
+                    Save Draft
                   </button>
-
-                  <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={onClose}
-                      className="px-4 py-2.5 rounded-xl text-brand-sandstone/70 hover:text-white text-xs font-bold"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      type="submit"
-                      disabled={isSubmitting}
-                      className="px-6 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-black text-xs transition-colors shadow-lg shadow-purple-600/30 flex items-center gap-2"
-                    >
-                      {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
-                      <span>{scheduledDate ? 'Schedule Episode' : 'Publish to Feed & RSS'}</span>
-                    </button>
-                  </div>
+                  <button
+                    type="button"
+                    disabled={isSubmitting}
+                    onClick={() => handleEpisodeSubmit(false)}
+                    className="px-6 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-black text-xs shadow-lg shadow-purple-600/30 flex items-center gap-2"
+                  >
+                    {isSubmitting && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                    <span>Publish Episode Now</span>
+                  </button>
                 </div>
-              </form>
+              </div>
             )}
           </div>
         )}
 
-        {/* Tab 2: Create Show */}
+        {/* TAB 2: CREATE SHOW */}
         {user && tab === 'create_show' && (
           <form onSubmit={handleCreateShow} className="space-y-4">
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-brand-sandstone/80">Show Title</label>
-              <input
-                type="text"
-                value={showTitle}
-                onChange={(e) => setShowTitle(e.target.value)}
-                placeholder="e.g. Voices of the Archipelago"
-                className="w-full bg-slate-900 border border-white/15 rounded-2xl px-4 py-2.5 text-xs text-white placeholder-brand-sandstone/40 focus:outline-none focus:border-purple-500"
-                required
-              />
+            {/* Show Title & Subtitle */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-black text-brand-sandstone/80 mb-1">
+                  Podcast Title *
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g., Caribbean Tech &amp; Culture"
+                  value={showTitle}
+                  onChange={(e) => setShowTitle(e.target.value)}
+                  className="w-full bg-slate-950/80 border border-white/20 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-purple-500"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-black text-brand-sandstone/80 mb-1">
+                  Show Subtitle
+                </label>
+                <input
+                  type="text"
+                  placeholder="One-line show tagline"
+                  value={showSubtitle}
+                  onChange={(e) => setShowSubtitle(e.target.value)}
+                  className="w-full bg-slate-950/80 border border-white/20 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-purple-500"
+                />
+              </div>
             </div>
 
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-brand-sandstone/80">Show Description &amp; Premise</label>
-              <textarea
-                rows={3}
-                value={showDescription}
-                onChange={(e) => setShowDescription(e.target.value)}
-                placeholder="Explain the mission, topics, and cultural focus of your show..."
-                className="w-full bg-slate-900 border border-white/15 rounded-2xl px-4 py-2 text-xs text-white placeholder-brand-sandstone/40 focus:outline-none focus:border-purple-500"
-              />
-            </div>
+            {/* Author, Territory, Category */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div>
+                <label className="block text-xs font-black text-brand-sandstone/80 mb-1">Host / Author</label>
+                <input
+                  type="text"
+                  value={authorName}
+                  onChange={(e) => setAuthorName(e.target.value)}
+                  className="w-full bg-slate-950/80 border border-white/20 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-purple-500"
+                />
+              </div>
 
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-brand-sandstone/80">Primary Language</label>
+              <div>
+                <label className="block text-xs font-black text-brand-sandstone/80 mb-1">Territory</label>
                 <select
-                  value={languageIso}
-                  onChange={(e) => setLanguageIso(e.target.value)}
-                  className="w-full bg-slate-900 border border-white/15 rounded-2xl px-3 py-2 text-xs text-white focus:outline-none focus:border-purple-500"
+                  value={islandTerritory}
+                  onChange={(e) => setIslandTerritory(e.target.value)}
+                  className="w-full bg-slate-950/80 border border-white/20 rounded-xl px-2 py-2 text-xs text-white focus:outline-none focus:border-purple-500"
                 >
-                  <option value="en">English (English)</option>
-                  <option value="es">Español (Spanish)</option>
-                  <option value="fr">Français (French)</option>
-                  <option value="ht">Kreyòl Ayisyen (Haitian Creole)</option>
-                  <option value="pap">Papiamento</option>
-                  <option value="nl">Nederlands (Dutch)</option>
+                  {CARIBBEAN_PODCAST_TERRITORIES.map((t) => (
+                    <option key={t.iso} value={t.iso}>
+                      {t.flag} {t.name}
+                    </option>
+                  ))}
                 </select>
               </div>
 
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-brand-sandstone/80">Network Category</label>
+              <div>
+                <label className="block text-xs font-black text-brand-sandstone/80 mb-1">Category</label>
                 <select
                   value={category}
                   onChange={(e) => setCategory(e.target.value)}
-                  className="w-full bg-slate-900 border border-white/15 rounded-2xl px-3 py-2 text-xs text-white focus:outline-none focus:border-purple-500"
+                  className="w-full bg-slate-950/80 border border-white/20 rounded-xl px-2 py-2 text-xs text-white focus:outline-none focus:border-purple-500"
                 >
-                  <option value="Culture & History">Culture &amp; History</option>
-                  <option value="Music & Sound Systems">Music &amp; Sound Systems</option>
-                  <option value="Business & Tech">Business &amp; Tech</option>
-                  <option value="Food & Culinary">Food &amp; Culinary</option>
-                  <option value="Diaspora Life">Diaspora Life</option>
+                  {CARIBBEAN_PODCAST_CATEGORIES.map((cat) => (
+                    <option key={cat} value={cat}>
+                      {cat}
+                    </option>
+                  ))}
                 </select>
               </div>
             </div>
 
-            {/* Cover Artwork File Upload */}
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-brand-sandstone/80">Show Artwork / Cover Image</label>
+            {/* Show Description */}
+            <div>
+              <label className="block text-xs font-black text-brand-sandstone/80 mb-1">
+                Show Description
+              </label>
+              <textarea
+                rows={3}
+                placeholder="What is this podcast about? What themes, stories, or interviews will listeners hear?"
+                value={showDescription}
+                onChange={(e) => setShowDescription(e.target.value)}
+                className="w-full bg-slate-950/80 border border-white/20 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-purple-500"
+              />
+            </div>
+
+            {/* Artwork Upload */}
+            <div className="p-3.5 rounded-2xl bg-white/5 border border-white/10 space-y-2">
+              <label className="block text-xs font-black text-white flex items-center gap-1.5">
+                <ImageIcon className="w-3.5 h-3.5 text-purple-400" /> Square Cover Artwork (min 1400x1400)
+              </label>
               <input
-                type="file"
                 ref={coverInputRef}
+                type="file"
                 accept="image/*"
                 onChange={handleCoverChange}
                 className="hidden"
               />
-              <div
+              <button
+                type="button"
                 onClick={() => coverInputRef.current?.click()}
-                className="border-2 border-dashed border-white/20 hover:border-purple-500/50 rounded-2xl p-4 text-center cursor-pointer transition-colors bg-white/5 flex items-center justify-center gap-3"
+                className="w-full py-3 px-3 rounded-xl border border-dashed border-purple-500/40 hover:bg-purple-600/10 text-xs font-bold text-brand-sandstone/80 hover:text-white flex items-center justify-center gap-2"
               >
-                {coverPreview ? (
-                  <img src={coverPreview} alt="Cover preview" className="w-14 h-14 rounded-xl object-cover" />
-                ) : (
-                  <ImageIcon className="w-6 h-6 text-purple-400" />
-                )}
-                <div className="text-left">
-                  <p className="text-xs font-bold text-white">
-                    {coverFile ? coverFile.name : 'Select 1400×1400+ square cover artwork'}
-                  </p>
-                  <p className="text-[11px] text-brand-sandstone/60">
-                    Compliant with Apple Podcasts and Spotify standards.
-                  </p>
-                </div>
-              </div>
+                <UploadCloud className="w-4 h-4 text-purple-400" />
+                <span>{coverFile ? coverFile.name : 'Choose Square JPEG or PNG'}</span>
+              </button>
             </div>
 
-            <div className="pt-3 flex items-center justify-end gap-3 border-t border-white/10">
+            {/* Submit Button */}
+            <div className="pt-4 border-t border-white/10 flex items-center justify-end gap-3">
               <button
                 type="button"
                 onClick={onClose}
-                className="px-4 py-2.5 rounded-xl text-brand-sandstone/70 hover:text-white text-xs font-bold"
+                className="px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/15 text-white font-bold text-xs"
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                disabled={isSubmitting}
-                className="px-6 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-black text-xs transition-colors shadow-lg shadow-purple-600/30 flex items-center gap-2"
+                disabled={isSubmitting || !showTitle.trim()}
+                className="px-6 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 disabled:opacity-50 text-white font-black text-xs shadow-lg shadow-purple-600/30 flex items-center gap-2"
               >
-                {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+                {isSubmitting && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
                 <span>Create Podcast Show</span>
               </button>
             </div>

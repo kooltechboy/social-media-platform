@@ -5,14 +5,19 @@ import { createSupabaseServerClient, getCurrentUser } from '../supabase/server';
 import {
   validateEpisode,
   validateChapters,
+  validateTimedLinks,
   slugifyPodcast,
   type Chapter,
+  type TimedLink,
+  type TranscriptSegment,
 } from '@caribbean/podcasts';
+import { CaribAIEngine } from '@caribbean/ai';
 
 export interface PodcastActionState {
   error: string | null;
   success: string | null;
   podcastSlug?: string;
+  podcastId?: string;
 }
 
 export async function createPodcastAction(
@@ -20,10 +25,21 @@ export async function createPodcastAction(
   formData: FormData,
 ): Promise<PodcastActionState> {
   const title = String(formData.get('title') ?? '').trim();
-  const description = String(formData.get('description') ?? '').trim();
-  const languageIso = String(formData.get('languageIso') ?? '').trim() || null;
+  const subtitle = String(formData.get('subtitle') ?? '').trim() || null;
+  const description = String(formData.get('description') ?? '').trim() || null;
+  const longDescription = String(formData.get('longDescription') ?? '').trim() || null;
+  const languageIso = String(formData.get('languageIso') ?? '').trim() || 'en';
+  const category = String(formData.get('category') ?? '').trim() || 'Culture & History';
+  const subcategory = String(formData.get('subcategory') ?? '').trim() || null;
+  const country = String(formData.get('country') ?? '').trim() || null;
+  const islandTerritory = String(formData.get('islandTerritory') ?? '').trim() || null;
+  const authorName = String(formData.get('authorName') ?? '').trim() || null;
+  const copyright = String(formData.get('copyright') ?? '').trim() || null;
+  const publisher = String(formData.get('publisher') ?? '').trim() || null;
+  const showType = (String(formData.get('showType') ?? 'episodic') as 'episodic' | 'serial') || 'episodic';
   const isPaid = formData.get('isPaid') === 'true';
   const coverPath = String(formData.get('coverPath') ?? '').trim() || null;
+  const pageId = String(formData.get('pageId') ?? '').trim() || null;
 
   if (!title || title.length < 2) {
     return { error: 'Podcast title must be at least 2 characters.', success: null };
@@ -38,22 +54,53 @@ export async function createPodcastAction(
   const baseSlug = slugifyPodcast(title);
   const slug = `${baseSlug}-${Date.now().toString(36).slice(-4)}`;
 
-  const { error } = await supabase.from('podcasts').insert({
-    creator_id: user.id,
-    title,
-    slug,
-    description: description || null,
-    cover_path: coverPath,
-    language: languageIso,
-    is_paid: isPaid,
-    follower_count: 0,
-  });
+  const { data: created, error } = await supabase
+    .from('podcasts')
+    .insert({
+      creator_id: user.id,
+      title,
+      subtitle,
+      slug,
+      description,
+      long_description: longDescription,
+      cover_path: coverPath,
+      language: languageIso,
+      category,
+      subcategory,
+      country,
+      island_territory: islandTerritory,
+      author_name: authorName,
+      copyright,
+      publisher,
+      show_type: showType,
+      is_paid: isPaid,
+      page_id: pageId,
+      follower_count: 0,
+      publication_status: 'published',
+      visibility: 'public',
+    })
+    .select('id, slug')
+    .single();
 
   if (error) return { error: error.message, success: null };
 
+  // Seed default distribution destinations for the newly created show
+  const defaultPlatforms = ['apple_podcasts', 'spotify', 'youtube_music', 'amazon_music', 'pocket_casts', 'podcast_index'];
+  const distRows = defaultPlatforms.map((plat) => ({
+    podcast_id: created.id,
+    platform: plat,
+    submission_status: 'unsubmitted',
+  }));
+  await supabase.from('podcast_distribution_destinations').upsert(distRows, { onConflict: 'podcast_id,platform' });
+
   revalidatePath('/podcasts');
   revalidatePath('/creator-studio');
-  return { error: null, success: 'Podcast show successfully created!', podcastSlug: slug };
+  return {
+    error: null,
+    success: 'Podcast show successfully created!',
+    podcastSlug: created.slug,
+    podcastId: created.id,
+  };
 }
 
 export interface PublishEpisodeParams {
@@ -61,12 +108,25 @@ export interface PublishEpisodeParams {
   seasonNumber: number;
   episodeNumber: number;
   title: string;
+  subtitle?: string;
   durationSeconds: number;
   audioPath: string;
+  videoPath?: string | null;
+  hlsManifestUrl?: string | null;
+  captionsUrl?: string | null;
   showNotes?: string;
+  showNotesHtml?: string;
   transcript?: string;
+  transcriptSegments?: TranscriptSegment[];
   chapters?: Chapter[];
+  timedLinks?: TimedLink[];
+  episodeType?: 'full' | 'trailer' | 'bonus';
   isSubscriberOnly?: boolean;
+  isPremium?: boolean;
+  isExplicit?: boolean;
+  authorName?: string;
+  artworkUrl?: string;
+  contentWarnings?: string[];
   isDraft?: boolean;
   scheduledFor?: string | null;
 }
@@ -84,7 +144,9 @@ export async function publishEpisodeAction(
     title: params.title,
     durationSeconds: params.durationSeconds,
     audioPath: params.audioPath,
+    videoPath: params.videoPath,
     isSubscriberOnly: Boolean(params.isSubscriberOnly),
+    isPremium: Boolean(params.isPremium),
   });
 
   if (!validation.valid) {
@@ -95,6 +157,13 @@ export async function publishEpisodeAction(
     const chapVal = validateChapters(params.chapters, params.durationSeconds);
     if (!chapVal.valid) {
       return { success: false, error: chapVal.errors.join(', ') };
+    }
+  }
+
+  if (params.timedLinks && params.timedLinks.length > 0) {
+    const linkVal = validateTimedLinks(params.timedLinks, params.durationSeconds);
+    if (!linkVal.valid) {
+      return { success: false, error: linkVal.errors.join(', ') };
     }
   }
 
@@ -114,23 +183,71 @@ export async function publishEpisodeAction(
       season_number: params.seasonNumber,
       episode_number: params.episodeNumber,
       title: params.title.trim(),
+      subtitle: params.subtitle?.trim() || null,
       audio_path: params.audioPath,
+      video_path: params.videoPath || null,
+      hls_manifest_url: params.hlsManifestUrl || null,
+      captions_url: params.captionsUrl || null,
       duration_seconds: params.durationSeconds,
       show_notes: params.showNotes || null,
+      show_notes_html: params.showNotesHtml || null,
       transcript: params.transcript || null,
       chapters: params.chapters || [],
+      episode_type: params.episodeType || 'full',
       is_subscriber_only: Boolean(params.isSubscriberOnly),
+      is_premium: Boolean(params.isPremium),
+      is_explicit: Boolean(params.isExplicit),
+      author_name: params.authorName || null,
+      artwork_url: params.artworkUrl || null,
+      content_warnings: params.contentWarnings || [],
       published_at: publishedAt,
       scheduled_for: scheduledFor,
+      distribution_status: 'ready',
     })
     .select('id')
     .single();
 
   if (error) return { success: false, error: error.message };
 
+  const episodeId = data?.id;
+
+  // Insert timed links if present
+  if (params.timedLinks && params.timedLinks.length > 0 && episodeId) {
+    const linkRows = params.timedLinks.map((l) => ({
+      episode_id: episodeId,
+      timestamp_seconds: l.timestampSeconds,
+      title: l.title,
+      url: l.url,
+      description: l.description || null,
+      link_kind: l.linkKind || 'external',
+      target_id: l.targetId || null,
+    }));
+    await supabase.from('podcast_timed_links').insert(linkRows);
+  }
+
+  // Insert structured transcript segments if present
+  if (params.transcriptSegments && params.transcriptSegments.length > 0 && episodeId) {
+    await supabase.from('podcast_transcripts').insert({
+      episode_id: episodeId,
+      language: 'en',
+      format: 'json',
+      segments: params.transcriptSegments,
+      is_primary: true,
+      ai_generated: false,
+    });
+  }
+
+  // Update show last published timestamp
+  if (publishedAt) {
+    await supabase
+      .from('podcasts')
+      .update({ last_published_at: publishedAt })
+      .eq('id', params.podcastId);
+  }
+
   revalidatePath('/podcasts');
   revalidatePath('/creator-studio');
-  return { success: true, episodeId: data?.id };
+  return { success: true, episodeId };
 }
 
 export async function deletePodcastAction(
@@ -164,7 +281,6 @@ export async function deletePodcastEpisodeAction(
   const supabase = await createSupabaseServerClient();
   if (!supabase) return { success: false, error: 'Service unavailable.' };
 
-  // Delete will be allowed by the updated RLS policy if creator owns the parent podcast
   const { error } = await supabase
     .from('podcast_episodes')
     .delete()
@@ -186,11 +302,13 @@ export async function publishDraftEpisodeAction(
   const supabase = await createSupabaseServerClient();
   if (!supabase) return { success: false, error: 'Service unavailable.' };
 
+  const now = new Date().toISOString();
   const { error } = await supabase
     .from('podcast_episodes')
     .update({
-      published_at: new Date().toISOString(),
+      published_at: now,
       scheduled_for: null,
+      distribution_status: 'ready',
     })
     .eq('id', episodeId);
 
@@ -214,15 +332,14 @@ export async function followPodcastAction(podcastId: string): Promise<PodcastAct
 
   if (error) return { error: error.message, success: null };
 
-  // Trigger trg_podcast_follower_count handles the counter, with RPC fallback
   try {
     await supabase.rpc('increment_podcast_followers', { p_podcast_id: podcastId });
   } catch {
-    // Ignore RPC failure if trigger already executed
+    // Ignore RPC failure if trigger already handled
   }
 
   revalidatePath('/podcasts');
-  return { error: null, success: 'Following.' };
+  return { error: null, success: 'Following show.' };
 }
 
 export async function unfollowPodcastAction(podcastId: string): Promise<PodcastActionState> {
@@ -243,7 +360,7 @@ export async function unfollowPodcastAction(podcastId: string): Promise<PodcastA
   try {
     await supabase.rpc('decrement_podcast_followers', { p_podcast_id: podcastId });
   } catch {
-    // Ignore RPC failure if trigger already executed
+    // Ignore RPC failure
   }
 
   revalidatePath('/podcasts');
@@ -321,7 +438,6 @@ export async function recordPodcastPlayAction(
   if (!supabase) return { success: false };
 
   try {
-    // Increment play_count on podcast_episodes
     const { data: ep } = await supabase
       .from('podcast_episodes')
       .select('play_count')
@@ -335,7 +451,6 @@ export async function recordPodcastPlayAction(
         .eq('id', episodeId);
     }
 
-    // Insert analytics record
     await supabase.from('podcast_analytics').insert({
       episode_id: episodeId,
       listener_id: user?.id || null,
@@ -351,50 +466,197 @@ export async function recordPodcastPlayAction(
   return { success: true };
 }
 
-export async function getPodcastAnalyticsAction(
-  podcastId: string,
-): Promise<{
-  totalPlays: number;
-  uniqueListeners: number;
-  completionRate: number;
-  error?: string;
-}> {
-  const user = await getCurrentUser();
-  if (!user) return { totalPlays: 0, uniqueListeners: 0, completionRate: 0, error: 'Unauthorized.' };
-
+export async function fetchEpisodeTimedLinksAction(episodeId: string): Promise<TimedLink[]> {
   const supabase = await createSupabaseServerClient();
-  if (!supabase) return { totalPlays: 0, uniqueListeners: 0, completionRate: 0, error: 'Database unavailable.' };
+  if (!supabase) return [];
 
-  try {
-    const { data: episodes } = await supabase
-      .from('podcast_episodes')
-      .select('id, play_count')
-      .eq('podcast_id', podcastId);
+  const { data } = await supabase
+    .from('podcast_timed_links')
+    .select('timestamp_seconds, title, url, description, link_kind, target_id')
+    .eq('episode_id', episodeId)
+    .order('timestamp_seconds', { ascending: true });
 
-    if (!episodes || episodes.length === 0) {
-      return { totalPlays: 0, uniqueListeners: 0, completionRate: 0 };
-    }
-
-    const totalPlays = episodes.reduce((acc, curr) => acc + (curr.play_count || 0), 0);
-    const episodeIds = episodes.map((e) => e.id);
-
-    const { data: analytics } = await supabase
-      .from('podcast_analytics')
-      .select('listener_id, completed')
-      .in('episode_id', episodeIds);
-
-    const uniqueListeners = new Set(
-      analytics?.map((a) => a.listener_id).filter(Boolean)
-    ).size;
-
-    const completedCount = analytics?.filter((a) => a.completed).length || 0;
-    const completionRate = analytics && analytics.length > 0
-      ? Math.round((completedCount / analytics.length) * 100)
-      : 0;
-
-    return { totalPlays, uniqueListeners, completionRate };
-  } catch (err: any) {
-    return { totalPlays: 0, uniqueListeners: 0, completionRate: 0, error: err?.message };
-  }
+  return (data || []).map((d) => ({
+    timestampSeconds: d.timestamp_seconds,
+    title: d.title,
+    url: d.url,
+    description: d.description || undefined,
+    linkKind: d.link_kind as any,
+    targetId: d.target_id || undefined,
+  }));
 }
 
+export async function fetchEpisodeTranscriptsAction(episodeId: string): Promise<TranscriptSegment[]> {
+  const supabase = await createSupabaseServerClient();
+  if (!supabase) return [];
+
+  const { data } = await supabase
+    .from('podcast_transcripts')
+    .select('segments')
+    .eq('episode_id', episodeId)
+    .eq('is_primary', true)
+    .maybeSingle();
+
+  if (data && Array.isArray(data.segments)) {
+    return data.segments as TranscriptSegment[];
+  }
+  return [];
+}
+
+export async function addPodcastCommentAction(
+  episodeId: string,
+  body: string,
+  timestampSeconds?: number,
+  parentCommentId?: string,
+): Promise<{ success: boolean; error?: string }> {
+  const user = await getCurrentUser();
+  if (!user) return { success: false, error: 'Sign in to comment.' };
+
+  if (!body.trim()) return { success: false, error: 'Comment cannot be empty.' };
+
+  const supabase = await createSupabaseServerClient();
+  if (!supabase) return { success: false, error: 'Service unavailable.' };
+
+  const { error } = await supabase.from('podcast_comments').insert({
+    episode_id: episodeId,
+    profile_id: user.id,
+    parent_comment_id: parentCommentId || null,
+    timestamp_seconds: timestampSeconds !== undefined ? Math.floor(timestampSeconds) : null,
+    body: body.trim(),
+  });
+
+  if (error) return { success: false, error: error.message };
+  return { success: true };
+}
+
+export async function fetchPodcastCommentsAction(episodeId: string): Promise<any[]> {
+  const supabase = await createSupabaseServerClient();
+  if (!supabase) return [];
+
+  const { data } = await supabase
+    .from('podcast_comments')
+    .select(`
+      id, timestamp_seconds, body, likes_count, is_pinned, created_at,
+      profile:profiles!podcast_comments_profile_id_fkey(id, display_name, username, avatar_url, is_verified)
+    `)
+    .eq('episode_id', episodeId)
+    .order('created_at', { ascending: false })
+    .limit(100);
+
+  return data || [];
+}
+
+export async function fetchPodcastDistributionDestinationsAction(podcastId: string): Promise<any[]> {
+  const supabase = await createSupabaseServerClient();
+  if (!supabase) return [];
+
+  const { data } = await supabase
+    .from('podcast_distribution_destinations')
+    .select('*')
+    .eq('podcast_id', podcastId);
+
+  return data || [];
+}
+
+export async function updatePodcastDistributionDestinationAction(
+  podcastId: string,
+  platform: string,
+  status: string,
+  externalUrl?: string,
+  feedUrl?: string,
+): Promise<{ success: boolean; error?: string }> {
+  const user = await getCurrentUser();
+  if (!user) return { success: false, error: 'Unauthorized.' };
+
+  const supabase = await createSupabaseServerClient();
+  if (!supabase) return { success: false, error: 'Service unavailable.' };
+
+  const { error } = await supabase
+    .from('podcast_distribution_destinations')
+    .upsert({
+      podcast_id: podcastId,
+      platform,
+      submission_status: status,
+      external_show_url: externalUrl || null,
+      destination_feed_url: feedUrl || null,
+      last_sync_at: new Date().toISOString(),
+    }, {
+      onConflict: 'podcast_id,platform',
+    });
+
+  if (error) return { success: false, error: error.message };
+  return { success: true };
+}
+
+export async function generateFeedTokenAction(podcastId: string): Promise<{ success: boolean; token?: string; error?: string }> {
+  const user = await getCurrentUser();
+  if (!user) return { success: false, error: 'Unauthorized.' };
+
+  const supabase = await createSupabaseServerClient();
+  if (!supabase) return { success: false, error: 'Service unavailable.' };
+
+  const randomPart = Math.random().toString(36).slice(2) + Date.now().toString(36);
+  const tokenHash = `tkb_pod_${randomPart}`;
+
+  const { error } = await supabase.from('podcast_feed_tokens').upsert({
+    podcast_id: podcastId,
+    profile_id: user.id,
+    token_hash: tokenHash,
+    is_revoked: false,
+    expires_at: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
+  }, {
+    onConflict: 'podcast_id,profile_id',
+  });
+
+  if (error) return { success: false, error: error.message };
+  return { success: true, token: tokenHash };
+}
+
+export async function generateCaribAiPodcastMetadataAction(
+  title: string,
+  rawNotes: string,
+): Promise<{
+  seoTitle: string;
+  summary: string;
+  chapters: Chapter[];
+  socialPost: string;
+  keywords: string[];
+}> {
+  try {
+    const ai = new CaribAIEngine();
+    const prompt = `You are CaribAI Podcast Studio Assistant. Analyze this podcast episode information:
+Title: "${title}"
+Notes: "${rawNotes}"
+
+Generate a structured JSON object with:
+1. "seoTitle": High-engagement SEO title for Caribbean audiences.
+2. "summary": Compelling 2-paragraph episode summary.
+3. "chapters": Array of 3 to 5 realistic chapter markers with startSeconds (integer) and title (string).
+4. "socialPost": Engaging social media promotional post with relevant hashtags.
+5. "keywords": Array of 5-8 search tags.
+
+Output only valid JSON:`;
+
+    const res = await ai.complete(prompt);
+    const parsed = JSON.parse(res);
+    return {
+      seoTitle: parsed.seoTitle || title,
+      summary: parsed.summary || rawNotes,
+      chapters: parsed.chapters || [{ startSeconds: 0, title: 'Introduction' }],
+      socialPost: parsed.socialPost || '',
+      keywords: parsed.keywords || [],
+    };
+  } catch (err) {
+    return {
+      seoTitle: title,
+      summary: rawNotes,
+      chapters: [
+        { startSeconds: 0, title: 'Introduction & Greetings' },
+        { startSeconds: 300, title: 'Caribbean Cultural Context' },
+        { startSeconds: 900, title: 'Community Discussion & Wrap' },
+      ],
+      socialPost: `Check out our new episode "${title}" on TUKUBI Podcasting Network! 🎙️🌴`,
+      keywords: ['Caribbean', 'Podcasts', 'Tukubi', 'Culture'],
+    };
+  }
+}

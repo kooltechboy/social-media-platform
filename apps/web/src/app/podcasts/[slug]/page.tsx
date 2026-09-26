@@ -30,7 +30,7 @@ export async function generateMetadata({
 
   return {
     title: `${data.title} — TUKUBI Caribbean Podcasts`,
-    description: data.description || 'Stream authentic Caribbean podcasts, music documentaries, and audio stories on TUKUBI.',
+    description: data.description || 'Stream authentic Caribbean podcasts, video talk series, and audio stories on TUKUBI.',
     openGraph: {
       title: `${data.title} — TUKUBI`,
       description: data.description || 'Stream authentic Caribbean voices and podcasts on TUKUBI.',
@@ -48,7 +48,6 @@ export async function generateMetadata({
 
 export default async function PodcastShowPage({
   params,
-  searchParams,
 }: {
   params: Promise<{ slug: string }>;
   searchParams?: Promise<{ t?: string }>;
@@ -65,18 +64,25 @@ export default async function PodcastShowPage({
       .select(`
         id,
         title,
+        subtitle,
         slug,
         description,
         is_paid,
         follower_count,
         language,
         cover_path,
+        category,
+        subcategory,
+        country,
+        island_territory,
         creator_id,
         profiles:profiles!podcasts_creator_id_fkey(display_name, username),
         podcast_episodes(
           id,
           title,
+          subtitle,
           audio_path,
+          video_path,
           duration_seconds,
           show_notes,
           transcript,
@@ -84,7 +90,8 @@ export default async function PodcastShowPage({
           published_at,
           season_number,
           episode_number,
-          is_subscriber_only
+          is_subscriber_only,
+          episode_type
         )
       `)
       .eq('slug', slug)
@@ -110,6 +117,18 @@ export default async function PodcastShowPage({
         }
       }
 
+      let videoUrl: string | null = null;
+      if (activeEp?.video_path) {
+        if (activeEp.video_path.startsWith('http')) {
+          videoUrl = activeEp.video_path;
+        } else {
+          const { data: pubData } = supabase.storage
+            .from('podcast-video')
+            .getPublicUrl(activeEp.video_path);
+          videoUrl = pubData?.publicUrl || null;
+        }
+      }
+
       let coverUrl: string | null = null;
       if (dbPod.cover_path) {
         if (dbPod.cover_path.startsWith('http')) {
@@ -122,9 +141,47 @@ export default async function PodcastShowPage({
         }
       }
 
+      const mappedEpisodes = episodes.map((ep: any) => {
+        let epAudioUrl: string | undefined = undefined;
+        if (ep.audio_path && ep.audio_path !== 'draft_pending_upload') {
+          if (ep.audio_path.startsWith('http')) {
+            epAudioUrl = ep.audio_path;
+          } else {
+            epAudioUrl = supabase.storage.from('podcast-audio').getPublicUrl(ep.audio_path).data?.publicUrl;
+          }
+        }
+
+        let epVideoUrl: string | null = null;
+        if (ep.video_path) {
+          if (ep.video_path.startsWith('http')) {
+            epVideoUrl = ep.video_path;
+          } else {
+            epVideoUrl = supabase.storage.from('podcast-video').getPublicUrl(ep.video_path).data?.publicUrl || null;
+          }
+        }
+
+        return {
+          id: ep.id,
+          title: ep.title,
+          season_number: ep.season_number,
+          episode_number: ep.episode_number,
+          duration_seconds: ep.duration_seconds,
+          audio_path: ep.audio_path,
+          video_path: ep.video_path,
+          audioUrl: epAudioUrl,
+          videoUrl: epVideoUrl,
+          show_notes: ep.show_notes,
+          transcript: ep.transcript,
+          chapters: ep.chapters,
+          published_at: ep.published_at,
+          is_subscriber_only: ep.is_subscriber_only,
+        };
+      });
+
       podcast = {
         id: dbPod.id,
         title: dbPod.title,
+        subtitle: dbPod.subtitle,
         slug: dbPod.slug,
         description: dbPod.description,
         is_paid: dbPod.is_paid,
@@ -132,10 +189,14 @@ export default async function PodcastShowPage({
         language: dbPod.language,
         cover_path: coverUrl || dbPod.cover_path,
         creator_id: dbPod.creator_id,
-        category: 'Culture & Talk',
+        category: dbPod.category || 'Culture & Talk',
+        subcategory: dbPod.subcategory,
+        country: dbPod.country,
+        island_territory: dbPod.island_territory,
         episodesCount: episodes.length,
-        podcast_episodes: episodes.map((e) => ({ id: e.id })),
+        podcast_episodes: mappedEpisodes,
         audioUrl,
+        videoUrl,
         latestEpisodeTitle: activeEp?.title,
         chapters: (activeEp?.chapters as any) || undefined,
         transcript: activeEp?.transcript || undefined,
@@ -172,7 +233,7 @@ export default async function PodcastShowPage({
               Browse Shows
             </Link>
             <Link
-              href="/creator-studio"
+              href="/creator-studio?tab=podcasts"
               className="px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-black transition-colors shadow-md shadow-purple-600/20"
             >
               Creator Studio

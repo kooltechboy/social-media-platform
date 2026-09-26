@@ -20,7 +20,12 @@ interface EpisodeItem {
   title: string;
   durationFormatted: string;
   audioUrl?: string | null;
+  videoUrl?: string | null;
+  hasVideo?: boolean;
   showNotes?: string | null;
+  seasonNumber?: number;
+  episodeNumber?: number;
+  episodeType?: string;
 }
 
 interface PodcastShow {
@@ -42,6 +47,9 @@ const PODCAST_CATEGORIES = [
   'Business & Tech',
   'Food & Culinary',
   'Diaspora Life',
+  'News & Politics',
+  'Comedy & Storytelling',
+  'Sports & Cricket',
 ];
 
 const TERRITORIES = [
@@ -49,7 +57,15 @@ const TERRITORIES = [
   { iso: 'TTO', name: 'Trinidad & Tobago', flag: '🇹🇹' },
   { iso: 'JAM', name: 'Jamaica', flag: '🇯🇲' },
   { iso: 'BRB', name: 'Barbados', flag: '🇧🇧' },
+  { iso: 'GUY', name: 'Guyana', flag: '🇬🇾' },
   { iso: 'HTI', name: 'Haiti', flag: '🇭🇹' },
+  { iso: 'BHS', name: 'Bahamas', flag: '🇧🇸' },
+  { iso: 'DMA', name: 'Dominica', flag: '🇩🇲' },
+  { iso: 'LCA', name: 'Saint Lucia', flag: '🇱🇨' },
+  { iso: 'GRD', name: 'Grenada', flag: '🇬🇩' },
+  { iso: 'ATG', name: 'Antigua & Barbuda', flag: '🇦🇬' },
+  { iso: 'PRI', name: 'Puerto Rico', flag: '🇵🇷' },
+  { iso: 'CUB', name: 'Cuba', flag: '🇨🇺' },
 ];
 
 export function PodcastsScreen() {
@@ -62,7 +78,9 @@ export function PodcastsScreen() {
   // Player state
   const [playingEpisodeId, setPlayingEpisodeId] = useState<string | null>(null);
   const [playingTitle, setPlayingTitle] = useState<string>('');
+  const [playingHasVideo, setPlayingHasVideo] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [playbackRate, setPlaybackRate] = useState(1.0);
   const soundRef = useRef<Audio.Sound | null>(null);
 
   const fetchPodcasts = async () => {
@@ -72,7 +90,10 @@ export function PodcastsScreen() {
         .select(`
           id, title, description, category, country_iso, cover_path, follower_count,
           profiles:creator_id (display_name, username),
-          podcast_episodes (id, title, duration_seconds, audio_path, show_notes)
+          podcast_episodes (
+            id, title, duration_seconds, audio_path, video_path, has_video,
+            show_notes, season_number, episode_number, episode_type
+          )
         `)
         .order('follower_count', { ascending: false })
         .limit(20);
@@ -96,12 +117,25 @@ export function PodcastsScreen() {
                 resolvedUrl = supabase.storage.from('podcast-audio').getPublicUrl(ep.audio_path).data.publicUrl;
               }
             }
+            let resolvedVideo = '';
+            if (ep.video_path) {
+              if (ep.video_path.startsWith('http')) {
+                resolvedVideo = ep.video_path;
+              } else {
+                resolvedVideo = supabase.storage.from('podcast-video').getPublicUrl(ep.video_path).data.publicUrl;
+              }
+            }
             return {
               id: ep.id,
               title: ep.title,
               durationFormatted: `${Math.floor((ep.duration_seconds || 1800) / 60)} mins`,
               audioUrl: resolvedUrl,
+              videoUrl: resolvedVideo || null,
+              hasVideo: Boolean(ep.has_video || resolvedVideo),
               showNotes: ep.show_notes,
+              seasonNumber: ep.season_number,
+              episodeNumber: ep.episode_number,
+              episodeType: ep.episode_type,
             };
           });
 
@@ -168,17 +202,19 @@ export function PodcastsScreen() {
 
       setPlayingEpisodeId(ep.id);
       setPlayingTitle(`${showTitle} • ${ep.title}`);
+      setPlayingHasVideo(Boolean(ep.hasVideo));
       setIsPlaying(true);
 
-      if (!ep.audioUrl) {
-        Alert.alert('Audio Unavailable', 'This episode does not have an audio file attached yet.');
+      if (!ep.audioUrl && !ep.videoUrl) {
+        Alert.alert('Media Unavailable', 'This episode does not have an audio or video track attached yet.');
         setIsPlaying(false);
         return;
       }
 
+      const mediaUri = ep.audioUrl || ep.videoUrl!;
       const { sound } = await Audio.Sound.createAsync(
-        { uri: ep.audioUrl },
-        { shouldPlay: true }
+        { uri: mediaUri },
+        { shouldPlay: true, rate: playbackRate, shouldCorrectPitch: true }
       );
       soundRef.current = sound;
 
@@ -200,6 +236,16 @@ export function PodcastsScreen() {
     } catch (err) {
       console.warn('Podcast audio error:', err);
       setIsPlaying(false);
+    }
+  };
+
+  const handleCycleRate = async () => {
+    const rates = [1.0, 1.25, 1.5, 2.0];
+    const nextIdx = (rates.indexOf(playbackRate) + 1) % rates.length;
+    const nextRate = rates[nextIdx];
+    setPlaybackRate(nextRate);
+    if (soundRef.current) {
+      await soundRef.current.setRateAsync(nextRate, true);
     }
   };
 
@@ -258,7 +304,7 @@ export function PodcastsScreen() {
         ) : (
           <ScrollView
             style={styles.content}
-            contentContainerStyle={{ paddingBottom: 100 }}
+            contentContainerStyle={{ paddingBottom: 120 }}
             refreshControl={
               <RefreshControl
                 refreshing={refreshing}
@@ -314,7 +360,17 @@ export function PodcastsScreen() {
                               <Text style={styles.epPlayBtnText}>{isThisPlaying ? '⏸' : '▶'}</Text>
                             </TouchableOpacity>
                             <View style={{ flex: 1 }}>
-                              <Text style={styles.epTitle} numberOfLines={1}>{ep.title}</Text>
+                              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                                <Text style={styles.epTitle} numberOfLines={1}>
+                                  {ep.seasonNumber && ep.episodeNumber ? `S${ep.seasonNumber}E${ep.episodeNumber}: ` : ''}
+                                  {ep.title}
+                                </Text>
+                                {ep.hasVideo && (
+                                  <View style={styles.videoBadge}>
+                                    <Text style={styles.videoBadgeText}>VIDEO</Text>
+                                  </View>
+                                )}
+                              </View>
                               <Text style={styles.epDuration}>{ep.durationFormatted}</Text>
                             </View>
                           </View>
@@ -332,9 +388,21 @@ export function PodcastsScreen() {
         {playingEpisodeId && (
           <View style={styles.miniPlayer}>
             <View style={{ flex: 1 }}>
-              <Text style={styles.miniPlayingLabel}>NOW PLAYING</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                <Text style={styles.miniPlayingLabel}>NOW PLAYING</Text>
+                {playingHasVideo && (
+                  <View style={styles.videoBadge}>
+                    <Text style={styles.videoBadgeText}>VIDEO</Text>
+                  </View>
+                )}
+              </View>
               <Text style={styles.miniPlayingTitle} numberOfLines={1}>{playingTitle}</Text>
             </View>
+
+            <TouchableOpacity style={styles.rateBtn} onPress={handleCycleRate}>
+              <Text style={styles.rateBtnText}>{playbackRate}x</Text>
+            </TouchableOpacity>
+
             <TouchableOpacity
               style={styles.miniPlayControl}
               onPress={() => {
@@ -461,4 +529,32 @@ const styles = StyleSheet.create({
     marginLeft: 12,
   },
   miniPlayControlText: { color: '#090D1A', fontSize: 14, fontWeight: '900' },
+  videoBadge: {
+    backgroundColor: 'rgba(239, 68, 68, 0.2)',
+    borderWidth: 1,
+    borderColor: '#EF4444',
+    paddingHorizontal: 5,
+    paddingVertical: 1,
+    borderRadius: 6,
+  },
+  videoBadgeText: {
+    color: '#F87171',
+    fontSize: 8,
+    fontWeight: '900',
+    letterSpacing: 0.5,
+  },
+  rateBtn: {
+    paddingHorizontal: 8,
+    paddingVertical: 5,
+    borderRadius: 8,
+    backgroundColor: TOKENS.surface,
+    borderWidth: 1,
+    borderColor: TOKENS.border,
+    marginRight: 6,
+  },
+  rateBtnText: {
+    color: TOKENS.textPrimary,
+    fontSize: 10,
+    fontWeight: '800',
+  },
 });
