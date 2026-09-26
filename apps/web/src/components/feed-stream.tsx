@@ -57,6 +57,7 @@ import {
 } from '../lib/social/actions';
 import { translatePostAction } from '../lib/social/translate-actions';
 import { createSupabaseBrowserClient } from '../lib/supabase/browser';
+import type { ResolvedContentMetadata } from '@caribbean/media';
 import CreatorTipModal from './creator-tip-modal';
 import ShoppablePostWidget, { type TaggedProduct } from './shoppable-post-widget';
 import UserAvatar from './user-avatar';
@@ -118,6 +119,8 @@ export interface FeedPostData {
   sharedPostId?: string;
   sharedPost?: FeedPostData | null;
   shareCommentary?: string;
+  linkPreview?: ResolvedContentMetadata | null;
+  linkPreviews?: ResolvedContentMetadata[];
 }
 
 export interface FeedStreamProps {

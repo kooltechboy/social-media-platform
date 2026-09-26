@@ -22,7 +22,8 @@ export type MessageKind =
   | 'profile' 
   | 'system' 
   | 'ai_response'
-  | 'shipment_tracking';
+  | 'shipment_tracking'
+  | 'rich_link';
 
 
 export type MessageStatus = 'sending' | 'sent' | 'delivered' | 'read' | 'failed' | 'retry';
@@ -166,6 +167,7 @@ export interface MessageMetadata {
   profile?: ProfileContextPayload;
   community?: CommunityContextPayload;
   ai?: AiResponsePayload;
+  link_preview?: Record<string, unknown>;
   translation?: {
     originalText: string;
     translatedText: string;
@@ -201,7 +203,7 @@ export function validateDraft(draft: MessageDraft): DraftValidation {
   const hasMedia = draft.mediaUrls && draft.mediaUrls.length > 0;
   const hasAttachment = (draft.attachmentBytes || 0) > 0;
   const isRichCard = [
-    'product', 'order', 'event', 'livestream', 'store', 'community', 'profile', 'ai_response'
+    'product', 'order', 'event', 'livestream', 'store', 'community', 'profile', 'ai_response', 'rich_link'
   ].includes(draft.messageKind || '');
 
   if (!hasText && !hasAudio && !hasMedia && !hasAttachment && !isRichCard) {
@@ -233,6 +235,8 @@ export function validateContextCardPayload(kind: MessageKind, metadata?: Message
       return !!(metadata.community?.communityId && metadata.community?.name && metadata.community?.communityUrl);
     case 'profile':
       return !!(metadata.profile?.profileId && metadata.profile?.username && metadata.profile?.profileUrl);
+    case 'rich_link':
+      return !!metadata.link_preview;
     case 'ai_response':
       return true;
     default:

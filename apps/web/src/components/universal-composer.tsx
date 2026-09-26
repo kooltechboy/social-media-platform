@@ -29,14 +29,15 @@ import {
   Hash,
 } from 'lucide-react';
 import { createPostAction } from '../lib/social/actions';
+import { createPollAction } from '../lib/polls/actions';
 import { generateCaptionAction, generateHashtagsAction } from '../lib/ai/creation-actions';
 import { createSupabaseBrowserClient } from '../lib/supabase/browser';
 import { useTranslation } from '@caribbean/localization';
 import { generateCreatorContentPlan } from '@caribbean/ai';
 import TukubiCameraModal, { type StudioCaptureMode as CaptureMode } from './media/tukubi-camera-modal';
 import EmojiPickerPopover from './emoji/emoji-picker-popover';
-import { createPollAction } from '../lib/polls/actions';
-import { normalizeExifAndCompressImage } from '@caribbean/media';
+import { normalizeExifAndCompressImage, detectUrls, type ResolvedContentMetadata } from '@caribbean/media';
+import MultiLinkContainer from './media/multi-link-container';
 import TukubiImage from './ui/tukubi-image';
 import UserAvatar from './user-avatar';
 import { fetchUserOperatingIdentitiesAction, type UserOperatingIdentity } from '../lib/auth/actions';
@@ -243,6 +244,11 @@ export default function UniversalComposer({
   const [activeMediaDropdown, setActiveMediaDropdown] = useState<'photo' | 'video' | 'reel' | null>(null);
   const [isEmojiPickerOpen, setIsEmojiPickerOpen] = useState(false);
 
+  // Live Paste-and-Preview Rich Media State
+  const [resolvedLinkPreviews, setResolvedLinkPreviews] = useState<ResolvedContentMetadata[]>([]);
+  const [dismissedUrls, setDismissedUrls] = useState<Set<string>>(new Set());
+  const [isResolvingUrl, setIsResolvingUrl] = useState(false);
+
   // Native / Live Camera modal
   const [cameraModalOpen, setCameraModalOpen] = useState(false);
   const [cameraModalMode, setCameraModalMode] = useState<CaptureMode>('photo');
@@ -359,6 +365,61 @@ export default function UniversalComposer({
       }
     }
   }, [content, audience]);
+
+  // Live URL detection and automatic content resolution
+  useEffect(() => {
+    if (!content || !content.trim()) return;
+    const detected = detectUrls(content);
+    if (!detected.hasUrls) return;
+
+    const urlsToResolve = detected.urls.filter(
+      (u) =>
+        !dismissedUrls.has(u) &&
+        !resolvedLinkPreviews.some((p) => p.url === u || p.normalizedUrl === u)
+    );
+
+    if (urlsToResolve.length === 0) return;
+
+    const timer = setTimeout(async () => {
+      setIsResolvingUrl(true);
+      try {
+        for (const targetUrl of urlsToResolve) {
+          const res = await fetch('/api/v1/media/resolve-url', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ url: targetUrl }),
+          });
+          if (res.ok) {
+            const data = await res.json();
+            if (data?.metadata) {
+              setResolvedLinkPreviews((prev) => {
+                if (prev.some((p) => p.normalizedUrl === data.metadata.normalizedUrl)) {
+                  return prev;
+                }
+                return [...prev, data.metadata];
+              });
+            }
+          }
+        }
+      } catch (err) {
+        console.warn('[UniversalComposer] Error resolving link preview:', err);
+      } finally {
+        setIsResolvingUrl(false);
+      }
+    }, 450);
+
+    return () => clearTimeout(timer);
+  }, [content, dismissedUrls, resolvedLinkPreviews]);
+
+  const handleRemoveLinkPreview = (index: number) => {
+    setResolvedLinkPreviews((prev) => {
+      const target = prev[index];
+      if (target) {
+        setDismissedUrls((d) => new Set([...d, target.url, target.normalizedUrl]));
+      }
+      return prev.filter((_, i) => i !== index);
+    });
+  };
 
   async function handleFileSelect(files: FileList | null, preferredType?: 'image' | 'video', markAsReel = false) {
     if (!files || files.length === 0) return;
@@ -750,6 +811,10 @@ export default function UniversalComposer({
       formData.set('media_urls', JSON.stringify(uploadedMediaUrls));
       formData.set('media_items', JSON.stringify(structuredMediaItems));
       formData.set('cultural_tags', JSON.stringify(culturalTags));
+      if (resolvedLinkPreviews.length > 0) {
+        formData.set('link_preview', JSON.stringify(resolvedLinkPreviews[0]));
+        formData.set('link_previews', JSON.stringify(resolvedLinkPreviews));
+      }
       if (selectedCommunityId) {
         formData.set('community_id', selectedCommunityId);
       }
@@ -789,6 +854,8 @@ export default function UniversalComposer({
       // Reset state on successful publish
       setContent('');
       setMediaList([]);
+      setResolvedLinkPreviews([]);
+      setDismissedUrls(new Set());
       setMode('text');
       setIsReel(false);
       setScheduledAt(null);
@@ -1313,6 +1380,23 @@ export default function UniversalComposer({
                 {content.length}/3000
               </div>
             </div>
+
+            {/* Live Resolving URL Shimmer Skeleton */}
+            {isResolvingUrl && (
+              <div className="flex items-center gap-3 p-3.5 rounded-2xl bg-brand-caribbeanSea/10 border border-brand-caribbeanSea/20 animate-pulse text-xs text-brand-caribbeanSea font-bold">
+                <Loader2 className="w-4 h-4 animate-spin shrink-0" />
+                <span>TUKUBI is retrieving rich content & media metadata...</span>
+              </div>
+            )}
+
+            {/* Resolved Link Previews */}
+            {resolvedLinkPreviews.length > 0 && (
+              <MultiLinkContainer
+                previews={resolvedLinkPreviews}
+                onRemovePreview={handleRemoveLinkPreview}
+                className="w-full"
+              />
+            )}
 
             {/* Post Scheduling (creator/business accounts only) */}
             {(accountType === 'creator' || accountType === 'business') && (

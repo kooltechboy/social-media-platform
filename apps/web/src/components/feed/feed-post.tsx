@@ -39,6 +39,8 @@ import { hidePostAction, unhidePostAction, updatePostAction, togglePinPostAction
 import TukubiImage from '../ui/tukubi-image';
 import TukubiVideoPlayer from '../media/tukubi-video-player';
 import TukubiGallery from '../media/tukubi-gallery';
+import MultiLinkContainer from '../media/multi-link-container';
+import UniversalContentCard from '../media/universal-content-card';
 import ShoppablePostWidget from '../shoppable-post-widget';
 import InteractivePollWidget from '../polls/interactive-poll-widget';
 import { useTranslation, LOCALE_DETAILS, LOCALES, type Locale } from '@caribbean/localization';
@@ -85,6 +87,38 @@ export interface FeedPostProps {
   };
   onTranslatePost: (postId: string, content: string, targetLang: Locale) => void;
   onToggleOriginalTranslation: (postId: string) => void;
+}
+
+function CommentLinkPreview({ text }: { text: string }) {
+  const [preview, setPreview] = React.useState<any>(null);
+
+  React.useEffect(() => {
+    if (!text) return;
+    const urls = text.match(/(?:https?:\/\/|www\.)[^\s<>"'{}|\\^`\[\]]+/gi);
+    if (!urls || urls.length === 0) return;
+    const targetUrl = urls[0].startsWith('www.') ? `https://${urls[0]}` : urls[0];
+
+    let isMounted = true;
+    fetch('/api/v1/media/resolve-url', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url: targetUrl }),
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (isMounted && data?.metadata && data.metadata.status !== 'failed') {
+          setPreview(data.metadata);
+        }
+      })
+      .catch(() => {});
+
+    return () => {
+      isMounted = false;
+    };
+  }, [text]);
+
+  if (!preview) return null;
+  return <UniversalContentCard metadata={preview} compact className="mt-2" />;
 }
 
 export default function FeedPost({
@@ -737,6 +771,14 @@ export default function FeedPost({
         />
       )}
 
+      {/* Universal Content & Rich Media Preview */}
+      {(post.linkPreviews?.length || post.linkPreview) && (
+        <MultiLinkContainer
+          previews={post.linkPreviews?.length ? post.linkPreviews : post.linkPreview ? [post.linkPreview] : []}
+          className="w-full pt-1"
+        />
+      )}
+
       {/* Shoppable Tagged Product Widget */}
       {post.taggedProduct && <ShoppablePostWidget product={post.taggedProduct} />}
 
@@ -884,6 +926,7 @@ export default function FeedPost({
                       </div>
 
                       <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">{c.content}</p>
+                      <CommentLinkPreview text={c.content} />
                     </div>
 
                     {/* Threaded Nested Replies */}
@@ -937,6 +980,7 @@ export default function FeedPost({
                                 </div>
                               </div>
                               <p className="text-xs sm:text-sm text-slate-300">{r.content}</p>
+                              <CommentLinkPreview text={r.content} />
                             </div>
                           );
                         })}

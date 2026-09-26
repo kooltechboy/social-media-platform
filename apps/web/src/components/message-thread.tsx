@@ -572,8 +572,8 @@ export default function MessageThread({
             const isDeleted = !!msg.deleted_at;
             const repliedMsg = msg.reply_to_id ? messages.find((m) => m.id === msg.reply_to_id) : null;
             const isRichCard = [
-              'product', 'order', 'event', 'livestream', 'store', 'community', 'profile', 'ai_response'
-            ].includes(msg.message_kind || '');
+              'product', 'order', 'event', 'livestream', 'store', 'community', 'profile', 'ai_response', 'rich_link'
+            ].includes(msg.message_kind || '') || !!msg.metadata?.link_preview;
 
             return (
               <div

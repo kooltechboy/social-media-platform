@@ -12,6 +12,7 @@ import {
   generateClientMessageId,
   buildBusinessAiSystemPrompt
 } from '@caribbean/messaging';
+import { detectUrls, resolveContentUrl } from '@caribbean/media';
 
 export interface MessageActionState {
   error: string | null;
@@ -37,7 +38,7 @@ export async function sendMessageAction(
 
   const conversationId = String(formData.get('conversationId') ?? '').trim();
   const body = String(formData.get('body') ?? '').trim();
-  const messageKind = (String(formData.get('message_kind') ?? 'text')) as MessageKind;
+  let messageKind = (String(formData.get('message_kind') ?? 'text')) as MessageKind;
   const clientMessageId = String(formData.get('client_message_id') ?? '').trim() || undefined;
   const audioUrl = String(formData.get('audio_url') ?? '').trim() || undefined;
   const mediaUrlsStr = String(formData.get('media_urls') ?? '').trim();
@@ -60,6 +61,24 @@ export async function sendMessageAction(
 
   if (audioUrl) metadata.audio_url = audioUrl;
   if (mediaUrls.length > 0) metadata.media_urls = mediaUrls;
+
+  // Auto-detect and resolve rich media preview for messages containing external or media URLs
+  if (!metadata.link_preview && body) {
+    const detected = detectUrls(body);
+    if (detected.hasUrls && detected.primaryUrl) {
+      try {
+        const preview = await resolveContentUrl(detected.primaryUrl);
+        if (preview && preview.status !== 'failed') {
+          metadata.link_preview = preview as any;
+          if (messageKind === 'text') {
+            messageKind = 'rich_link';
+          }
+        }
+      } catch {
+        // Non-blocking fallback
+      }
+    }
+  }
 
   if (!conversationId) return { error: 'Conversation ID is required.' };
 

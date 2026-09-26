@@ -15,6 +15,7 @@ import {
 } from '@caribbean/advertising';
 
 import { parseMediaPayload, type StructuredMediaItem } from './media-utils';
+import { detectUrls, resolveContentUrl, type ResolvedContentMetadata } from '@caribbean/media';
 export type { StructuredMediaItem };
 
 export interface PostActionState {
@@ -31,6 +32,7 @@ export interface PostActionState {
     content: string;
     mediaUrls?: string[];
     mediaItems?: StructuredMediaItem[];
+    linkPreview?: ResolvedContentMetadata | null;
     culturalTags?: string[];
     likes: number;
     reposts: number;
@@ -325,6 +327,31 @@ export async function createPostAction(_prev: PostActionState, formData: FormDat
   // Explicit pinning check (official or author with permission)
   const isPinnedExplicit = formData.get('is_pinned') === 'true';
 
+  // Extract or auto-resolve link preview metadata
+  const linkPreviewRaw = formData.get('link_preview');
+  let linkPreview: ResolvedContentMetadata | null = null;
+  if (typeof linkPreviewRaw === 'string' && linkPreviewRaw.trim()) {
+    try {
+      linkPreview = JSON.parse(linkPreviewRaw);
+    } catch {
+      linkPreview = null;
+    }
+  }
+
+  if (!linkPreview && content) {
+    const detected = detectUrls(content);
+    if (detected.hasUrls && detected.primaryUrl) {
+      try {
+        const auto = await resolveContentUrl(detected.primaryUrl);
+        if (auto && auto.status !== 'failed') {
+          linkPreview = auto;
+        }
+      } catch {
+        // Fallback
+      }
+    }
+  }
+
   const { data, error } = await supabase
     .from('posts')
     .insert({
@@ -346,11 +373,12 @@ export async function createPostAction(_prev: PostActionState, formData: FormDat
       is_pinned: isPinnedExplicit,
       shared_post_id: sharedPostId,
       share_commentary: shareCommentary,
+      link_preview: linkPreview || null,
     })
     .select(`
       id, content, created_at, media_urls, cultural_tags, likes_count, comments_count, shares_count, visibility, 
       community_id, country_id, page_id, is_official, official_content_type, is_pinned, publisher_type, publisher_entity_id, 
-      created_by_user_id, shared_post_id,
+      created_by_user_id, shared_post_id, link_preview,
       profiles:profiles!posts_author_id_fkey(id, display_name, username, avatar_url, is_verified, is_official),
       businesses:businesses!posts_page_id_fkey(id, name, slug, avatar_url, is_verified)
     `)
@@ -436,6 +464,7 @@ export async function createPostAction(_prev: PostActionState, formData: FormDat
     content: data.content || '',
     mediaUrls: data.media_urls || [],
     mediaItems,
+    linkPreview: data.link_preview || linkPreview || null,
     culturalTags: data.cultural_tags || [],
     likes: data.likes_count || 0,
     reposts: data.shares_count || 0,

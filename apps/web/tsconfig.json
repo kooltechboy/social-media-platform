@@ -27,7 +27,9 @@
       "@caribbean/localization": ["../../packages/localization/src"],
       "@caribbean/ai": ["../../packages/ai/src"],
       "@caribbean/design-system": ["../../packages/design-system/src"],
-      "@caribbean/ui": ["../../packages/ui/src"]
+      "@caribbean/ui": ["../../packages/ui/src"],
+      "@caribbean/media": ["../../packages/media/src/index.ts"],
+      "@caribbean/messaging": ["../../packages/messaging/src/index.ts"]
     }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],

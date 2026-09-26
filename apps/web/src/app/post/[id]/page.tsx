@@ -13,10 +13,64 @@ export async function generateMetadata({
 }: {
   params: Promise<{ id: string }>;
 }): Promise<Metadata> {
-  const resolved = await params;
+  const { id } = await params;
+  const supabase = await createSupabaseServerClient();
+  if (!supabase) {
+    return {
+      title: 'Post — TUKUBI',
+      description: 'View post on TUKUBI — The Caribbean Connected.',
+    };
+  }
+
+  const { data: post } = await supabase
+    .from('posts')
+    .select(`
+      content, media_urls, link_preview,
+      profiles!posts_author_id_fkey ( display_name, username )
+    `)
+    .eq('id', id)
+    .maybeSingle();
+
+  if (!post) {
+    return {
+      title: 'Post Not Found — TUKUBI',
+      description: 'The requested post could not be found on TUKUBI.',
+    };
+  }
+
+  const profile = Array.isArray(post.profiles) ? post.profiles[0] : post.profiles;
+  const authorName = profile?.display_name || (profile?.username ? `@${profile.username}` : 'A Caribbean Member');
+  const preview = post.link_preview as any;
+  const snippet = post.content ? (post.content.length > 140 ? `${post.content.slice(0, 137)}...` : post.content) : 'Check out this post on TUKUBI.';
+  const title = `${authorName} on TUKUBI`;
+  const description = preview?.description || snippet;
+
+  // Resolve best image for social preview
+  let ogImage: string | undefined;
+  if (Array.isArray(post.media_urls) && post.media_urls.length > 0) {
+    ogImage = post.media_urls[0];
+  } else if (preview?.thumbnail_url) {
+    ogImage = preview.thumbnail_url;
+  } else if (preview?.preview_image_url) {
+    ogImage = preview.preview_image_url;
+  }
+
   return {
-    title: `Post — TUKUBI`,
-    description: `View post on TUKUBI — The Caribbean Connected.`,
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      siteName: 'TUKUBI — The Caribbean Connected',
+      type: 'article',
+      ...(ogImage ? { images: [{ url: ogImage, alt: title }] } : {}),
+    },
+    twitter: {
+      card: ogImage ? 'summary_large_image' : 'summary',
+      title,
+      description,
+      ...(ogImage ? { images: [ogImage] } : {}),
+    },
   };
 }
 
@@ -40,7 +94,7 @@ export default async function SinglePostPage({
   const { data: postRow, error } = await supabase
     .from('posts')
     .select(`
-      id, content, created_at, visibility, likes_count, comments_count, shares_count, media_urls, cultural_tags, location_tag,
+      id, content, created_at, visibility, likes_count, comments_count, shares_count, media_urls, cultural_tags, location_tag, link_preview, link_previews,
       profiles!posts_author_id_fkey ( id, display_name, username, avatar_url, is_verified )
     `)
     .eq('id', id)

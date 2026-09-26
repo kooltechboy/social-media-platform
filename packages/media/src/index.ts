@@ -314,3 +314,4 @@ export * from './streaming';
 export * from './image-optimizer';
 export * from './captions';
 export * from './media-utils';
+export * from './content-resolver';

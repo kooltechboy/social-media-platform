@@ -36,6 +36,7 @@ import type {
   AiResponsePayload,
 } from '@caribbean/messaging';
 import TukubiImage from '../../ui/tukubi-image';
+import UniversalContentCard from '../../media/universal-content-card';
 
 interface MessageContextCardProps {
   kind: MessageKind;
@@ -442,6 +443,18 @@ export default function MessageContextCard({
             ))}
           </div>
         )}
+      </div>
+    );
+  }
+
+  // 9. RICH LINK / UNIVERSAL MEDIA CONTENT CARD
+  if ((kind === 'rich_link' || metadata.link_preview) && metadata.link_preview) {
+    return (
+      <div className="max-w-md">
+        <UniversalContentCard
+          metadata={metadata.link_preview as any}
+          compact={false}
+        />
       </div>
     );
   }

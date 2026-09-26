@@ -357,6 +357,8 @@ export async function hydratePostsEngagement(
       category: p.category || 'caribbean',
       taggedProduct: p.taggedProduct || p.tagged_product,
       poll: p.poll,
+      linkPreview: p.link_preview || p.linkPreview || null,
+      linkPreviews: Array.isArray(p.link_previews) ? p.link_previews : (p.link_preview ? [p.link_preview] : []),
       isSponsored: p.isSponsored ?? false,
       adId: p.adId,
       headline: p.headline,
