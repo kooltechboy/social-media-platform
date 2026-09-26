@@ -8,7 +8,7 @@ export default defineConfig({
     },
   },
   test: {
-    include: ['tests/unit/**/*.test.ts', 'packages/**/*.test.ts'],
+    include: ['tests/**/*.test.ts', 'packages/**/*.test.ts'],
     exclude: ['tests/e2e/**', 'node_modules/**'],
     testTimeout: 45000,
     fileParallelism: false,
