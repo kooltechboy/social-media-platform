@@ -20,7 +20,7 @@ import {
 import { CARIBBEAN_SOUNDS, type CaribbeanSound } from '../../lib/constants/caribbean-sounds';
 import { publishReelAction } from '../../lib/media/reel-actions';
 import { createSupabaseBrowserClient } from '../../lib/supabase/browser';
-import TukubiCameraModal from '../media/tukubi-camera-modal';
+import { TukubiCreationStudio, type CreationStudioHandoffPayload } from '../media/creation';
 
 interface CreateReelModalProps {
   isOpen: boolean;
@@ -420,27 +420,27 @@ export default function CreateReelModal({
         </form>
       </div>
 
-      {/* Dedicated Reel Camera Studio Modal */}
-      <TukubiCameraModal
+      {/* Dedicated Reel Creation Studio Modal */}
+      <TukubiCreationStudio
         isOpen={isCameraOpen}
         initialMode="reel"
-        initialSoundId={selectedSound?.id}
         onClose={() => setIsCameraOpen(false)}
-        onCaptureComplete={(file, _type, meta) => {
-          setVideoFile(file);
-          setVideoPreviewUrl(URL.createObjectURL(file));
-          if (meta?.durationSeconds) {
-            setVideoDuration(Math.max(1, meta.durationSeconds));
+        onHandoffComplete={(payload: CreationStudioHandoffPayload) => {
+          setVideoFile(payload.file);
+          setVideoPreviewUrl(payload.previewUrl || URL.createObjectURL(payload.file));
+          if (payload.durationSeconds) {
+            setVideoDuration(Math.max(1, Math.round(payload.durationSeconds)));
           }
-          if (meta?.soundId && !selectedSound) {
-            const matched = CARIBBEAN_SOUNDS.find((s) => s.id === meta.soundId);
+          if (payload.soundId) {
+            const matched = CARIBBEAN_SOUNDS.find((s) => s.id === payload.soundId);
+            if (matched) setSelectedSound(matched);
+          } else if (payload.soundTitle) {
+            const matched = CARIBBEAN_SOUNDS.find(
+              (s) => s.title.toLowerCase() === payload.soundTitle?.toLowerCase()
+            );
             if (matched) setSelectedSound(matched);
           }
           setIsCameraOpen(false);
-        }}
-        onFallbackToFilePicker={() => {
-          setIsCameraOpen(false);
-          fileInputRef.current?.click();
         }}
       />
     </div>

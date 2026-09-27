@@ -25,9 +25,9 @@ import {
   Music,
   Camera,
 } from 'lucide-react';
-import UniversalComposer, { type ComposerMode } from './universal-composer';
+import UniversalComposer, { type ComposerMode, type UploadedMediaItem } from './universal-composer';
 import CreatePodcastModal from './podcasts/create-podcast-modal';
-import TukubiCameraModal from './media/tukubi-camera-modal';
+import { TukubiCreationStudio, type CreationStudioHandoffPayload } from './media/creation';
 import { getCreatorDraftsAction, type CreatorDraftItem } from '../lib/creator/draft-actions';
 import { createSupabaseBrowserClient } from '../lib/supabase/browser';
 
@@ -203,6 +203,7 @@ export default function CreateHubClient({ user }: CreateHubClientProps) {
   const [creatorPodcasts, setCreatorPodcasts] = useState<Array<{ id: string; title: string; slug: string }>>([]);
   const [isPodcastModalOpen, setIsPodcastModalOpen] = useState(false);
   const [isCameraStudioOpen, setIsCameraStudioOpen] = useState(false);
+  const [studioHandoffMedia, setStudioHandoffMedia] = useState<UploadedMediaItem[]>([]);
   const [publishedPostId, setPublishedPostId] = useState<string | null>(null);
   const [composerMode, setComposerMode] = useState<ComposerMode>('text');
   const composerSectionRef = useRef<HTMLDivElement>(null);
@@ -359,8 +360,9 @@ export default function CreateHubClient({ user }: CreateHubClientProps) {
         </div>
 
         <UniversalComposer
-          key={composerMode}
+          key={`${composerMode}_${studioHandoffMedia.length}`}
           initialMode={composerMode}
+          initialMedia={studioHandoffMedia}
           displayName={user?.displayName ?? 'Caribbean Citizen'}
           avatarInitials={(user?.displayName ?? 'CO').slice(0, 2).toUpperCase()}
           userId={user?.id}
@@ -368,6 +370,7 @@ export default function CreateHubClient({ user }: CreateHubClientProps) {
           onPostCreated={(post) => {
             if (post?.id) setPublishedPostId(post.id);
             setHasDraft(false);
+            setStudioHandoffMedia([]);
           }}
         />
       </section>
@@ -560,18 +563,25 @@ export default function CreateHubClient({ user }: CreateHubClientProps) {
         existingPodcasts={creatorPodcasts}
       />
 
-      {/* Live Camera Studio Modal */}
-      <TukubiCameraModal
+      {/* Live Creation Studio Modal */}
+      <TukubiCreationStudio
         isOpen={isCameraStudioOpen}
-        mode="photo"
+        initialMode="photo"
         onClose={() => setIsCameraStudioOpen(false)}
-        onCaptureComplete={(_file, type) => {
+        onHandoffComplete={(payload: CreationStudioHandoffPayload) => {
           setIsCameraStudioOpen(false);
-          handleStartCreating(type === 'video' ? 'video' : 'photo');
-        }}
-        onFallbackToFilePicker={() => {
-          setIsCameraStudioOpen(false);
-          handleStartCreating('photo');
+          const handoffItem: UploadedMediaItem = {
+            id: `media_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+            file: payload.file,
+            previewUrl: payload.previewUrl,
+            type: payload.mediaKind,
+            caption: payload.altText || '',
+            altText: payload.altText,
+            aspectRatio: payload.aspectRatio,
+            posterBlob: payload.posterBlob,
+          };
+          setStudioHandoffMedia([handoffItem]);
+          handleStartCreating(payload.mediaKind === 'video' ? 'video' : 'photo');
         }}
       />
     </div>

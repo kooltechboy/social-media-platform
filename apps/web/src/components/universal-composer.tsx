@@ -34,7 +34,8 @@ import { generateCaptionAction, generateHashtagsAction } from '../lib/ai/creatio
 import { createSupabaseBrowserClient } from '../lib/supabase/browser';
 import { useTranslation } from '@caribbean/localization';
 import { generateCreatorContentPlan } from '@caribbean/ai';
-import TukubiCameraModal, { type StudioCaptureMode as CaptureMode } from './media/tukubi-camera-modal';
+import { TukubiCreationStudio, type CreationStudioHandoffPayload } from './media/creation';
+import type { CreationMode } from '@caribbean/media';
 import EmojiPickerPopover from './emoji/emoji-picker-popover';
 import { normalizeExifAndCompressImage, detectUrls, type ResolvedContentMetadata } from '@caribbean/media';
 import MultiLinkContainer from './media/multi-link-container';
@@ -68,6 +69,7 @@ export interface UniversalComposerProps {
   defaultCountryId?: string;
   defaultPublishAsType?: 'personal' | 'official' | 'page' | 'community' | 'creator';
   defaultPublishAsId?: string;
+  initialMedia?: UploadedMediaItem[];
 }
 
 export interface UploadedMediaItem {
@@ -76,6 +78,7 @@ export interface UploadedMediaItem {
   previewUrl: string;
   type: 'image' | 'video';
   caption?: string;
+  altText?: string;
   uploadedUrl?: string;
   width?: number;
   height?: number;
@@ -178,11 +181,12 @@ export default function UniversalComposer({
   defaultCountryId,
   defaultPublishAsType,
   defaultPublishAsId,
+  initialMedia,
 }: UniversalComposerProps) {
   const router = useRouter();
   const { t } = useTranslation();
 
-  const [isExpanded, setIsExpanded] = useState(defaultExpanded || initialMode !== 'text');
+  const [isExpanded, setIsExpanded] = useState(defaultExpanded || initialMode !== 'text' || (initialMedia && initialMedia.length > 0));
   const [mode, setMode] = useState<ComposerMode>(initialMode);
   const [content, setContent] = useState('');
   const [audience, setAudience] = useState<AudienceSelection>('everyone');
@@ -239,19 +243,26 @@ export default function UniversalComposer({
   }, [defaultPublishAsId]);
 
   // Media files
-  const [mediaList, setMediaList] = useState<UploadedMediaItem[]>([]);
+  const [mediaList, setMediaList] = useState<UploadedMediaItem[]>(initialMedia || []);
   const [isDragging, setIsDragging] = useState(false);
   const [activeMediaDropdown, setActiveMediaDropdown] = useState<'photo' | 'video' | 'reel' | null>(null);
   const [isEmojiPickerOpen, setIsEmojiPickerOpen] = useState(false);
+
+  useEffect(() => {
+    if (initialMedia && initialMedia.length > 0) {
+      setMediaList(initialMedia);
+      setIsExpanded(true);
+    }
+  }, [initialMedia]);
 
   // Live Paste-and-Preview Rich Media State
   const [resolvedLinkPreviews, setResolvedLinkPreviews] = useState<ResolvedContentMetadata[]>([]);
   const [dismissedUrls, setDismissedUrls] = useState<Set<string>>(new Set());
   const [isResolvingUrl, setIsResolvingUrl] = useState(false);
 
-  // Native / Live Camera modal
+  // Native / Live Creation Studio modal
   const [cameraModalOpen, setCameraModalOpen] = useState(false);
-  const [cameraModalMode, setCameraModalMode] = useState<CaptureMode>('photo');
+  const [cameraModalMode, setCameraModalMode] = useState<CreationMode>('photo');
 
   // Interactive Attachment States
   // 1. Poll
@@ -502,75 +513,28 @@ export default function UniversalComposer({
     setActiveMediaDropdown(null);
   }
 
-  async function handleDirectCapture(file: File, type: 'image' | 'video') {
-    if (type === 'image') {
-      try {
-        const processed = await normalizeExifAndCompressImage(file);
-        setMediaList((prev) => [
-          ...prev,
-          {
-            id: `media_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
-            file: processed.file,
-            previewUrl: processed.previewUrl,
-            type: 'image',
-            caption: '',
-            width: processed.width,
-            height: processed.height,
-            aspectRatio: processed.aspectRatio,
-          },
-        ]);
-      } catch {
-        const previewUrl = URL.createObjectURL(file);
-        setMediaList((prev) => [
-          ...prev,
-          {
-            id: `media_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
-            file,
-            previewUrl,
-            type: 'image',
-            caption: '',
-          },
-        ]);
-      }
-    } else {
-      const previewUrl = URL.createObjectURL(file);
-      let posterBlob: Blob | undefined;
-      let width: number | undefined;
-      let height: number | undefined;
-      let aspectRatio: number | undefined;
+  function handleStudioHandoff(payload: CreationStudioHandoffPayload) {
+    const newItem: UploadedMediaItem = {
+      id: `media_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+      file: payload.file,
+      previewUrl: payload.previewUrl,
+      type: payload.mediaKind,
+      caption: payload.altText || '',
+      altText: payload.altText,
+      aspectRatio: payload.aspectRatio,
+      posterBlob: payload.posterBlob,
+    };
 
-      try {
-        const poster = await extractVideoPosterFrame(file);
-        posterBlob = poster.posterBlob;
-        width = poster.width;
-        height = poster.height;
-        if (width && height) {
-          aspectRatio = width / height;
-        }
-      } catch (err) {
-        console.warn('[UniversalComposer] Video poster extraction fallback:', err);
-      }
-
-      setMediaList((prev) => [
-        ...prev,
-        {
-          id: `media_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
-          file,
-          previewUrl,
-          type: 'video',
-          caption: '',
-          posterBlob,
-          width,
-          height,
-          aspectRatio,
-        },
-      ]);
-    }
+    setMediaList((prev) => [...prev, newItem]);
     setIsExpanded(true);
-    if (cameraModalMode === 'reel') {
-      setIsReel(true);
-      setMode('reel');
+
+    if (cameraModalMode === 'reel' || payload.durationSeconds !== undefined || payload.soundId !== undefined) {
+      if (cameraModalMode === 'reel') {
+        setIsReel(true);
+        setMode('reel');
+      }
     }
+    setCameraModalOpen(false);
   }
 
   function removeMediaItem(id: string) {
@@ -899,7 +863,7 @@ export default function UniversalComposer({
     }
   }
 
-  function openCameraFor(captureMode: CaptureMode) {
+  function openCameraFor(captureMode: CreationMode) {
     setCameraModalMode(captureMode);
     setCameraModalOpen(true);
     setActiveMediaDropdown(null);
@@ -955,18 +919,12 @@ export default function UniversalComposer({
 
   return (
     <>
-      {/* Device Media Live Camera Modal */}
-      <TukubiCameraModal
+      {/* Device Media Live Creation Studio Modal */}
+      <TukubiCreationStudio
         isOpen={cameraModalOpen}
         initialMode={cameraModalMode}
         onClose={() => setCameraModalOpen(false)}
-        onCaptureComplete={handleDirectCapture}
-        onFallbackToFilePicker={() => {
-          setCameraModalOpen(false);
-          if (cameraModalMode === 'video') videoInputRef.current?.click();
-          else if (cameraModalMode === 'reel') reelInputRef.current?.click();
-          else photoInputRef.current?.click();
-        }}
+        onHandoffComplete={handleStudioHandoff}
       />
 
       {/* Hidden File Pickers */}
