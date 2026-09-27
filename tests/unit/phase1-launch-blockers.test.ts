@@ -77,10 +77,10 @@ describe('Phase 1 Launch Blockers Verification Suite', () => {
     }
   });
 
-  it('UniversalComposer directly imports TukubiCameraModal rather than proxy', () => {
+  it('UniversalComposer directly imports TukubiCreationStudio rather than proxy', () => {
     const composerPath = path.join(rootDir, 'apps/web/src/components/universal-composer.tsx');
     const composerContent = fs.readFileSync(composerPath, 'utf-8');
-    expect(composerContent).toContain("from './media/tukubi-camera-modal'");
+    expect(composerContent).toContain("from './media/creation'");
     expect(composerContent).not.toContain('device-media-capture-modal');
   });
 });
