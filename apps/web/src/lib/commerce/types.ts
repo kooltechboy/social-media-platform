@@ -32,6 +32,7 @@ export interface StorefrontConfig {
   returnPolicy?: string | null;
   shippingPolicy?: string | null;
   currency: string;
+  countryIso?: string | null;
   supportEmail?: string | null;
   socialLinks?: Record<string, string> | null;
   isPublished: boolean;
@@ -46,6 +47,7 @@ export interface StorefrontConfig {
   brand_color?: string | null;
   return_policy?: string | null;
   shipping_policy?: string | null;
+  country_iso?: string | null;
   support_email?: string | null;
   social_links?: Record<string, string> | null;
   is_published?: boolean;
@@ -67,6 +69,7 @@ export interface CreateStorefrontInput {
   returnPolicy?: string;
   shippingPolicy?: string;
   currency?: string;
+  countryIso?: string;
   supportEmail?: string;
   socialLinks?: Record<string, string>;
   isPublished?: boolean;
