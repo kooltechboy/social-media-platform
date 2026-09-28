@@ -22,6 +22,8 @@ import UseThisSoundButton from '../sounds/use-this-sound-button';
 import CreateReelModal from './create-reel-modal';
 import ReelSubtitleOverlay from './reel-subtitle-overlay';
 import AudioManager from '../../lib/media/audio-manager';
+import ShoppableReelBadge from '../commerce/shoppable-reel-badge';
+import type { TaggedProductSummary } from '@caribbean/marketplace';
 
 export interface ReelItem {
   id: string;
@@ -40,6 +42,9 @@ export interface ReelItem {
   videoUrl?: string;
   initialLiked?: boolean;
   captions?: CaptionTrack;
+  tagged_product_ids?: string[];
+  taggedProductIds?: string[];
+  taggedProducts?: TaggedProductSummary[];
 }
 
 
@@ -344,6 +349,16 @@ function ReelCard({
       {/* Bottom Left Info */}
 
       <div className="absolute left-4 bottom-6 right-20 z-20 flex flex-col gap-2">
+        {/* Shoppable Reel Badge Overlay */}
+        {(reel.taggedProducts?.length || reel.tagged_product_ids?.length || reel.taggedProductIds?.length) ? (
+          <div className="mb-0.5">
+            <ShoppableReelBadge
+              products={reel.taggedProducts}
+              productIds={reel.tagged_product_ids || reel.taggedProductIds}
+            />
+          </div>
+        ) : null}
+
         <Link href={`/profile/${reel.handle}`} className="flex items-center gap-2">
           <span className="text-base font-bold text-white drop-shadow-md">{reel.creator}</span>
           <span className="text-sm font-medium text-white/80 drop-shadow-md">@{reel.handle}</span>
