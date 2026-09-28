@@ -58,3 +58,16 @@ export interface VideoEditState {
   }>;
   coverTimestampMs: number;
 }
+
+export interface MediaExportResult {
+  file: File;
+  mediaKind: 'image' | 'video';
+  previewUrl: string;
+  aspectRatio: string;
+  posterBlob?: Blob;
+  soundId?: string;
+  soundTitle?: string;
+  durationSeconds?: number;
+  altText?: string;
+  taggedProductIds?: string[];
+}

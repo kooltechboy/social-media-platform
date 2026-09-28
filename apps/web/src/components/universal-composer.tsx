@@ -42,6 +42,8 @@ import MultiLinkContainer from './media/multi-link-container';
 import TukubiImage from './ui/tukubi-image';
 import UserAvatar from './user-avatar';
 import { fetchUserOperatingIdentitiesAction, type UserOperatingIdentity } from '../lib/auth/actions';
+import ProductTaggingTray, { DEFAULT_CARIBBEAN_PRODUCTS } from './commerce/product-tagging-tray';
+import { type TaggedProductSummary, formatProductPrice } from '@caribbean/marketplace';
 
 export type ComposerMode =
   | 'text'
@@ -269,9 +271,8 @@ export default function UniversalComposer({
   const [pollQuestion, setPollQuestion] = useState('');
   const [pollOptions, setPollOptions] = useState<string[]>(['', '']);
 
-  // 2. Product / Marketplace
-  const [productTitle, setProductTitle] = useState('');
-  const [productPrice, setProductPrice] = useState('');
+  // 2. Product / Marketplace Tagging
+  const [taggedProducts, setTaggedProducts] = useState<TaggedProductSummary[]>([]);
 
   // 3. Event
   const [eventTitle, setEventTitle] = useState('');
@@ -528,6 +529,31 @@ export default function UniversalComposer({
     setMediaList((prev) => [...prev, newItem]);
     setIsExpanded(true);
 
+    if (payload.taggedProductIds && payload.taggedProductIds.length > 0) {
+      setTaggedProducts((prev) => {
+        const existingIds = new Set(prev.map((p) => p.id));
+        const newProducts: TaggedProductSummary[] = [];
+        for (const id of payload.taggedProductIds!) {
+          if (!existingIds.has(id)) {
+            const found = DEFAULT_CARIBBEAN_PRODUCTS.find((p) => p.id === id);
+            if (found) {
+              newProducts.push(found);
+            } else {
+              newProducts.push({
+                id,
+                title: `Product ${id}`,
+                priceMinor: 0,
+                currency: 'USD',
+                isAvailable: true,
+              });
+            }
+            existingIds.add(id);
+          }
+        }
+        return [...prev, ...newProducts].slice(0, 5);
+      });
+    }
+
     if (cameraModalMode === 'reel' || payload.durationSeconds !== undefined || payload.soundId !== undefined) {
       if (cameraModalMode === 'reel') {
         setIsReel(true);
@@ -661,7 +687,7 @@ export default function UniversalComposer({
     const hasMedia = mediaList.length > 0;
     const hasContent = content.trim().length > 0;
     const hasPoll = mode === 'poll' && pollQuestion.trim().length > 0;
-    const hasProduct = mode === 'product' && productTitle.trim().length > 0;
+    const hasProduct = taggedProducts.length > 0;
     const hasEvent = mode === 'event' && eventTitle.trim().length > 0;
     const hasFundraiser = mode === 'fundraiser' && fundraiserTitle.trim().length > 0;
 
@@ -701,8 +727,11 @@ export default function UniversalComposer({
         if (validOptions.length > 0) {
           finalContent = `${finalContent ? `${finalContent}\n\n` : ''}📊 **Poll:** ${pollQuestion.trim()}\n${validOptions.map((o) => `• ${o.trim()}`).join('\n')}`;
         }
-      } else if (mode === 'product' && productTitle.trim()) {
-        finalContent = `${finalContent ? `${finalContent}\n\n` : ''}🛍️ **Featured Product:** ${productTitle.trim()} ($${productPrice ? productPrice.trim() : '0.00'} USD on TUKUBI)`;
+      } else if (taggedProducts.length > 0) {
+        const productLines = taggedProducts.map(
+          (p) => `• ${p.title} (${formatProductPrice(p.priceMinor, p.currency || 'USD')}${p.originTerritory ? ` - ${p.originTerritory}` : ''})`
+        );
+        finalContent = `${finalContent ? `${finalContent}\n\n` : ''}🛍️ **Featured Products:**\n${productLines.join('\n')}`;
       } else if (mode === 'event' && eventTitle.trim()) {
         finalContent = `${finalContent ? `${finalContent}\n\n` : ''}📅 **Upcoming Caribbean Event:** ${eventTitle.trim()} (${eventDate ? eventDate.trim() : 'TBD'}${eventLocation ? ` • 📍 ${eventLocation.trim()}` : ''})`;
       } else if (mode === 'fundraiser' && fundraiserTitle.trim()) {
@@ -775,6 +804,7 @@ export default function UniversalComposer({
       formData.set('media_urls', JSON.stringify(uploadedMediaUrls));
       formData.set('media_items', JSON.stringify(structuredMediaItems));
       formData.set('cultural_tags', JSON.stringify(culturalTags));
+      formData.set('tagged_product_ids', JSON.stringify(taggedProducts.map((p) => p.id)));
       if (resolvedLinkPreviews.length > 0) {
         formData.set('link_preview', JSON.stringify(resolvedLinkPreviews[0]));
         formData.set('link_previews', JSON.stringify(resolvedLinkPreviews));
@@ -825,8 +855,7 @@ export default function UniversalComposer({
       setScheduledAt(null);
       setPollQuestion('');
       setPollOptions(['', '']);
-      setProductTitle('');
-      setProductPrice('');
+      setTaggedProducts([]);
       setEventTitle('');
       setEventDate('');
       setEventLocation('');
@@ -1452,34 +1481,22 @@ export default function UniversalComposer({
               <div className="p-4 rounded-2xl bg-brand-twilight border border-emerald-500/30 space-y-3 animate-fadeIn">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-bold text-emerald-400 flex items-center gap-1.5">
-                    <ShoppingBag className="w-4 h-4" /> Feature Marketplace Product
+                    <ShoppingBag className="w-4 h-4" /> Feature Marketplace Products
                   </span>
                   <button
                     type="button"
                     onClick={() => setMode('text')}
                     className="text-brand-sandstone/40 hover:text-brand-sandstone text-xs flex items-center gap-1"
                   >
-                    <X className="w-3.5 h-3.5" /> Remove
+                    <X className="w-3.5 h-3.5" /> Close
                   </button>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <input
-                    type="text"
-                    value={productTitle}
-                    onChange={(e) => setProductTitle(e.target.value)}
-                    placeholder="Product Name (e.g. Handmade Jamaican Blue Mountain Roast)"
-                    className="w-full bg-brand-dusk border border-slate-800 rounded-xl px-3 py-2 text-xs text-brand-sandstone focus:outline-none focus:border-emerald-500"
-                  />
-                  <input
-                    type="number"
-                    step="0.01"
-                    value={productPrice}
-                    onChange={(e) => setProductPrice(e.target.value)}
-                    placeholder="Price ($ USD on TUKUBI)"
-                    className="w-full bg-brand-dusk border border-slate-800 rounded-xl px-3 py-2 text-xs text-brand-sandstone focus:outline-none focus:border-emerald-500"
-                  />
-                </div>
+                <ProductTaggingTray
+                  selectedProducts={taggedProducts}
+                  onTagsChange={(newTags) => setTaggedProducts(newTags)}
+                  maxTags={5}
+                />
               </div>
             )}
 
@@ -1662,6 +1679,47 @@ export default function UniversalComposer({
                       </div>
                     </div>
                   )}
+                </div>
+              </div>
+            )}
+
+            {/* Tagged Products Preview Chips */}
+            {taggedProducts.length > 0 && (
+              <div className="p-3 rounded-2xl bg-emerald-950/20 border border-emerald-500/30 space-y-2">
+                <div className="flex items-center justify-between text-xs font-bold text-emerald-400 px-1">
+                  <span className="flex items-center gap-1.5">
+                    <ShoppingBag className="w-3.5 h-3.5" /> Tagged Caribbean Products ({taggedProducts.length}/5)
+                  </span>
+                  {mode !== 'product' && (
+                    <button
+                      type="button"
+                      onClick={() => setMode('product')}
+                      className="text-[11px] text-emerald-400 hover:text-emerald-300 font-semibold underline"
+                    >
+                      Edit Tags
+                    </button>
+                  )}
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {taggedProducts.map((prod) => (
+                    <div
+                      key={prod.id}
+                      className="inline-flex items-center gap-2 pl-2.5 pr-1.5 py-1 rounded-xl bg-brand-dusk border border-emerald-500/40 text-xs text-brand-sandstone shadow-sm"
+                    >
+                      <span className="font-semibold">{prod.title}</span>
+                      <span className="text-emerald-400 font-bold">
+                        {formatProductPrice(prod.priceMinor, prod.currency || 'USD')}
+                      </span>
+                      <button
+                        type="button"
+                        aria-label={`Remove ${prod.title}`}
+                        onClick={() => setTaggedProducts((prev) => prev.filter((p) => p.id !== prod.id))}
+                        className="p-1 rounded-lg hover:bg-white/10 text-brand-sandstone/60 hover:text-rose-400 transition-colors"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  ))}
                 </div>
               </div>
             )}
@@ -1923,7 +1981,7 @@ export default function UniversalComposer({
                     (!content.trim() &&
                       mediaList.length === 0 &&
                       !pollQuestion.trim() &&
-                      !productTitle.trim() &&
+                      taggedProducts.length === 0 &&
                       !eventTitle.trim() &&
                       !fundraiserTitle.trim())
                   }

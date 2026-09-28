@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { X, Loader2, Camera, Video, Film, ArrowRight } from 'lucide-react';
+import { X, Loader2, Camera, Video, Film, ArrowRight, ShoppingBag } from 'lucide-react';
 import {
   CameraManager,
   ClipRecorder,
@@ -11,11 +11,19 @@ import {
   type RecordedClip,
   type PhotoEditState,
   type VideoEditState,
+  type MediaExportResult,
 } from '@caribbean/media';
 import StudioViewfinder from './studio-viewfinder';
 import PhotoEditor from './photo-editor';
 import VideoTimelineEditor from './video-timeline-editor';
 import { createSupabaseBrowserClient } from '../../../lib/supabase/browser';
+import ProductTaggingTray, {
+  DEFAULT_CARIBBEAN_PRODUCTS,
+} from '../../commerce/product-tagging-tray';
+import {
+  type TaggedProductSummary,
+  formatProductPrice,
+} from '@caribbean/marketplace';
 
 export interface CreationStudioHandoffPayload {
   file: File;
@@ -27,15 +35,17 @@ export interface CreationStudioHandoffPayload {
   soundTitle?: string;
   durationSeconds?: number;
   altText?: string;
+  taggedProductIds?: string[];
 }
 
 export interface TukubiCreationStudioProps {
   isOpen: boolean;
   initialMode?: CreationMode;
-  initialStage?: 'capture' | 'edit' | 'exporting';
+  initialStage?: 'capture' | 'edit' | 'review' | 'exporting';
   initialClips?: RecordedClip[];
   initialPhotoUrl?: string;
   initialExportProgress?: number;
+  initialTaggedProducts?: TaggedProductSummary[];
   onClose: () => void;
   onHandoffComplete: (payload: CreationStudioHandoffPayload) => void;
   storageClient?: any;
@@ -96,12 +106,13 @@ export default function TukubiCreationStudio({
   initialClips = [],
   initialPhotoUrl,
   initialExportProgress = 0,
+  initialTaggedProducts = [],
   onClose,
   onHandoffComplete,
   storageClient,
 }: TukubiCreationStudioProps) {
   const [mode, setMode] = useSafeState<CreationMode>(initialMode);
-  const [stage, setStage] = useSafeState<'capture' | 'edit' | 'exporting'>(initialStage);
+  const [stage, setStage] = useSafeState<'capture' | 'edit' | 'review' | 'exporting'>(initialStage);
   const [permissionState, setPermissionState] = useSafeState<CameraPermissionState>('UNKNOWN');
   const [facingMode, setFacingMode] = useSafeState<'user' | 'environment'>('user');
   const [torchSupported, setTorchSupported] = useSafeState<boolean>(false);
@@ -113,6 +124,10 @@ export default function TukubiCreationStudio({
   const [rawPhotoUrl, setRawPhotoUrl] = useSafeState<string | null>(initialPhotoUrl || null);
   const [exportProgress, setExportProgress] = useSafeState<number>(initialExportProgress);
   const [exportStatusText, setExportStatusText] = useSafeState<string>('Preparing studio composition...');
+  const [taggedProducts, setTaggedProducts] = useSafeState<TaggedProductSummary[]>(initialTaggedProducts || []);
+  const [isTaggingTrayOpen, setIsTaggingTrayOpen] = useSafeState<boolean>(false);
+  const [pendingPhotoState, setPendingPhotoState] = useSafeState<PhotoEditState | null>(null);
+  const [pendingVideoState, setPendingVideoState] = useSafeState<VideoEditState | null>(null);
 
   const cameraManagerRef = useSafeRef<CameraManager | null>(null);
   const clipRecorderRef = useSafeRef<ClipRecorder | null>(null);
@@ -292,7 +307,7 @@ export default function TukubiCreationStudio({
     }
   };
 
-  const handlePhotoSave = async (state: PhotoEditState) => {
+  const executePhotoExport = async (state: PhotoEditState) => {
     if (!rawPhotoUrl || !compositorRef.current) return;
     setStage('exporting');
     setExportStatusText('Applying Caribbean presets & rendering composition...');
@@ -328,6 +343,7 @@ export default function TukubiCreationStudio({
         previewUrl,
         aspectRatio: state.aspectRatio,
         altText: state.altText,
+        taggedProductIds: taggedProducts.map((p) => p.id),
       });
       onClose();
     } catch (err) {
@@ -336,7 +352,12 @@ export default function TukubiCreationStudio({
     }
   };
 
-  const handleVideoSave = (finalState: VideoEditState) => {
+  const handlePhotoSave = async (state: PhotoEditState) => {
+    setPendingPhotoState(state);
+    setStage('review');
+  };
+
+  const executeVideoExport = (finalState: VideoEditState) => {
     if (clips.length === 0) return;
     setStage('exporting');
     setExportStatusText('Assembling timeline clips & rhythm stems...');
@@ -366,8 +387,14 @@ export default function TukubiCreationStudio({
       soundId: finalState.selectedSoundId,
       soundTitle: finalState.selectedSoundTitle,
       durationSeconds: totalDurationSeconds,
+      taggedProductIds: taggedProducts.map((p) => p.id),
     });
     onClose();
+  };
+
+  const handleVideoSave = (finalState: VideoEditState) => {
+    setPendingVideoState(finalState);
+    setStage('review');
   };
 
   return (
@@ -500,7 +527,166 @@ export default function TukubiCreationStudio({
           />
         )}
 
-        {/* 3. Exporting Stage: Telemetry & Progress */}
+        {/* 3. Review & Export Stage */}
+        {stage === 'review' && (
+          <div
+            role="region"
+            aria-label="Review and Export"
+            className="flex-1 flex flex-col p-6 overflow-y-auto text-white space-y-6"
+          >
+            {/* Header info */}
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="font-bold text-lg text-transparent bg-clip-text bg-gradient-to-r from-amber-400 via-orange-400 to-rose-400">
+                  Review &amp; Export
+                </h3>
+                <p className="text-xs text-white/60">
+                  Tag Caribbean store products and review before publishing.
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setStage('edit')}
+                  className="px-3 py-1.5 rounded-xl text-xs font-semibold text-white/70 hover:text-white bg-white/5 hover:bg-white/10 transition-colors"
+                >
+                  Back to Editor
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (mode === 'photo') {
+                      executePhotoExport(
+                        pendingPhotoState || {
+                          crop: { x: 0, y: 0, width: 0, height: 0 },
+                          aspectRatio: '1:1',
+                          rotationDeg: 0,
+                          flipHorizontal: false,
+                          filter: 'none',
+                          brightness: 0,
+                          contrast: 0,
+                          saturation: 0,
+                          altText: '',
+                        }
+                      );
+                    } else {
+                      executeVideoExport(
+                        pendingVideoState || {
+                          clips,
+                          soundVolume: 80,
+                          micVolume: 100,
+                          activeFilter: 'none',
+                          textOverlays: [],
+                          coverTimestampMs: 0,
+                        }
+                      );
+                    }
+                  }}
+                  className="flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-amber-500 via-orange-500 to-rose-500 hover:opacity-95 text-white text-xs font-bold rounded-xl shadow-lg transition-transform active:scale-95"
+                >
+                  <span>Export &amp; Share</span>
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+
+            {/* Media Preview Card */}
+            <div className="flex flex-col md:flex-row gap-6 items-start">
+              <div className="relative w-full md:w-64 aspect-[4/3] sm:aspect-square rounded-2xl overflow-hidden bg-black/60 border border-white/10 flex items-center justify-center flex-shrink-0 shadow-xl">
+                {mode === 'photo' && rawPhotoUrl ? (
+                  <img
+                    src={rawPhotoUrl}
+                    alt="Review media preview"
+                    className="w-full h-full object-contain"
+                  />
+                ) : clips.length > 0 ? (
+                  <video
+                    src={clips[0].previewUrl}
+                    controls
+                    className="w-full h-full object-contain"
+                  />
+                ) : (
+                  <div className="text-white/40 text-xs flex flex-col items-center gap-2">
+                    <Film className="w-8 h-8 opacity-40" />
+                    <span>Media Ready for Export</span>
+                  </div>
+                )}
+                <span className="absolute top-2 left-2 px-2 py-0.5 rounded-lg bg-black/70 text-[10px] font-bold text-amber-300 uppercase tracking-wider border border-white/10">
+                  {mode}
+                </span>
+              </div>
+
+              {/* Tagging Controls & Summary */}
+              <div className="flex-1 w-full space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <ShoppingBag className="w-4 h-4 text-emerald-400" />
+                    <span className="text-sm font-bold text-white/90">
+                      Caribbean Store Tags ({taggedProducts.length}/5)
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setIsTaggingTrayOpen(!isTaggingTrayOpen)}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 text-xs font-bold transition-all"
+                  >
+                    <ShoppingBag className="w-3.5 h-3.5" />
+                    <span>{isTaggingTrayOpen ? 'Close Tag Tray' : 'Tag Products for Caribbean Shop'}</span>
+                  </button>
+                </div>
+
+                {/* Tagged Preview Chips */}
+                {taggedProducts.length > 0 ? (
+                  <div className="space-y-2">
+                    <div className="flex flex-wrap gap-2">
+                      {taggedProducts.map((prod) => (
+                        <div
+                          key={prod.id}
+                          className="inline-flex items-center gap-2 px-2.5 py-1.5 rounded-xl bg-slate-900 border border-emerald-500/40 text-xs text-white/90 shadow-sm"
+                        >
+                          <span className="font-semibold">{prod.title}</span>
+                          <span className="text-emerald-400 font-bold">
+                            {formatProductPrice(prod.priceMinor, prod.currency || 'USD')}
+                          </span>
+                          <button
+                            type="button"
+                            aria-label={`Remove ${prod.title}`}
+                            onClick={() =>
+                              setTaggedProducts((prev) => prev.filter((p) => p.id !== prod.id))
+                            }
+                            className="p-0.5 rounded-md hover:bg-white/10 text-white/60 hover:text-rose-400 transition-colors"
+                          >
+                            <X className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="p-4 rounded-xl border border-dashed border-white/10 bg-white/5 text-center text-xs text-white/50 space-y-1">
+                    <p className="font-semibold text-white/70">No Products Tagged</p>
+                    <p>Connect Caribbean artisans, coffee growers, or local goods directly to your post.</p>
+                  </div>
+                )}
+
+                {/* Expandable Tagging Tray */}
+                {isTaggingTrayOpen && (
+                  <div className="pt-2">
+                    <ProductTaggingTray
+                      selectedProducts={taggedProducts}
+                      onTagsChange={(newTags) => setTaggedProducts(newTags)}
+                      maxTags={5}
+                      onClose={() => setIsTaggingTrayOpen(false)}
+                      className="border border-emerald-500/30 shadow-2xl rounded-2xl"
+                    />
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* 4. Exporting Stage: Telemetry & Progress */}
         {stage === 'exporting' && (
           <div
             role="progressbar"
