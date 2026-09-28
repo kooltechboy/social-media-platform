@@ -694,4 +694,5 @@ export function calculateAffiliateCommission(subtotalMinor: number, commissionBp
 }
 
 export * from './logistics';
+export * from './tagging';
 
