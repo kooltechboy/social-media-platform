@@ -1245,20 +1245,43 @@ export async function reportPostAction(postId: string, reason: string, details?:
 // Note: ReactionType and REACTION_EMOJI_MAP are defined here (server-side source of truth)
 // The client component in components/reactions/reaction-picker.tsx re-exports compatible types
 
-export type ReactionType = 'like' | 'love' | 'fire' | 'celebrate' | 'laugh' | 'wow' | 'sad' | 'angry';
+export type ReactionType =
+  | 'like'
+  | 'love'
+  | 'fire'
+  | 'celebrate'
+  | 'laugh'
+  | 'wow'
+  | 'sad'
+  | 'angry'
+  | 'palm'
+  | 'sound';
 
 const REACTION_EMOJI_MAP: Record<ReactionType, { emoji: string; label: string; color: string }> = {
-  like:      { emoji: '🤍', label: 'Like',      color: 'text-slate-300' },
-  love:      { emoji: '❤️', label: 'Love',      color: 'text-rose-400' },
-  fire:      { emoji: '🔥', label: 'Fire',      color: 'text-orange-400' },
-  celebrate: { emoji: '🎉', label: 'Celebrate', color: 'text-yellow-400' },
-  laugh:     { emoji: '😂', label: 'Laugh',     color: 'text-amber-400' },
-  wow:       { emoji: '😮', label: 'Wow',       color: 'text-sky-400' },
-  sad:       { emoji: '😢', label: 'Sad',       color: 'text-blue-400' },
-  angry:     { emoji: '😠', label: 'Angry',     color: 'text-red-500' },
+  like:      { emoji: '🤍', label: 'Like',        color: 'text-slate-300' },
+  love:      { emoji: '❤️', label: 'Love',        color: 'text-rose-400' },
+  fire:      { emoji: '🔥', label: 'Fire',        color: 'text-orange-400' },
+  celebrate: { emoji: '🎉', label: 'Celebrate',   color: 'text-yellow-400' },
+  laugh:     { emoji: '😂', label: 'Laugh',       color: 'text-amber-400' },
+  wow:       { emoji: '😮', label: 'Wow',         color: 'text-sky-400' },
+  sad:       { emoji: '😢', label: 'Sad',         color: 'text-blue-400' },
+  angry:     { emoji: '😠', label: 'Angry',       color: 'text-red-500' },
+  palm:      { emoji: '🌴', label: 'Island Vibe', color: 'text-emerald-400' },
+  sound:     { emoji: '🎵', label: 'Riddim',      color: 'text-violet-400' },
 };
 
-const VALID_REACTION_TYPES: ReactionType[] = ['like','love','fire','celebrate','laugh','wow','sad','angry'];
+const VALID_REACTION_TYPES: ReactionType[] = [
+  'like',
+  'love',
+  'fire',
+  'celebrate',
+  'laugh',
+  'wow',
+  'sad',
+  'angry',
+  'palm',
+  'sound',
+];
 
 export interface ReactionToggleResult {
   liked: boolean;
