@@ -11,6 +11,8 @@ import type {
   StorefrontConfig,
   CreateStorefrontInput,
   UpdateStorefrontInput,
+  EscrowStatus,
+  OrderEscrowDetails,
 } from './types';
 
 /**
@@ -277,3 +279,152 @@ export async function fetchStorefrontConfigAction(
     return null;
   }
 }
+
+export interface EscrowOrderItemInput {
+  productId: string;
+  variantId?: string | null;
+  quantity: number;
+  unitPriceMinor: number;
+  lineTotalMinor?: number;
+}
+
+export interface PlaceEscrowOrderInput {
+  sellerId?: string;
+  items: EscrowOrderItemInput[];
+  subtotalMinor: number;
+  platformFeeMinor?: number;
+  totalMinor: number;
+  currency?: string;
+  idempotencyKey?: string;
+  shippingAddress?: Record<string, unknown>;
+}
+
+export interface PlaceEscrowOrderResult {
+  success: boolean;
+  orderId?: string;
+  escrowStatus?: EscrowStatus;
+  idempotentReplay?: boolean;
+  error?: string;
+  data?: any;
+}
+
+/**
+ * Places an atomic order with escrow status reservation via RPC public.place_order_with_escrow.
+ */
+export async function placeOrderWithEscrowAction(
+  input: PlaceEscrowOrderInput
+): Promise<PlaceEscrowOrderResult> {
+  const user = await getCurrentUser();
+  if (!user?.id) {
+    return {
+      success: false,
+      error: 'Authentication required to place escrow order.',
+    };
+  }
+
+  if (!input.items || !Array.isArray(input.items) || input.items.length === 0) {
+    return {
+      success: false,
+      error: 'Order must contain at least one line item.',
+    };
+  }
+
+  const supabase = await createSupabaseServerClient();
+  if (!supabase) {
+    return {
+      success: false,
+      error: 'Commerce service temporarily unavailable.',
+    };
+  }
+
+  try {
+    const itemsPayload = input.items.map((item) => ({
+      product_id: item.productId,
+      variant_id: item.variantId || null,
+      quantity: item.quantity,
+      unit_price_minor: item.unitPriceMinor,
+      line_total_minor: item.lineTotalMinor ?? item.unitPriceMinor * item.quantity,
+    }));
+
+    const { data, error } = await supabase.rpc('place_order_with_escrow', {
+      p_buyer_id: user.id,
+      p_seller_id: input.sellerId || null,
+      p_items: itemsPayload,
+      p_subtotal_minor: input.subtotalMinor,
+      p_platform_fee_minor: input.platformFeeMinor ?? 0,
+      p_total_minor: input.totalMinor,
+      p_currency: input.currency || 'USD',
+      p_idempotency_key: input.idempotencyKey || null,
+      p_shipping_address: input.shippingAddress || {},
+    });
+
+    if (error) {
+      return {
+        success: false,
+        error: error.message || 'Failed to place order with escrow protection.',
+      };
+    }
+
+    try {
+      revalidatePath('/marketplace');
+      revalidatePath('/orders');
+      revalidatePath('/purchases');
+    } catch {
+      // Non-critical revalidation catch
+    }
+
+    return {
+      success: true,
+      orderId: data?.order_id,
+      escrowStatus: (data?.escrow_status as EscrowStatus) || 'held',
+      idempotentReplay: Boolean(data?.idempotent_replay),
+      data,
+    };
+  } catch (err: any) {
+    return {
+      success: false,
+      error: err?.message || 'An unexpected error occurred while placing escrow order.',
+    };
+  }
+}
+
+/**
+ * Fetches order escrow verification status and dispute window details.
+ */
+export async function fetchOrderEscrowDetailsAction(
+  orderId: string
+): Promise<OrderEscrowDetails | null> {
+  if (!orderId || typeof orderId !== 'string' || orderId.trim().length === 0) {
+    return null;
+  }
+
+  const supabase = await createSupabaseServerClient();
+  if (!supabase) return null;
+
+  try {
+    const { data, error } = await supabase
+      .from('orders')
+      .select('id, buyer_id, seller_id, escrow_status, total_minor, currency, created_at, escrow_released_at, dispute_reason')
+      .eq('id', orderId.trim())
+      .maybeSingle();
+
+    if (error || !data) {
+      return null;
+    }
+
+    return {
+      orderId: data.id,
+      buyerId: data.buyer_id,
+      sellerId: data.seller_id,
+      escrowStatus: (data.escrow_status as EscrowStatus) || 'held',
+      totalMinor: data.total_minor,
+      currency: data.currency,
+      createdAt: data.created_at,
+      escrowReleasedAt: data.escrow_released_at ?? null,
+      disputeReason: data.dispute_reason ?? null,
+    };
+  } catch {
+    return null;
+  }
+}
+

@@ -1,5 +1,5 @@
 'use client';
-
+ 
 import React, { useState, useMemo } from 'react';
 import {
   ShoppingBag,
@@ -12,6 +12,8 @@ import {
   ShieldCheck,
   Calendar,
   Store,
+  Loader2,
+  CheckCircle,
 } from 'lucide-react';
 import {
   type CartLine,
@@ -21,14 +23,45 @@ import {
 import { Money, isMarketplaceCommerceActive } from '@caribbean/payments';
 import Link from 'next/link';
 import { ComingSoonButton } from '../ui/coming-soon-badge';
+import OrderEscrowBadge from '../commerce/order-escrow-badge';
+import { placeOrderWithEscrowAction } from '../../lib/commerce/actions';
+import { clearCart } from '../../lib/commerce/cart-store';
 
-interface CartDrawerProps {
+function useSafeState<T>(initialValue: T | (() => T)): [T, React.Dispatch<React.SetStateAction<T>>] {
+  const internals =
+    (React as any)?.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE ||
+    (React as any)?.__SECRET_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
+  const dispatcher = internals?.H || internals?.ReactCurrentDispatcher?.current;
+
+  if (dispatcher) {
+    return React.useState<T>(initialValue);
+  }
+  const val = typeof initialValue === 'function' ? (initialValue as () => T)() : initialValue;
+  return [val, () => {}];
+}
+
+function useSafeMemo<T>(factory: () => T, deps: React.DependencyList): T {
+  const internals =
+    (React as any)?.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE ||
+    (React as any)?.__SECRET_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
+  const dispatcher = internals?.H || internals?.ReactCurrentDispatcher?.current;
+
+  if (dispatcher) {
+    return React.useMemo<T>(factory, deps);
+  }
+  return factory();
+}
+
+export interface CartDrawerProps {
   isOpen: boolean;
   onClose: () => void;
   lines: CartLine[];
   onUpdateQuantity: (productId: string, variantId: string | undefined, quantity: number) => void;
   onRemoveLine: (productId: string, variantId: string | undefined) => void;
   onProceedToCheckout?: () => void;
+  onCheckoutSuccess?: (orderId: string) => void;
+  buyerId?: string;
+  shippingAddress?: Record<string, unknown>;
 }
 
 export default function CartDrawer({
@@ -38,10 +71,16 @@ export default function CartDrawer({
   onUpdateQuantity,
   onRemoveLine,
   onProceedToCheckout,
+  onCheckoutSuccess,
+  buyerId,
+  shippingAddress,
 }: CartDrawerProps) {
   const canTransact = isMarketplaceCommerceActive();
+  const [isSubmitting, setIsSubmitting] = useSafeState(false);
+  const [checkoutError, setCheckoutError] = useSafeState<string | null>(null);
+  const [successOrderId, setSuccessOrderId] = useSafeState<string | null>(null);
 
-  const { grandTotal, sellerBreakdown } = useMemo(() => {
+  const { grandTotal, sellerBreakdown } = useSafeMemo(() => {
     return computeMultiSellerOrderTotals(lines, {
       processingFeeBps: 290,
       processingFixedMinor: 30,
@@ -52,6 +91,51 @@ export default function CartDrawer({
   const totalMoney = new Money(grandTotal.totalMinor, currency);
   const subtotalMoney = new Money(grandTotal.subtotalMinor, currency);
   const feeMoney = new Money(grandTotal.processingFeeMinor || 0, currency);
+
+  const handleCheckoutClick = async () => {
+    if (onProceedToCheckout) {
+      onProceedToCheckout();
+      return;
+    }
+
+    if (lines.length === 0) return;
+
+    setIsSubmitting(true);
+    setCheckoutError(null);
+
+    try {
+      const firstSellerId = Object.keys(sellerBreakdown)[0];
+      const res = await placeOrderWithEscrowAction({
+        sellerId: firstSellerId,
+        items: lines.map((l) => ({
+          productId: l.productId,
+          variantId: l.variantId,
+          quantity: l.quantity,
+          unitPriceMinor: l.unitPriceMinor,
+          lineTotalMinor: l.unitPriceMinor * l.quantity,
+        })),
+        subtotalMinor: grandTotal.subtotalMinor,
+        platformFeeMinor: grandTotal.platformFeeMinor,
+        totalMinor: grandTotal.totalMinor,
+        currency: 'USD',
+        shippingAddress,
+      });
+
+      if (res.success && res.orderId) {
+        setSuccessOrderId(res.orderId);
+        clearCart();
+        if (onCheckoutSuccess) {
+          onCheckoutSuccess(res.orderId);
+        }
+      } else {
+        setCheckoutError(res.error || 'Failed to place escrow order.');
+      }
+    } catch (err: any) {
+      setCheckoutError(err?.message || 'An unexpected error occurred during escrow checkout.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   if (!isOpen) return null;
 
@@ -96,9 +180,34 @@ export default function CartDrawer({
             )}
           </div>
 
-          {/* Cart Items List */}
+          {/* Cart Items List or Success State */}
           <div className="flex-1 overflow-y-auto py-4 space-y-5 scrollbar-none">
-            {lines.length === 0 ? (
+            {successOrderId ? (
+              <div className="py-12 px-2 text-center space-y-4 animate-fadeIn">
+                <div className="w-12 h-12 rounded-full bg-emerald-500/20 text-emerald-400 mx-auto flex items-center justify-center">
+                  <CheckCircle className="w-6 h-6" />
+                </div>
+                <div className="space-y-1">
+                  <h3 className="text-base font-black text-white">Order Confirmed!</h3>
+                  <p className="text-xs text-slate-400">
+                    Order ID: <span className="font-mono text-amber-400">{successOrderId}</span>
+                  </p>
+                </div>
+                <div className="text-left pt-2">
+                  <OrderEscrowBadge status="held" variant="card" createdAt={new Date().toISOString()} />
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSuccessOrderId(null);
+                    onClose();
+                  }}
+                  className="w-full mt-4 py-3 rounded-2xl bg-orange-500 hover:bg-orange-400 text-slate-950 font-black text-xs transition-colors cursor-pointer"
+                >
+                  Continue Shopping
+                </button>
+              </div>
+            ) : lines.length === 0 ? (
               <div className="py-16 text-center space-y-3">
                 <ShoppingBag className="w-12 h-12 text-slate-600 mx-auto" />
                 <h3 className="text-sm font-bold text-white">Your cart is currently empty</h3>
@@ -196,7 +305,7 @@ export default function CartDrawer({
           </div>
 
           {/* Footer & Totals */}
-          {lines.length > 0 && (
+          {lines.length > 0 && !successOrderId && (
             <div className="pt-4 border-t border-slate-800 space-y-4">
               <div className="space-y-1.5 text-xs text-slate-400">
                 <div className="flex justify-between">
@@ -213,26 +322,39 @@ export default function CartDrawer({
                 </div>
               </div>
 
-              <div className="flex items-center gap-1.5 text-[10px] text-slate-400 justify-center">
-                <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-                <span>Backed by TUKUBI 30-Day Escrow Guarantee</span>
+              <div className="flex items-center justify-between text-xs pt-1">
+                <div className="flex items-center gap-1.5 text-[10px] text-slate-400">
+                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+                  <span>Backed by TUKUBI 30-Day Escrow Guarantee</span>
+                </div>
+                <OrderEscrowBadge status="held" variant="pill" />
               </div>
+
+              {checkoutError && (
+                <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs">
+                  {checkoutError}
+                </div>
+              )}
 
               {canTransact || onProceedToCheckout ? (
                 <button
                   type="button"
-                  onClick={() => {
-                    if (onProceedToCheckout) {
-                      onProceedToCheckout();
-                    } else {
-                      onClose();
-                    }
-                  }}
-                  className="w-full bg-gradient-to-r from-brand-sunriseCoral via-orange-500 to-brand-goldenHour hover:brightness-110 active:scale-[0.98] text-slate-950 font-black py-3 px-4 rounded-2xl text-xs sm:text-sm min-h-[44px] flex items-center justify-center gap-2 transition-all shadow-md shadow-brand-sunriseCoral/20"
+                  disabled={isSubmitting}
+                  onClick={handleCheckoutClick}
+                  className="w-full bg-gradient-to-r from-brand-sunriseCoral via-orange-500 to-brand-goldenHour hover:brightness-110 active:scale-[0.98] text-slate-950 font-black py-3 px-4 rounded-2xl text-xs sm:text-sm min-h-[44px] flex items-center justify-center gap-2 transition-all shadow-md shadow-brand-sunriseCoral/20 disabled:opacity-60 cursor-pointer"
                 >
-                  <Lock className="w-4 h-4 text-slate-950" />
-                  <span>Proceed to Secure Checkout</span>
-                  <ArrowRight className="w-4 h-4 text-slate-950" />
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="w-4 h-4 text-slate-950 animate-spin" />
+                      <span>Securing Escrow...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Lock className="w-4 h-4 text-slate-950" />
+                      <span>Proceed to Secure Checkout</span>
+                      <ArrowRight className="w-4 h-4 text-slate-950" />
+                    </>
+                  )}
                 </button>
               ) : (
                 <button
