@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { createSupabaseServerClient, getCurrentUser } from '../supabase/server';
-import type { PollData, PollOptionData, PollVoteResult } from './types';
+import type { CreatePollParams, PollData, PollOptionData, PollVoteResult } from './types';
 
 /**
  * Fetches structured poll data for a specific post.
@@ -15,7 +15,7 @@ export async function fetchPollByPostIdAction(postId: string): Promise<PollData 
 
   const { data: poll, error: pollError } = await supabase
     .from('polls')
-    .select('id, post_id, question, expires_at, allow_multiple, total_votes, created_at')
+    .select('id, post_id, question, expires_at, allow_multiple, total_votes, created_at, is_quiz, quiz_explanation, correct_option_id')
     .eq('post_id', postId)
     .maybeSingle();
 
@@ -23,21 +23,24 @@ export async function fetchPollByPostIdAction(postId: string): Promise<PollData 
 
   const { data: options } = await supabase
     .from('poll_options')
-    .select('id, poll_id, option_text, position, votes_count')
+    .select('id, poll_id, option_text, position, votes_count, image_url')
     .eq('poll_id', poll.id)
     .order('position', { ascending: true });
 
   let userVotedOptionId: string | null = null;
+  let userIsCorrect: boolean | null = null;
+
   if (user) {
     const { data: vote } = await supabase
       .from('poll_votes')
-      .select('option_id')
+      .select('option_id, is_correct')
       .eq('poll_id', poll.id)
       .eq('user_id', user.id)
       .maybeSingle();
 
     if (vote) {
       userVotedOptionId = vote.option_id;
+      userIsCorrect = vote.is_correct ?? null;
     }
   }
 
@@ -52,6 +55,7 @@ export async function fetchPollByPostIdAction(postId: string): Promise<PollData 
       position: opt.position,
       votesCount: count,
       percentage,
+      imageUrl: opt.image_url || undefined,
     };
   });
 
@@ -68,6 +72,10 @@ export async function fetchPollByPostIdAction(postId: string): Promise<PollData 
     options: formattedOptions,
     userVotedOptionId,
     isExpired,
+    isQuiz: Boolean(poll.is_quiz),
+    quizExplanation: poll.quiz_explanation ?? null,
+    correctOptionId: poll.correct_option_id ?? null,
+    userIsCorrect,
   };
 }
 
@@ -88,7 +96,7 @@ export async function votePollAction(pollId: string, optionId: string): Promise<
   // 1. Check poll validity and expiration
   const { data: poll, error: pollError } = await supabase
     .from('polls')
-    .select('id, post_id, expires_at')
+    .select('id, post_id, expires_at, is_quiz, quiz_explanation, correct_option_id')
     .eq('id', pollId)
     .single();
 
@@ -101,13 +109,15 @@ export async function votePollAction(pollId: string, optionId: string): Promise<
   }
 
   // 2. Insert vote record
-  const { error: voteError } = await supabase
+  const { data: vote, error: voteError } = await supabase
     .from('poll_votes')
     .insert({
       poll_id: pollId,
       option_id: optionId,
       user_id: user.id,
-    });
+    })
+    .select('id, option_id, is_correct')
+    .single();
 
   if (voteError) {
     if (voteError.code === '23505') {
@@ -118,7 +128,16 @@ export async function votePollAction(pollId: string, optionId: string): Promise<
 
   // 3. Re-fetch updated poll state
   const updatedPoll = await fetchPollByPostIdAction(poll.post_id);
-  revalidatePath('/');
+
+  if (updatedPoll && vote && vote.is_correct !== undefined && updatedPoll.userIsCorrect === null) {
+    updatedPoll.userIsCorrect = vote.is_correct;
+  }
+
+  try {
+    revalidatePath('/');
+  } catch {
+    // Safe fallback outside Next.js request context (e.g., tests or background jobs)
+  }
 
   return {
     success: true,
@@ -128,23 +147,38 @@ export async function votePollAction(pollId: string, optionId: string): Promise<
 }
 
 /**
- * Creates an interactive poll attached to a post.
+ * Creates an interactive poll or quiz attached to a post.
  */
-export async function createPollAction(params: {
-  postId: string;
-  question: string;
-  options: string[];
-  durationHours?: number;
-}): Promise<{ success: boolean; pollId?: string; error?: string }> {
+export async function createPollAction(
+  params: CreatePollParams
+): Promise<{ success: boolean; pollId?: string; error?: string }> {
   const user = await getCurrentUser();
   if (!user) return { success: false, error: 'Authentication required.' };
 
   const supabase = await createSupabaseServerClient();
   if (!supabase) return { success: false, error: 'Service unavailable.' };
 
-  const validOptions = params.options.map((o) => o.trim()).filter(Boolean);
-  if (validOptions.length < 2) {
+  // Normalize options
+  const normalizedOptions = (params.options || [])
+    .map((opt) => {
+      if (typeof opt === 'string') {
+        return { text: opt.trim(), imageUrl: null as string | null };
+      }
+      return {
+        text: (opt.text || '').trim(),
+        imageUrl: opt.imageUrl ? opt.imageUrl.trim() : null,
+      };
+    })
+    .filter((opt) => opt.text.length > 0);
+
+  if (normalizedOptions.length < 2) {
     return { success: false, error: 'A poll must have at least 2 options.' };
+  }
+
+  if (params.isQuiz && params.correctOptionIndex !== undefined) {
+    if (params.correctOptionIndex < 0 || params.correctOptionIndex >= normalizedOptions.length) {
+      return { success: false, error: 'Invalid correct option index for quiz.' };
+    }
   }
 
   const durationHours = params.durationHours || 24;
@@ -157,7 +191,9 @@ export async function createPollAction(params: {
       post_id: params.postId,
       question: params.question.trim(),
       expires_at: expiresAt,
-      allow_multiple: false,
+      allow_multiple: params.allowMultiple ?? false,
+      is_quiz: Boolean(params.isQuiz),
+      quiz_explanation: params.quizExplanation?.trim() || null,
     })
     .select('id')
     .single();
@@ -167,15 +203,41 @@ export async function createPollAction(params: {
   }
 
   // 2. Insert Poll Options
-  const optionRows = validOptions.map((opt, index) => ({
+  const optionRows = normalizedOptions.map((opt, index) => ({
     poll_id: poll.id,
-    option_text: opt,
+    option_text: opt.text,
     position: index,
+    image_url: opt.imageUrl,
   }));
 
-  const { error: optErr } = await supabase.from('poll_options').insert(optionRows);
+  const { data: createdOptions, error: optErr } = await supabase
+    .from('poll_options')
+    .insert(optionRows)
+    .select('id, position');
+
   if (optErr) {
     return { success: false, error: optErr.message || 'Failed to save poll options.' };
+  }
+
+  // 3. Link correct_option_id if quiz
+  if (params.isQuiz && params.correctOptionIndex !== undefined && createdOptions) {
+    const correctOpt = createdOptions.find((o) => o.position === params.correctOptionIndex) || createdOptions[params.correctOptionIndex];
+    if (correctOpt) {
+      const { error: updateErr } = await supabase
+        .from('polls')
+        .update({ correct_option_id: correctOpt.id })
+        .eq('id', poll.id);
+
+      if (updateErr) {
+        return { success: false, error: updateErr.message || 'Failed to set correct option for quiz.' };
+      }
+    }
+  }
+
+  try {
+    revalidatePath('/');
+  } catch {
+    // Safe fallback outside Next.js request context
   }
 
   return { success: true, pollId: poll.id };

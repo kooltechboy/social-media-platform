@@ -5,6 +5,7 @@ export interface PollOptionData {
   position: number;
   votesCount: number;
   percentage?: number;
+  imageUrl?: string;
 }
 
 export interface PollData {
@@ -18,6 +19,10 @@ export interface PollData {
   options: PollOptionData[];
   userVotedOptionId?: string | null;
   isExpired?: boolean;
+  isQuiz?: boolean;
+  quizExplanation?: string | null;
+  correctOptionId?: string | null;
+  userIsCorrect?: boolean | null;
 }
 
 export interface PollVoteResult {
@@ -25,4 +30,17 @@ export interface PollVoteResult {
   message?: string;
   error?: string;
   poll?: PollData;
+}
+
+export type PollOptionInput = string | { text: string; imageUrl?: string };
+
+export interface CreatePollParams {
+  postId: string;
+  question: string;
+  options: PollOptionInput[];
+  durationHours?: number;
+  allowMultiple?: boolean;
+  isQuiz?: boolean;
+  correctOptionIndex?: number;
+  quizExplanation?: string | null;
 }
