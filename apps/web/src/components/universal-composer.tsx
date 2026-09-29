@@ -44,6 +44,13 @@ import UserAvatar from './user-avatar';
 import { fetchUserOperatingIdentitiesAction, type UserOperatingIdentity } from '../lib/auth/actions';
 import ProductTaggingTray, { DEFAULT_CARIBBEAN_PRODUCTS } from './commerce/product-tagging-tray';
 import { type TaggedProductSummary, formatProductPrice } from '@caribbean/marketplace';
+import { createEventAction } from '../lib/events/actions';
+import { createReliefCampaignAction } from '../lib/relief/actions';
+import type { CreateEventInput } from '../lib/events/types';
+import type { CreateReliefCampaignInput } from '../lib/relief/types';
+import { RELIEF_CATEGORY_METADATA } from '../lib/relief/types';
+import EventComposerPanel from './events/event-composer-panel';
+import ReliefComposerPanel from './relief/relief-composer-panel';
 
 export type ComposerMode =
   | 'text'
@@ -275,13 +282,29 @@ export default function UniversalComposer({
   const [taggedProducts, setTaggedProducts] = useState<TaggedProductSummary[]>([]);
 
   // 3. Event
-  const [eventTitle, setEventTitle] = useState('');
-  const [eventDate, setEventDate] = useState('');
-  const [eventLocation, setEventLocation] = useState('');
+  const [eventInput, setEventInput] = useState<CreateEventInput>({
+    title: '',
+    description: '',
+    event_kind: 'in_person',
+    privacy: 'public',
+    starts_at: '',
+    ends_at: '',
+    venue: '',
+    livestream_url: '',
+    capacity: null,
+  });
 
   // 4. Fundraiser / Relief
-  const [fundraiserTitle, setFundraiserTitle] = useState('');
-  const [fundraiserTarget, setFundraiserTarget] = useState('');
+  const [reliefInput, setReliefInput] = useState<CreateReliefCampaignInput>({
+    title: '',
+    description: '',
+    category: 'hurricane_relief',
+    goal_minor: 10000,
+    currency: 'USD',
+    target_country_iso: 'JAM',
+    disaster_declaration_ref: '',
+    supporting_evidence_urls: [],
+  });
 
   // 5. Official Alert (Government / Institution)
   const [isOfficialAlert, setIsOfficialAlert] = useState(false);
@@ -688,8 +711,8 @@ export default function UniversalComposer({
     const hasContent = content.trim().length > 0;
     const hasPoll = mode === 'poll' && pollQuestion.trim().length > 0;
     const hasProduct = taggedProducts.length > 0;
-    const hasEvent = mode === 'event' && eventTitle.trim().length > 0;
-    const hasFundraiser = mode === 'fundraiser' && fundraiserTitle.trim().length > 0;
+    const hasEvent = mode === 'event' && Boolean(eventInput.title?.trim());
+    const hasFundraiser = mode === 'fundraiser' && Boolean(reliefInput.title?.trim());
 
     if (!hasContent && !hasMedia && !hasPoll && !hasProduct && !hasEvent && !hasFundraiser) {
       setErrorMessage('Please enter some text, add photos/videos, or attach an update.');
@@ -703,6 +726,42 @@ export default function UniversalComposer({
     try {
       // 1. Upload media files
       const uploadedMediaUrls = await uploadMediaFiles();
+
+      // 1b. Create attached Event or Relief Campaign if in corresponding mode
+      let createdEventId: string | null = null;
+      let createdReliefCampaignId: string | null = null;
+
+      if (mode === 'event' && eventInput.title?.trim()) {
+        const eventRes = await createEventAction({
+          ...eventInput,
+          description: eventInput.description?.trim() || content.trim() || null,
+          country_iso: eventInput.country_iso || selectedCountryId || null,
+          community_id: selectedCommunityId || null,
+        });
+
+        if (eventRes.error) {
+          setErrorMessage(eventRes.error);
+          setIsSubmitting(false);
+          return;
+        }
+        createdEventId = eventRes.eventId || eventRes.event?.id || null;
+      }
+
+      if (mode === 'fundraiser' && reliefInput.title?.trim()) {
+        const reliefRes = await createReliefCampaignAction({
+          ...reliefInput,
+          description: reliefInput.description?.trim() || content.trim() || reliefInput.title.trim(),
+          target_country_iso: reliefInput.target_country_iso || selectedCountryId || null,
+          community_id: selectedCommunityId || null,
+        });
+
+        if (reliefRes.error) {
+          setErrorMessage(reliefRes.error);
+          setIsSubmitting(false);
+          return;
+        }
+        createdReliefCampaignId = reliefRes.data?.id || reliefRes.campaign?.id || null;
+      }
 
       // 2. Build structured captions & content
       let finalContent = content.trim();
@@ -732,10 +791,28 @@ export default function UniversalComposer({
           (p) => `• ${p.title} (${formatProductPrice(p.priceMinor, p.currency || 'USD')}${p.originTerritory ? ` - ${p.originTerritory}` : ''})`
         );
         finalContent = `${finalContent ? `${finalContent}\n\n` : ''}🛍️ **Featured Products:**\n${productLines.join('\n')}`;
-      } else if (mode === 'event' && eventTitle.trim()) {
-        finalContent = `${finalContent ? `${finalContent}\n\n` : ''}📅 **Upcoming Caribbean Event:** ${eventTitle.trim()} (${eventDate ? eventDate.trim() : 'TBD'}${eventLocation ? ` • 📍 ${eventLocation.trim()}` : ''})`;
-      } else if (mode === 'fundraiser' && fundraiserTitle.trim()) {
-        finalContent = `${finalContent ? `${finalContent}\n\n` : ''}💰 **Community Fundraiser:** ${fundraiserTitle.trim()} (Goal: $${fundraiserTarget ? fundraiserTarget.trim() : '1,000'} USD on TUKUBI)`;
+      } else if (mode === 'event' && eventInput.title?.trim()) {
+        const dateFormatted = eventInput.starts_at ? new Date(eventInput.starts_at).toLocaleString() : 'TBD';
+        const formatLabel =
+          eventInput.event_kind === 'in_person'
+            ? 'In-Person'
+            : eventInput.event_kind === 'livestream'
+              ? 'Livestream'
+              : 'Hybrid';
+        const locationLabel = eventInput.venue?.trim() ? ` • 📍 ${eventInput.venue.trim()}` : '';
+        const livestreamLabel = eventInput.livestream_url?.trim() ? ` • 🔴 ${eventInput.livestream_url.trim()}` : '';
+        finalContent = `${finalContent ? `${finalContent}\n\n` : ''}📅 **Caribbean Event (${formatLabel}):** ${eventInput.title.trim()} (${dateFormatted}${locationLabel}${livestreamLabel})`;
+        if (eventInput.description?.trim() && eventInput.description.trim() !== content.trim()) {
+          finalContent += `\n${eventInput.description.trim()}`;
+        }
+      } else if (mode === 'fundraiser' && reliefInput.title?.trim()) {
+        const categoryMeta = RELIEF_CATEGORY_METADATA[reliefInput.category];
+        const goalFormatted = (reliefInput.goal_minor / 100).toLocaleString();
+        const protocolLabel = categoryMeta?.protocol ? ` [Protocol: ${categoryMeta.protocol}]` : '';
+        finalContent = `${finalContent ? `${finalContent}\n\n` : ''}🤝 **Community Relief Campaign:** ${reliefInput.title.trim()} (Goal: $${goalFormatted} ${reliefInput.currency || 'USD'} on TUKUBI)${protocolLabel}`;
+        if (reliefInput.description?.trim() && reliefInput.description.trim() !== content.trim()) {
+          finalContent += `\n${reliefInput.description.trim()}`;
+        }
       }
 
       if (isOfficialAlert) {
@@ -825,6 +902,12 @@ export default function UniversalComposer({
           formData.set('page_id', selectedIdentity.id);
         }
       }
+      if (createdEventId) {
+        formData.set('event_id', createdEventId);
+      }
+      if (createdReliefCampaignId) {
+        formData.set('relief_campaign_id', createdReliefCampaignId);
+      }
 
       const result = await createPostAction({ error: null }, formData);
 
@@ -856,11 +939,27 @@ export default function UniversalComposer({
       setPollQuestion('');
       setPollOptions(['', '']);
       setTaggedProducts([]);
-      setEventTitle('');
-      setEventDate('');
-      setEventLocation('');
-      setFundraiserTitle('');
-      setFundraiserTarget('');
+      setEventInput({
+        title: '',
+        description: '',
+        event_kind: 'in_person',
+        privacy: 'public',
+        starts_at: '',
+        ends_at: '',
+        venue: '',
+        livestream_url: '',
+        capacity: null,
+      });
+      setReliefInput({
+        title: '',
+        description: '',
+        category: 'hurricane_relief',
+        goal_minor: 10000,
+        currency: 'USD',
+        target_country_iso: 'JAM',
+        disaster_declaration_ref: '',
+        supporting_evidence_urls: [],
+      });
       setIsOfficialAlert(false);
       setIsExpanded(false);
 
@@ -1502,78 +1601,45 @@ export default function UniversalComposer({
 
             {/* 3. EVENT PANEL */}
             {mode === 'event' && (
-              <div className="p-4 rounded-2xl bg-brand-twilight border border-yellow-500/30 space-y-3 animate-fadeIn">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-yellow-400 flex items-center gap-1.5">
-                    <Calendar className="w-4 h-4" /> Caribbean Event / Gathering
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => setMode('text')}
-                    className="text-brand-sandstone/40 hover:text-brand-sandstone text-xs flex items-center gap-1"
-                  >
-                    <X className="w-3.5 h-3.5" /> Remove
-                  </button>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  <input
-                    type="text"
-                    value={eventTitle}
-                    onChange={(e) => setEventTitle(e.target.value)}
-                    placeholder="Event Name (e.g. Port of Spain Carnival Fete)"
-                    className="w-full bg-brand-dusk border border-slate-800 rounded-xl px-3 py-2 text-xs text-brand-sandstone focus:outline-none focus:border-yellow-500"
-                  />
-                  <input
-                    type="date"
-                    value={eventDate}
-                    onChange={(e) => setEventDate(e.target.value)}
-                    className="w-full bg-brand-dusk border border-slate-800 rounded-xl px-3 py-2 text-xs text-brand-sandstone focus:outline-none focus:border-yellow-500"
-                  />
-                  <input
-                    type="text"
-                    value={eventLocation}
-                    onChange={(e) => setEventLocation(e.target.value)}
-                    placeholder="Location / Island (e.g. Queen's Park Savannah)"
-                    className="w-full bg-brand-dusk border border-slate-800 rounded-xl px-3 py-2 text-xs text-brand-sandstone focus:outline-none focus:border-yellow-500"
-                  />
-                </div>
-              </div>
+              <EventComposerPanel
+                value={eventInput}
+                onChange={setEventInput}
+                onRemove={() => {
+                  setEventInput({
+                    title: '',
+                    description: '',
+                    event_kind: 'in_person',
+                    privacy: 'public',
+                    starts_at: '',
+                    ends_at: '',
+                    venue: '',
+                    livestream_url: '',
+                    capacity: null,
+                  });
+                  setMode('text');
+                }}
+              />
             )}
 
             {/* 4. FUNDRAISER / RELIEF PANEL */}
             {mode === 'fundraiser' && (
-              <div className="p-4 rounded-2xl bg-brand-twilight border border-rose-500/30 space-y-3 animate-fadeIn">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-rose-400 flex items-center gap-1.5">
-                    <HeartHandshake className="w-4 h-4" /> Launch Community Relief / Fundraiser
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => setMode('text')}
-                    className="text-brand-sandstone/40 hover:text-brand-sandstone text-xs flex items-center gap-1"
-                  >
-                    <X className="w-3.5 h-3.5" /> Remove
-                  </button>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <input
-                    type="text"
-                    value={fundraiserTitle}
-                    onChange={(e) => setFundraiserTitle(e.target.value)}
-                    placeholder="Cause / Initiative Title (e.g. Hurricane Preparedness Relief)"
-                    className="w-full bg-brand-dusk border border-slate-800 rounded-xl px-3 py-2 text-xs text-brand-sandstone focus:outline-none focus:border-rose-500"
-                  />
-                  <input
-                    type="number"
-                    value={fundraiserTarget}
-                    onChange={(e) => setFundraiserTarget(e.target.value)}
-                    placeholder="Funding Goal ($ USD on TUKUBI)"
-                    className="w-full bg-brand-dusk border border-slate-800 rounded-xl px-3 py-2 text-xs text-brand-sandstone focus:outline-none focus:border-rose-500"
-                  />
-                </div>
-              </div>
+              <ReliefComposerPanel
+                value={reliefInput}
+                onChange={setReliefInput}
+                onRemove={() => {
+                  setReliefInput({
+                    title: '',
+                    description: '',
+                    category: 'hurricane_relief',
+                    goal_minor: 10000,
+                    currency: 'USD',
+                    target_country_iso: 'JAM',
+                    disaster_declaration_ref: '',
+                    supporting_evidence_urls: [],
+                  });
+                  setMode('text');
+                }}
+              />
             )}
 
             {/* 5. CIVIC ALERT CHECKBOX (Government / Institution accounts) */}
@@ -1720,6 +1786,100 @@ export default function UniversalComposer({
                       </button>
                     </div>
                   ))}
+                </div>
+              </div>
+            )}
+
+            {/* Attached Event Preview Badge */}
+            {eventInput.title?.trim() && (
+              <div className="p-3 rounded-2xl bg-amber-950/20 border border-brand-goldenHour/30 space-y-2">
+                <div className="flex items-center justify-between text-xs font-bold text-brand-goldenHour px-1">
+                  <span className="flex items-center gap-1.5">
+                    <Calendar className="w-3.5 h-3.5" /> Attached Event Preview
+                  </span>
+                  {mode !== 'event' && (
+                    <button
+                      type="button"
+                      onClick={() => setMode('event')}
+                      className="text-[11px] text-brand-goldenHour hover:underline font-semibold"
+                    >
+                      Edit Event
+                    </button>
+                  )}
+                </div>
+                <div className="inline-flex items-center gap-2 pl-2.5 pr-1.5 py-1.5 rounded-xl bg-brand-dusk border border-brand-goldenHour/40 text-xs text-brand-sandstone shadow-sm">
+                  <span className="font-semibold text-brand-goldenHour">{eventInput.title}</span>
+                  <span className="text-[11px] text-brand-sandstone/60">
+                    {eventInput.starts_at ? new Date(eventInput.starts_at).toLocaleDateString() : 'Date TBD'} • {eventInput.event_kind}
+                  </span>
+                  <button
+                    type="button"
+                    aria-label="Remove attached event"
+                    onClick={() =>
+                      setEventInput({
+                        title: '',
+                        description: '',
+                        event_kind: 'in_person',
+                        privacy: 'public',
+                        starts_at: '',
+                        ends_at: '',
+                        venue: '',
+                        livestream_url: '',
+                        capacity: null,
+                      })
+                    }
+                    className="p-1 rounded-lg hover:bg-white/10 text-brand-sandstone/60 hover:text-rose-400 transition-colors"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Attached Relief Campaign Preview Badge */}
+            {reliefInput.title?.trim() && (
+              <div className="p-3 rounded-2xl bg-rose-950/20 border border-rose-500/30 space-y-2">
+                <div className="flex items-center justify-between text-xs font-bold text-rose-400 px-1">
+                  <span className="flex items-center gap-1.5">
+                    <HeartHandshake className="w-3.5 h-3.5" /> Attached Relief Campaign Preview
+                  </span>
+                  {mode !== 'fundraiser' && (
+                    <button
+                      type="button"
+                      onClick={() => setMode('fundraiser')}
+                      className="text-[11px] text-rose-400 hover:underline font-semibold"
+                    >
+                      Edit Campaign
+                    </button>
+                  )}
+                </div>
+                <div className="inline-flex items-center gap-2 pl-2.5 pr-1.5 py-1.5 rounded-xl bg-brand-dusk border border-rose-500/40 text-xs text-brand-sandstone shadow-sm">
+                  <span className="font-semibold text-rose-300">{reliefInput.title}</span>
+                  <span className="text-[11px] px-2 py-0.5 rounded bg-rose-500/10 text-rose-300 border border-rose-500/30 font-medium">
+                    ${Math.round((reliefInput.goal_minor || 0) / 100).toLocaleString()} {reliefInput.currency || 'USD'}
+                  </span>
+                  <span className="text-[10px] text-brand-sandstone/60">
+                    {RELIEF_CATEGORY_METADATA[reliefInput.category]?.protocol || reliefInput.category}
+                  </span>
+                  <button
+                    type="button"
+                    aria-label="Remove attached relief campaign"
+                    onClick={() =>
+                      setReliefInput({
+                        title: '',
+                        description: '',
+                        category: 'hurricane_relief',
+                        goal_minor: 10000,
+                        currency: 'USD',
+                        target_country_iso: 'JAM',
+                        disaster_declaration_ref: '',
+                        supporting_evidence_urls: [],
+                      })
+                    }
+                    className="p-1 rounded-lg hover:bg-white/10 text-brand-sandstone/60 hover:text-rose-400 transition-colors"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
                 </div>
               </div>
             )}
@@ -1982,8 +2142,8 @@ export default function UniversalComposer({
                       mediaList.length === 0 &&
                       !pollQuestion.trim() &&
                       taggedProducts.length === 0 &&
-                      !eventTitle.trim() &&
-                      !fundraiserTitle.trim())
+                      !(mode === 'event' && eventInput.title?.trim()) &&
+                      !(mode === 'fundraiser' && reliefInput.title?.trim()))
                   }
                   className="w-full sm:w-auto bg-gradient-to-r from-brand-caribbeanSea via-brand-sunriseCoral to-brand-goldenHour hover:opacity-95 disabled:opacity-40 text-slate-950 font-black px-6 md:px-8 py-2.5 md:py-3 min-h-[44px] md:min-h-[48px] rounded-2xl text-xs md:text-sm flex items-center justify-center gap-2 transition-all shadow-lg shadow-brand-caribbeanSea/20 cursor-pointer"
                 >
