@@ -591,7 +591,49 @@ export async function fetchFeedPostsAction(params: {
       }
     }
 
-    return { posts: normalizedPosts, nextCursor: res.nextCursor };
+    // ── Authoritative Official Post fallback for 'for_you' ──
+    // Mirrors the same contract in page.tsx: if the ranked feed is empty (or
+    // missing the official launch post) on the first page, inject it so the
+    // For You tab never appears blank when a known launch post exists in DB.
+    let finalPosts = normalizedPosts;
+    if (params.mode === 'for_you' && !params.cursor) {
+      const hasOfficialPost = finalPosts.some(
+        (p: any) =>
+          p.handle?.toLowerCase() === 'tukubi' ||
+          p.id === 'd23f3e75-0dfa-47c6-8df9-2c0fa299d7ff'
+      );
+      if (!hasOfficialPost) {
+        try {
+          const { data: dbOfficialPost } = await supabase
+            .from('posts')
+            .select(`
+              id, author_id, content, created_at, media_urls, cultural_tags,
+              likes_count, comments_count, shares_count, visibility, post_status,
+              scheduled_at, is_official, official_content_type, is_pinned,
+              profiles:profiles!posts_author_id_fkey(
+                id, display_name, username, avatar_url, is_verified, is_official
+              )
+            `)
+            .eq('id', 'd23f3e75-0dfa-47c6-8df9-2c0fa299d7ff')
+            .maybeSingle();
+
+          if (dbOfficialPost) {
+            const hydrated = await hydratePostsEngagement(
+              [dbOfficialPost],
+              supabase,
+              { currentUserId: user.id }
+            );
+            if (hydrated.length > 0) {
+              finalPosts = [hydrated[0], ...finalPosts];
+            }
+          }
+        } catch {
+          // Non-blocking — feed continues without the official post
+        }
+      }
+    }
+
+    return { posts: finalPosts, nextCursor: res.nextCursor };
   } catch (err) {
     return { posts: [], error: err instanceof Error ? err.message : 'Failed to fetch feed' };
   }

@@ -154,6 +154,16 @@ export default function HomeDashboard({
   const [currentCursor, setCurrentCursor] = useState<string | undefined>(nextCursor);
   const [isLoadingTab, setIsLoadingTab] = useState(false);
 
+  // ── Per-tab feed cache: preserves posts when switching between tabs ──
+  // Keyed by FeedMode, stores the fetched posts + cursor so returning to a
+  // previously-visited tab restores content instantly without a network call.
+  const [tabCache, setTabCache] = useState<
+    Record<string, { posts: FeedPostData[]; cursor?: string }>
+  >(() => ({
+    // Seed the cache with server-rendered initial posts for the landing tab
+    [initialMode]: { posts: initialPosts, cursor: nextCursor },
+  }));
+
   const activeTabMeta = FEED_TABS.find((t) => t.id === activeTab) || FEED_TABS[0];
 
   // Quick Action Buttons
@@ -169,18 +179,54 @@ export default function HomeDashboard({
   const handleTabChange = async (tab: typeof FEED_TABS[number]) => {
     if (tab.id === activeTab || isLoadingTab) return;
 
+    // Before switching away, snapshot the current tab's posts into the cache
+    setTabCache((prev) => ({
+      ...prev,
+      [activeTab]: { posts: feedPosts, cursor: currentCursor },
+    }));
+
     setActiveTab(tab.id);
-    setIsLoadingTab(true);
 
     const targetUrl = tab.id === 'for_you' ? '/' : `/?tab=${tab.slug}`;
     if (typeof window !== 'undefined') {
       window.history.replaceState(null, '', targetUrl);
     }
 
+    // If we have cached posts for this tab, restore them instantly (no loading spinner)
+    const cached = tabCache[tab.id];
+    if (cached && cached.posts.length > 0) {
+      setFeedPosts(cached.posts);
+      setCurrentCursor(cached.cursor);
+      // Still re-fetch in the background to pick up new posts, but don't blank the UI
+      fetchFeedPostsAction({ mode: tab.id })
+        .then((res) => {
+          if (res.posts && res.posts.length > 0) {
+            setFeedPosts(res.posts);
+            setCurrentCursor(res.nextCursor);
+            setTabCache((prev) => ({
+              ...prev,
+              [tab.id]: { posts: res.posts, cursor: res.nextCursor },
+            }));
+          }
+        })
+        .catch(() => {
+          // Keep cached data on background refresh failure — don't blank the feed
+        });
+      return;
+    }
+
+    // No cache — show loading state and fetch
+    setIsLoadingTab(true);
     try {
       const res = await fetchFeedPostsAction({ mode: tab.id });
-      setFeedPosts(res.posts || []);
+      const posts = res.posts || [];
+      setFeedPosts(posts);
       setCurrentCursor(res.nextCursor);
+      // Store in cache for future tab switches
+      setTabCache((prev) => ({
+        ...prev,
+        [tab.id]: { posts, cursor: res.nextCursor },
+      }));
     } catch (err) {
       console.error('[HomeDashboard] Failed to fetch feed for tab:', tab.id, err);
       setFeedPosts([]);
