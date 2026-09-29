@@ -474,6 +474,26 @@ export function HomeScreen({ navigation }: any) {
           <View style={styles.centerBox}>
             <ActivityIndicator size="large" color={TOKENS.action} />
           </View>
+        ) : posts.length === 0 ? (
+          <View style={styles.emptyStateBox}>
+            <Text style={styles.emptyStateEmoji}>🌴</Text>
+            <Text style={styles.emptyStateTitle}>Welcome to the Caribbean Feed</Text>
+            <Text style={styles.emptyStateSubtitle}>
+              {feedMode === 'caribbean'
+                ? 'No regional posts found under this filter yet. Share the first island moment!'
+                : feedMode === 'communities'
+                ? 'No community posts found yet. Join a Caribbean hub or share an update!'
+                : 'No posts yet. Be the first to share an authentic update, photo, or story with the community!'}
+            </Text>
+            <TouchableOpacity
+              style={styles.emptyStateBtn}
+              onPress={() => navigation?.navigate('Create')}
+              accessibilityRole="button"
+              accessibilityLabel="Create first post"
+            >
+              <Text style={styles.emptyStateBtnText}>+ Create First Post</Text>
+            </TouchableOpacity>
+          </View>
         ) : (
           posts.map((post) => (
             <View key={post.id} style={styles.postCard}>
@@ -909,5 +929,45 @@ const styles = StyleSheet.create({
   feedTabTextActive: {
     color: '#FFFFFF',
     fontWeight: '900',
+  },
+  emptyStateBox: {
+    padding: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: TOKENS.surface,
+    borderRadius: 16,
+    marginHorizontal: 16,
+    marginVertical: 24,
+    borderWidth: 1,
+    borderColor: TOKENS.border,
+  },
+  emptyStateEmoji: {
+    fontSize: 48,
+    marginBottom: 12,
+  },
+  emptyStateTitle: {
+    color: TOKENS.textPrimary,
+    fontSize: 18,
+    fontWeight: '800',
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  emptyStateSubtitle: {
+    color: TOKENS.textMuted,
+    fontSize: 14,
+    textAlign: 'center',
+    lineHeight: 20,
+    marginBottom: 20,
+  },
+  emptyStateBtn: {
+    backgroundColor: TOKENS.action,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 20,
+  },
+  emptyStateBtnText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '800',
   },
 });
