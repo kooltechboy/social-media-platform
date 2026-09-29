@@ -214,7 +214,7 @@ export default function AppSidebar({ currentPath }: { currentPath?: string }) {
   }
 
   const renderNavList = (items: NavItem[]) => (
-    <ul className="space-y-1" role="list">
+    <ul className="space-y-0.5" role="list">
       {items.map((item) => {
         const isActive = isItemActive(item.href);
         const Icon = item.icon;
@@ -228,7 +228,7 @@ export default function AppSidebar({ currentPath }: { currentPath?: string }) {
                 aria-current={isActive ? 'page' : undefined}
                 title={label}
                 aria-label={label}
-                className={`relative flex items-center justify-center w-12 h-11 mx-auto rounded-2xl transition-all group ${
+                className={`relative flex items-center justify-center w-12 h-10 mx-auto rounded-2xl transition-all group ${
                   isActive
                     ? 'bg-gradient-to-r from-brand-caribbeanSea/30 to-brand-sunriseCoral/20 text-white border border-brand-caribbeanSea/50 shadow-md shadow-brand-caribbeanSea/15'
                     : 'text-slate-300 hover:bg-white/10 hover:text-white border border-transparent'
@@ -261,7 +261,7 @@ export default function AppSidebar({ currentPath }: { currentPath?: string }) {
             <Link
               href={item.href}
               aria-current={isActive ? 'page' : undefined}
-              className={`flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-xs md:text-sm font-bold min-h-[42px] transition-all group ${
+              className={`flex items-center justify-between px-3.5 py-2 rounded-2xl text-xs md:text-sm font-bold min-h-[38px] transition-all group ${
                 isActive
                   ? 'bg-gradient-to-r from-brand-caribbeanSea/25 to-brand-sunriseCoral/15 text-white border border-brand-caribbeanSea/40 shadow-sm shadow-brand-caribbeanSea/10'
                   : 'text-slate-300 hover:bg-white/5 hover:text-white border border-transparent'
@@ -306,9 +306,9 @@ export default function AppSidebar({ currentPath }: { currentPath?: string }) {
   );
 
   return (
-    <nav className="w-full space-y-4 pb-8" aria-label="Global navigation">
+    <nav className="w-full h-full flex flex-col pb-2" aria-label="Global navigation">
       {/* ── 0. Sidebar Collapse / Expand Toggle Button ── */}
-      <div className={`flex items-center ${isCollapsed ? 'justify-center' : 'justify-between px-2'} mb-1`}>
+      <div className={`flex items-center shrink-0 ${isCollapsed ? 'justify-center' : 'justify-between px-2'} mb-1`}>
         {!isCollapsed && (
           <span className="text-[10px] font-black uppercase tracking-wider text-brand-sandstone/50">
             Platform Menu
@@ -330,12 +330,12 @@ export default function AppSidebar({ currentPath }: { currentPath?: string }) {
       </div>
 
       {/* ── 1. Create Action Button ── */}
-      <div className="px-1">
+      <div className="px-1 shrink-0 mb-1.5">
         <Link
           href="/create"
           title="Create on TUKUBI"
           className={`w-full flex items-center justify-center gap-2.5 rounded-2xl bg-gradient-to-r from-brand-caribbeanSea via-teal-400 to-brand-sunriseCoral hover:brightness-110 text-slate-950 font-black tracking-wide transition-all shadow-lg shadow-brand-caribbeanSea/20 hover:shadow-brand-caribbeanSea/30 active:scale-[0.98] ${
-            isCollapsed ? 'w-12 h-11 mx-auto p-0' : 'py-3 px-4 text-sm min-h-[46px]'
+            isCollapsed ? 'w-12 h-10 mx-auto p-0' : 'py-2.5 px-4 text-sm min-h-[42px]'
           }`}
         >
           <PlusCircle className="w-5 h-5 text-slate-950 shrink-0" />
@@ -344,9 +344,9 @@ export default function AppSidebar({ currentPath }: { currentPath?: string }) {
       </div>
 
       {/* ── 2. Primary Navigation Container ── */}
-      <div className={`glass rounded-3xl space-y-3 border border-white/10 shadow-lg ${isCollapsed ? 'p-1.5' : 'p-2.5'}`}>
+      <div className={`glass rounded-3xl flex flex-col flex-1 min-h-0 border border-white/10 shadow-lg ${isCollapsed ? 'p-1.5' : 'p-2'}`}>
         {!isCollapsed && (
-          <div className="px-2 pt-1 pb-0.5 flex items-center justify-between">
+          <div className="px-2 pt-0.5 pb-0.5 flex items-center justify-between shrink-0">
             <span className="text-[10px] font-black uppercase tracking-wider text-brand-sandstone/50">
               Primary
             </span>
@@ -356,10 +356,10 @@ export default function AppSidebar({ currentPath }: { currentPath?: string }) {
 
         {renderNavList(PRIMARY_NAV)}
 
-        <div className="h-px bg-white/10 my-2" />
+        <div className="h-px bg-white/10 my-1 shrink-0" />
 
         {!isCollapsed && (
-          <div className="px-2 pt-0.5 pb-0.5">
+          <div className="px-2 pt-0.5 pb-0.5 shrink-0">
             <span className="text-[10px] font-black uppercase tracking-wider text-brand-sandstone/50">
               Personal &amp; Connect
             </span>
@@ -368,18 +368,18 @@ export default function AppSidebar({ currentPath }: { currentPath?: string }) {
 
         {renderNavList(SECONDARY_NAV)}
 
-        <div className="h-px bg-white/10 my-2" />
+        <div className="h-px bg-white/10 my-1 shrink-0" />
 
         {/* ── 3. More Tools & Ecosystem Accordion / Compact Menu ── */}
         {isCollapsed ? (
           renderNavList(TOOLS_NAV)
         ) : (
-          <div>
+          <div className="shrink-0">
             <button
               type="button"
               onClick={() => setIsToolsOpen((prev) => !prev)}
               aria-expanded={isToolsOpen}
-              className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold text-slate-400 hover:text-white hover:bg-white/5 transition-colors"
+              className="w-full flex items-center justify-between px-3 py-1.5 rounded-xl text-xs font-bold text-slate-400 hover:text-white hover:bg-white/5 transition-colors"
             >
               <span className="flex items-center gap-2">
                 <Sparkles className="w-3.5 h-3.5 text-brand-goldenHour" />
@@ -393,7 +393,7 @@ export default function AppSidebar({ currentPath }: { currentPath?: string }) {
             </button>
 
             {isToolsOpen && (
-              <div className="pt-1.5 pl-1 space-y-1 animate-fadeIn">
+              <div className="pt-1 pl-1 space-y-0.5 animate-fadeIn">
                 {renderNavList(TOOLS_NAV)}
               </div>
             )}
@@ -402,21 +402,21 @@ export default function AppSidebar({ currentPath }: { currentPath?: string }) {
 
         {!isCollapsed && (
           <>
-            <div className="h-px bg-white/10 my-2" />
+            <div className="h-px bg-white/10 my-1 shrink-0" />
 
             {/* Creator Ecosystem Action Card */}
-            <div className="glass rounded-2xl p-4 space-y-3">
+            <div className="glass rounded-2xl p-3 space-y-2 shrink-0">
               <div className="flex items-center justify-center gap-1.5 text-xs font-black text-brand-caribbeanSea uppercase tracking-wide">
                 <Sparkles className="w-3.5 h-3.5 text-brand-goldenHour" /> Caribbean Creator Ecosystem
               </div>
-              <p className="text-[11px] text-slate-300 leading-relaxed text-center">
+              <p className="text-[11px] text-slate-300 leading-snug text-center">
                 Grow your presence, connect with fans, and operate your media business on TUKUBI.
               </p>
 
-              <div className="space-y-2 pt-1">
+              <div className="space-y-1.5 pt-0.5">
                 <Link
                   href="/creator-hub"
-                  className="w-full flex items-center justify-between p-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 transition-all text-left group min-h-[44px]"
+                  className="w-full flex items-center justify-between p-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 transition-all text-left group min-h-[38px]"
                 >
                   <div>
                     <p className="text-xs font-black text-brand-goldenHour flex items-center gap-1.5">
@@ -431,7 +431,7 @@ export default function AppSidebar({ currentPath }: { currentPath?: string }) {
 
                 <Link
                   href="/creator-studio"
-                  className="w-full block bg-gradient-to-r from-brand-caribbeanSea to-brand-sunriseCoral hover:brightness-110 text-slate-950 font-black text-xs py-2.5 rounded-xl transition-all shadow-md shadow-brand-caribbeanSea/20 text-center min-h-[40px] flex items-center justify-center"
+                  className="w-full block bg-gradient-to-r from-brand-caribbeanSea to-brand-sunriseCoral hover:brightness-110 text-slate-950 font-black text-xs py-2 rounded-xl transition-all shadow-md shadow-brand-caribbeanSea/20 text-center min-h-[36px] flex items-center justify-center"
                 >
                   Open Creator Studio
                 </Link>
@@ -446,7 +446,7 @@ export default function AppSidebar({ currentPath }: { currentPath?: string }) {
 
       {/* ── 4. Diaspora / Brand Identity Footer ── */}
       {!isCollapsed && (
-        <div className="px-3 py-2 text-center space-y-1">
+        <div className="px-3 py-1.5 text-center shrink-0">
           <p className="text-[11px] font-black tracking-wider text-brand-sandstone/70">
             TUKUBI — The Caribbean Connected.
           </p>
