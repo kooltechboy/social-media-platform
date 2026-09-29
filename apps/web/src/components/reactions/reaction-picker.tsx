@@ -129,6 +129,19 @@ export default function ReactionPicker({
     };
   }, []);
 
+  useSafeEffect(() => {
+    if (!open) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setOpen(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [open]);
+
   const current = currentReaction ? REACTION_EMOJI_MAP[currentReaction] : null;
 
   return (

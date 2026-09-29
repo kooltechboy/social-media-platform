@@ -194,7 +194,7 @@ export default function ReliefDonationModal({
 
         {completedDonation ? (
           /* Confirmation State */
-          <div className="text-center py-6 space-y-5 animate-fadeIn">
+          <div role="status" aria-live="polite" className="text-center py-6 space-y-5 animate-fadeIn">
             <div className="mx-auto w-16 h-16 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center justify-center">
               <CheckCircle2 className="w-9 h-9" />
             </div>

@@ -52,6 +52,17 @@ function useSafeMemo<T>(factory: () => T, deps: React.DependencyList): T {
   return factory();
 }
 
+function useSafeEffect(effect: React.EffectCallback, deps?: React.DependencyList): void {
+  const internals =
+    (React as any)?.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE ||
+    (React as any)?.__SECRET_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
+  const dispatcher = internals?.H || internals?.ReactCurrentDispatcher?.current;
+
+  if (dispatcher && typeof React.useEffect === 'function') {
+    React.useEffect(effect, deps);
+  }
+}
+
 export interface CartDrawerProps {
   isOpen: boolean;
   onClose: () => void;
@@ -137,10 +148,31 @@ export default function CartDrawer({
     }
   };
 
+  // Escape key and modal accessibility
+  useSafeEffect(() => {
+    if (!isOpen) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 overflow-hidden animate-fadeIn">
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="cart-drawer-title"
+      className="fixed inset-0 z-50 overflow-hidden animate-fadeIn"
+    >
       {/* Backdrop */}
       <div
         onClick={onClose}
@@ -154,13 +186,14 @@ export default function CartDrawer({
             <div className="flex items-center justify-between border-b border-slate-800 pb-4">
               <div className="flex items-center gap-2.5">
                 <ShoppingBag className="w-5 h-5 text-orange-400" />
-                <h2 className="text-base font-black text-white">Your Shopping Cart</h2>
+                <h2 id="cart-drawer-title" className="text-base font-black text-white">Your Shopping Cart</h2>
                 <span className="text-xs text-slate-400 font-semibold">({lines.length})</span>
               </div>
               <button
                 type="button"
                 onClick={onClose}
-                className="p-1.5 rounded-full text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
+                aria-label="Close shopping cart"
+                className="min-h-[44px] min-w-[44px] p-2.5 rounded-full text-slate-400 hover:text-white hover:bg-slate-800 transition-colors flex items-center justify-center cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -183,7 +216,7 @@ export default function CartDrawer({
           {/* Cart Items List or Success State */}
           <div className="flex-1 overflow-y-auto py-4 space-y-5 scrollbar-none">
             {successOrderId ? (
-              <div className="py-12 px-2 text-center space-y-4 animate-fadeIn">
+              <div role="status" aria-live="polite" className="py-12 px-2 text-center space-y-4 animate-fadeIn">
                 <div className="w-12 h-12 rounded-full bg-emerald-500/20 text-emerald-400 mx-auto flex items-center justify-center">
                   <CheckCircle className="w-6 h-6" />
                 </div>
@@ -202,7 +235,7 @@ export default function CartDrawer({
                     setSuccessOrderId(null);
                     onClose();
                   }}
-                  className="w-full mt-4 py-3 rounded-2xl bg-orange-500 hover:bg-orange-400 text-slate-950 font-black text-xs transition-colors cursor-pointer"
+                  className="w-full mt-4 min-h-[44px] min-w-[44px] py-3 rounded-2xl bg-orange-500 hover:bg-orange-400 text-slate-950 font-black text-xs transition-colors cursor-pointer"
                 >
                   Continue Shopping
                 </button>
@@ -217,7 +250,7 @@ export default function CartDrawer({
                 <button
                   type="button"
                   onClick={onClose}
-                  className="mt-2 px-4 py-2 rounded-xl bg-orange-500 text-slate-950 font-black text-xs cursor-pointer"
+                  className="mt-2 min-h-[44px] min-w-[44px] px-4 py-2 rounded-xl bg-orange-500 text-slate-950 font-black text-xs cursor-pointer"
                 >
                   Explore Marketplace
                 </button>
@@ -264,6 +297,7 @@ export default function CartDrawer({
                           <div className="flex items-center gap-2">
                             <button
                               type="button"
+                              aria-label={`Decrease quantity of ${line.productTitle || 'item'}`}
                               onClick={() =>
                                 onUpdateQuantity(
                                   line.productId,
@@ -271,28 +305,30 @@ export default function CartDrawer({
                                   Math.max(1, line.quantity - 1)
                                 )
                               }
-                              className="w-6 h-6 rounded-lg bg-slate-800 hover:bg-slate-700 text-white flex items-center justify-center cursor-pointer"
+                              className="min-h-[44px] min-w-[44px] rounded-lg bg-slate-800 hover:bg-slate-700 text-white flex items-center justify-center cursor-pointer"
                             >
-                              <Minus className="w-3 h-3" />
+                              <Minus className="w-3.5 h-3.5" />
                             </button>
                             <span className="font-bold text-white w-4 text-center">
                               {line.quantity}
                             </span>
                             <button
                               type="button"
+                              aria-label={`Increase quantity of ${line.productTitle || 'item'}`}
                               onClick={() =>
                                 onUpdateQuantity(line.productId, line.variantId, line.quantity + 1)
                               }
-                              className="w-6 h-6 rounded-lg bg-slate-800 hover:bg-slate-700 text-white flex items-center justify-center cursor-pointer"
+                              className="min-h-[44px] min-w-[44px] rounded-lg bg-slate-800 hover:bg-slate-700 text-white flex items-center justify-center cursor-pointer"
                             >
-                              <Plus className="w-3 h-3" />
+                              <Plus className="w-3.5 h-3.5" />
                             </button>
                             <button
                               type="button"
+                              aria-label={`Remove ${line.productTitle || 'item'} from cart`}
                               onClick={() => onRemoveLine(line.productId, line.variantId)}
-                              className="p-1.5 text-slate-500 hover:text-rose-400 transition-colors ml-1 cursor-pointer"
+                              className="min-h-[44px] min-w-[44px] p-2.5 text-slate-500 hover:text-rose-400 transition-colors ml-1 flex items-center justify-center cursor-pointer"
                             >
-                              <Trash2 className="w-3.5 h-3.5" />
+                              <Trash2 className="w-4 h-4" />
                             </button>
                           </div>
                         </div>
@@ -331,7 +367,7 @@ export default function CartDrawer({
               </div>
 
               {checkoutError && (
-                <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs">
+                <div role="status" aria-live="polite" className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs">
                   {checkoutError}
                 </div>
               )}

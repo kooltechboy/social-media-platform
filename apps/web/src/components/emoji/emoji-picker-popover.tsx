@@ -177,6 +177,18 @@ export function EmojiPickerPopoverContent({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [onClose]);
 
+  // Global Escape keydown listener
+  useEffect(() => {
+    function handleGlobalKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape') {
+        onClose?.();
+      }
+    }
+
+    window.addEventListener('keydown', handleGlobalKeyDown);
+    return () => window.removeEventListener('keydown', handleGlobalKeyDown);
+  }, [onClose]);
+
   // Derived emojis list based on category, search, and skin tone
   const displayedEmojis = useMemo<EmojiItem[]>(() => {
     const trimmed = searchQuery.trim();

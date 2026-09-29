@@ -355,6 +355,7 @@ export default function ProductTaggingTray({
         <div className="flex items-center gap-3">
           {/* Tag Counter with Live Region */}
           <div
+            role="status"
             aria-live="polite"
             className={`px-3 py-1.5 rounded-xl text-xs font-semibold tracking-wide border transition-colors ${
               isAtLimit

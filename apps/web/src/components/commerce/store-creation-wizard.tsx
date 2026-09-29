@@ -40,6 +40,17 @@ function useSafeState<T>(initialValue: T | (() => T)): [T, React.Dispatch<React.
   return [val, () => {}];
 }
 
+function useSafeEffect(effect: React.EffectCallback, deps?: React.DependencyList): void {
+  const internals =
+    (React as any)?.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE ||
+    (React as any)?.__SECRET_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
+  const dispatcher = internals?.H || internals?.ReactCurrentDispatcher?.current;
+
+  if (dispatcher && typeof React.useEffect === 'function') {
+    React.useEffect(effect, deps);
+  }
+}
+
 /**
  * Caribbean Futurism Signature Color Swatches
  */
@@ -224,6 +235,20 @@ export default function StoreCreationWizard({
     setErrorMessage(null);
     setCurrentStep((prev) => Math.max(prev - 1, 1));
   };
+
+  // Keyboard accessibility: Escape triggers onCancel if provided
+  useSafeEffect(() => {
+    if (!onCancel) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onCancel();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [onCancel]);
 
   const handleSubmit = async () => {
     if (!validateStep(1) || !validateStep(2) || !validateStep(3)) {
