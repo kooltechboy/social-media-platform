@@ -4,7 +4,7 @@ import { hydratePostsEngagement } from '../../apps/web/src/lib/feed/hydrate-post
 
 describe('TUKUBI Social Interactions Integrity & Unification Verification', () => {
   describe('1. Reaction Types & Validation Integrity', () => {
-    it('supports all 8 authentic Caribbean reaction types', () => {
+    it('supports all 10 authentic Caribbean reaction types', () => {
       const expectedReactions: ReactionType[] = [
         'like',
         'love',
@@ -14,8 +14,10 @@ describe('TUKUBI Social Interactions Integrity & Unification Verification', () =
         'wow',
         'sad',
         'angry',
+        'palm',
+        'sound',
       ];
-      expect(VALID_REACTION_TYPES).toHaveLength(8);
+      expect(VALID_REACTION_TYPES).toHaveLength(10);
       for (const rx of expectedReactions) {
         expect(VALID_REACTION_TYPES).toContain(rx);
       }

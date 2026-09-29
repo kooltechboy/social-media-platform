@@ -77,7 +77,7 @@ describe('Phase 5: Mobile & Performance Optimization', () => {
     const filePath = path.join(rootDir, 'apps/web/src/components/universal-composer.tsx');
     const content = fs.readFileSync(filePath, 'utf-8');
 
-    expect(content).toContain('TukubiCameraModal');
+    expect(content).toMatch(/TukubiCreationStudio|TukubiCameraModal/);
     expect(content).toContain('min-h-[44px] min-w-[44px]');
   });
 });
