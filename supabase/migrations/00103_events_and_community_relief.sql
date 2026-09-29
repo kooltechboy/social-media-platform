@@ -245,6 +245,12 @@ CREATE TRIGGER trg_relief_donations_insert
 -- -----------------------------------------------------------------------------
 -- 6. Row Level Security & Policies
 -- -----------------------------------------------------------------------------
+ALTER TABLE public.events ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.events FORCE ROW LEVEL SECURITY;
+
+ALTER TABLE public.event_attendees ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.event_attendees FORCE ROW LEVEL SECURITY;
+
 ALTER TABLE public.relief_campaigns ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.relief_campaigns FORCE ROW LEVEL SECURITY;
 

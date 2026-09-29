@@ -343,7 +343,7 @@ BEGIN
     ) THEN
         CREATE POLICY "Seller reads assigned orders"
             ON public.orders FOR SELECT
-            USING (auth.uid() = seller_id);
+            USING (seller_id = (SELECT auth.uid()));
     END IF;
 END $$;
 
@@ -356,14 +356,14 @@ BEGIN
         CREATE POLICY "Content creators manage product tags"
             ON public.product_tags FOR ALL
             USING (
-                (post_id IS NOT NULL AND EXISTS (SELECT 1 FROM public.posts WHERE id = product_tags.post_id AND author_id = auth.uid()))
+                (post_id IS NOT NULL AND EXISTS (SELECT 1 FROM public.posts WHERE id = product_tags.post_id AND author_id = (SELECT auth.uid())))
                 OR
-                (video_id IS NOT NULL AND EXISTS (SELECT 1 FROM public.videos WHERE id = product_tags.video_id AND creator_id = auth.uid()))
+                (video_id IS NOT NULL AND EXISTS (SELECT 1 FROM public.videos WHERE id = product_tags.video_id AND creator_id = (SELECT auth.uid())))
             )
             WITH CHECK (
-                (post_id IS NOT NULL AND EXISTS (SELECT 1 FROM public.posts WHERE id = product_tags.post_id AND author_id = auth.uid()))
+                (post_id IS NOT NULL AND EXISTS (SELECT 1 FROM public.posts WHERE id = product_tags.post_id AND author_id = (SELECT auth.uid())))
                 OR
-                (video_id IS NOT NULL AND EXISTS (SELECT 1 FROM public.videos WHERE id = product_tags.video_id AND creator_id = auth.uid()))
+                (video_id IS NOT NULL AND EXISTS (SELECT 1 FROM public.videos WHERE id = product_tags.video_id AND creator_id = (SELECT auth.uid())))
             );
     END IF;
 END $$;

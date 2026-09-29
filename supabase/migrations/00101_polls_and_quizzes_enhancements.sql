@@ -68,7 +68,7 @@ BEGIN
 
     RETURN NEW;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, pg_temp;
 
 -- Drop previous trigger (previously AFTER INSERT) and recreate as BEFORE INSERT
 DROP TRIGGER IF EXISTS trg_poll_vote_insert ON public.poll_votes;
