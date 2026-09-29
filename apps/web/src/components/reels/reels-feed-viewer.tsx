@@ -207,9 +207,9 @@ function ReelCard({
 
   return (
     <div className="h-full w-full snap-start snap-always relative overflow-hidden bg-black reel-container" data-reel-id={reel.id}>
-      {/* Video or Fallback */}
+      {/* Video or Fallback: only mount video decoders for active, previous, and next reel to prevent GPU texture exhaustion */}
       <div onClick={handleTogglePlay} className="absolute inset-0 cursor-pointer flex items-center justify-center">
-        {displayUrl && !videoError ? (
+        {displayUrl && !videoError && (isActive || isNext) ? (
           <video
             ref={videoRef}
             src={displayUrl}
@@ -238,9 +238,9 @@ function ReelCard({
              <div className="w-16 h-16 rounded-full bg-white/10 flex items-center justify-center text-white/60 border border-white/15">
                 <Video className="w-8 h-8 opacity-60" />
              </div>
-             <p className="text-sm font-bold text-white/90">Video Unavailable</p>
+             <p className="text-sm font-bold text-white/90">{reel.title || 'TUKUBI Reel'}</p>
              <p className="text-xs text-white/60 max-w-xs">
-               This video stream is currently being transcoded or is temporarily offline.
+               @{reel.handle}
              </p>
           </div>
         )}
