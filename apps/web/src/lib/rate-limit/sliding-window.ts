@@ -79,8 +79,8 @@ async function checkUpstashRedis(
         ['ZCARD', redisKey],
         ['EXPIRE', redisKey, policy.windowSec],
       ]),
-      // Low timeout so rate-limiting never stalls application requests
-      signal: AbortSignal.timeout(1200),
+      // Tight timeout — middleware budget is limited; fall back to in-memory on slow responses
+      signal: AbortSignal.timeout(500),
     });
 
     if (!response.ok) return null;

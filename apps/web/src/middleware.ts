@@ -72,25 +72,28 @@ export async function middleware(request: NextRequest) {
 
   const pathname = request.nextUrl.pathname;
 
-  // Rate Limiting Gate (Anti-DDoS, Credential Stuffing & Scraping Mitigation)
-  const clientIp =
-    request.headers.get('x-forwarded-for')?.split(',')[0].trim() ||
-    request.headers.get('x-real-ip') ||
-    '127.0.0.1';
-
-  // Check if route is an auth gateway route (/login, /signup, etc.)
+  // ── Fast classification (no I/O) ──
   const isAuthGatewayRoute = AUTH_GATEWAY_ROUTES.some(
     (route) => pathname === route || pathname.startsWith(`${route}/`)
   );
 
-  // Check if route is a publicly exempt route
   const isPublicExemptRoute =
     PUBLIC_EXEMPT_ROUTES.some(
       (route) => pathname === route || pathname.startsWith(`${route}/`)
     ) ||
     pathname.startsWith('/api/payments/webhooks/') ||
-    // Public RSS feeds for podcast distribution
     (pathname.startsWith('/api/v1/podcasts/') && pathname.endsWith('/rss'));
+
+  // Determine if this route actually needs an auth check. Public-exempt
+  // routes and the root `/` page (which renders its own public front door)
+  // never need getUser(), so we can skip the expensive Supabase call entirely.
+  const needsAuthCheck = !isPublicExemptRoute && pathname !== '/';
+
+  // ── Rate limit tier selection (no I/O) ──
+  const clientIp =
+    request.headers.get('x-forwarded-for')?.split(',')[0].trim() ||
+    request.headers.get('x-real-ip') ||
+    '127.0.0.1';
 
   let tier: RateLimitTier = 'burst';
   if (isAuthGatewayRoute && request.method !== 'GET') {
@@ -101,35 +104,15 @@ export async function middleware(request: NextRequest) {
     tier = 'api';
   }
 
-  const rateLimitResult = await checkRateLimit(clientIp, tier);
-  const rateLimitHeaders = getRateLimitHeaders(rateLimitResult);
-
-  if (!rateLimitResult.success) {
-    if (pathname.startsWith('/api/')) {
-      return NextResponse.json(
-        { error: 'Too Many Requests', message: 'Rate limit exceeded. Please try again later.' },
-        { status: 429, headers: rateLimitHeaders }
-      );
-    }
-    return new NextResponse('Too Many Requests. Please slow down and try again later.', {
-      status: 429,
-      headers: { 'Content-Type': 'text/plain', ...rateLimitHeaders },
-    });
-  }
-
+  // ── Build the base response and headers ──
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set('x-pathname', pathname);
 
   let response = NextResponse.next({
-    request: {
-      headers: requestHeaders,
-    },
+    request: { headers: requestHeaders },
   });
-  for (const [k, v] of Object.entries(rateLimitHeaders)) {
-    response.headers.set(k, v);
-  }
 
-  // 0. Language & Locale Detection (Requirement 2 & 5)
+  // 0. Language & Locale Detection
   const existingLocale = request.cookies.get('tukubi_locale')?.value;
   let targetLocale = existingLocale;
   if (!existingLocale) {
@@ -153,7 +136,7 @@ export async function middleware(request: NextRequest) {
     return response;
   }
 
-  // Create SSR-compatible Supabase client to inspect and refresh auth session cookies
+  // ── Create Supabase client (no I/O yet — lazy until getUser) ──
   const supabase = createServerClient(url, anonKey, {
     cookies: {
       getAll() {
@@ -162,15 +145,44 @@ export async function middleware(request: NextRequest) {
       setAll(cookiesToSet) {
         cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
         response = NextResponse.next({ request });
-        for (const [k, v] of Object.entries(rateLimitHeaders)) {
-          response.headers.set(k, v);
-        }
         cookiesToSet.forEach(({ name, value, options }) => response.cookies.set(name, value, options));
       },
     },
   });
 
-  let { data: { user } } = await supabase.auth.getUser();
+  // ── Run rate limiting + auth IN PARALLEL to avoid serial latency ──
+  // On mobile networks, running these sequentially (Redis ~200-1200ms + Supabase
+  // auth ~300-800ms) regularly exceeds Vercel's Edge Middleware timeout.
+  // By parallelizing, total wall-clock time = max(rateLimit, auth) instead of sum.
+  const [rateLimitResult, authResult] = await Promise.all([
+    checkRateLimit(clientIp, tier),
+    needsAuthCheck
+      ? supabase.auth.getUser()
+      : Promise.resolve({ data: { user: null } } as { data: { user: any } }),
+  ]);
+
+  // Apply rate limit headers to response
+  const rateLimitHeaders = getRateLimitHeaders(rateLimitResult);
+  for (const [k, v] of Object.entries(rateLimitHeaders)) {
+    response.headers.set(k, v);
+  }
+
+  // ── Rate limit enforcement ──
+  if (!rateLimitResult.success) {
+    if (pathname.startsWith('/api/')) {
+      return NextResponse.json(
+        { error: 'Too Many Requests', message: 'Rate limit exceeded. Please try again later.' },
+        { status: 429, headers: rateLimitHeaders }
+      );
+    }
+    return new NextResponse('Too Many Requests. Please slow down and try again later.', {
+      status: 429,
+      headers: { 'Content-Type': 'text/plain', ...rateLimitHeaders },
+    });
+  }
+
+  // ── Auth resolution ──
+  let user = authResult.data?.user ?? null;
 
   // In automated E2E test environments, recognize test session cookie if supabase auth is absent
   if (!user && process.env.PLAYWRIGHT_TEST === '1') {
