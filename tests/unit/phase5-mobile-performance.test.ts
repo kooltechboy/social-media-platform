@@ -56,7 +56,7 @@ describe('Phase 5: Mobile & Performance Optimization', () => {
     expect(content).toContain('pb-24 md:pb-6');
 
     // Sidebar hidden on mobile
-    expect(content).toContain('hidden md:block');
+    expect(content).toMatch(/hidden md:(block|flex)/);
   });
 
   it('app header provides accessible >= 44px touch targets on mobile viewports', () => {

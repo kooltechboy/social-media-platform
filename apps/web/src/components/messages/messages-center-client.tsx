@@ -212,21 +212,29 @@ export default function MessagesCenterClient({
       )
       .subscribe();
 
-    // 3. Subscribe to all messages for live conversation updates & preview synchronization
-    const messagesChannel = supabase
-      .channel('public:messages:all')
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'messages',
-        },
-        (payload) => {
-          const newMsg = payload.new as any;
-          setLocalConversations((prev) => {
-            const exists = prev.find((c) => c.id === newMsg.conversation_id);
-            if (exists) {
+    // 3. Subscribe to messages scoped strictly to the current user's conversations
+    // (Prevents global eavesdropping leak and stops cascading router.refresh churn across the platform)
+    const userConvIds = conversations.map((c) => c.id).filter(Boolean);
+    let messagesChannel: any = null;
+
+    if (userConvIds.length > 0) {
+      const channelId = `user_messages:${currentUserId}:${userConvIds.slice(0, 10).join('-')}`;
+      messagesChannel = supabase
+        .channel(channelId)
+        .on(
+          'postgres_changes',
+          {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'messages',
+            filter: `conversation_id=in.(${userConvIds.slice(0, 50).join(',')})`,
+          },
+          (payload) => {
+            const newMsg = payload.new as any;
+            if (!newMsg?.conversation_id) return;
+            setLocalConversations((prev) => {
+              const exists = prev.find((c) => c.id === newMsg.conversation_id);
+              if (!exists) return prev;
               return prev
                 .map((c) =>
                   c.id === newMsg.conversation_id
@@ -243,22 +251,20 @@ export default function MessagesCenterClient({
                   const timeB = b.last_message_at ? new Date(b.last_message_at).getTime() : 0;
                   return timeB - timeA;
                 });
-            } else {
-              // Refresh to pick up joined conversation info
-              router.refresh();
-              return prev;
-            }
-          });
-        }
-      )
-      .subscribe();
+            });
+          }
+        )
+        .subscribe();
+    }
 
     return () => {
       supabase.removeChannel(convMembersChannel);
       supabase.removeChannel(msgRequestsChannel);
-      supabase.removeChannel(messagesChannel);
+      if (messagesChannel) {
+        supabase.removeChannel(messagesChannel);
+      }
     };
-  }, [currentUserId, router, selectedId]);
+  }, [currentUserId, router, selectedId, conversations]);
 
   // Open direct chat with selected user
   const handleStartChatWithUser = async (person: NewMessageMember) => {

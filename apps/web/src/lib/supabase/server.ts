@@ -1,6 +1,7 @@
 import { createServerClient } from '@supabase/ssr';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
+import { cache } from 'react';
 
 export async function createSupabaseServerClient(): Promise<SupabaseClient | null> {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
@@ -69,7 +70,7 @@ export interface AuthCheckResult {
 
 import { ensureUserProfile } from '../auth/user-sync';
 
-export async function getCurrentUser(): Promise<SessionUser | null> {
+export const getCurrentUser = cache(async function getCurrentUser(): Promise<SessionUser | null> {
   if (process.env.PLAYWRIGHT_TEST === '1') {
     try {
       const cookieStore = await cookies();
@@ -115,7 +116,7 @@ export async function getCurrentUser(): Promise<SessionUser | null> {
     isOfficial,
     isVerified: profile?.is_verified ?? false,
   };
-}
+});
 
 export async function getAuthorizedUser(
   allowedRoles: PlatformRole[]

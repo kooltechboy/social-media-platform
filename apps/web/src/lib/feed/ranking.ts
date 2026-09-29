@@ -118,8 +118,12 @@ export async function buildRankedFeed(
       // True Page publishing filter
       postQuery = postQuery.or('publisher_type.eq.page,page_id.not.is.null');
     } else if (mode === 'creators') {
-      // Creator publishing filter
-      const { data: creators } = await supabase.from('creator_accounts').select('profile_id');
+      // Creator publishing filter: bounded to top 100 recent/verified creators to prevent table-scan & URL overflow (P0-002)
+      const { data: creators } = await supabase
+        .from('creator_accounts')
+        .select('profile_id')
+        .order('created_at', { ascending: false })
+        .limit(100);
       const creatorProfileIds = creators?.map((c: any) => c.profile_id).filter(Boolean) || [];
       if (creatorProfileIds.length > 0) {
         postQuery = postQuery.or(`publisher_type.eq.creator,author_id.in.(${creatorProfileIds.join(',')})`);

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
 import { createSupabaseBrowserClient } from '../lib/supabase/browser';
 import { useAuth } from './auth-provider';
 import { usePathname } from 'next/navigation';
@@ -25,6 +25,11 @@ export function NotificationsRealtimeProvider({
   const [unreadMessagesCount, setUnreadMessagesCount] = useState(initialUnreadMessagesCount);
   const { user } = useAuth();
   const pathname = usePathname();
+  const pathnameRef = useRef(pathname);
+
+  useEffect(() => {
+    pathnameRef.current = pathname;
+  }, [pathname]);
 
   useEffect(() => {
     setUnreadCount(initialUnreadCount);
@@ -60,10 +65,11 @@ export function NotificationsRealtimeProvider({
           filter: `recipient_id=eq.${user.id}`,
         },
         (payload: { new?: { kind?: string } }) => {
-          if (pathname !== '/notifications') {
+          const currentPath = pathnameRef.current;
+          if (currentPath !== '/notifications') {
             setUnreadCount((prev) => prev + 1);
           }
-          if (payload.new?.kind === 'message' && !pathname?.startsWith('/messages')) {
+          if (payload.new?.kind === 'message' && !currentPath?.startsWith('/messages')) {
             setUnreadMessagesCount((prev) => prev + 1);
           }
         }
@@ -73,7 +79,7 @@ export function NotificationsRealtimeProvider({
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user, pathname]);
+  }, [user?.id]);
 
   return (
     <NotificationsContext.Provider value={{ unreadCount, unreadMessagesCount }}>

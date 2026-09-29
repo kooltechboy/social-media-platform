@@ -47,7 +47,6 @@ const PUBLIC_EXEMPT_ROUTES = [
   '/events',
   '/post',
   '/profile',
-  '/admin/bootstrap',
   '/live',
   '/communities',
   '/pages',
