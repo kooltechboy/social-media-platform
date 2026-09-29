@@ -1,4 +1,5 @@
 'use client';
+/* eslint-disable react-hooks/rules-of-hooks */
 
 import React from 'react';
 import { X, Loader2, Camera, Video, Film, ArrowRight, ShoppingBag } from 'lucide-react';

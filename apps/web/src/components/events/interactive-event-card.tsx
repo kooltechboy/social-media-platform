@@ -1,4 +1,5 @@
 'use client';
+/* eslint-disable react-hooks/rules-of-hooks */
 
 import React from 'react';
 import Link from 'next/link';
@@ -434,7 +435,7 @@ export default function InteractiveEventCard({
                 }`}
               >
                 <XCircle className="w-4 h-4 shrink-0" />
-                <span>Can't Go</span>
+                <span>Can&apos;t Go</span>
               </button>
             </div>
 

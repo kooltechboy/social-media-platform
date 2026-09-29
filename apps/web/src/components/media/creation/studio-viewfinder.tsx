@@ -165,7 +165,7 @@ export default function StudioViewfinder({
             <ol className="text-[11px] text-white/60 space-y-1 list-decimal list-inside">
               <li>Click the lock or camera icon in your address bar</li>
               <li>Toggle Camera & Microphone permissions to <strong className="text-white/80">Allow</strong></li>
-              <li>Click "Try Again" below to resume capture</li>
+              <li>Click &quot;Try Again&quot; below to resume capture</li>
             </ol>
           </div>
 

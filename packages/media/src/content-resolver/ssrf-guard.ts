@@ -3,6 +3,8 @@
  * Defense-in-Depth SSRF & Safe HTTP Fetch Engine
  */
 
+declare const __non_webpack_require__: ((id: string) => any) | undefined;
+
 export interface SafeFetchOptions {
   timeoutMs?: number;
   maxRedirects?: number;
@@ -177,24 +179,33 @@ export async function assertSafeUrl(
   }
 
   // 5. DNS Pre-Resolution Check in Node.js runtime to prevent DNS Rebinding
-  if (typeof process !== 'undefined' && process.versions && process.versions.node) {
+  if (typeof window === 'undefined' && typeof process !== 'undefined' && process.versions && process.versions.node) {
     try {
+      // Dynamic non-static require so browser / Next.js client bundlers do not attempt to bundle 'dns'
+      const dnsModuleName = 'dns';
       // eslint-disable-next-line @typescript-eslint/no-var-requires
-      const dns = require('dns').promises;
-      const lookup = await dns.lookup(hostname, { all: true });
+      const nodeDns = typeof __non_webpack_require__ !== 'undefined'
+        ? __non_webpack_require__(dnsModuleName)
+        : typeof require !== 'undefined'
+        ? require(dnsModuleName)
+        : null;
 
-      for (const entry of lookup) {
-        if (entry.family === 4 && isPrivateIpv4(entry.address)) {
-          throw new SsrfSecurityError(
-            `DNS resolved ${hostname} to private IPv4 address ${entry.address}`,
-            'DNS_REBINDING_BLOCKED'
-          );
-        }
-        if (entry.family === 6 && isPrivateIpv6(entry.address)) {
-          throw new SsrfSecurityError(
-            `DNS resolved ${hostname} to private IPv6 address ${entry.address}`,
-            'DNS_REBINDING_BLOCKED'
-          );
+      if (nodeDns && nodeDns.promises) {
+        const lookup = await nodeDns.promises.lookup(hostname, { all: true });
+
+        for (const entry of lookup) {
+          if (entry.family === 4 && isPrivateIpv4(entry.address)) {
+            throw new SsrfSecurityError(
+              `DNS resolved ${hostname} to private IPv4 address ${entry.address}`,
+              'DNS_REBINDING_BLOCKED'
+            );
+          }
+          if (entry.family === 6 && isPrivateIpv6(entry.address)) {
+            throw new SsrfSecurityError(
+              `DNS resolved ${hostname} to private IPv6 address ${entry.address}`,
+              'DNS_REBINDING_BLOCKED'
+            );
+          }
         }
       }
     } catch (err) {
