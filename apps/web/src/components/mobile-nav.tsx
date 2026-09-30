@@ -582,8 +582,8 @@ export default function MobileNav() {
             >
               <div className="relative">
                 <Menu className="w-5 h-5" />
-                {unreadMessagesCount > 0 && (
-                  <span className="absolute -top-1 -right-1 w-2 h-2 bg-brand-caribbeanSea rounded-full animate-pulse shadow-[0_0_6px_rgba(0,168,150,0.9)]" />
+                {unreadNotificationsCount > 0 && (
+                  <span className="absolute -top-1 -right-1 w-2 h-2 bg-brand-sunriseCoral rounded-full animate-pulse shadow-[0_0_6px_rgba(255,107,107,0.9)]" />
                 )}
               </div>
               <span className="text-[10px]">Menu</span>
