@@ -441,17 +441,23 @@ describe('Task 7: Escrow Order Pipeline, Cart Store & Escrow Status Tracking', (
     });
 
     it('renders pre-launch notification when marketplace transactions are not active and onProceedToCheckout is omitted', () => {
-      const vdom = CartDrawer({
-        isOpen: true,
-        onClose: vi.fn(),
-        lines: [mockCartLine1],
-        onUpdateQuantity: vi.fn(),
-        onRemoveLine: vi.fn(),
-      });
+      vi.useFakeTimers();
+      vi.setSystemTime(new Date('2026-09-29T12:00:00Z'));
+      try {
+        const vdom = CartDrawer({
+          isOpen: true,
+          onClose: vi.fn(),
+          lines: [mockCartLine1],
+          onUpdateQuantity: vi.fn(),
+          onRemoveLine: vi.fn(),
+        });
 
-      const json = JSON.stringify(vdom);
-      expect(json).toContain('Transactions Begin Sept 30');
-      expect(json).toContain('Escrow');
+        const json = JSON.stringify(vdom);
+        expect(json).toContain('Transactions Begin Sept 30');
+        expect(json).toContain('Escrow');
+      } finally {
+        vi.useRealTimers();
+      }
     });
   });
 });

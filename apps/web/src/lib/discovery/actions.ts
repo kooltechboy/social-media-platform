@@ -244,12 +244,13 @@ export async function universalSearchAction(params: {
     podcastsData: [],
   };
 
-  if (!supabase || !query) {
+  const cleanTerm = query.replace(/^@/, '').trim();
+  if (!supabase || !cleanTerm || cleanTerm.length < 2) {
     return emptyResult;
   }
 
   try {
-    const termFilter = `%${query.replace(/^@/, '')}%`;
+    const termFilter = `%${cleanTerm}%`;
 
     // 1. Profiles Search (People, Creators)
     let profileQuery = supabase
@@ -326,7 +327,7 @@ export async function universalSearchAction(params: {
     // 9. Live Streams Search
     let liveQuery = supabase
       .from('livestreams')
-      .select('id, title, state, peak_viewers, category, profiles(display_name, username)')
+      .select('id, title, state, peak_viewers, category, profiles:profiles!livestreams_creator_id_fkey(display_name, username)')
       .in('state', ['live', 'scheduled'])
       .or(`title.ilike.${termFilter},category.ilike.${termFilter}`)
       .limit(limit);
