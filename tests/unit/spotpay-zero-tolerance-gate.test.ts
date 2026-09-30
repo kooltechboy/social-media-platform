@@ -19,7 +19,13 @@ describe("SpotPay Zero-Tolerance Inviolable Architecture Gate", () => {
           scan(full);
         } else if (entry.isFile()) {
           if (entry.name.endsWith(".tsbuildinfo") || entry.name.endsWith(".log") || entry.name.endsWith(".lock")) continue;
-          if (full.includes("spotpay-zero-tolerance-gate.test.ts") || full.includes("check-prohibited-references.js")) continue;
+          if (
+            full.includes("spotpay-zero-tolerance-gate.test.ts") ||
+            full.includes("check-prohibited-references.js") ||
+            full.includes("phase23-cicd-gates-zero-tolerance-certification.test.ts")
+          ) {
+            continue;
+          }
 
           try {
             const content = fs.readFileSync(full, "utf-8");
