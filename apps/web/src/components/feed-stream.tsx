@@ -535,7 +535,8 @@ export default function FeedStream({
     })();
 
     return () => {
-      supabase.getChannels().forEach(ch => supabase.removeChannel(ch));
+      const ch = supabase.getChannels().find((c) => c.topic.includes('feed_realtime_posts'));
+      if (ch) supabase.removeChannel(ch);
     };
   }, [currentUserId, mode]);
 
