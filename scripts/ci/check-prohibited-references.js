@@ -40,8 +40,12 @@ function scanDirectory(dir) {
       if (entry.name.endsWith(".tsbuildinfo") || entry.name.endsWith(".log") || entry.name.endsWith(".lock")) {
         continue;
       }
-      // Avoid scanning this scanner script itself
-      if (fullPath.includes("check-prohibited-references.js") || fullPath.includes("spotpay-zero-tolerance-gate.test.ts")) {
+      // Avoid scanning this scanner script and the test suites that test prohibited terms
+      if (
+        fullPath.includes("check-prohibited-references.js") ||
+        fullPath.includes("spotpay-zero-tolerance-gate.test.ts") ||
+        fullPath.includes("phase23-cicd-gates-zero-tolerance-certification.test.ts")
+      ) {
         continue;
       }
       try {
