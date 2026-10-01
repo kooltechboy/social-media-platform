@@ -143,6 +143,8 @@ export default function MessageThread({
   }, []);
 
   // Realtime Channel & Broadcast Subscription
+  const broadcastChannelRef = useRef<any>(null);
+
   useEffect(() => {
     const supabase = createSupabaseBrowserClient();
     if (!supabase) return;
@@ -243,7 +245,10 @@ export default function MessageThread({
       })
       .subscribe();
 
+    broadcastChannelRef.current = broadcastChannel;
+
     return () => {
+      broadcastChannelRef.current = null;
       supabase.removeChannel(changesChannel);
       supabase.removeChannel(broadcastChannel);
     };
@@ -251,11 +256,10 @@ export default function MessageThread({
 
   // Broadcast typing indicator
   function handleTyping() {
-    const supabase = createSupabaseBrowserClient();
-    if (!supabase) return;
+    if (!broadcastChannelRef.current) return;
 
     if (!typingTimeoutRef.current) {
-      supabase.channel(`broadcast:${conversationId}`).send({
+      broadcastChannelRef.current.send({
         type: 'broadcast',
         event: 'typing',
         payload: { userId: currentUserId, userName: 'User' },

@@ -50,6 +50,7 @@ const PUBLIC_EXEMPT_ROUTES = [
   '/live',
   '/communities',
   '/pages',
+  '/admin/bootstrap',
 ];
 
 import { checkRateLimit, getRateLimitHeaders, type RateLimitTier } from './lib/rate-limit/sliding-window';

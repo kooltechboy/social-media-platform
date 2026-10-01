@@ -217,7 +217,7 @@ describe('Phase 1: Functional Production Certification Suite', () => {
       const clientPath = path.join(rootDir, 'apps/web/src/components/messages/messages-center-client.tsx');
       const content = fs.readFileSync(clientPath, 'utf-8');
       expect(content).not.toContain("channel('public:messages:all')");
-      expect(content).toContain('conversation_id=in.');
+      expect(content).toContain('recipient_id=eq.');
     });
 
     it('send message action enforces burst rate limits and active membership', () => {

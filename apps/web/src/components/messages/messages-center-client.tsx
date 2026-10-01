@@ -212,57 +212,55 @@ export default function MessagesCenterClient({
       )
       .subscribe();
 
-    // 3. Subscribe to messages scoped strictly to the current user's conversations
-    // (Prevents global eavesdropping leak and stops cascading router.refresh churn across the platform)
-    const userConvIds = conversations.map((c) => c.id).filter(Boolean);
-    let messagesChannel: any = null;
+    // 3. Subscribe to real-time message notifications for the current user
+    // Uses standard Supabase Realtime 'recipient_id=eq.' filter to eliminate invalid in. filter
+    const messageNotifsChannel = supabase
+      .channel(`user_messages_notifs:${currentUserId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'notifications',
+          filter: `recipient_id=eq.${currentUserId}`,
+        },
+        (payload) => {
+          const newNotif = payload.new as any;
+          if (newNotif?.kind !== 'message') return;
+          const convId = newNotif.payload?.conversation_id || newNotif.entity_id;
+          if (!convId) return;
 
-    if (userConvIds.length > 0) {
-      const channelId = `user_messages:${currentUserId}:${userConvIds.slice(0, 10).join('-')}`;
-      messagesChannel = supabase
-        .channel(channelId)
-        .on(
-          'postgres_changes',
-          {
-            event: 'INSERT',
-            schema: 'public',
-            table: 'messages',
-            filter: `conversation_id=in.(${userConvIds.slice(0, 50).join(',')})`,
-          },
-          (payload) => {
-            const newMsg = payload.new as any;
-            if (!newMsg?.conversation_id) return;
-            setLocalConversations((prev) => {
-              const exists = prev.find((c) => c.id === newMsg.conversation_id);
-              if (!exists) return prev;
-              return prev
-                .map((c) =>
-                  c.id === newMsg.conversation_id
-                    ? {
-                        ...c,
-                        unreadCount: c.id === selectedId ? 0 : (c.unreadCount || 0) + 1,
-                        preview: newMsg.body || 'New message',
-                        last_message_at: newMsg.created_at,
-                      }
-                    : c
-                )
-                .sort((a, b) => {
-                  const timeA = a.last_message_at ? new Date(a.last_message_at).getTime() : 0;
-                  const timeB = b.last_message_at ? new Date(b.last_message_at).getTime() : 0;
-                  return timeB - timeA;
-                });
-            });
-          }
-        )
-        .subscribe();
-    }
+          setLocalConversations((prev) => {
+            const exists = prev.find((c) => c.id === convId);
+            if (!exists) {
+              router.refresh();
+              return prev;
+            }
+            return prev
+              .map((c) =>
+                c.id === convId
+                  ? {
+                      ...c,
+                      unreadCount: c.id === selectedId ? 0 : (c.unreadCount || 0) + 1,
+                      preview: newNotif.payload?.preview || 'New message',
+                      last_message_at: newNotif.created_at,
+                    }
+                  : c
+              )
+              .sort((a, b) => {
+                const timeA = a.last_message_at ? new Date(a.last_message_at).getTime() : 0;
+                const timeB = b.last_message_at ? new Date(b.last_message_at).getTime() : 0;
+                return timeB - timeA;
+              });
+          });
+        }
+      )
+      .subscribe();
 
     return () => {
       supabase.removeChannel(convMembersChannel);
       supabase.removeChannel(msgRequestsChannel);
-      if (messagesChannel) {
-        supabase.removeChannel(messagesChannel);
-      }
+      supabase.removeChannel(messageNotifsChannel);
     };
   }, [currentUserId, router, selectedId, conversations]);
 
