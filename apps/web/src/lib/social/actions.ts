@@ -17,6 +17,7 @@ import {
 import { parseMediaPayload, type StructuredMediaItem } from './media-utils';
 import { detectUrls, resolveContentUrl, type ResolvedContentMetadata } from '@caribbean/media';
 import { logger } from '../logger';
+import { isBannedTesterAccount, BANNED_TESTER_USER_IDS } from '../auth/banned-testers';
 export type { StructuredMediaItem };
 
 export interface PostActionState {
@@ -79,6 +80,11 @@ export interface StoryData {
 export async function createPostAction(_prev: PostActionState, formData: FormData): Promise<PostActionState> {
   const user = await getCurrentUser();
   if (!user) return { error: 'Please sign in to publish a post.' };
+
+  if (isBannedTesterAccount(user)) {
+    logger.warn('[createPostAction] Banned tester account blocked from posting', { userId: user.id, username: user.username });
+    return { error: 'Test accounts (Bravo Tester / Alpha Tester) are strictly prohibited from posting on this platform.' };
+  }
 
   const content = String(formData.get('content') ?? '').trim();
   const mediaItemsRaw = formData.get('media_items');
@@ -313,6 +319,16 @@ export async function createPostAction(_prev: PostActionState, formData: FormDat
     authorId = user.id;
     publisherType = 'personal';
     publisherEntityId = user.id;
+  }
+
+  if (
+    BANNED_TESTER_USER_IDS.has(authorId) ||
+    BANNED_TESTER_USER_IDS.has(publisherEntityId) ||
+    isBannedTesterAccount({ id: authorId }) ||
+    isBannedTesterAccount({ id: publisherEntityId })
+  ) {
+    logger.warn('[createPostAction] Banned tester identity blocked from posting', { authorId, publisherEntityId });
+    return { error: 'Test accounts (Bravo Tester / Alpha Tester) are strictly prohibited from posting on this platform.' };
   }
 
   // If country_id not explicitly supplied, fallback to profile's country
@@ -810,6 +826,10 @@ export async function createStoryAction(input: {
   const user = await getCurrentUser();
   if (!user) return { storyId: null, error: 'Please sign in to share a Moment.' };
 
+  if (isBannedTesterAccount(user)) {
+    return { storyId: null, error: 'Test accounts (Bravo Tester / Alpha Tester) are strictly prohibited from publishing.' };
+  }
+
   const supabase = await createSupabaseServerClient();
   if (!supabase) return { storyId: null, error: 'Service is temporarily unavailable.' };
 
@@ -1093,6 +1113,10 @@ export async function repostPostAction(
 ): Promise<{ success: boolean; postId?: string; post?: any; error: string | null }> {
   const user = await getCurrentUser();
   if (!user) return { success: false, error: 'Sign in to share this post.' };
+
+  if (isBannedTesterAccount(user)) {
+    return { success: false, error: 'Test accounts (Bravo Tester / Alpha Tester) are strictly prohibited from sharing posts.' };
+  }
 
   const supabase = await createSupabaseServerClient();
   if (!supabase) return { success: false, error: 'Service is temporarily unavailable.' };

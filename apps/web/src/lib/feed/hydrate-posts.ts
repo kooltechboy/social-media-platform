@@ -1,6 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { ReactionType } from '../../components/reactions/reaction-picker';
 import type { FeedPostData } from '../../components/feed-stream';
+import { isBannedTesterAccount } from '../auth/banned-testers';
 
 export function formatRelativeTime(iso?: string): string {
   if (!iso) return 'just now';
@@ -33,6 +34,23 @@ export async function hydratePostsEngagement(
   options: HydratePostsOptions = {}
 ): Promise<FeedPostData[]> {
   if (!rawPosts || rawPosts.length === 0) {
+    return [];
+  }
+
+  // Inviolable Rule: Exclude all posts from Bravo Tester and Alpha Tester
+  rawPosts = rawPosts.filter((p) => {
+    const rawProfile = p.profiles;
+    const profile = Array.isArray(rawProfile) ? rawProfile[0] : rawProfile;
+    return !isBannedTesterAccount({
+      id: p.author_id || p.authorId,
+      username: profile?.username || p.handle,
+      displayName: profile?.display_name || p.author,
+      author: p.author,
+      handle: p.handle,
+    });
+  });
+
+  if (rawPosts.length === 0) {
     return [];
   }
 

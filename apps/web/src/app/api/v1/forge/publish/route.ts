@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { validateForgePublishPayload, type ForgePublishPayload, type ForgePublishResult } from '@caribbean/api';
 import { createSupabaseServerClient } from '../../../../../lib/supabase/server';
+import { isBannedTesterAccount, BANNED_TESTER_USER_IDS } from '../../../../../lib/auth/banned-testers';
 
 export const dynamic = 'force-dynamic';
 
@@ -52,6 +53,13 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(
       { success: false, platform: 'tukubi', error: validation.errors.join('; '), timestamp: new Date().toISOString() },
       { status: 400 }
+    );
+  }
+
+  if (payload.creatorId && (BANNED_TESTER_USER_IDS.has(payload.creatorId) || isBannedTesterAccount({ id: payload.creatorId }))) {
+    return NextResponse.json(
+      { success: false, platform: 'tukubi', error: 'Forbidden: Test accounts (Bravo Tester / Alpha Tester) are strictly prohibited from publishing on this platform.', timestamp: new Date().toISOString() },
+      { status: 403 }
     );
   }
 

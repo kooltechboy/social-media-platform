@@ -67,6 +67,9 @@ export async function buildRankedFeed(
     // Apply status filter: published or null (not scheduled/draft/deleted)
     postQuery = postQuery.or('post_status.is.null,post_status.eq.published');
 
+    // Inviolable Rule: Exclude all posts from Bravo Tester and Alpha Tester
+    postQuery = postQuery.not('author_id', 'in', '("a5df3d20-e923-4995-ab94-544fef75a751","7102174d-57f0-4140-bbba-5ac21455d777")');
+
     // Apply mode filters
     if (mode === 'following') {
       const { data: follows } = await supabase.from('follows').select('following_id').eq('follower_id', userId);
@@ -163,6 +166,7 @@ export async function buildRankedFeed(
             businesses:businesses!posts_page_id_fkey(id, name, slug, avatar_url, is_verified)
           `)
           .or('post_status.is.null,post_status.eq.published')
+          .not('author_id', 'in', '("a5df3d20-e923-4995-ab94-544fef75a751","7102174d-57f0-4140-bbba-5ac21455d777")')
           .order('created_at', { ascending: false })
           .limit(30);
 

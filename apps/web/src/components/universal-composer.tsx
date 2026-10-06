@@ -38,6 +38,7 @@ import {
   hasMeaningfulDraftContent,
   subscribeToDraftChanges,
 } from '../lib/social/draft-manager';
+import { isBannedTesterAccount } from '../lib/auth/banned-testers';
 import { createSupabaseBrowserClient } from '../lib/supabase/browser';
 import { useTranslation } from '@caribbean/localization';
 import { generateCreatorContentPlan } from '@caribbean/ai';
@@ -334,6 +335,7 @@ export default function UniversalComposer({
   const [aiTooltip, setAiTooltip] = useState<string | null>(null);
 
   const firstName = displayName.split(' ')[0]?.replace('@', '') || 'Friend';
+  const isBannedTester = isBannedTesterAccount({ id: userId, displayName });
 
   const isPublishingRef = useRef(false);
 
@@ -806,6 +808,11 @@ export default function UniversalComposer({
   async function handlePublish(e: React.FormEvent) {
     e.preventDefault();
     if (isPublishingRef.current) return;
+
+    if (isBannedTester) {
+      setErrorMessage('Test accounts (Bravo Tester / Alpha Tester) are strictly prohibited from posting on this platform.');
+      return;
+    }
 
     const hasMedia = mediaList.length > 0;
     const hasContent = content.trim().length > 0;
@@ -2231,6 +2238,12 @@ export default function UniversalComposer({
                 </div>
               )}
 
+              {isBannedTester && (
+                <div className="w-full p-3 bg-rose-950/80 border border-rose-500/50 rounded-2xl text-rose-200 text-xs font-bold flex items-center gap-2">
+                  <span>⚠️ Test accounts (Bravo Tester / Alpha Tester) are strictly prohibited from publishing on TUKUBI.</span>
+                </div>
+              )}
+
               {/* Submit / Action Buttons */}
               <div className="flex items-center gap-2 w-full sm:w-auto">
                 <button
@@ -2245,6 +2258,7 @@ export default function UniversalComposer({
                   type="submit"
                   disabled={
                     isSubmitting ||
+                    isBannedTester ||
                     (!content.trim() &&
                       mediaList.length === 0 &&
                       !pollQuestion.trim() &&

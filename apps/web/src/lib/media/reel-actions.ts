@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { createSupabaseServerClient, getCurrentUser } from '../supabase/server';
+import { isBannedTesterAccount } from '../auth/banned-testers';
 
 export interface ReelActionResult {
   success: boolean;
@@ -200,6 +201,10 @@ export async function recordReelViewAction(reelId: string, watchedSeconds: numbe
 export async function publishReelAction(formData: FormData): Promise<ReelActionResult> {
   const user = await getCurrentUser();
   if (!user) return { success: false, error: 'Sign in to publish reels.' };
+
+  if (isBannedTesterAccount(user)) {
+    return { success: false, error: 'Test accounts (Bravo Tester / Alpha Tester) are strictly prohibited from publishing reels.' };
+  }
 
   const title = String(formData.get('title') ?? '').trim();
   const soundId = String(formData.get('soundId') ?? '').trim();

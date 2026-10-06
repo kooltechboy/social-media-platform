@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { createSupabaseServerClient, getCurrentUser } from '../supabase/server';
+import { isBannedTesterAccount } from '../auth/banned-testers';
 
 export interface PageActionResult {
   error: string | null;
@@ -618,6 +619,10 @@ export async function createPagePostAction(
 ): Promise<PageActionResult> {
   const user = await getCurrentUser();
   if (!user) return { error: 'Sign in required.' };
+
+  if (isBannedTesterAccount(user)) {
+    return { error: 'Test accounts (Bravo Tester / Alpha Tester) are strictly prohibited from posting.' };
+  }
 
   if (!content.trim() && mediaUrls.length === 0) {
     return { error: 'Post content cannot be empty.' };
