@@ -11,12 +11,15 @@ import {
 import { normalizeUrl } from './url-detector';
 import { TukubiMediaProvider } from './providers/tukubi-provider';
 import { YouTubeProvider } from './providers/youtube-provider';
+import { DirectMediaProvider } from './providers/direct-media-provider';
 import { SpotifyProvider } from './providers/spotify-provider';
 import { SoundCloudProvider } from './providers/soundcloud-provider';
 import { AppleProvider } from './providers/apple-provider';
 import { TikTokProvider } from './providers/tiktok-provider';
 import { VimeoProvider } from './providers/vimeo-provider';
 import { TwitterProvider } from './providers/twitter-provider';
+import { InstagramProvider } from './providers/instagram-provider';
+import { FacebookProvider } from './providers/facebook-provider';
 import { LocationProvider } from './providers/location-provider';
 import { GenericWebProvider } from './providers/generic-provider';
 
@@ -40,12 +43,15 @@ export class ContentResolverEngine {
     this.providers = [
       new TukubiMediaProvider(),
       new YouTubeProvider(),
+      new DirectMediaProvider(),
       new SpotifyProvider(),
       new SoundCloudProvider(),
       new AppleProvider(),
       new TikTokProvider(),
       new VimeoProvider(),
       new TwitterProvider(),
+      new InstagramProvider(),
+      new FacebookProvider(),
       new LocationProvider(),
     ];
   }

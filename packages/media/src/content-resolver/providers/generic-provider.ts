@@ -173,6 +173,35 @@ export class GenericWebProvider extends BaseContentProvider {
       return this.buildFallback(url);
     }
   }
+
+  public override buildFallback(
+    url: URL,
+    errorMessage?: string,
+    status: import('../types').ContentResolutionStatus = 'fallback'
+  ): ResolvedContentMetadata {
+    const domain = extractDomain(url.toString());
+    const pathPart = url.pathname.replace(/^\/+/, '').split('/')[0];
+    const cleanPath = pathPart ? decodeURIComponent(pathPart).replace(/[-_]+/g, ' ') : '';
+    const title = cleanPath ? `${domain} — ${cleanPath}` : domain;
+    return {
+      url: url.toString(),
+      normalizedUrl: url.toString(),
+      canonicalUrl: url.toString(),
+      provider: 'generic',
+      providerDisplayName: domain,
+      contentType: 'website',
+      title,
+      description: `Visit ${domain}`,
+      siteName: domain,
+      faviconUrl: this.getFaviconUrl(url),
+      isPlayable: false,
+      canEmbed: false,
+      status,
+      errorMessage,
+      resolvedAt: new Date().toISOString(),
+    };
+  }
 }
 
 export { GenericWebProvider as GenericProvider };
+

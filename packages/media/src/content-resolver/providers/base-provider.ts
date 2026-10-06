@@ -86,6 +86,7 @@ export abstract class BaseContentProvider implements ContentProvider {
     embedHtml?: string;
     aspectRatio?: string;
     isPlayable?: boolean;
+    canEmbed?: boolean;
     extra?: Record<string, unknown>;
     status?: ContentResolutionStatus;
   }): ResolvedContentMetadata {
@@ -115,6 +116,7 @@ export abstract class BaseContentProvider implements ContentProvider {
       embedHtml: params.embedHtml,
       aspectRatio: params.aspectRatio,
       isPlayable: params.isPlayable ?? false,
+      canEmbed: params.canEmbed ?? (Boolean(params.embedUrl) || Boolean(params.embedHtml)),
       extra: params.extra,
       status: params.status || 'resolved',
       resolvedAt: new Date().toISOString(),

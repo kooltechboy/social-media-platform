@@ -346,6 +346,26 @@ export async function createPostAction(_prev: PostActionState, formData: FormDat
   // Explicit pinning check (official or author with permission)
   const isPinnedExplicit = formData.get('is_pinned') === 'true';
 
+  // Publisher & Client Request Idempotency Key
+  const idempotencyKeyRaw = formData.get('idempotency_key') || formData.get('client_publish_id') || formData.get('client_request_id');
+  const idempotencyKey = typeof idempotencyKeyRaw === 'string' && idempotencyKeyRaw.trim() ? idempotencyKeyRaw.trim() : null;
+
+  // Extract multi-link previews or single link preview metadata
+  const linkPreviewsRaw = formData.get('link_previews');
+  let linkPreviews: ResolvedContentMetadata[] = [];
+  if (typeof linkPreviewsRaw === 'string' && linkPreviewsRaw.trim()) {
+    try {
+      const parsed = JSON.parse(linkPreviewsRaw);
+      if (Array.isArray(parsed)) {
+        linkPreviews = parsed;
+      } else if (parsed && typeof parsed === 'object') {
+        linkPreviews = [parsed];
+      }
+    } catch {
+      linkPreviews = [];
+    }
+  }
+
   // Extract or auto-resolve link preview metadata
   const linkPreviewRaw = formData.get('link_preview');
   let linkPreview: ResolvedContentMetadata | null = null;
@@ -357,6 +377,13 @@ export async function createPostAction(_prev: PostActionState, formData: FormDat
     }
   }
 
+  // Synchronize single preview and multi-preview array
+  if (linkPreviews.length > 0 && !linkPreview) {
+    linkPreview = linkPreviews[0];
+  } else if (linkPreview && linkPreviews.length === 0) {
+    linkPreviews = [linkPreview];
+  }
+
   if (!linkPreview && content) {
     const detected = detectUrls(content);
     if (detected.hasUrls && detected.primaryUrl) {
@@ -364,6 +391,9 @@ export async function createPostAction(_prev: PostActionState, formData: FormDat
         const auto = await resolveContentUrl(detected.primaryUrl);
         if (auto && auto.status !== 'failed') {
           linkPreview = auto;
+          if (linkPreviews.length === 0) {
+            linkPreviews = [auto];
+          }
         }
       } catch {
         // Fallback
@@ -371,91 +401,137 @@ export async function createPostAction(_prev: PostActionState, formData: FormDat
     }
   }
 
-  // Idempotency: Deduplicate identical submissions sent within a 15-second window
-  try {
-    const recentThreshold = new Date(Date.now() - 15000).toISOString();
-    let dupQuery = supabase
-      .from('posts')
-      .select(`
-        id, content, created_at, media_urls, cultural_tags, likes_count, comments_count, shares_count, visibility, 
-        community_id, country_id, page_id, is_official, official_content_type, is_pinned, link_preview,
-        profiles:profiles!posts_author_id_fkey(id, display_name, username, avatar_url, is_verified, is_official),
-        businesses:businesses!posts_page_id_fkey(id, name, slug, avatar_url, is_verified)
-      `)
-      .eq('author_id', authorId)
-      .gt('created_at', recentThreshold)
-      .order('created_at', { ascending: false })
-      .limit(1);
+  // Helper to format an existing replayed post deterministically
+  const buildReplayedPostResponse = (existing: any) => {
+    const rawProf = existing.profiles;
+    const prof = Array.isArray(rawProf) ? rawProf[0] : rawProf;
+    const rawBiz = existing.businesses;
+    const biz = Array.isArray(rawBiz) ? rawBiz[0] : rawBiz;
 
-    if (content) {
-      dupQuery = dupQuery.eq('content', content);
+    let dAuthor = prof?.display_name || user.displayName || 'Caribbean Member';
+    let dHandle = prof?.username || user.username || 'member';
+    let dAvatar = prof?.avatar_url || user.avatarUrl || null;
+    let dVerified = prof?.is_verified ?? true;
+
+    if (publisherType === 'page' && biz) {
+      dAuthor = biz.name;
+      dHandle = biz.slug;
+      dAvatar = biz.avatar_url || null;
+      dVerified = biz.is_verified ?? true;
+    } else if (publisherType === 'official' || isOfficialPost) {
+      dAuthor = 'TUKUBI';
+      dHandle = 'tukubi';
+      dAvatar = prof?.avatar_url || '/brand/tukubi-emblem.png';
+      dVerified = true;
     }
-    const { data: recentDups } = await dupQuery;
-    if (recentDups && recentDups.length > 0) {
-      const existing = recentDups[0];
-      logger.info('[createPostAction] Idempotent post replay detected; returning existing post', {
-        existingPostId: existing.id,
-        authorId,
+
+    return {
+      error: null,
+      postId: existing.id,
+      post: {
+        id: existing.id,
+        author: dAuthor,
+        handle: dHandle,
+        avatarUrl: dAvatar,
+        verified: dVerified,
+        isOfficial: isOfficialPost,
+        isPinned: Boolean(existing.is_pinned),
+        officialContentType: officialContentType || undefined,
         publisherType,
-      });
-      const { track } = await import('../monitoring/analytics');
-      track('post_publish_replayed', { postId: existing.id, publisherType }, user.id);
+        publisherId: publisherEntityId,
+        pageId: pageId || undefined,
+        pageSlug: biz?.slug,
+        pageName: biz?.name,
+        createdByUserId: user.id,
+        location: 'Caribbean 🌴',
+        time: 'just now',
+        content: existing.content || '',
+        mediaUrls: existing.media_urls || [],
+        mediaItems,
+        linkPreview: existing.link_preview || linkPreview || null,
+        linkPreviews: existing.link_previews || linkPreviews || (existing.link_preview ? [existing.link_preview] : []),
+        culturalTags: existing.cultural_tags || [],
+        likes: existing.likes_count || 0,
+        reposts: existing.shares_count || 0,
+        comments: existing.comments_count || 0,
+        category: 'caribbean' as const,
+        communityId: existing.community_id || undefined,
+        countryId: existing.country_id || undefined,
+      },
+    };
+  };
 
-      const rawProf = existing.profiles;
-      const prof = Array.isArray(rawProf) ? rawProf[0] : rawProf;
-      const rawBiz = existing.businesses;
-      const biz = Array.isArray(rawBiz) ? rawBiz[0] : rawBiz;
+  // Idempotency: 1. Authoritative check by client idempotency key (if provided)
+  if (idempotencyKey) {
+    try {
+      const { data: existingByKey } = await supabase
+        .from('posts')
+        .select(`
+          id, content, created_at, media_urls, cultural_tags, likes_count, comments_count, shares_count, visibility, 
+          community_id, country_id, page_id, is_official, official_content_type, is_pinned, link_preview,
+          profiles:profiles!posts_author_id_fkey(id, display_name, username, avatar_url, is_verified, is_official),
+          businesses:businesses!posts_page_id_fkey(id, name, slug, avatar_url, is_verified)
+        `)
+        .eq('author_id', authorId)
+        .eq('idempotency_key', idempotencyKey)
+        .maybeSingle();
 
-      let dAuthor = prof?.display_name || user.displayName || 'Caribbean Member';
-      let dHandle = prof?.username || user.username || 'member';
-      let dAvatar = prof?.avatar_url || user.avatarUrl || null;
-      let dVerified = prof?.is_verified ?? true;
-
-      if (publisherType === 'page' && biz) {
-        dAuthor = biz.name;
-        dHandle = biz.slug;
-        dAvatar = biz.avatar_url || null;
-        dVerified = biz.is_verified ?? true;
-      } else if (publisherType === 'official' || isOfficialPost) {
-        dAuthor = 'TUKUBI';
-        dHandle = 'tukubi';
-        dAvatar = prof?.avatar_url || '/brand/tukubi-emblem.png';
-        dVerified = true;
-      }
-
-      return {
-        error: null,
-        postId: existing.id,
-        post: {
-          id: existing.id,
-          author: dAuthor,
-          handle: dHandle,
-          avatarUrl: dAvatar,
-          verified: dVerified,
-          isOfficial: isOfficialPost,
-          isPinned: Boolean(existing.is_pinned),
-          officialContentType: officialContentType || undefined,
+      if (existingByKey) {
+        logger.info('[createPostAction] Idempotent post replay by key detected; returning existing post', {
+          existingPostId: existingByKey.id,
+          authorId,
+          idempotencyKey,
           publisherType,
-          publisherId: publisherEntityId,
-          pageId: pageId || undefined,
-          pageSlug: biz?.slug,
-          pageName: biz?.name,
-          createdByUserId: user.id,
-          location: 'Caribbean 🌴',
-          time: 'just now',
-          content: existing.content || '',
-          mediaUrls: existing.media_urls || [],
-          mediaItems,
-          linkPreview: existing.link_preview || linkPreview || null,
-          culturalTags: existing.cultural_tags || [],
-          likes: existing.likes_count || 0,
-          reposts: existing.shares_count || 0,
-          comments: existing.comments_count || 0,
-          category: 'caribbean' as const,
-          communityId: existing.community_id || undefined,
-          countryId: existing.country_id || undefined,
-        },
-      };
+        });
+        const { track } = await import('../monitoring/analytics');
+        track('post_publish_replayed', { postId: existingByKey.id, publisherType, method: 'idempotency_key' }, user.id);
+        return buildReplayedPostResponse(existingByKey);
+      }
+    } catch (keyErr) {
+      // Column may not yet exist in PostgREST schema cache; proceed to window fallback
+    }
+  }
+
+  // Idempotency: 2. Fallback deduplicate identical submissions sent within a 15-second window
+  try {
+    const hasMeaningfulDedupContent = Boolean((content && content.trim()) || mediaUrls.length > 0);
+    if (hasMeaningfulDedupContent) {
+      const recentThreshold = new Date(Date.now() - 15000).toISOString();
+      let dupQuery = supabase
+        .from('posts')
+        .select(`
+          id, content, created_at, media_urls, cultural_tags, likes_count, comments_count, shares_count, visibility, 
+          community_id, country_id, page_id, is_official, official_content_type, is_pinned, link_preview,
+          profiles:profiles!posts_author_id_fkey(id, display_name, username, avatar_url, is_verified, is_official),
+          businesses:businesses!posts_page_id_fkey(id, name, slug, avatar_url, is_verified)
+        `)
+        .eq('author_id', authorId)
+        .gt('created_at', recentThreshold)
+        .order('created_at', { ascending: false })
+        .limit(1);
+
+      if (content && content.trim()) {
+        dupQuery = dupQuery.eq('content', content.trim());
+      }
+      const { data: recentDups } = await dupQuery;
+      if (recentDups && recentDups.length > 0) {
+        const existing = recentDups[0];
+        // If content was empty, only match if media urls match as well
+        const mediaMatches = !content?.trim()
+          ? JSON.stringify(existing.media_urls || []) === JSON.stringify(mediaUrls)
+          : true;
+
+        if (mediaMatches) {
+          logger.info('[createPostAction] Idempotent post replay detected; returning existing post', {
+            existingPostId: existing.id,
+            authorId,
+            publisherType,
+          });
+          const { track } = await import('../monitoring/analytics');
+          track('post_publish_replayed', { postId: existing.id, publisherType, method: 'time_window' }, user.id);
+          return buildReplayedPostResponse(existing);
+        }
+      }
     }
   } catch (dedupErr) {
     logger.warn('[createPostAction] Non-blocking idempotency check skipped:', { error: String(dedupErr) });
@@ -486,7 +562,7 @@ export async function createPostAction(_prev: PostActionState, formData: FormDat
     businesses:businesses!posts_page_id_fkey(id, name, slug, avatar_url, is_verified)
   `;
 
-  // Extended schema insert payload (when 00097 migration columns are present)
+  // Extended schema insert payload (when 00097 & 00107 migration columns are present)
   const extendedInsertPayload = {
     ...coreInsertPayload,
     created_by_user_id: user.id,
@@ -494,6 +570,8 @@ export async function createPostAction(_prev: PostActionState, formData: FormDat
     publisher_entity_id: publisherEntityId,
     shared_post_id: sharedPostId,
     share_commentary: shareCommentary,
+    idempotency_key: idempotencyKey,
+    link_previews: linkPreviews,
   };
 
   let insertedPost: any = null;
@@ -570,6 +648,37 @@ export async function createPostAction(_prev: PostActionState, formData: FormDat
     }
   }
 
+  // Insert associated post_external_media rows for universal external content & rich embeds
+  if (supabase && linkPreviews.length > 0 && data?.id) {
+    try {
+      const extMediaRows = linkPreviews.map((item) => ({
+        post_id: data.id,
+        provider: item.provider || 'generic',
+        media_type: item.contentType || 'link',
+        original_url: item.url,
+        canonical_url: item.normalizedUrl || item.url,
+        external_id: item.extra?.id ? String(item.extra.id) : null,
+        title: item.title || null,
+        description: item.description || null,
+        thumbnail_url: item.thumbnailUrl || null,
+        embed_url: item.embedUrl || null,
+        author_name: item.authorName || null,
+        author_url: item.authorUrl || null,
+        duration_seconds: item.durationSeconds || null,
+        aspect_ratio: item.aspectRatio || '16:9',
+        metadata: item.extra || {},
+        embed_allowed: item.canEmbed !== false,
+        resolution_status: item.status || 'resolved',
+      }));
+      const { error: extMediaErr } = await supabase.from('post_external_media').insert(extMediaRows);
+      if (extMediaErr) {
+        logger.warn('[createPostAction] post_external_media insert notice:', { error: extMediaErr.message });
+      }
+    } catch (e) {
+      logger.warn('[createPostAction] post_external_media insert error:', { error: String(e) });
+    }
+  }
+
   // If this was a re-share, record in post_shares table
   if (sharedPostId) {
     try {
@@ -628,6 +737,7 @@ export async function createPostAction(_prev: PostActionState, formData: FormDat
     mediaUrls: data.media_urls || [],
     mediaItems,
     linkPreview: data.link_preview || linkPreview || null,
+    linkPreviews: (data as any).link_previews || linkPreviews || (data.link_preview ? [data.link_preview] : []),
     culturalTags: data.cultural_tags || [],
     likes: data.likes_count || 0,
     reposts: data.shares_count || 0,

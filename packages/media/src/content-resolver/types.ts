@@ -29,6 +29,7 @@ export type ContentProviderName =
   | 'tukubi_video'
   | 'google_maps'
   | 'apple_maps'
+  | 'direct_media'
   | 'generic';
 
 export type ContentResolutionStatus =
@@ -63,6 +64,7 @@ export interface ResolvedContentMetadata {
   embedHtml?: string;
   aspectRatio?: string;
   isPlayable: boolean;
+  canEmbed?: boolean;
   extra?: Record<string, unknown>;
   status: ContentResolutionStatus;
   httpStatus?: number;

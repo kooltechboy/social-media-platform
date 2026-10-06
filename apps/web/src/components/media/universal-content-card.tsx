@@ -23,6 +23,31 @@ import TukubiImage from '../ui/tukubi-image';
 import TukubiAudioPlayer from './tukubi-audio-player';
 import TukubiVideoPlayer from './tukubi-video-player';
 
+const ALLOWED_EMBED_ORIGINS = [
+  'https://www.youtube.com',
+  'https://www.youtube-nocookie.com',
+  'https://player.vimeo.com',
+  'https://open.spotify.com',
+  'https://w.soundcloud.com',
+  'https://embed.podcasts.apple.com',
+  'https://embed.music.apple.com',
+  'https://www.tiktok.com',
+];
+
+function isSafeEmbedUrl(urlStr?: string): boolean {
+  if (!urlStr) return false;
+  try {
+    const u = new URL(urlStr);
+    if (u.protocol !== 'https:') return false;
+    return ALLOWED_EMBED_ORIGINS.some((origin) => {
+      const o = new URL(origin);
+      return u.hostname === o.hostname || u.hostname.endsWith(`.${o.hostname}`);
+    });
+  } catch {
+    return false;
+  }
+}
+
 export interface UniversalContentCardProps {
   metadata: ResolvedContentMetadata;
   compact?: boolean;
@@ -60,7 +85,7 @@ export default function UniversalContentCard({
   } = metadata;
 
   // 1. TUKUBI NATIVE AUDIO / DIRECT AUDIO STREAM
-  if (contentType === 'audio' && (provider === 'tukubi_sound' || extra?.audioUrl || (embedUrl && (embedUrl.endsWith('.wav') || embedUrl.endsWith('.mp3'))))) {
+  if (contentType === 'audio' && (provider === 'tukubi_sound' || provider === 'direct_media' || extra?.audioUrl || (embedUrl && (embedUrl.endsWith('.wav') || embedUrl.endsWith('.mp3'))))) {
     const audioSrc = (extra?.audioUrl as string) || embedUrl || url;
     return (
       <div className={`relative ${className}`}>
@@ -88,7 +113,7 @@ export default function UniversalContentCard({
   }
 
   // 2. TUKUBI NATIVE VIDEO / DIRECT MP4 STREAM
-  if (contentType === 'video' && (provider === 'tukubi_video' || extra?.videoUrl || (embedUrl && embedUrl.endsWith('.mp4')))) {
+  if (contentType === 'video' && (provider === 'tukubi_video' || provider === 'direct_media' || extra?.videoUrl || (embedUrl && embedUrl.endsWith('.mp4')))) {
     const videoSrc = (extra?.videoUrl as string) || embedUrl || url;
     return (
       <div className={`relative rounded-2xl overflow-hidden ${className}`}>
@@ -207,28 +232,34 @@ export default function UniversalContentCard({
 
       {/* A. VIDEO PLAYER / EMBED / THUMBNAIL */}
       {contentType === 'video' && (
-        <div className="relative w-full aspect-video bg-black/80 overflow-hidden">
-          {isPlayingEmbed && embedUrl ? (
+        <div className={aspectRatio === '9:16' || extra?.isShort ? 'relative w-full max-w-[320px] mx-auto aspect-[9/16] bg-black/90 rounded-xl overflow-hidden' : 'relative w-full aspect-video bg-black/80 overflow-hidden'}>
+          {isPlayingEmbed && embedUrl && isSafeEmbedUrl(embedUrl) && metadata.canEmbed !== false ? (
             <iframe
               src={embedUrl}
               className="w-full h-full border-0"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
               allowFullScreen
+              sandbox="allow-scripts allow-same-origin allow-presentation allow-popups"
+              loading="lazy"
               title={title}
             />
           ) : (
             <div
               className="relative w-full h-full cursor-pointer group/thumb"
               onClick={() => {
-                if (embedUrl) setIsPlayingEmbed(true);
+                if (embedUrl && isSafeEmbedUrl(embedUrl) && metadata.canEmbed !== false) {
+                  setIsPlayingEmbed(true);
+                } else if (url) {
+                  window.open(url, '_blank', 'noopener,noreferrer');
+                }
               }}
             >
               {thumbnailUrl ? (
                 <TukubiImage
                   src={thumbnailUrl}
                   alt={title}
-                  width={640}
-                  height={360}
+                  width={aspectRatio === '9:16' || extra?.isShort ? 360 : 640}
+                  height={aspectRatio === '9:16' || extra?.isShort ? 640 : 360}
                   objectFit="cover"
                   className="w-full h-full group-hover/thumb:scale-102 transition-transform duration-300"
                 />
@@ -241,11 +272,18 @@ export default function UniversalContentCard({
               {/* Gradient Overlay */}
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
 
-              {/* Centered Play Button */}
-              {embedUrl && (
+              {/* Centered Play Button (or External Link if cannot embed) */}
+              {embedUrl && isSafeEmbedUrl(embedUrl) && metadata.canEmbed !== false ? (
                 <div className="absolute inset-0 flex items-center justify-center">
                   <div className="w-14 h-14 rounded-full bg-gradient-to-tr from-brand-caribbeanSea to-brand-sunriseCoral text-slate-950 flex items-center justify-center shadow-2xl group-hover/thumb:scale-110 transition-transform">
                     <Play className="w-6 h-6 fill-current ml-0.5" />
+                  </div>
+                </div>
+              ) : (
+                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover/thumb:opacity-100 transition-opacity">
+                  <div className="px-3.5 py-1.5 rounded-full bg-black/80 text-white font-bold text-xs flex items-center gap-1.5 backdrop-blur-sm border border-white/20">
+                    <span>Watch on {providerDisplayName}</span>
+                    <ExternalLink className="w-3.5 h-3.5" />
                   </div>
                 </div>
               )}
@@ -268,11 +306,17 @@ export default function UniversalContentCard({
       )}
 
       {/* B. AUDIO / PODCAST EMBED (Spotify, Apple, SoundCloud) */}
-      {(contentType === 'audio' || contentType === 'podcast') && embedHtml && (
-        <div
-          className="w-full p-2 bg-black/40 border-b border-white/8"
-          dangerouslySetInnerHTML={{ __html: embedHtml }}
-        />
+      {(contentType === 'audio' || contentType === 'podcast') && embedUrl && isSafeEmbedUrl(embedUrl) && metadata.canEmbed !== false && (
+        <div className="w-full h-[152px] bg-black/40 border-b border-white/8 overflow-hidden">
+          <iframe
+            src={embedUrl}
+            className="w-full h-full border-0"
+            allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+            loading="lazy"
+            sandbox="allow-scripts allow-same-origin allow-presentation allow-popups"
+            title={title}
+          />
+        </div>
       )}
 
       {/* C. HERO IMAGE FOR ARTICLES & PRODUCTS */}

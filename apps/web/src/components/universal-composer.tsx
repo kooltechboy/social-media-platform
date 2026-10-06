@@ -39,6 +39,14 @@ import {
   subscribeToDraftChanges,
 } from '../lib/social/draft-manager';
 import { isBannedTesterAccount } from '../lib/auth/banned-testers';
+import {
+  type PostingState,
+  type PostFailureInfo,
+  generateCorrelationId,
+  generateIdempotencyKey,
+  formatFriendlyErrorMessage,
+  isRetryableError,
+} from '../lib/social/posting-state-machine';
 import { createSupabaseBrowserClient } from '../lib/supabase/browser';
 import { useTranslation } from '@caribbean/localization';
 import { generateCreatorContentPlan } from '@caribbean/ai';
@@ -322,11 +330,25 @@ export default function UniversalComposer({
   const videoInputRef = useRef<HTMLInputElement>(null);
   const reelInputRef = useRef<HTMLInputElement>(null);
 
-  // Status & submission
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  // Production-Grade Posting State Machine & Observability
+  const [postingState, setPostingState] = useState<PostingState>('idle');
+  const [failureInfo, setFailureInfo] = useState<PostFailureInfo | null>(null);
   const [uploadProgressText, setUploadProgressText] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [clientPublishId, setClientPublishId] = useState<string>(() => generateIdempotencyKey(userId));
+
+  // Request Cancellation & In-Flight Tracking
+  const urlResolverAbortRef = useRef<AbortController | null>(null);
+  const publishAbortRef = useRef<AbortController | null>(null);
+  const isPublishingRef = useRef(false);
+
+  // Inviolable Rule: Zero Ghost Errors — immediately clear error when user edits or changes state
+  const clearErrorState = React.useCallback(() => {
+    setErrorMessage(null);
+    setFailureInfo(null);
+    setPostingState((prev) => (prev === 'failed' ? 'editing' : prev));
+  }, []);
 
   const [isGeneratingCaptions, setIsGeneratingCaptions] = useState(false);
   const [isGeneratingHashtags, setIsGeneratingHashtags] = useState(false);
@@ -337,9 +359,7 @@ export default function UniversalComposer({
   const firstName = displayName.split(' ')[0]?.replace('@', '') || 'Friend';
   const isBannedTester = isBannedTesterAccount({ id: userId, displayName });
 
-  const isPublishingRef = useRef(false);
-
-  // Restore draft on mount
+  // Authoritative draft restoration on mount
   useEffect(() => {
     try {
       const saved = getComposerDraft();
@@ -351,6 +371,25 @@ export default function UniversalComposer({
         if (saved.pollOptions) setPollOptions(saved.pollOptions);
         if (saved.selectedCommunityId) setSelectedCommunityId(saved.selectedCommunityId);
         if (saved.selectedCountryId) setSelectedCountryId(saved.selectedCountryId);
+        if (Array.isArray(saved.linkPreviews) && saved.linkPreviews.length > 0) {
+          setResolvedLinkPreviews(saved.linkPreviews);
+        }
+        if (Array.isArray(saved.mediaSummary) && saved.mediaSummary.length > 0) {
+          const restoredMedia: UploadedMediaItem[] = saved.mediaSummary
+            .filter((m) => m.uploadedUrl)
+            .map((m) => ({
+              id: m.id || `restored_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+              file: undefined as any,
+              previewUrl: m.uploadedUrl!,
+              uploadedUrl: m.uploadedUrl!,
+              type: m.type,
+              caption: '',
+            }));
+          if (restoredMedia.length > 0) {
+            setMediaList(restoredMedia);
+          }
+        }
+        setIsExpanded(true);
       }
     } catch {
       // Ignore
@@ -442,8 +481,23 @@ export default function UniversalComposer({
     mediaList,
   ]);
 
-  const handleDiscardDraft = () => {
+  const resetComposer = React.useCallback(() => {
+    // Abort in-flight operations
+    if (urlResolverAbortRef.current) {
+      urlResolverAbortRef.current.abort();
+      urlResolverAbortRef.current = null;
+    }
+    if (publishAbortRef.current) {
+      publishAbortRef.current.abort();
+      publishAbortRef.current = null;
+    }
+
     setContent('');
+    mediaList.forEach((m) => {
+      if (m.previewUrl?.startsWith('blob:')) {
+        try { URL.revokeObjectURL(m.previewUrl); } catch {}
+      }
+    });
     setMediaList([]);
     setResolvedLinkPreviews([]);
     setDismissedUrls(new Set());
@@ -476,10 +530,17 @@ export default function UniversalComposer({
     });
     setIsOfficialAlert(false);
     setErrorMessage(null);
+    setFailureInfo(null);
     setSuccessMessage(null);
+    setUploadProgressText(null);
+    setPostingState('idle');
+    isPublishingRef.current = false;
+    setClientPublishId(generateIdempotencyKey(userId));
     clearComposerDraft();
     setIsExpanded(false);
-  };
+  }, [mediaList, userId]);
+
+  const handleDiscardDraft = resetComposer;
 
   const handleCloseOrDiscard = () => {
     const hasMeaningful = hasMeaningfulDraftContent({
@@ -497,9 +558,16 @@ export default function UniversalComposer({
     }
   };
 
-  // Live URL detection and automatic content resolution
+  // Live URL detection and automatic content resolution with cancellation support
   useEffect(() => {
-    if (!content || !content.trim()) return;
+    if (!content || !content.trim()) {
+      if (urlResolverAbortRef.current) {
+        urlResolverAbortRef.current.abort();
+        urlResolverAbortRef.current = null;
+      }
+      setIsResolvingUrl(false);
+      return;
+    }
     const detected = detectUrls(content);
     if (!detected.hasUrls) return;
 
@@ -511,16 +579,25 @@ export default function UniversalComposer({
 
     if (urlsToResolve.length === 0) return;
 
+    // Abort previous in-flight URL resolution request
+    if (urlResolverAbortRef.current) {
+      urlResolverAbortRef.current.abort();
+    }
+    const controller = new AbortController();
+    urlResolverAbortRef.current = controller;
+
     const timer = setTimeout(async () => {
       setIsResolvingUrl(true);
       try {
         for (const targetUrl of urlsToResolve) {
+          if (controller.signal.aborted) break;
           const res = await fetch('/api/v1/media/resolve-url', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ url: targetUrl }),
+            signal: controller.signal,
           });
-          if (res.ok) {
+          if (res.ok && !controller.signal.aborted) {
             const data = await res.json();
             if (data?.metadata) {
               setResolvedLinkPreviews((prev) => {
@@ -532,17 +609,25 @@ export default function UniversalComposer({
             }
           }
         }
-      } catch (err) {
-        console.warn('[UniversalComposer] Error resolving link preview:', err);
+      } catch (err: any) {
+        if (err?.name !== 'AbortError') {
+          console.warn('[UniversalComposer] Error resolving link preview:', err);
+        }
       } finally {
-        setIsResolvingUrl(false);
+        if (!controller.signal.aborted) {
+          setIsResolvingUrl(false);
+        }
       }
     }, 450);
 
-    return () => clearTimeout(timer);
+    return () => {
+      clearTimeout(timer);
+      controller.abort();
+    };
   }, [content, dismissedUrls, resolvedLinkPreviews]);
 
   const handleRemoveLinkPreview = (index: number) => {
+    clearErrorState();
     setResolvedLinkPreviews((prev) => {
       const target = prev[index];
       if (target) {
@@ -553,6 +638,7 @@ export default function UniversalComposer({
   };
 
   async function handleFileSelect(files: FileList | null, preferredType?: 'image' | 'video', markAsReel = false) {
+    clearErrorState();
     if (!files || files.length === 0) return;
     const fileArray = Array.from(files);
 
@@ -723,19 +809,24 @@ export default function UniversalComposer({
   }
 
   // Upload files to Supabase 'post-media' bucket
+  // Upload files to Supabase 'post-media' bucket
   async function uploadMediaFiles(): Promise<string[]> {
     if (mediaList.length === 0) return [];
     const supabase = createSupabaseBrowserClient();
     const uploadedUrls: string[] = [];
 
     let effectiveUserId = userId;
-    if (!effectiveUserId && supabase) {
+    if (supabase) {
       const { data: authData } = await supabase.auth.getUser();
-      effectiveUserId = authData.user?.id;
+      if (authData?.user?.id) {
+        effectiveUserId = authData.user.id;
+      }
     }
     if (!effectiveUserId) {
-      throw new Error('Please sign in to upload media files.');
+      throw new Error('Please sign in to upload photos or videos.');
     }
+
+    setPostingState('uploading');
 
     for (let i = 0; i < mediaList.length; i++) {
       const item = mediaList[i];
@@ -743,13 +834,18 @@ export default function UniversalComposer({
         uploadedUrls.push(item.uploadedUrl);
         continue;
       }
+      if (!item.file) {
+        // Skip items without a local file or pre-uploaded URL
+        continue;
+      }
       setUploadProgressText(`Uploading media ${i + 1} of ${mediaList.length}...`);
 
       if (supabase) {
         try {
-          const rawExt = item.file.name.split('.').pop() || (item.type === 'video' ? 'mp4' : 'jpg');
+          const fileName = item.file.name || `media_${Date.now()}.${item.type === 'video' ? 'mp4' : 'jpg'}`;
+          const rawExt = fileName.split('.').pop() || (item.type === 'video' ? 'mp4' : 'jpg');
           const fileExt = rawExt.toLowerCase();
-          const cleanBase = item.file.name.replace(/\.[^/.]+$/, '').replace(/[^a-zA-Z0-9_-]/g, '_');
+          const cleanBase = fileName.replace(/\.[^/.]+$/, '').replace(/[^a-zA-Z0-9_-]/g, '_');
           const filePath = `${effectiveUserId}/${Date.now()}_${Math.random().toString(36).substring(2, 8)}_${cleanBase}.${fileExt}`;
 
           const { error: uploadError } = await supabase.storage
@@ -820,15 +916,18 @@ export default function UniversalComposer({
     const hasProduct = taggedProducts.length > 0;
     const hasEvent = mode === 'event' && Boolean(eventInput.title?.trim());
     const hasFundraiser = mode === 'fundraiser' && Boolean(reliefInput.title?.trim());
+    const hasLinkPreviews = resolvedLinkPreviews.length > 0;
 
-    if (!hasContent && !hasMedia && !hasPoll && !hasProduct && !hasEvent && !hasFundraiser) {
+    if (!hasContent && !hasMedia && !hasPoll && !hasProduct && !hasEvent && !hasFundraiser && !hasLinkPreviews) {
       setErrorMessage('Please enter some text, add photos/videos, or attach an update.');
       return;
     }
 
+    const correlationId = generateCorrelationId();
     isPublishingRef.current = true;
-    setIsSubmitting(true);
+    setPostingState('uploading');
     setErrorMessage(null);
+    setFailureInfo(null);
     setSuccessMessage(null);
 
     try {
@@ -840,6 +939,7 @@ export default function UniversalComposer({
       let createdReliefCampaignId: string | null = null;
 
       if (mode === 'event' && eventInput.title?.trim()) {
+        setPostingState('publishing');
         const eventRes = await createEventAction({
           ...eventInput,
           description: eventInput.description?.trim() || content.trim() || null,
@@ -848,14 +948,24 @@ export default function UniversalComposer({
         });
 
         if (eventRes.error) {
-          setErrorMessage(eventRes.error);
-          setIsSubmitting(false);
+          const friendly = formatFriendlyErrorMessage(eventRes.error, correlationId);
+          setFailureInfo({
+            correlationId,
+            friendlyMessage: friendly.friendly,
+            technicalDetails: eventRes.error,
+            isRetryable: friendly.isRetryable,
+            failedStep: 'event_creation',
+            timestamp: Date.now(),
+          });
+          setErrorMessage(friendly.friendly);
+          setPostingState('failed');
           return;
         }
         createdEventId = eventRes.eventId || eventRes.event?.id || null;
       }
 
       if (mode === 'fundraiser' && reliefInput.title?.trim()) {
+        setPostingState('publishing');
         const reliefRes = await createReliefCampaignAction({
           ...reliefInput,
           description: reliefInput.description?.trim() || content.trim() || reliefInput.title.trim(),
@@ -864,8 +974,17 @@ export default function UniversalComposer({
         });
 
         if (reliefRes.error) {
-          setErrorMessage(reliefRes.error);
-          setIsSubmitting(false);
+          const friendly = formatFriendlyErrorMessage(reliefRes.error, correlationId);
+          setFailureInfo({
+            correlationId,
+            friendlyMessage: friendly.friendly,
+            technicalDetails: reliefRes.error,
+            isRetryable: friendly.isRetryable,
+            failedStep: 'relief_creation',
+            timestamp: Date.now(),
+          });
+          setErrorMessage(friendly.friendly);
+          setPostingState('failed');
           return;
         }
         createdReliefCampaignId = reliefRes.data?.id || reliefRes.campaign?.id || null;
@@ -1017,19 +1136,31 @@ export default function UniversalComposer({
         formData.set('relief_campaign_id', createdReliefCampaignId);
       }
 
-      const clientRequestId = `req_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
-      formData.set('client_request_id', clientRequestId);
-      formData.set('idempotency_key', clientRequestId);
+      setPostingState('publishing');
+      formData.set('client_request_id', clientPublishId);
+      formData.set('client_publish_id', clientPublishId);
+      formData.set('idempotency_key', clientPublishId);
+      formData.set('correlation_id', correlationId);
 
       const result = await createPostAction({ error: null }, formData);
 
       if (result.error) {
-        setErrorMessage(result.error);
+        const friendly = formatFriendlyErrorMessage(result.error, correlationId);
+        setFailureInfo({
+          correlationId,
+          friendlyMessage: friendly.friendly,
+          technicalDetails: result.error,
+          isRetryable: friendly.isRetryable,
+          failedStep: 'post_insert',
+          timestamp: Date.now(),
+        });
+        setErrorMessage(friendly.friendly);
+        setPostingState('failed');
         return;
       }
 
-      // If poll mode, attach structured poll to the new post
-      if (mode === 'poll' && pollQuestion.trim() && result.post?.id) {
+      // If poll was configured, attach structured poll to the new post (supports mixed-media posts)
+      if ((mode === 'poll' || pollQuestion.trim()) && pollQuestion.trim() && result.post?.id) {
         const validOptions = pollOptions.filter((o) => o.trim());
         if (validOptions.length >= 2) {
           await createPollAction({
@@ -1040,45 +1171,15 @@ export default function UniversalComposer({
         }
       }
 
-      // Reset state on successful publish
-      setContent('');
-      setMediaList([]);
-      setResolvedLinkPreviews([]);
-      setDismissedUrls(new Set());
-      setMode('text');
-      setIsReel(false);
-      setScheduledAt(null);
-      setPollQuestion('');
-      setPollOptions(['', '']);
-      setTaggedProducts([]);
-      setEventInput({
-        title: '',
-        description: '',
-        event_kind: 'in_person',
-        privacy: 'public',
-        starts_at: '',
-        ends_at: '',
-        venue: '',
-        livestream_url: '',
-        capacity: null,
-      });
-      setReliefInput({
-        title: '',
-        description: '',
-        category: 'hurricane_relief',
-        goal_minor: 10000,
-        currency: 'USD',
-        target_country_iso: 'JAM',
-        disaster_declaration_ref: '',
-        supporting_evidence_urls: [],
-      });
-      setIsOfficialAlert(false);
-      setIsExpanded(false);
+      // Complete, deterministic reset on successful publish
+      resetComposer();
 
-      clearComposerDraft();
-
+      setPostingState('published');
       setSuccessMessage(scheduledAt ? 'Scheduled! Your post will be published automatically.' : 'Published! Your post is live on the feed.');
-      setTimeout(() => setSuccessMessage(null), 4000);
+      setTimeout(() => {
+        setSuccessMessage(null);
+        setPostingState('idle');
+      }, 4000);
 
       // Dispatch global window event for instant feed update
       if (typeof window !== 'undefined' && result.post) {
@@ -1091,11 +1192,20 @@ export default function UniversalComposer({
 
       if (onPostCreated) onPostCreated(result.post);
       router.refresh();
-    } catch (err) {
-      setErrorMessage(err instanceof Error ? err.message : 'An unexpected error occurred while publishing.');
+    } catch (err: any) {
+      const friendly = formatFriendlyErrorMessage(err, correlationId);
+      setFailureInfo({
+        correlationId,
+        friendlyMessage: friendly.friendly,
+        technicalDetails: err instanceof Error ? err.message : String(err),
+        isRetryable: friendly.isRetryable,
+        failedStep: err?.message?.includes('upload') ? 'media_upload' : 'network',
+        timestamp: Date.now(),
+      });
+      setErrorMessage(friendly.friendly);
+      setPostingState('failed');
     } finally {
       isPublishingRef.current = false;
-      setIsSubmitting(false);
       setUploadProgressText(null);
     }
   }
@@ -1550,7 +1660,10 @@ export default function UniversalComposer({
             <div className="relative">
               <textarea
                 value={content}
-                onChange={(e) => setContent(e.target.value)}
+                onChange={(e) => {
+                  setContent(e.target.value);
+                  clearErrorState();
+                }}
                 placeholder={
                   mediaList.length > 0
                     ? 'Add a caption for your media...'
@@ -1628,8 +1741,13 @@ export default function UniversalComposer({
                   </span>
                   <button
                     type="button"
-                    onClick={() => setMode('text')}
-                    className="text-brand-sandstone/40 hover:text-brand-sandstone text-xs flex items-center gap-1"
+                    onClick={() => {
+                      clearErrorState();
+                      setMode('text');
+                      setPollQuestion('');
+                      setPollOptions(['', '']);
+                    }}
+                    className="text-brand-sandstone/40 hover:text-brand-sandstone text-xs flex items-center gap-1 cursor-pointer"
                   >
                     <X className="w-3.5 h-3.5" /> Remove
                   </button>
@@ -1638,7 +1756,10 @@ export default function UniversalComposer({
                 <input
                   type="text"
                   value={pollQuestion}
-                  onChange={(e) => setPollQuestion(e.target.value)}
+                  onChange={(e) => {
+                    clearErrorState();
+                    setPollQuestion(e.target.value);
+                  }}
                   placeholder="Poll Question (e.g. Best Carnival road march of 2026?)"
                   className="w-full bg-brand-dusk border border-slate-800 rounded-xl px-3 py-2 text-xs text-brand-sandstone focus:outline-none focus:border-purple-500"
                 />
@@ -1650,6 +1771,7 @@ export default function UniversalComposer({
                         type="text"
                         value={opt}
                         onChange={(e) => {
+                          clearErrorState();
                           const next = [...pollOptions];
                           next[idx] = e.target.value;
                           setPollOptions(next);
@@ -1660,7 +1782,10 @@ export default function UniversalComposer({
                       {pollOptions.length > 2 && (
                         <button
                           type="button"
-                          onClick={() => setPollOptions(pollOptions.filter((_, i) => i !== idx))}
+                          onClick={() => {
+                            clearErrorState();
+                            setPollOptions(pollOptions.filter((_, i) => i !== idx));
+                          }}
                           className="p-1.5 text-brand-sandstone/40 hover:text-rose-400"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
@@ -1690,8 +1815,11 @@ export default function UniversalComposer({
                   </span>
                   <button
                     type="button"
-                    onClick={() => setMode('text')}
-                    className="text-brand-sandstone/40 hover:text-brand-sandstone text-xs flex items-center gap-1"
+                    onClick={() => {
+                      clearErrorState();
+                      setMode('text');
+                    }}
+                    className="text-brand-sandstone/40 hover:text-brand-sandstone text-xs flex items-center gap-1 cursor-pointer"
                   >
                     <X className="w-3.5 h-3.5" /> Close
                   </button>
@@ -1699,7 +1827,10 @@ export default function UniversalComposer({
 
                 <ProductTaggingTray
                   selectedProducts={taggedProducts}
-                  onTagsChange={(newTags) => setTaggedProducts(newTags)}
+                  onTagsChange={(newTags) => {
+                    clearErrorState();
+                    setTaggedProducts(newTags);
+                  }}
                   maxTags={5}
                 />
               </div>
@@ -1709,8 +1840,12 @@ export default function UniversalComposer({
             {mode === 'event' && (
               <EventComposerPanel
                 value={eventInput}
-                onChange={setEventInput}
+                onChange={(val) => {
+                  clearErrorState();
+                  setEventInput(val);
+                }}
                 onRemove={() => {
+                  clearErrorState();
                   setEventInput({
                     title: '',
                     description: '',
@@ -1731,8 +1866,12 @@ export default function UniversalComposer({
             {mode === 'fundraiser' && (
               <ReliefComposerPanel
                 value={reliefInput}
-                onChange={setReliefInput}
+                onChange={(val) => {
+                  clearErrorState();
+                  setReliefInput(val);
+                }}
                 onRemove={() => {
+                  clearErrorState();
                   setReliefInput({
                     title: '',
                     description: '',
@@ -1998,9 +2137,35 @@ export default function UniversalComposer({
               </div>
             )}
             {errorMessage && (
-              <div className="p-3 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs font-bold flex items-center gap-2">
-                <AlertCircle className="w-4 h-4 text-rose-400 flex-shrink-0" />
-                <span>{errorMessage}</span>
+              <div className="p-3.5 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs font-semibold flex items-start justify-between gap-3 animate-fadeIn">
+                <div className="flex items-start gap-2.5">
+                  <AlertCircle className="w-4 h-4 text-rose-400 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p>{errorMessage}</p>
+                    {failureInfo?.correlationId && (
+                      <p className="text-[10px] text-white/40 font-mono mt-0.5">Reference: {failureInfo.correlationId}</p>
+                    )}
+                  </div>
+                </div>
+                <div className="flex items-center gap-1.5 shrink-0">
+                  {failureInfo?.isRetryable && (
+                    <button
+                      type="button"
+                      onClick={(e) => handlePublish(e)}
+                      className="px-2.5 py-1 rounded-lg bg-rose-500/20 hover:bg-rose-500/30 text-white font-bold text-xs transition-colors cursor-pointer"
+                    >
+                      Retry
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={clearErrorState}
+                    aria-label="Dismiss error"
+                    className="p-1 rounded-lg hover:bg-white/10 text-white/60 hover:text-white transition-colors cursor-pointer"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                </div>
               </div>
             )}
 
@@ -2154,6 +2319,7 @@ export default function UniversalComposer({
                     onClose={() => setIsEmojiPickerOpen(false)}
                     onSelectEmoji={(emoji) => {
                       setContent((prev) => prev + emoji);
+                      clearErrorState();
                     }}
                     position="top"
                   />
@@ -2205,6 +2371,7 @@ export default function UniversalComposer({
                           type="button"
                           onClick={() => {
                             setContent(prev => prev.trim() ? prev + '\n\n' + cap : cap);
+                            clearErrorState();
                             setCaptionSuggestions([]);
                           }}
                           className="block w-full text-left p-2 rounded bg-black/30 hover:bg-brand-caribbeanSea/20 border border-transparent hover:border-brand-caribbeanSea/40 transition-colors text-slate-300"
@@ -2215,6 +2382,7 @@ export default function UniversalComposer({
                       <button type="button" onClick={() => setCaptionSuggestions([])} className="text-brand-sandstone/50 hover:text-white mt-1 underline">Cancel</button>
                     </div>
                   )}
+
                   {hashtagSuggestions.length > 0 && (
                     <div>
                       <p className="text-brand-sandstone/70 font-bold mb-1">Click hashtags to append:</p>
@@ -2225,6 +2393,7 @@ export default function UniversalComposer({
                             type="button"
                             onClick={() => {
                               setContent(prev => prev.trim() ? prev + ' ' + tag : tag);
+                              clearErrorState();
                             }}
                             className="px-2 py-1 rounded-full bg-brand-caribbeanSea/10 hover:bg-brand-caribbeanSea/30 border border-brand-caribbeanSea/40 text-brand-caribbeanSea transition-colors"
                           >
@@ -2249,7 +2418,7 @@ export default function UniversalComposer({
                 <button
                   type="button"
                   onClick={handleDiscardDraft}
-                  disabled={isSubmitting}
+                  disabled={postingState === 'uploading' || postingState === 'publishing' || isPublishingRef.current}
                   className="w-full sm:w-auto px-4 py-2.5 md:py-3 min-h-[44px] md:min-h-[48px] rounded-2xl text-xs md:text-sm font-semibold text-brand-sandstone/70 hover:text-white hover:bg-white/10 transition-colors border border-white/10 flex items-center justify-center cursor-pointer disabled:opacity-50"
                 >
                   Discard
@@ -2257,10 +2426,13 @@ export default function UniversalComposer({
                 <button
                   type="submit"
                   disabled={
-                    isSubmitting ||
+                    postingState === 'uploading' ||
+                    postingState === 'publishing' ||
+                    isPublishingRef.current ||
                     isBannedTester ||
                     (!content.trim() &&
                       mediaList.length === 0 &&
+                      resolvedLinkPreviews.length === 0 &&
                       !pollQuestion.trim() &&
                       taggedProducts.length === 0 &&
                       !(mode === 'event' && eventInput.title?.trim()) &&
@@ -2268,7 +2440,7 @@ export default function UniversalComposer({
                   }
                   className="w-full sm:w-auto bg-gradient-to-r from-brand-caribbeanSea via-brand-sunriseCoral to-brand-goldenHour hover:opacity-95 disabled:opacity-40 text-slate-950 font-black px-6 md:px-8 py-2.5 md:py-3 min-h-[44px] md:min-h-[48px] rounded-2xl text-xs md:text-sm flex items-center justify-center gap-2 transition-all shadow-lg shadow-brand-caribbeanSea/20 cursor-pointer"
                 >
-                  {isSubmitting ? (
+                  {postingState === 'uploading' || postingState === 'publishing' ? (
                     <>
                       <Loader2 className="w-4 h-4 md:w-5 md:h-5 animate-spin text-slate-950" />
                       <span>{uploadProgressText || (scheduledAt ? 'Scheduling...' : 'Publishing...')}</span>

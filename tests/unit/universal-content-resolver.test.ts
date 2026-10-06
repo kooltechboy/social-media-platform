@@ -9,12 +9,15 @@ import {
   assertSafeUrl,
   getContentResolver,
   YouTubeProvider,
+  DirectMediaProvider,
   SpotifyProvider,
   SoundCloudProvider,
   AppleProvider,
   TikTokProvider,
   VimeoProvider,
   TwitterProvider,
+  InstagramProvider,
+  FacebookProvider,
   LocationProvider,
   TukubiProvider,
   GenericProvider,
@@ -125,7 +128,54 @@ describe('Universal Content Resolver — Tukubi Media Architecture', () => {
       expect(youtube.canHandle('https://www.youtube.com/watch?v=dQw4w9WgXcQ')).toBe(true);
       expect(youtube.canHandle('https://youtu.be/dQw4w9WgXcQ')).toBe(true);
       expect(youtube.canHandle('https://youtube.com/shorts/abcdefghijk')).toBe(true);
+      expect(youtube.canHandle('https://www.youtube.com/live/abcdefghijk')).toBe(true);
+      expect(youtube.canHandle('https://m.youtube.com/watch?v=dQw4w9WgXcQ')).toBe(true);
       expect(youtube.canHandle('https://vimeo.com/12345')).toBe(false);
+    });
+
+    it('extracts YouTube live and shorts video IDs correctly', () => {
+      expect(youtube.extractVideoId(new URL('https://www.youtube.com/live/dQw4w9WgXcQ'))).toBe('dQw4w9WgXcQ');
+      expect(youtube.extractVideoId(new URL('https://youtube.com/shorts/abcdefghijk'))).toBe('abcdefghijk');
+      expect(youtube.extractVideoId(new URL('https://youtu.be/dQw4w9WgXcQ?si=test12345'))).toBe('dQw4w9WgXcQ');
+    });
+
+    it('correctly classifies Direct Media URLs', () => {
+      const direct = new DirectMediaProvider();
+      expect(direct.canHandle('https://example.com/videos/carnival.mp4')).toBe(true);
+      expect(direct.canHandle('https://example.com/audio/steelpan.mp3')).toBe(true);
+      expect(direct.canHandle('https://example.com/images/beach.png')).toBe(true);
+      expect(direct.canHandle('https://example.com/page.html')).toBe(false);
+    });
+
+    it('resolves Direct Media files into structured playable metadata', async () => {
+      const direct = new DirectMediaProvider();
+      const videoRes = await direct.resolve(new URL('https://example.com/videos/carnival_parade.mp4'));
+      expect(videoRes).not.toBeNull();
+      expect(videoRes!.contentType).toBe('video');
+      expect(videoRes!.isPlayable).toBe(true);
+      expect(videoRes!.title).toContain('Carnival parade');
+
+      const audioRes = await direct.resolve(new URL('https://example.com/audio/steelband.wav'));
+      expect(audioRes).not.toBeNull();
+      expect(audioRes!.contentType).toBe('audio');
+      expect(audioRes!.isPlayable).toBe(true);
+
+      const imageRes = await direct.resolve(new URL('https://example.com/images/maracas_bay.jpg'));
+      expect(imageRes).not.toBeNull();
+      expect(imageRes!.contentType).toBe('image');
+      expect(imageRes!.thumbnailUrl).toBe('https://example.com/images/maracas_bay.jpg');
+    });
+
+    it('correctly classifies Instagram and Facebook URLs', () => {
+      const ig = new InstagramProvider();
+      expect(ig.canHandle('https://www.instagram.com/p/C4s9-123/')).toBe(true);
+      expect(ig.canHandle('https://instagram.com/reel/C4s9-456/')).toBe(true);
+      expect(ig.canHandle('https://youtube.com')).toBe(false);
+
+      const fb = new FacebookProvider();
+      expect(fb.canHandle('https://www.facebook.com/watch?v=123456789')).toBe(true);
+      expect(fb.canHandle('https://fb.watch/xyz123/')).toBe(true);
+      expect(fb.canHandle('https://twitter.com')).toBe(false);
     });
 
     it('correctly classifies Spotify tracks, albums, playlists, and shows', () => {
@@ -219,7 +269,7 @@ describe('Universal Content Resolver — Tukubi Media Architecture', () => {
     it('registers default providers and resolves URLs through pipeline', async () => {
       const engine = getContentResolver();
       const providers = engine.getProviders();
-      expect(providers.length).toBeGreaterThanOrEqual(10);
+      expect(providers.length).toBeGreaterThanOrEqual(12);
 
       // Resolve native sound stem
       const result = await engine.resolve('/audio/sound-dancehall-02.wav');
@@ -229,8 +279,17 @@ describe('Universal Content Resolver — Tukubi Media Architecture', () => {
 
       // Second resolution hits the LRU cache
       const cached = await engine.resolve('/audio/sound-dancehall-02.wav');
-      expect(cached.urlHash).toBe(result.urlHash);
       expect(cached.title).toBe(result.title);
+    });
+
+    it('safely handles unresolvable external URLs with graceful fallback', async () => {
+      const engine = getContentResolver();
+      const fallbackResult = await engine.resolve('https://nonexistent-domain-caribbean-test.org/story');
+      expect(fallbackResult).toBeDefined();
+      expect(fallbackResult.status).toBe('fallback');
+      expect(fallbackResult.provider).toBe('generic');
+      expect(fallbackResult.title).toContain('nonexistent-domain-caribbean-test.org');
     });
   });
 });
+

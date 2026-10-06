@@ -74,7 +74,10 @@ export default function PagePostComposer({ pageId, pageName }: PagePostComposerP
         <textarea
           rows={3}
           value={content}
-          onChange={(e) => setContent(e.target.value)}
+          onChange={(e) => {
+            if (statusMessage) setStatusMessage(null);
+            setContent(e.target.value);
+          }}
           placeholder={`Share an update, announcement, or new release from ${pageName}...`}
           className="w-full p-4 rounded-2xl bg-white/5 border border-white/10 text-white placeholder:text-brand-sandstone/40 text-xs sm:text-sm focus:outline-none focus:border-brand-sunriseCoral transition-colors resize-none"
         />
@@ -83,7 +86,10 @@ export default function PagePostComposer({ pageId, pageName }: PagePostComposerP
           <input
             type="url"
             value={mediaUrlInput}
-            onChange={(e) => setMediaUrlInput(e.target.value)}
+            onChange={(e) => {
+              if (statusMessage) setStatusMessage(null);
+              setMediaUrlInput(e.target.value);
+            }}
             placeholder="Photo or Video URL (https://...)"
             className="w-full px-4 py-2.5 rounded-2xl bg-white/5 border border-white/10 text-white placeholder:text-brand-sandstone/40 text-xs focus:outline-none focus:border-brand-sunriseCoral transition-colors"
           />
@@ -93,7 +99,10 @@ export default function PagePostComposer({ pageId, pageName }: PagePostComposerP
           <input
             type="text"
             value={tagInput}
-            onChange={(e) => setTagInput(e.target.value)}
+            onChange={(e) => {
+              if (statusMessage) setStatusMessage(null);
+              setTagInput(e.target.value);
+            }}
             placeholder="Cultural tags (comma separated: soca, carnival, reggae, islandeats)..."
             className="w-full px-4 py-2.5 rounded-2xl bg-white/5 border border-white/10 text-white placeholder:text-brand-sandstone/40 text-xs focus:outline-none focus:border-brand-sunriseCoral transition-colors"
           />
