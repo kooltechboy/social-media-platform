@@ -31,6 +31,13 @@ import {
 import { createPostAction } from '../lib/social/actions';
 import { createPollAction } from '../lib/polls/actions';
 import { generateCaptionAction, generateHashtagsAction } from '../lib/ai/creation-actions';
+import {
+  getComposerDraft,
+  saveComposerDraft,
+  clearComposerDraft,
+  hasMeaningfulDraftContent,
+  subscribeToDraftChanges,
+} from '../lib/social/draft-manager';
 import { createSupabaseBrowserClient } from '../lib/supabase/browser';
 import { useTranslation } from '@caribbean/localization';
 import { generateCreatorContentPlan } from '@caribbean/ai';
@@ -328,14 +335,20 @@ export default function UniversalComposer({
 
   const firstName = displayName.split(' ')[0]?.replace('@', '') || 'Friend';
 
+  const isPublishingRef = useRef(false);
+
   // Restore draft on mount
   useEffect(() => {
     try {
-      const saved = localStorage.getItem(DRAFT_KEY);
+      const saved = getComposerDraft();
       if (saved) {
-        const parsed = JSON.parse(saved);
-        if (parsed.content) setContent(parsed.content);
-        if (parsed.audience) setAudience(parsed.audience);
+        if (saved.content) setContent(saved.content);
+        if (saved.audience) setAudience(saved.audience as any);
+        if (saved.mode) setMode(saved.mode as any);
+        if (saved.pollQuestion) setPollQuestion(saved.pollQuestion);
+        if (saved.pollOptions) setPollOptions(saved.pollOptions);
+        if (saved.selectedCommunityId) setSelectedCommunityId(saved.selectedCommunityId);
+        if (saved.selectedCountryId) setSelectedCountryId(saved.selectedCountryId);
       }
     } catch {
       // Ignore
@@ -383,23 +396,104 @@ export default function UniversalComposer({
     };
   }, [userId]);
 
-  // Auto-save draft
+  // Auto-save draft with debouncing
   useEffect(() => {
-    if (content.trim()) {
-      try {
-        localStorage.setItem(
-          DRAFT_KEY,
-          JSON.stringify({
-            content,
-            audience,
-            updatedAt: Date.now(),
-          })
-        );
-      } catch {
-        // Ignore
-      }
+    const hasMeaningful = hasMeaningfulDraftContent({
+      content,
+      pollQuestion,
+      taggedProductIds: taggedProducts.map((p) => p.id),
+      linkPreviews: resolvedLinkPreviews,
+      mediaSummary: mediaList.map((m) => ({ id: m.id, type: m.type, uploadedUrl: m.uploadedUrl })),
+    });
+
+    if (hasMeaningful) {
+      const timer = setTimeout(() => {
+        saveComposerDraft({
+          content,
+          audience,
+          mode,
+          isReel,
+          pollQuestion,
+          pollOptions,
+          selectedCommunityId,
+          selectedCountryId,
+          taggedProductIds: taggedProducts.map((p) => p.id),
+          linkPreviews: resolvedLinkPreviews,
+          mediaSummary: mediaList.map((m) => ({ id: m.id, type: m.type, uploadedUrl: m.uploadedUrl })),
+        });
+      }, 400);
+      return () => clearTimeout(timer);
+    } else {
+      clearComposerDraft();
     }
-  }, [content, audience]);
+  }, [
+    content,
+    audience,
+    mode,
+    isReel,
+    pollQuestion,
+    pollOptions,
+    selectedCommunityId,
+    selectedCountryId,
+    taggedProducts,
+    resolvedLinkPreviews,
+    mediaList,
+  ]);
+
+  const handleDiscardDraft = () => {
+    setContent('');
+    setMediaList([]);
+    setResolvedLinkPreviews([]);
+    setDismissedUrls(new Set());
+    setMode('text');
+    setIsReel(false);
+    setScheduledAt(null);
+    setPollQuestion('');
+    setPollOptions(['', '']);
+    setTaggedProducts([]);
+    setEventInput({
+      title: '',
+      description: '',
+      event_kind: 'in_person',
+      privacy: 'public',
+      starts_at: '',
+      ends_at: '',
+      venue: '',
+      livestream_url: '',
+      capacity: null,
+    });
+    setReliefInput({
+      title: '',
+      description: '',
+      category: 'hurricane_relief',
+      goal_minor: 10000,
+      currency: 'USD',
+      target_country_iso: 'JAM',
+      disaster_declaration_ref: '',
+      supporting_evidence_urls: [],
+    });
+    setIsOfficialAlert(false);
+    setErrorMessage(null);
+    setSuccessMessage(null);
+    clearComposerDraft();
+    setIsExpanded(false);
+  };
+
+  const handleCloseOrDiscard = () => {
+    const hasMeaningful = hasMeaningfulDraftContent({
+      content,
+      pollQuestion,
+      taggedProductIds: taggedProducts.map((p) => p.id),
+      linkPreviews: resolvedLinkPreviews,
+      mediaSummary: mediaList.map((m) => ({ id: m.id, type: m.type, uploadedUrl: m.uploadedUrl })),
+    });
+
+    if (!hasMeaningful) {
+      handleDiscardDraft();
+    } else {
+      setIsExpanded(false);
+    }
+  };
 
   // Live URL detection and automatic content resolution
   useEffect(() => {
@@ -643,6 +737,10 @@ export default function UniversalComposer({
 
     for (let i = 0; i < mediaList.length; i++) {
       const item = mediaList[i];
+      if (item.uploadedUrl) {
+        uploadedUrls.push(item.uploadedUrl);
+        continue;
+      }
       setUploadProgressText(`Uploading media ${i + 1} of ${mediaList.length}...`);
 
       if (supabase) {
@@ -707,6 +805,8 @@ export default function UniversalComposer({
 
   async function handlePublish(e: React.FormEvent) {
     e.preventDefault();
+    if (isPublishingRef.current) return;
+
     const hasMedia = mediaList.length > 0;
     const hasContent = content.trim().length > 0;
     const hasPoll = mode === 'poll' && pollQuestion.trim().length > 0;
@@ -719,6 +819,7 @@ export default function UniversalComposer({
       return;
     }
 
+    isPublishingRef.current = true;
     setIsSubmitting(true);
     setErrorMessage(null);
     setSuccessMessage(null);
@@ -909,6 +1010,10 @@ export default function UniversalComposer({
         formData.set('relief_campaign_id', createdReliefCampaignId);
       }
 
+      const clientRequestId = `req_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+      formData.set('client_request_id', clientRequestId);
+      formData.set('idempotency_key', clientRequestId);
+
       const result = await createPostAction({ error: null }, formData);
 
       if (result.error) {
@@ -963,11 +1068,7 @@ export default function UniversalComposer({
       setIsOfficialAlert(false);
       setIsExpanded(false);
 
-      try {
-        localStorage.removeItem(DRAFT_KEY);
-      } catch {
-        // Ignore
-      }
+      clearComposerDraft();
 
       setSuccessMessage(scheduledAt ? 'Scheduled! Your post will be published automatically.' : 'Published! Your post is live on the feed.');
       setTimeout(() => setSuccessMessage(null), 4000);
@@ -986,6 +1087,7 @@ export default function UniversalComposer({
     } catch (err) {
       setErrorMessage(err instanceof Error ? err.message : 'An unexpected error occurred while publishing.');
     } finally {
+      isPublishingRef.current = false;
       setIsSubmitting(false);
       setUploadProgressText(null);
     }
@@ -1428,10 +1530,7 @@ export default function UniversalComposer({
               {/* Close Button */}
               <button
                 type="button"
-                onClick={() => {
-                  setIsExpanded(false);
-                  setMode('text');
-                }}
+                onClick={handleCloseOrDiscard}
                 className="self-end sm:self-auto p-2 rounded-full text-brand-sandstone/60 hover:text-brand-sandstone hover:bg-brand-dusk transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
                 title="Close composer"
                 aria-label="Close composer"
@@ -2132,8 +2231,16 @@ export default function UniversalComposer({
                 </div>
               )}
 
-              {/* Submit Button */}
+              {/* Submit / Action Buttons */}
               <div className="flex items-center gap-2 w-full sm:w-auto">
+                <button
+                  type="button"
+                  onClick={handleDiscardDraft}
+                  disabled={isSubmitting}
+                  className="w-full sm:w-auto px-4 py-2.5 md:py-3 min-h-[44px] md:min-h-[48px] rounded-2xl text-xs md:text-sm font-semibold text-brand-sandstone/70 hover:text-white hover:bg-white/10 transition-colors border border-white/10 flex items-center justify-center cursor-pointer disabled:opacity-50"
+                >
+                  Discard
+                </button>
                 <button
                   type="submit"
                   disabled={

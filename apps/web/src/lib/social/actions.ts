@@ -16,6 +16,7 @@ import {
 
 import { parseMediaPayload, type StructuredMediaItem } from './media-utils';
 import { detectUrls, resolveContentUrl, type ResolvedContentMetadata } from '@caribbean/media';
+import { logger } from '../logger';
 export type { StructuredMediaItem };
 
 export interface PostActionState {
@@ -50,6 +51,8 @@ export interface PostActionState {
     sharedPostId?: string;
     sharedPost?: any;
     shareCommentary?: string;
+    communityId?: string;
+    countryId?: string;
   };
 }
 
@@ -352,53 +355,193 @@ export async function createPostAction(_prev: PostActionState, formData: FormDat
     }
   }
 
-  const { data, error } = await supabase
-    .from('posts')
-    .insert({
-      author_id: authorId,
-      created_by_user_id: user.id,
-      publisher_type: publisherType,
-      publisher_entity_id: publisherEntityId,
-      content: content || null,
-      visibility,
-      media_urls: mediaUrls,
-      cultural_tags: culturalTags,
-      scheduled_at: scheduledAt,
-      post_status: postStatus,
-      community_id: communityId,
-      country_id: countryId,
-      page_id: pageId,
-      is_official: isOfficialPost,
-      official_content_type: officialContentType,
-      is_pinned: isPinnedExplicit,
-      shared_post_id: sharedPostId,
-      share_commentary: shareCommentary,
-      link_preview: linkPreview || null,
-    })
-    .select(`
-      id, content, created_at, media_urls, cultural_tags, likes_count, comments_count, shares_count, visibility, 
-      community_id, country_id, page_id, is_official, official_content_type, is_pinned, publisher_type, publisher_entity_id, 
-      created_by_user_id, shared_post_id, link_preview,
-      profiles:profiles!posts_author_id_fkey(id, display_name, username, avatar_url, is_verified, is_official),
-      businesses:businesses!posts_page_id_fkey(id, name, slug, avatar_url, is_verified)
-    `)
-    .single();
+  // Idempotency: Deduplicate identical submissions sent within a 15-second window
+  try {
+    const recentThreshold = new Date(Date.now() - 15000).toISOString();
+    let dupQuery = supabase
+      .from('posts')
+      .select(`
+        id, content, created_at, media_urls, cultural_tags, likes_count, comments_count, shares_count, visibility, 
+        community_id, country_id, page_id, is_official, official_content_type, is_pinned, link_preview,
+        profiles:profiles!posts_author_id_fkey(id, display_name, username, avatar_url, is_verified, is_official),
+        businesses:businesses!posts_page_id_fkey(id, name, slug, avatar_url, is_verified)
+      `)
+      .eq('author_id', authorId)
+      .gt('created_at', recentThreshold)
+      .order('created_at', { ascending: false })
+      .limit(1);
 
-  if (error) {
-    console.error('[createPostAction] Database error creating post:', error);
-    if (error.code === '23503') {
-      return { error: "We couldn't link your profile to publish this post. Please refresh and try again." };
+    if (content) {
+      dupQuery = dupQuery.eq('content', content);
     }
-    return { error: "We couldn't publish your post right now. Please try again." };
+    const { data: recentDups } = await dupQuery;
+    if (recentDups && recentDups.length > 0) {
+      const existing = recentDups[0];
+      logger.info('[createPostAction] Idempotent post replay detected; returning existing post', {
+        existingPostId: existing.id,
+        authorId,
+        publisherType,
+      });
+      const { track } = await import('../monitoring/analytics');
+      track('post_publish_replayed', { postId: existing.id, publisherType }, user.id);
+
+      const rawProf = existing.profiles;
+      const prof = Array.isArray(rawProf) ? rawProf[0] : rawProf;
+      const rawBiz = existing.businesses;
+      const biz = Array.isArray(rawBiz) ? rawBiz[0] : rawBiz;
+
+      let dAuthor = prof?.display_name || user.displayName || 'Caribbean Member';
+      let dHandle = prof?.username || user.username || 'member';
+      let dAvatar = prof?.avatar_url || user.avatarUrl || null;
+      let dVerified = prof?.is_verified ?? true;
+
+      if (publisherType === 'page' && biz) {
+        dAuthor = biz.name;
+        dHandle = biz.slug;
+        dAvatar = biz.avatar_url || null;
+        dVerified = biz.is_verified ?? true;
+      } else if (publisherType === 'official' || isOfficialPost) {
+        dAuthor = 'TUKUBI';
+        dHandle = 'tukubi';
+        dAvatar = prof?.avatar_url || '/brand/tukubi-emblem.png';
+        dVerified = true;
+      }
+
+      return {
+        error: null,
+        postId: existing.id,
+        post: {
+          id: existing.id,
+          author: dAuthor,
+          handle: dHandle,
+          avatarUrl: dAvatar,
+          verified: dVerified,
+          isOfficial: isOfficialPost,
+          isPinned: Boolean(existing.is_pinned),
+          officialContentType: officialContentType || undefined,
+          publisherType,
+          publisherId: publisherEntityId,
+          pageId: pageId || undefined,
+          pageSlug: biz?.slug,
+          pageName: biz?.name,
+          createdByUserId: user.id,
+          location: 'Caribbean 🌴',
+          time: 'just now',
+          content: existing.content || '',
+          mediaUrls: existing.media_urls || [],
+          mediaItems,
+          linkPreview: existing.link_preview || linkPreview || null,
+          culturalTags: existing.cultural_tags || [],
+          likes: existing.likes_count || 0,
+          reposts: existing.shares_count || 0,
+          comments: existing.comments_count || 0,
+          category: 'caribbean' as const,
+          communityId: existing.community_id || undefined,
+          countryId: existing.country_id || undefined,
+        },
+      };
+    }
+  } catch (dedupErr) {
+    logger.warn('[createPostAction] Non-blocking idempotency check skipped:', { error: String(dedupErr) });
   }
 
-  if (supabase && mediaItems.length > 0) {
+  // 1. Core schema insert payload (guaranteed compatible with certified baseline DB)
+  const coreInsertPayload = {
+    author_id: authorId,
+    content: content || null,
+    visibility,
+    media_urls: mediaUrls,
+    cultural_tags: culturalTags,
+    scheduled_at: scheduledAt,
+    post_status: postStatus,
+    community_id: communityId,
+    country_id: countryId,
+    page_id: pageId,
+    is_official: isOfficialPost,
+    official_content_type: officialContentType,
+    is_pinned: isPinnedExplicit,
+    link_preview: linkPreview || null,
+  };
+
+  const coreSelectQuery = `
+    id, content, created_at, media_urls, cultural_tags, likes_count, comments_count, shares_count, visibility, 
+    community_id, country_id, page_id, is_official, official_content_type, is_pinned, link_preview,
+    profiles:profiles!posts_author_id_fkey(id, display_name, username, avatar_url, is_verified, is_official),
+    businesses:businesses!posts_page_id_fkey(id, name, slug, avatar_url, is_verified)
+  `;
+
+  // Extended schema insert payload (when 00097 migration columns are present)
+  const extendedInsertPayload = {
+    ...coreInsertPayload,
+    created_by_user_id: user.id,
+    publisher_type: publisherType,
+    publisher_entity_id: publisherEntityId,
+    shared_post_id: sharedPostId,
+    share_commentary: shareCommentary,
+  };
+
+  let insertedPost: any = null;
+  let insertError: any = null;
+
+  // Attempt extended insert first
+  const { data: extData, error: extError } = await supabase
+    .from('posts')
+    .insert(extendedInsertPayload)
+    .select(coreSelectQuery)
+    .single();
+
+  if (!extError && extData) {
+    insertedPost = extData;
+  } else if (
+    extError &&
+    (extError.code === 'PGRST204' ||
+      extError.code === '42703' ||
+      extError.message?.includes('schema cache') ||
+      extError.message?.includes('column') ||
+      extError.message?.includes('publisher_type'))
+  ) {
+    // Missing column in database schema cache; seamlessly fallback to certified baseline core payload
+    logger.warn('[createPostAction] Extended columns not present in DB schema cache; executing core payload insert', {
+      error: extError.message,
+    });
+    const { data: coreData, error: coreError } = await supabase
+      .from('posts')
+      .insert(coreInsertPayload)
+      .select(coreSelectQuery)
+      .single();
+
+    if (!coreError && coreData) {
+      insertedPost = coreData;
+    } else {
+      insertError = coreError;
+    }
+  } else {
+    insertError = extError;
+  }
+
+  if (insertError || !insertedPost) {
+    logger.error('[createPostAction] Database error creating post', insertError, {
+      authorId,
+      publisherType,
+      userId: user.id,
+    });
+    const { track } = await import('../monitoring/analytics');
+    track('post_publish_failed', { authorId, publisherType, errorCode: insertError?.code }, user.id);
+
+    if (insertError?.code === '23503') {
+      return { error: "We couldn't link your profile to publish this post. Please refresh and try again." };
+    }
+    return { error: "We couldn't publish your post right now. Your draft has been preserved. Please try again." };
+  }
+
+  const data = insertedPost;
+
+  // Insert associated post_media rows with verified existing columns
+  if (supabase && mediaItems.length > 0 && data?.id) {
     const postMediaRows = mediaItems.map((item, idx) => ({
       post_id: data.id,
-      media_url: item.url,
       storage_path: item.url,
       media_kind: item.type || 'image',
-      media_type: item.type || 'image',
       aspect_ratio: item.aspectRatio || null,
       width: item.width || null,
       height: item.height || null,
@@ -407,17 +550,21 @@ export async function createPostAction(_prev: PostActionState, formData: FormDat
     }));
     const { error: postMediaError } = await supabase.from('post_media').insert(postMediaRows);
     if (postMediaError) {
-      console.warn('[createPostAction] Failed to insert post_media rows:', postMediaError.message);
+      logger.warn('[createPostAction] post_media insert notice:', { error: postMediaError.message });
     }
   }
 
   // If this was a re-share, record in post_shares table
   if (sharedPostId) {
-    await supabase.from('post_shares').insert({
-      post_id: sharedPostId,
-      user_id: user.id,
-      share_type: 'internal',
-    });
+    try {
+      await supabase.from('post_shares').insert({
+        post_id: sharedPostId,
+        user_id: user.id,
+        share_type: 'internal',
+      });
+    } catch (shareErr) {
+      logger.warn('[createPostAction] post_shares recording notice:', { error: String(shareErr) });
+    }
   }
 
   const rawProfile = data?.profiles;
@@ -483,6 +630,13 @@ export async function createPostAction(_prev: PostActionState, formData: FormDat
   
   const { track } = await import('../monitoring/analytics');
   track('post_created', { postId: data.id, publisherType, visibility }, user.id);
+  logger.info('[createPostAction] Post published successfully', {
+    postId: data.id,
+    authorId,
+    publisherType,
+    hasMedia: mediaUrls.length > 0,
+    hasLink: Boolean(linkPreview),
+  });
   
   return { error: null, postId: data.id, post: normalizedPost };
 }

@@ -48,13 +48,11 @@ export async function buildRankedFeed(
     const limitCount = shouldRank ? 60 : 30;
 
     // 3. Build the base query
-    // 3. Build the base query
     let postQuery = supabase
       .from('posts')
       .select(`
         id, author_id, content, created_at, media_urls, cultural_tags, likes_count, comments_count, shares_count, 
-        country_id, community_id, is_official, is_pinned, official_content_type, page_id, publisher_type, 
-        publisher_entity_id, created_by_user_id, shared_post_id,
+        country_id, community_id, is_official, is_pinned, official_content_type, page_id, link_preview,
         profiles:profiles!posts_author_id_fkey(display_name, username, avatar_url, is_verified, is_official),
         businesses:businesses!posts_page_id_fkey(id, name, slug, avatar_url, is_verified)
       `)
@@ -116,7 +114,7 @@ export async function buildRankedFeed(
       }
     } else if (mode === 'pages') {
       // True Page publishing filter
-      postQuery = postQuery.or('publisher_type.eq.page,page_id.not.is.null');
+      postQuery = postQuery.not('page_id', 'is', null);
     } else if (mode === 'creators') {
       // Creator publishing filter: bounded to top 100 recent/verified creators to prevent table-scan & URL overflow (P0-002)
       const { data: creators } = await supabase
@@ -126,13 +124,11 @@ export async function buildRankedFeed(
         .limit(100);
       const creatorProfileIds = creators?.map((c: any) => c.profile_id).filter(Boolean) || [];
       if (creatorProfileIds.length > 0) {
-        postQuery = postQuery.or(`publisher_type.eq.creator,author_id.in.(${creatorProfileIds.join(',')})`);
-      } else {
-        postQuery = postQuery.eq('publisher_type', 'creator');
+        postQuery = postQuery.in('author_id', creatorProfileIds);
       }
     } else if (mode === 'official') {
       // Official TUKUBI platform announcements & updates
-      postQuery = postQuery.or('publisher_type.eq.official,is_official.eq.true');
+      postQuery = postQuery.eq('is_official', true);
     } else if (mode === 'for_you') {
       const { data: follows } = await supabase.from('follows').select('following_id').eq('follower_id', userId);
       const followingIds = follows?.map((f: any) => f.following_id) || [];
@@ -162,8 +158,7 @@ export async function buildRankedFeed(
           .from('posts')
           .select(`
             id, author_id, content, created_at, media_urls, cultural_tags, likes_count, comments_count, shares_count, 
-            country_id, community_id, is_official, is_pinned, official_content_type, page_id, publisher_type, 
-            publisher_entity_id, created_by_user_id, shared_post_id,
+            country_id, community_id, is_official, is_pinned, official_content_type, page_id, link_preview,
             profiles:profiles!posts_author_id_fkey(display_name, username, avatar_url, is_verified, is_official),
             businesses:businesses!posts_page_id_fkey(id, name, slug, avatar_url, is_verified)
           `)

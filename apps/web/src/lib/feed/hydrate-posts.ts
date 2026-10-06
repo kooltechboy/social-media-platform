@@ -140,7 +140,7 @@ export async function hydratePostsEngagement(
             .from('posts')
             .select(`
               id, author_id, content, created_at, media_urls, cultural_tags, likes_count, comments_count, shares_count, 
-              page_id, publisher_type, publisher_entity_id, is_official, official_content_type,
+              page_id, is_official, official_content_type, link_preview,
               profiles:profiles!posts_author_id_fkey(display_name, username, avatar_url, is_verified, is_official),
               businesses:businesses!posts_page_id_fkey(id, name, slug, avatar_url, is_verified)
             `)

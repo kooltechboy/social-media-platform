@@ -24,11 +24,13 @@ import {
   Layers,
   Music,
   Camera,
+  X,
 } from 'lucide-react';
 import UniversalComposer, { type ComposerMode, type UploadedMediaItem } from './universal-composer';
 import CreatePodcastModal from './podcasts/create-podcast-modal';
 import { TukubiCreationStudio, type CreationStudioHandoffPayload } from './media/creation';
 import { getCreatorDraftsAction, type CreatorDraftItem } from '../lib/creator/draft-actions';
+import { getComposerDraft, clearComposerDraft, subscribeToDraftChanges } from '../lib/social/draft-manager';
 import { createSupabaseBrowserClient } from '../lib/supabase/browser';
 
 interface CreateHubClientProps {
@@ -199,6 +201,7 @@ const FILTER_TABS = [
 export default function CreateHubClient({ user }: CreateHubClientProps) {
   const [activeFilter, setActiveFilter] = useState('all');
   const [hasDraft, setHasDraft] = useState(false);
+  const [isDraftBannerDismissed, setIsDraftBannerDismissed] = useState(false);
   const [serverDrafts, setServerDrafts] = useState<CreatorDraftItem[]>([]);
   const [creatorPodcasts, setCreatorPodcasts] = useState<Array<{ id: string; title: string; slug: string }>>([]);
   const [isPodcastModalOpen, setIsPodcastModalOpen] = useState(false);
@@ -208,19 +211,13 @@ export default function CreateHubClient({ user }: CreateHubClientProps) {
   const [composerMode, setComposerMode] = useState<ComposerMode>('text');
   const composerSectionRef = useRef<HTMLDivElement>(null);
 
-  // Check for saved drafts and existing creator podcasts on mount
+  // Check for saved drafts and existing creator podcasts on mount + subscribe to live changes
   useEffect(() => {
-    try {
-      const draft = localStorage.getItem('tukubi_composer_draft_v3') || localStorage.getItem('tukubi_composer_draft_v2');
-      if (draft) {
-        const parsed = JSON.parse(draft);
-        if (parsed.content || (parsed.media && parsed.media.length > 0)) {
-          setHasDraft(true);
-        }
-      }
-    } catch {
-      // Ignore
-    }
+    setHasDraft(Boolean(getComposerDraft()));
+
+    const unsubscribe = subscribeToDraftChanges((draft) => {
+      setHasDraft(Boolean(draft));
+    });
 
     if (user?.id) {
       void getCreatorDraftsAction().then((res) => {
@@ -317,7 +314,7 @@ export default function CreateHubClient({ user }: CreateHubClientProps) {
       )}
 
       {/* Draft Resume Indicator (Local + Cloud Synced) */}
-      {(hasDraft || serverDrafts.length > 0) && !publishedPostId && (
+      {(hasDraft || serverDrafts.length > 0) && !publishedPostId && !isDraftBannerDismissed && (
         <div className="p-4 sm:p-5 rounded-2xl bg-amber-950/80 border border-amber-500/50 text-amber-200 text-xs sm:text-sm font-semibold flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 animate-fadeIn">
           <div className="flex items-center gap-2.5">
             <Clock className="w-5 h-5 text-amber-400 flex-shrink-0" />
@@ -327,15 +324,28 @@ export default function CreateHubClient({ user }: CreateHubClientProps) {
                 : 'You have an unposted draft saved in your local workspace.'}
             </span>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2.5 flex-wrap">
             {hasDraft && (
-              <button
-                type="button"
-                onClick={() => handleStartCreating('text')}
-                className="text-amber-300 underline font-black hover:text-white min-h-[38px] flex items-center cursor-pointer"
-              >
-                Resume Local Draft →
-              </button>
+              <>
+                <button
+                  type="button"
+                  onClick={() => handleStartCreating('text')}
+                  className="text-amber-300 underline font-black hover:text-white min-h-[38px] flex items-center cursor-pointer"
+                >
+                  Resume Local Draft →
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    clearComposerDraft();
+                    setHasDraft(false);
+                  }}
+                  className="px-3 py-1.5 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 text-rose-200 border border-rose-500/30 font-bold text-xs flex items-center transition-colors cursor-pointer"
+                  title="Discard unsaved local draft"
+                >
+                  Discard Draft
+                </button>
+              </>
             )}
             {serverDrafts.length > 0 && (
               <Link
@@ -345,6 +355,15 @@ export default function CreateHubClient({ user }: CreateHubClientProps) {
                 Manage in Studio →
               </Link>
             )}
+            <button
+              type="button"
+              onClick={() => setIsDraftBannerDismissed(true)}
+              aria-label="Dismiss draft notification"
+              className="p-1 rounded-lg text-amber-400/60 hover:text-amber-200 hover:bg-amber-500/10 transition-colors"
+              title="Dismiss reminder"
+            >
+              <X className="w-4 h-4" />
+            </button>
           </div>
         </div>
       )}
