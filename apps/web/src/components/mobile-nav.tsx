@@ -398,6 +398,7 @@ export default function MobileNav() {
 
               <Link
                 href="/messages"
+                aria-label="Messages"
                 onClick={() => setIsMenuSheetOpen(false)}
                 className="flex items-center justify-between p-3 rounded-2xl bg-brand-caribbeanSea/10 hover:bg-brand-caribbeanSea/20 border border-brand-caribbeanSea/30 text-white text-xs font-bold transition-colors"
               >
@@ -406,7 +407,7 @@ export default function MobileNav() {
                   <span>Messages &amp; Direct Chat</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  {unreadMessagesCount > 0 && (
+                  {hasUnreadMessagesTab && (
                     <span className="px-2 py-0.5 rounded-full bg-brand-caribbeanSea text-slate-950 text-[10px] font-black">
                       {unreadMessagesCount}
                     </span>
@@ -483,7 +484,7 @@ export default function MobileNav() {
         </div>
       )}
 
-      {/* ── 3. Bottom 5-Tab Bar ── */}
+      {/* ── 3. Bottom 5-Tab Bar (D-02: Home, Explore, Create, Community, Profile) ── */}
       <nav
         className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#110D17]/95 backdrop-blur-2xl border-t border-white/10 shadow-2xl"
         aria-label="Main mobile navigation"
@@ -526,7 +527,6 @@ export default function MobileNav() {
           </li>
 
           {/* Tab 3: Create (Floating Action Button) */}
-
           <li role="presentation">
             <button
               type="button"
@@ -560,30 +560,7 @@ export default function MobileNav() {
             </Link>
           </li>
 
-          {/* Tab 5: Messages */}
-          <li role="presentation">
-            <Link
-              href="/messages"
-              role="tab"
-              aria-selected={isMessagesActive}
-              aria-label="Messages"
-              className={`flex flex-col items-center gap-0.5 px-2.5 py-1.5 rounded-2xl transition-all min-w-[44px] min-h-[44px] justify-center ${
-                isMessagesActive
-                  ? 'text-brand-caribbeanSea font-black'
-                  : 'text-brand-sandstone/60 hover:text-slate-200 font-bold'
-              }`}
-            >
-              <div className="relative">
-                <MessageSquare className="w-5 h-5" />
-                {unreadMessagesCount > 0 && (
-                  <span className="absolute -top-1 -right-1 w-2 h-2 bg-brand-caribbeanSea rounded-full animate-pulse shadow-[0_0_6px_rgba(0,168,150,0.9)]" />
-                )}
-              </div>
-              <span className="text-[10px]">Messages</span>
-            </Link>
-          </li>
-
-          {/* Tab 6: Profile & Ecosystem Menu */}
+          {/* Tab 5: Profile & Ecosystem Menu */}
           <li role="presentation">
             <button
               type="button"
@@ -600,8 +577,8 @@ export default function MobileNav() {
               }`}
             >
               <div className="relative">
-                <Menu className="w-5 h-5" />
-                {unreadNotificationsCount > 0 && (
+                <User className="w-5 h-5" />
+                {(unreadNotificationsCount > 0 || hasUnreadMessagesTab) && (
                   <span className="absolute -top-1 -right-1 w-2 h-2 bg-brand-sunriseCoral rounded-full animate-pulse shadow-[0_0_6px_rgba(255,107,107,0.9)]" />
                 )}
               </div>

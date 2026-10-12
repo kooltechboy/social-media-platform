@@ -279,6 +279,79 @@ export async function hydratePostsEngagement(
     }
   }
 
+  let externalMediaMap = new Map<string, any[]>();
+  let postMediaMap = new Map<string, any[]>();
+
+  if (supabase) {
+    try {
+      const postsWithLinks = rawPosts
+        .filter((p) => p.id && p.link_preview && !p.post_external_media && !p.link_previews)
+        .map((p) => p.id);
+      if (postsWithLinks.length > 0) {
+        const [extRes, mediaRes] = await Promise.all([
+          supabase
+            .from('post_external_media')
+            .select(
+              'post_id, original_url, canonical_url, provider_id, content_type, title, description, author_name, site_name, thumbnail_url, embed_url, aspect_ratio, duration_seconds, is_embeddable, display_order'
+            )
+            .in('post_id', postsWithLinks),
+          supabase
+            .from('post_media')
+            .select('post_id, public_url, media_type, width, height, duration_sec, thumbnail_url, sort_order')
+            .in('post_id', postsWithLinks),
+        ]);
+        if (extRes?.data) {
+          const sortedExt = [...extRes.data].sort(
+            (a: any, b: any) => (a.display_order ?? 0) - (b.display_order ?? 0)
+          );
+          for (const row of sortedExt) {
+            const list = externalMediaMap.get(row.post_id) || [];
+            list.push({
+              url: row.original_url,
+              canonicalUrl: row.canonical_url || row.original_url,
+              provider: row.provider_id,
+              contentType: row.content_type,
+              title: row.title,
+              description: row.description,
+              authorName: row.author_name,
+              siteName: row.site_name,
+              thumbnailUrl: row.thumbnail_url,
+              embedUrl: row.embed_url,
+              aspectRatio: row.aspect_ratio,
+              durationSeconds: row.duration_seconds,
+              isEmbeddable: row.is_embeddable ?? Boolean(row.embed_url),
+            });
+            externalMediaMap.set(row.post_id, list);
+          }
+        }
+        if (mediaRes?.data) {
+          const sortedMedia = [...mediaRes.data].sort(
+            (a: any, b: any) => (a.sort_order ?? 0) - (b.sort_order ?? 0)
+          );
+          for (const row of sortedMedia) {
+            if (!row.public_url) continue;
+            const list = postMediaMap.get(row.post_id) || [];
+            list.push({
+              url: row.public_url,
+              type: row.media_type === 'video' ? 'video' : 'image',
+              width: row.width ?? undefined,
+              height: row.height ?? undefined,
+              aspectRatio:
+                row.width && row.height && row.height > 0
+                  ? Number((row.width / row.height).toFixed(4))
+                  : undefined,
+              durationSec: row.duration_sec ?? undefined,
+              posterUrl: row.thumbnail_url ?? undefined,
+            });
+            postMediaMap.set(row.post_id, list);
+          }
+        }
+      }
+    } catch {
+      // Non-blocking enrichment fallback
+    }
+  }
+
   // Filter out hidden posts unless caller explicitly asked to include them
   const eligiblePosts = !includeHidden && hiddenPostIdsSet.size > 0
     ? rawPosts.filter((p) => !hiddenPostIdsSet.has(p.id))
@@ -359,7 +432,7 @@ export async function hydratePostsEngagement(
         : Array.isArray(p.mediaUrls)
         ? p.mediaUrls
         : [],
-      mediaItems: p.media_items || p.mediaItems,
+      mediaItems: p.media_items || p.mediaItems || postMediaMap.get(p.id),
       culturalTags: Array.isArray(p.cultural_tags)
         ? p.cultural_tags
         : Array.isArray(p.culturalTags)
@@ -375,8 +448,14 @@ export async function hydratePostsEngagement(
       category: p.category || 'caribbean',
       taggedProduct: p.taggedProduct || p.tagged_product,
       poll: p.poll,
-      linkPreview: p.link_preview || p.linkPreview || null,
-      linkPreviews: Array.isArray(p.link_previews) ? p.link_previews : (p.link_preview ? [p.link_preview] : []),
+      linkPreview: p.link_preview || p.linkPreview || externalMediaMap.get(p.id)?.[0] || null,
+      linkPreviews: Array.isArray(p.link_previews)
+        ? p.link_previews
+        : externalMediaMap.get(p.id)?.length
+        ? externalMediaMap.get(p.id)!
+        : p.link_preview
+        ? [p.link_preview]
+        : [],
       isSponsored: p.isSponsored ?? false,
       adId: p.adId,
       headline: p.headline,

@@ -71,8 +71,8 @@ export async function POST(
 
   // 1. Enforce Webhook Processor & Idempotency
   const processor = new WebhookProcessor(
-    async (payload, _sig, _secret) => {
-      return adapter.verifyWebhook(payload, headerObj);
+    async (payload, sig, _secret) => {
+      return adapter.verifyWebhook(payload, (providerId === 'paypal' ? headerObj : sig) as any);
     },
     {
       claim: async (claimed) => {
@@ -110,7 +110,8 @@ export async function POST(
       switch (eventType) {
         case 'PAYMENT.CAPTURE.COMPLETED':
         case 'CHECKOUT.ORDER.APPROVED': {
-          const customId = resource.custom_id || resource.invoice_id;
+          const rawCustomId = resource.custom_id || resource.invoice_id;
+          const customId = typeof rawCustomId === 'string' ? rawCustomId.replace(/[^a-zA-Z0-9_-]/g, '') : '';
           const captureId = resource.id;
           const amountMinor = resource.amount?.value ? Math.round(parseFloat(resource.amount.value) * 100) : 0;
           const currency = resource.amount?.currency_code || 'USD';

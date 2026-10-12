@@ -36,7 +36,10 @@ export default async function EventsPage({
       query = query.eq('event_kind', kind);
     }
     if (q) {
-      query = query.or(`title.ilike.%${q}%,description.ilike.%${q}%`);
+      const safeQ = q.replace(/[,().%]/g, '').trim();
+      if (safeQ) {
+        query = query.or(`title.ilike.%${safeQ}%,description.ilike.%${safeQ}%`);
+      }
     }
 
     const [eventsResult, citiesResult] = await Promise.all([

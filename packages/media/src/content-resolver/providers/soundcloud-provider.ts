@@ -41,6 +41,7 @@ export class SoundCloudProvider extends BaseContentProvider {
 
         const title = this.sanitizeText(data.title) || 'SoundCloud Track';
         const author = this.sanitizeText(data.author_name);
+        const embedUrl = `https://w.soundcloud.com/player/?url=${encodeURIComponent(url.toString())}&color=%2300b4d8&auto_play=false&visual=true`;
 
         return this.buildBaseMetadata({
           url,
@@ -50,8 +51,10 @@ export class SoundCloudProvider extends BaseContentProvider {
           thumbnailUrl: data.thumbnail_url,
           authorName: author,
           authorUrl: data.author_url,
+          embedUrl,
           embedHtml: data.html,
           aspectRatio: '16:9',
+          canEmbed: true,
           isPlayable: true,
           status: 'resolved',
         });

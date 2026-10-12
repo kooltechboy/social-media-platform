@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { StripeAdapter, WebhookProcessor, type WebhookEvent } from '@caribbean/payments';
+import { StripeAdapter, WebhookProcessor, TransactionLedgerService, type WebhookEvent } from '@caribbean/payments';
 import { createServiceSupabaseClient } from '../../../../lib/supabase/server';
 
 export async function POST(req: NextRequest) {
@@ -58,43 +58,90 @@ export async function POST(req: NextRequest) {
   // Handle specific Stripe events
   const supabase = await createServiceSupabaseClient();
   if (supabase) {
-    const object = (event.data?.object || {}) as {
-      id?: string;
-      amount?: number;
-      metadata?: Record<string, string>;
-    };
-    const orderId = object.metadata?.orderId;
-    const paymentIntentId = object.metadata?.paymentIntentId;
+    try {
+      const object = (event.data?.object || {}) as {
+        id?: string;
+        amount?: number;
+        currency?: string;
+        metadata?: Record<string, string>;
+      };
+      const orderId = object.metadata?.orderId;
+      const paymentIntentId = object.metadata?.paymentIntentId;
+      const ledgerService = new TransactionLedgerService();
 
-    switch (event.type) {
-      case 'payment_intent.succeeded': {
-        let buyerId = object.metadata?.buyerId || object.metadata?.userId;
-        if (orderId) {
-          const { data: orderData } = await supabase.from('orders').update({ status: 'paid' }).eq('id', orderId).select('buyer_id').maybeSingle();
-          if (orderData?.buyer_id) buyerId = orderData.buyer_id;
+      switch (event.type) {
+        case 'payment_intent.succeeded': {
+          let buyerId = object.metadata?.buyerId || object.metadata?.userId;
+          let sellerId = object.metadata?.sellerId || object.metadata?.merchantId || object.metadata?.creatorId;
+          if (orderId) {
+            const { data: orderData } = await supabase
+              .from('orders')
+              .update({ status: 'paid' })
+              .eq('id', orderId)
+              .select('buyer_id, seller_id, total_minor, currency')
+              .maybeSingle();
+            if (orderData?.buyer_id) buyerId = orderData.buyer_id;
+            if (orderData?.seller_id) sellerId = orderData.seller_id;
+          }
+          if (paymentIntentId) {
+            await supabase.from('payment_intents').update({ status: 'succeeded' }).eq('id', paymentIntentId);
+          } else if (orderId) {
+            await supabase.from('payment_intents').update({ status: 'succeeded' }).eq('reference_id', orderId);
+          }
+          if (buyerId && typeof object.amount === 'number' && object.amount > 0) {
+            try {
+              const tx = await ledgerService.recordTransaction(supabase, {
+                idempotencyKey: `stripe_wh_${object.id || eventId}`,
+                transactionType: object.metadata?.creatorId ? 'CREATOR_SUBSCRIPTION' : 'MARKETPLACE_PURCHASE',
+                payerId: buyerId,
+                recipientId: sellerId || null,
+                creatorId: object.metadata?.creatorId || null,
+                merchantId: sellerId || null,
+                orderId: orderId || null,
+                paymentIntentId: paymentIntentId || null,
+                provider: 'stripe',
+                providerTransactionId: object.id || eventId,
+                grossAmountMinor: object.amount,
+                currency: (object.currency || 'USD').toUpperCase(),
+              });
+              await ledgerService.settleTransaction(supabase, tx.id, {
+                providerTransactionId: object.id || eventId,
+              });
+            } catch (ledgerErr) {
+              console.warn('[StripeWebhook] Ledger settlement warning:', ledgerErr);
+            }
+          }
+          const { track } = await import('../../../../lib/monitoring/analytics');
+          track('payment_completed', { amount: object.amount ?? null }, buyerId);
+          break;
         }
-        if (paymentIntentId) {
-          await supabase.from('payment_intents').update({ status: 'succeeded' }).eq('id', paymentIntentId);
-        } else if (orderId) {
-          await supabase.from('payment_intents').update({ status: 'succeeded' }).eq('reference_id', orderId);
+        case 'payment_intent.payment_failed': {
+          if (orderId) {
+            await supabase.from('orders').update({ status: 'cancelled' }).eq('id', orderId);
+          }
+          if (paymentIntentId) {
+            await supabase.from('payment_intents').update({ status: 'failed' }).eq('id', paymentIntentId);
+          } else if (orderId) {
+            await supabase.from('payment_intents').update({ status: 'failed' }).eq('reference_id', orderId);
+          }
+          break;
         }
-        const { track } = await import('../../../../lib/monitoring/analytics');
-        track('payment_completed', { amount: object.amount ?? null }, buyerId);
-        break;
+        default:
+          console.log(`Unhandled event type ${eventType}`);
       }
-      case 'payment_intent.payment_failed': {
-        if (orderId) {
-          await supabase.from('orders').update({ status: 'cancelled' }).eq('id', orderId);
-        }
-        if (paymentIntentId) {
-          await supabase.from('payment_intents').update({ status: 'failed' }).eq('id', paymentIntentId);
-        } else if (orderId) {
-          await supabase.from('payment_intents').update({ status: 'failed' }).eq('reference_id', orderId);
-        }
-        break;
-      }
-      default:
-        console.log(`Unhandled event type ${eventType}`);
+
+      await supabase
+        .from('payment_webhooks')
+        .update({ processing_status: 'processed', processed_at: new Date().toISOString() })
+        .eq('provider_id', 'stripe')
+        .eq('event_id', eventId);
+    } catch (processingError: any) {
+      await supabase
+        .from('payment_webhooks')
+        .update({ processing_status: 'failed', error_message: processingError?.message || 'Processing failed' })
+        .eq('provider_id', 'stripe')
+        .eq('event_id', eventId);
+      throw processingError;
     }
   }
 

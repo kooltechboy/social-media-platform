@@ -306,12 +306,13 @@ export class EntitlementEngine {
   }
 
   private resolveTier(tierIdOrCode: string): TierEntitlementsDefinition | undefined {
-    if (this.tierMap.has(tierIdOrCode)) {
-      return this.tierMap.get(tierIdOrCode);
+    const normalizedId = tierIdOrCode === 'free_starter' ? 'creator_free' : tierIdOrCode;
+    if (this.tierMap.has(normalizedId)) {
+      return this.tierMap.get(normalizedId);
     }
     // Search by tierCode across definitions
     for (const def of this.tierMap.values()) {
-      if (def.tierCode === tierIdOrCode) {
+      if (def.tierCode === normalizedId) {
         return def;
       }
     }

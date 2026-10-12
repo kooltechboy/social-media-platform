@@ -167,7 +167,10 @@ export default async function ReliefPage({
       query = query.eq('target_country_iso', currentCountry.toUpperCase());
     }
     if (currentQuery) {
-      query = query.or(`title.ilike.%${currentQuery}%,description.ilike.%${currentQuery}%`);
+      const safeQuery = currentQuery.replace(/[,().%]/g, '').trim();
+      if (safeQuery) {
+        query = query.or(`title.ilike.%${safeQuery}%,description.ilike.%${safeQuery}%`);
+      }
     }
     if (isVerifiedOnly) {
       query = query.eq('verification_status', 'verified');
@@ -304,16 +307,16 @@ export default async function ReliefPage({
                 href={targetUrl}
                 className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs sm:text-sm font-bold min-h-[44px] shrink-0 transition-all ${
                   isActive
-                    ? 'bg-brand-sunriseCoral text-white shadow-lg shadow-brand-sunriseCoral/25 ring-2 ring-brand-sunriseCoral/40'
+                    ? 'bg-brand-sunriseCoral text-brand-twilight shadow-lg shadow-brand-sunriseCoral/25 ring-2 ring-brand-sunriseCoral/40'
                     : 'bg-brand-dusk/90 hover:bg-slate-800 text-brand-sandstone hover:text-white border border-slate-800'
                 }`}
               >
-                <Icon className={`w-4 h-4 ${isActive ? 'text-white' : 'text-brand-sunriseCoral'}`} />
+                <Icon className={`w-4 h-4 ${isActive ? 'text-brand-twilight' : 'text-brand-sunriseCoral'}`} />
                 <span>{tab.label}</span>
                 {tab.id !== 'all' && (
                   <span
                     className={`hidden md:inline-block px-1.5 py-0.5 rounded text-[10px] font-mono ${
-                      isActive ? 'bg-white/20 text-white' : 'bg-slate-800 text-brand-sandstone/70'
+                      isActive ? 'bg-slate-950/20 text-brand-twilight' : 'bg-slate-800 text-brand-sandstone/70'
                     }`}
                   >
                     {tab.protocol}
@@ -377,7 +380,7 @@ export default async function ReliefPage({
             <button
               type="submit"
               aria-label="Submit search"
-              className="flex-1 md:flex-none inline-flex items-center justify-center gap-2 bg-brand-sunriseCoral hover:brightness-110 text-white font-bold px-5 py-2.5 rounded-2xl text-xs sm:text-sm min-h-[44px] shadow-md shadow-brand-sunriseCoral/20 transition-all active:scale-[0.98]"
+              className="flex-1 md:flex-none inline-flex items-center justify-center gap-2 bg-brand-sunriseCoral hover:brightness-110 text-brand-twilight font-bold px-5 py-2.5 rounded-2xl text-xs sm:text-sm min-h-[44px] shadow-md shadow-brand-sunriseCoral/20 transition-all active:scale-[0.98]"
             >
               <Search className="w-4 h-4" />
               <span>Search</span>
@@ -454,7 +457,7 @@ export default async function ReliefPage({
             <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
               <Link
                 href="/create?mode=fundraiser"
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-brand-sunriseCoral hover:brightness-110 text-white font-black px-6 py-3 rounded-2xl text-xs sm:text-sm min-h-[44px] shadow-lg shadow-brand-sunriseCoral/25 transition-all"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-brand-sunriseCoral hover:brightness-110 text-brand-twilight font-black px-6 py-3 rounded-2xl text-xs sm:text-sm min-h-[44px] shadow-lg shadow-brand-sunriseCoral/25 transition-all"
               >
                 <Plus className="w-4 h-4 stroke-[3]" />
                 <span>Launch Relief Fundraiser</span>

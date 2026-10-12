@@ -737,7 +737,7 @@ export default function ExploreDiscoveryClient({
 
                   <div className="pt-4 border-t border-white/10">
                     <Link
-                      href="/events"
+                      href={`/events/${evt.id}`}
                       className="w-full text-center bg-yellow-400 hover:brightness-110 text-slate-950 font-black py-2.5 rounded-xl text-xs md:text-sm transition-all shadow-md shadow-yellow-500/20 block min-h-[42px] flex items-center justify-center"
                     >
                       Get Tickets / RSVP →
@@ -886,7 +886,7 @@ export default function ExploreDiscoveryClient({
               {initialResult.reels.map((reel) => (
                 <Link
                   key={reel.id}
-                  href="/reels"
+                  href={`/reels?id=${reel.id}`}
                   className="surface-card surface-card-interactive rounded-2xl p-4 space-y-2 block border border-white/10 group"
                 >
                   <div className="aspect-[9/16] bg-slate-950 rounded-xl overflow-hidden relative flex items-center justify-center border border-white/5">

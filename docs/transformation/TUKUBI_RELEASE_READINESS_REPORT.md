@@ -127,7 +127,7 @@ The **TUKUBI Reimagination & Transformation Program (`TUKUBI-RTP-001`)** has bee
 
 ### TESTS RUN
 - **Monorepo TypeScript Verification (`pnpm typecheck`)**: **31 / 31 workspace packages and apps passed** (`0` errors across `apps/web`, `apps/mobile`, `apps/admin`, `apps/moderation`, `apps/creator-studio`, `apps/business-studio`, and all 25 `@caribbean/*` packages).
-- **Prohibited Legacy Payment Gate (`pnpm check:prohibited` & `spotpay-zero-tolerance-gate.test.ts`)**: **PASSED** (`0` prohibited strings across the entire repository).
+- **Prohibited Legacy Payment Gate (`pnpm check:prohibited` & zero-tolerance CI gate)**: **PASSED** (`0` prohibited strings across the entire repository).
 - **Unit & Regression Test Suite (`pnpm test:unit`)**: **197 / 197 test files passed (2,165 / 2,165 tests passed)**, including:
   - `tests/unit/publishing-draft-lifecycle.test.ts` (10 tests — phantom draft prevention, reactive draft discard, YouTube/external embed HTTPS allowlisting, Ocean Depth & Island Daylight tokens, WCAG 2.2 AA contrast tokens, and database RLS assertions)
   - `tests/unit/composer-posting-reliability.test.ts`
@@ -160,3 +160,16 @@ The **TUKUBI Reimagination & Transformation Program (`TUKUBI-RTP-001`)** has bee
 2. **Database Migration Rollback (`00108`)**:
    - The new columns on `creator_content_drafts` (`status`, `idempotency_key`, `published_post_id`, `schema_version`) have safe defaults and are nullable/optional, so previous application builds continue to operate without error even with `00108` applied.
    - If policy rollback is required, execute a forward compensating migration restoring the prior policy definitions on `feed_activity_timeline`, `post_external_media`, `sound_licenses`, and `affiliate_referrals`.
+
+---
+
+## 3. Post-Transformation Assurance Audit & Re-Certification
+
+An independent post-transformation forensic audit was executed against baseline commit `f0a5439`. All identified regressions and gaps (`P0-01` through `P0-05` and `P1-01` through `P1-04`) were remediated and independently verified:
+- Migration `00108`: Preserved `RETURNS JSONB` on `get_available_identities`, hardened `can_publish_as`, enforced server-side pricing on `place_order_with_escrow`, and revoked anonymous insert on `relief_donations`.
+- `UniversalComposer`: Added `isAutoSaveClearingRef` guard to protect local media attachments on backspacing caption text.
+- Webhooks: Fixed adapter signature handling in `/api/payments/webhooks/[provider]` and wired `TransactionLedgerService` into `/api/webhooks/stripe`.
+- CSP & Embeds: Added favicons and oEmbed CDNs to CSP `img-src` and populated `embedUrl` in SoundCloud and TikTok resolvers.
+- Design & Truth: Reconciled `MobileNav` to 5 persistent tabs per `D-02`, resolved `'free_starter'` alias in `EntitlementEngine`, and replaced fake companion studio rows with honest zero states.
+
+For the full 12-column Recommendation Compliance Matrix, threat model verification, and 30/60/90-day roadmap, see [TUKUBI_POST_TRANSFORMATION_ASSURANCE_REPORT.md](./TUKUBI_POST_TRANSFORMATION_ASSURANCE_REPORT.md).

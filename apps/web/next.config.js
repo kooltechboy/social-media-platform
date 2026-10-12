@@ -11,8 +11,8 @@ const TUKUBI_CSP = [
   "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://www.paypal.com https://www.paypalobjects.com https://accounts.google.com",
   // Styles: self + inline (Tailwind injects inline styles)
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-  // Images: self + Supabase Storage + Unsplash + Mux + Cloudflare + Cloudinary + YouTube thumbnails + data URIs
-  "img-src 'self' data: blob: https://*.supabase.co https://*.supabase.in https://images.unsplash.com https://*.unsplash.com https://image.mux.com https://imagedelivery.net https://res.cloudinary.com https://i.ytimg.com https://img.youtube.com https://www.paypalobjects.com https://www.gstatic.com",
+  // Images: self + Supabase Storage + Unsplash + Mux + Cloudflare + Cloudinary + YouTube/Vimeo/Spotify/SoundCloud/TikTok/OpenGraph thumbnails + Google favicons + data URIs
+  "img-src 'self' data: blob: https: https://*.supabase.co https://*.supabase.in https://images.unsplash.com https://*.unsplash.com https://image.mux.com https://imagedelivery.net https://res.cloudinary.com https://i.ytimg.com https://img.youtube.com https://i.vimeocdn.com https://i.scdn.co https://*.spotifycdn.com https://*.sndcdn.com https://*.tiktokcdn.com https://*.tiktokcdn-us.com https://*.dmcdn.net https://cdn.loom.com https://*.mzstatic.com https://www.google.com https://www.paypalobjects.com https://www.gstatic.com",
   // Fonts: self + Google Fonts
   "font-src 'self' https://fonts.gstatic.com",
   // API/WebSocket connections: Supabase, Stripe, PayPal, self, Sentry, Mux, Cloudflare

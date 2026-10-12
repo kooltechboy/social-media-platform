@@ -2,41 +2,17 @@ import React from 'react';
 import { formatPrice } from '@caribbean/business';
 
 export default function CampaignsPage() {
-  const campaigns = [
-    {
-      id: 'CMP-301',
-      title: 'Carnival Coffee Roasters Promo',
-      status: 'Active',
-      budgetMinor: 50000, // $500.00
-      spentMinor: 31250,
-      impressions: 48900,
-      clicks: 2140,
-      ctr: '4.37%',
-      target: 'Kingston, Port of Spain, Miami',
-    },
-    {
-      id: 'CMP-302',
-      title: 'Diaspora Holiday Gift Basket Push',
-      status: 'Scheduled',
-      budgetMinor: 100000, // $1,000.00
-      spentMinor: 0,
-      impressions: 0,
-      clicks: 0,
-      ctr: '0.00%',
-      target: 'London, Toronto, NYC, Brooklyn',
-    },
-    {
-      id: 'CMP-299',
-      title: 'Summer Flash Sale: Island Spices',
-      status: 'Completed',
-      budgetMinor: 25000,
-      spentMinor: 25000,
-      impressions: 34100,
-      clicks: 1890,
-      ctr: '5.54%',
-      target: 'Caribbean Basin Wide',
-    },
-  ];
+  const campaigns: Array<{
+    id: string;
+    title: string;
+    status: string;
+    budgetMinor: number;
+    spentMinor: number;
+    impressions: number;
+    clicks: number;
+    ctr: string;
+    target: string;
+  }> = [];
 
   return (
     <div className="space-y-6">
@@ -47,9 +23,12 @@ export default function CampaignsPage() {
             Reach engaged Caribbean diaspora audiences across Tukubi feeds, explore spotlight, and live audio lounges.
           </p>
         </div>
-        <button className="px-4 py-2 rounded-xl bg-gradient-to-r from-[#00B4D8] to-[#FFB347] text-white font-semibold text-sm shadow-md hover:opacity-95 transition-opacity">
+        <a
+          href="/business-center?tab=campaigns"
+          className="px-4 py-2 rounded-xl bg-gradient-to-r from-[#00B4D8] to-[#FFB347] text-[#110D17] font-bold text-sm shadow-md hover:opacity-95 transition-opacity inline-flex items-center justify-center"
+        >
           + Launch New Campaign
-        </button>
+        </a>
       </div>
 
       <div className="rounded-xl bg-[#1D1429] border border-[#2A1B38] p-6">
@@ -66,37 +45,48 @@ export default function CampaignsPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-[#2A1B38]/60">
-              {campaigns.map((c) => (
-                <tr key={c.id}>
-                  <td className="py-3 px-2">
-                    <p className="font-semibold text-white">{c.title}</p>
-                    <p className="text-xs font-mono text-[#00B4D8]">{c.id}</p>
+              {campaigns.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="py-8 text-center text-[#FDF2E9]/50">
+                    <p className="text-sm font-semibold text-white">No advertising campaigns created yet</p>
+                    <p className="text-xs mt-1">
+                      Create and fund regional or diaspora ad campaigns in the canonical Business Center (`/business-center?tab=campaigns`, `ad_campaigns` table) to track live impressions and CTR here.
+                    </p>
                   </td>
-                  <td className="py-3 px-2">
-                    <span
-                      className={`px-2.5 py-0.5 text-xs rounded-full border ${
-                        c.status === 'Active'
-                          ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
-                          : c.status === 'Scheduled'
-                          ? 'bg-[#8B5CF6]/20 text-[#8B5CF6] border-[#8B5CF6]/30'
-                          : 'bg-zinc-500/20 text-zinc-400 border-zinc-500/30'
-                      }`}
-                    >
-                      {c.status}
-                    </span>
-                  </td>
-                  <td className="py-3 px-2 text-xs font-mono">
-                    <span className="text-white">{formatPrice(c.spentMinor, 'USD')}</span>
-                    <span className="text-[#FDF2E9]/50"> / {formatPrice(c.budgetMinor, 'USD')}</span>
-                  </td>
-                  <td className="py-3 px-2 font-mono text-white">{c.impressions.toLocaleString()}</td>
-                  <td className="py-3 px-2 text-xs font-mono">
-                    <span className="text-white">{c.clicks.toLocaleString()}</span>{' '}
-                    <span className="text-[#FFB347]">({c.ctr})</span>
-                  </td>
-                  <td className="py-3 px-2 text-xs text-[#FDF2E9]/70">{c.target}</td>
                 </tr>
-              ))}
+              ) : (
+                campaigns.map((c) => (
+                  <tr key={c.id}>
+                    <td className="py-3 px-2">
+                      <p className="font-semibold text-white">{c.title}</p>
+                      <p className="text-xs font-mono text-[#00B4D8]">{c.id}</p>
+                    </td>
+                    <td className="py-3 px-2">
+                      <span
+                        className={`px-2.5 py-0.5 text-xs rounded-full border ${
+                          c.status === 'Active'
+                            ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
+                            : c.status === 'Scheduled'
+                            ? 'bg-[#8B5CF6]/20 text-[#8B5CF6] border-[#8B5CF6]/30'
+                            : 'bg-zinc-500/20 text-zinc-400 border-zinc-500/30'
+                        }`}
+                      >
+                        {c.status}
+                      </span>
+                    </td>
+                    <td className="py-3 px-2 text-xs font-mono">
+                      <span className="text-white">{formatPrice(c.spentMinor, 'USD')}</span>
+                      <span className="text-[#FDF2E9]/50"> / {formatPrice(c.budgetMinor, 'USD')}</span>
+                    </td>
+                    <td className="py-3 px-2 font-mono text-white">{c.impressions.toLocaleString()}</td>
+                    <td className="py-3 px-2 text-xs font-mono">
+                      <span className="text-white">{c.clicks.toLocaleString()}</span>{' '}
+                      <span className="text-[#FFB347]">({c.ctr})</span>
+                    </td>
+                    <td className="py-3 px-2 text-xs text-[#FDF2E9]/70">{c.target}</td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>

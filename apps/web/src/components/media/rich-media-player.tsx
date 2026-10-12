@@ -98,6 +98,9 @@ export default function RichMediaPlayer({
 
     function handleWindowMessage(event: MessageEvent) {
       if (!event.data) return;
+      if (iframeRef.current?.contentWindow && event.source && event.source !== iframeRef.current.contentWindow) {
+        return;
+      }
 
       try {
         let payload: any = event.data;
@@ -173,6 +176,8 @@ export default function RichMediaPlayer({
         if (typeof window !== 'undefined' && window.location.origin) {
           u.searchParams.set('origin', window.location.origin);
         }
+      } else if (u.hostname.includes('twitch.tv') && typeof window !== 'undefined' && window.location.hostname) {
+        u.searchParams.set('parent', window.location.hostname);
       }
       return u.toString();
     } catch {

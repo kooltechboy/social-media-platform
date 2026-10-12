@@ -221,14 +221,14 @@ export default function UniversalContentCard({
             allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
             loading="lazy"
             referrerPolicy="strict-origin-when-cross-origin"
-            sandbox="allow-scripts allow-same-origin allow-presentation allow-popups"
+            sandbox="allow-scripts allow-same-origin allow-presentation allow-popups allow-forms"
             title={title}
           />
         </div>
       )}
 
       {/* C. HERO IMAGE FOR ARTICLES & PRODUCTS */}
-      {contentType !== 'video' && !embedHtml && thumbnailUrl && (
+      {contentType !== 'video' && !((contentType === 'audio' || contentType === 'podcast') && embedUrl && isSafeEmbedUrl(embedUrl) && metadata.canEmbed !== false) && thumbnailUrl && (
         <div className="relative w-full aspect-[1.91/1] max-h-64 bg-slate-900 overflow-hidden">
           <TukubiImage
             src={thumbnailUrl}

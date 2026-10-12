@@ -219,4 +219,48 @@ describe('TUKUBI-RTP-001 — Publishing, Media, Draft Lifecycle & Design System 
       expect(creatorDraftsRls.statement.text).toContain('public.creator_content_drafts');
     });
   });
+
+  // ===========================================================================
+  // 5. Post-Transformation Assurance Regression Suite (P0/P1 Hardening)
+  // ===========================================================================
+  describe('5. Post-Transformation Assurance Regression Checks', () => {
+    it('preserves RETURNS JSONB and all 6 identity keys in migration 00108 get_available_identities while enforcing auth.uid() IDOR guard', async () => {
+      const fs = await import('node:fs');
+      const path = await import('node:path');
+      const sql = fs.readFileSync(
+        path.resolve(__dirname, '../../supabase/migrations/00108_phase2_security_rls_and_publishing_lifecycle.sql'),
+        'utf-8'
+      );
+      expect(sql).toContain('CREATE OR REPLACE FUNCTION public.get_available_identities(p_user_id UUID)');
+      expect(sql).toContain('RETURNS JSONB');
+      expect(sql).not.toContain('RETURNS TABLE');
+      expect(sql).toContain("'personal', v_personal");
+      expect(sql).toContain("'official', v_official");
+      expect(sql).toContain("'creator', v_creator");
+      expect(sql).toContain("'businesses', v_businesses");
+      expect(sql).toContain("'communities', v_communities");
+      expect(sql).toContain("'active', COALESCE(v_active");
+      expect(sql).toContain("cm.role IN ('admin', 'moderator')");
+      expect(sql).toContain('CREATE OR REPLACE FUNCTION public.place_order_with_escrow');
+      expect(sql).toContain('REVOKE INSERT ON public.relief_donations FROM anon');
+    });
+
+    it('guards auto-save clearComposerDraft in UniversalComposer with isAutoSaveClearingRef so un-uploaded local media is not wiped on backspace', async () => {
+      const fs = await import('node:fs');
+      const path = await import('node:path');
+      const composerSrc = fs.readFileSync(
+        path.resolve(__dirname, '../../apps/web/src/components/universal-composer.tsx'),
+        'utf-8'
+      );
+      expect(composerSrc).toContain('isAutoSaveClearingRef');
+      expect(composerSrc).toContain('if (!draft && !isAutoSaveClearingRef.current)');
+    });
+
+    it('resolves free_starter as an alias for creator_free in EntitlementEngine', async () => {
+      const { EntitlementEngine } = await import('../../packages/payments/src/entitlements');
+      const engine = new EntitlementEngine();
+      expect(engine.getEntitlements('free_starter')).toEqual(engine.getEntitlements('creator_free'));
+      expect(engine.canMonetize('free_starter')).toBe(true);
+    });
+  });
 });

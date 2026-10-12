@@ -42,6 +42,10 @@ export class TikTokProvider extends BaseContentProvider {
 
         const title = this.sanitizeText(data.title) || 'TikTok Video';
         const author = this.sanitizeText(data.author_name);
+        const pathMatch = url.pathname.match(/\/video\/(\d+)/);
+        const htmlMatch = data.html?.match(/data-video-id="(\d+)"/);
+        const videoId = pathMatch?.[1] || htmlMatch?.[1];
+        const embedUrl = videoId ? `https://www.tiktok.com/embed/v2/${videoId}` : undefined;
 
         return this.buildBaseMetadata({
           url,
@@ -51,9 +55,11 @@ export class TikTokProvider extends BaseContentProvider {
           thumbnailUrl: data.thumbnail_url,
           authorName: author ? `@${author}` : undefined,
           authorUrl: data.author_url,
+          embedUrl,
           embedHtml: data.html,
           aspectRatio: '9:16',
-          isPlayable: false, // External attribution redirect preferred for TikTok mobile web stability
+          canEmbed: Boolean(embedUrl),
+          isPlayable: Boolean(embedUrl),
           status: 'resolved',
         });
       }

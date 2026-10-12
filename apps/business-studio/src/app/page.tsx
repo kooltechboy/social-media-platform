@@ -19,8 +19,8 @@ export default function BusinessStudioOverview() {
         </div>
         <div className="mt-6">
           <a
-            href="/onboarding"
-            className="inline-flex px-5 py-2.5 rounded-xl font-semibold text-sm bg-gradient-to-r from-[#00B4D8] to-[#FFB347] text-white hover:opacity-95 shadow-lg shadow-[#00B4D8]/20 transition-opacity"
+            href="/marketplace/seller-center/onboarding"
+            className="inline-flex px-5 py-2.5 rounded-xl font-bold text-sm bg-gradient-to-r from-[#00B4D8] to-[#FFB347] text-[#110D17] hover:opacity-95 shadow-lg shadow-[#00B4D8]/20 transition-opacity"
           >
             Set Up Your Store →
           </a>

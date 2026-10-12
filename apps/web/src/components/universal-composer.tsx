@@ -358,6 +358,7 @@ export default function UniversalComposer({
 
   const firstName = displayName.split(' ')[0]?.replace('@', '') || 'Friend';
   const isBannedTester = isBannedTesterAccount({ id: userId, displayName });
+  const isAutoSaveClearingRef = useRef(false);
 
   // Authoritative draft restoration on mount + live external discard synchronization
   useEffect(() => {
@@ -399,7 +400,7 @@ export default function UniversalComposer({
     }
 
     const unsubscribe = subscribeToDraftChanges((draft) => {
-      if (!draft) {
+      if (!draft && !isAutoSaveClearingRef.current) {
         setContent('');
         setMediaList((prev) => {
           prev.forEach((m) => {
@@ -413,9 +414,34 @@ export default function UniversalComposer({
         });
         setResolvedLinkPreviews([]);
         setDismissedUrls(new Set());
+        setMode('text');
+        setIsReel(false);
+        setScheduledAt(null);
         setPollQuestion('');
         setPollOptions(['', '']);
         setTaggedProducts([]);
+        setEventInput({
+          title: '',
+          description: '',
+          event_kind: 'in_person',
+          privacy: 'public',
+          starts_at: '',
+          ends_at: '',
+          venue: '',
+          livestream_url: '',
+          capacity: null,
+        });
+        setReliefInput({
+          title: '',
+          description: '',
+          category: 'hurricane_relief',
+          goal_minor: 10000,
+          currency: 'USD',
+          target_country_iso: 'JAM',
+          disaster_declaration_ref: '',
+          supporting_evidence_urls: [],
+        });
+        setIsOfficialAlert(false);
         setErrorMessage(null);
         setFailureInfo(null);
       }
@@ -501,7 +527,12 @@ export default function UniversalComposer({
       }, 400);
       return () => clearTimeout(timer);
     } else if (typeof window !== 'undefined' && window.localStorage.getItem('tukubi_composer_draft_v3')) {
-      clearComposerDraft();
+      isAutoSaveClearingRef.current = true;
+      try {
+        clearComposerDraft();
+      } finally {
+        isAutoSaveClearingRef.current = false;
+      }
     }
   }, [
     content,
