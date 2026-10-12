@@ -384,22 +384,13 @@ export async function createPostAction(_prev: PostActionState, formData: FormDat
     linkPreviews = [linkPreview];
   }
 
-  if (!linkPreview && content) {
-    const detected = detectUrls(content);
-    if (detected.hasUrls && detected.primaryUrl) {
-      try {
-        const auto = await resolveContentUrl(detected.primaryUrl);
-        if (auto && auto.status !== 'failed') {
-          linkPreview = auto;
-          if (linkPreviews.length === 0) {
-            linkPreviews = [auto];
-          }
-        }
-      } catch {
-        // Fallback
-      }
-    }
-  }
+  // TUKUBI UNIVERSAL RICH MEDIA ENGINE: Non-blocking Post Creation
+  // Post publishing must NEVER block or fail due to external media resolution.
+  // If link preview was not provided up front by the composer, we queue non-blocking
+  // background enrichment to maintain sub-150ms publish response times.
+  const pendingBackgroundUrl = (!linkPreview && content)
+    ? detectUrls(content).primaryUrl || null
+    : null;
 
   // Helper to format an existing replayed post deterministically
   const buildReplayedPostResponse = (existing: any) => {
@@ -677,6 +668,64 @@ export async function createPostAction(_prev: PostActionState, formData: FormDat
     } catch (e) {
       logger.warn('[createPostAction] post_external_media insert error:', { error: String(e) });
     }
+  }
+
+  // TUKUBI UNIVERSAL RICH MEDIA ENGINE: Asynchronous Background Enrichment
+  // If the post had detected URLs but no pre-resolved preview from the client composer,
+  // resolve media asynchronously in the background so publish response is instant.
+  if (pendingBackgroundUrl && data?.id && supabase) {
+    const targetPostId = data.id;
+    (async () => {
+      try {
+        const auto = await resolveContentUrl(pendingBackgroundUrl);
+        if (auto && auto.status !== 'failed') {
+          // 1. Update post JSON preview column
+          await supabase
+            .from('posts')
+            .update({
+              link_preview: auto,
+              link_previews: [auto],
+            })
+            .eq('id', targetPostId);
+
+          // 2. Insert normalized post_external_media row
+          await supabase.from('post_external_media').insert([{
+            post_id: targetPostId,
+            provider: auto.provider || 'generic',
+            media_type: auto.contentType || 'link',
+            original_url: auto.url,
+            canonical_url: auto.normalizedUrl || auto.url,
+            external_id: auto.extra?.id ? String(auto.extra.id) : null,
+            title: auto.title || null,
+            description: auto.description || null,
+            thumbnail_url: auto.thumbnailUrl || null,
+            embed_url: auto.embedUrl || null,
+            author_name: auto.authorName || null,
+            author_url: auto.authorUrl || null,
+            duration_seconds: auto.durationSeconds || null,
+            aspect_ratio: auto.aspectRatio || '16:9',
+            metadata: auto.extra || {},
+            embed_allowed: auto.canEmbed !== false,
+            resolution_status: auto.status || 'resolved',
+          }]);
+          logger.info('[createPostAction] Background rich media resolution completed successfully', {
+            postId: targetPostId,
+            provider: auto.provider,
+            contentType: auto.contentType,
+          });
+        }
+      } catch (bgErr) {
+        logger.warn('[createPostAction] Background rich media resolution failed gracefully:', {
+          postId: targetPostId,
+          error: String(bgErr),
+        });
+      }
+    })().catch((err) => {
+      logger.warn('[createPostAction] Background rich media worker uncaught error:', {
+        postId: targetPostId,
+        error: String(err),
+      });
+    });
   }
 
   // If this was a re-share, record in post_shares table

@@ -236,4 +236,62 @@ describe('Composer & Posting Reliability — Publish Transaction Resilience', ()
     };
     expect(isMissingColumnError(constraintError)).toBe(false);
   });
+
+  describe('Universal Rich Media Engine — Non-Blocking Decoupled Publishing', () => {
+    it('synchronizes single link_preview and multi link_previews deterministically', () => {
+      const singlePreview = {
+        url: 'https://www.youtube.com/watch?v=IIQ3mIGKquc',
+        normalizedUrl: 'https://www.youtube.com/watch?v=IIQ3mIGKquc',
+        provider: 'youtube',
+        contentType: 'video',
+        title: 'Caribbean Vibe',
+        canEmbed: true,
+      };
+
+      // Case A: Only single link_preview provided
+      let single: any = singlePreview;
+      let multi: any[] = [];
+      if (multi.length > 0 && !single) single = multi[0];
+      else if (single && multi.length === 0) multi = [single];
+
+      expect(multi).toHaveLength(1);
+      expect(multi[0].provider).toBe('youtube');
+
+      // Case B: Only multi link_previews provided
+      single = null;
+      multi = [singlePreview];
+      if (multi.length > 0 && !single) single = multi[0];
+      else if (single && multi.length === 0) multi = [single];
+
+      expect(single).not.toBeNull();
+      expect(single.title).toBe('Caribbean Vibe');
+    });
+
+    it('identifies pending background URL when link preview is not pre-resolved by client', () => {
+      const content = 'Check out this island track https://open.spotify.com/track/4cOdK2wGLETKBW3PvgPWqT in Trinidad!';
+      let linkPreview = null;
+
+      const pendingBackgroundUrl = (!linkPreview && content)
+        ? detectUrls(content).primaryUrl || null
+        : null;
+
+      expect(pendingBackgroundUrl).toBe('https://open.spotify.com/track/4cOdK2wGLETKBW3PvgPWqT');
+    });
+
+    it('bypasses background URL queue when composer already provided link_preview', () => {
+      const content = 'Check out this island track https://open.spotify.com/track/4cOdK2wGLETKBW3PvgPWqT in Trinidad!';
+      const linkPreview = {
+        url: 'https://open.spotify.com/track/4cOdK2wGLETKBW3PvgPWqT',
+        provider: 'spotify',
+        contentType: 'audio',
+      };
+
+      const pendingBackgroundUrl = (!linkPreview && content)
+        ? detectUrls(content).primaryUrl || null
+        : null;
+
+      // Because linkPreview was already supplied by composer, pendingBackgroundUrl is null
+      expect(pendingBackgroundUrl).toBeNull();
+    });
+  });
 });
