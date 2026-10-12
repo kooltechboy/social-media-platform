@@ -96,7 +96,7 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   createButtonText: {
-    color: '#FFFFFF',
+    color: TOKENS.actionText,
     fontSize: 24,
     fontWeight: '700',
   },

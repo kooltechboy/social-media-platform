@@ -71,7 +71,7 @@ export interface AuthCheckResult {
 import { ensureUserProfile } from '../auth/user-sync';
 
 export const getCurrentUser = cache(async function getCurrentUser(): Promise<SessionUser | null> {
-  if (process.env.PLAYWRIGHT_TEST === '1') {
+  if (process.env.NODE_ENV !== 'production' && process.env.PLAYWRIGHT_TEST === '1') {
     try {
       const cookieStore = await cookies();
       const testCookie = cookieStore.get('tukubi_user_session')?.value;

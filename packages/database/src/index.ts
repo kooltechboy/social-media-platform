@@ -29,7 +29,10 @@ export type Table =
   | 'awards_programs' | 'award_nominations' | 'award_winners'
   | 'recognition_badges' | 'recognition_badge_categories' | 'recognition_achievements' | 'recognition_referrals' | 'reputation_levels' | 'user_badges' | 'user_achievements' | 'user_certifications' | 'user_reputation' | 'user_favorites' | 'user_active_identity'
   | 'feed_activity_timeline' | 'trending_signals' | 'content_translations_cache' | 'commercial_subscriptions' | 'commercial_rule_audit_logs' | 'affiliate_referrals' | 'media_assets' | 'parental_consent_requests' | 'polls' | 'poll_options' | 'poll_votes' | 'recommendation_feedback' | 'spotlights'
-  | 'help_categories' | 'help_articles' | 'help_faqs' | 'help_article_feedback' | 'help_search_queries' | 'help_tutorial_steps';
+  | 'help_categories' | 'help_articles' | 'help_faqs' | 'help_article_feedback' | 'help_search_queries' | 'help_tutorial_steps'
+  | 'page_categories' | 'page_roles' | 'page_followers' | 'hidden_posts' | 'url_metadata_cache'
+  | 'podcast_collaborators' | 'podcast_timed_links' | 'podcast_transcripts' | 'podcast_distribution_destinations' | 'podcast_feed_tokens' | 'podcast_comments' | 'podcast_sponsor_campaigns'
+  | 'relief_campaigns' | 'relief_donations' | 'post_external_media';
 
 export type Visibility = 'public' | 'followers' | 'friends' | 'private';
 

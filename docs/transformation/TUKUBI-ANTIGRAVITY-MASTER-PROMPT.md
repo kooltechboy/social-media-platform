@@ -115,7 +115,7 @@ Do not delete them — index them in TUKUBI_PRIOR_AUDIT_INDEX.md.
 Identity: TUKUBI · "The Caribbean Connected." · "Born in the Caribbean.
 Built for the World." · Island Vibes · Caribbean Futurism.
 Never revive Antilia, Caribbean One or retired brands. Never use
-"TUKUBI Ecosystem" as the primary name. Never reintroduce SpotPay.
+"TUKUBI Ecosystem" as the primary name. Never reintroduce retired payment brands.
 
 The existing palette (packages/design-system/src/index.ts, apps/web/src/app/
 globals.css) is the source of truth: Twilight #110D17, Dusk #1D1429,
@@ -429,7 +429,7 @@ indexable. Real data only. STOP after report.
 Execute PHASE 5 for approved items. K leads. Follow AGENTS.md payment chain:
 Payments Architect → Compliance → Backend → QA → Financial Reconciliation →
 Final Approval. Preserve tiered subscriptions/services with centralized
-entitlements; no commissions substitution; no SpotPay. Verify entitlement
+entitlements; no commissions substitution; no retired payment brands. Verify entitlement
 enforcement, provider webhooks, refunds, and ledger reconciliation in test
 mode. Mark anything incomplete as Planned in the truth matrices. STOP.
 ```

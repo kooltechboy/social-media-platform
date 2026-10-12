@@ -1,15 +1,19 @@
 // Design Tokens for TUKUBI Visual Language (Island Vibes / Caribbean Sunrise & Sunset)
 
 export const DEFAULT_THEME = 'island-vibes' as const;
+export type ThemeMode = 'island-vibes' | 'island-daylight';
 
 export const colors = {
   brand: {
     twilight: '#110D17',        // Deep Twilight Base (Island Vibes night sky)
     dusk: '#1D1429',            // Warm Dusk Surface 
     sunsetPlum: '#2A1B38',      // Deep Plum Raised Surface
+    oceanDepth: '#0B1F33',      // Deep Ocean Navy Trust & Financial Surface (D-01)
     sunriseCoral: '#FF7A59',    // Vibrant Sunrise Coral
+    emberCoral: '#C2410C',      // Light-Mode Accessible Deep Ember Coral (5.18:1)
     goldenHour: '#FFB347',      // Warm Golden Hour
     caribbeanSea: '#00B4D8',    // Beautiful Tropical Sea
+    deepSea: '#0E7490',         // Light-Mode Accessible Deep Sea Cyan (5.36:1)
     sandstone: '#FDF2E9',       // Warm Sandstone Text/White
     sunsetPurple: '#8B5CF6',    // Deep Sunset Purple
     oceanSurge: '#0284C7',      // Deep Ocean Blue Accent
@@ -22,6 +26,7 @@ export const colors = {
     canvas: '#110D17',
     surface: '#1D1429',
     surfaceRaised: '#2A1B38',
+    surfaceTrust: '#0B1F33',
     surfaceOpaque: '#161022',
     surfaceElevated: '#1D1429',
     surfaceCard: 'rgba(22, 16, 34, 0.94)',
@@ -30,19 +35,48 @@ export const colors = {
     border: 'rgba(255, 255, 255, 0.10)',
     borderHover: 'rgba(255, 122, 89, 0.40)',
     primary: '#FF7A59',
+    onPrimary: '#110D17',
     secondary: '#8B5CF6',
     accent: '#FFB347',
     sea: '#00B4D8',
     textPrimary: '#FDF2E9',
-    textMuted: '#A1A1AA',
-    textDim: '#71717A',
+    textMuted: '#B4B4BE',
+    textDim: '#A1A1AA',
     success: '#10B981',
     warning: '#FFB347',
     danger: '#F43F5E',
   },
+  islandDaylight: {
+    name: 'Island Daylight',
+    id: 'island-daylight',
+    canvas: '#FFFDF9',
+    surface: '#FFFFFF',
+    surfaceRaised: '#F4EFE6',
+    surfaceTrust: '#0B1F33',
+    surfaceOpaque: '#FFFFFF',
+    surfaceElevated: '#F4EFE6',
+    surfaceCard: 'rgba(255, 255, 255, 0.96)',
+    surfaceHeader: 'rgba(255, 253, 249, 0.94)',
+    surfaceGlass: 'rgba(255, 253, 249, 0.85)',
+    border: 'rgba(24, 24, 27, 0.10)',
+    borderHover: 'rgba(194, 65, 12, 0.35)',
+    primary: '#C2410C',
+    primaryBright: '#FF7A59',
+    onPrimary: '#FFFFFF',
+    secondary: '#0E7490',
+    accent: '#B45309',
+    sea: '#0E7490',
+    textPrimary: '#18181B',
+    textMuted: '#52525B',
+    textDim: '#52525B',
+    success: '#059669',
+    warning: '#D97706',
+    danger: '#E11D48',
+  },
   gradients: {
     tukubiAmbient: 'linear-gradient(135deg, #110D17 0%, #1D1429 50%, #2A1B38 100%)',
     islandVibesHeader: 'linear-gradient(135deg, #00B4D8 0%, #FFB347 50%, #FF7A59 100%)',
+    oceanTrust: 'linear-gradient(135deg, #0B1F33 0%, #110D17 100%)',
     sunriseGlow: 'radial-gradient(circle at 80% 20%, rgba(255, 122, 89, 0.2), transparent 40%)',
     goldenGlow: 'radial-gradient(circle at 20% 80%, rgba(255, 179, 71, 0.15), transparent 40%)',
     oceanGlow: 'radial-gradient(circle at 50% 50%, rgba(0, 180, 216, 0.15), transparent 50%)',
@@ -62,6 +96,19 @@ export const colors = {
     950: '#09090B',
   }
 };
+
+export const motion = {
+  durationFast: '150ms',
+  durationNormal: '220ms',
+  durationSlow: '350ms',
+  easingStandard: 'cubic-bezier(0.2, 0, 0, 1)',
+} as const;
+
+export const localeLayout = {
+  textExpansionFactor: 1.3,
+  minTouchTargetPx: 44,
+  maxLineWidthCh: 68,
+} as const;
 
 export const typography = {
   fontFamily: {

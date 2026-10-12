@@ -169,7 +169,7 @@ export default function DiasporaAdsManagerModal({
         {/* Header */}
         <div className="flex items-center justify-between border-b border-slate-800 pb-3">
           <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-2xl bg-gradient-to-tr from-brand-sunriseCoral to-brand-goldenHour text-white shadow-lg shadow-brand-sunriseCoral/20">
+            <div className="p-2.5 rounded-2xl bg-gradient-to-tr from-brand-sunriseCoral to-brand-goldenHour text-brand-twilight shadow-lg shadow-brand-sunriseCoral/20">
               <Target className="w-5 h-5" />
             </div>
             <div>
@@ -303,7 +303,7 @@ export default function DiasporaAdsManagerModal({
                   <button
                     type="button"
                     onClick={() => setStep(2)}
-                    className="px-5 py-2.5 rounded-xl bg-brand-sunriseCoral text-white text-xs font-bold flex items-center gap-1.5 hover:bg-brand-sunriseCoral/90 transition-all"
+                    className="px-5 py-2.5 rounded-xl bg-brand-sunriseCoral text-brand-twilight text-xs font-bold flex items-center gap-1.5 hover:bg-brand-sunriseCoral/90 transition-all"
                   >
                     Next: Target Audience <ArrowRight className="w-4 h-4" />
                   </button>
@@ -426,7 +426,7 @@ export default function DiasporaAdsManagerModal({
                   <button
                     type="button"
                     onClick={() => setStep(3)}
-                    className="px-5 py-2.5 rounded-xl bg-brand-sunriseCoral text-white text-xs font-bold flex items-center gap-1.5 hover:bg-brand-sunriseCoral/90 transition-all"
+                    className="px-5 py-2.5 rounded-xl bg-brand-sunriseCoral text-brand-twilight text-xs font-bold flex items-center gap-1.5 hover:bg-brand-sunriseCoral/90 transition-all"
                   >
                     Next: Review &amp; Launch <ArrowRight className="w-4 h-4" />
                   </button>
@@ -497,7 +497,7 @@ export default function DiasporaAdsManagerModal({
                     type="button"
                     onClick={handleLaunch}
                     disabled={isLaunching || !headline.trim()}
-                    className="px-6 py-3 rounded-2xl bg-gradient-to-r from-brand-sunriseCoral via-brand-goldenHour to-brand-sunriseCoral font-black text-white text-xs uppercase tracking-wider transition-all disabled:opacity-50 flex items-center justify-center gap-2 shadow-lg shadow-brand-sunriseCoral/20"
+                    className="px-6 py-3 rounded-2xl bg-gradient-to-r from-brand-sunriseCoral via-brand-goldenHour to-brand-sunriseCoral font-black text-brand-twilight text-xs uppercase tracking-wider transition-all disabled:opacity-50 flex items-center justify-center gap-2 shadow-lg shadow-brand-sunriseCoral/20"
                   >
                     {isLaunching ? (
                       <>

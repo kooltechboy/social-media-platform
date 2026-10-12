@@ -927,7 +927,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   feedTabTextActive: {
-    color: '#FFFFFF',
+    color: TOKENS.actionText,
     fontWeight: '900',
   },
   emptyStateBox: {
@@ -966,7 +966,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
   },
   emptyStateBtnText: {
-    color: '#FFFFFF',
+    color: TOKENS.actionText,
     fontSize: 14,
     fontWeight: '800',
   },

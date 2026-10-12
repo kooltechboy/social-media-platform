@@ -95,6 +95,31 @@ export async function deleteDraftAction(
   return { success: true };
 }
 
+export async function clearAllCreatorDraftsAction(
+  contentType?: DraftContentType,
+): Promise<{ success: boolean; error?: string }> {
+  const user = await getCurrentUser();
+  if (!user) return { success: false, error: 'Unauthorized.' };
+
+  const supabase = await createSupabaseServerClient();
+  if (!supabase) return { success: false, error: 'Service unavailable.' };
+
+  let query = supabase
+    .from('creator_content_drafts')
+    .delete()
+    .eq('creator_id', user.id);
+
+  if (contentType) {
+    query = query.eq('content_type', contentType);
+  }
+
+  const { error } = await query;
+  if (error) return { success: false, error: error.message };
+  revalidatePath('/create');
+  revalidatePath('/creator-studio');
+  return { success: true };
+}
+
 export async function getCreatorDraftsAction(
   contentType?: DraftContentType,
 ): Promise<{ drafts: CreatorDraftItem[]; error?: string }> {
@@ -117,5 +142,9 @@ export async function getCreatorDraftsAction(
   const { data, error } = await query;
   if (error) return { drafts: [], error: error.message };
 
-  return { drafts: (data as CreatorDraftItem[]) ?? [] };
+  const activeDrafts = ((data as Array<CreatorDraftItem & { status?: string }>) ?? []).filter(
+    (d) => !d.status || d.status === 'draft'
+  );
+
+  return { drafts: activeDrafts };
 }

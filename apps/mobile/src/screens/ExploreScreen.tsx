@@ -613,7 +613,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   tabTextActive: {
-    color: '#FFF',
+    color: TOKENS.actionText,
   },
   countryRail: {
     gap: 8,

@@ -105,7 +105,7 @@ export default async function CreatorHubPage() {
       .eq("creator_account_id", account.id),
     supabase
       .from("ledger_accounts")
-      .select("id, balance, currency")
+      .select("id, balance, balance_minor, currency")
       .eq("owner_id", user.id)
       .eq("account_type", "creator_pending")
       .maybeSingle(),
@@ -144,7 +144,7 @@ export default async function CreatorHubPage() {
   const activeSubs = subscriptions.filter((s: any) =>
     isSubscriptionActive(s.status, s.current_period_end)
   );
-  const ledgerAccount = ledgerAccountResult.data;
+  const ledgerAccount = ledgerAccountResult.data as any;
   const briefs = campaignBriefsResult.data || [];
   const draftsCount = draftsCountResult.count ?? 0;
   const totalMediaPublished =
@@ -152,7 +152,10 @@ export default async function CreatorHubPage() {
     (podcastsCountResult.count ?? 0) +
     (livestreamsCountResult.count ?? 0);
 
-  const pendingBalanceMinor = Math.round(Number(ledgerAccount?.balance || 0) * 100);
+  const pendingBalanceMinor =
+    typeof ledgerAccount?.balance_minor === "number"
+      ? ledgerAccount.balance_minor
+      : Math.round(Number(ledgerAccount?.balance || 0) * 100);
   const currency = ledgerAccount?.currency || "USD";
   const creatorLaunch = getCreatorLaunchMessaging();
 
@@ -365,8 +368,8 @@ export default async function CreatorHubPage() {
 
           <div className="pt-2 border-t border-white/5 space-y-2 text-xs md:text-sm text-brand-sandstone/80">
             <div className="flex justify-between">
-              <span>Fan Tiers</span>
-              <span className="font-bold text-white">3 Active ($2.99–$9.99)</span>
+              <span>Active Subscribers</span>
+              <span className="font-bold text-white">{activeSubs.length.toLocaleString()} Active</span>
             </div>
             <div className="flex justify-between">
               <span>Settlement</span>
@@ -535,37 +538,57 @@ export default async function CreatorHubPage() {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5">
-          <div className="p-5 md:p-6 rounded-2xl bg-white/5 border border-white/5 space-y-2.5 hover:border-purple-500/30 transition-all">
-            <span className="text-2xl md:text-3xl">🌴</span>
-            <h4 className="text-sm md:text-base font-black text-white">Caribbean IP &amp; Copyright</h4>
+          <Link
+            href="/learn"
+            className="p-5 md:p-6 rounded-2xl bg-white/5 border border-white/5 space-y-2.5 hover:border-purple-500/30 hover:bg-white/10 transition-all block group"
+          >
+            <span className="text-2xl md:text-3xl block">🌴</span>
+            <h4 className="text-sm md:text-base font-black text-white group-hover:text-purple-300 transition-colors">
+              Caribbean IP &amp; Copyright
+            </h4>
             <p className="text-xs md:text-sm text-brand-sandstone/70 leading-relaxed">
               Protecting Soca, Dancehall, Kompa, and indigenous folklore content across global digital distributions.
             </p>
-          </div>
+          </Link>
 
-          <div className="p-5 md:p-6 rounded-2xl bg-white/5 border border-white/5 space-y-2.5 hover:border-purple-500/30 transition-all">
-            <span className="text-2xl md:text-3xl">💡</span>
-            <h4 className="text-sm md:text-base font-black text-white">Monetizing the Global Diaspora</h4>
+          <Link
+            href="/learn"
+            className="p-5 md:p-6 rounded-2xl bg-white/5 border border-white/5 space-y-2.5 hover:border-purple-500/30 hover:bg-white/10 transition-all block group"
+          >
+            <span className="text-2xl md:text-3xl block">💡</span>
+            <h4 className="text-sm md:text-base font-black text-white group-hover:text-purple-300 transition-colors">
+              Monetizing the Global Diaspora
+            </h4>
             <p className="text-xs md:text-sm text-brand-sandstone/70 leading-relaxed">
               How to structure membership tiers and cultural merchandise for audiences in NYC, Miami, Toronto, and London.
             </p>
-          </div>
+          </Link>
 
-          <div className="p-5 md:p-6 rounded-2xl bg-white/5 border border-white/5 space-y-2.5 hover:border-purple-500/30 transition-all">
-            <span className="text-2xl md:text-3xl">🎙️</span>
-            <h4 className="text-sm md:text-base font-black text-white">Low-Bandwidth Production</h4>
+          <Link
+            href="/learn"
+            className="p-5 md:p-6 rounded-2xl bg-white/5 border border-white/5 space-y-2.5 hover:border-purple-500/30 hover:bg-white/10 transition-all block group"
+          >
+            <span className="text-2xl md:text-3xl block">🎙️</span>
+            <h4 className="text-sm md:text-base font-black text-white group-hover:text-purple-300 transition-colors">
+              Low-Bandwidth Production
+            </h4>
             <p className="text-xs md:text-sm text-brand-sandstone/70 leading-relaxed">
               Optimization guide: audio compression, progressive video encoding, and reliable live streaming across island connectivity.
             </p>
-          </div>
+          </Link>
 
-          <div className="p-5 md:p-6 rounded-2xl bg-white/5 border border-white/5 space-y-2.5 hover:border-purple-500/30 transition-all">
-            <span className="text-2xl md:text-3xl">🤝</span>
-            <h4 className="text-sm md:text-base font-black text-white">Pitching Island Brands</h4>
+          <Link
+            href="/learn"
+            className="p-5 md:p-6 rounded-2xl bg-white/5 border border-white/5 space-y-2.5 hover:border-purple-500/30 hover:bg-white/10 transition-all block group"
+          >
+            <span className="text-2xl md:text-3xl block">🤝</span>
+            <h4 className="text-sm md:text-base font-black text-white group-hover:text-purple-300 transition-colors">
+              Pitching Island Brands
+            </h4>
             <p className="text-xs md:text-sm text-brand-sandstone/70 leading-relaxed">
               Preparing your TUKUBI media kit, setting fair CPM rates, and contracting with regional telecom and tourism brands.
             </p>
-          </div>
+          </Link>
         </div>
       </div>
     </div>

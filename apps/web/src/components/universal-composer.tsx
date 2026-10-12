@@ -359,7 +359,7 @@ export default function UniversalComposer({
   const firstName = displayName.split(' ')[0]?.replace('@', '') || 'Friend';
   const isBannedTester = isBannedTesterAccount({ id: userId, displayName });
 
-  // Authoritative draft restoration on mount
+  // Authoritative draft restoration on mount + live external discard synchronization
   useEffect(() => {
     try {
       const saved = getComposerDraft();
@@ -371,6 +371,9 @@ export default function UniversalComposer({
         if (saved.pollOptions) setPollOptions(saved.pollOptions);
         if (saved.selectedCommunityId) setSelectedCommunityId(saved.selectedCommunityId);
         if (saved.selectedCountryId) setSelectedCountryId(saved.selectedCountryId);
+        if (Array.isArray(saved.taggedProducts) && saved.taggedProducts.length > 0) {
+          setTaggedProducts(saved.taggedProducts);
+        }
         if (Array.isArray(saved.linkPreviews) && saved.linkPreviews.length > 0) {
           setResolvedLinkPreviews(saved.linkPreviews);
         }
@@ -382,7 +385,7 @@ export default function UniversalComposer({
               file: undefined as any,
               previewUrl: m.uploadedUrl!,
               uploadedUrl: m.uploadedUrl!,
-              type: m.type,
+              type: m.type || m.kind || 'image',
               caption: '',
             }));
           if (restoredMedia.length > 0) {
@@ -394,6 +397,33 @@ export default function UniversalComposer({
     } catch {
       // Ignore
     }
+
+    const unsubscribe = subscribeToDraftChanges((draft) => {
+      if (!draft) {
+        setContent('');
+        setMediaList((prev) => {
+          prev.forEach((m) => {
+            if (m.previewUrl?.startsWith('blob:')) {
+              try {
+                URL.revokeObjectURL(m.previewUrl);
+              } catch {}
+            }
+          });
+          return [];
+        });
+        setResolvedLinkPreviews([]);
+        setDismissedUrls(new Set());
+        setPollQuestion('');
+        setPollOptions(['', '']);
+        setTaggedProducts([]);
+        setErrorMessage(null);
+        setFailureInfo(null);
+      }
+    });
+
+    return () => {
+      unsubscribe();
+    };
   }, []);
 
   // Fetch user communities and countries for tagging and feed routing
@@ -439,12 +469,17 @@ export default function UniversalComposer({
 
   // Auto-save draft with debouncing
   useEffect(() => {
+    const uploadedMediaSummary = mediaList
+      .filter((m) => Boolean(m.uploadedUrl))
+      .map((m) => ({ id: m.id, type: m.type, uploadedUrl: m.uploadedUrl }));
+
     const hasMeaningful = hasMeaningfulDraftContent({
       content,
       pollQuestion,
       taggedProductIds: taggedProducts.map((p) => p.id),
+      taggedProducts,
       linkPreviews: resolvedLinkPreviews,
-      mediaSummary: mediaList.map((m) => ({ id: m.id, type: m.type, uploadedUrl: m.uploadedUrl })),
+      mediaSummary: uploadedMediaSummary,
     });
 
     if (hasMeaningful) {
@@ -459,12 +494,13 @@ export default function UniversalComposer({
           selectedCommunityId,
           selectedCountryId,
           taggedProductIds: taggedProducts.map((p) => p.id),
+          taggedProducts,
           linkPreviews: resolvedLinkPreviews,
-          mediaSummary: mediaList.map((m) => ({ id: m.id, type: m.type, uploadedUrl: m.uploadedUrl })),
+          mediaSummary: uploadedMediaSummary,
         });
       }, 400);
       return () => clearTimeout(timer);
-    } else {
+    } else if (typeof window !== 'undefined' && window.localStorage.getItem('tukubi_composer_draft_v3')) {
       clearComposerDraft();
     }
   }, [

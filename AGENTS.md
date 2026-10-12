@@ -48,7 +48,7 @@ Every line of code, migration, and configuration must adhere to NASA-grade softw
 ---
 
 ## Agent Organization Structure
-Full organization: `.agents/agents/` (14 role protocols), `.agents/workflows/` (feature, bugfix, security-review, database-migration, release), `.agents/policies/` (security, coding, testing, architecture).
+Full organization: `.agents/agents/` (17 role protocols), `.agents/workflows/` (feature, bugfix, security-review, database-migration, release), `.agents/policies/` (security, coding, testing, architecture).
 
 - **Chief Architect (`.agents/agents/chief-architect.md`):** Monorepo boundaries, ADRs, scalability.
 - **Product (`.agents/agents/product.md`):** PRD, roadmap, metrics, competitive analysis.
@@ -56,14 +56,17 @@ Full organization: `.agents/agents/` (14 role protocols), `.agents/workflows/` (
 - **Database Architect (`.agents/agents/database.md`):** Migrations, indexing, double-entry ledger.
 - **Payments & Financial (`.agents/agents/payments.md`):** PSP connectors, idempotency, wallet safety.
 - **Frontend Principal (`.agents/agents/frontend.md`):** Next.js 15 App Router, RSC, Tailwind v4.
+- **Brand, UX/UI & Accessibility (`.agents/agents/brand-ux.md`):** Island Vibes token governance, WCAG 2.2 AA, responsive UX.
 - **Mobile Principal (`.agents/agents/mobile.md`):** Universal Expo React Native, iOS & Android.
 - **Backend (`.agents/agents/backend.md`):** Domain services, events, Redis, rate limiting.
+- **Media & Publishing (`.agents/agents/media-publishing.md`):** Unified publishing lifecycle, uploads, embeds, draft state machine.
 - **AI & CaribAI (`.agents/agents/ai.md`):** OpenRouter free model routing, Vercel AI SDK, translation.
 - **Trust & Safety (`.agents/agents/trust-safety.md`):** Moderation pipeline, risk engine, appeals.
 - **QA & Automation (`.agents/agents/qa.md`):** Playwright E2E, Vitest unit suites, RLS verification.
 - **Performance (`.agents/agents/performance.md`):** Budgets, load strategy, extraction evidence.
 - **DevOps/SRE (`.agents/agents/devops.md`):** CI/CD, observability, disaster recovery.
 - **Data & Analytics (`.agents/agents/analytics.md`):** Event taxonomy, dashboards, funnels.
+- **Documentation & Release Manager (`.agents/agents/release-manager.md`):** Truth matrices, ADRs, release readiness certification.
 
 ## Agent Review Process (mandatory for major features)
 
@@ -76,7 +79,7 @@ Payment features add: Payments Architect → Compliance → Backend → QA → *
 Every reviewed change must state: WHAT CHANGED / WHY / FILES CHANGED / TESTS RUN / SECURITY IMPACT / PERFORMANCE IMPACT / DATABASE IMPACT / ROLLBACK PLAN.
 
 ## Governing Documents
-`ARCHITECTURE.md` • `PRODUCT-REQUIREMENTS.md` • `PAYMENT-ARCHITECTURE.md` • `THREAT-MODEL.md` • `TRUST-SAFETY.md` • `DESIGN-SYSTEM.md` • `docs/adr/INDEX.md` • `docs/IMPLEMENTATION-ROADMAP.md` • `docs/assessment/repo-assessment-gap-analysis.md`
+`docs/transformation/TUKUBI-RTP-001-MASTER-PLAN.md` • `docs/transformation/TUKUBI-ANTIGRAVITY-MASTER-PROMPT.md` • `ARCHITECTURE.md` • `PRODUCT-REQUIREMENTS.md` • `PAYMENT-ARCHITECTURE.md` • `THREAT-MODEL.md` • `TRUST-SAFETY.md` • `DESIGN-SYSTEM.md` • `docs/adr/INDEX.md` • `docs/IMPLEMENTATION-ROADMAP.md` • `docs/assessment/repo-assessment-gap-analysis.md`
 
 ## Priority Order
 Security → Correctness → Reliability → Scalability → Performance → Maintainability → Accessibility → UX → Observability → Business viability → Speed of development.

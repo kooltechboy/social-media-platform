@@ -184,8 +184,8 @@ export async function middleware(request: NextRequest) {
   // ── Auth resolution ──
   let user = authResult.data?.user ?? null;
 
-  // In automated E2E test environments, recognize test session cookie if supabase auth is absent
-  if (!user && process.env.PLAYWRIGHT_TEST === '1') {
+  // In automated E2E test environments (never in production), recognize test session cookie if supabase auth is absent
+  if (!user && process.env.NODE_ENV !== 'production' && process.env.PLAYWRIGHT_TEST === '1') {
     const testSessionCookie = request.cookies.get('tukubi_user_session')?.value;
     if (testSessionCookie) {
       try {

@@ -678,7 +678,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 16,
   },
-  saveButtonText: { color: '#FFF', fontSize: 14, fontWeight: '900' },
+  saveButtonText: { color: TOKENS.actionText, fontSize: 14, fontWeight: '900' },
 
   statsCard: {
     flexDirection: 'row',
@@ -745,7 +745,7 @@ const styles = StyleSheet.create({
     borderRadius: 14,
   },
   createShortcutText: {
-    color: '#FFF',
+    color: TOKENS.actionText,
     fontSize: 12,
     fontWeight: '800',
   },

@@ -93,7 +93,7 @@ export default async function ProfilePage({
   searchParams: Promise<{ tab?: string }>;
 }) {
   const { username } = await params;
-  const { tab = 'about' } = await searchParams;
+  const { tab = 'posts' } = await searchParams;
   const decodedParam = decodeURIComponent(username || '').trim();
 
   const [currentUser, supabase] = await Promise.all([
@@ -295,7 +295,7 @@ export default async function ProfilePage({
   return (
     <div className="min-h-screen bg-transparent text-brand-sandstone pb-12">
       {/* Top sticky app header */}
-      <header className="sticky top-0 z-40 surface-header backdrop-blur-xl border-b border-white/15 px-4 sm:px-6 py-3.5 flex items-center justify-between gap-4 shadow-xl">
+      <header className="sticky top-[58px] z-40 surface-header backdrop-blur-xl border-b border-white/15 px-4 sm:px-6 py-3.5 flex items-center justify-between gap-4 shadow-xl">
         <div className="flex items-center gap-3">
           <Link
             href="/"
@@ -507,19 +507,15 @@ export default async function ProfilePage({
         </section>
 
         {/* Tab Navigation */}
-        <nav className="flex border-b border-white/15 gap-8 text-sm md:text-base font-black overflow-x-auto scrollbar-none" aria-label="Profile navigation">
-          <Link
-            href={`/profile/${profileData.username}?tab=about`}
-            className={`pb-3.5 md:pb-4 border-b-2 transition-all min-h-[44px] md:min-h-[48px] flex items-center whitespace-nowrap ${
-              tab === 'about'
-                ? 'border-orange-500 text-orange-400 font-black'
-                : 'border-transparent text-brand-sandstone/70 hover:text-white'
-            }`}
-          >
-            About
-          </Link>
+        <nav
+          className="flex border-b border-white/15 gap-8 text-sm md:text-base font-black overflow-x-auto scrollbar-none"
+          aria-label="Profile navigation"
+          role="tablist"
+        >
           <Link
             href={`/profile/${profileData.username}?tab=posts`}
+            role="tab"
+            aria-selected={tab === 'posts'}
             className={`pb-3.5 md:pb-4 border-b-2 transition-all min-h-[44px] md:min-h-[48px] flex items-center whitespace-nowrap ${
               tab === 'posts'
                 ? 'border-orange-500 text-orange-400 font-black'
@@ -528,9 +524,23 @@ export default async function ProfilePage({
           >
             Posts ({posts.length})
           </Link>
+          <Link
+            href={`/profile/${profileData.username}?tab=about`}
+            role="tab"
+            aria-selected={tab === 'about'}
+            className={`pb-3.5 md:pb-4 border-b-2 transition-all min-h-[44px] md:min-h-[48px] flex items-center whitespace-nowrap ${
+              tab === 'about'
+                ? 'border-orange-500 text-orange-400 font-black'
+                : 'border-transparent text-brand-sandstone/70 hover:text-white'
+            }`}
+          >
+            About
+          </Link>
           {!isOfficialTukubi && (
             <Link
               href={`/profile/${profileData.username}?tab=friends`}
+              role="tab"
+              aria-selected={tab === 'friends'}
               className={`pb-3.5 md:pb-4 border-b-2 transition-all flex items-center gap-2 min-h-[44px] md:min-h-[48px] whitespace-nowrap ${
                 tab === 'friends'
                   ? 'border-emerald-500 text-emerald-400 font-black'
@@ -545,6 +555,8 @@ export default async function ProfilePage({
           )}
           <Link
             href={`/profile/${profileData.username}?tab=recognition`}
+            role="tab"
+            aria-selected={tab === 'recognition'}
             className={`pb-3.5 md:pb-4 border-b-2 transition-all flex items-center gap-2 min-h-[44px] md:min-h-[48px] whitespace-nowrap ${
               tab === 'recognition'
                 ? 'border-amber-400 text-amber-300 font-black'
@@ -559,6 +571,8 @@ export default async function ProfilePage({
           {userPages.length > 0 && (
             <Link
               href={`/profile/${profileData.username}?tab=pages`}
+              role="tab"
+              aria-selected={tab === 'pages'}
               className={`pb-3.5 md:pb-4 border-b-2 transition-all flex items-center gap-2 min-h-[44px] md:min-h-[48px] whitespace-nowrap ${
                 tab === 'pages'
                   ? 'border-brand-caribbeanSea text-brand-caribbeanSea font-black'
@@ -574,6 +588,8 @@ export default async function ProfilePage({
           {userCommunities.length > 0 && (
             <Link
               href={`/profile/${profileData.username}?tab=communities`}
+              role="tab"
+              aria-selected={tab === 'communities'}
               className={`pb-3.5 md:pb-4 border-b-2 transition-all flex items-center gap-2 min-h-[44px] md:min-h-[48px] whitespace-nowrap ${
                 tab === 'communities'
                   ? 'border-brand-sunriseCoral text-brand-sunriseCoral font-black'
@@ -589,6 +605,8 @@ export default async function ProfilePage({
           {userPodcasts.length > 0 && (
             <Link
               href={`/profile/${profileData.username}?tab=podcasts`}
+              role="tab"
+              aria-selected={tab === 'podcasts'}
               className={`pb-3.5 md:pb-4 border-b-2 transition-all flex items-center gap-2 min-h-[44px] md:min-h-[48px] whitespace-nowrap ${
                 tab === 'podcasts'
                   ? 'border-purple-500 text-purple-400 font-black'

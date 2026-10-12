@@ -220,6 +220,7 @@ export default function UniversalContentCard({
             className="w-full h-full border-0"
             allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
             loading="lazy"
+            referrerPolicy="strict-origin-when-cross-origin"
             sandbox="allow-scripts allow-same-origin allow-presentation allow-popups"
             title={title}
           />

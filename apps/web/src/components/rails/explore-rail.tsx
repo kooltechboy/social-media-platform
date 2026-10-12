@@ -281,10 +281,10 @@ export default function ExploreRail({
 
         <div className="space-y-1.5 pt-0.5">
           {[
-            { vibe: 'music_dance', label: 'Carnival, Reggae & Soca', emoji: '🎶' },
-            { vibe: 'food_rum', label: 'Cuisine, Spices & Rum', emoji: '🍲' },
-            { vibe: 'business_tech', label: 'Caribbean Tech & Ventures', emoji: '🚀' },
-            { vibe: 'diaspora_roots', label: 'Diaspora Heritage & History', emoji: '🌴' },
+            { vibe: 'music', label: 'Soca, Reggae & Dancehall', emoji: '🎵' },
+            { vibe: 'carnival', label: 'Carnival, Mas & Fetes', emoji: '🎭' },
+            { vibe: 'food', label: 'Cuisine, Spices & Rum', emoji: '🍲' },
+            { vibe: 'tech', label: 'Caribbean Tech & Ventures', emoji: '🚀' },
           ].map((v) => (
             <Link
               key={v.vibe}

@@ -10,6 +10,7 @@
  */
 
 export const TUKUBI_COMPOSER_DRAFT_KEY = 'tukubi_composer_draft_v3';
+export const DRAFT_STORAGE_KEY = TUKUBI_COMPOSER_DRAFT_KEY;
 const LEGACY_DRAFT_KEYS = ['tukubi_composer_draft_v2', 'tukubi_composer_draft'];
 
 export type ComposerDraftStatus = 'empty' | 'editing' | 'dirty' | 'saved' | 'publishing' | 'published' | 'error';
@@ -25,24 +26,36 @@ export interface ComposerDraftData {
   selectedCommunityId?: string | null;
   selectedCountryId?: string | null;
   taggedProductIds?: string[];
+  taggedProducts?: Array<any>;
   linkPreviews?: any[];
-  mediaSummary?: Array<{ id: string; type: 'image' | 'video'; name?: string; uploadedUrl?: string }>;
+  mediaSummary?: Array<{ id?: string; type?: 'image' | 'video'; kind?: 'image' | 'video'; status?: string; name?: string; uploadedUrl?: string }>;
   updatedAt: number;
 }
 
 export type ComposerDraftPayload = ComposerDraftData;
 
+function isPersistedMediaItem(m: any): boolean {
+  if (!m || typeof m !== 'object') return false;
+  if (typeof m.uploadedUrl === 'string' && m.uploadedUrl.trim().length > 0) return true;
+  if ('status' in m || 'uploadedUrl' in m) return false;
+  return Boolean(m.id || m.type);
+}
+
 /**
  * Determines whether the draft payload contains meaningful, recoverable user content.
- * An empty composer, or one with only whitespace, is NOT considered a draft.
+ * An empty composer, one with only whitespace, or one with only un-uploaded local blob
+ * references (which cannot survive page reloads) is NOT considered a recoverable draft.
  */
 export function hasMeaningfulDraftContent(draft: Partial<ComposerDraftData> | null | undefined): boolean {
   if (!draft) return false;
   if (typeof draft.content === 'string' && draft.content.trim().length > 0) return true;
   if (typeof draft.pollQuestion === 'string' && draft.pollQuestion.trim().length > 0) return true;
   if (Array.isArray(draft.taggedProductIds) && draft.taggedProductIds.length > 0) return true;
+  if (Array.isArray(draft.taggedProducts) && draft.taggedProducts.length > 0) return true;
   if (Array.isArray(draft.linkPreviews) && draft.linkPreviews.length > 0) return true;
-  if (Array.isArray(draft.mediaSummary) && draft.mediaSummary.length > 0) return true;
+  if (Array.isArray(draft.mediaSummary) && draft.mediaSummary.some(isPersistedMediaItem)) {
+    return true;
+  }
   return false;
 }
 
@@ -81,20 +94,32 @@ export function getComposerDraft(): ComposerDraftData | null {
   }
 }
 
+export const loadComposerDraft = getComposerDraft;
+
 /**
  * Persists a meaningful draft to storage and notifies listening components.
- * If the content is not meaningful, automatically discards the draft.
+ * If the content is not meaningful, automatically discards any existing stored draft.
  */
 export function saveComposerDraft(data: Omit<ComposerDraftData, 'updatedAt'>): void {
   if (typeof window === 'undefined') return;
 
   if (!hasMeaningfulDraftContent(data)) {
-    clearComposerDraft();
+    const hasStoredKey =
+      Boolean(localStorage.getItem(TUKUBI_COMPOSER_DRAFT_KEY)) ||
+      LEGACY_DRAFT_KEYS.some((k) => Boolean(localStorage.getItem(k)));
+    if (hasStoredKey) {
+      clearComposerDraft();
+    }
     return;
   }
 
+  const normalizedMediaSummary = Array.isArray(data.mediaSummary)
+    ? data.mediaSummary.filter(isPersistedMediaItem)
+    : undefined;
+
   const payload: ComposerDraftData = {
     ...data,
+    mediaSummary: normalizedMediaSummary,
     updatedAt: Date.now(),
   };
 

@@ -29,7 +29,7 @@
 | Design language | Caribbean Futurism (VERIFIED, `DESIGN-SYSTEM.md` §1) |
 | Website | https://www.tukubi.com/ |
 
-**Binding exclusions:** do not revive Antilia, Caribbean One, or other retired branding. Do not use "TUKUBI Ecosystem" as the primary brand name. Do not reintroduce SpotPay as an active product. No fake users, fabricated engagement, mock production content, or false financial metrics. Keep the tiered creator subscriptions and services model with centralized entitlements, with no silent switch to platform commissions. Keep the current authentication approach, and introduce no mandatory email verification without approval.
+**Binding exclusions:** do not revive Antilia, Caribbean One, or other retired branding. Do not use "TUKUBI Ecosystem" as the primary brand name. Do not reintroduce retired payment brand names as an active product. No fake users, fabricated engagement, mock production content, or false financial metrics. Keep the tiered creator subscriptions and services model with centralized entitlements, with no silent switch to platform commissions. Keep the current authentication approach, and introduce no mandatory email verification without approval.
 
 **Design principle:** *familiar enough to use immediately, different enough to remember.*
 
@@ -322,16 +322,16 @@ No targets are invented. Phase 1 measures baselines, and the owner then approves
 
 ---
 
-## 11. Decisions requiring owner approval
+## 11. Owner Decisions (APPROVED 2026-10-12)
 
-| ID | Decision | Options |
+| ID | Decision | Approved Resolution |
 | :--- | :--- | :--- |
-| D‑01 | Adopt Ocean Depth and the Island Daylight light theme (§3.4) | Approve · Modify · Defer |
-| D‑02 | Mobile tab bar: **DESIGN-SYSTEM.md** says *Home, Explore, Create, Communities, Messages*; the reimagined vision says *Home, Explore, Create, Community, Profile* | Pick one; the other items move to the header |
-| D‑03 | Authorize Phase 2 after reviewing Phase 1 findings | Approve · Approve subset |
-| D‑04 | Advertising platform: freeze expansion (preserve existing) until core KPIs justify it | Freeze · Continue |
-| D‑05 | Where prior `AUDIT/` reports live after reconciliation | Keep in place with a status index · Move to `AUDIT/archive/` |
-| D‑06 | Production access model for agents (read-only staging vs. none) | Defines what Phase 1 can verify live |
+| D‑01 | Adopt Ocean Depth (`#0B1F33`) and the Island Daylight light theme (§3.4) while preserving Island Vibes (`#110D17`) as the default theme | **APPROVED** |
+| D‑02 | Mobile tab bar persistent destinations | **APPROVED:** *Home · Explore · Create · Community · Profile* (with Messages, Notifications, Search, and Settings accessible in the persistent header) |
+| D‑03 | Authorize Phase 2+ execution after forensic audit synthesis | **APPROVED** |
+| D‑04 | Advertising platform: freeze expansion (preserve existing routes/logic) until core KPIs justify it | **APPROVED (Freeze expansion, preserve existing)** |
+| D‑05 | Where prior `AUDIT/` reports live after reconciliation | **APPROVED:** Keep in place and index in `docs/transformation/TUKUBI_PRIOR_AUDIT_INDEX.md` |
+| D‑06 | Access model for agents | **APPROVED:** Full access throughout the workspace and tools, governed by Phase gates and non-destructive rules |
 
 ---
 

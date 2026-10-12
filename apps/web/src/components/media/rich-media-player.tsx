@@ -180,6 +180,26 @@ export default function RichMediaPlayer({
     }
   };
 
+  const handleIframeLoad = useCallback(() => {
+    if (watchdogTimerRef.current) {
+      clearTimeout(watchdogTimerRef.current);
+      watchdogTimerRef.current = null;
+    }
+    setPlayerState((prev) => (prev === 'loading' ? 'playing' : prev));
+
+    // Register YouTube IFrame API listener so restricted embeds (error 101/150) emit onError
+    if (embedUrl && embedUrl.includes('youtube') && iframeRef.current?.contentWindow) {
+      try {
+        iframeRef.current.contentWindow.postMessage(
+          JSON.stringify({ event: 'listening', id: 1, channel: 'widget' }),
+          '*'
+        );
+      } catch {
+        // Cross-origin postMessage ignored if blocked
+      }
+    }
+  }, [embedUrl]);
+
   const containerAspectClass = isShort
     ? 'relative w-full max-w-[320px] mx-auto aspect-[9/16] bg-black/95 rounded-xl overflow-hidden'
     : 'relative w-full aspect-video bg-black/90 overflow-hidden';
@@ -198,8 +218,10 @@ export default function RichMediaPlayer({
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
             allowFullScreen
             sandbox="allow-scripts allow-same-origin allow-presentation allow-popups allow-forms"
+            referrerPolicy="strict-origin-when-cross-origin"
             loading="lazy"
             title={title}
+            onLoad={handleIframeLoad}
             onError={() => triggerFallback('Iframe failed to load.')}
           />
 

@@ -53,7 +53,7 @@ export default function CreatorTierModal({ isOpen, onClose, creatorName }: Creat
         </button>
 
         <div className="flex items-center gap-3 border-b border-slate-800 pb-3">
-          <div className="p-2.5 rounded-2xl bg-gradient-to-tr from-brand-caribbeanSea to-brand-sunriseCoral text-white">
+          <div className="p-2.5 rounded-2xl bg-gradient-to-tr from-brand-caribbeanSea to-brand-sunriseCoral text-brand-twilight">
             <Radio className="w-5 h-5" />
           </div>
           <div>

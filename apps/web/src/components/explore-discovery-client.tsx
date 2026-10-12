@@ -642,10 +642,10 @@ export default function ExploreDiscoveryClient({
                         <MessageCircle className="w-4 h-4 text-brand-caribbeanSea" /> {post.comments_count ?? 0}
                       </span>
                       <Link
-                        href="/"
+                        href={`/post/${post.id}`}
                         className="text-brand-caribbeanSea hover:underline text-xs md:text-sm font-black flex items-center"
                       >
-                        View in Feed →
+                        View Post →
                       </Link>
                     </div>
                   </article>
@@ -864,7 +864,7 @@ export default function ExploreDiscoveryClient({
 
                   <div className="pt-4 border-t border-white/10">
                     <Link
-                      href="/marketplace"
+                      href={`/marketplace/${prod.id}`}
                       className="w-full text-center bg-orange-400 hover:brightness-110 text-slate-950 font-black py-2.5 rounded-xl text-xs md:text-sm transition-all shadow-md shadow-orange-500/20 block min-h-[42px] flex items-center justify-center"
                     >
                       Order with Tukubi Escrow →

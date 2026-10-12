@@ -27,9 +27,12 @@ module.exports = {
           twilight: '#110D17',        // Deep Twilight Base (Island Vibes night sky)
           dusk: '#1D1429',            // Warm Dusk Surface 
           sunsetPlum: '#2A1B38',      // Deep Plum Raised Surface
+          oceanDepth: '#0B1F33',      // Deep Ocean Navy Trust & Financial Surface
           sunriseCoral: '#FF7A59',    // Vibrant Sunrise Coral
+          emberCoral: '#C2410C',      // Light-Mode Accessible Deep Ember Coral
           goldenHour: '#FFB347',      // Warm Golden Hour
           caribbeanSea: '#00B4D8',    // Beautiful Tropical Sea
+          deepSea: '#0E7490',         // Light-Mode Accessible Deep Sea Cyan
           sandstone: '#FDF2E9',       // Warm Sandstone Text/White
           sunsetPurple: '#8B5CF6',    // Deep Sunset Purple
           oceanSurge: '#0284C7',      // Deep Ocean Blue Accent
@@ -40,6 +43,7 @@ module.exports = {
           canvas: '#110D17',
           surface: '#1D1429',
           surfaceRaised: '#2A1B38',
+          surfaceTrust: '#0B1F33',
           surfaceOpaque: '#161022',
           surfaceElevated: '#1D1429',
           surfaceCard: 'rgba(22, 16, 34, 0.94)',
@@ -48,15 +52,29 @@ module.exports = {
           border: 'rgba(255, 255, 255, 0.10)',
           borderHover: 'rgba(255, 122, 89, 0.40)',
           primary: '#FF7A59',
+          onPrimary: '#110D17',
           secondary: '#8B5CF6',
           accent: '#FFB347',
           sea: '#00B4D8',
           textPrimary: '#FDF2E9',
-          textMuted: '#A1A1AA',
-          textDim: '#71717A',
+          textMuted: '#B4B4BE',
+          textDim: '#A1A1AA',
           success: '#10B981',
           warning: '#FFB347',
           danger: '#F43F5E',
+        },
+        islandDaylight: {
+          canvas: '#FFFDF9',
+          surface: '#FFFFFF',
+          surfaceRaised: '#F4EFE6',
+          surfaceTrust: '#0B1F33',
+          primary: '#C2410C',
+          primaryBright: '#FF7A59',
+          onPrimary: '#FFFFFF',
+          secondary: '#0E7490',
+          textPrimary: '#18181B',
+          textMuted: '#52525B',
+          textDim: '#52525B',
         },
       },
       boxShadow: {

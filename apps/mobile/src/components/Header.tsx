@@ -6,6 +6,7 @@ import { supabase } from '../lib/supabase';
 export interface HeaderProps {
   onWalletPress?: () => void;
   onNotificationsPress?: () => void;
+  onMessagesPress?: () => void;
   onMarketplacePress?: () => void;
   onSearchPress?: () => void;
 }
@@ -13,6 +14,7 @@ export interface HeaderProps {
 export function Header({
   onWalletPress,
   onNotificationsPress,
+  onMessagesPress,
   onMarketplacePress,
   onSearchPress,
 }: HeaderProps) {
@@ -68,6 +70,19 @@ export function Header({
         >
           <Text style={styles.marketText}>🛍️ Market</Text>
         </TouchableOpacity>
+
+        {/* Direct Messages Icon */}
+        {onMessagesPress && (
+          <TouchableOpacity
+            accessibilityRole="button"
+            accessibilityLabel="Messages"
+            style={styles.notifBadge}
+            onPress={onMessagesPress}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.notifText}>💬</Text>
+          </TouchableOpacity>
+        )}
 
         {/* Notifications Icon with Badge */}
         <TouchableOpacity
@@ -178,7 +193,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 4,
   },
   unreadPillText: {
-    color: '#FFF',
+    color: TOKENS.actionText,
     fontSize: 9,
     fontWeight: '900',
   },

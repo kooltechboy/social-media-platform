@@ -29,7 +29,7 @@ import {
 import UniversalComposer, { type ComposerMode, type UploadedMediaItem } from './universal-composer';
 import CreatePodcastModal from './podcasts/create-podcast-modal';
 import { TukubiCreationStudio, type CreationStudioHandoffPayload } from './media/creation';
-import { getCreatorDraftsAction, type CreatorDraftItem } from '../lib/creator/draft-actions';
+import { getCreatorDraftsAction, clearAllCreatorDraftsAction, type CreatorDraftItem } from '../lib/creator/draft-actions';
 import { getComposerDraft, clearComposerDraft, subscribeToDraftChanges } from '../lib/social/draft-manager';
 import { createSupabaseBrowserClient } from '../lib/supabase/browser';
 
@@ -156,7 +156,7 @@ const CREATE_TOOLS: CreateTool[] = [
     description: 'Promote your track, brand, or event targeted by island nation and diaspora city.',
     category: 'commerce',
     icon: <Megaphone className="w-6 h-6 text-indigo-400" />,
-    directHref: '/creator-studio',
+    directHref: '/ads/new',
     color: 'from-indigo-500/20 to-indigo-950/40 border-indigo-500/30',
   },
   {
@@ -165,7 +165,7 @@ const CREATE_TOOLS: CreateTool[] = [
     description: 'Post tech, remote, creative, tourism, or skilled trade opportunities.',
     category: 'commerce',
     icon: <Briefcase className="w-6 h-6 text-teal-400" />,
-    directHref: '/marketplace',
+    directHref: '/marketplace/seller-center/create',
     color: 'from-teal-500/20 to-teal-950/40 border-teal-500/30',
   },
   {
@@ -174,7 +174,6 @@ const CREATE_TOOLS: CreateTool[] = [
     description: 'Verified public sector notices, tourism campaigns, and civic emergency announcements.',
     category: 'community',
     icon: <Landmark className="w-6 h-6 text-brand-goldenHour" />,
-    mode: 'alert',
     directHref: '/pages/create?type=government',
     badge: 'CIVIC ONLY',
     color: 'from-brand-goldenHour/20 to-amber-950/40 border-brand-goldenHour/30',
@@ -217,6 +216,9 @@ export default function CreateHubClient({ user }: CreateHubClientProps) {
 
     const unsubscribe = subscribeToDraftChanges((draft) => {
       setHasDraft(Boolean(draft));
+      if (draft) {
+        setIsDraftBannerDismissed(false);
+      }
     });
 
     if (user?.id) {
@@ -239,12 +241,26 @@ export default function CreateHubClient({ user }: CreateHubClientProps) {
           });
       }
     }
+
+    return () => {
+      unsubscribe();
+    };
   }, [user?.id]);
 
   function handleStartCreating(mode: ComposerMode = 'text') {
     setComposerMode(mode);
     if (composerSectionRef.current) {
       composerSectionRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }
+
+  function handleDiscardAllDrafts() {
+    clearComposerDraft();
+    setHasDraft(false);
+    setServerDrafts([]);
+    setIsDraftBannerDismissed(true);
+    if (user?.id) {
+      void clearAllCreatorDraftsAction();
     }
   }
 
@@ -326,27 +342,22 @@ export default function CreateHubClient({ user }: CreateHubClientProps) {
           </div>
           <div className="flex items-center gap-2.5 flex-wrap">
             {hasDraft && (
-              <>
-                <button
-                  type="button"
-                  onClick={() => handleStartCreating('text')}
-                  className="text-amber-300 underline font-black hover:text-white min-h-[38px] flex items-center cursor-pointer"
-                >
-                  Resume Local Draft →
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    clearComposerDraft();
-                    setHasDraft(false);
-                  }}
-                  className="px-3 py-1.5 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 text-rose-200 border border-rose-500/30 font-bold text-xs flex items-center transition-colors cursor-pointer"
-                  title="Discard unsaved local draft"
-                >
-                  Discard Draft
-                </button>
-              </>
+              <button
+                type="button"
+                onClick={() => handleStartCreating('text')}
+                className="text-amber-300 underline font-black hover:text-white min-h-[38px] flex items-center cursor-pointer"
+              >
+                Resume Local Draft →
+              </button>
             )}
+            <button
+              type="button"
+              onClick={handleDiscardAllDrafts}
+              className="px-3 py-1.5 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 text-rose-200 border border-rose-500/30 font-bold text-xs flex items-center transition-colors cursor-pointer"
+              title="Discard saved draft"
+            >
+              Discard Draft
+            </button>
             {serverDrafts.length > 0 && (
               <Link
                 href="/creator-studio?tab=drafts"
@@ -375,7 +386,7 @@ export default function CreateHubClient({ user }: CreateHubClientProps) {
             <Layers className="w-4 h-4 text-brand-caribbeanSea" />
             Active Creation Workspace
           </h2>
-          <span className="text-xs text-brand-sandstone/60">Auto-saves to offline drafts</span>
+          <span className="text-xs text-brand-sandstone/70">Auto-saves to offline drafts</span>
         </div>
 
         <UniversalComposer
@@ -389,6 +400,7 @@ export default function CreateHubClient({ user }: CreateHubClientProps) {
           onPostCreated={(post) => {
             if (post?.id) setPublishedPostId(post.id);
             setHasDraft(false);
+            setServerDrafts([]);
             setStudioHandoffMedia([]);
           }}
         />

@@ -178,7 +178,7 @@ export default function ShoppablePostWidget({ product }: ShoppablePostWidgetProp
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full py-3 rounded-2xl bg-gradient-to-r from-brand-sunriseCoral to-brand-goldenHour font-black text-white text-xs uppercase tracking-wider transition-all disabled:opacity-50 flex items-center justify-center gap-2 shadow-lg shadow-brand-sunriseCoral/20"
+                  className="w-full py-3 rounded-2xl bg-gradient-to-r from-brand-sunriseCoral to-brand-goldenHour font-black text-brand-twilight text-xs uppercase tracking-wider transition-all disabled:opacity-50 flex items-center justify-center gap-2 shadow-lg shadow-brand-sunriseCoral/20"
                 >
                   {isSubmitting ? (
                     <>

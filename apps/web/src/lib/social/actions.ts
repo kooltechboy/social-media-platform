@@ -106,12 +106,59 @@ export async function createPostAction(_prev: PostActionState, formData: FormDat
     }
   }
 
-  // Validate post structure using @caribbean/social rules
+  // Extract multi-link previews or single link preview metadata before validation
+  const linkPreviewsRaw = formData.get('link_previews');
+  let linkPreviews: ResolvedContentMetadata[] = [];
+  if (typeof linkPreviewsRaw === 'string' && linkPreviewsRaw.trim()) {
+    try {
+      const parsed = JSON.parse(linkPreviewsRaw);
+      if (Array.isArray(parsed)) {
+        linkPreviews = parsed;
+      } else if (parsed && typeof parsed === 'object') {
+        linkPreviews = [parsed];
+      }
+    } catch {
+      linkPreviews = [];
+    }
+  }
+
+  const linkPreviewRaw = formData.get('link_preview');
+  let linkPreview: ResolvedContentMetadata | null = null;
+  if (typeof linkPreviewRaw === 'string' && linkPreviewRaw.trim()) {
+    try {
+      linkPreview = JSON.parse(linkPreviewRaw);
+    } catch {
+      linkPreview = null;
+    }
+  }
+
+  if (linkPreviews.length > 0 && !linkPreview) {
+    linkPreview = linkPreviews[0];
+  } else if (linkPreview && linkPreviews.length === 0) {
+    linkPreviews = [linkPreview];
+  }
+
+  // Extract tagged product IDs (if any)
+  const taggedProductsRaw = formData.get('tagged_product_ids');
+  let taggedProductIds: string[] = [];
+  if (typeof taggedProductsRaw === 'string' && taggedProductsRaw.trim()) {
+    try {
+      const parsed = JSON.parse(taggedProductsRaw);
+      if (Array.isArray(parsed)) {
+        taggedProductIds = parsed.filter((id): id is string => typeof id === 'string' && id.trim().length > 0);
+      }
+    } catch {
+      taggedProductIds = [];
+    }
+  }
+
+  // Validate post structure using @caribbean/social rules (counting uploaded media, link previews, and tagged products)
+  const effectiveMediaCount = Math.min(10, mediaUrls.length + linkPreviews.length + (taggedProductIds.length > 0 ? 1 : 0));
   const validation = validateComposer({
     authorId: user.id,
     content,
     visibility,
-    mediaCount: mediaUrls.length,
+    mediaCount: effectiveMediaCount,
   });
 
   if (!validation.valid && validation.errors.length > 0) {
@@ -180,8 +227,10 @@ export async function createPostAction(_prev: PostActionState, formData: FormDat
   const shareCommentary = typeof shareCommentaryRaw === 'string' && shareCommentaryRaw.trim() ? shareCommentaryRaw.trim() : null;
 
   // Publisher Identity Validation & Actor Separation
+  const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
   const publishAsTypeRaw = String(formData.get('publish_as_type') || formData.get('publisher_type') || 'personal').toLowerCase().trim();
-  const publishAsIdRaw = String(formData.get('publish_as_id') || formData.get('publisher_entity_id') || user.id).trim();
+  const rawPublishAsId = String(formData.get('publish_as_id') || formData.get('publisher_entity_id') || user.id).trim();
+  const publishAsIdRaw = UUID_REGEX.test(rawPublishAsId) ? rawPublishAsId : user.id;
 
   let authorId = user.id;
   let publisherType: 'personal' | 'official' | 'page' | 'community' | 'creator' = 'personal';
@@ -349,40 +398,6 @@ export async function createPostAction(_prev: PostActionState, formData: FormDat
   // Publisher & Client Request Idempotency Key
   const idempotencyKeyRaw = formData.get('idempotency_key') || formData.get('client_publish_id') || formData.get('client_request_id');
   const idempotencyKey = typeof idempotencyKeyRaw === 'string' && idempotencyKeyRaw.trim() ? idempotencyKeyRaw.trim() : null;
-
-  // Extract multi-link previews or single link preview metadata
-  const linkPreviewsRaw = formData.get('link_previews');
-  let linkPreviews: ResolvedContentMetadata[] = [];
-  if (typeof linkPreviewsRaw === 'string' && linkPreviewsRaw.trim()) {
-    try {
-      const parsed = JSON.parse(linkPreviewsRaw);
-      if (Array.isArray(parsed)) {
-        linkPreviews = parsed;
-      } else if (parsed && typeof parsed === 'object') {
-        linkPreviews = [parsed];
-      }
-    } catch {
-      linkPreviews = [];
-    }
-  }
-
-  // Extract or auto-resolve link preview metadata
-  const linkPreviewRaw = formData.get('link_preview');
-  let linkPreview: ResolvedContentMetadata | null = null;
-  if (typeof linkPreviewRaw === 'string' && linkPreviewRaw.trim()) {
-    try {
-      linkPreview = JSON.parse(linkPreviewRaw);
-    } catch {
-      linkPreview = null;
-    }
-  }
-
-  // Synchronize single preview and multi-preview array
-  if (linkPreviews.length > 0 && !linkPreview) {
-    linkPreview = linkPreviews[0];
-  } else if (linkPreview && linkPreviews.length === 0) {
-    linkPreviews = [linkPreview];
-  }
 
   // TUKUBI UNIVERSAL RICH MEDIA ENGINE: Non-blocking Post Creation
   // Post publishing must NEVER block or fail due to external media resolution.
@@ -626,7 +641,9 @@ export async function createPostAction(_prev: PostActionState, formData: FormDat
     const postMediaRows = mediaItems.map((item, idx) => ({
       post_id: data.id,
       storage_path: item.url,
+      media_url: item.url,
       media_kind: item.type || 'image',
+      media_type: item.type || 'image',
       aspect_ratio: item.aspectRatio || null,
       width: item.width || null,
       height: item.height || null,
@@ -636,6 +653,34 @@ export async function createPostAction(_prev: PostActionState, formData: FormDat
     const { error: postMediaError } = await supabase.from('post_media').insert(postMediaRows);
     if (postMediaError) {
       logger.warn('[createPostAction] post_media insert notice:', { error: postMediaError.message });
+    }
+  }
+
+  // Persist tagged products to product_tags and posts.tagged_product_ids
+  if (supabase && taggedProductIds.length > 0 && data?.id) {
+    try {
+      const productTagRows = taggedProductIds.map((pid) => ({
+        post_id: data.id,
+        product_id: pid,
+        tagged_by: user.id,
+      }));
+      await supabase.from('product_tags').insert(productTagRows);
+      await supabase.from('posts').update({ tagged_product_ids: taggedProductIds }).eq('id', data.id);
+    } catch (tagErr) {
+      logger.warn('[createPostAction] product_tags insert notice:', { error: String(tagErr) });
+    }
+  }
+
+  // Clean up any active post drafts in creator_content_drafts so stale draft reminders never persist after publish
+  if (supabase && data?.id) {
+    try {
+      await supabase
+        .from('creator_content_drafts')
+        .delete()
+        .eq('creator_id', user.id)
+        .eq('content_type', 'post');
+    } catch {
+      // Non-blocking draft cleanup
     }
   }
 

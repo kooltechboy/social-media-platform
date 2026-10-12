@@ -11,14 +11,14 @@ const TUKUBI_CSP = [
   "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://www.paypal.com https://www.paypalobjects.com https://accounts.google.com",
   // Styles: self + inline (Tailwind injects inline styles)
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-  // Images: self + Supabase Storage + Unsplash + Mux + Cloudflare + Cloudinary + data URIs
-  "img-src 'self' data: blob: https://*.supabase.co https://*.supabase.in https://images.unsplash.com https://*.unsplash.com https://image.mux.com https://imagedelivery.net https://res.cloudinary.com https://www.paypalobjects.com https://www.gstatic.com",
+  // Images: self + Supabase Storage + Unsplash + Mux + Cloudflare + Cloudinary + YouTube thumbnails + data URIs
+  "img-src 'self' data: blob: https://*.supabase.co https://*.supabase.in https://images.unsplash.com https://*.unsplash.com https://image.mux.com https://imagedelivery.net https://res.cloudinary.com https://i.ytimg.com https://img.youtube.com https://www.paypalobjects.com https://www.gstatic.com",
   // Fonts: self + Google Fonts
   "font-src 'self' https://fonts.gstatic.com",
   // API/WebSocket connections: Supabase, Stripe, PayPal, self, Sentry, Mux, Cloudflare
   "connect-src 'self' https://*.supabase.co https://*.supabase.in wss://*.supabase.co https://api.stripe.com https://www.paypal.com https://api.paypal.com https://openrouter.ai https://api.openrouter.ai https://*.sentry.io https://stream.mux.com https://videodelivery.net",
-  // Frames: Stripe hosted payment UI, PayPal Smart Buttons
-  "frame-src 'self' https://js.stripe.com https://hooks.stripe.com https://www.paypal.com https://www.sandbox.paypal.com",
+  // Frames: Stripe hosted payment UI, PayPal Smart Buttons, and whitelisted RichMediaPlayer embed origins
+  "frame-src 'self' https://js.stripe.com https://hooks.stripe.com https://www.paypal.com https://www.sandbox.paypal.com https://www.youtube.com https://youtube.com https://www.youtube-nocookie.com https://player.vimeo.com https://www.dailymotion.com https://player.twitch.tv https://clips.twitch.tv https://www.loom.com https://open.spotify.com https://w.soundcloud.com https://embed.podcasts.apple.com https://embed.music.apple.com https://www.tiktok.com",
   // Media: self + Supabase Storage + Mux + Cloudflare Stream for audio/video
   "media-src 'self' blob: https://*.supabase.co https://*.supabase.in https://stream.mux.com https://videodelivery.net",
   // Workers: service worker from same origin
@@ -89,6 +89,14 @@ const nextConfig = {
         hostname: 'res.cloudinary.com',
       },
       {
+        protocol: 'https',
+        hostname: 'i.ytimg.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'img.youtube.com',
+      },
+      {
         protocol: 'http',
         hostname: '127.0.0.1',
       },
@@ -101,7 +109,7 @@ const nextConfig = {
   async headers() {
     return [
       {
-        source: '/(.*)',
+        source: '/((?!embed/).*)',
         headers: [
           { key: 'X-Content-Type-Options', value: 'nosniff' },
           { key: 'X-Frame-Options', value: 'DENY' },
@@ -117,6 +125,17 @@ const nextConfig = {
           {
             key: 'Content-Security-Policy',
             value: TUKUBI_CSP,
+          },
+        ],
+      },
+      {
+        source: '/embed/:path*',
+        headers: [
+          { key: 'X-Content-Type-Options', value: 'nosniff' },
+          { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+          {
+            key: 'Content-Security-Policy',
+            value: `${TUKUBI_CSP}; frame-ancestors *`,
           },
         ],
       },

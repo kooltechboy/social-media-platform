@@ -154,6 +154,7 @@ export default function App() {
               <Header 
                 onWalletPress={() => navigationRef.isReady() && navigationRef.navigate('Finance')}
                 onNotificationsPress={() => navigationRef.isReady() && navigationRef.navigate('Notifications')}
+                onMessagesPress={() => navigationRef.isReady() && navigationRef.navigate('Messages')}
                 onMarketplacePress={() => navigationRef.isReady() && navigationRef.navigate('Marketplace')}
                 onSearchPress={() => navigationRef.isReady() && navigationRef.navigate('Explore')}
               />
@@ -174,6 +175,7 @@ export default function App() {
               let iconStr = '🏠';
               if (route.name === 'Home') iconStr = '🏠';
               else if (route.name === 'Explore') iconStr = '🧭';
+              else if (route.name === 'Communities') iconStr = '🌴';
               else if (route.name === 'Messages') iconStr = '💬';
               else if (route.name === 'Profile') iconStr = '👤';
               
@@ -181,7 +183,7 @@ export default function App() {
             },
           })}
         >
-          {/* Primary 5 Tabs */}
+          {/* Primary 5 Tabs (D-02: Home · Explore · Create · Community · Profile) */}
           <Screen name="Home" component={HomeScreen} />
           <Screen name="Explore" component={ExploreScreen} />
           <Screen 
@@ -195,13 +197,22 @@ export default function App() {
               ),
             }}
           />
-          <Screen name="Messages" component={MessagesScreen} />
+          <Screen
+            name="Communities"
+            component={CommunitiesScreen}
+            options={{ tabBarLabel: 'Community' }}
+          />
           <Screen
             name="Profile"
             children={(props: any) => <ProfileScreen {...props} onLogout={() => setSession(null)} />}
           />
 
           {/* Secondary & High-Value Destinations */}
+          <Screen
+            name="Messages"
+            component={MessagesScreen}
+            options={{ tabBarButton: () => null }}
+          />
           <Screen 
             name="Create" 
             component={CreateScreen} 
@@ -251,11 +262,6 @@ export default function App() {
           <Screen 
             name="Podcasts" 
             component={PodcastsScreen} 
-            options={{ tabBarButton: () => null }} 
-          />
-          <Screen 
-            name="Communities" 
-            component={CommunitiesScreen} 
             options={{ tabBarButton: () => null }} 
           />
           <Screen 

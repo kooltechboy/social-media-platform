@@ -1,10 +1,12 @@
 export const TOKENS = {
   canvas: '#110D17',      // Island Vibes deep twilight base
+  oceanDepth: '#0B1F33',  // Ocean Depth heritage dark surface
   surface: '#1D1429',     // Island Vibes warm dusk surface
   raised: '#2A1B38',      // Island Vibes sunset plum raised surface
   textPrimary: '#FDF2E9', // Warm sandstone white
   textMuted: '#A1A1AA',   // Muted sandstone slate
   action: '#FF7A59',      // Vibrant sunrise coral (primary action)
+  actionText: '#110D17',  // High-contrast twilight text on sunrise coral (7.48:1 AAA)
   coral: '#FF7A59',       // Sunrise coral
   actionSecondary: '#00B4D8', // Tropical Caribbean Sea
   accent: '#FFB347',      // Warm golden hour

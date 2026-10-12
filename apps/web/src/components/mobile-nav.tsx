@@ -95,13 +95,15 @@ export default function MobileNav() {
 
   const isHomeActive = pathname === '/' || pathname === '/home' || pathname === '/feeds' || pathname.startsWith('/feeds/');
   const isExploreActive = pathname === '/explore' || pathname.startsWith('/explore/');
+  const isCommunityActive = pathname === '/communities' || pathname.startsWith('/communities/');
   const isMessagesActive = pathname === '/messages' || pathname.startsWith('/messages/');
 
-  // Core 5 mobile navigation items (Home, Explore, Create, Messages, Profile/Menu)
+  // Core mobile navigation items (Home, Explore, Create, Community, Messages, Profile/Menu)
   const MOBILE_TABS: MobileTab[] = [
     { href: '/', labelKey: 'nav.home', fallbackLabel: 'Home', icon: Home },
     { href: '/explore', labelKey: 'nav.explore', fallbackLabel: 'Explore', icon: Compass },
     { href: '/create', fallbackLabel: 'Create', icon: PlusCircle, isAction: true },
+    { href: '/communities', fallbackLabel: 'Community', icon: Users },
     { href: '/messages', labelKey: 'nav.messages', fallbackLabel: 'Messages', icon: MessageSquare },
   ];
 
@@ -540,14 +542,32 @@ export default function MobileNav() {
             </button>
           </li>
 
-          {/* Tab 4: Messages */}
+          {/* Tab 4: Community (D-02 persistent destination) */}
+          <li role="presentation">
+            <Link
+              href="/communities"
+              role="tab"
+              aria-selected={isCommunityActive}
+              aria-label="Community"
+              className={`flex flex-col items-center gap-0.5 px-2.5 py-1.5 rounded-2xl transition-all min-w-[44px] min-h-[44px] justify-center ${
+                isCommunityActive
+                  ? 'text-brand-caribbeanSea font-black'
+                  : 'text-brand-sandstone/60 hover:text-slate-200 font-bold'
+              }`}
+            >
+              <Users className="w-5 h-5" />
+              <span className="text-[10px]">Community</span>
+            </Link>
+          </li>
+
+          {/* Tab 5: Messages */}
           <li role="presentation">
             <Link
               href="/messages"
               role="tab"
               aria-selected={isMessagesActive}
               aria-label="Messages"
-              className={`flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-2xl transition-all min-w-[44px] min-h-[44px] justify-center ${
+              className={`flex flex-col items-center gap-0.5 px-2.5 py-1.5 rounded-2xl transition-all min-w-[44px] min-h-[44px] justify-center ${
                 isMessagesActive
                   ? 'text-brand-caribbeanSea font-black'
                   : 'text-brand-sandstone/60 hover:text-slate-200 font-bold'
@@ -563,8 +583,7 @@ export default function MobileNav() {
             </Link>
           </li>
 
-
-          {/* Tab 5: Menu */}
+          {/* Tab 6: Profile & Ecosystem Menu */}
           <li role="presentation">
             <button
               type="button"
@@ -574,7 +593,7 @@ export default function MobileNav() {
               aria-expanded={isMenuSheetOpen}
               aria-label="Ecosystem Menu"
               onClick={() => setIsMenuSheetOpen((prev) => !prev)}
-              className={`flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-2xl transition-all min-w-[44px] min-h-[44px] justify-center ${
+              className={`flex flex-col items-center gap-0.5 px-2.5 py-1.5 rounded-2xl transition-all min-w-[44px] min-h-[44px] justify-center ${
                 isMenuSheetOpen
                   ? 'text-brand-caribbeanSea font-black'
                   : 'text-brand-sandstone/60 hover:text-slate-200 font-bold'
@@ -586,7 +605,7 @@ export default function MobileNav() {
                   <span className="absolute -top-1 -right-1 w-2 h-2 bg-brand-sunriseCoral rounded-full animate-pulse shadow-[0_0_6px_rgba(255,107,107,0.9)]" />
                 )}
               </div>
-              <span className="text-[10px]">Menu</span>
+              <span className="text-[10px]">Profile</span>
             </button>
           </li>
         </ul>

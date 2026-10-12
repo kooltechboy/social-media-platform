@@ -7,6 +7,7 @@
   --brand-twilight:     #110D17;
   --brand-dusk:         #1D1429;
   --brand-plum:         #2A1B38;
+  --brand-ocean-depth:  #0B1F33;
   --brand-sandstone:    #FDF2E9;
   --brand-sunrise:      #FF7A59;
   --brand-gold:         #FFB347;
@@ -19,6 +20,18 @@
   --content-text-max:   760px;
   --app-shell-max:      2560px;
   --desktop-main-padding: 1.5rem;
+}
+
+[data-theme="island-daylight"] {
+  --brand-twilight:     #FFFDF9;
+  --brand-dusk:         #FFFFFF;
+  --brand-plum:         #F4EFE6;
+  --brand-ocean-depth:  #0B1F33;
+  --brand-sandstone:    #18181B;
+  --brand-sunrise:      #C2410C;
+  --brand-gold:         #B45309;
+  --brand-sea:          #0E7490;
+  --brand-purple:       #6D28D9;
 }
 
 @media (min-width: 1600px) {
@@ -111,6 +124,13 @@ body {
   box-shadow: 0 14px 35px -10px rgba(0, 0, 0, 0.75), 0 0 25px -5px rgba(0, 180, 216, 0.25), inset 0 1px 0 0 rgba(255, 255, 255, 0.20);
 }
 
+/* Surface Trust: Ocean Depth (#0B1F33) surface for financial, verification, and identity surfaces */
+.surface-trust {
+  background: #0B1F33;
+  border: 1px solid rgba(0, 180, 216, 0.25);
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.75);
+}
+
 /* Surface Opaque: 100% solid surface for maximum readability in high-information cards, forms, and tables */
 .surface-opaque {
   background: #181126;
@@ -178,6 +198,20 @@ body {
   50% { opacity: 0.85; transform: scale(1.02); }
 }
 .animate-subtlePulse { animation: subtlePulse 4s ease-in-out infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  .animate-fadeIn,
+  .animate-subtlePulse {
+    animation: none !important;
+  }
+  .glass-interactive:hover,
+  .surface-card-interactive:hover {
+    transform: none !important;
+  }
+}
 
 /* Micro-Scrollbar styling */
 .scrollbar-none::-webkit-scrollbar {
