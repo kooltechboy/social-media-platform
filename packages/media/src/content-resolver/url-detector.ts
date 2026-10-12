@@ -107,13 +107,39 @@ export function normalizeUrl(rawUrl: string): string {
       url.port = '';
     }
 
-    // 2. Canonicalize mobile hostnames
-    if (url.hostname === 'm.youtube.com') {
+    // 2. Canonicalize hostnames and short domains
+    if (url.hostname === 'youtu.be') {
+      const id = url.pathname.replace(/^\/+/, '').split('/')[0];
+      if (id && /^[a-zA-Z0-9_-]{11}$/.test(id)) {
+        url.hostname = 'www.youtube.com';
+        url.pathname = '/watch';
+        url.searchParams.set('v', id);
+      }
+    } else if (url.hostname === 'm.youtube.com' || url.hostname === 'youtube.com') {
       url.hostname = 'www.youtube.com';
+    } else if (url.hostname === 'dai.ly') {
+      const id = url.pathname.replace(/^\/+/, '').split('/')[0];
+      if (id) {
+        url.hostname = 'www.dailymotion.com';
+        url.pathname = `/video/${id}`;
+      }
+    } else if (url.hostname === 'player.vimeo.com') {
+      const vimeoMatch = url.pathname.match(/\/video\/(\d+)/);
+      if (vimeoMatch && vimeoMatch[1]) {
+        url.hostname = 'vimeo.com';
+        url.pathname = `/${vimeoMatch[1]}`;
+      }
+    } else if (url.hostname === 'm.twitch.tv') {
+      url.hostname = 'www.twitch.tv';
     } else if (url.hostname === 'mobile.twitter.com' || url.hostname === 'twitter.com') {
       url.hostname = 'x.com';
     } else if (url.hostname === 'm.facebook.com' || url.hostname === 'mobile.facebook.com') {
       url.hostname = 'www.facebook.com';
+    }
+
+    // Canonicalize Spotify locale prefixes (e.g. /intl-es/track/ID -> /track/ID)
+    if (url.hostname === 'open.spotify.com' && /^\/intl-[a-zA-Z-]+\//.test(url.pathname)) {
+      url.pathname = url.pathname.replace(/^\/intl-[a-zA-Z-]+/, '');
     }
 
     // 3. Remove tracking query parameters while preserving functional parameters

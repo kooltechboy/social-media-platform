@@ -58,6 +58,16 @@ describe('Universal Content Resolver — Tukubi Media Architecture', () => {
       expect(mobileTwitter).toBe('https://x.com/caribbeannews/status/1234567890');
     });
 
+    it('canonicalizes youtu.be short URLs to www.youtube.com/watch?v=ID while stripping tracking parameters and preserving timestamps', () => {
+      const shortUrl = 'https://youtu.be/IIQ3mIGKquc?si=faAZYkCPvSl1iH44';
+      const canonical = normalizeUrl(shortUrl);
+      expect(canonical).toBe('https://www.youtube.com/watch?v=IIQ3mIGKquc');
+
+      const timestampUrl = 'https://youtu.be/IIQ3mIGKquc?t=120&si=tracking123';
+      const canonicalWithTime = normalizeUrl(timestampUrl);
+      expect(canonicalWithTime).toBe('https://www.youtube.com/watch?t=120&v=IIQ3mIGKquc');
+    });
+
     it('generates consistent URL hashes (sync and async SHA-256)', async () => {
       const testUrl = 'https://youtube.com/watch?v=dQw4w9WgXcQ';
       const hashSync = hashUrlSync(testUrl);
