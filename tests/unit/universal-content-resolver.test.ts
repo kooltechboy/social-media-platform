@@ -15,9 +15,15 @@ import {
   AppleProvider,
   TikTokProvider,
   VimeoProvider,
+  DailymotionProvider,
+  TwitchProvider,
+  LoomProvider,
   TwitterProvider,
   InstagramProvider,
   FacebookProvider,
+  RedditProvider,
+  ThreadsProvider,
+  LinkedInProvider,
   LocationProvider,
   TukubiProvider,
   GenericProvider,
@@ -129,7 +135,13 @@ describe('Universal Content Resolver — Tukubi Media Architecture', () => {
     const apple = new AppleProvider();
     const tiktok = new TikTokProvider();
     const vimeo = new VimeoProvider();
+    const dailymotion = new DailymotionProvider();
+    const twitch = new TwitchProvider();
+    const loom = new LoomProvider();
     const twitter = new TwitterProvider();
+    const reddit = new RedditProvider();
+    const threads = new ThreadsProvider();
+    const linkedin = new LinkedInProvider();
     const location = new LocationProvider();
     const tukubi = new TukubiProvider();
     const generic = new GenericProvider();
@@ -215,6 +227,42 @@ describe('Universal Content Resolver — Tukubi Media Architecture', () => {
     it('correctly classifies Vimeo URLs', () => {
       expect(vimeo.canHandle('https://vimeo.com/123456789')).toBe(true);
       expect(vimeo.canHandle('https://youtube.com')).toBe(false);
+    });
+
+    it('correctly classifies Dailymotion URLs and extracts IDs', () => {
+      expect(dailymotion.canHandle('https://www.dailymotion.com/video/x8abcdef')).toBe(true);
+      expect(dailymotion.canHandle('https://dai.ly/x8abcdef')).toBe(true);
+      expect(dailymotion.extractVideoId(new URL('https://dai.ly/x8abcdef'))).toBe('x8abcdef');
+      expect(dailymotion.canHandle('https://vimeo.com/123')).toBe(false);
+    });
+
+    it('correctly classifies Twitch stream, VOD, and clip URLs', () => {
+      expect(twitch.canHandle('https://www.twitch.tv/caribbeangamer')).toBe(true);
+      expect(twitch.canHandle('https://www.twitch.tv/videos/123456789')).toBe(true);
+      expect(twitch.canHandle('https://clips.twitch.tv/AmazingClip123')).toBe(true);
+      expect(twitch.canHandle('https://youtube.com')).toBe(false);
+    });
+
+    it('correctly classifies Loom video URLs and extracts IDs', () => {
+      expect(loom.canHandle('https://www.loom.com/share/abc123def456')).toBe(true);
+      expect(loom.extractVideoId(new URL('https://www.loom.com/share/abc123def456'))).toBe('abc123def456');
+      expect(loom.canHandle('https://vimeo.com')).toBe(false);
+    });
+
+    it('correctly classifies Reddit community and thread URLs', () => {
+      expect(reddit.canHandle('https://www.reddit.com/r/caribbean/comments/12345/island_vibes/')).toBe(true);
+      expect(reddit.canHandle('https://redd.it/xyz123')).toBe(true);
+      expect(reddit.canHandle('https://twitter.com')).toBe(false);
+    });
+
+    it('correctly classifies Threads URLs', () => {
+      expect(threads.canHandle('https://www.threads.net/@tukubiapp/post/C4s9-123')).toBe(true);
+      expect(threads.canHandle('https://instagram.com')).toBe(false);
+    });
+
+    it('correctly classifies LinkedIn URLs', () => {
+      expect(linkedin.canHandle('https://www.linkedin.com/posts/tukubi-caribbean-tech-update')).toBe(true);
+      expect(linkedin.canHandle('https://facebook.com')).toBe(false);
     });
 
     it('correctly classifies Twitter / X URLs', () => {

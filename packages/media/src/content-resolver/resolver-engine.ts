@@ -17,9 +17,15 @@ import { SoundCloudProvider } from './providers/soundcloud-provider';
 import { AppleProvider } from './providers/apple-provider';
 import { TikTokProvider } from './providers/tiktok-provider';
 import { VimeoProvider } from './providers/vimeo-provider';
+import { DailymotionProvider } from './providers/dailymotion-provider';
+import { TwitchProvider } from './providers/twitch-provider';
+import { LoomProvider } from './providers/loom-provider';
 import { TwitterProvider } from './providers/twitter-provider';
 import { InstagramProvider } from './providers/instagram-provider';
 import { FacebookProvider } from './providers/facebook-provider';
+import { RedditProvider } from './providers/reddit-provider';
+import { ThreadsProvider } from './providers/threads-provider';
+import { LinkedInProvider } from './providers/linkedin-provider';
 import { LocationProvider } from './providers/location-provider';
 import { GenericWebProvider } from './providers/generic-provider';
 
@@ -49,9 +55,15 @@ export class ContentResolverEngine {
       new AppleProvider(),
       new TikTokProvider(),
       new VimeoProvider(),
+      new DailymotionProvider(),
+      new TwitchProvider(),
+      new LoomProvider(),
       new TwitterProvider(),
       new InstagramProvider(),
       new FacebookProvider(),
+      new RedditProvider(),
+      new ThreadsProvider(),
+      new LinkedInProvider(),
       new LocationProvider(),
     ];
   }
