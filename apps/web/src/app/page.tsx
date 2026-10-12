@@ -154,7 +154,7 @@ export default async function RootPage(props: RootPageProps) {
           .from('posts')
           .select(`
             id, author_id, content, created_at, media_urls, cultural_tags, likes_count, comments_count, shares_count,
-            visibility, post_status, scheduled_at, is_official, official_content_type, is_pinned,
+            visibility, post_status, scheduled_at, is_official, official_content_type, is_pinned, link_preview,
             profiles:profiles!posts_author_id_fkey(id, display_name, username, avatar_url, is_verified, is_official)
           `)
           .eq('id', 'd23f3e75-0dfa-47c6-8df9-2c0fa299d7ff')

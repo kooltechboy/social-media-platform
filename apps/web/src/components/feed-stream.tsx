@@ -457,7 +457,7 @@ export default function FeedStream({
           try {
             const { data: postWithProfile } = await supabase
               .from('posts')
-              .select('id, author_id, content, created_at, media_urls, cultural_tags, likes_count, comments_count, shares_count, is_official, is_pinned, official_content_type, profiles:profiles!posts_author_id_fkey(display_name, username, avatar_url, is_verified, is_official)')
+              .select('id, author_id, content, created_at, media_urls, cultural_tags, likes_count, comments_count, shares_count, is_official, is_pinned, official_content_type, link_preview, profiles:profiles!posts_author_id_fkey(display_name, username, avatar_url, is_verified, is_official)')
               .eq('id', newRow.id)
               .maybeSingle();
 
@@ -483,6 +483,8 @@ export default function FeedStream({
                 reposts: postWithProfile.shares_count || 0,
                 comments: postWithProfile.comments_count || 0,
                 category: 'caribbean',
+                linkPreview: postWithProfile.link_preview || null,
+                linkPreviews: (postWithProfile as any).link_previews || (postWithProfile.link_preview ? [postWithProfile.link_preview] : []),
               };
 
               setPosts((prev) => {
@@ -519,6 +521,10 @@ export default function FeedStream({
                   likes: typeof updatedRow.likes_count === 'number' ? updatedRow.likes_count : p.likes,
                   comments: typeof updatedRow.comments_count === 'number' ? updatedRow.comments_count : p.comments,
                   reposts: typeof updatedRow.shares_count === 'number' ? updatedRow.shares_count : p.reposts,
+                  linkPreview: updatedRow.link_preview !== undefined ? updatedRow.link_preview : p.linkPreview,
+                  linkPreviews: Array.isArray(updatedRow.link_previews)
+                    ? updatedRow.link_previews
+                    : (updatedRow.link_preview ? [updatedRow.link_preview] : p.linkPreviews),
                 };
               })
             );
