@@ -238,8 +238,8 @@ export function extractDomain(rawUrl: string): string {
 /**
  * Formats duration in seconds to "m:ss" or "h:mm:ss".
  */
-export function formatDurationSeconds(seconds: number): string {
-  if (isNaN(seconds) || seconds <= 0) return '';
+export function formatDurationSeconds(seconds?: number | null): string {
+  if (seconds === undefined || seconds === null || isNaN(seconds) || seconds <= 0) return '';
   const total = Math.floor(seconds);
   const h = Math.floor(total / 3600);
   const m = Math.floor((total % 3600) / 60);

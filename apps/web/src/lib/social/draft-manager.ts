@@ -30,6 +30,8 @@ export interface ComposerDraftData {
   updatedAt: number;
 }
 
+export type ComposerDraftPayload = ComposerDraftData;
+
 /**
  * Determines whether the draft payload contains meaningful, recoverable user content.
  * An empty composer, or one with only whitespace, is NOT considered a draft.

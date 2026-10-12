@@ -173,7 +173,7 @@ describe('Composer & Posting Reliability — Link Detection and Media Pipeline',
 
     expect(detected.hasUrls).toBe(true);
     expect(detected.primaryUrl).toBe('https://youtu.be/k1bA3q4Z4oE?si=test1234');
-    expect(normalizeUrl(detected.primaryUrl!)).toBe('https://youtu.be/k1bA3q4Z4oE');
+    expect(normalizeUrl(detected.primaryUrl!)).toBe('https://www.youtube.com/watch?v=k1bA3q4Z4oE');
   });
 
   it('handles posts with no URLs without throwing', () => {
