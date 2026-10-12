@@ -89,6 +89,7 @@ export abstract class BaseContentProvider implements ContentProvider {
     canEmbed?: boolean;
     extra?: Record<string, unknown>;
     status?: ContentResolutionStatus;
+    siteName?: string;
   }): ResolvedContentMetadata {
     const rawUrlStr = params.url.toString();
     const normalized = normalizeUrl(rawUrlStr);
@@ -110,7 +111,7 @@ export abstract class BaseContentProvider implements ContentProvider {
       durationFormatted: params.durationSeconds
         ? this.formatDuration(params.durationSeconds)
         : undefined,
-      siteName: this.displayName,
+      siteName: params.siteName || this.displayName,
       faviconUrl: this.getFaviconUrl(params.url),
       embedUrl: params.embedUrl,
       embedHtml: params.embedHtml,
