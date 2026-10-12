@@ -174,6 +174,8 @@ export function normalizeUrl(rawUrl: string): string {
   }
 }
 
+export const canonicalizeUrl = normalizeUrl;
+
 /**
  * Computes a fast, collision-resistant SHA-256 hash representation of the normalized URL.
  * Works seamlessly in both Node.js server environments and modern browser WebCrypto.
