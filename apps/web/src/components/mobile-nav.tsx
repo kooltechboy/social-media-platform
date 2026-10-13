@@ -97,14 +97,26 @@ export default function MobileNav() {
   const isExploreActive = pathname === '/explore' || pathname.startsWith('/explore/');
   const isCommunityActive = pathname === '/communities' || pathname.startsWith('/communities/');
   const isMessagesActive = pathname === '/messages' || pathname.startsWith('/messages/');
+  const isProfileActive = Boolean(pathname.startsWith('/profile') || (user && pathname === `/profile/${user.username}`));
 
-  // Core mobile navigation items (Home, Explore, Create, Community, Messages, Profile/Menu)
+  // Listen for global ecosystem menu trigger (e.g. from mobile header or profile actions)
+  useEffect(() => {
+    function handleOpenMenu() {
+      setIsMenuSheetOpen(true);
+    }
+    window.addEventListener('tukubi:open-ecosystem-menu', handleOpenMenu);
+    return () => {
+      window.removeEventListener('tukubi:open-ecosystem-menu', handleOpenMenu);
+    };
+  }, []);
+
+  // Core mobile 5-tab navigation: Home, Explore, Create, Messages, Profile
   const MOBILE_TABS: MobileTab[] = [
     { href: '/', labelKey: 'nav.home', fallbackLabel: 'Home', icon: Home },
     { href: '/explore', labelKey: 'nav.explore', fallbackLabel: 'Explore', icon: Compass },
     { href: '/create', fallbackLabel: 'Create', icon: PlusCircle, isAction: true },
-    { href: '/communities', fallbackLabel: 'Community', icon: Users },
     { href: '/messages', labelKey: 'nav.messages', fallbackLabel: 'Messages', icon: MessageSquare },
+    { href: user ? `/profile/${user.username}` : '/login', labelKey: 'nav.profile', fallbackLabel: 'Profile', icon: User },
   ];
 
   // Indicator condition for message touchpoints:
@@ -258,7 +270,7 @@ export default function MobileNav() {
           className="fixed inset-0 z-[60] bg-black/75 backdrop-blur-md flex items-end animate-fadeIn"
           role="dialog"
           aria-modal="true"
-          aria-label="TUKUBI Ecosystem Menu"
+          aria-label="Ecosystem Menu"
         >
           <div
             ref={menuSheetRef}
@@ -484,12 +496,12 @@ export default function MobileNav() {
         </div>
       )}
 
-      {/* ── 3. Bottom 5-Tab Bar (D-02: Home, Explore, Create, Community, Profile) ── */}
+      {/* ── 3. Bottom 5-Tab Bar (Home, Explore, Create, Messages, Profile) ── */}
       <nav
-        className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#110D17]/95 backdrop-blur-2xl border-t border-white/10 shadow-2xl"
+        className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#110D17]/95 backdrop-blur-2xl border-t border-white/10 shadow-2xl pb-[max(0.35rem,env(safe-area-inset-bottom))]"
         aria-label="Main mobile navigation"
       >
-        <ul className="flex items-center justify-around px-2 py-1.5" role="tablist">
+        <ul className="flex items-center justify-around px-2 py-1" role="tablist">
           {/* Tab 1: Home */}
           <li role="presentation">
             <Link
@@ -497,7 +509,7 @@ export default function MobileNav() {
               role="tab"
               aria-selected={isHomeActive}
               aria-label="Home"
-              className={`flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-2xl transition-all min-w-[44px] min-h-[44px] justify-center ${
+              className={`flex flex-col items-center gap-0.5 px-2.5 py-1.5 rounded-2xl transition-all min-w-[44px] min-h-[44px] sm:min-w-[48px] sm:min-h-[48px] justify-center ${
                 isHomeActive
                   ? 'text-brand-caribbeanSea font-black'
                   : 'text-brand-sandstone/60 hover:text-slate-200 font-bold'
@@ -515,7 +527,7 @@ export default function MobileNav() {
               role="tab"
               aria-selected={isExploreActive}
               aria-label="Explore Caribbean"
-              className={`flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-2xl transition-all min-w-[44px] min-h-[44px] justify-center ${
+              className={`flex flex-col items-center gap-0.5 px-2.5 py-1.5 rounded-2xl transition-all min-w-[44px] min-h-[44px] sm:min-w-[48px] sm:min-h-[48px] justify-center ${
                 isExploreActive
                   ? 'text-brand-caribbeanSea font-black'
                   : 'text-brand-sandstone/60 hover:text-slate-200 font-bold'
@@ -533,7 +545,7 @@ export default function MobileNav() {
               role="tab"
               aria-label="Create on TUKUBI"
               onClick={() => setIsCreateSheetOpen(true)}
-              className="flex flex-col items-center gap-0.5 px-2 py-1 rounded-2xl transition-all min-w-[44px] min-h-[44px] justify-center"
+              className="flex flex-col items-center gap-0.5 px-2 py-1 rounded-2xl transition-all min-w-[44px] min-h-[44px] sm:min-w-[48px] sm:min-h-[48px] justify-center"
             >
               <span className="w-11 h-11 rounded-full bg-gradient-to-tr from-brand-caribbeanSea to-brand-sunriseCoral flex items-center justify-center -mt-4 shadow-lg shadow-brand-caribbeanSea/40 border-2 border-[#110D17] text-slate-950 hover:scale-105 active:scale-95 transition-transform">
                 <PlusCircle className="w-6 h-6 text-slate-950" />
@@ -542,48 +554,60 @@ export default function MobileNav() {
             </button>
           </li>
 
-          {/* Tab 4: Community (D-02 persistent destination) */}
+          {/* Tab 4: Messages */}
           <li role="presentation">
             <Link
-              href="/communities"
+              href="/messages"
               role="tab"
-              aria-selected={isCommunityActive}
-              aria-label="Community"
-              className={`flex flex-col items-center gap-0.5 px-2.5 py-1.5 rounded-2xl transition-all min-w-[44px] min-h-[44px] justify-center ${
-                isCommunityActive
-                  ? 'text-brand-caribbeanSea font-black'
-                  : 'text-brand-sandstone/60 hover:text-slate-200 font-bold'
-              }`}
-            >
-              <Users className="w-5 h-5" />
-              <span className="text-[10px]">Community</span>
-            </Link>
-          </li>
-
-          {/* Tab 5: Profile & Ecosystem Menu */}
-          <li role="presentation">
-            <button
-              type="button"
-              role="tab"
-              aria-selected={isMenuSheetOpen}
-              aria-haspopup="dialog"
-              aria-expanded={isMenuSheetOpen}
-              aria-label="Ecosystem Menu"
-              onClick={() => setIsMenuSheetOpen((prev) => !prev)}
-              className={`flex flex-col items-center gap-0.5 px-2.5 py-1.5 rounded-2xl transition-all min-w-[44px] min-h-[44px] justify-center ${
-                isMenuSheetOpen
+              aria-selected={isMessagesActive}
+              aria-label="Messages"
+              className={`flex flex-col items-center gap-0.5 px-2.5 py-1.5 rounded-2xl transition-all min-w-[44px] min-h-[44px] sm:min-w-[48px] sm:min-h-[48px] justify-center ${
+                isMessagesActive
                   ? 'text-brand-caribbeanSea font-black'
                   : 'text-brand-sandstone/60 hover:text-slate-200 font-bold'
               }`}
             >
               <div className="relative">
-                <User className="w-5 h-5" />
-                {(unreadNotificationsCount > 0 || hasUnreadMessagesTab) && (
+                <MessageSquare className="w-5 h-5" />
+                {unreadMessagesCount > 0 && (
+                  <span className="absolute -top-1.5 -right-2 px-1 min-w-[16px] h-4 rounded-full bg-brand-sunriseCoral text-slate-950 font-black text-[9px] flex items-center justify-center shadow-sm">
+                    {unreadMessagesCount > 99 ? '99+' : unreadMessagesCount}
+                  </span>
+                )}
+              </div>
+              <span className="text-[10px]">Messages</span>
+            </Link>
+          </li>
+
+          {/* Tab 5: Profile */}
+          <li role="presentation">
+            <Link
+              href={user ? `/profile/${user.username}` : '/login'}
+              role="tab"
+              aria-selected={isProfileActive}
+              aria-label="Profile"
+              className={`flex flex-col items-center gap-0.5 px-2.5 py-1.5 rounded-2xl transition-all min-w-[44px] min-h-[44px] sm:min-w-[48px] sm:min-h-[48px] justify-center ${
+                isProfileActive
+                  ? 'text-brand-caribbeanSea font-black'
+                  : 'text-brand-sandstone/60 hover:text-slate-200 font-bold'
+              }`}
+            >
+              <div className="relative">
+                {user?.avatarUrl ? (
+                  <UserAvatar
+                    src={user.avatarUrl}
+                    name={user.displayName || user.username}
+                    size="xs"
+                  />
+                ) : (
+                  <User className="w-5 h-5" />
+                )}
+                {unreadNotificationsCount > 0 && (
                   <span className="absolute -top-1 -right-1 w-2 h-2 bg-brand-sunriseCoral rounded-full animate-pulse shadow-[0_0_6px_rgba(255,107,107,0.9)]" />
                 )}
               </div>
               <span className="text-[10px]">Profile</span>
-            </button>
+            </Link>
           </li>
         </ul>
       </nav>

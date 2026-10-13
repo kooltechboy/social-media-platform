@@ -3,7 +3,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Search, Wallet, CreditCard, Bell, MessageSquare, User, CheckCircle, Users, Calendar, ShoppingBag, X } from 'lucide-react';
+import { Search, Wallet, CreditCard, Bell, MessageSquare, User, CheckCircle, Users, Calendar, ShoppingBag, X, Menu } from 'lucide-react';
 import SessionWidget from './session-widget';
 import IdentitySwitcher from './identity-switcher';
 import { createSupabaseBrowserClient } from '../lib/supabase/browser';
@@ -323,7 +323,7 @@ export default function AppHeader() {
 
         <Link
           href="/messages"
-          className="p-2 sm:p-2.5 md:p-3 text-white/70 hover:text-white rounded-full hover:bg-white/10 relative transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
+          className="hidden md:flex p-2 sm:p-2.5 md:p-3 text-white/70 hover:text-white rounded-full hover:bg-white/10 relative transition-colors min-h-[44px] min-w-[44px] items-center justify-center"
           aria-label={t('nav.messages')}
         >
           <MessageSquare className="w-5 h-5 md:w-[22px] md:h-[22px]" aria-hidden="true" />
@@ -331,6 +331,20 @@ export default function AppHeader() {
             <span className="absolute top-2 right-2 w-2.5 h-2.5 bg-brand-caribbeanSea rounded-full animate-pulse shadow-[0_0_8px_rgba(0,168,150,0.9)]" />
           )}
         </Link>
+
+        {/* Mobile Ecosystem Drawer Quick Trigger */}
+        <button
+          type="button"
+          onClick={() => {
+            if (typeof window !== 'undefined') {
+              window.dispatchEvent(new CustomEvent('tukubi:open-ecosystem-menu'));
+            }
+          }}
+          className="md:hidden p-2 text-white/70 hover:text-white rounded-full hover:bg-white/10 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
+          aria-label="Open Caribbean Ecosystem Menu"
+        >
+          <Menu className="w-5 h-5" aria-hidden="true" />
+        </button>
 
         <div className="hidden sm:block">
           <IdentitySwitcher />

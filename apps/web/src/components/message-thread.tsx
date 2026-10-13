@@ -628,7 +628,7 @@ export default function MessageThread({
           </div>
         ) : (
           messages.map((msg, index) => {
-            const isMine = msg.sender_id === currentUserId;
+            const isMine = Boolean(currentUserId && msg.sender_id === currentUserId);
             const isVoice = msg.message_kind === 'voice' || !!msg.audio_url;
             const isDeleted = !!msg.deleted_at;
             const repliedMsg = msg.reply_to_id ? messages.find((m) => m.id === msg.reply_to_id) : null;
