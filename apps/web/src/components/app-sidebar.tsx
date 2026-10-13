@@ -228,25 +228,25 @@ export default function AppSidebar({ currentPath }: { currentPath?: string }) {
                 aria-current={isActive ? 'page' : undefined}
                 title={label}
                 aria-label={label}
-                className={`relative flex items-center justify-center w-12 h-10 mx-auto rounded-2xl transition-all group ${
+                className={`relative flex items-center justify-center w-10 h-8 mx-auto rounded-xl transition-all group ${
                   isActive
                     ? 'bg-gradient-to-r from-brand-caribbeanSea/30 to-brand-sunriseCoral/20 text-white border border-brand-caribbeanSea/50 shadow-md shadow-brand-caribbeanSea/15'
                     : 'text-slate-300 hover:bg-white/10 hover:text-white border border-transparent'
                 }`}
               >
                 <Icon
-                  className={`w-5 h-5 shrink-0 transition-transform duration-200 group-hover:scale-115 ${
+                  className={`w-4 h-4 shrink-0 transition-transform duration-200 group-hover:scale-110 ${
                     isActive ? 'text-brand-caribbeanSea' : 'text-slate-400 group-hover:text-brand-caribbeanSea'
                   }`}
                 />
                 {item.badgeCount !== undefined && item.badgeCount > 0 && (
-                  <span className="absolute -top-1 -right-1 min-w-[18px] h-4.5 px-1 rounded-full bg-brand-sunriseCoral text-slate-950 font-black text-[9px] flex items-center justify-center shadow-sm">
+                  <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 rounded-full bg-brand-sunriseCoral text-slate-950 font-black text-[9px] flex items-center justify-center shadow-sm">
                     {item.badgeCount > 99 ? '99+' : item.badgeCount}
                   </span>
                 )}
                 {item.badge && !item.badgeCount && (
                   <span
-                    className={`absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full ${
+                    className={`absolute -top-1 -right-1 w-2 h-2 rounded-full ${
                       item.badge === 'LIVE' ? 'bg-rose-500 animate-pulse' : 'bg-brand-goldenHour'
                     }`}
                   />
@@ -261,30 +261,30 @@ export default function AppSidebar({ currentPath }: { currentPath?: string }) {
             <Link
               href={item.href}
               aria-current={isActive ? 'page' : undefined}
-              className={`flex items-center justify-between px-3.5 py-2 rounded-2xl text-xs md:text-sm font-bold min-h-[38px] transition-all group ${
+              className={`flex items-center justify-between px-2.5 py-1 sm:py-1.5 rounded-xl text-xs font-bold min-h-[30px] sm:min-h-[32px] transition-all group ${
                 isActive
                   ? 'bg-gradient-to-r from-brand-caribbeanSea/25 to-brand-sunriseCoral/15 text-white border border-brand-caribbeanSea/40 shadow-sm shadow-brand-caribbeanSea/10'
                   : 'text-slate-300 hover:bg-white/5 hover:text-white border border-transparent'
               }`}
             >
-              <div className="flex items-center gap-3 min-w-0">
+              <div className="flex items-center gap-2.5 min-w-0">
                 <Icon
-                  className={`w-5 h-5 shrink-0 transition-transform duration-200 group-hover:scale-110 ${
+                  className={`w-4 h-4 shrink-0 transition-transform duration-200 group-hover:scale-110 ${
                     isActive ? 'text-brand-caribbeanSea' : 'text-slate-400 group-hover:text-brand-caribbeanSea'
                   }`}
                 />
                 <span className="truncate">{label}</span>
               </div>
 
-              <div className="flex items-center gap-1.5 shrink-0 ml-2">
+              <div className="flex items-center gap-1.5 shrink-0 ml-1.5">
                 {item.badgeCount !== undefined && item.badgeCount > 0 && (
-                  <span className="min-w-[20px] h-5 px-1.5 rounded-full bg-brand-sunriseCoral text-slate-950 font-black text-[10px] flex items-center justify-center shadow-sm">
+                  <span className="min-w-[18px] h-4.5 px-1 rounded-full bg-brand-sunriseCoral text-slate-950 font-black text-[9px] flex items-center justify-center shadow-sm">
                     {item.badgeCount > 99 ? '99+' : item.badgeCount}
                   </span>
                 )}
                 {item.badge && (
                   <span
-                    className={`text-[9px] font-black px-2 py-0.5 rounded-full border ${
+                    className={`text-[8.5px] font-black px-1.5 py-0.5 rounded-full border ${
                       item.badge === 'OFFICIAL'
                         ? 'bg-brand-caribbeanSea/20 text-[#38BDF8] border-[#0EA5E9]/40'
                         : item.badge === 'LIVE'
@@ -306,11 +306,11 @@ export default function AppSidebar({ currentPath }: { currentPath?: string }) {
   );
 
   return (
-    <nav className="w-full h-full flex flex-col pb-2" aria-label="Global navigation">
+    <nav className="w-full h-full flex flex-col pb-1" aria-label="Global navigation">
       {/* ── 0. Sidebar Collapse / Expand Toggle Button ── */}
       <div className={`flex items-center shrink-0 ${isCollapsed ? 'justify-center' : 'justify-between px-2'} mb-1`}>
         {!isCollapsed && (
-          <span className="text-[10px] font-black uppercase tracking-wider text-brand-sandstone/50">
+          <span className="text-[9.5px] font-black uppercase tracking-wider text-brand-sandstone/50">
             Platform Menu
           </span>
         )}
@@ -319,48 +319,48 @@ export default function AppSidebar({ currentPath }: { currentPath?: string }) {
           onClick={toggleCollapse}
           title={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar into compact rail'}
           aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-          className="p-1.5 rounded-xl text-brand-sandstone/70 hover:text-white hover:bg-white/10 transition-colors"
+          className="p-1 rounded-lg text-brand-sandstone/70 hover:text-white hover:bg-white/10 transition-colors"
         >
           {isCollapsed ? (
-            <PanelLeftOpen className="w-4 h-4 text-brand-caribbeanSea" />
+            <PanelLeftOpen className="w-3.5 h-3.5 text-brand-caribbeanSea" />
           ) : (
-            <PanelLeftClose className="w-4 h-4" />
+            <PanelLeftClose className="w-3.5 h-3.5" />
           )}
         </button>
       </div>
 
       {/* ── 1. Create Action Button ── */}
-      <div className="px-1 shrink-0 mb-1.5">
+      <div className="px-0.5 shrink-0 mb-1">
         <Link
           href="/create"
           title="Create on TUKUBI"
-          className={`w-full flex items-center justify-center gap-2.5 rounded-2xl bg-gradient-to-r from-brand-caribbeanSea via-teal-400 to-brand-sunriseCoral hover:brightness-110 text-slate-950 font-black tracking-wide transition-all shadow-lg shadow-brand-caribbeanSea/20 hover:shadow-brand-caribbeanSea/30 active:scale-[0.98] ${
-            isCollapsed ? 'w-12 h-10 mx-auto p-0' : 'py-2.5 px-4 text-sm min-h-[42px]'
+          className={`w-full flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-brand-caribbeanSea via-teal-400 to-brand-sunriseCoral hover:brightness-110 text-slate-950 font-black tracking-wide transition-all shadow-md shadow-brand-caribbeanSea/20 hover:shadow-brand-caribbeanSea/30 active:scale-[0.98] ${
+            isCollapsed ? 'w-10 h-8 mx-auto p-0' : 'py-1.5 px-3 text-xs min-h-[34px]'
           }`}
         >
-          <PlusCircle className="w-5 h-5 text-slate-950 shrink-0" />
+          <PlusCircle className="w-4 h-4 text-slate-950 shrink-0" />
           {!isCollapsed && <span>Create on TUKUBI</span>}
         </Link>
       </div>
 
       {/* ── 2. Primary Navigation Container ── */}
-      <div className={`glass rounded-3xl flex flex-col flex-1 min-h-0 overflow-y-auto overflow-x-hidden custom-scrollbar border border-white/10 shadow-lg ${isCollapsed ? 'p-1.5' : 'p-2'}`}>
+      <div className={`glass rounded-2xl flex flex-col flex-1 min-h-0 overflow-y-auto overflow-x-hidden custom-scrollbar border border-white/10 shadow-lg ${isCollapsed ? 'p-1' : 'p-1.5'}`}>
         {!isCollapsed && (
           <div className="px-2 pt-0.5 pb-0.5 flex items-center justify-between shrink-0">
-            <span className="text-[10px] font-black uppercase tracking-wider text-brand-sandstone/50">
+            <span className="text-[9px] font-black uppercase tracking-wider text-brand-sandstone/50">
               Primary
             </span>
-            <span className="text-[9px] font-bold text-brand-caribbeanSea/80">Caribbean Global</span>
+            <span className="text-[8.5px] font-bold text-brand-caribbeanSea/80">Caribbean Global</span>
           </div>
         )}
 
         {renderNavList(PRIMARY_NAV)}
 
-        <div className="h-px bg-white/10 my-1 shrink-0" />
+        <div className="h-px bg-white/10 my-0.5 shrink-0" />
 
         {!isCollapsed && (
           <div className="px-2 pt-0.5 pb-0.5 shrink-0">
-            <span className="text-[10px] font-black uppercase tracking-wider text-brand-sandstone/50">
+            <span className="text-[9px] font-black uppercase tracking-wider text-brand-sandstone/50">
               Personal &amp; Connect
             </span>
           </div>
@@ -368,7 +368,7 @@ export default function AppSidebar({ currentPath }: { currentPath?: string }) {
 
         {renderNavList(SECONDARY_NAV)}
 
-        <div className="h-px bg-white/10 my-1 shrink-0" />
+        <div className="h-px bg-white/10 my-0.5 shrink-0" />
 
         {/* ── 3. More Tools & Ecosystem Accordion / Compact Menu ── */}
         {isCollapsed ? (
@@ -379,21 +379,21 @@ export default function AppSidebar({ currentPath }: { currentPath?: string }) {
               type="button"
               onClick={() => setIsToolsOpen((prev) => !prev)}
               aria-expanded={isToolsOpen}
-              className="w-full flex items-center justify-between px-3 py-1.5 rounded-xl text-xs font-bold text-slate-400 hover:text-white hover:bg-white/5 transition-colors"
+              className="w-full flex items-center justify-between px-2.5 py-1 rounded-lg text-xs font-bold text-slate-400 hover:text-white hover:bg-white/5 transition-colors min-h-[28px]"
             >
               <span className="flex items-center gap-2">
                 <Sparkles className="w-3.5 h-3.5 text-brand-goldenHour" />
                 Tools &amp; Ecosystem
               </span>
               <ChevronDown
-                className={`w-4 h-4 transition-transform duration-200 ${
+                className={`w-3.5 h-3.5 transition-transform duration-200 ${
                   isToolsOpen ? 'rotate-180 text-brand-caribbeanSea' : ''
                 }`}
               />
             </button>
 
             {isToolsOpen && (
-              <div className="pt-1 pl-1 space-y-0.5 animate-fadeIn">
+              <div className="pt-0.5 pl-1 space-y-0.5 animate-fadeIn">
                 {renderNavList(TOOLS_NAV)}
               </div>
             )}
@@ -402,54 +402,61 @@ export default function AppSidebar({ currentPath }: { currentPath?: string }) {
 
         {!isCollapsed && (
           <>
-            <div className="h-px bg-white/10 my-1 shrink-0" />
+            <div className="h-px bg-white/10 my-0.5 shrink-0" />
 
-            {/* Creator Ecosystem Action Card */}
-            <div className="glass rounded-2xl p-3 space-y-2 shrink-0">
-              <div className="flex items-center justify-center gap-1.5 text-xs font-black text-brand-caribbeanSea uppercase tracking-wide">
-                <Sparkles className="w-3.5 h-3.5 text-brand-goldenHour" /> Caribbean Creator Ecosystem
+            {/* Creator Ecosystem Action Card - Compact & Elegant */}
+            <div className="glass rounded-xl p-2 space-y-1 shrink-0 border border-white/5">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1 text-[10px] font-black text-brand-caribbeanSea uppercase tracking-wider">
+                  <Sparkles className="w-3 h-3 text-brand-goldenHour" /> Caribbean Creator Ecosystem
+                </div>
+                <Link
+                  href="/creator-studio"
+                  className="text-[9.5px] font-black px-1.5 py-0.5 rounded bg-brand-caribbeanSea/20 text-brand-caribbeanSea hover:brightness-125 transition-all"
+                  title="Create, manage, analyze & monetize content"
+                >
+                  Studio →
+                </Link>
               </div>
-              <p className="text-[11px] text-slate-300 leading-snug text-center">
-                Grow your presence, connect with fans, and operate your media business on TUKUBI.
-              </p>
 
-              <div className="space-y-1.5 pt-0.5">
+              <div className="flex items-center gap-1.5 pt-0.5">
                 <Link
                   href="/creator-hub"
-                  className="w-full flex items-center justify-between p-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 transition-all text-left group min-h-[38px]"
+                  className="flex-1 flex items-center justify-between p-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/5 transition-all group min-h-[30px]"
                 >
-                  <div>
-                    <p className="text-xs font-black text-brand-goldenHour flex items-center gap-1.5">
-                      <Sparkles className="w-3.5 h-3.5" /> Creator Hub
+                  <div className="min-w-0">
+                    <p className="text-[10px] font-black text-brand-goldenHour flex items-center gap-1 truncate">
+                      <Sparkles className="w-3 h-3 shrink-0" /> Creator Hub
                     </p>
-                    <p className="text-[10px] text-brand-sandstone/70">
+                    <p className="text-[8.5px] text-brand-sandstone/60 truncate">
                       Your home base, audience &amp; business
                     </p>
                   </div>
-                  <ArrowRight className="w-3.5 h-3.5 text-brand-goldenHour opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <ArrowRight className="w-3 h-3 text-brand-goldenHour opacity-0 group-hover:opacity-100 transition-opacity shrink-0 ml-1" />
                 </Link>
 
                 <Link
                   href="/creator-studio"
-                  className="w-full block bg-gradient-to-r from-brand-caribbeanSea to-brand-sunriseCoral hover:brightness-110 text-slate-950 font-black text-xs py-2 rounded-xl transition-all shadow-md shadow-brand-caribbeanSea/20 text-center min-h-[36px] flex items-center justify-center"
+                  className="shrink-0 bg-gradient-to-r from-brand-caribbeanSea to-brand-sunriseCoral hover:brightness-110 text-slate-950 font-black text-[10px] px-2.5 py-1.5 rounded-lg transition-all shadow-sm text-center min-h-[30px] flex items-center justify-center whitespace-nowrap"
                 >
-                  Open Creator Studio
+                  Open Studio
                 </Link>
-                <p className="text-[10px] text-center text-brand-sandstone/60">
-                  Create, manage, analyze &amp; monetize content
-                </p>
               </div>
+
+              <p className="text-[8.5px] text-center text-brand-sandstone/50 truncate">
+                Create, manage, analyze &amp; monetize content
+              </p>
             </div>
           </>
         )}
 
         {/* ── 4. Diaspora / Brand Identity Footer (Safely docked inside scroll container to prevent overlap) ── */}
         {!isCollapsed && (
-          <div className="px-3 pt-3 pb-1 text-center border-t border-white/5 mt-2 shrink-0">
-            <p className="text-[11px] font-black tracking-wider text-brand-sandstone/70">
+          <div className="px-2 pt-1.5 pb-0.5 text-center border-t border-white/5 mt-0.5 shrink-0">
+            <p className="text-[9.5px] font-black tracking-wider text-brand-sandstone/60 leading-tight">
               TUKUBI — The Caribbean Connected.
             </p>
-            <p className="text-[10px] text-brand-sandstone/40">
+            <p className="text-[8.5px] text-brand-sandstone/40 leading-tight">
               Born in the Caribbean. Built for the World.
             </p>
           </div>
