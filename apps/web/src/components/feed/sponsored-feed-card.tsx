@@ -128,7 +128,7 @@ export default function SponsoredFeedCard({ post }: SponsoredFeedCardProps) {
 
       {/* Media Creative */}
       {primaryMedia && (
-        <div className="relative rounded-2xl overflow-hidden border border-slate-800 bg-black/40 aspect-video w-full">
+        <div className="relative rounded-2xl overflow-hidden border border-slate-800 bg-black/40 aspect-video max-h-[420px] md:max-h-[480px] w-full">
           <TukubiImage
             src={primaryMedia}
             alt={post.headline || post.author}

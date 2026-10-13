@@ -273,7 +273,7 @@ export default function FeedPost({
     <article
       id={post.id}
       aria-label={`Post by ${post.author}`}
-      className="glass-aerospace rounded-3xl p-5 sm:p-6 space-y-4 hover:border-white/25 transition-all duration-300 relative group overflow-hidden shadow-2xl"
+      className="glass-aerospace rounded-2xl sm:rounded-3xl p-4 sm:p-5 md:p-6 space-y-3 sm:space-y-3.5 md:space-y-4 hover:border-white/25 transition-all duration-300 relative group overflow-hidden shadow-xl sm:shadow-2xl"
     >
       {/* Specular high-definition light reflection line */}
       <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/25 to-transparent pointer-events-none" />
@@ -585,7 +585,7 @@ export default function FeedPost({
           </div>
         </div>
       ) : (
-        <p className="text-base md:text-[17px] text-slate-100 leading-[1.6] font-medium whitespace-pre-wrap">
+        <p className="text-[15px] sm:text-base md:text-[17px] text-slate-100 leading-[1.6] font-medium whitespace-pre-wrap break-words">
           {translation?.translatedText && !translation?.isShowingOriginal
             ? translation.translatedText
             : displayedContent}

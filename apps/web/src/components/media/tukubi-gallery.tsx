@@ -106,6 +106,7 @@ export default function TukubiGallery({
   initialViewMode = 'carousel',
   enableViewModeSwitch = true,
 }: TukubiGalleryProps) {
+  const [detectedRatio, setDetectedRatio] = useState<number | null>(null);
   const [viewerOpen, setViewerOpen] = useState(false);
   const [activeViewerIndex, setActiveViewerIndex] = useState(0);
   const [viewMode, setViewMode] = useState<'carousel' | 'grid'>(initialViewMode);
@@ -198,10 +199,11 @@ export default function TukubiGallery({
 
     if (isVid) {
       return (
-        <div className={`relative rounded-2xl overflow-hidden bg-black aspect-video w-full ${className}`}>
+        <div className={`relative rounded-2xl overflow-hidden w-full max-h-[460px] sm:max-h-[520px] md:max-h-[560px] ${className}`}>
           <TukubiVideoPlayer
             src={url}
             posterUrl={firstItem?.posterUrl}
+            aspectRatio={firstItem?.aspectRatio}
             altText={altText}
             className="w-full h-full"
           />
@@ -215,17 +217,21 @@ export default function TukubiGallery({
       firstItem?.aspectRatio
     );
 
+    const activeRatio = detectedRatio && !firstItem?.aspectRatio && !firstItem?.width
+      ? computeSinglePhotoContainerStyle(undefined, undefined, detectedRatio)
+      : containerStyle;
+
     return (
       <>
         <div
-          className={`relative w-full rounded-2xl overflow-hidden bg-gradient-to-br from-[#0D0818] via-[#150D24] to-[#081220] border border-white/10 shadow-lg group cursor-pointer max-h-[640px] sm:max-h-[720px] ${className}`}
-          style={{ aspectRatio: containerStyle.aspectRatio }}
+          className={`relative w-full rounded-2xl overflow-hidden bg-slate-950/80 border border-white/10 shadow-lg group cursor-pointer max-h-[460px] sm:max-h-[520px] md:max-h-[560px] ${className}`}
+          style={{ aspectRatio: activeRatio.aspectRatio }}
           onClick={() => openViewer(0)}
         >
           {/* Ambient blurred backdrop if image exceeds ergonomic clamp */}
-          {containerStyle.needsAmbientBackdrop && (
+          {activeRatio.needsAmbientBackdrop && (
             <div
-              className="absolute inset-0 bg-cover bg-center filter blur-xl opacity-35 scale-110 pointer-events-none"
+              className="absolute inset-0 bg-cover bg-center filter blur-2xl opacity-35 scale-110 pointer-events-none"
               style={{ backgroundImage: `url(${url})` }}
               aria-hidden="true"
             />
@@ -236,9 +242,18 @@ export default function TukubiGallery({
             alt={altText}
             fill
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 75vw, 680px"
-            objectFit="contain"
+            objectFit={activeRatio.needsAmbientBackdrop ? 'contain' : 'cover'}
+            onDimensionsDetected={(dims) => {
+              if (!firstItem?.aspectRatio && !firstItem?.width) {
+                setDetectedRatio(dims.aspectRatio);
+              }
+            }}
             className="w-full h-full relative z-10 transition-transform duration-300 group-hover:scale-[1.01]"
-            imageClassName="w-full h-full object-contain mx-auto"
+            imageClassName={
+              activeRatio.needsAmbientBackdrop
+                ? 'w-full h-full object-contain mx-auto'
+                : 'w-full h-full object-cover'
+            }
           />
 
           {/* Subtle click-to-expand prompt on hover */}
@@ -274,7 +289,7 @@ export default function TukubiGallery({
           tabIndex={0}
           onKeyDown={handleKeyDown}
           style={{ aspectRatio: anchorRatio }}
-          className={`relative w-full rounded-2xl overflow-hidden border border-white/10 shadow-lg group select-none bg-gradient-to-br from-[#0D0818] via-[#150D24] to-[#081220] focus:outline-none focus:ring-2 focus:ring-brand-sunriseCoral/50 ${className}`}
+          className={`relative w-full rounded-2xl overflow-hidden border border-white/10 shadow-lg group select-none bg-gradient-to-br from-[#0D0818] via-[#150D24] to-[#081220] focus:outline-none focus:ring-2 focus:ring-brand-sunriseCoral/50 max-h-[460px] sm:max-h-[520px] md:max-h-[560px] ${className}`}
         >
           {/* View Mode Switcher Toggle */}
           {renderViewModeToggle()}
@@ -306,6 +321,7 @@ export default function TukubiGallery({
                     <TukubiVideoPlayer
                       src={url}
                       posterUrl={item?.posterUrl}
+                      aspectRatio={item?.aspectRatio}
                       altText={`${altText} (${idx + 1})`}
                       className="w-full h-full"
                     />
@@ -314,7 +330,7 @@ export default function TukubiGallery({
                       {/* Ambient blurred backdrop if slide ratio differs from anchor ratio */}
                       {needsBackdrop && (
                         <div
-                          className="absolute inset-0 bg-cover bg-center filter blur-xl opacity-35 scale-110 pointer-events-none"
+                          className="absolute inset-0 bg-cover bg-center filter blur-2xl opacity-35 scale-110 pointer-events-none"
                           style={{ backgroundImage: `url(${url})` }}
                           aria-hidden="true"
                         />
@@ -324,9 +340,9 @@ export default function TukubiGallery({
                         alt={`${altText} (${idx + 1} of ${totalSlides})`}
                         fill
                         sizes="(max-width: 640px) 100vw, (max-width: 1024px) 75vw, 680px"
-                        objectFit="contain"
+                        objectFit="cover"
                         className="w-full h-full relative z-10 transition-transform duration-300 group-hover:scale-[1.01]"
-                        imageClassName="w-full h-full object-contain mx-auto"
+                        imageClassName="w-full h-full object-cover"
                       />
                     </>
                   )}
@@ -403,7 +419,7 @@ export default function TukubiGallery({
       <>
         <div className="relative w-full">
           {renderViewModeToggle()}
-          <div className={`grid grid-cols-2 gap-2 rounded-2xl overflow-hidden ${className}`}>
+          <div className={`grid grid-cols-2 gap-2 rounded-2xl overflow-hidden max-h-[460px] sm:max-h-[520px] md:max-h-[560px] ${className}`}>
             {mediaUrls.map((url, idx) => (
               <div
                 key={idx}
@@ -446,7 +462,7 @@ export default function TukubiGallery({
       <>
         <div className="relative w-full">
           {renderViewModeToggle()}
-          <div className={`grid grid-cols-3 gap-2 rounded-2xl overflow-hidden aspect-[16/10] ${className}`}>
+          <div className={`grid grid-cols-3 gap-2 rounded-2xl overflow-hidden aspect-[16/10] max-h-[460px] sm:max-h-[520px] md:max-h-[560px] ${className}`}>
             {/* Main Hero Tile */}
             <div
               onClick={() => openViewer(0)}
@@ -512,7 +528,7 @@ export default function TukubiGallery({
       <>
         <div className="relative w-full">
           {renderViewModeToggle()}
-          <div className={`grid grid-cols-2 gap-2 rounded-2xl overflow-hidden ${className}`}>
+          <div className={`grid grid-cols-2 gap-2 rounded-2xl overflow-hidden max-h-[460px] sm:max-h-[520px] md:max-h-[560px] ${className}`}>
             {mediaUrls.map((url, idx) => (
               <div
                 key={idx}
@@ -557,7 +573,7 @@ export default function TukubiGallery({
     <>
       <div className="relative w-full">
         {renderViewModeToggle()}
-        <div className={`grid grid-cols-3 gap-2 rounded-2xl overflow-hidden ${className}`}>
+        <div className={`grid grid-cols-3 gap-2 rounded-2xl overflow-hidden max-h-[480px] sm:max-h-[540px] md:max-h-[580px] ${className}`}>
           {/* Top Hero Span */}
           <div
             onClick={() => openViewer(0)}

@@ -167,7 +167,8 @@ export default function TukubiVideoPlayer({
   const flashTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Aspect ratio calculations
-  const containerStyle = computeVideoContainerStyle(aspectRatio);
+  const [detectedRatio, setDetectedRatio] = useState<number | null>(null);
+  const containerStyle = computeVideoContainerStyle(aspectRatio || detectedRatio || undefined);
 
   // Check Picture-in-Picture API support
   useEffect(() => {
@@ -351,8 +352,13 @@ export default function TukubiVideoPlayer({
 
   const handleLoadedMetadata = () => {
     const video = videoRef.current;
-    if (video && video.duration) {
-      setDuration(video.duration);
+    if (video) {
+      if (video.duration) {
+        setDuration(video.duration);
+      }
+      if (video.videoWidth && video.videoHeight && !aspectRatio) {
+        setDetectedRatio(video.videoWidth / video.videoHeight);
+      }
     }
   };
 
@@ -482,7 +488,7 @@ export default function TukubiVideoPlayer({
       onClick={handleContainerClick}
       onKeyDown={handleKeyDown}
       tabIndex={0}
-      className={`relative group overflow-hidden rounded-2xl bg-black select-none cursor-pointer max-h-[640px] sm:max-h-[720px] focus:outline-none focus:ring-2 focus:ring-brand-caribbeanSea/50 ${className}`}
+      className={`relative group overflow-hidden rounded-2xl bg-black select-none cursor-pointer max-h-[460px] sm:max-h-[520px] md:max-h-[560px] focus:outline-none focus:ring-2 focus:ring-brand-caribbeanSea/50 ${className}`}
       style={{ aspectRatio: containerStyle.aspectRatio }}
       role="region"
       aria-label={altText}

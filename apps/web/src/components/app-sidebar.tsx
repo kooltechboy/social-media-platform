@@ -344,7 +344,7 @@ export default function AppSidebar({ currentPath }: { currentPath?: string }) {
       </div>
 
       {/* ── 2. Primary Navigation Container ── */}
-      <div className={`glass rounded-3xl flex flex-col flex-1 min-h-0 border border-white/10 shadow-lg ${isCollapsed ? 'p-1.5' : 'p-2'}`}>
+      <div className={`glass rounded-3xl flex flex-col flex-1 min-h-0 overflow-y-auto overflow-x-hidden custom-scrollbar border border-white/10 shadow-lg ${isCollapsed ? 'p-1.5' : 'p-2'}`}>
         {!isCollapsed && (
           <div className="px-2 pt-0.5 pb-0.5 flex items-center justify-between shrink-0">
             <span className="text-[10px] font-black uppercase tracking-wider text-brand-sandstone/50">
@@ -442,19 +442,19 @@ export default function AppSidebar({ currentPath }: { currentPath?: string }) {
             </div>
           </>
         )}
-      </div>
 
-      {/* ── 4. Diaspora / Brand Identity Footer ── */}
-      {!isCollapsed && (
-        <div className="px-3 py-1.5 text-center shrink-0">
-          <p className="text-[11px] font-black tracking-wider text-brand-sandstone/70">
-            TUKUBI — The Caribbean Connected.
-          </p>
-          <p className="text-[10px] text-brand-sandstone/40">
-            Born in the Caribbean. Built for the World.
-          </p>
-        </div>
-      )}
+        {/* ── 4. Diaspora / Brand Identity Footer (Safely docked inside scroll container to prevent overlap) ── */}
+        {!isCollapsed && (
+          <div className="px-3 pt-3 pb-1 text-center border-t border-white/5 mt-2 shrink-0">
+            <p className="text-[11px] font-black tracking-wider text-brand-sandstone/70">
+              TUKUBI — The Caribbean Connected.
+            </p>
+            <p className="text-[10px] text-brand-sandstone/40">
+              Born in the Caribbean. Built for the World.
+            </p>
+          </div>
+        )}
+      </div>
     </nav>
   );
 }
