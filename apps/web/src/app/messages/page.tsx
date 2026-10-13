@@ -58,20 +58,58 @@ export default async function MessagesPage({
     }
   }
 
-  // Load User's Active Memberships & Conversations
-  const [membershipsResult, onlineMembersResult, requestsResult] = await Promise.all([
+  // Load User's Active Memberships, Real Accepted Friends & Message Requests
+  const [membershipsResult, friendsResult, requestsResult] = await Promise.all([
     supabase
       .from('conversation_members')
       .select('conversation_id, last_read_sequence, status, conversations(id, kind, category, title, last_message_at, last_sequence_number)')
       .eq('profile_id', user.id)
       .is('left_at', null)
       .order('last_message_at', { ascending: false, foreignTable: 'conversations' }),
-    supabase
-      .from('profiles')
-      .select('id, display_name, username, avatar_url, is_verified, bio')
-      .neq('id', user.id)
-      .order('updated_at', { ascending: false })
-      .limit(20),
+    // Retrieve actual accepted, unblocked friends
+    (async () => {
+      try {
+        const rpcRes = await supabase.rpc('get_user_messaging_friends', { viewer_id: user.id });
+        if (!rpcRes.error && Array.isArray(rpcRes.data) && rpcRes.data.length > 0) {
+          return { data: rpcRes.data };
+        }
+      } catch {}
+
+      try {
+        const { data: frRows } = await supabase
+          .from('friendships')
+          .select('id, requester_id, addressee_id, status, created_at, updated_at')
+          .eq('status', 'accepted')
+          .or(`requester_id.eq.${user.id},addressee_id.eq.${user.id}`);
+
+        if (!frRows || frRows.length === 0) return { data: [] };
+
+        const friendIds = frRows.map((f) => (f.requester_id === user.id ? f.addressee_id : f.requester_id));
+
+        // Filter out blocked users
+        const { data: blocks } = await supabase
+          .from('blocks')
+          .select('blocker_id, blocked_id')
+          .or(`blocker_id.eq.${user.id},blocked_id.eq.${user.id}`);
+
+        const blockedSet = new Set<string>();
+        (blocks || []).forEach((b) => {
+          blockedSet.add(b.blocker_id === user.id ? b.blocked_id : b.blocker_id);
+        });
+
+        const allowedFriendIds = friendIds.filter((id) => !blockedSet.has(id));
+        if (allowedFriendIds.length === 0) return { data: [] };
+
+        const { data: profiles } = await supabase
+          .from('profiles')
+          .select('id, display_name, username, avatar_url, is_verified, bio, updated_at')
+          .in('id', allowedFriendIds);
+
+        return { data: profiles || [] };
+      } catch {
+        return { data: [] };
+      }
+    })(),
     (async () => {
       try {
         const res = await supabase
@@ -113,7 +151,7 @@ export default async function MessagesPage({
   const conversationIds = conversations.map((c) => c.id);
 
   let membersByConversation = new Map<string, Array<{ profile_id: string; display_name: string; username?: string; avatar_url?: string | null }>>();
-  let latestByConversation = new Map<string, string>();
+  let latestByConversation = new Map<string, { body: string; sender_id: string | null }>();
 
   if (conversationIds.length > 0) {
     const [membersResult, messagesResult] = await Promise.all([
@@ -123,10 +161,10 @@ export default async function MessagesPage({
         .in('conversation_id', conversationIds),
       supabase
         .from('messages')
-        .select('conversation_id, body, created_at')
+        .select('conversation_id, sender_id, body, created_at')
         .in('conversation_id', conversationIds)
         .order('created_at', { ascending: false })
-        .limit(150),
+        .limit(200),
     ]);
 
     membersByConversation = new Map();
@@ -145,24 +183,49 @@ export default async function MessagesPage({
       membersByConversation.set(member.conversation_id, bucket);
     }
 
-    for (const message of (messagesResult.data ?? []) as Array<{ conversation_id: string; body: string | null }>) {
+    for (const message of (messagesResult.data ?? []) as Array<{ conversation_id: string; sender_id: string | null; body: string | null }>) {
       if (!latestByConversation.has(message.conversation_id) && message.body) {
-        latestByConversation.set(message.conversation_id, message.body);
+        latestByConversation.set(message.conversation_id, {
+          body: message.body,
+          sender_id: message.sender_id,
+        });
       }
     }
   }
 
+  // Determine active conversation ID
+  const selectedId = targetConversationId
+    || (params.c && (conversationIds.includes(params.c) || targetConversationId === params.c) ? params.c : null)
+    || null;
+
   const summaries: ConversationSummary[] = conversations.map((conversation) => {
     const members = membersByConversation.get(conversation.id) ?? [];
     const others = members.filter((member) => member.profile_id !== user.id);
+    const partner = others[0];
     const displayName =
       conversation.kind === 'group'
         ? conversation.title ?? 'Group conversation'
-        : others[0]?.display_name ?? 'Conversation';
+        : partner?.display_name ?? 'Conversation';
+
+    const latestInfo = latestByConversation.get(conversation.id);
+    let preview = 'No messages yet';
+    if (latestInfo) {
+      if (latestInfo.sender_id === user.id) {
+        preview = `You: ${latestInfo.body}`;
+      } else {
+        preview = latestInfo.body;
+      }
+    }
 
     const latestSeq = conversation.last_sequence_number || 0;
     const readSeq = conversation.last_read_sequence || 0;
-    const unreadCount = Math.max(0, latestSeq - readSeq);
+    let unreadCount = Math.max(0, latestSeq - readSeq);
+
+    // Invariant: An actively selected conversation has 0 unread.
+    // If the latest message was sent by the viewer, viewer has 0 unread from it.
+    if (selectedId === conversation.id || latestInfo?.sender_id === user.id) {
+      unreadCount = 0;
+    }
 
     return {
       id: conversation.id,
@@ -171,8 +234,10 @@ export default async function MessagesPage({
       title: conversation.title ?? null,
       last_message_at: conversation.last_message_at ?? null,
       displayName,
-      avatarUrl: others[0]?.avatar_url ?? null,
-      preview: latestByConversation.get(conversation.id) ?? 'No messages yet',
+      partnerId: partner?.profile_id ?? null,
+      partnerUsername: partner?.username ?? null,
+      avatarUrl: partner?.avatar_url ?? null,
+      preview,
       unreadCount,
       status: conversation.member_status as any,
     };
@@ -187,18 +252,14 @@ export default async function MessagesPage({
       title: null,
       last_message_at: null,
       displayName: targetResolvedProfile?.displayName || 'Direct Conversation',
+      partnerId: targetResolvedProfile?.id ?? null,
+      partnerUsername: targetResolvedProfile?.username ?? null,
       avatarUrl: targetResolvedProfile?.avatarUrl || null,
       preview: 'Say wah gwaan to start the conversation!',
       unreadCount: 0,
       status: 'active',
     });
   }
-
-  // Resolve which conversation to display:
-  // Priority: targetConversationId (from ?u=) > ?c= param > null (inbox view)
-  const selectedId = targetConversationId
-    || (params.c && (conversationIds.includes(params.c) || summaries.some((s) => s.id === params.c)) ? params.c : null)
-    || null;
 
   let threadMessages: ThreadMessage[] = [];
   if (selectedId) {
@@ -212,17 +273,21 @@ export default async function MessagesPage({
     threadMessages = (threadResult.data ?? []) as unknown as ThreadMessage[];
 
     // Mark as read in background
-    void supabase.rpc('mark_conversation_read', { conv_id: selectedId });
+    try {
+      void supabase.rpc('mark_conversation_read', { conv_id: selectedId });
+    } catch {}
   }
 
-  const onlineMembers: NewMessageMember[] = (onlineMembersResult.data ?? []).map((p) => ({
+  // Map real accepted friends
+  const realFriends: NewMessageMember[] = (friendsResult.data ?? []).map((p: any) => ({
     id: p.id,
-    name: p.display_name || p.username || 'Caribbean Member',
+    name: p.display_name || p.username || 'Friend',
     username: p.username || p.id.slice(0, 8),
     avatarUrl: p.avatar_url,
     isVerified: !!p.is_verified,
-    isOnline: true,
+    isOnline: false,
     bio: p.bio,
+    isFriend: true,
   }));
 
   const pendingRequests = (requestsResult.data ?? []).map((r: any) => ({
@@ -236,19 +301,19 @@ export default async function MessagesPage({
   }));
 
   return (
-    <div className="min-h-screen bg-transparent text-white pb-12">
+    <div className="h-screen max-h-screen flex flex-col bg-[#0A0612] text-white overflow-hidden">
       {/* Header Bar */}
-      <header className="sticky top-0 z-40 bg-[#0E0818]/90 backdrop-blur-xl border-b border-white/10 px-4 sm:px-6 py-3.5 md:py-4 flex items-center justify-between">
+      <header className="h-14 flex-shrink-0 bg-[#0E0818]/95 backdrop-blur-xl border-b border-white/10 px-4 sm:px-6 flex items-center justify-between z-30">
         <div className="flex items-center gap-3">
           <Link
             href="/"
-            className="flex items-center gap-1.5 text-slate-300 hover:text-white text-xs md:text-sm font-bold px-3 md:px-4 py-1.5 md:py-2 min-h-[36px] md:min-h-[40px] rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 transition-colors"
+            className="flex items-center gap-1.5 text-slate-300 hover:text-white text-xs md:text-sm font-bold px-3 py-1.5 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 transition-colors"
           >
             <ArrowLeft className="w-3.5 h-3.5 md:w-4 md:h-4" /> Back
           </Link>
           <div className="flex items-center gap-2">
-            <h1 className="text-base sm:text-lg md:text-xl font-black text-white flex items-center gap-2">
-              <MessageSquare className="w-5 h-5 md:w-6 md:h-6 text-brand-caribbeanSea" /> Messages Hub
+            <h1 className="text-base sm:text-lg font-black text-white flex items-center gap-2">
+              <MessageSquare className="w-5 h-5 text-brand-caribbeanSea" /> Messages Hub
             </h1>
           </div>
         </div>
@@ -256,7 +321,7 @@ export default async function MessagesPage({
         <div className="flex items-center gap-2">
           <Link
             href="/friends"
-            className="text-xs md:text-sm font-bold px-3 md:px-4 py-1.5 md:py-2 min-h-[36px] md:min-h-[40px] rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 text-slate-200 flex items-center gap-1.5 transition-colors"
+            className="text-xs md:text-sm font-bold px-3 py-1.5 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 text-slate-200 flex items-center gap-1.5 transition-colors"
           >
             <Users className="w-3.5 h-3.5 md:w-4 md:h-4 text-brand-caribbeanSea" />
             <span className="hidden sm:inline">Friends</span>
@@ -265,13 +330,14 @@ export default async function MessagesPage({
       </header>
 
       {/* Main Container — Fluid desktop messaging workspace */}
-      <main className="w-full py-4">
+      <main className="flex-1 min-h-0 overflow-hidden relative">
         <MessagesCenterClient
           conversations={summaries}
           selectedId={selectedId}
           threadMessages={threadMessages}
           currentUserId={user.id}
-          onlineMembers={onlineMembers}
+          friends={realFriends}
+          onlineMembers={realFriends}
           pendingRequests={pendingRequests}
           initialCompose={params.compose === 'true'}
           conversationError={conversationError}

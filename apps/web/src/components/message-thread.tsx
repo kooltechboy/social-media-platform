@@ -27,6 +27,7 @@ import {
   Check,
   CheckCheck,
   Bot,
+  Users,
 } from 'lucide-react';
 import { createSupabaseBrowserClient } from '../lib/supabase/browser';
 import {
@@ -71,14 +72,22 @@ export default function MessageThread({
   currentUserId,
   peerName = 'Caribbean Member',
   peerAvatarUrl,
+  isOnline = false,
   onBack,
+  onToggleDetails,
+  isDetailsOpen = false,
+  onMessageSent,
 }: {
   conversationId: string;
   initialMessages: ThreadMessage[];
   currentUserId: string;
   peerName?: string;
   peerAvatarUrl?: string | null;
+  isOnline?: boolean;
   onBack?: () => void;
+  onToggleDetails?: () => void;
+  isDetailsOpen?: boolean;
+  onMessageSent?: (conversationId: string, previewText: string) => void;
 }) {
   const [messages, setMessages] = useState<ThreadMessage[]>(initialMessages);
   const [messageInput, setMessageInput] = useState('');
@@ -162,8 +171,16 @@ export default function MessageThread({
         },
         (payload) => {
           const newMsg = payload.new as any;
+          // If this is an incoming message from the peer and we are viewing this active conversation,
+          // advance our read cursor immediately so unread counts stay 0
+          if (newMsg.sender_id && newMsg.sender_id !== currentUserId) {
+            import('../lib/messaging/actions').then(({ markConversationReadAction }) => {
+              void markConversationReadAction(conversationId, newMsg.sequence_number);
+            }).catch(() => {});
+          }
+
           setMessages((prev) => {
-            // Reconcile optimistic message by client_message_id
+            // 1. Reconcile optimistic message by client_message_id
             if (newMsg.client_message_id) {
               const optIndex = prev.findIndex((m) => m.client_message_id === newMsg.client_message_id);
               if (optIndex >= 0) {
@@ -175,6 +192,24 @@ export default function MessageThread({
                 };
                 return updated;
               }
+            }
+
+            // 2. Reconcile by matching sender, body, and proximate timestamp
+            const fuzzyIndex = prev.findIndex(
+              (m) =>
+                m.sender_id === newMsg.sender_id &&
+                m.body === newMsg.body &&
+                (m.status === 'sending' || m.status === 'sent') &&
+                Math.abs(new Date(m.created_at).getTime() - new Date(newMsg.created_at).getTime()) < 10000
+            );
+            if (fuzzyIndex >= 0) {
+              const updated = [...prev];
+              updated[fuzzyIndex] = {
+                ...updated[fuzzyIndex],
+                ...newMsg,
+                status: 'delivered',
+              };
+              return updated;
             }
 
             if (prev.some((m) => m.id === newMsg.id)) return prev;
@@ -324,6 +359,7 @@ export default function MessageThread({
               : m
           )
         );
+        onMessageSent?.(conversationId, bodyText);
       }
     });
   }
@@ -485,14 +521,14 @@ export default function MessageThread({
   }
 
   return (
-    <div className="flex flex-col h-full min-h-[78vh] bg-slate-950/40 relative">
+    <div className="flex flex-col h-full bg-[#0E0919] relative overflow-hidden">
       {/* 1. Header with Peer Details & Calls */}
-      <div className="p-3.5 sm:p-4 border-b border-white/10 bg-[#0E0818]/90 backdrop-blur-xl flex items-center justify-between gap-3 sticky top-0 z-20">
+      <div className="p-3.5 sm:p-4 border-b border-white/10 bg-[#0E0818]/95 backdrop-blur-xl flex items-center justify-between gap-3 sticky top-0 z-20 flex-shrink-0">
         <div className="flex items-center gap-3 min-w-0">
           {onBack && (
             <button
               onClick={onBack}
-              className="p-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 md:hidden transition-all"
+              className="p-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 md:hidden transition-all cursor-pointer"
               title="Back to conversation list"
             >
               <ArrowLeft className="w-4 h-4" />
@@ -501,7 +537,11 @@ export default function MessageThread({
 
           <div className="relative flex-shrink-0">
             <UserAvatar name={peerName} avatarUrl={peerAvatarUrl} size="md" />
-            <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 border border-[#0E0818]" />
+            <span
+              className={`absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border border-[#0E0818] ${
+                isOnline ? 'bg-emerald-500' : 'bg-slate-500'
+              }`}
+            />
           </div>
 
           <div className="min-w-0">
@@ -511,13 +551,14 @@ export default function MessageThread({
                 <ShieldCheck className="w-3.5 h-3.5 md:w-4 md:h-4 text-brand-caribbeanSea" />
               </span>
             </div>
-            <p className="text-[10px] md:text-xs text-emerald-400 font-bold flex items-center gap-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" /> Active now
+            <p className={`text-[10px] md:text-xs font-bold flex items-center gap-1 ${isOnline ? 'text-emerald-400' : 'text-slate-400'}`}>
+              <span className={`w-1.5 h-1.5 rounded-full ${isOnline ? 'bg-emerald-400 animate-pulse' : 'bg-slate-500'}`} />
+              <span>{isOnline ? 'Active now' : 'Offline'}</span>
             </p>
           </div>
         </div>
 
-        {/* Action Controls: Audio / Video Calls */}
+        {/* Action Controls: Audio / Video Calls & Details Toggle */}
         <div className="flex items-center gap-1.5 sm:gap-2">
           <button
             type="button"
@@ -526,7 +567,7 @@ export default function MessageThread({
               setIsCallOpen(true);
             }}
             title="Start Audio Call"
-            className="p-2 sm:px-3 sm:py-1.5 md:px-4 md:py-2 rounded-xl bg-white/5 hover:bg-white/10 text-slate-200 hover:text-white border border-white/10 text-xs md:text-sm font-bold flex items-center gap-1.5 md:gap-2 transition-all shadow-sm min-h-[36px] md:min-h-[42px]"
+            className="p-2 sm:px-3 sm:py-1.5 md:px-3.5 md:py-2 rounded-xl bg-white/5 hover:bg-white/10 text-slate-200 hover:text-white border border-white/10 text-xs md:text-sm font-bold flex items-center gap-1.5 md:gap-2 transition-all shadow-sm min-h-[36px] md:min-h-[40px] cursor-pointer"
           >
             <Phone className="w-3.5 h-3.5 md:w-4 md:h-4 text-brand-caribbeanSea" />
             <span className="hidden sm:inline">Audio</span>
@@ -539,11 +580,27 @@ export default function MessageThread({
               setIsCallOpen(true);
             }}
             title="Start HD Video Call"
-            className="p-2 sm:px-3 sm:py-1.5 md:px-4 md:py-2 rounded-xl bg-gradient-to-r from-brand-caribbeanSea/20 to-brand-sunriseCoral/20 hover:from-brand-caribbeanSea/30 hover:to-brand-sunriseCoral/30 text-brand-caribbeanSea border border-brand-caribbeanSea/30 text-xs md:text-sm font-bold flex items-center gap-1.5 md:gap-2 transition-all shadow-sm min-h-[36px] md:min-h-[42px]"
+            className="p-2 sm:px-3 sm:py-1.5 md:px-3.5 md:py-2 rounded-xl bg-gradient-to-r from-brand-caribbeanSea/20 to-brand-sunriseCoral/20 hover:from-brand-caribbeanSea/30 hover:to-brand-sunriseCoral/30 text-brand-caribbeanSea border border-brand-caribbeanSea/30 text-xs md:text-sm font-bold flex items-center gap-1.5 md:gap-2 transition-all shadow-sm min-h-[36px] md:min-h-[40px] cursor-pointer"
           >
             <Video className="w-3.5 h-3.5 md:w-4 md:h-4" />
             <span className="hidden sm:inline">Video</span>
           </button>
+
+          {onToggleDetails && (
+            <button
+              type="button"
+              onClick={onToggleDetails}
+              title={isDetailsOpen ? 'Hide Conversation Details' : 'Show Conversation Details'}
+              className={`p-2 sm:px-3 sm:py-1.5 md:px-3.5 md:py-2 rounded-xl border text-xs md:text-sm font-bold flex items-center gap-1.5 md:gap-2 transition-all shadow-sm min-h-[36px] md:min-h-[40px] cursor-pointer ${
+                isDetailsOpen
+                  ? 'bg-brand-caribbeanSea/20 border-brand-caribbeanSea/40 text-brand-caribbeanSea'
+                  : 'bg-white/5 hover:bg-white/10 border-white/10 text-slate-300 hover:text-white'
+              }`}
+            >
+              <Users className="w-3.5 h-3.5 md:w-4 md:h-4" />
+              <span className="hidden xl:inline">Details</span>
+            </button>
+          )}
         </div>
       </div>
 

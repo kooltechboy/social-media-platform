@@ -200,15 +200,39 @@ export async function sendMessageAction(
         sender_id: user.id,
         body: finalBody,
         message_kind: messageKind || 'text',
+        client_message_id: clientMessageId,
         reply_to_id: replyToId || null,
+        metadata,
       })
-      .select('id, conversation_id, sender_id, body, created_at, message_kind, reply_to_id')
+      .select('id, conversation_id, sender_id, body, created_at, client_message_id, sequence_number, message_kind, reply_to_id, metadata')
       .single();
 
     if (baseError) {
       return { error: baseError.message };
     }
     inserted = baseInsert;
+  }
+
+  // Authoritatively advance sender's read sequence so their own sent message is NEVER marked unread for the sender
+  try {
+    await supabase.rpc('mark_conversation_read', {
+      conv_id: conversationId,
+      up_to_sequence: inserted?.sequence_number || null,
+    });
+  } catch {
+    try {
+      if (inserted?.sequence_number) {
+        await supabase
+          .from('conversation_members')
+          .update({
+            last_read_sequence: inserted.sequence_number,
+            last_read_message_id: inserted.id,
+            last_read_at: new Date().toISOString(),
+          })
+          .eq('conversation_id', conversationId)
+          .eq('profile_id', user.id);
+      }
+    } catch {}
   }
 
   revalidatePath('/messages');
