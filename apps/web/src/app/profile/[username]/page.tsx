@@ -295,7 +295,7 @@ export default async function ProfilePage({
   return (
     <div className="min-h-screen bg-transparent text-brand-sandstone pb-12">
       {/* Top sticky app header */}
-      <header className="sticky top-[58px] z-40 surface-header backdrop-blur-xl border-b border-white/15 px-4 sm:px-6 py-3.5 flex items-center justify-between gap-4 shadow-xl">
+      <header className="sticky shell-sticky-below-header z-30 surface-header backdrop-blur-xl border-b border-white/15 px-4 sm:px-6 py-3.5 flex items-center justify-between gap-4 shadow-xl">
         <div className="flex items-center gap-3">
           <Link
             href="/"

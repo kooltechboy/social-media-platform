@@ -12,7 +12,7 @@ export default function LearnLayout({ children }: { children: React.ReactNode })
   return (
     <div className="w-full min-h-screen text-brand-sandstone animate-fadeIn pb-16">
       {/* Top Banner Navigation Bar */}
-      <div className="surface-header sticky top-0 z-40 border-b border-white/10 bg-slate-950/80 backdrop-blur-xl px-4 sm:px-6 py-3.5 flex items-center justify-between gap-4">
+      <div className="surface-header sticky shell-sticky-below-header z-30 border-b border-white/10 bg-slate-950/80 backdrop-blur-xl px-4 sm:px-6 py-3.5 flex items-center justify-between gap-4">
         <div className="flex items-center gap-4">
           <Link
             href="/"

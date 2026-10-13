@@ -22,7 +22,7 @@ export default function AccessDenied({
   return (
     <div className="min-h-screen bg-brand-twilight text-brand-sandstone flex flex-col justify-between selection:bg-brand-sunriseCoral/30">
       {/* Top Navbar */}
-      <header className="sticky top-0 z-50 bg-brand-dusk/90 backdrop-blur-md border-b border-brand-sunsetPurple/20 px-6 py-4 flex items-center justify-between">
+      <header className="sticky shell-sticky-below-header z-30 bg-brand-dusk/90 backdrop-blur-md border-b border-brand-sunsetPurple/20 px-6 py-4 flex items-center justify-between">
         <Link
           href="/"
           className="flex items-center gap-2 text-slate-400 hover:text-brand-sandstone text-sm font-semibold transition-colors"

@@ -36,6 +36,26 @@ export default function AppHeader() {
   const [followingMap, setFollowingMap] = useState<Record<string, boolean>>({});
   const [pendingFollowId, setPendingFollowId] = useState<string | null>(null);
   const searchRef = useRef<HTMLDivElement>(null);
+  const headerRef = useRef<HTMLElement>(null);
+
+  // Publish the real header height as --app-header-h so the sticky shell columns
+  // (left nav, right rail, page sub-headers) sit exactly below it at any zoom level,
+  // text size, translation length, or breakpoint.
+  useEffect(() => {
+    const el = headerRef.current;
+    if (!el || typeof ResizeObserver === 'undefined') return;
+    const root = document.documentElement;
+    const publish = () => {
+      root.style.setProperty('--app-header-h', `${Math.ceil(el.getBoundingClientRect().height)}px`);
+    };
+    publish();
+    const observer = new ResizeObserver(publish);
+    observer.observe(el);
+    return () => {
+      observer.disconnect();
+      root.style.removeProperty('--app-header-h');
+    };
+  }, []);
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -139,6 +159,7 @@ export default function AppHeader() {
 
   return (
     <header
+      ref={headerRef}
       className="sticky top-0 z-50 glass-aerospace border-b border-white/12 px-3 sm:px-6 lg:px-8 3xl:px-10 py-3 flex items-center justify-between gap-2 sm:gap-4 backdrop-blur-3xl shadow-xl shadow-black/30"
       role="banner"
     >

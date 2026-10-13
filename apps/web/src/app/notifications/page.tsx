@@ -124,7 +124,7 @@ export default async function NotificationsPage() {
   return (
     <div className="min-h-screen bg-transparent text-brand-sandstone pb-12">
       {/* Sticky Surface Header */}
-      <header className="sticky top-0 z-50 surface-header backdrop-blur-xl border-b border-white/15 px-4 sm:px-6 py-4 shadow-xl">
+      <header className="sticky shell-sticky-below-header z-30 surface-header backdrop-blur-xl border-b border-white/15 px-4 sm:px-6 py-4 shadow-xl">
         <div className="max-w-4xl 3xl:max-w-5xl mx-auto flex items-center justify-between gap-4">
           <div className="flex items-center gap-4">
             <Link

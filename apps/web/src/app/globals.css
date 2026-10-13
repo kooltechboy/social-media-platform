@@ -20,6 +20,19 @@
   --content-text-max:   760px;
   --app-shell-max:      2560px;
   --desktop-main-padding: 1.5rem;
+
+  /* ─── App Shell Sticky Geometry ───
+     --app-header-h is overwritten at runtime by <AppHeader /> with its measured
+     height (ResizeObserver), so zoom / text enlargement / translations stay correct.
+     The values below are only pre-hydration defaults. */
+  --app-header-h:        70px;
+  --shell-gutter-y:      1.5rem; /* matches <main> py-6 so the right rail doesn't jump when it sticks */
+}
+
+@media (min-width: 640px) {
+  :root {
+    --app-header-h: 76px;
+  }
 }
 
 [data-theme="island-daylight"] {
@@ -49,6 +62,52 @@
 html {
   background-color: var(--brand-twilight);
   scroll-behavior: smooth;
+  /* Keep focused / anchored content clear of the sticky header (WCAG 2.2 SC 2.4.11) */
+  scroll-padding-top: calc(var(--app-header-h) + 1rem);
+}
+
+/* ─── App Shell sticky columns ───
+   Scrolling model: the DOCUMENT is the single primary scroller (center feed scrolls
+   naturally); both sidebars are position:sticky against the viewport.
+   IMPORTANT: no ancestor of these elements may set overflow hidden/auto/scroll —
+   use overflow-x: clip instead (clip does not create a scroll container). */
+@layer utilities {
+  .shell-sticky-below-header {
+    top: var(--app-header-h);
+  }
+  /* For asides that sit beneath a page-level sticky sub-header (~4rem) */
+  .shell-sticky-below-subheader {
+    top: calc(var(--app-header-h) + 5rem);
+  }
+  .shell-left-rail {
+    top: var(--app-header-h);
+    height: calc(100vh - var(--app-header-h));
+    height: calc(100dvh - var(--app-header-h));
+  }
+  .shell-right-rail {
+    top: calc(var(--app-header-h) + var(--shell-gutter-y));
+    max-height: calc(100vh - var(--app-header-h) - var(--shell-gutter-y) - 1rem);
+    max-height: calc(100dvh - var(--app-header-h) - var(--shell-gutter-y) - 1rem);
+  }
+}
+
+/* ─── Left nav vertical-fit strategy (graduated, essential links never hidden) ───
+   1. < 940px tall: hide non-navigational promo content (Creator Ecosystem card, brand
+      tagline) — its links are duplicated in Primary nav and Tools.
+   2. ≤ 800px tall: compact link rows to 28px (still above the WCAG 2.5.8 24px minimum).
+   3. Still too short (e.g. 600px, or Tools expanded): the nav list scrolls internally
+      with a visible thin scrollbar. */
+@media (max-height: 939px) {
+  .nav-fit-hide-short {
+    display: none !important;
+  }
+}
+@media (max-height: 800px) {
+  .nav-fit-compact-item {
+    min-height: 28px !important;
+    padding-top: 0.25rem !important;
+    padding-bottom: 0.25rem !important;
+  }
 }
 
 /* Body baseline — transparent so the full-screen Caribbean background shows through */

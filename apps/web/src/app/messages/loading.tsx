@@ -5,7 +5,7 @@ export default function MessagesLoading() {
   return (
     <div className="min-h-screen bg-transparent text-white animate-pulse">
       {/* Header bar skeleton */}
-      <div className="sticky top-0 z-40 bg-[#0E0818]/90 backdrop-blur-xl border-b border-white/10 px-4 sm:px-6 py-3.5 flex items-center justify-between">
+      <div className="sticky shell-sticky-below-header z-30 bg-[#0E0818]/90 backdrop-blur-xl border-b border-white/10 px-4 sm:px-6 py-3.5 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <Skeleton className="w-20 h-9 rounded-xl" />
           <Skeleton className="w-36 h-6 rounded-lg" />

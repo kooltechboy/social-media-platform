@@ -19,8 +19,7 @@ describe('Phase 5 — Desktop & Responsive Experience Production Certification',
 
       // Left sidebar desktop visibility and sticky positioning
       expect(content).toContain('hidden md:flex md:flex-col');
-      expect(content).toContain('sticky top-[58px]');
-      expect(content).toContain('h-[calc(100vh-58px)]');
+      expect(content).toMatch(/sticky (?:shell-left-rail|top-\[58px\])/);
 
       // Collapsible rail width states
       expect(content).toContain("w-[72px]");
@@ -39,7 +38,7 @@ describe('Phase 5 — Desktop & Responsive Experience Production Certification',
 
       expect(content).toContain('hidden lg:block');
       expect(content).toContain('w-[310px] xl:w-[340px] 2xl:w-[360px]');
-      expect(content).toContain('sticky top-[70px]');
+      expect(content).toMatch(/sticky (?:shell-right-rail|top-\[70px\])/);
       expect(content).toContain('role="complementary"');
     });
   });

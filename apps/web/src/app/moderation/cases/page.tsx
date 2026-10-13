@@ -78,7 +78,7 @@ export default async function WebModerationCasesPage({
 
   return (
     <div className="min-h-screen bg-transparent text-brand-sandstone">
-      <header className="sticky top-0 z-50 bg-[#0F172A]/90 backdrop-blur-md border-b border-slate-800 px-4 py-3 flex items-center gap-4">
+      <header className="sticky shell-sticky-below-header z-30 bg-[#0F172A]/90 backdrop-blur-md border-b border-slate-800 px-4 py-3 flex items-center gap-4">
         <Link href="/moderation" className="flex items-center gap-2 text-slate-300 hover:text-brand-sandstone text-sm font-semibold">
           <ArrowLeft className="w-4 h-4" /> Queue
         </Link>

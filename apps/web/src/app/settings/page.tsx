@@ -67,7 +67,7 @@ export default async function SettingsPage() {
 
   return (
     <div className="min-h-screen bg-transparent text-brand-sandstone pb-12">
-      <header className="sticky top-0 z-40 surface-header backdrop-blur-xl border-b border-white/15 px-4 sm:px-6 py-3.5 flex items-center justify-between gap-4 shadow-xl">
+      <header className="sticky shell-sticky-below-header z-30 surface-header backdrop-blur-xl border-b border-white/15 px-4 sm:px-6 py-3.5 flex items-center justify-between gap-4 shadow-xl">
         <Link
           href={`/profile/${profile.username}`}
           className="flex items-center gap-2 text-brand-sandstone/70 hover:text-white text-xs sm:text-sm font-bold transition-colors min-h-[36px] px-2"

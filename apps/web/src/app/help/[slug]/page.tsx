@@ -157,7 +157,7 @@ export default async function HelpArticlePage({
         </article>
 
         {/* Right Rail: Table of Contents & Related Articles */}
-        <aside className="lg:col-span-4 space-y-6 lg:sticky lg:top-24">
+        <aside className="lg:col-span-4 space-y-6 lg:sticky lg:shell-sticky-below-subheader">
           {tocItems.length > 0 && (
             <div className="surface-card rounded-2xl p-5 border border-white/10">
               <TableOfContents items={tocItems} />

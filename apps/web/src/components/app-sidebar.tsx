@@ -261,7 +261,7 @@ export default function AppSidebar({ currentPath }: { currentPath?: string }) {
             <Link
               href={item.href}
               aria-current={isActive ? 'page' : undefined}
-              className={`flex items-center justify-between px-2.5 py-1 sm:py-1.5 rounded-xl text-xs font-bold min-h-[30px] sm:min-h-[32px] transition-all group ${
+              className={`nav-fit-compact-item flex items-center justify-between px-2.5 py-1 sm:py-1.5 rounded-xl text-xs font-bold min-h-[30px] sm:min-h-[32px] transition-all group ${
                 isActive
                   ? 'bg-gradient-to-r from-brand-caribbeanSea/25 to-brand-sunriseCoral/15 text-white border border-brand-caribbeanSea/40 shadow-sm shadow-brand-caribbeanSea/10'
                   : 'text-slate-300 hover:bg-white/5 hover:text-white border border-transparent'
@@ -402,10 +402,10 @@ export default function AppSidebar({ currentPath }: { currentPath?: string }) {
 
         {!isCollapsed && (
           <>
-            <div className="h-px bg-white/10 my-0.5 shrink-0" />
+            <div className="nav-fit-hide-short h-px bg-white/10 my-0.5 shrink-0" />
 
-            {/* Creator Ecosystem Action Card - Compact & Elegant */}
-            <div className="glass rounded-xl p-2 space-y-1 shrink-0 border border-white/5">
+            {/* Creator Ecosystem Action Card - Compact & Elegant (hidden on short viewports: links duplicated in nav) */}
+            <div className="nav-fit-hide-short glass rounded-xl p-2 space-y-1 shrink-0 border border-white/5">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-1 text-[10px] font-black text-brand-caribbeanSea uppercase tracking-wider">
                   <Sparkles className="w-3 h-3 text-brand-goldenHour" /> Caribbean Creator Ecosystem
@@ -452,7 +452,7 @@ export default function AppSidebar({ currentPath }: { currentPath?: string }) {
 
         {/* ── 4. Diaspora / Brand Identity Footer (Safely docked inside scroll container to prevent overlap) ── */}
         {!isCollapsed && (
-          <div className="px-2 pt-1.5 pb-0.5 text-center border-t border-white/5 mt-0.5 shrink-0">
+          <div className="nav-fit-hide-short px-2 pt-1.5 pb-0.5 text-center border-t border-white/5 mt-0.5 shrink-0">
             <p className="text-[9.5px] font-black tracking-wider text-brand-sandstone/60 leading-tight">
               TUKUBI — The Caribbean Connected.
             </p>

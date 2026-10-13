@@ -106,7 +106,7 @@ export default async function ModerationPage() {
 
   return (
     <div className="min-h-screen bg-transparent text-brand-sandstone">
-      <header className="sticky top-0 z-50 bg-[#0F172A]/90 backdrop-blur-md border-b border-slate-800 px-4 py-3 flex items-center justify-between gap-4">
+      <header className="sticky shell-sticky-below-header z-30 bg-[#0F172A]/90 backdrop-blur-md border-b border-slate-800 px-4 py-3 flex items-center justify-between gap-4">
         <div className="flex items-center gap-4">
           <TukubiLogo variant="horizontal" size="xs" href="/" />
           <div className="h-5 w-px bg-slate-700 hidden sm:block" />

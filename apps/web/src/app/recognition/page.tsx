@@ -38,7 +38,7 @@ export default async function RecognitionHubPage() {
   return (
     <div className="min-h-screen bg-transparent text-brand-sandstone">
       {/* Top Header */}
-      <header className="sticky top-0 z-40 bg-[#0F172A]/90 backdrop-blur-md border-b border-slate-800 px-4 py-3.5 flex items-center justify-between gap-4">
+      <header className="sticky shell-sticky-below-header z-30 bg-[#0F172A]/90 backdrop-blur-md border-b border-slate-800 px-4 py-3.5 flex items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <Link
             href="/"

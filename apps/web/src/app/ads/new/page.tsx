@@ -154,7 +154,7 @@ export default function NewCampaignPage() {
 
   return (
     <div className="min-h-screen bg-brand-twilight pb-20">
-      <div className="bg-slate-900 border-b border-slate-800 sticky top-0 z-10">
+      <div className="bg-slate-900 border-b border-slate-800 sticky shell-sticky-below-header z-10">
         <div className="max-w-4xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between mb-4">
             <h1 className="text-xl font-black text-white">Create New Campaign</h1>
