@@ -1,7 +1,7 @@
 import React from 'react';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
-import { Video, ArrowLeft, Plus, Eye, Calendar, Sparkles } from 'lucide-react';
+import { Video, ArrowLeft, Plus, Eye, Calendar, Sparkles, Film, ExternalLink } from 'lucide-react';
 import { createSupabaseServerClient, getCurrentUser } from '../../../lib/supabase/server';
 
 export const dynamic = 'force-dynamic';
@@ -12,6 +12,9 @@ interface VideoRow {
   video_kind: string;
   view_count: number;
   created_at: string;
+  page_id?: string | null;
+  storage_path?: string;
+  category?: string | null;
 }
 
 function relativeTime(iso: string): string {
@@ -24,19 +27,45 @@ function relativeTime(iso: string): string {
   return `${Math.floor(hours / 24)}d ago`;
 }
 
-export default async function CreatorStudioVideosPage() {
+export default async function CreatorStudioVideosPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ kind?: string }>;
+}) {
+  const resolvedParams = searchParams ? await searchParams : {};
+  const currentKind = resolvedParams.kind || 'all';
+
   const user = await getCurrentUser();
   if (!user) redirect('/login?next=/creator-studio/videos');
 
   const supabase = await createSupabaseServerClient();
   if (!supabase) redirect('/login?next=/creator-studio/videos');
 
-  const { data } = await supabase
+  // Also fetch page IDs managed by user
+  const { data: pageRoles } = await supabase
+    .from('page_roles')
+    .select('page_id')
+    .eq('user_id', user.id)
+    .in('role', ['owner', 'admin', 'editor']);
+
+  const managedPageIds = (pageRoles || []).map((r) => r.page_id);
+
+  let query = supabase
     .from('videos')
-    .select('id, title, video_kind, view_count, created_at')
-    .eq('creator_id', user.id)
+    .select('id, title, video_kind, view_count, created_at, page_id, storage_path, category')
     .order('created_at', { ascending: false });
 
+  if (managedPageIds.length > 0) {
+    query = query.or(`creator_id.eq.${user.id},page_id.in.(${managedPageIds.join(',')})`);
+  } else {
+    query = query.eq('creator_id', user.id);
+  }
+
+  if (currentKind !== 'all') {
+    query = query.eq('video_kind', currentKind);
+  }
+
+  const { data } = await query;
   const videos = (data ?? []) as VideoRow[];
 
   return (
@@ -54,12 +83,42 @@ export default async function CreatorStudioVideosPage() {
           </h1>
         </div>
 
-        <Link
-          href="/create"
-          className="bg-gradient-to-r from-brand-caribbeanSea to-brand-sunriseCoral text-slate-950 font-black px-4 py-2 rounded-xl text-xs flex items-center gap-2 transition-all shadow-md self-start sm:self-auto"
-        >
-          <Plus className="w-4 h-4" /> New Video Post
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link
+            href="/shorts?create=true"
+            className="bg-brand-caribbeanSea hover:bg-brand-caribbeanSea/90 text-slate-950 font-black px-3.5 py-2 rounded-xl text-xs flex items-center gap-1.5 transition-all shadow-md"
+          >
+            <Film className="w-4 h-4" /> Publish Short
+          </Link>
+          <Link
+            href="/create"
+            className="bg-gradient-to-r from-brand-caribbeanSea to-brand-sunriseCoral text-slate-950 font-black px-4 py-2 rounded-xl text-xs flex items-center gap-2 transition-all shadow-md self-start sm:self-auto"
+          >
+            <Plus className="w-4 h-4" /> New Video Post
+          </Link>
+        </div>
+      </div>
+
+      {/* Filter Tabs */}
+      <div className="flex items-center gap-2 overflow-x-auto pb-2">
+        {[
+          { id: 'all', label: 'All Content' },
+          { id: 'short', label: 'Shorts' },
+          { id: 'reel', label: 'Reels' },
+          { id: 'long_form', label: 'Long Form' },
+        ].map((tab) => (
+          <Link
+            key={tab.id}
+            href={tab.id === 'all' ? '/creator-studio/videos' : `/creator-studio/videos?kind=${tab.id}`}
+            className={`px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-colors min-h-[36px] flex items-center ${
+              currentKind === tab.id
+                ? 'bg-brand-caribbeanSea text-slate-950'
+                : 'bg-brand-dusk border border-slate-800 text-slate-400 hover:text-white'
+            }`}
+          >
+            {tab.label}
+          </Link>
+        ))}
       </div>
 
       {videos.length === 0 ? (
@@ -69,35 +128,63 @@ export default async function CreatorStudioVideosPage() {
           <p className="text-xs text-brand-sandstone/60 max-w-sm mx-auto">
             Upload short-form clips, cultural documentaries, or fete highlights to engage Caribbean audiences.
           </p>
-          <Link
-            href="/create"
-            className="inline-block bg-brand-caribbeanSea text-slate-950 font-black px-5 py-2.5 rounded-xl text-xs mt-2"
-          >
-            Publish First Video
-          </Link>
+          <div className="flex items-center justify-center gap-3 pt-2">
+            <Link
+              href="/shorts?create=true"
+              className="inline-block bg-brand-caribbeanSea text-slate-950 font-black px-5 py-2.5 rounded-xl text-xs"
+            >
+              Publish First Short
+            </Link>
+            <Link
+              href="/create"
+              className="inline-block bg-slate-800 border border-slate-700 text-white font-black px-5 py-2.5 rounded-xl text-xs"
+            >
+              Universal Composer
+            </Link>
+          </div>
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-          {videos.map((video) => (
-            <div
-              key={video.id}
-              className="bg-brand-dusk/80 border border-slate-800 rounded-2xl p-4 space-y-3 hover:border-slate-700 transition-colors flex flex-col justify-between"
-            >
-              <div>
-                <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-brand-twilight text-brand-caribbeanSea border border-slate-800 uppercase">
-                  {video.video_kind}
-                </span>
-                <h4 className="text-sm font-bold text-brand-sandstone mt-2 line-clamp-2">{video.title}</h4>
-              </div>
+          {videos.map((video) => {
+            const isShort = video.video_kind === 'short' || video.video_kind === 'reel';
+            const targetUrl = video.video_kind === 'short' ? `/shorts?id=${video.id}` : `/reels?id=${video.id}`;
+            return (
+              <div
+                key={video.id}
+                className="bg-brand-dusk/80 border border-slate-800 rounded-2xl p-4 space-y-3 hover:border-slate-700 transition-colors flex flex-col justify-between"
+              >
+                <div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-brand-twilight text-brand-caribbeanSea border border-slate-800 uppercase">
+                      {video.video_kind}
+                    </span>
+                    {video.page_id && (
+                      <span className="text-[9px] font-semibold text-brand-coralPink">Page Video</span>
+                    )}
+                  </div>
+                  <h4 className="text-sm font-bold text-brand-sandstone mt-2 line-clamp-2">{video.title}</h4>
+                </div>
 
-              <div className="pt-3 border-t border-slate-800/80 flex items-center justify-between text-xs text-brand-sandstone/60">
-                <span className="flex items-center gap-1">
-                  <Eye className="w-3.5 h-3.5 text-brand-goldenHour" /> {video.view_count.toLocaleString()} views
-                </span>
-                <span className="text-[11px] text-brand-sandstone/40">{relativeTime(video.created_at)}</span>
+                <div className="pt-3 border-t border-slate-800/80 flex items-center justify-between text-xs text-brand-sandstone/60">
+                  <span className="flex items-center gap-1">
+                    <Eye className="w-3.5 h-3.5 text-brand-goldenHour" /> {video.view_count.toLocaleString()} views
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[11px] text-brand-sandstone/40">{relativeTime(video.created_at)}</span>
+                    {isShort && (
+                      <Link
+                        href={targetUrl}
+                        className="text-brand-caribbeanSea hover:underline flex items-center gap-1"
+                        title="View video"
+                      >
+                        <ExternalLink className="w-3 h-3" />
+                      </Link>
+                    )}
+                  </div>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>

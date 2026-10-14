@@ -95,6 +95,7 @@ export default function MobileNav() {
   };
 
   const isHomeActive = pathname === '/' || pathname === '/home' || pathname === '/feeds' || pathname.startsWith('/feeds/');
+  const isShortsActive = pathname === '/shorts' || pathname.startsWith('/shorts/') || pathname === '/reels' || pathname.startsWith('/reels/');
   const isExploreActive = pathname === '/explore' || pathname.startsWith('/explore/');
   const isCommunityActive = pathname === '/communities' || pathname.startsWith('/communities/');
   const isMessagesActive = pathname === '/messages' || pathname.startsWith('/messages/');
@@ -168,6 +169,16 @@ export default function MobileNav() {
                 <span className="text-2xl mb-1">📝</span>
                 <span className="text-xs font-black text-white">Post</span>
                 <span className="text-[10px] text-brand-sandstone/60">Story &amp; Photo</span>
+              </Link>
+
+              <Link
+                href="/shorts?create=true"
+                onClick={() => setIsCreateSheetOpen(false)}
+                className="flex flex-col items-center justify-center p-3 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 text-center min-h-[88px] transition-all"
+              >
+                <span className="text-2xl mb-1">⚡</span>
+                <span className="text-xs font-black text-white">Shorts</span>
+                <span className="text-[10px] text-brand-sandstone/60">Short-form Video</span>
               </Link>
 
               <Link
@@ -519,7 +530,7 @@ export default function MobileNav() {
               role="tab"
               aria-selected={isHomeActive}
               aria-label="Home"
-              className={`flex flex-col items-center gap-0.5 px-2.5 py-1.5 rounded-2xl transition-all min-w-[44px] min-h-[44px] sm:min-w-[48px] sm:min-h-[48px] justify-center ${
+              className={`flex flex-col items-center gap-0.5 px-2 py-1.5 rounded-2xl transition-all min-w-[44px] min-h-[44px] sm:min-w-[48px] sm:min-h-[48px] justify-center ${
                 isHomeActive
                   ? 'text-brand-caribbeanSea font-black'
                   : 'text-brand-sandstone/60 hover:text-slate-200 font-bold'
@@ -530,21 +541,21 @@ export default function MobileNav() {
             </Link>
           </li>
 
-          {/* Tab 2: Explore */}
+          {/* Tab 2: Shorts */}
           <li role="presentation">
             <Link
-              href="/explore"
+              href="/shorts"
               role="tab"
-              aria-selected={isExploreActive}
-              aria-label="Explore Caribbean"
-              className={`flex flex-col items-center gap-0.5 px-2.5 py-1.5 rounded-2xl transition-all min-w-[44px] min-h-[44px] sm:min-w-[48px] sm:min-h-[48px] justify-center ${
-                isExploreActive
-                  ? 'text-brand-caribbeanSea font-black'
+              aria-selected={isShortsActive}
+              aria-label="TUKUBI Shorts"
+              className={`flex flex-col items-center gap-0.5 px-2 py-1.5 rounded-2xl transition-all min-w-[44px] min-h-[44px] sm:min-w-[48px] sm:min-h-[48px] justify-center ${
+                isShortsActive
+                  ? 'text-brand-sunriseCoral font-black'
                   : 'text-brand-sandstone/60 hover:text-slate-200 font-bold'
               }`}
             >
-              <Compass className="w-5 h-5" />
-              <span className="text-[10px]">Explore</span>
+              <Film className="w-5 h-5" />
+              <span className="text-[10px]">Shorts</span>
             </Link>
           </li>
 
@@ -562,6 +573,24 @@ export default function MobileNav() {
               </span>
               <span className="text-[10px] font-black text-brand-caribbeanSea">Create</span>
             </button>
+          </li>
+
+          {/* Tab 4: Explore */}
+          <li role="presentation">
+            <Link
+              href="/explore"
+              role="tab"
+              aria-selected={isExploreActive}
+              aria-label="Explore Caribbean"
+              className={`flex flex-col items-center gap-0.5 px-2 py-1.5 rounded-2xl transition-all min-w-[44px] min-h-[44px] sm:min-w-[48px] sm:min-h-[48px] justify-center ${
+                isExploreActive
+                  ? 'text-brand-caribbeanSea font-black'
+                  : 'text-brand-sandstone/60 hover:text-slate-200 font-bold'
+              }`}
+            >
+              <Compass className="w-5 h-5" />
+              <span className="text-[10px]">Explore</span>
+            </Link>
           </li>
 
           {/* Tab 4: Messages */}

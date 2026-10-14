@@ -37,6 +37,7 @@ function AppShellContent({ children }: { children: React.ReactNode }) {
   const isPublicLanding = pathname === '/' && !user;
   const isMapRoute = pathname === '/map';
   const isMessagesRoute = pathname === '/messages' || pathname?.startsWith('/messages/');
+  const isShortsRoute = pathname === '/shorts' || pathname?.startsWith('/shorts/') || pathname === '/reels' || pathname?.startsWith('/reels/');
 
   if (isPublicLanding) {
     return (
@@ -66,7 +67,7 @@ function AppShellContent({ children }: { children: React.ReactNode }) {
         {/* Fluid Main Workspace & Experience Canvas */}
         <main
           className={`flex-1 min-w-0 ${
-            isMapRoute
+            isMapRoute || isShortsRoute
               ? 'p-0'
               : isMessagesRoute
               ? 'p-0 sm:p-2 lg:p-3'

@@ -65,6 +65,16 @@ const CREATE_TOOLS: CreateTool[] = [
     color: 'from-brand-caribbeanSea/20 to-sky-950/40 border-brand-caribbeanSea/30',
   },
   {
+    id: 'shorts',
+    title: 'TUKUBI Shorts',
+    description: 'Publish full-screen vertical short-form video with Caribbean Sounds, category tags, and Page identity.',
+    category: 'media',
+    icon: <Film className="w-6 h-6 text-brand-caribbeanSea" />,
+    directHref: '/shorts?create=true',
+    badge: 'NEW',
+    color: 'from-brand-caribbeanSea/20 to-teal-950/40 border-brand-caribbeanSea/30',
+  },
+  {
     id: 'reel',
     title: 'Reel / Short Video',
     description: 'Upload short-form vertical video tagged with trending Caribbean Sounds and rhythm stems.',

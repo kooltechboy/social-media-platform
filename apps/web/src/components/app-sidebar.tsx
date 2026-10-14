@@ -81,6 +81,12 @@ export default function AppSidebar({ currentPath }: { currentPath?: string }) {
       icon: Globe,
     },
     {
+      href: '/shorts',
+      fallbackLabel: 'Shorts',
+      icon: Film,
+      badge: 'HOT',
+    },
+    {
       href: '/reels',
       labelKey: 'nav.reels',
       fallbackLabel: 'Reels & Sounds',
@@ -219,6 +225,12 @@ export default function AppSidebar({ currentPath }: { currentPath?: string }) {
     }
     if (href === '/caribbean') {
       return activePath === '/caribbean' || activePath.startsWith('/caribbean/') || activePath.startsWith('/diaspora');
+    }
+    if (href === '/shorts') {
+      return activePath === '/shorts' || activePath.startsWith('/shorts/');
+    }
+    if (href === '/reels') {
+      return activePath === '/reels' || activePath.startsWith('/reels/');
     }
     if (href === '/profile') {
       return activePath.startsWith('/profile');

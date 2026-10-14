@@ -84,6 +84,7 @@ export default function App() {
         Home: 'home',
         Explore: 'explore',
         Marketplace: 'marketplace',
+        Shorts: 'shorts',
         Reels: 'reels',
         Sounds: 'sounds',
         Live: 'live',
@@ -230,6 +231,15 @@ export default function App() {
           <Screen 
             name="SellProduct" 
             component={SellProductScreen} 
+            options={{ 
+              tabBarButton: () => null,
+              headerShown: false,
+              tabBarStyle: { display: 'none' },
+            }} 
+          />
+          <Screen 
+            name="Shorts" 
+            component={ReelsScreen} 
             options={{ 
               tabBarButton: () => null,
               headerShown: false,
