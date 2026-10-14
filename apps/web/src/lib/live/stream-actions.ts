@@ -142,3 +142,106 @@ export async function getLiveStreamStatusAction(streamId: string): Promise<{
     cloudflareUid: stream.cloudflare_uid ?? undefined,
   };
 }
+
+export async function inviteCoHostAction(
+  streamId: string,
+  inviteeUserId: string
+): Promise<{ success: boolean; error?: string }> {
+  const user = await getCurrentUser();
+  if (!user) return { success: false, error: 'Not authenticated' };
+
+  const supabase = await createSupabaseServerClient();
+  if (!supabase) return { success: false, error: 'Database unavailable' };
+
+  const { data: stream, error: fetchErr } = await supabase
+    .from('livestreams')
+    .select('id, creator_id, state, co_host_status')
+    .eq('id', streamId)
+    .single();
+
+  if (fetchErr || !stream) return { success: false, error: 'Livestream not found' };
+  if (stream.creator_id !== user.id) return { success: false, error: 'Only the host can invite a co-host' };
+  if (stream.state !== 'scheduled' && stream.state !== 'live') {
+    return { success: false, error: 'Cannot invite co-host to an inactive stream' };
+  }
+  if (inviteeUserId === user.id) {
+    return { success: false, error: 'Cannot invite yourself as co-host' };
+  }
+
+  const { error: updateErr } = await supabase
+    .from('livestreams')
+    .update({
+      co_host_id: inviteeUserId,
+      co_host_status: 'invited',
+    })
+    .eq('id', streamId);
+
+  if (updateErr) return { success: false, error: updateErr.message };
+  return { success: true };
+}
+
+export async function respondCoHostInviteAction(
+  streamId: string,
+  accept: boolean
+): Promise<{ success: boolean; error?: string }> {
+  const user = await getCurrentUser();
+  if (!user) return { success: false, error: 'Not authenticated' };
+
+  const supabase = await createSupabaseServerClient();
+  if (!supabase) return { success: false, error: 'Database unavailable' };
+
+  const { data: stream, error: fetchErr } = await supabase
+    .from('livestreams')
+    .select('id, co_host_id, co_host_status, state')
+    .eq('id', streamId)
+    .single();
+
+  if (fetchErr || !stream) return { success: false, error: 'Livestream not found' };
+  if (stream.co_host_id !== user.id || stream.co_host_status !== 'invited') {
+    return { success: false, error: 'No pending co-host invitation found for this user' };
+  }
+
+  const { error: updateErr } = await supabase
+    .from('livestreams')
+    .update({
+      co_host_status: accept ? 'active' : 'declined',
+      co_host_id: accept ? user.id : null,
+    })
+    .eq('id', streamId);
+
+  if (updateErr) return { success: false, error: updateErr.message };
+  return { success: true };
+}
+
+export async function removeCoHostAction(
+  streamId: string
+): Promise<{ success: boolean; error?: string }> {
+  const user = await getCurrentUser();
+  if (!user) return { success: false, error: 'Not authenticated' };
+
+  const supabase = await createSupabaseServerClient();
+  if (!supabase) return { success: false, error: 'Database unavailable' };
+
+  const { data: stream, error: fetchErr } = await supabase
+    .from('livestreams')
+    .select('id, creator_id, co_host_id')
+    .eq('id', streamId)
+    .single();
+
+  if (fetchErr || !stream) return { success: false, error: 'Livestream not found' };
+  if (stream.creator_id !== user.id && stream.co_host_id !== user.id) {
+    return { success: false, error: 'Unauthorized to remove co-host' };
+  }
+
+  const { error: updateErr } = await supabase
+    .from('livestreams')
+    .update({
+      co_host_id: null,
+      co_host_status: 'none',
+    })
+    .eq('id', streamId);
+
+  if (updateErr) return { success: false, error: updateErr.message };
+  return { success: true };
+}
+

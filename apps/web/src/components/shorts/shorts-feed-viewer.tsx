@@ -46,6 +46,7 @@ export default function ShortsFeedViewer({ initialShorts, user }: ShortsFeedView
   const [isMuted, setIsMuted] = useState(true);
   const [activeShortId, setActiveShortId] = useState<string | null>(effectiveShorts[0]?.id || null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [remixSoundId, setRemixSoundId] = useState<string | undefined>(undefined);
 
   // Synchronize initial shorts on prop change
   useEffect(() => {
@@ -57,9 +58,14 @@ export default function ShortsFeedViewer({ initialShorts, user }: ShortsFeedView
     }
   }, [initialShorts]);
 
-  // Handle ?create=true deep query param
+  // Handle ?create=true and ?soundId= deep query params
   useEffect(() => {
     if (searchParams?.get('create') === 'true') {
+      setIsCreateModalOpen(true);
+    }
+    const sId = searchParams?.get('soundId');
+    if (sId) {
+      setRemixSoundId(sId);
       setIsCreateModalOpen(true);
     }
   }, [searchParams]);
@@ -222,6 +228,11 @@ export default function ShortsFeedViewer({ initialShorts, user }: ShortsFeedView
     if (activeShareShortId) void recordShortShareAction(activeShareShortId, 'copy_link');
   };
 
+  const handleUseSound = (soundId?: string, soundTitle?: string) => {
+    setRemixSoundId(soundId || soundTitle);
+    setIsCreateModalOpen(true);
+  };
+
   const tabs = [
     { id: 'for_you', label: 'For You' },
     { id: 'following', label: 'Following' },
@@ -343,6 +354,7 @@ export default function ShortsFeedViewer({ initialShorts, user }: ShortsFeedView
                 onOpenReport={handleOpenReport}
                 isSaved={savedShorts.has(short.id)}
                 onSave={handleSaveShort}
+                onUseSound={handleUseSound}
               />
             );
           })
@@ -462,7 +474,11 @@ export default function ShortsFeedViewer({ initialShorts, user }: ShortsFeedView
       {/* Create Short Modal */}
       <CreateShortModal
         isOpen={isCreateModalOpen}
-        onClose={() => setIsCreateModalOpen(false)}
+        onClose={() => {
+          setIsCreateModalOpen(false);
+          setRemixSoundId(undefined);
+        }}
+        initialSoundId={remixSoundId}
         user={user}
       />
     </div>

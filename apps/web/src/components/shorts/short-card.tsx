@@ -60,6 +60,7 @@ interface ShortCardProps {
   onOpenReport: (shortId: string) => void;
   isSaved: boolean;
   onSave: (shortId: string) => void;
+  onUseSound?: (soundId?: string, soundTitle?: string) => void;
 }
 
 export default function ShortCard({
@@ -78,6 +79,7 @@ export default function ShortCard({
   onOpenReport,
   isSaved,
   onSave,
+  onUseSound,
 }: ShortCardProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [progress, setProgress] = useState(0);
@@ -455,11 +457,25 @@ export default function ShortCard({
             </span>
           </div>
 
-          {/* Sound / Rhythm Track */}
-          <div className="flex items-center gap-2 mt-1">
-            <Disc className="w-4 h-4 text-white animate-spin" style={{ animationDuration: '4s' }} />
-            <span className="text-xs font-medium text-white/90 drop-shadow-md truncate">{short.sound}</span>
-          </div>
+          {/* Sound / Rhythm Track with Remix Action */}
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onUseSound?.(short.soundId, short.sound);
+            }}
+            title={`Remix sound: ${short.sound}`}
+            aria-label={`Remix sound track: ${short.sound}`}
+            className="group inline-flex items-center gap-2 mt-1 px-3 py-1.5 rounded-full bg-black/50 hover:bg-brand-coralPink/30 border border-white/20 hover:border-brand-coralPink/60 transition-all text-left max-w-full cursor-pointer shadow-md"
+          >
+            <Disc className="w-3.5 h-3.5 text-brand-goldenHour group-hover:text-brand-coralPink animate-spin shrink-0" style={{ animationDuration: '4s' }} />
+            <span className="text-xs font-semibold text-white/90 group-hover:text-white drop-shadow-md truncate max-w-[150px] sm:max-w-[200px]">
+              {short.sound}
+            </span>
+            <span className="text-[9px] uppercase font-black tracking-wider px-1.5 py-0.5 rounded bg-brand-goldenHour/20 text-brand-goldenHour group-hover:bg-brand-coralPink group-hover:text-slate-950 shrink-0 transition-colors">
+              Remix
+            </span>
+          </button>
         </div>
       </div>
     </div>

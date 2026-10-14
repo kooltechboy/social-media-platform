@@ -1,7 +1,7 @@
 import React from 'react';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
-import { Video, ArrowLeft, Plus, Eye, Calendar, Sparkles, Film, ExternalLink } from 'lucide-react';
+import { Video, ArrowLeft, Plus, Eye, Calendar, Sparkles, Film, ExternalLink, Subtitles } from 'lucide-react';
 import { createSupabaseServerClient, getCurrentUser } from '../../../lib/supabase/server';
 
 export const dynamic = 'force-dynamic';
@@ -83,7 +83,13 @@ export default async function CreatorStudioVideosPage({
           </h1>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
+          <Link
+            href="/creator-studio/captions"
+            className="bg-brand-dusk border border-slate-800 hover:text-white font-bold px-3.5 py-2 rounded-xl text-xs flex items-center gap-1.5 transition-colors"
+          >
+            <Subtitles className="w-4 h-4 text-brand-goldenHour" /> Dialect Subtitles
+          </Link>
           <Link
             href="/shorts?create=true"
             className="bg-brand-caribbeanSea hover:bg-brand-caribbeanSea/90 text-slate-950 font-black px-3.5 py-2 rounded-xl text-xs flex items-center gap-1.5 transition-all shadow-md"

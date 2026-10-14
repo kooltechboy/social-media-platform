@@ -1,5 +1,7 @@
 export type StreamState = 'scheduled' | 'live' | 'ended' | 'cancelled';
 export type StreamAccess = 'public' | 'followers' | 'subscribers' | 'community';
+export type StreamRole = 'host' | 'co_host' | 'guest' | 'viewer';
+export type CoHostStatus = 'none' | 'invited' | 'active' | 'declined';
 
 export const VALID_TRANSITIONS: Record<StreamState, StreamState[]> = {
   scheduled: ['live', 'cancelled'],
@@ -10,6 +12,8 @@ export const VALID_TRANSITIONS: Record<StreamState, StreamState[]> = {
 
 export interface StreamContext {
   creatorId: string;
+  coHostId?: string | null;
+  coHostStatus?: CoHostStatus;
   state: StreamState;
   accessLevel: StreamAccess;
   communityId?: string;
@@ -33,7 +37,7 @@ export class StreamStateMachine {
     isSubscriber: boolean;
     communityMember: boolean;
   }): boolean {
-    if (viewer.id === stream.creatorId) return true;
+    if (viewer.id === stream.creatorId || (stream.coHostId && viewer.id === stream.coHostId)) return true;
     switch (stream.accessLevel) {
       case 'public':
         return true;
@@ -55,6 +59,90 @@ export class StreamStateMachine {
 
   public updatePeakViewers(currentPeak: number, concurrentViewers: number): number {
     return Math.max(currentPeak, concurrentViewers);
+  }
+
+  /**
+   * Evaluates if requester can invite a co-host to the live broadcast.
+   * Only the primary creator can invite, only while scheduled or live, and when no active co-host exists.
+   */
+  public canInviteCoHost(stream: StreamContext, requesterId: string): boolean {
+    if (requesterId !== stream.creatorId) return false;
+    if (stream.state !== 'scheduled' && stream.state !== 'live') return false;
+    return stream.coHostStatus !== 'active';
+  }
+
+  /**
+   * Invites a co-host to collaborate on the live stream.
+   */
+  public inviteCoHost(stream: StreamContext, requesterId: string, inviteeId: string): StreamContext {
+    if (!this.canInviteCoHost(stream, requesterId)) {
+      throw new Error('Only the primary host can invite a co-host during an active or scheduled broadcast');
+    }
+    if (inviteeId === stream.creatorId) {
+      throw new Error('Creator cannot invite themselves as co-host');
+    }
+    return {
+      ...stream,
+      coHostId: inviteeId,
+      coHostStatus: 'invited',
+    };
+  }
+
+  /**
+   * Evaluates if a user can respond to a co-host invitation.
+   */
+  public canRespondCoHostInvite(stream: StreamContext, userId: string): boolean {
+    return (
+      stream.coHostStatus === 'invited' &&
+      stream.coHostId === userId &&
+      (stream.state === 'scheduled' || stream.state === 'live')
+    );
+  }
+
+  /**
+   * Handles acceptance or rejection of a co-host invitation.
+   */
+  public respondToCoHostInvite(stream: StreamContext, userId: string, accept: boolean): StreamContext {
+    if (!this.canRespondCoHostInvite(stream, userId)) {
+      throw new Error('User is not authorized or invited to co-host this stream');
+    }
+    return {
+      ...stream,
+      coHostStatus: accept ? 'active' : 'declined',
+      coHostId: accept ? userId : null,
+    };
+  }
+
+  /**
+   * Evaluates whether a user has broadcasting privileges (camera, microphone, ingest).
+   */
+  public canBroadcast(stream: StreamContext, userId: string): boolean {
+    if (userId === stream.creatorId) return true;
+    return Boolean(stream.coHostId === userId && stream.coHostStatus === 'active');
+  }
+
+  /**
+   * Evaluates whether a user can terminate the broadcast.
+   * Only primary host can end the entire broadcast.
+   */
+  public canEndStream(stream: StreamContext, userId: string): boolean {
+    return userId === stream.creatorId;
+  }
+
+  /**
+   * Removes or leaves the co-host role.
+   */
+  public removeCoHost(stream: StreamContext, requesterId: string): StreamContext {
+    const isHost = requesterId === stream.creatorId;
+    const isCoHost = requesterId === stream.coHostId;
+    if (!isHost && !isCoHost) {
+      throw new Error('Only the host or current co-host can remove or vacate the co-host role');
+    }
+    return {
+      ...stream,
+      coHostId: null,
+      coHostStatus: 'none',
+    };
   }
 }
 

@@ -103,7 +103,14 @@ export default function CreateShortModal({
 
   useEffect(() => {
     if (initialSoundId) {
-      const found = CARIBBEAN_SOUNDS.find((s) => s.id === initialSoundId);
+      const target = initialSoundId.trim().toLowerCase();
+      const found = CARIBBEAN_SOUNDS.find(
+        (s) =>
+          s.id.toLowerCase() === target ||
+          s.title.toLowerCase() === target ||
+          target.includes(s.title.toLowerCase()) ||
+          s.title.toLowerCase().includes(target)
+      );
       if (found) setSelectedSound(found);
     }
   }, [initialSoundId]);
