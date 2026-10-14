@@ -20,6 +20,14 @@ import { logger } from '../logger';
 import { isBannedTesterAccount, BANNED_TESTER_USER_IDS } from '../auth/banned-testers';
 export type { StructuredMediaItem };
 
+function safeRevalidatePath(path: string) {
+  try {
+    revalidatePath(path);
+  } catch {
+    // Graceful no-op in unit test environments without active Next.js static store
+  }
+}
+
 export interface PostActionState {
   error: string | null;
   postId?: string;
@@ -1408,6 +1416,15 @@ export async function deletePostAction(postId: string): Promise<{ success: boole
       .eq('user_id', user.id)
       .maybeSingle();
     isAuthorized = ['owner', 'admin'].includes(pageRole?.role || '');
+
+    if (!isAuthorized) {
+      const { data: biz } = await supabase
+        .from('businesses')
+        .select('owner_id')
+        .eq('id', post.page_id)
+        .maybeSingle();
+      if (biz?.owner_id === user.id) isAuthorized = true;
+    }
   }
 
   if (!isAuthorized && post.is_official) {
@@ -1434,9 +1451,9 @@ export async function deletePostAction(postId: string): Promise<{ success: boole
   }
 
   await invalidateFeedCache(user.id);
-  revalidatePath('/');
-  revalidatePath('/create');
-  revalidatePath('/profile');
+  safeRevalidatePath('/');
+  safeRevalidatePath('/create');
+  safeRevalidatePath('/profile');
   return { success: true, error: null };
 }
 
@@ -1528,12 +1545,71 @@ export async function updatePostAction(
     return { success: false, error: 'Post content cannot exceed 3000 characters.' };
   }
 
+  // Fetch post to check permissions (author, creator, or page owner/admin/editor)
+  const { data: post } = await supabase
+    .from('posts')
+    .select('id, author_id, created_by_user_id, page_id, is_official')
+    .eq('id', postId)
+    .maybeSingle();
+
+  if (!post) {
+    return { success: false, error: 'Post not found.' };
+  }
+
+  const isDirectAuthor = post.author_id === user.id || post.created_by_user_id === user.id;
+  let isAuthorized = isDirectAuthor;
+
+  if (!isAuthorized && post.page_id) {
+    const { data: pageRole } = await supabase
+      .from('page_roles')
+      .select('role')
+      .eq('page_id', post.page_id)
+      .eq('user_id', user.id)
+      .maybeSingle();
+    isAuthorized = ['owner', 'admin', 'editor'].includes(pageRole?.role || '');
+
+    if (!isAuthorized) {
+      const { data: biz } = await supabase
+        .from('businesses')
+        .select('owner_id')
+        .eq('id', post.page_id)
+        .maybeSingle();
+      if (biz?.owner_id === user.id) isAuthorized = true;
+    }
+  }
+
+  if (!isAuthorized && post.is_official) {
+    const { data: op } = await supabase
+      .from('official_account_operators')
+      .select('role')
+      .eq('operator_profile_id', user.id)
+      .maybeSingle();
+    isAuthorized = ['owner', 'administrator', 'editor'].includes(op?.role || '');
+  }
+
+  if (!isAuthorized) {
+    return { success: false, error: 'You do not have permission to edit this post.' };
+  }
+
   const updatePayload: Record<string, any> = {
     updated_at: new Date().toISOString(),
   };
 
   if (cleanContent !== undefined) {
     updatePayload.content = cleanContent || null;
+    if (cleanContent) {
+      const detected = detectUrls(cleanContent);
+      if (detected.hasUrls && detected.primaryUrl) {
+        try {
+          const preview = await resolveContentUrl(detected.primaryUrl);
+          if (preview && preview.status !== 'failed') {
+            updatePayload.link_preview = preview;
+          }
+        } catch {
+          // Non-blocking enrichment
+        }
+      }
+    }
   }
   if (input.visibility) {
     updatePayload.visibility = input.visibility;
@@ -1546,7 +1622,6 @@ export async function updatePostAction(
     .from('posts')
     .update(updatePayload)
     .eq('id', postId)
-    .eq('author_id', user.id)
     .select('id, content, updated_at, visibility, cultural_tags')
     .single();
 
@@ -1555,9 +1630,10 @@ export async function updatePostAction(
     return { success: false, error: error.message };
   }
 
-  revalidatePath('/');
-  revalidatePath('/create');
-  revalidatePath(`/post/${postId}`);
+  await invalidateFeedCache(user.id);
+  safeRevalidatePath('/');
+  safeRevalidatePath('/create');
+  safeRevalidatePath(`/post/${postId}`);
   return { success: true, post: data, error: null };
 }
 
