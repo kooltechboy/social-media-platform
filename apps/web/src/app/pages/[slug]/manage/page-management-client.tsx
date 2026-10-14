@@ -40,7 +40,7 @@ import {
   type PageMemberSummary,
   type PageRoleType,
 } from '../../../../lib/pages/actions';
-import { CARIBBEAN_TERRITORIES } from '../../../../lib/constants/caribbean-territories';
+import { CARIBBEAN_TERRITORIES, normalizeCaribbeanCountryIso } from '../../../../lib/constants/caribbean-territories';
 import { ALL_UNIVERSAL_CATEGORIES } from '../../../../lib/pages/categories';
 
 interface PageManagementClientProps {
@@ -92,18 +92,19 @@ export default function PageManagementClient({
 
   const initialAvatar = business.avatar_url || business.logo_url || '';
   const initialCover = business.cover_image_url || business.cover_url || '';
+  const initialCountry = normalizeCaribbeanCountryIso(business.country_iso);
 
   const initialValues = React.useMemo(() => ({
     name: business.name || '',
     category: business.category || 'Creator',
     description: business.description || '',
-    countryIso: business.country_iso || 'JM',
+    countryIso: initialCountry,
     phone: business.phone || '',
     website: business.website || '',
     contactEmail: business.contact_email || '',
     avatarUrl: initialAvatar,
     coverImageUrl: initialCover,
-  }), [business, initialAvatar, initialCover]);
+  }), [business, initialAvatar, initialCover, initialCountry]);
 
   // Edit form state
   const [name, setName] = useState(initialValues.name);
@@ -116,15 +117,22 @@ export default function PageManagementClient({
   const [avatarUrl, setAvatarUrl] = useState(initialValues.avatarUrl);
   const [coverImageUrl, setCoverImageUrl] = useState(initialValues.coverImageUrl);
 
-  // Dirty check
+  // Saved baseline state to track persistence cleanly across saves and refreshes
+  const [savedBaseline, setSavedBaseline] = useState(initialValues);
+
+  React.useEffect(() => {
+    setSavedBaseline(initialValues);
+  }, [initialValues]);
+
+  // Dirty check against the saved baseline
   const isDirty = (
-    name !== initialValues.name ||
-    category !== initialValues.category ||
-    description !== initialValues.description ||
-    countryIso !== initialValues.countryIso ||
-    phone !== initialValues.phone ||
-    website !== initialValues.website ||
-    contactEmail !== initialValues.contactEmail
+    name.trim() !== savedBaseline.name.trim() ||
+    category !== savedBaseline.category ||
+    description.trim() !== savedBaseline.description.trim() ||
+    countryIso !== savedBaseline.countryIso ||
+    phone.trim() !== savedBaseline.phone.trim() ||
+    website.trim() !== savedBaseline.website.trim() ||
+    contactEmail.trim() !== savedBaseline.contactEmail.trim()
   );
 
   // Warn on navigation when unsaved changes exist
@@ -141,13 +149,13 @@ export default function PageManagementClient({
 
   // Reset form to saved values
   const handleDiscardEdits = () => {
-    setName(initialValues.name);
-    setCategory(initialValues.category);
-    setDescription(initialValues.description);
-    setCountryIso(initialValues.countryIso);
-    setPhone(initialValues.phone);
-    setWebsite(initialValues.website);
-    setContactEmail(initialValues.contactEmail);
+    setName(savedBaseline.name);
+    setCategory(savedBaseline.category);
+    setDescription(savedBaseline.description);
+    setCountryIso(savedBaseline.countryIso);
+    setPhone(savedBaseline.phone);
+    setWebsite(savedBaseline.website);
+    setContactEmail(savedBaseline.contactEmail);
     setStatusMessage(null);
   };
 
@@ -192,7 +200,18 @@ export default function PageManagementClient({
         if (res.error) {
           setStatusMessage({ type: 'error', text: res.error });
         } else {
-          setStatusMessage({ type: 'success', text: 'Page information saved successfully!' });
+          setStatusMessage({ type: 'success', text: 'Page profile & identity saved successfully!' });
+          setSavedBaseline({
+            name: name.trim(),
+            category: category.trim(),
+            description: description.trim(),
+            countryIso,
+            phone: phone.trim(),
+            website: website.trim(),
+            contactEmail: contactEmail.trim(),
+            avatarUrl,
+            coverImageUrl,
+          });
           router.refresh();
         }
       } catch (err: any) {
@@ -543,7 +562,7 @@ export default function PageManagementClient({
 
               <button
                 type="submit"
-                disabled={isPending || (!isDirty && name.trim() === initialValues.name)}
+                disabled={isPending || !isDirty}
                 className="px-6 py-2.5 rounded-2xl bg-brand-sunriseCoral hover:brightness-110 disabled:opacity-50 text-slate-950 font-black text-xs flex items-center gap-1.5 transition-all shadow-md min-h-[40px]"
               >
                 {isPending ? (
@@ -555,6 +574,34 @@ export default function PageManagementClient({
               </button>
             </div>
           </div>
+
+          {/* Inline Feedback Banner */}
+          {statusMessage && (
+            <div
+              className={`p-4 rounded-2xl text-xs font-bold flex items-center justify-between gap-3 animate-fadeIn ${
+                statusMessage.type === 'success'
+                  ? 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/30'
+                  : 'bg-rose-500/15 text-rose-300 border border-rose-500/30'
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                {statusMessage.type === 'success' ? (
+                  <CheckCircle className="w-4 h-4 text-emerald-400 shrink-0" />
+                ) : (
+                  <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0" />
+                )}
+                <span>{statusMessage.text}</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setStatusMessage(null)}
+                className="text-xs text-white/50 hover:text-white"
+                aria-label="Dismiss message"
+              >
+                ✕
+              </button>
+            </div>
+          )}
 
           {/* 1. VISUAL BRANDING SECTION (Banner & Avatar) */}
           <div className="space-y-6">
@@ -569,7 +616,11 @@ export default function PageManagementClient({
                 pageId={business.id}
                 imageType="banner"
                 currentUrl={coverImageUrl}
-                onUrlChange={(url) => setCoverImageUrl(url || '')}
+                onUrlChange={(url) => {
+                  const val = url || '';
+                  setCoverImageUrl(val);
+                  setSavedBaseline((prev) => ({ ...prev, coverImageUrl: val }));
+                }}
                 disabled={isPending}
               />
             </div>
@@ -580,7 +631,11 @@ export default function PageManagementClient({
                 pageId={business.id}
                 imageType="avatar"
                 currentUrl={avatarUrl}
-                onUrlChange={(url) => setAvatarUrl(url || '')}
+                onUrlChange={(url) => {
+                  const val = url || '';
+                  setAvatarUrl(val);
+                  setSavedBaseline((prev) => ({ ...prev, avatarUrl: val }));
+                }}
                 disabled={isPending}
               />
             </div>
@@ -734,9 +789,13 @@ export default function PageManagementClient({
           </div>
 
           {/* Bottom Save Bar */}
-          <div className="pt-5 border-t border-white/10 flex items-center justify-between gap-4">
+          <div className="pt-5 border-t border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="text-[11px] text-brand-sandstone/60">
-              {isDirty ? (
+              {statusMessage ? (
+                <span className={statusMessage.type === 'success' ? 'text-emerald-400 font-bold' : 'text-rose-400 font-bold'}>
+                  {statusMessage.text}
+                </span>
+              ) : isDirty ? (
                 <span className="text-amber-400 font-bold">You have unsaved changes. Remember to click Save Changes.</span>
               ) : (
                 <span>All page information is up to date.</span>
@@ -756,7 +815,7 @@ export default function PageManagementClient({
 
               <button
                 type="submit"
-                disabled={isPending || (!isDirty && name.trim() === initialValues.name)}
+                disabled={isPending || !isDirty}
                 className="px-6 py-2.5 rounded-2xl bg-brand-sunriseCoral hover:brightness-110 disabled:opacity-50 text-slate-950 font-black text-xs flex items-center gap-1.5 transition-all shadow-md"
               >
                 {isPending ? (

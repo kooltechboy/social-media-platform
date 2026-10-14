@@ -1,8 +1,9 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { createSupabaseServerClient, getCurrentUser } from '../supabase/server';
+import { createSupabaseServerClient, createServiceSupabaseClient, getCurrentUser } from '../supabase/server';
 import { isBannedTesterAccount } from '../auth/banned-testers';
+import { normalizeCaribbeanCountryIso } from '../constants/caribbean-territories';
 
 export interface PageActionResult {
   error: string | null;
@@ -515,7 +516,7 @@ export async function createUniversalPageAction(
   const slug = rawSlug.replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
   const category = String(formData.get('category') ?? 'Creator').trim();
   const description = String(formData.get('description') ?? '').trim();
-  const countryIso = String(formData.get('countryIso') ?? 'JM').trim().substring(0, 3).toUpperCase();
+  const countryIso = normalizeCaribbeanCountryIso(String(formData.get('countryIso') ?? 'JAM'));
   const phone = String(formData.get('phone') ?? '').trim();
   const contactEmail = String(formData.get('contactEmail') ?? '').trim();
   const avatarUrl = String(formData.get('avatarUrl') ?? '').trim() || null;
@@ -555,7 +556,7 @@ export async function createUniversalPageAction(
       category,
       page_type: 'universal',
       description: description || null,
-      country_iso: countryIso || 'JM',
+      country_iso: countryIso || 'JAM',
       phone: phone || null,
       website: safeWebsite,
       contact_email: contactEmail || null,
@@ -604,33 +605,69 @@ export async function updatePageDetailsAction(
   const supabase = await createSupabaseServerClient();
   if (!supabase) return { error: 'Database is unavailable.' };
 
-  // Verify permission: owner or admin
-  const { data: roleRow } = await supabase
-    .from('page_roles')
-    .select('role')
-    .eq('page_id', pageId)
-    .eq('user_id', user.id)
-    .maybeSingle();
+  // 1. Authorization check: check server client first, fallback to serviceClient if RLS restricts
+  let pageOwner: { id: string; owner_id: string; slug: string } | null = null;
+  let isAuthorized = false;
 
-  const { data: pageOwner } = await supabase
+  const { data: pageData } = await supabase
     .from('businesses')
     .select('id, owner_id, slug')
     .eq('id', pageId)
     .maybeSingle();
 
+  if (pageData) {
+    pageOwner = pageData;
+    if (pageData.owner_id === user.id) {
+      isAuthorized = true;
+    } else {
+      const { data: roleRow } = await supabase
+        .from('page_roles')
+        .select('role')
+        .eq('page_id', pageId)
+        .eq('user_id', user.id)
+        .maybeSingle();
+      if (roleRow?.role === 'admin' || roleRow?.role === 'owner') {
+        isAuthorized = true;
+      }
+    }
+  }
+
+  // Fallback to serviceClient to ensure verified session can read owner & role even under restrictive RLS
+  const serviceClient = await createServiceSupabaseClient();
+  if (!isAuthorized && serviceClient) {
+    const { data: svcPage } = await serviceClient
+      .from('businesses')
+      .select('id, owner_id, slug')
+      .eq('id', pageId)
+      .maybeSingle();
+
+    if (svcPage) {
+      pageOwner = svcPage;
+      if (svcPage.owner_id === user.id) {
+        isAuthorized = true;
+      } else {
+        const { data: svcRole } = await serviceClient
+          .from('page_roles')
+          .select('role')
+          .eq('page_id', pageId)
+          .eq('user_id', user.id)
+          .maybeSingle();
+        if (svcRole?.role === 'admin' || svcRole?.role === 'owner') {
+          isAuthorized = true;
+        }
+      }
+    }
+  }
+
   if (!pageOwner) return { error: 'Page not found.' };
-
-  const isOwner = pageOwner.owner_id === user.id;
-  const isAdmin = roleRow?.role === 'admin' || roleRow?.role === 'owner';
-
-  if (!isOwner && !isAdmin) {
+  if (!isAuthorized) {
     return { error: 'You do not have permission to manage this Page.' };
   }
 
   const name = String(formData.get('name') ?? '').trim();
   const category = String(formData.get('category') ?? '').trim();
   const description = String(formData.get('description') ?? '').trim();
-  const countryIso = String(formData.get('countryIso') ?? 'JM').trim().substring(0, 3).toUpperCase();
+  const countryIso = normalizeCaribbeanCountryIso(String(formData.get('countryIso') ?? 'JAM'));
   const phone = String(formData.get('phone') ?? '').trim();
   const contactEmail = String(formData.get('contactEmail') ?? '').trim();
   const avatarUrl = String(formData.get('avatarUrl') ?? '').trim();
@@ -658,24 +695,54 @@ export async function updatePageDetailsAction(
     }
   }
 
-  const { error: updateErr } = await supabase
+  // Use serviceClient for atomic reliable write, fallback to server client
+  const clientToUse = serviceClient || supabase;
+
+  // Attempt dual-column update first
+  const fullUpdatePayload: Record<string, any> = {
+    name,
+    category: category || undefined,
+    description: description || null,
+    country_iso: countryIso,
+    phone: phone || null,
+    website: safeWebsite,
+    contact_email: contactEmail || null,
+    avatar_url: avatarUrl || null,
+    logo_url: avatarUrl || null,
+    cover_image_url: coverImageUrl || null,
+    cover_url: coverImageUrl || null,
+  };
+
+  const { error: updateErr } = await clientToUse
     .from('businesses')
-    .update({
+    .update(fullUpdatePayload)
+    .eq('id', pageId);
+
+  if (updateErr) {
+    console.warn('updatePageDetailsAction dual-column update failed, falling back to canonical columns:', updateErr.message);
+    // Fallback in case logo_url / cover_url do not exist on the live table schema yet
+    const fallbackUpdatePayload: Record<string, any> = {
       name,
       category: category || undefined,
       description: description || null,
-      country_iso: countryIso || undefined,
+      country_iso: countryIso,
       phone: phone || null,
       website: safeWebsite,
       contact_email: contactEmail || null,
       avatar_url: avatarUrl || null,
-      logo_url: avatarUrl || null,
       cover_image_url: coverImageUrl || null,
-      cover_url: coverImageUrl || null,
-    })
-    .eq('id', pageId);
+    };
 
-  if (updateErr) return { error: updateErr.message };
+    const { error: fallbackErr } = await clientToUse
+      .from('businesses')
+      .update(fallbackUpdatePayload)
+      .eq('id', pageId);
+
+    if (fallbackErr) {
+      console.error('updatePageDetailsAction fallback failed:', fallbackErr);
+      return { error: fallbackErr.message || 'Failed to save page changes.' };
+    }
+  }
 
   revalidatePath('/pages');
   revalidatePath(`/pages/${pageOwner.slug}`);

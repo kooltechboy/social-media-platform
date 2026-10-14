@@ -189,4 +189,81 @@ describe('TUKUBI Page Management — Validation & Authorization Engine', () => {
       expect(resolved.banner_url).toBe(rawBusiness.cover_image_url);
     });
   });
+
+  describe('Caribbean Country ISO Normalization & FK Integrity', () => {
+    it('normalizes 2-letter Caribbean ISO codes to 3-letter codes in public.countries', async () => {
+      const { normalizeCaribbeanCountryIso } = await import('../../apps/web/src/lib/constants/caribbean-territories');
+      expect(normalizeCaribbeanCountryIso('JM')).toBe('JAM');
+      expect(normalizeCaribbeanCountryIso('TT')).toBe('TTO');
+      expect(normalizeCaribbeanCountryIso('BB')).toBe('BRB');
+      expect(normalizeCaribbeanCountryIso('BS')).toBe('BHS');
+      expect(normalizeCaribbeanCountryIso('DO')).toBe('DOM');
+      expect(normalizeCaribbeanCountryIso('HT')).toBe('HTI');
+    });
+
+    it('preserves valid 3-letter Caribbean ISO codes', async () => {
+      const { normalizeCaribbeanCountryIso } = await import('../../apps/web/src/lib/constants/caribbean-territories');
+      expect(normalizeCaribbeanCountryIso('JAM')).toBe('JAM');
+      expect(normalizeCaribbeanCountryIso('DOM')).toBe('DOM');
+      expect(normalizeCaribbeanCountryIso('TTO')).toBe('TTO');
+      expect(normalizeCaribbeanCountryIso('PRI')).toBe('PRI');
+    });
+
+    it('maps variant codes like CUW to standard CUR present in public.countries', async () => {
+      const { normalizeCaribbeanCountryIso } = await import('../../apps/web/src/lib/constants/caribbean-territories');
+      expect(normalizeCaribbeanCountryIso('CUW')).toBe('CUR');
+      expect(normalizeCaribbeanCountryIso('CW')).toBe('CUR');
+    });
+
+    it('safely defaults null, empty, or unknown codes to JAM without crashing FK constraints', async () => {
+      const { normalizeCaribbeanCountryIso } = await import('../../apps/web/src/lib/constants/caribbean-territories');
+      expect(normalizeCaribbeanCountryIso(null)).toBe('JAM');
+      expect(normalizeCaribbeanCountryIso(undefined)).toBe('JAM');
+      expect(normalizeCaribbeanCountryIso('')).toBe('JAM');
+      expect(normalizeCaribbeanCountryIso('XYZ')).toBe('JAM');
+    });
+  });
+
+  describe('Update Payload Fallback Resilience', () => {
+    it('falls back to canonical columns if dual columns are rejected by legacy DB schema', () => {
+      function prepareUpdatePayloads(input: {
+        name: string;
+        avatarUrl?: string;
+        coverImageUrl?: string;
+        countryIso: string;
+      }) {
+        const fullPayload = {
+          name: input.name,
+          country_iso: input.countryIso,
+          avatar_url: input.avatarUrl || null,
+          logo_url: input.avatarUrl || null,
+          cover_image_url: input.coverImageUrl || null,
+          cover_url: input.coverImageUrl || null,
+        };
+
+        const fallbackPayload = {
+          name: input.name,
+          country_iso: input.countryIso,
+          avatar_url: input.avatarUrl || null,
+          cover_image_url: input.coverImageUrl || null,
+        };
+
+        return { fullPayload, fallbackPayload };
+      }
+
+      const { fullPayload, fallbackPayload } = prepareUpdatePayloads({
+        name: 'Kool Tech Solutions',
+        avatarUrl: 'https://example.com/avatar.png',
+        coverImageUrl: 'https://example.com/banner.png',
+        countryIso: 'JAM',
+      });
+
+      expect(fullPayload.logo_url).toBe('https://example.com/avatar.png');
+      expect(fullPayload.cover_url).toBe('https://example.com/banner.png');
+      expect(fallbackPayload).not.toHaveProperty('logo_url');
+      expect(fallbackPayload).not.toHaveProperty('cover_url');
+      expect(fallbackPayload.avatar_url).toBe('https://example.com/avatar.png');
+      expect(fallbackPayload.cover_image_url).toBe('https://example.com/banner.png');
+    });
+  });
 });

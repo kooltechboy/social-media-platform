@@ -71,3 +71,56 @@ export const SOVEREIGN_CARIBBEAN = CARIBBEAN_TERRITORIES.filter(t => t.sovereign
 
 export const CARIBBEAN_TERRITORIES_BY_ISO: Record<string, CaribbeanTerritory> =
   Object.fromEntries(CARIBBEAN_TERRITORIES.map(t => [t.iso, t]));
+
+/**
+ * Maps ISO-2 or variant ISO-3 territory codes to database-compliant public.countries(iso_code)
+ */
+export const ISO2_TO_ISO3_MAP: Record<string, string> = {
+  JM: 'JAM',
+  DO: 'DOM',
+  TT: 'TTO',
+  HT: 'HTI',
+  BS: 'BHS',
+  BB: 'BRB',
+  CU: 'CUB',
+  AG: 'ATG',
+  DM: 'DMA',
+  GD: 'GRD',
+  KN: 'KNA',
+  LC: 'LCA',
+  VC: 'VCT',
+  BZ: 'BLZ',
+  GY: 'GUY',
+  SR: 'SUR',
+  PR: 'PRI',
+  KY: 'CYM',
+  CW: 'CUR',
+  CUW: 'CUR',
+  AW: 'ABW',
+  SX: 'SXM',
+  VG: 'VGB',
+  VI: 'VIR',
+  TC: 'TCA',
+  BM: 'BMU',
+  AI: 'AIA',
+  MS: 'MSR',
+  US: 'USA',
+  CA: 'CAN',
+  GB: 'GBR',
+  NL: 'NLD',
+};
+
+export const VALID_COUNTRY_ISO3 = new Set([
+  'JAM', 'DOM', 'TTO', 'HTI', 'BHS', 'BRB', 'CUB', 'ATG', 'DMA', 'GRD',
+  'KNA', 'LCA', 'VCT', 'BLZ', 'GUY', 'SUR', 'PRI', 'CYM', 'CUR', 'ABW',
+  'SXM', 'VGB', 'VIR', 'TCA', 'BMU', 'AIA', 'MSR', 'USA', 'CAN', 'GBR', 'NLD'
+]);
+
+export function normalizeCaribbeanCountryIso(raw?: string | null): string {
+  if (!raw) return 'JAM';
+  const clean = raw.trim().toUpperCase();
+  if (VALID_COUNTRY_ISO3.has(clean)) return clean;
+  if (ISO2_TO_ISO3_MAP[clean]) return ISO2_TO_ISO3_MAP[clean];
+  if (clean.length === 2 && ISO2_TO_ISO3_MAP[clean]) return ISO2_TO_ISO3_MAP[clean];
+  return 'JAM';
+}
