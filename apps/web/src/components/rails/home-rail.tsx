@@ -12,6 +12,9 @@ import {
   Tv,
   CheckCircle,
   Flame,
+  Building2,
+  ShieldCheck,
+  Plus,
 } from 'lucide-react';
 import UserAvatar from '../user-avatar';
 import FollowButton from '../follow-button';
@@ -49,6 +52,25 @@ export interface HomeRailProps {
     peak_viewers?: number;
     creator_name?: string;
   } | null;
+  managedPages?: Array<{
+    id: string;
+    name: string;
+    slug: string;
+    category?: string;
+    avatarUrl?: string | null;
+    isVerified?: boolean;
+    userRole?: string | null;
+    followerCount?: number;
+  }>;
+  followedPages?: Array<{
+    id: string;
+    name: string;
+    slug: string;
+    category?: string;
+    avatarUrl?: string | null;
+    isVerified?: boolean;
+    followerCount?: number;
+  }>;
 }
 
 export default function HomeRail({
@@ -57,6 +79,8 @@ export default function HomeRail({
   upcomingEvents = [],
   marketplaceItems = [],
   activeLiveStream = null,
+  managedPages = [],
+  followedPages = [],
 }: HomeRailProps) {
   const displayTrends = trendingTopics;
 
@@ -94,7 +118,155 @@ export default function HomeRail({
         </div>
       )}
 
-      {/* 2. People You May Know */}
+      {/* 2. Pages You Manage (Ecosystem RBAC) */}
+      {managedPages && managedPages.length > 0 && (
+        <section aria-label="Pages You Manage" className="glass rounded-3xl p-4 sm:p-5 space-y-3.5 border border-white/10">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Building2 className="w-4 h-4 text-orange-400" />
+              <h3 className="text-xs font-black text-white uppercase tracking-wider">
+                Pages You Manage
+              </h3>
+            </div>
+            <Link
+              href="/pages?tab=my-pages"
+              className="text-[11px] font-bold text-orange-400 hover:underline"
+            >
+              All ({managedPages.length})
+            </Link>
+          </div>
+
+          <div className="space-y-2 pt-0.5">
+            {managedPages.slice(0, 3).map((page) => (
+              <div
+                key={page.id}
+                className="flex items-center justify-between gap-3 p-2 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/5 transition-colors group"
+              >
+                <Link
+                  href={`/pages/${page.slug}`}
+                  className="flex items-center gap-2.5 min-w-0 flex-1"
+                >
+                  <div className="w-8 h-8 rounded-xl overflow-hidden bg-white/10 flex items-center justify-center shrink-0 border border-white/10">
+                    {page.avatarUrl ? (
+                      <img src={page.avatarUrl} alt={page.name} className="w-full h-full object-cover" />
+                    ) : (
+                      <Building2 className="w-4 h-4 text-orange-300" />
+                    )}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-xs font-bold text-white truncate group-hover:text-orange-300 transition-colors flex items-center gap-1">
+                      <span>{page.name}</span>
+                      {page.isVerified && (
+                        <CheckCircle className="w-3 h-3 text-brand-caribbeanSea shrink-0" />
+                      )}
+                    </p>
+                    <p className="text-[10px] text-brand-sandstone/60 truncate">
+                      {page.userRole ? `${page.userRole.charAt(0).toUpperCase() + page.userRole.slice(1)} • ` : ''}
+                      {page.followerCount !== undefined ? `${page.followerCount} followers` : page.category || 'Page'}
+                    </p>
+                  </div>
+                </Link>
+                <Link
+                  href={`/pages/${page.slug}/manage`}
+                  className="shrink-0 text-[10px] font-black uppercase px-2 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-colors"
+                  title="Manage Page"
+                >
+                  Manage
+                </Link>
+              </div>
+            ))}
+          </div>
+
+          <div className="pt-0.5">
+            <Link
+              href="/pages/create"
+              className="w-full flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-orange-500/15 hover:bg-orange-500/25 border border-orange-500/30 text-orange-300 font-bold text-xs transition-colors"
+            >
+              <Plus className="w-3.5 h-3.5" /> Create a New Page
+            </Link>
+          </div>
+        </section>
+      )}
+
+      {/* 3. Pages You Follow */}
+      {followedPages && followedPages.length > 0 && (
+        <section aria-label="Pages You Follow" className="glass rounded-3xl p-4 sm:p-5 space-y-3 border border-white/10">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <ShieldCheck className="w-4 h-4 text-sky-400" />
+              <h3 className="text-xs font-black text-white uppercase tracking-wider">
+                Pages You Follow
+              </h3>
+            </div>
+            <Link
+              href="/pages"
+              className="text-[11px] font-bold text-sky-400 hover:underline"
+            >
+              Explore
+            </Link>
+          </div>
+
+          <div className="space-y-2 pt-0.5">
+            {followedPages.slice(0, 3).map((page) => (
+              <Link
+                key={page.id}
+                href={`/pages/${page.slug}`}
+                className="flex items-center justify-between gap-3 p-2 rounded-xl hover:bg-white/5 transition-colors group"
+              >
+                <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                  <div className="w-7 h-7 rounded-lg overflow-hidden bg-white/10 flex items-center justify-center shrink-0 border border-white/10">
+                    {page.avatarUrl ? (
+                      <img src={page.avatarUrl} alt={page.name} className="w-full h-full object-cover" />
+                    ) : (
+                      <Building2 className="w-3.5 h-3.5 text-sky-300" />
+                    )}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-xs font-bold text-white truncate group-hover:text-sky-300 transition-colors flex items-center gap-1">
+                      <span>{page.name}</span>
+                      {page.isVerified && (
+                        <CheckCircle className="w-3 h-3 text-brand-caribbeanSea shrink-0" />
+                      )}
+                    </p>
+                    <p className="text-[10px] text-brand-sandstone/60 truncate">
+                      {page.followerCount !== undefined ? `${page.followerCount} followers` : page.category || 'Page'}
+                    </p>
+                  </div>
+                </div>
+                <ArrowRight className="w-3.5 h-3.5 text-white/40 group-hover:text-white transition-colors shrink-0" />
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* 4. Page Promotion Callout when user has no managed pages */}
+      {(!managedPages || managedPages.length === 0) && (
+        <section aria-label="Create a Caribbean Page" className="glass rounded-3xl p-4 sm:p-5 space-y-2.5 border border-white/10 bg-gradient-to-br from-orange-500/10 via-transparent to-transparent">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 text-orange-400">
+              <Building2 className="w-4 h-4" />
+              <h3 className="text-xs font-black uppercase tracking-wider">
+                Caribbean Pages
+              </h3>
+            </div>
+            <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-orange-500/20 text-orange-300 border border-orange-500/30">
+              New
+            </span>
+          </div>
+          <p className="text-xs text-brand-sandstone/70 leading-relaxed">
+            Create an official public identity for your business, creator brand, music project, or community foundation.
+          </p>
+          <Link
+            href="/pages/create"
+            className="inline-flex items-center justify-center gap-1.5 w-full py-2 px-3 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 hover:brightness-110 text-slate-950 font-black text-xs transition-all shadow-sm"
+          >
+            <Plus className="w-3.5 h-3.5" /> Create a Page
+          </Link>
+        </section>
+      )}
+
+      {/* 5. People You May Know */}
       {suggestedPeople.length > 0 && (
         <section aria-label="People You May Know" className="glass rounded-3xl p-4 sm:p-5 space-y-3.5 border border-white/10">
           <div className="flex items-center justify-between">

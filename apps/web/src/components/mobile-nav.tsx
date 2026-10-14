@@ -29,6 +29,7 @@ import {
   HelpCircle,
   MapPin,
   ChevronRight,
+  ShieldCheck,
 } from 'lucide-react';
 import { useAuth } from './auth-provider';
 import UserAvatar from './user-avatar';
@@ -326,6 +327,15 @@ export default function MobileNav() {
                 >
                   <Building2 className="w-4 h-4 text-orange-400 shrink-0" />
                   <span>Pages</span>
+                </Link>
+
+                <Link
+                  href="/pages?tab=my-pages"
+                  onClick={() => setIsMenuSheetOpen(false)}
+                  className="flex items-center gap-2.5 p-3 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 text-white text-xs font-bold transition-colors"
+                >
+                  <ShieldCheck className="w-4 h-4 text-amber-400 shrink-0" />
+                  <span>My Pages</span>
                 </Link>
 
                 <Link

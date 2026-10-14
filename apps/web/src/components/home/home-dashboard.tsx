@@ -57,6 +57,25 @@ export interface HomeDashboardProps {
   culturalEvents?: any[];
   suggestedPeople?: any[];
   trendingTopics?: any[];
+  managedPages?: Array<{
+    id: string;
+    name: string;
+    slug: string;
+    category?: string;
+    avatarUrl?: string | null;
+    isVerified?: boolean;
+    userRole?: string | null;
+    followerCount?: number;
+  }>;
+  followedPages?: Array<{
+    id: string;
+    name: string;
+    slug: string;
+    category?: string;
+    avatarUrl?: string | null;
+    isVerified?: boolean;
+    followerCount?: number;
+  }>;
 }
 
 const FEED_TABS: Array<{
@@ -147,6 +166,8 @@ export default function HomeDashboard({
   culturalEvents = [],
   suggestedPeople = [],
   trendingTopics = [],
+  managedPages = [],
+  followedPages = [],
 }: HomeDashboardProps) {
   const [showComposer, setShowComposer] = useState(false);
   const [activeTab, setActiveTab] = useState<FeedMode>(initialMode);
@@ -701,6 +722,8 @@ export default function HomeDashboard({
           upcomingEvents={culturalEvents}
           marketplaceItems={marketProducts}
           activeLiveStream={activeLiveStream}
+          managedPages={managedPages}
+          followedPages={followedPages}
         />
       </RightRail>
     </div>

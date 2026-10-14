@@ -228,9 +228,11 @@ export async function createPostAction(_prev: PostActionState, formData: FormDat
 
   // Publisher Identity Validation & Actor Separation
   const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-  const publishAsTypeRaw = String(formData.get('publish_as_type') || formData.get('publisher_type') || 'personal').toLowerCase().trim();
-  const rawPublishAsId = String(formData.get('publish_as_id') || formData.get('publisher_entity_id') || user.id).trim();
-  const publishAsIdRaw = UUID_REGEX.test(rawPublishAsId) ? rawPublishAsId : user.id;
+  const rawPageIdParam = formData.get('page_id');
+  const explicitPageId = typeof rawPageIdParam === 'string' && UUID_REGEX.test(rawPageIdParam.trim()) ? rawPageIdParam.trim() : null;
+  const publishAsTypeRaw = String(formData.get('publish_as_type') || formData.get('publisher_type') || (explicitPageId ? 'page' : 'personal')).toLowerCase().trim();
+  const rawPublishAsId = String(formData.get('publish_as_id') || formData.get('publisher_entity_id') || explicitPageId || user.id).trim();
+  const publishAsIdRaw = UUID_REGEX.test(rawPublishAsId) ? rawPublishAsId : (explicitPageId || user.id);
 
   let authorId = user.id;
   let publisherType: 'personal' | 'official' | 'page' | 'community' | 'creator' = 'personal';
@@ -297,12 +299,13 @@ export async function createPostAction(_prev: PostActionState, formData: FormDat
     publisherType = 'official';
     publisherEntityId = targetProfileId;
     officialContentType = (formData.get('official_content_type') as string) || 'announcement';
-  } else if (publishAsTypeRaw === 'page' || publishAsTypeRaw === 'business') {
+  } else if (publishAsTypeRaw === 'page' || publishAsTypeRaw === 'business' || explicitPageId) {
+    const targetPageId = explicitPageId || publishAsIdRaw;
     // 2. Verify Page ownership or assigned team role
     const { data: biz } = await supabase
       .from('businesses')
       .select('id, owner_id, slug, name')
-      .eq('id', publishAsIdRaw)
+      .eq('id', targetPageId)
       .maybeSingle();
 
     if (!biz) {
@@ -314,7 +317,7 @@ export async function createPostAction(_prev: PostActionState, formData: FormDat
       const { data: pageRole } = await supabase
         .from('page_roles')
         .select('role')
-        .eq('page_id', publishAsIdRaw)
+        .eq('page_id', targetPageId)
         .eq('user_id', user.id)
         .maybeSingle();
 
@@ -326,9 +329,9 @@ export async function createPostAction(_prev: PostActionState, formData: FormDat
     }
 
     authorId = user.id;
-    pageId = publishAsIdRaw;
+    pageId = targetPageId;
     publisherType = 'page';
-    publisherEntityId = publishAsIdRaw;
+    publisherEntityId = targetPageId;
   } else if (publishAsTypeRaw === 'creator') {
     // 3. Verify Creator account
     const { data: creatorAcc } = await supabase

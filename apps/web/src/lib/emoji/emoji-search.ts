@@ -11,6 +11,8 @@ interface IndexedEmoji {
 
 let indexedEmojis: IndexedEmoji[] | null = null;
 let emojiMapByChar: Map<string, EmojiItem> | null = null;
+const queryCache = new Map<string, EmojiItem[]>();
+const MAX_QUERY_CACHE_SIZE = 256;
 
 function getIndexedEmojis(): { indexed: IndexedEmoji[]; charMap: Map<string, EmojiItem> } {
   if (indexedEmojis && emojiMapByChar) {
@@ -65,6 +67,12 @@ export function searchEmojis(query: string, limit: number = 50): EmojiItem[] {
   const trimmed = query.trim().toLowerCase();
   if (!trimmed) {
     return [];
+  }
+
+  const cacheKey = `${trimmed}:${limit}`;
+  const cached = queryCache.get(cacheKey);
+  if (cached) {
+    return cached;
   }
 
   const { indexed, charMap } = getIndexedEmojis();
@@ -144,5 +152,13 @@ export function searchEmojis(query: string, limit: number = 50): EmojiItem[] {
   // Sort by score descending
   scored.sort((a, b) => b.score - a.score);
 
-  return scored.slice(0, limit).map((s) => s.item);
+  const results = scored.slice(0, limit).map((s) => s.item);
+
+  if (queryCache.size >= MAX_QUERY_CACHE_SIZE) {
+    const firstKey = queryCache.keys().next().value;
+    if (firstKey) queryCache.delete(firstKey);
+  }
+  queryCache.set(cacheKey, results);
+
+  return results;
 }

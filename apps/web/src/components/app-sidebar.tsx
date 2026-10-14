@@ -32,6 +32,7 @@ import {
   Globe,
   PanelLeftClose,
   PanelLeftOpen,
+  ShieldCheck,
 } from 'lucide-react';
 import { useTranslation, TranslationKey } from '@caribbean/localization';
 import { useUnreadNotificationsCount, useUnreadMessagesCount } from './notifications-realtime-provider';
@@ -114,6 +115,18 @@ export default function AppSidebar({ currentPath }: { currentPath?: string }) {
       href: '/pages',
       fallbackLabel: 'Pages',
       icon: Building2,
+    },
+    {
+      href: '/pages?tab=my-pages',
+      fallbackLabel: 'My Pages',
+      icon: ShieldCheck,
+      badge: 'PAGES',
+    },
+    {
+      href: '/pages/create',
+      fallbackLabel: 'Create Page',
+      icon: PlusCircle,
+      badge: 'NEW',
     },
     {
       href: '/podcasts',
@@ -210,12 +223,24 @@ export default function AppSidebar({ currentPath }: { currentPath?: string }) {
     if (href === '/profile') {
       return activePath.startsWith('/profile');
     }
+    if (href === '/pages') {
+      return activePath === '/pages';
+    }
+    if (href === '/pages?tab=my-pages') {
+      return activePath.includes('tab=my-pages') || activePath.includes('/manage');
+    }
+    if (href === '/pages/create') {
+      return activePath === '/pages/create';
+    }
     return activePath.startsWith(href);
   }
 
   const renderNavList = (items: NavItem[]) => (
     <ul className="space-y-0.5" role="list">
       {items.map((item) => {
+        if (isCollapsed && item.href === '/pages?tab=my-pages') {
+          return null;
+        }
         const isActive = isItemActive(item.href);
         const Icon = item.icon;
         const label = item.labelKey ? t(item.labelKey) : (item.label || item.fallbackLabel);

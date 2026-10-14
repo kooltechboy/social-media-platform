@@ -72,10 +72,19 @@ export async function buildRankedFeed(
 
     // Apply mode filters
     if (mode === 'following') {
-      const { data: follows } = await supabase.from('follows').select('following_id').eq('follower_id', userId);
-      const followingIds = follows?.map((f: any) => f.following_id) || [];
-      if (followingIds.length > 0) {
+      const [followsRes, pageFollowsRes] = await Promise.all([
+        supabase.from('follows').select('following_id').eq('follower_id', userId),
+        supabase.from('page_followers').select('page_id').eq('user_id', userId),
+      ]);
+      const followingIds = followsRes.data?.map((f: any) => f.following_id).filter(Boolean) || [];
+      const followedPageIds = pageFollowsRes.data?.map((pf: any) => pf.page_id).filter(Boolean) || [];
+
+      if (followingIds.length > 0 && followedPageIds.length > 0) {
+        postQuery = postQuery.or(`author_id.in.(${followingIds.join(',')}),page_id.in.(${followedPageIds.join(',')})`);
+      } else if (followingIds.length > 0) {
         postQuery = postQuery.in('author_id', followingIds);
+      } else if (followedPageIds.length > 0) {
+        postQuery = postQuery.in('page_id', followedPageIds);
       } else {
         postQuery = postQuery.in('author_id', ['00000000-0000-0000-0000-000000000000']);
       }
@@ -133,9 +142,14 @@ export async function buildRankedFeed(
       // Official TUKUBI platform announcements & updates
       postQuery = postQuery.eq('is_official', true);
     } else if (mode === 'for_you') {
-      const { data: follows } = await supabase.from('follows').select('following_id').eq('follower_id', userId);
-      const followingIds = follows?.map((f: any) => f.following_id) || [];
-      // In for_you, always include the author's own posts, followed accounts, Caribbean tag, or official posts
+      const [followsRes, pageFollowsRes] = await Promise.all([
+        supabase.from('follows').select('following_id').eq('follower_id', userId),
+        supabase.from('page_followers').select('page_id').eq('user_id', userId),
+      ]);
+      const followingIds = followsRes.data?.map((f: any) => f.following_id).filter(Boolean) || [];
+      const followedPageIds = pageFollowsRes.data?.map((pf: any) => pf.page_id).filter(Boolean) || [];
+
+      // In for_you, always include the author's own posts, followed accounts, followed pages, Caribbean tag, or official posts
       const orConditions: string[] = [
         `author_id.eq.${userId}`,
         'country_id.not.is.null',
@@ -144,6 +158,9 @@ export async function buildRankedFeed(
       ];
       if (followingIds.length > 0) {
         orConditions.push(`author_id.in.(${followingIds.join(',')})`);
+      }
+      if (followedPageIds.length > 0) {
+        orConditions.push(`page_id.in.(${followedPageIds.join(',')})`);
       }
       postQuery = postQuery.or(orConditions.join(','));
     }
@@ -215,14 +232,16 @@ export async function buildRankedFeed(
         ? (profileBuilder as any).maybeSingle()
         : Promise.resolve({ data: null });
 
-    const [followsRes, friendshipsRes, profileRes] = await Promise.all([
+    const [followsRes, friendshipsRes, profileRes, pageFollowsRes] = await Promise.all([
       supabase.from('follows').select('following_id').eq('follower_id', userId),
       supabase.from('friendships').select('requester_id, addressee_id, status')
         .or(`requester_id.eq.${userId},addressee_id.eq.${userId}`),
       profileQueryPromise,
+      supabase.from('page_followers').select('page_id').eq('user_id', userId),
     ]);
 
     const followingSet = new Set(followsRes.data?.map((f: any) => f.following_id) || []);
+    const followedPagesSet = new Set(pageFollowsRes.data?.map((pf: any) => pf.page_id).filter(Boolean) || []);
     const friendsSet = new Set(friendshipsRes.data?.filter((f: any) => f.status === 'accepted').map((f: any) => f.requester_id === userId ? f.addressee_id : f.requester_id) || []);
     const userCountryId = profileRes.data?.country_id || profileRes.data?.current_country_id || profileRes.data?.origin_country_id;
 
@@ -230,10 +249,13 @@ export async function buildRankedFeed(
     const ranker = new CaribbeanFeedRanker();
     
     const rankableItems = candidates.map((post: any) => {
-      // Relationship
+      // Relationship: personal follow, followed page, or accepted friend
       let relationshipScore = 0;
-      if (followingSet.has(post.author_id)) relationshipScore = 1.0;
-      else if (friendsSet.has(post.author_id)) relationshipScore = 0.5;
+      if (followingSet.has(post.author_id) || (post.page_id && followedPagesSet.has(post.page_id))) {
+        relationshipScore = 1.0;
+      } else if (friendsSet.has(post.author_id)) {
+        relationshipScore = 0.5;
+      }
 
       // Recency
       const recencyHours = (Date.now() - new Date(post.created_at).getTime()) / 3_600_000;

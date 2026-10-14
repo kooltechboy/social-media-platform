@@ -9,6 +9,7 @@ import { buildRankedFeed } from '../lib/feed/ranking';
 import { hydratePostsEngagement } from '../lib/feed/hydrate-posts';
 import { fetchActiveStoriesAction } from '../lib/social/actions';
 import { fetchTrendingSignalsAction } from '../lib/explore/actions';
+import { fetchMyPagesAction, fetchFollowedPagesAction } from '../lib/pages/actions';
 import PublicFrontDoor from '../components/public-front-door';
 import HomeDashboard from '../components/home/home-dashboard';
 import { type FeedPostData } from '../components/feed-stream';
@@ -46,12 +47,14 @@ export default async function RootPage(props: RootPageProps) {
   let trendingTopics: Array<{ tag: string; post_count?: number }> = [];
   let friendsCount = 0;
   let followingCount = 0;
+  let myPages: any[] = [];
+  let followedPages: any[] = [];
 
   if (supabase) {
     const sixHoursAgo = new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString();
     const nowIso = new Date().toISOString();
 
-    const [postsRes, liveRes, reelsRes, marketRes, eventsRes, peopleRes, followsRes, friendsRes, trendingSignals] =
+    const [postsRes, liveRes, reelsRes, marketRes, eventsRes, peopleRes, followsRes, friendsRes, trendingSignals, myPagesRes, followedPagesRes] =
       await Promise.all([
         buildRankedFeed(user.id, activeMode, supabase, cursor, { skipCache: true }),
         supabase
@@ -97,7 +100,12 @@ export default async function RootPage(props: RootPageProps) {
           .or(`requester_id.eq.${user.id},addressee_id.eq.${user.id}`)
           .eq('status', 'accepted'),
         fetchTrendingSignalsAction(),
+        fetchMyPagesAction(),
+        fetchFollowedPagesAction(10),
       ]);
+
+    myPages = myPagesRes || [];
+    followedPages = followedPagesRes || [];
 
     friendsCount = friendsRes.count || 0;
     followingCount = followsRes.data?.length || 0;
@@ -192,6 +200,8 @@ export default async function RootPage(props: RootPageProps) {
       culturalEvents={culturalEvents}
       suggestedPeople={suggestedPeople}
       trendingTopics={trendingTopics}
+      managedPages={myPages}
+      followedPages={followedPages}
     />
   );
 }

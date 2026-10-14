@@ -216,6 +216,83 @@ export async function fetchMyPagesAction(): Promise<UniversalPageSummary[]> {
 }
 
 // -----------------------------------------------------------------------------
+// 2B. Fetch Followed Pages for Current User
+// -----------------------------------------------------------------------------
+export async function fetchFollowedPagesAction(limit = 20): Promise<UniversalPageSummary[]> {
+  const user = await getCurrentUser();
+  if (!user) return [];
+
+  const supabase = await createSupabaseServerClient();
+  if (!supabase) return [];
+
+  try {
+    const { data: followRows, error } = await supabase
+      .from('page_followers')
+      .select(`
+        page_id,
+        created_at,
+        businesses:businesses!page_followers_page_id_fkey(
+          id, name, slug, category, page_type, description, is_verified,
+          country_iso, avatar_url, cover_image_url, created_at,
+          is_deactivated, is_archived, deleted_at
+        )
+      `)
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+      .limit(limit);
+
+    if (error || !followRows) return [];
+
+    const pages: UniversalPageSummary[] = [];
+    const pageIds: string[] = [];
+
+    for (const row of followRows) {
+      const b: any = Array.isArray(row.businesses) ? row.businesses[0] : row.businesses;
+      if (!b || b.deleted_at || b.is_archived || b.is_deactivated) continue;
+      pageIds.push(b.id);
+      pages.push({
+        id: b.id,
+        name: b.name,
+        slug: b.slug,
+        category: b.category || 'Universal Caribbean Page',
+        pageType: b.page_type || 'universal',
+        description: b.description,
+        isVerified: Boolean(b.is_verified),
+        countryIso: b.country_iso,
+        avatarUrl: b.avatar_url,
+        coverImageUrl: b.cover_image_url,
+        createdAt: b.created_at,
+        followerCount: 0,
+        postCount: 0,
+        userRole: null,
+        isDeactivated: false,
+      });
+    }
+
+    if (pageIds.length === 0) return [];
+
+    // Attach follower counts
+    const { data: followers } = await supabase
+      .from('page_followers')
+      .select('page_id')
+      .in('page_id', pageIds);
+
+    const followerCountMap = new Map<string, number>();
+    for (const f of followers || []) {
+      followerCountMap.set(f.page_id, (followerCountMap.get(f.page_id) || 0) + 1);
+    }
+
+    return pages.map((p) => ({
+      ...p,
+      followerCount: followerCountMap.get(p.id) || 0,
+    }));
+  } catch (err) {
+    console.error('fetchFollowedPagesAction error:', err);
+    return [];
+  }
+}
+
+// -----------------------------------------------------------------------------
 // 3. Fetch Full Page Details
 // -----------------------------------------------------------------------------
 export async function fetchPageDetailsAction(slug: string): Promise<{
