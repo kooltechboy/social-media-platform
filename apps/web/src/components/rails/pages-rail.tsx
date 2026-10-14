@@ -13,6 +13,7 @@ import {
   Users,
   Layers,
   FileText,
+  Edit3,
 } from 'lucide-react';
 
 export interface PagesRailProps {
@@ -87,16 +88,28 @@ export default function PagesRail({
               <ChevronRight className="w-3.5 h-3.5 text-white/40" />
             </Link>
             {activePage.is_admin && (
-              <Link
-                href={`/pages/${activePage.slug}/manage`}
-                className="flex items-center justify-between p-2.5 rounded-xl bg-brand-sunriseCoral/10 hover:bg-brand-sunriseCoral/20 border border-brand-sunriseCoral/30 text-xs font-black text-brand-sunriseCoral transition-colors"
-              >
-                <div className="flex items-center gap-2">
-                  <Settings className="w-3.5 h-3.5 text-brand-sunriseCoral" />
-                  <span>Manage Page &amp; Roles</span>
-                </div>
-                <ChevronRight className="w-3.5 h-3.5 text-brand-sunriseCoral/70" />
-              </Link>
+              <div className="space-y-1.5 pt-1 border-t border-white/10">
+                <Link
+                  href={`/pages/${activePage.slug}/manage?tab=edit`}
+                  className="flex items-center justify-between p-2.5 rounded-xl bg-brand-sunriseCoral/15 hover:bg-brand-sunriseCoral/25 border border-brand-sunriseCoral/30 text-xs font-black text-brand-sunriseCoral transition-colors"
+                >
+                  <div className="flex items-center gap-2">
+                    <Edit3 className="w-3.5 h-3.5 text-brand-sunriseCoral" />
+                    <span>Edit Profile &amp; Banner</span>
+                  </div>
+                  <ChevronRight className="w-3.5 h-3.5 text-brand-sunriseCoral/70" />
+                </Link>
+                <Link
+                  href={`/pages/${activePage.slug}/manage`}
+                  className="flex items-center justify-between p-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-xs font-bold text-white transition-colors"
+                >
+                  <div className="flex items-center gap-2">
+                    <Settings className="w-3.5 h-3.5 text-brand-sandstone" />
+                    <span>Page Settings &amp; Roles</span>
+                  </div>
+                  <ChevronRight className="w-3.5 h-3.5 text-white/40" />
+                </Link>
+              </div>
             )}
           </nav>
         </section>

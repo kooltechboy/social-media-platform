@@ -9,10 +9,17 @@ export const dynamic = 'force-dynamic';
 
 export default async function PageManageRoute({
   params,
+  searchParams,
 }: {
   params: Promise<{ slug: string }>;
+  searchParams?: Promise<{ tab?: string }>;
 }) {
   const { slug } = await params;
+  const resolvedSearchParams = searchParams ? await searchParams : {};
+  const initialTab = resolvedSearchParams.tab === 'edit' || resolvedSearchParams.tab === 'roles' || resolvedSearchParams.tab === 'danger'
+    ? resolvedSearchParams.tab
+    : 'overview';
+
   const user = await getCurrentUser();
 
   if (!user) {
@@ -54,6 +61,7 @@ export default async function PageManageRoute({
       followerCount={pageData.followerCount}
       currentUserRole={pageData.currentUserRole || 'admin'}
       currentUser={user}
+      initialTab={initialTab}
     />
   );
 }

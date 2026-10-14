@@ -36,6 +36,11 @@ export interface UniversalPageSummary {
   countryIso: string | null;
   avatarUrl: string | null;
   coverImageUrl: string | null;
+  avatar_url?: string | null;
+  logo_url?: string | null;
+  cover_image_url?: string | null;
+  cover_url?: string | null;
+  banner_url?: string | null;
   createdAt: string;
   followerCount: number;
   postCount: number;
@@ -91,21 +96,30 @@ export async function fetchUniversalPagesAction(options?: {
       followerCountMap.set(f.page_id, (followerCountMap.get(f.page_id) || 0) + 1);
     }
 
-    return pages.map((p: any) => ({
-      id: p.id,
-      name: p.name,
-      slug: p.slug,
-      category: p.category || 'Universal Caribbean Page',
-      pageType: p.page_type || 'universal',
-      description: p.description,
-      isVerified: Boolean(p.is_verified),
-      countryIso: p.country_iso,
-      avatarUrl: p.avatar_url,
-      coverImageUrl: p.cover_image_url,
-      createdAt: p.created_at,
-      followerCount: followerCountMap.get(p.id) || 0,
-      postCount: 0,
-    }));
+    return pages.map((p: any) => {
+      const avatar = p.avatar_url || p.logo_url || null;
+      const cover = p.cover_image_url || p.cover_url || null;
+      return {
+        id: p.id,
+        name: p.name,
+        slug: p.slug,
+        category: p.category || 'Universal Caribbean Page',
+        pageType: p.page_type || 'universal',
+        description: p.description,
+        isVerified: Boolean(p.is_verified),
+        countryIso: p.country_iso,
+        avatarUrl: avatar,
+        avatar_url: avatar,
+        logo_url: avatar,
+        coverImageUrl: cover,
+        cover_image_url: cover,
+        cover_url: cover,
+        banner_url: cover,
+        createdAt: p.created_at,
+        followerCount: followerCountMap.get(p.id) || 0,
+        postCount: 0,
+      };
+    });
   } catch (err) {
     console.error('fetchUniversalPagesAction error:', err);
     return [];
@@ -141,6 +155,8 @@ export async function fetchMyPagesAction(): Promise<UniversalPageSummary[]> {
 
     if (ownedRows) {
       for (const p of ownedRows) {
+        const avatar = p.avatar_url || (p as any).logo_url || null;
+        const cover = p.cover_image_url || (p as any).cover_url || null;
         pageMap.set(p.id, {
           id: p.id,
           name: p.name,
@@ -150,8 +166,13 @@ export async function fetchMyPagesAction(): Promise<UniversalPageSummary[]> {
           description: p.description,
           isVerified: Boolean(p.is_verified),
           countryIso: p.country_iso,
-          avatarUrl: p.avatar_url,
-          coverImageUrl: p.cover_image_url,
+          avatarUrl: avatar,
+          avatar_url: avatar,
+          logo_url: avatar,
+          coverImageUrl: cover,
+          cover_image_url: cover,
+          cover_url: cover,
+          banner_url: cover,
           createdAt: p.created_at,
           followerCount: 0,
           postCount: 0,
@@ -166,6 +187,8 @@ export async function fetchMyPagesAction(): Promise<UniversalPageSummary[]> {
         const b = (r as any).businesses;
         if (!b) continue;
         const existing = pageMap.get(b.id);
+        const avatar = b.avatar_url || b.logo_url || null;
+        const cover = b.cover_image_url || b.cover_url || null;
         if (existing) {
           existing.userRole = r.role as PageRoleType;
         } else {
@@ -178,8 +201,13 @@ export async function fetchMyPagesAction(): Promise<UniversalPageSummary[]> {
             description: b.description,
             isVerified: Boolean(b.is_verified),
             countryIso: b.country_iso,
-            avatarUrl: b.avatar_url,
-            coverImageUrl: b.cover_image_url,
+            avatarUrl: avatar,
+            avatar_url: avatar,
+            logo_url: avatar,
+            coverImageUrl: cover,
+            cover_image_url: cover,
+            cover_url: cover,
+            banner_url: cover,
             createdAt: b.created_at,
             followerCount: 0,
             postCount: 0,
@@ -434,8 +462,19 @@ export async function fetchPageDetailsAction(slug: string): Promise<{
       createdAt: m.created_at,
     }));
 
+    const resolvedAvatar = business.avatar_url || (business as any).logo_url || null;
+    const resolvedCover = business.cover_image_url || (business as any).cover_url || null;
+    const harmonizedPage = {
+      ...business,
+      avatar_url: resolvedAvatar,
+      logo_url: resolvedAvatar,
+      cover_image_url: resolvedCover,
+      cover_url: resolvedCover,
+      banner_url: resolvedCover,
+    };
+
     return {
-      page: business,
+      page: harmonizedPage,
       products: productsRes.data || [],
       posts: postsRes.data || [],
       members,
@@ -599,6 +638,8 @@ export async function updatePageDetailsAction(
   const rawWebsite = String(formData.get('website') ?? '').trim();
 
   if (!name) return { error: 'Page name cannot be empty.' };
+  if (name.length > 100) return { error: 'Page name cannot exceed 100 characters.' };
+  if (description.length > 1000) return { error: 'Page description cannot exceed 1000 characters.' };
 
   let safeWebsite: string | null = null;
   if (rawWebsite) {
@@ -609,6 +650,8 @@ export async function updatePageDetailsAction(
       const parsed = new URL(normalized);
       if (parsed.protocol === 'http:' || parsed.protocol === 'https:') {
         safeWebsite = parsed.toString();
+      } else {
+        return { error: 'Please enter a valid website URL.' };
       }
     } catch {
       return { error: 'Please enter a valid website URL.' };
@@ -626,7 +669,9 @@ export async function updatePageDetailsAction(
       website: safeWebsite,
       contact_email: contactEmail || null,
       avatar_url: avatarUrl || null,
+      logo_url: avatarUrl || null,
       cover_image_url: coverImageUrl || null,
+      cover_url: coverImageUrl || null,
     })
     .eq('id', pageId);
 
@@ -635,7 +680,207 @@ export async function updatePageDetailsAction(
   revalidatePath('/pages');
   revalidatePath(`/pages/${pageOwner.slug}`);
   revalidatePath(`/pages/${pageOwner.slug}/manage`);
+  revalidatePath('/');
   return { error: null, slug: pageOwner.slug, success: true };
+}
+
+export interface PageImageUploadResult {
+  success: boolean;
+  error?: string | null;
+  message?: string;
+  url?: string;
+}
+
+// -----------------------------------------------------------------------------
+// 5B. Upload Page Profile Picture or Cover Banner to Supabase Storage
+// -----------------------------------------------------------------------------
+export async function uploadPageImageAction(
+  pageId: string,
+  formData: FormData,
+  imageType: 'avatar' | 'banner'
+): Promise<PageImageUploadResult> {
+  const user = await getCurrentUser();
+  if (!user) return { success: false, error: 'Sign in required to update page media.' };
+
+  const supabase = await createSupabaseServerClient();
+  if (!supabase) return { success: false, error: 'Database service unavailable.' };
+
+  // Authorization: must be owner or admin
+  const { data: page } = await supabase
+    .from('businesses')
+    .select('id, owner_id, slug, avatar_url, cover_image_url')
+    .eq('id', pageId)
+    .maybeSingle();
+
+  if (!page) return { success: false, error: 'Page not found.' };
+
+  const isOwner = page.owner_id === user.id;
+  let isAdmin = false;
+  if (!isOwner) {
+    const { data: roleRow } = await supabase
+      .from('page_roles')
+      .select('role')
+      .eq('page_id', pageId)
+      .eq('user_id', user.id)
+      .maybeSingle();
+    isAdmin = roleRow?.role === 'admin' || roleRow?.role === 'owner';
+  }
+
+  if (!isOwner && !isAdmin) {
+    return { success: false, error: 'Only Page Owners and Administrators can update page media.' };
+  }
+
+  const file = formData.get('file') as File | null;
+  if (!file || typeof file === 'string') {
+    return { success: false, error: `No ${imageType === 'avatar' ? 'profile picture' : 'banner'} file provided.` };
+  }
+
+  const allowedMimes = imageType === 'avatar'
+    ? ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
+    : ['image/jpeg', 'image/png', 'image/webp'];
+
+  if (!allowedMimes.includes(file.type.toLowerCase())) {
+    return {
+      success: false,
+      error: imageType === 'avatar'
+        ? 'Only JPG, PNG, WebP, or GIF images are allowed for avatars.'
+        : 'Only JPG, PNG, or WebP images are allowed for banners.',
+    };
+  }
+
+  const maxSize = imageType === 'avatar' ? 5 * 1024 * 1024 : 10 * 1024 * 1024;
+  if (file.size > maxSize) {
+    return {
+      success: false,
+      error: `${imageType === 'avatar' ? 'Avatar' : 'Banner'} file size exceeds ${imageType === 'avatar' ? '5MB' : '10MB'} limit.`,
+    };
+  }
+
+  const ext = file.name.split('.').pop()?.toLowerCase() || (imageType === 'avatar' ? 'png' : 'webp');
+  const filePath = `${pageId}/${imageType}-${Date.now()}.${ext}`;
+  const arrayBuffer = await file.arrayBuffer();
+  const buffer = Buffer.from(arrayBuffer);
+
+  let bucketName = 'page-media';
+  let uploadRes = await supabase.storage
+    .from(bucketName)
+    .upload(filePath, buffer, {
+      contentType: file.type,
+      upsert: true,
+    });
+
+  if (uploadRes.error && uploadRes.error.message.includes('Bucket not found')) {
+    bucketName = 'avatars';
+    const fallbackPath = `${user.id}/pages/${pageId}/${imageType}-${Date.now()}.${ext}`;
+    uploadRes = await supabase.storage
+      .from(bucketName)
+      .upload(fallbackPath, buffer, {
+        contentType: file.type,
+        upsert: true,
+      });
+  }
+
+  if (uploadRes.error) {
+    return { success: false, error: `Upload failed: ${uploadRes.error.message}` };
+  }
+
+  const actualPath = uploadRes.data?.path || filePath;
+  const { data: { publicUrl } } = supabase.storage.from(bucketName).getPublicUrl(actualPath);
+
+  const updatePayload: Record<string, string | null> = {};
+  if (imageType === 'avatar') {
+    updatePayload.avatar_url = publicUrl;
+    updatePayload.logo_url = publicUrl;
+  } else {
+    updatePayload.cover_image_url = publicUrl;
+    updatePayload.cover_url = publicUrl;
+  }
+
+  const { error: dbError } = await supabase
+    .from('businesses')
+    .update(updatePayload)
+    .eq('id', pageId);
+
+  if (dbError) {
+    return { success: false, error: `Failed to save image to database: ${dbError.message}` };
+  }
+
+  revalidatePath('/pages');
+  revalidatePath(`/pages/${page.slug}`);
+  revalidatePath(`/pages/${page.slug}/manage`);
+  revalidatePath('/');
+
+  return {
+    success: true,
+    message: `${imageType === 'avatar' ? 'Profile picture' : 'Cover banner'} updated successfully!`,
+    url: publicUrl,
+  };
+}
+
+// -----------------------------------------------------------------------------
+// 5C. Remove Page Profile Picture or Cover Banner
+// -----------------------------------------------------------------------------
+export async function removePageImageAction(
+  pageId: string,
+  imageType: 'avatar' | 'banner'
+): Promise<PageImageUploadResult> {
+  const user = await getCurrentUser();
+  if (!user) return { success: false, error: 'Sign in required to manage page media.' };
+
+  const supabase = await createSupabaseServerClient();
+  if (!supabase) return { success: false, error: 'Database service unavailable.' };
+
+  const { data: page } = await supabase
+    .from('businesses')
+    .select('id, owner_id, slug')
+    .eq('id', pageId)
+    .maybeSingle();
+
+  if (!page) return { success: false, error: 'Page not found.' };
+
+  const isOwner = page.owner_id === user.id;
+  let isAdmin = false;
+  if (!isOwner) {
+    const { data: roleRow } = await supabase
+      .from('page_roles')
+      .select('role')
+      .eq('page_id', pageId)
+      .eq('user_id', user.id)
+      .maybeSingle();
+    isAdmin = roleRow?.role === 'admin' || roleRow?.role === 'owner';
+  }
+
+  if (!isOwner && !isAdmin) {
+    return { success: false, error: 'Only Page Owners and Administrators can remove page images.' };
+  }
+
+  const updatePayload: Record<string, null> = {};
+  if (imageType === 'avatar') {
+    updatePayload.avatar_url = null;
+    updatePayload.logo_url = null;
+  } else {
+    updatePayload.cover_image_url = null;
+    updatePayload.cover_url = null;
+  }
+
+  const { error: dbError } = await supabase
+    .from('businesses')
+    .update(updatePayload)
+    .eq('id', pageId);
+
+  if (dbError) {
+    return { success: false, error: `Failed to remove image: ${dbError.message}` };
+  }
+
+  revalidatePath('/pages');
+  revalidatePath(`/pages/${page.slug}`);
+  revalidatePath(`/pages/${page.slug}/manage`);
+  revalidatePath('/');
+
+  return {
+    success: true,
+    message: `${imageType === 'avatar' ? 'Profile picture' : 'Cover banner'} removed successfully.`,
+  };
 }
 
 // -----------------------------------------------------------------------------

@@ -28,7 +28,9 @@ import {
   Clock,
   Send,
   UserMinus,
+  RotateCcw,
 } from 'lucide-react';
+import PageImageUploader from '../../../../components/pages/page-image-uploader';
 import {
   updatePageDetailsAction,
   togglePageDeactivationAction,
@@ -54,7 +56,9 @@ interface PageManagementClientProps {
     website?: string;
     contact_email?: string;
     avatar_url?: string;
+    logo_url?: string;
     cover_image_url?: string;
+    cover_url?: string;
     is_deactivated?: boolean;
     is_archived?: boolean;
     created_at: string;
@@ -67,6 +71,7 @@ interface PageManagementClientProps {
     id: string;
     displayName: string;
   };
+  initialTab?: string;
 }
 
 export default function PageManagementClient({
@@ -76,20 +81,75 @@ export default function PageManagementClient({
   followerCount,
   currentUserRole,
   currentUser,
+  initialTab,
 }: PageManagementClientProps) {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<'overview' | 'edit' | 'roles' | 'danger'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'edit' | 'roles' | 'danger'>(
+    initialTab === 'edit' || initialTab === 'roles' || initialTab === 'danger'
+      ? initialTab
+      : 'overview'
+  );
+
+  const initialAvatar = business.avatar_url || business.logo_url || '';
+  const initialCover = business.cover_image_url || business.cover_url || '';
+
+  const initialValues = React.useMemo(() => ({
+    name: business.name || '',
+    category: business.category || 'Creator',
+    description: business.description || '',
+    countryIso: business.country_iso || 'JM',
+    phone: business.phone || '',
+    website: business.website || '',
+    contactEmail: business.contact_email || '',
+    avatarUrl: initialAvatar,
+    coverImageUrl: initialCover,
+  }), [business, initialAvatar, initialCover]);
 
   // Edit form state
-  const [name, setName] = useState(business.name);
-  const [category, setCategory] = useState(business.category || 'Creator');
-  const [description, setDescription] = useState(business.description || '');
-  const [countryIso, setCountryIso] = useState(business.country_iso || 'JM');
-  const [phone, setPhone] = useState(business.phone || '');
-  const [website, setWebsite] = useState(business.website || '');
-  const [contactEmail, setContactEmail] = useState(business.contact_email || '');
-  const [avatarUrl, setAvatarUrl] = useState(business.avatar_url || '');
-  const [coverImageUrl, setCoverImageUrl] = useState(business.cover_image_url || '');
+  const [name, setName] = useState(initialValues.name);
+  const [category, setCategory] = useState(initialValues.category);
+  const [description, setDescription] = useState(initialValues.description);
+  const [countryIso, setCountryIso] = useState(initialValues.countryIso);
+  const [phone, setPhone] = useState(initialValues.phone);
+  const [website, setWebsite] = useState(initialValues.website);
+  const [contactEmail, setContactEmail] = useState(initialValues.contactEmail);
+  const [avatarUrl, setAvatarUrl] = useState(initialValues.avatarUrl);
+  const [coverImageUrl, setCoverImageUrl] = useState(initialValues.coverImageUrl);
+
+  // Dirty check
+  const isDirty = (
+    name !== initialValues.name ||
+    category !== initialValues.category ||
+    description !== initialValues.description ||
+    countryIso !== initialValues.countryIso ||
+    phone !== initialValues.phone ||
+    website !== initialValues.website ||
+    contactEmail !== initialValues.contactEmail
+  );
+
+  // Warn on navigation when unsaved changes exist
+  React.useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (isDirty) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [isDirty]);
+
+  // Reset form to saved values
+  const handleDiscardEdits = () => {
+    setName(initialValues.name);
+    setCategory(initialValues.category);
+    setDescription(initialValues.description);
+    setCountryIso(initialValues.countryIso);
+    setPhone(initialValues.phone);
+    setWebsite(initialValues.website);
+    setContactEmail(initialValues.contactEmail);
+    setStatusMessage(null);
+  };
 
   // Lifecycle & Status
   const [isDeactivated, setIsDeactivated] = useState(
@@ -133,6 +193,7 @@ export default function PageManagementClient({
           setStatusMessage({ type: 'error', text: res.error });
         } else {
           setStatusMessage({ type: 'success', text: 'Page information saved successfully!' });
+          router.refresh();
         }
       } catch (err: any) {
         setStatusMessage({ type: 'error', text: err?.message || 'Failed to update Page.' });
@@ -333,7 +394,10 @@ export default function PageManagementClient({
           }`}
         >
           <Edit3 className="w-3.5 h-3.5" />
-          <span>Edit Profile</span>
+          <span>Edit Profile &amp; Media</span>
+          {isDirty && (
+            <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" title="Unsaved changes" />
+          )}
         </button>
 
         <button
@@ -446,43 +510,117 @@ export default function PageManagementClient({
         </div>
       )}
 
-      {/* ── TAB 2: EDIT PROFILE ── */}
+      {/* ── TAB 2: EDIT PROFILE & BRANDING ── */}
       {activeTab === 'edit' && (
-        <form onSubmit={handleUpdatePage} className="surface-card rounded-3xl p-6 sm:p-8 border border-white/10 shadow-xl space-y-6">
-          <div className="flex items-center justify-between border-b border-white/10 pb-4">
+        <form onSubmit={handleUpdatePage} className="surface-card rounded-3xl p-6 sm:p-8 border border-white/10 shadow-xl space-y-8 animate-fadeIn">
+          {/* Header & Primary Actions */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/10 pb-5">
             <div>
-              <h2 className="text-lg font-black text-white">Edit Page Profile</h2>
-              <p className="text-xs text-brand-sandstone/60">Update public identity and contact channels.</p>
+              <div className="flex items-center gap-2">
+                <h2 className="text-lg sm:text-xl font-black text-white">Edit Page Profile &amp; Identity</h2>
+                {isDirty && (
+                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-amber-500/20 text-amber-400 border border-amber-500/30">
+                    Unsaved Edits
+                  </span>
+                )}
+              </div>
+              <p className="text-xs text-brand-sandstone/70">
+                Customize your Caribbean brand identity, cover banner, avatar photo, and contact channels.
+              </p>
             </div>
-            <button
-              type="submit"
-              disabled={isPending}
-              className="px-6 py-2.5 rounded-2xl bg-brand-sunriseCoral hover:brightness-110 disabled:opacity-50 text-slate-950 font-black text-xs flex items-center gap-1.5 transition-all shadow-md"
-            >
-              <Save className="w-4 h-4" />
-              <span>Save Changes</span>
-            </button>
+
+            <div className="flex items-center gap-2.5">
+              <button
+                type="button"
+                onClick={handleDiscardEdits}
+                disabled={!isDirty || isPending}
+                className="px-4 py-2.5 rounded-2xl bg-white/5 hover:bg-white/10 disabled:opacity-40 text-brand-sandstone hover:text-white font-bold text-xs flex items-center gap-1.5 transition-all min-h-[40px]"
+                aria-label="Discard unsaved edits"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                <span>Discard</span>
+              </button>
+
+              <button
+                type="submit"
+                disabled={isPending || (!isDirty && name.trim() === initialValues.name)}
+                className="px-6 py-2.5 rounded-2xl bg-brand-sunriseCoral hover:brightness-110 disabled:opacity-50 text-slate-950 font-black text-xs flex items-center gap-1.5 transition-all shadow-md min-h-[40px]"
+              >
+                {isPending ? (
+                  <RefreshCw className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Save className="w-4 h-4" />
+                )}
+                <span>{isPending ? 'Saving...' : 'Save Changes'}</span>
+              </button>
+            </div>
           </div>
 
-          <div className="space-y-4">
+          {/* 1. VISUAL BRANDING SECTION (Banner & Avatar) */}
+          <div className="space-y-6">
+            <h3 className="text-xs font-black uppercase tracking-wider text-brand-sunriseCoral flex items-center gap-2">
+              <Camera className="w-4 h-4" />
+              <span>Visual Branding &amp; Media</span>
+            </h3>
+
+            {/* Cover Banner Uploader */}
+            <div className="p-4 sm:p-6 rounded-3xl bg-white/5 border border-white/5 space-y-4">
+              <PageImageUploader
+                pageId={business.id}
+                imageType="banner"
+                currentUrl={coverImageUrl}
+                onUrlChange={(url) => setCoverImageUrl(url || '')}
+                disabled={isPending}
+              />
+            </div>
+
+            {/* Profile Avatar Uploader */}
+            <div className="p-4 sm:p-6 rounded-3xl bg-white/5 border border-white/5 space-y-4">
+              <PageImageUploader
+                pageId={business.id}
+                imageType="avatar"
+                currentUrl={avatarUrl}
+                onUrlChange={(url) => setAvatarUrl(url || '')}
+                disabled={isPending}
+              />
+            </div>
+          </div>
+
+          {/* 2. GENERAL PAGE INFORMATION */}
+          <div className="space-y-6 pt-4 border-t border-white/10">
+            <h3 className="text-xs font-black uppercase tracking-wider text-brand-sunriseCoral flex items-center gap-2">
+              <Building2 className="w-4 h-4" />
+              <span>Page Information &amp; Classification</span>
+            </h3>
+
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-black text-white uppercase tracking-wider mb-1.5">
-                  Page Name *
-                </label>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label htmlFor="page-edit-name" className="text-xs font-black text-white uppercase tracking-wider">
+                    Page Name *
+                  </label>
+                  <span className="text-[10px] text-brand-sandstone/50 font-mono">
+                    {name.length}/100
+                  </span>
+                </div>
                 <input
+                  id="page-edit-name"
                   type="text"
                   required
+                  maxLength={100}
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="w-full px-4 py-2.5 rounded-2xl bg-white/5 border border-white/10 text-white text-xs focus:outline-none focus:border-brand-sunriseCoral"
+                  className="w-full px-4 py-2.5 rounded-2xl bg-white/5 border border-white/10 text-white text-xs focus:outline-none focus:border-brand-sunriseCoral transition-colors"
+                  placeholder="Official name of your page..."
                 />
               </div>
+
               <div>
-                <label className="block text-xs font-black text-white uppercase tracking-wider mb-1.5">
+                <label htmlFor="page-edit-category" className="block text-xs font-black text-white uppercase tracking-wider mb-1.5">
                   Category
                 </label>
                 <select
+                  id="page-edit-category"
                   value={category}
                   onChange={(e) => setCategory(e.target.value)}
                   className="w-full px-4 py-2.5 rounded-2xl bg-brand-dusk border border-white/10 text-white text-xs font-bold focus:outline-none focus:border-brand-sunriseCoral"
@@ -497,23 +635,48 @@ export default function PageManagementClient({
             </div>
 
             <div>
-              <label className="block text-xs font-black text-white uppercase tracking-wider mb-1.5">
-                Description / Bio
-              </label>
+              <div className="flex items-center justify-between mb-1.5">
+                <label htmlFor="page-edit-description" className="text-xs font-black text-white uppercase tracking-wider">
+                  Description / Mission / Bio
+                </label>
+                <span className="text-[10px] text-brand-sandstone/50 font-mono">
+                  {description.length}/1000
+                </span>
+              </div>
               <textarea
+                id="page-edit-description"
                 rows={3}
+                maxLength={1000}
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                className="w-full p-4 rounded-2xl bg-white/5 border border-white/10 text-white text-xs focus:outline-none focus:border-brand-sunriseCoral resize-none"
+                placeholder="Describe your page, mission, cultural offerings, or services..."
+                className="w-full p-4 rounded-2xl bg-white/5 border border-white/10 text-white text-xs focus:outline-none focus:border-brand-sunriseCoral resize-none transition-colors"
               />
             </div>
 
+            {/* Permanent Page Handle Info */}
+            <div className="p-3.5 rounded-2xl bg-white/5 border border-white/5 flex items-center justify-between gap-3 text-xs">
+              <span className="text-brand-sandstone/70">Public Page Handle &amp; URL:</span>
+              <code className="px-2.5 py-1 rounded-xl bg-slate-950 font-mono text-[11px] text-brand-caribbeanSea font-bold border border-white/5">
+                tukubi.com/pages/{business.slug}
+              </code>
+            </div>
+          </div>
+
+          {/* 3. CONTACT & LOCATION CHANNELS */}
+          <div className="space-y-6 pt-4 border-t border-white/10">
+            <h3 className="text-xs font-black uppercase tracking-wider text-brand-sunriseCoral flex items-center gap-2">
+              <Globe className="w-4 h-4" />
+              <span>Contact &amp; Territory Channels</span>
+            </h3>
+
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
-                <label className="block text-xs font-black text-white uppercase tracking-wider mb-1.5">
+                <label htmlFor="page-edit-territory" className="block text-xs font-black text-white uppercase tracking-wider mb-1.5">
                   Territory ISO
                 </label>
                 <select
+                  id="page-edit-territory"
                   value={countryIso}
                   onChange={(e) => setCountryIso(e.target.value)}
                   className="w-full px-4 py-2.5 rounded-2xl bg-brand-dusk border border-white/10 text-white text-xs font-bold focus:outline-none focus:border-brand-sunriseCoral"
@@ -525,65 +688,84 @@ export default function PageManagementClient({
                   ))}
                 </select>
               </div>
+
               <div>
-                <label className="block text-xs font-black text-white uppercase tracking-wider mb-1.5">
-                  Phone
+                <label htmlFor="page-edit-phone" className="block text-xs font-black text-white uppercase tracking-wider mb-1.5">
+                  Phone (Optional)
                 </label>
                 <input
+                  id="page-edit-phone"
                   type="tel"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
-                  className="w-full px-4 py-2.5 rounded-2xl bg-white/5 border border-white/10 text-white text-xs focus:outline-none focus:border-brand-sunriseCoral"
+                  placeholder="+1 (876) 555-0199"
+                  className="w-full px-4 py-2.5 rounded-2xl bg-white/5 border border-white/10 text-white text-xs focus:outline-none focus:border-brand-sunriseCoral transition-colors"
                 />
               </div>
+
               <div>
-                <label className="block text-xs font-black text-white uppercase tracking-wider mb-1.5">
-                  Contact Email
+                <label htmlFor="page-edit-email" className="block text-xs font-black text-white uppercase tracking-wider mb-1.5">
+                  Contact Email (Optional)
                 </label>
                 <input
+                  id="page-edit-email"
                   type="email"
                   value={contactEmail}
                   onChange={(e) => setContactEmail(e.target.value)}
-                  className="w-full px-4 py-2.5 rounded-2xl bg-white/5 border border-white/10 text-white text-xs focus:outline-none focus:border-brand-sunriseCoral"
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-xs font-black text-white uppercase tracking-wider mb-1.5">
-                  Website URL
-                </label>
-                <input
-                  type="url"
-                  value={website}
-                  onChange={(e) => setWebsite(e.target.value)}
-                  className="w-full px-4 py-2.5 rounded-2xl bg-white/5 border border-white/10 text-white text-xs focus:outline-none focus:border-brand-sunriseCoral"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-black text-white uppercase tracking-wider mb-1.5">
-                  Avatar URL
-                </label>
-                <input
-                  type="url"
-                  value={avatarUrl}
-                  onChange={(e) => setAvatarUrl(e.target.value)}
-                  className="w-full px-4 py-2.5 rounded-2xl bg-white/5 border border-white/10 text-white text-xs focus:outline-none focus:border-brand-sunriseCoral"
+                  placeholder="contact@example.com"
+                  className="w-full px-4 py-2.5 rounded-2xl bg-white/5 border border-white/10 text-white text-xs focus:outline-none focus:border-brand-sunriseCoral transition-colors"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-black text-white uppercase tracking-wider mb-1.5">
-                Cover Banner URL
+              <label htmlFor="page-edit-website" className="block text-xs font-black text-white uppercase tracking-wider mb-1.5">
+                Official Website URL
               </label>
               <input
+                id="page-edit-website"
                 type="url"
-                value={coverImageUrl}
-                onChange={(e) => setCoverImageUrl(e.target.value)}
-                className="w-full px-4 py-2.5 rounded-2xl bg-white/5 border border-white/10 text-white text-xs focus:outline-none focus:border-brand-sunriseCoral"
+                value={website}
+                onChange={(e) => setWebsite(e.target.value)}
+                placeholder="https://yourpage.com"
+                className="w-full px-4 py-2.5 rounded-2xl bg-white/5 border border-white/10 text-white text-xs focus:outline-none focus:border-brand-sunriseCoral transition-colors"
               />
+            </div>
+          </div>
+
+          {/* Bottom Save Bar */}
+          <div className="pt-5 border-t border-white/10 flex items-center justify-between gap-4">
+            <div className="text-[11px] text-brand-sandstone/60">
+              {isDirty ? (
+                <span className="text-amber-400 font-bold">You have unsaved changes. Remember to click Save Changes.</span>
+              ) : (
+                <span>All page information is up to date.</span>
+              )}
+            </div>
+
+            <div className="flex items-center gap-2.5">
+              <button
+                type="button"
+                onClick={handleDiscardEdits}
+                disabled={!isDirty || isPending}
+                className="px-4 py-2.5 rounded-2xl bg-white/5 hover:bg-white/10 disabled:opacity-40 text-brand-sandstone hover:text-white font-bold text-xs flex items-center gap-1.5 transition-all"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                <span>Discard</span>
+              </button>
+
+              <button
+                type="submit"
+                disabled={isPending || (!isDirty && name.trim() === initialValues.name)}
+                className="px-6 py-2.5 rounded-2xl bg-brand-sunriseCoral hover:brightness-110 disabled:opacity-50 text-slate-950 font-black text-xs flex items-center gap-1.5 transition-all shadow-md"
+              >
+                {isPending ? (
+                  <RefreshCw className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Save className="w-4 h-4" />
+                )}
+                <span>{isPending ? 'Saving Changes...' : 'Save Changes'}</span>
+              </button>
             </div>
           </div>
         </form>

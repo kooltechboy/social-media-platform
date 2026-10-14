@@ -24,6 +24,8 @@ import {
   Play,
   Rss,
   Video,
+  Edit3,
+  Camera,
 } from 'lucide-react';
 import VerificationBadge from '../../../components/verification-badge';
 import PageFollowButton from '../../../components/page-follow-button';
@@ -126,29 +128,53 @@ export default async function UniversalPageView({
         {/* ── Page Profile Header ── */}
         <div className="surface-card rounded-3xl overflow-hidden border border-white/10 shadow-2xl">
           {/* Banner */}
-          <div className="h-44 sm:h-56 w-full bg-gradient-to-r from-purple-900 via-indigo-950 to-slate-900 relative">
-            {page.cover_url && (
+          <div className="h-44 sm:h-56 w-full bg-gradient-to-r from-purple-900 via-indigo-950 to-slate-900 relative group">
+            {(page.cover_url || page.cover_image_url) && (
               <img
-                src={page.cover_url}
+                src={page.cover_url || page.cover_image_url}
                 alt={page.name}
-                className="w-full h-full object-cover opacity-80"
+                className="w-full h-full object-cover opacity-90"
               />
             )}
-            <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent pointer-events-none" />
+
+            {/* Direct Edit Banner Button for Managers */}
+            {canManage && (
+              <Link
+                href={`/pages/${page.slug}/manage?tab=edit`}
+                className="absolute top-4 right-4 px-3.5 py-1.5 rounded-xl bg-slate-950/70 hover:bg-slate-950 text-white font-bold text-xs flex items-center gap-1.5 backdrop-blur-md border border-white/20 transition-all opacity-90 hover:opacity-100 shadow-lg"
+                title="Change Cover Banner"
+              >
+                <Camera className="w-3.5 h-3.5 text-brand-sunriseCoral" />
+                <span>Edit Banner</span>
+              </Link>
+            )}
           </div>
 
           <div className="px-6 sm:px-8 pb-6 sm:pb-8 pt-0 relative space-y-4">
             {/* Avatar & Top Row */}
             <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 -mt-16 sm:-mt-20">
-              <div className="w-28 h-28 sm:w-32 sm:h-32 rounded-3xl bg-slate-900 border-4 border-slate-950 flex items-center justify-center text-4xl shadow-2xl overflow-hidden shrink-0">
-                {page.logo_url ? (
-                  <img src={page.logo_url} alt={page.name} className="w-full h-full object-cover" />
+              <div className="w-28 h-28 sm:w-32 sm:h-32 rounded-3xl bg-slate-900 border-4 border-slate-950 flex items-center justify-center text-4xl shadow-2xl overflow-hidden shrink-0 relative group">
+                {(page.logo_url || page.avatar_url) ? (
+                  <img src={page.logo_url || page.avatar_url} alt={page.name} className="w-full h-full object-cover" />
                 ) : (
                   <span>🌴</span>
                 )}
+
+                {/* Direct Edit Avatar Overlay for Managers */}
+                {canManage && (
+                  <Link
+                    href={`/pages/${page.slug}/manage?tab=edit`}
+                    className="absolute inset-0 bg-slate-950/70 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center text-white text-[10px] font-black uppercase tracking-wider gap-1"
+                    title="Change Profile Picture"
+                  >
+                    <Camera className="w-5 h-5 text-brand-sunriseCoral" />
+                    <span>Change</span>
+                  </Link>
+                )}
               </div>
 
-              <div className="flex items-center gap-2.5 self-start sm:self-auto">
+              <div className="flex items-center gap-2.5 self-start sm:self-auto flex-wrap">
                 <PageFollowButton
                   pageId={page.id}
                   initialIsFollowing={isFollowing}
@@ -156,13 +182,23 @@ export default async function UniversalPageView({
                 />
 
                 {canManage && (
-                  <Link
-                    href={`/pages/${page.slug}/manage`}
-                    className="p-2.5 rounded-2xl bg-white/10 hover:bg-white/15 text-white text-xs font-bold transition-all flex items-center gap-1.5 border border-white/15"
-                  >
-                    <Settings className="w-4 h-4" />
-                    <span>Manage</span>
-                  </Link>
+                  <div className="flex items-center gap-2">
+                    <Link
+                      href={`/pages/${page.slug}/manage?tab=edit`}
+                      className="px-4 py-2.5 rounded-2xl bg-brand-sunriseCoral hover:brightness-110 text-slate-950 text-xs font-black transition-all flex items-center gap-1.5 shadow-md min-h-[40px]"
+                    >
+                      <Edit3 className="w-3.5 h-3.5 text-slate-950" />
+                      <span>Edit Page</span>
+                    </Link>
+                    <Link
+                      href={`/pages/${page.slug}/manage`}
+                      className="px-3.5 py-2.5 rounded-2xl bg-white/10 hover:bg-white/15 text-white text-xs font-bold transition-all flex items-center gap-1.5 border border-white/10 min-h-[40px]"
+                      title="Manage Page Settings & Roles"
+                    >
+                      <Settings className="w-4 h-4 text-brand-sandstone" />
+                      <span className="hidden sm:inline">Settings</span>
+                    </Link>
+                  </div>
                 )}
               </div>
             </div>
