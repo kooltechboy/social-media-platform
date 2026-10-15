@@ -7,6 +7,13 @@ import { encodeCursor } from '@caribbean/database';
 import { buildRankedFeed } from './ranking';
 import { hydratePostsEngagement } from './hydrate-posts';
 import { type FeedPostData } from '../../components/feed-stream';
+import {
+  rankAndSelectAds,
+  formatSponsoredFeedItem,
+  injectSponsoredIntoFeed,
+  type AdCandidate,
+  type ViewerContext,
+} from '@caribbean/advertising';
 
 function relativeTime(iso: string): string {
   const diffMs = Date.now() - new Date(iso).getTime();
@@ -97,6 +104,84 @@ export async function loadFeedPageData(rawMode?: string, cursor?: string) {
     posts = await hydratePostsEngagement(rawData, supabase, {
       currentUserId: user.id,
     });
+
+    // Query active, approved, and funded ads for feed delivery
+    try {
+      const { data: rawAds } = await supabase
+        .from('ads')
+        .select(`
+          id,
+          headline,
+          body,
+          media_path,
+          destination_url,
+          cta_text,
+          is_approved,
+          ad_sets!inner (
+            id,
+            placement,
+            country_iso,
+            bid_cpm_minor,
+            campaigns!inner (
+              id,
+              advertiser_id,
+              status,
+              budget_daily_minor,
+              funded_amount_minor,
+              spent_amount_minor,
+              advertisers!inner (
+                id,
+                name
+              )
+            )
+          )
+        `)
+        .eq('is_approved', true)
+        .eq('ad_sets.placement', 'feed')
+        .eq('ad_sets.campaigns.status', 'active');
+
+      if (rawAds && rawAds.length > 0) {
+        const candidates: AdCandidate[] = rawAds.map((a: any) => {
+          const adSet = Array.isArray(a.ad_sets) ? a.ad_sets[0] : a.ad_sets;
+          const campaign = Array.isArray(adSet?.campaigns) ? adSet.campaigns[0] : adSet?.campaigns;
+          const advertiser = Array.isArray(campaign?.advertisers) ? campaign.advertisers[0] : campaign?.advertisers;
+          return {
+            id: a.id,
+            adSetId: adSet?.id || '',
+            campaignId: campaign?.id || '',
+            advertiserId: advertiser?.id || '',
+            advertiserName: advertiser?.name || 'TUKUBI Partner',
+            headline: a.headline,
+            body: a.body,
+            mediaPath: a.media_path,
+            destinationUrl: a.destination_url,
+            ctaText: a.cta_text,
+            isApproved: Boolean(a.is_approved),
+            campaignStatus: campaign?.status || 'draft',
+            placement: 'feed',
+            targetCountries: adSet?.country_iso ? [adSet.country_iso] : undefined,
+            bidCpmMinor: Number(adSet?.bid_cpm_minor) || 800,
+            budgetDailyMinor: Number(campaign?.budget_daily_minor) || 1000,
+            spentTodayMinor: 0,
+            fundedAmountMinor: Number(campaign?.funded_amount_minor) || 0,
+            totalSpentMinor: Number(campaign?.spent_amount_minor) || 0,
+          };
+        });
+
+        const viewerContext: ViewerContext = {
+          userId: user.id,
+          placement: 'feed',
+        };
+
+        const winners = rankAndSelectAds(candidates, viewerContext, 1);
+        if (winners.length > 0) {
+          const sponsoredPost = formatSponsoredFeedItem(winners[0]);
+          posts = injectSponsoredIntoFeed(posts, sponsoredPost as any, 4);
+        }
+      }
+    } catch (adErr) {
+      // Non-blocking ad delivery failure
+    }
   }
 
   return {

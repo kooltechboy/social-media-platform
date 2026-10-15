@@ -1,13 +1,15 @@
 'use client';
-import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { Check, Target, Users, Layout, Image as ImageIcon, DollarSign, Sparkles, Loader2, Megaphone, CheckCircle, Play, MessageCircle, ShoppingCart, Search } from 'lucide-react';
+import React, { useState, Suspense, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { Check, Target, Users, Layout, Image as ImageIcon, DollarSign, Sparkles, Loader2, Megaphone, CheckCircle, Play, MessageCircle, ShoppingCart, Search, Lock, ShieldCheck } from 'lucide-react';
 import { 
   createCampaignAction, 
   createAdSetAction, 
   createAdAction, 
-  generateAIAdCopyAction 
+  generateAIAdCopyAction,
+  initiateCampaignCheckoutAction,
 } from '../../../lib/advertising/actions';
+import { estimateCampaignReach } from '@caribbean/advertising';
 
 const OBJECTIVES = [
   { id: 'awareness', icon: Megaphone, name: 'Awareness', desc: 'Reach more Caribbean people' },
@@ -40,9 +42,10 @@ const PLACEMENTS = [
   { id: 'communities', name: 'Communities', icon: Users },
 ];
 
-
-export default function NewCampaignPage() {
+function NewCampaignForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const postId = searchParams?.get('postId');
   const [step, setStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -96,20 +99,36 @@ export default function NewCampaignPage() {
     setIsGenerating(false);
   };
 
+  useEffect(() => {
+    if (postId) {
+      setCampaignName(`Promote Post #${postId.slice(0, 8)}`);
+      setObjective('engagement');
+    }
+  }, [postId]);
+
   const handleSubmit = async () => {
     if (!agreed) return;
     setIsSubmitting(true);
     setError(null);
+
+    const budgetParsed = Math.max(10, parseFloat(amount) || 10);
+    const budgetTotalMinor = budgetType === 'total' 
+      ? Math.round(budgetParsed * 100) 
+      : Math.round(budgetParsed * 100 * 30);
+    const budgetDailyMinor = budgetType === 'daily' 
+      ? Math.round(budgetParsed * 100) 
+      : Math.round(budgetTotalMinor / 30);
     
     // Create Campaign
     const campRes = await createCampaignAction({
       name: campaignName,
       objective: 'awareness',
       objective_v2: objective,
-      budgetTotalMinor: budgetType === 'total' ? parseFloat(amount) * 100 : parseFloat(amount) * 100 * 30, // Rough if daily
-      budgetDailyMinor: budgetType === 'daily' ? parseFloat(amount) * 100 : undefined,
+      budgetTotalMinor,
+      budgetDailyMinor,
       currency: 'USD',
       startsAt: new Date(startDate).toISOString(),
+      sourcePostId: postId || undefined,
     });
 
     if (campRes.error || !campRes.campaignId) {
@@ -136,8 +155,8 @@ export default function NewCampaignPage() {
     // Create Ad
     const adRes = await createAdAction({
       adSetId: adSetRes.adSetId,
-      headline,
-      body: primaryText,
+      headline: headline || campaignName,
+      body: primaryText || headline || campaignName,
       media_path: mediaPath,
       creative_type: creativeType,
     });
@@ -148,7 +167,18 @@ export default function NewCampaignPage() {
       return;
     }
 
-    router.push('/ads');
+    // Initiate PayPal prepaid checkout
+    try {
+      const checkoutRes = await initiateCampaignCheckoutAction(campRes.campaignId);
+      if (checkoutRes.success && checkoutRes.approvalUrl) {
+        window.location.href = checkoutRes.approvalUrl;
+        return;
+      }
+    } catch {
+      // Fallback to ads dashboard if checkout couldn't be redirected immediately
+    }
+
+    router.push(`/ads?created=${campRes.campaignId}`);
     router.refresh();
   };
 
@@ -448,17 +478,21 @@ export default function NewCampaignPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-bold text-slate-300 mb-2">Amount (USD)</label>
+                <label className="block text-sm font-bold text-slate-300 mb-2">Budget Amount (USD, minimum $10.00)</label>
                 <div className="relative">
                   <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
                   <input
                     type="number"
                     min="10"
+                    step="5"
                     value={amount}
                     onChange={e => setAmount(e.target.value)}
                     className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-12 pr-4 py-3 text-white font-black text-xl focus:outline-none focus:border-brand-sunriseCoral"
                   />
                 </div>
+                {parseFloat(amount) < 10 && (
+                  <p className="text-xs text-rose-400 mt-1 font-bold">Minimum campaign budget is $10.00</p>
+                )}
               </div>
 
               <div className="grid grid-cols-2 gap-4">
@@ -482,17 +516,30 @@ export default function NewCampaignPage() {
                 </div>
               </div>
 
-              <div className="p-5 rounded-2xl bg-slate-950 border border-slate-800 text-center">
-                <div className="text-slate-400 text-sm font-bold mb-1">Estimated Daily Reach</div>
-                <div className="text-2xl font-black text-emerald-400">500 – 2,000 people</div>
-                <div className="text-xs text-slate-500 mt-2">Estimate based on your budget and targeting.</div>
-              </div>
+              {(() => {
+                const parsed = Math.max(10, parseFloat(amount) || 10);
+                const reach = estimateCampaignReach(parsed * 100);
+                return (
+                  <div className="p-5 rounded-2xl bg-slate-950 border border-slate-800 text-center space-y-1">
+                    <div className="text-slate-400 text-sm font-bold">Estimated Delivery & Impressions</div>
+                    <div className="text-2xl font-black text-emerald-400">
+                      ~{reach.estimatedImpressions.toLocaleString()} impressions
+                    </div>
+                    <div className="text-sm font-semibold text-brand-caribbeanSea">
+                      {reach.minReach.toLocaleString()} – {reach.maxReach.toLocaleString()} unique Caribbean viewers
+                    </div>
+                    <div className="text-xs text-slate-500 pt-2">
+                      Transparent $6.00 baseline CPM. Unspent funds remain in your escrow balance and can be refunded anytime.
+                    </div>
+                  </div>
+                );
+              })()}
             </div>
           )}
 
           {step === 6 && (
             <div className="space-y-8 animate-fadeIn">
-              <h2 className="text-2xl font-black text-white">Review & Publish</h2>
+              <h2 className="text-2xl font-black text-white">Review & Fund Campaign</h2>
               
               {error && (
                 <div className="p-4 bg-red-900/20 border border-red-900 text-red-400 rounded-xl text-sm font-bold">
@@ -511,8 +558,8 @@ export default function NewCampaignPage() {
                 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <div className="text-slate-500 text-xs font-bold uppercase tracking-wider mb-1">Budget</div>
-                    <div className="text-white font-bold">${amount} / {budgetType}</div>
+                    <div className="text-slate-500 text-xs font-bold uppercase tracking-wider mb-1">Prepaid Budget</div>
+                    <div className="text-white font-bold text-lg">${amount} USD</div>
                   </div>
                   <div>
                     <div className="text-slate-500 text-xs font-bold uppercase tracking-wider mb-1">Schedule</div>
@@ -525,15 +572,22 @@ export default function NewCampaignPage() {
                 <div>
                   <div className="text-slate-500 text-xs font-bold uppercase tracking-wider mb-1">Ad Preview</div>
                   <div className="mt-3 border border-slate-800 rounded-xl p-4 bg-slate-900 max-w-sm">
-                    <div className="text-sm text-white mb-2">{primaryText || 'Your ad text will appear here'}</div>
+                    <div className="text-sm text-white mb-2">{primaryText || headline || campaignName}</div>
                     <div className="h-40 bg-slate-800 rounded-lg flex items-center justify-center text-slate-500 mb-3">
                       <ImageIcon className="w-8 h-8 opacity-50" />
                     </div>
                     <div className="flex justify-between items-center bg-slate-950 p-2 rounded-lg">
-                      <div className="text-sm font-bold text-white truncate pr-2">{headline || 'Ad Headline'}</div>
+                      <div className="text-sm font-bold text-white truncate pr-2">{headline || campaignName}</div>
                       <button className="bg-slate-800 text-white text-xs px-3 py-1.5 rounded-md font-bold shrink-0">{cta}</button>
                     </div>
                   </div>
+                </div>
+              </div>
+
+              <div className="bg-amber-500/10 border border-amber-500/30 rounded-2xl p-4 flex items-start gap-3">
+                <ShieldCheck className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
+                <div className="text-xs text-amber-200/90 leading-relaxed">
+                  <span className="font-bold text-amber-400">Prepaid Escrow & Verification:</span> You will authorize prepaid funding via PayPal. Your funds are secured in your advertiser ledger escrow account and only debited when viewable impressions are recorded in user feeds. All campaigns undergo platform trust & safety review before ad serving begins.
                 </div>
               </div>
 
@@ -548,7 +602,7 @@ export default function NewCampaignPage() {
                 </div>
                 <div className="text-sm text-slate-400 group-hover:text-slate-300">
                   I agree to the <span className="text-brand-sunriseCoral font-bold">TUKUBI Advertising Policies</span>. 
-                  I understand that I am responsible for the content of my ads and that they must comply with local laws and platform guidelines.
+                  I understand that I am responsible for the content of my ads and that they must comply with local laws and platform safety rules.
                 </div>
               </label>
             </div>
@@ -580,18 +634,30 @@ export default function NewCampaignPage() {
           ) : (
             <button
               onClick={handleSubmit}
-              disabled={!agreed || isSubmitting}
+              disabled={!agreed || isSubmitting || parseFloat(amount) < 10}
               className="bg-gradient-to-r from-brand-sunriseCoral to-brand-goldenHour text-white px-8 py-3 rounded-xl font-black shadow-lg shadow-brand-sunriseCoral/20 transition-all hover:scale-105 disabled:opacity-50 disabled:hover:scale-100 flex items-center gap-2"
             >
               {isSubmitting ? (
-                <><Loader2 className="w-5 h-5 animate-spin" /> Publishing...</>
+                <><Loader2 className="w-5 h-5 animate-spin" /> Authorizing PayPal...</>
               ) : (
-                <><CheckCircle className="w-5 h-5" /> Launch Campaign</>
+                <><Lock className="w-4 h-4" /> Pay ${amount} with PayPal & Launch</>
               )}
             </button>
           )}
         </div>
       </div>
     </div>
+  );
+}
+
+export default function NewCampaignPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-brand-twilight flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-brand-sunriseCoral" />
+      </div>
+    }>
+      <NewCampaignForm />
+    </Suspense>
   );
 }

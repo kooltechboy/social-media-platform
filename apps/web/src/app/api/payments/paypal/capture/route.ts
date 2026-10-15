@@ -41,6 +41,8 @@ export async function POST(request: NextRequest) {
       txType = 'CREATOR_TIP';
     } else if (intent.product_type === 'physical_goods' || intent.product_type === 'store_product') {
       txType = 'MARKETPLACE_PURCHASE';
+    } else if (intent.product_type === 'business_ad' || intent.reference_type === 'ad_campaign') {
+      txType = 'AD_PAYMENT';
     }
 
     // 4. Record & Settle in Immutable Transaction Ledger
@@ -67,7 +69,7 @@ export async function POST(request: NextRequest) {
 
     await ledgerService.settleTransaction(supabase, tx.id, {
       providerTransactionId: captureResult.id || token,
-      sellerCategory: intent.creator_id ? 'creator' : (intent.merchant_id ? 'merchant' : 'user'),
+      sellerCategory: intent.creator_id ? 'creator' : (intent.merchant_id ? 'merchant' : (intent.product_type === 'business_ad' ? 'business' : 'user')),
       productType: intent.product_type,
     });
 
@@ -80,12 +82,30 @@ export async function POST(request: NextRequest) {
       })
       .eq('id', intent.id);
 
-    // 6. Fulfill Order or Subscription
+    // 6. Fulfill Order, Subscription, or Ad Campaign
     if (intent.reference_type === 'order' && intent.reference_id) {
       await supabase
         .from('orders')
         .update({ status: 'paid' })
         .eq('id', intent.reference_id);
+    } else if (intent.reference_type === 'ad_campaign' && intent.reference_id) {
+      // Fulfill Ad Campaign Prepaid Funding
+      const { data: campaign } = await supabase
+        .from('campaigns')
+        .select('id, moderation_status, budget_total_minor')
+        .eq('id', intent.reference_id)
+        .maybeSingle();
+
+      if (campaign) {
+        const isApproved = campaign.moderation_status === 'approved';
+        await supabase
+          .from('campaigns')
+          .update({
+            funded_amount_minor: intent.amount_minor,
+            status: isApproved ? 'active' : 'draft',
+          })
+          .eq('id', campaign.id);
+      }
     } else if (intent.reference_type === 'subscription' && intent.reference_id) {
       const now = new Date();
       const periodEnd = new Date(now.getTime() + 30 * 86400000).toISOString();

@@ -135,7 +135,7 @@ export async function POST(
                 idempotencyKey: `wh_${captureId}`,
                 transactionType: intent.product_type === 'digital_subscription'
                   ? (intent.creator_id ? 'CREATOR_SUBSCRIPTION' : 'TUKUBI_SUBSCRIPTION')
-                  : 'MARKETPLACE_PURCHASE',
+                  : (intent.product_type === 'business_ad' || intent.reference_type === 'ad_campaign' ? 'AD_PAYMENT' : 'MARKETPLACE_PURCHASE'),
                 payerId: intent.payer_id,
                 recipientId: intent.merchant_id || intent.creator_id,
                 creatorId: intent.creator_id,
@@ -151,11 +151,28 @@ export async function POST(
 
               await ledgerService.settleTransaction(supabase, tx.id, {
                 providerTransactionId: captureId,
-                sellerCategory: intent.creator_id ? 'creator' : 'merchant',
+                sellerCategory: intent.creator_id ? 'creator' : (intent.merchant_id ? 'merchant' : (intent.product_type === 'business_ad' ? 'business' : 'user')),
               });
 
               if (intent.reference_type === 'order' && intent.reference_id) {
                 await supabase.from('orders').update({ status: 'paid' }).eq('id', intent.reference_id);
+              } else if (intent.reference_type === 'ad_campaign' && intent.reference_id) {
+                const { data: campaign } = await supabase
+                  .from('campaigns')
+                  .select('id, moderation_status')
+                  .eq('id', intent.reference_id)
+                  .maybeSingle();
+
+                if (campaign) {
+                  const isApproved = campaign.moderation_status === 'approved';
+                  await supabase
+                    .from('campaigns')
+                    .update({
+                      funded_amount_minor: amountMinor || intent.amount_minor,
+                      status: isApproved ? 'active' : 'draft',
+                    })
+                    .eq('id', campaign.id);
+                }
               }
             }
           }

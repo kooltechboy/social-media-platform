@@ -22,6 +22,8 @@ export interface AdCandidate {
   bidCpmMinor: number;
   budgetDailyMinor: number;
   spentTodayMinor: number;
+  fundedAmountMinor?: number;
+  totalSpentMinor?: number;
 }
 
 export interface ViewerContext {
@@ -40,6 +42,7 @@ export interface SponsoredFeedItem {
   author: string;
   handle: string;
   avatarUrl: string | null;
+  time: string;
   headline: string;
   content: string;
   mediaUrls: string[];
@@ -47,6 +50,9 @@ export interface SponsoredFeedItem {
   ctaText: string;
   isSponsored: true;
   verified: boolean;
+  likes: number;
+  reposts: number;
+  comments: number;
   likesCount: number;
   commentsCount: number;
   sharesCount: number;
@@ -59,6 +65,18 @@ export interface SponsoredFeedItem {
  */
 export function isAdEligible(ad: AdCandidate, viewer: ViewerContext): boolean {
   if (!ad.isApproved || ad.campaignStatus !== 'active') {
+    return false;
+  }
+
+  // Prepaid funding & budget exhaustion verification
+  if (ad.fundedAmountMinor !== undefined && ad.fundedAmountMinor <= 0) {
+    return false;
+  }
+  if (
+    ad.fundedAmountMinor !== undefined &&
+    ad.totalSpentMinor !== undefined &&
+    ad.totalSpentMinor >= ad.fundedAmountMinor
+  ) {
     return false;
   }
 
@@ -121,6 +139,7 @@ export function formatSponsoredFeedItem(ad: AdCandidate): SponsoredFeedItem {
     author: ad.advertiserName,
     handle: ad.advertiserName.toLowerCase().replace(/[^a-z0-9]/g, ''),
     avatarUrl: ad.advertiserAvatarUrl || '/brand/tukubi-emblem.png',
+    time: 'Promoted',
     headline: ad.headline,
     content: ad.body || ad.headline,
     mediaUrls: ad.mediaPath ? [ad.mediaPath] : [],
@@ -128,6 +147,9 @@ export function formatSponsoredFeedItem(ad: AdCandidate): SponsoredFeedItem {
     ctaText: ad.ctaText || 'Learn More',
     isSponsored: true,
     verified: true,
+    likes: 0,
+    reposts: 0,
+    comments: 0,
     likesCount: 0,
     commentsCount: 0,
     sharesCount: 0,

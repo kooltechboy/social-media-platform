@@ -1,6 +1,6 @@
 'use server';
 
-import { getCurrentUser, createSupabaseServerClient } from '../supabase/server';
+import { getCurrentUser, getAuthorizedUser, createSupabaseServerClient, createServiceSupabaseClient } from '../supabase/server';
 import { validateCampaign, type CampaignInput, type AIAdBrief, type GeneratedAdCopy, generateAdCopyPrompt } from '@caribbean/advertising';
 
 // Internal helper to get or create an advertiser ID for the current user
@@ -69,11 +69,16 @@ export async function createCampaignAction(input: any): Promise<{campaignId: str
       name: campaignInput.name,
       objective: campaignInput.objective,
       objective_v2: input.objective_v2 || input.objective,
-      status: 'active',
+      status: 'draft',
+      moderation_status: 'pending',
       budget_total_minor: campaignInput.budgetTotalMinor,
       budget_daily_minor: campaignInput.budgetDailyMinor,
+      funded_amount_minor: 0,
+      spent_amount_minor: 0,
       currency: campaignInput.currency,
       starts_at: campaignInput.startsAt,
+      source_post_id: input.sourcePostId || null,
+      page_id: input.pageId || null,
     })
     .select('id')
     .single();
@@ -122,7 +127,7 @@ export async function createAdAction(input: any): Promise<{adId: string | null; 
       body: input.body,
       media_path: input.media_path,
       destination_url: input.destination_url || 'https://tukubi.com',
-      is_approved: true, // For MVP self-serve, auto-approve
+      is_approved: false, // Requires moderation clearance before delivery
       creative_type: input.creative_type || 'single_image',
       ai_brief: input.ai_brief,
       ai_generated_headline: input.ai_generated_headline,
@@ -151,10 +156,16 @@ export async function fetchAdvertiserCampaignsAction(): Promise<{campaigns: any[
       objective,
       objective_v2,
       status,
+      moderation_status,
+      moderation_reason,
       budget_total_minor,
       budget_daily_minor,
+      funded_amount_minor,
+      spent_amount_minor,
       currency,
       created_at,
+      source_post_id,
+      page_id,
       ad_sets (
         id,
         ads (
@@ -173,8 +184,8 @@ export async function fetchAdvertiserCampaignsAction(): Promise<{campaigns: any[
     let clicks = 0;
     
     // We fetch impressions and clicks for ads belonging to this campaign
-    for (const adSet of camp.ad_sets) {
-      for (const ad of adSet.ads) {
+    for (const adSet of camp.ad_sets || []) {
+      for (const ad of adSet.ads || []) {
         const { count: impCount } = await supabase.from('ad_events').select('*', { count: 'exact', head: true }).eq('ad_id', ad.id).eq('event_type', 'impression');
         const { count: clickCount } = await supabase.from('ad_events').select('*', { count: 'exact', head: true }).eq('ad_id', ad.id).eq('event_type', 'click');
         
@@ -190,6 +201,11 @@ export async function fetchAdvertiserCampaignsAction(): Promise<{campaigns: any[
       }
     }
 
+    const actualSpend = (camp.spent_amount_minor !== undefined && camp.spent_amount_minor !== null && camp.spent_amount_minor > 0)
+      ? camp.spent_amount_minor
+      : spendMinor;
+    const funded = camp.funded_amount_minor || 0;
+    const remainingMinor = Math.max(0, funded - actualSpend);
     const ctr = impressions > 0 ? (clicks / impressions) * 100 : 0;
     
     return {
@@ -197,11 +213,17 @@ export async function fetchAdvertiserCampaignsAction(): Promise<{campaigns: any[
       name: camp.name,
       objective: camp.objective_v2 || camp.objective,
       status: camp.status,
+      moderationStatus: camp.moderation_status || 'pending',
+      moderationReason: camp.moderation_reason || null,
       budgetTotalMinor: camp.budget_total_minor,
-      spendMinor: spendMinor,
+      budgetDailyMinor: camp.budget_daily_minor,
+      fundedAmountMinor: funded,
+      spendMinor: actualSpend,
+      remainingMinor,
       impressions,
       clicks,
       ctr,
+      createdAt: camp.created_at,
     };
   }));
 
@@ -214,6 +236,33 @@ export async function updateCampaignStatusAction(campaignId: string, status: 'ac
 
   const supabase = await createSupabaseServerClient();
   if (!supabase) return { error: 'Internal Error' };
+
+  // Fetch campaign to verify ownership, funding, and moderation clearance
+  const { data: campaign, error: fetchErr } = await supabase
+    .from('campaigns')
+    .select('id, status, moderation_status, moderation_reason, funded_amount_minor, spent_amount_minor, advertiser_id, advertisers!inner(profile_id)')
+    .eq('id', campaignId)
+    .single();
+
+  if (fetchErr || !campaign) {
+    return { error: 'Campaign not found' };
+  }
+
+  if ((campaign.advertisers as any)?.profile_id !== user.id) {
+    return { error: 'Forbidden: You do not own this campaign' };
+  }
+
+  if (status === 'active') {
+    if ((campaign.funded_amount_minor || 0) <= 0) {
+      return { error: 'Campaign must be funded with prepaid balance before activation. Please complete checkout.' };
+    }
+    if ((campaign.spent_amount_minor || 0) >= (campaign.funded_amount_minor || 0)) {
+      return { error: 'Campaign budget is exhausted. Please fund additional budget to reactivate.' };
+    }
+    if (campaign.moderation_status === 'rejected') {
+      return { error: `Campaign was rejected by moderation: ${campaign.moderation_reason || 'Policy violation'}.` };
+    }
+  }
 
   const { error } = await supabase
     .from('campaigns')
@@ -275,27 +324,27 @@ export async function generateAIAdCopyAction(brief: AIAdBrief): Promise<{copy: G
 }
 
 /**
- * Records a campaign budget funding transaction using double-entry accounting.
- * Creates an escrow funding entry from the advertiser's payment method or platform balance into campaign budget.
+ * Initiates authoritative PayPal prepaid funding for a campaign.
+ * Verifies campaign ownership, checks minimum spend ($10.00 / 1000 minor units),
+ * and creates an authorized PayPal order via the backend payment engine.
  */
-export async function fundCampaignBudgetAction(params: {
-  campaignId: string;
-  amountMinor: number;
-  currency: string;
-  paymentMethodId?: string;
-  idempotencyKey: string;
-}): Promise<{ success: boolean; transactionId?: string; error?: string }> {
+export async function initiateCampaignCheckoutAction(campaignId: string): Promise<{
+  success: boolean;
+  approvalUrl?: string;
+  orderId?: string;
+  intentId?: string;
+  error?: string;
+}> {
   const user = await getCurrentUser();
   if (!user) return { success: false, error: 'Unauthorized' };
 
   const supabase = await createSupabaseServerClient();
-  if (!supabase) return { success: false, error: 'Service temporarily unavailable' };
+  if (!supabase) return { success: false, error: 'Database service unavailable' };
 
-  // Validate campaign ownership
   const { data: campaign, error: campErr } = await supabase
     .from('campaigns')
-    .select('id, budget_total_minor, advertiser_id, advertisers!inner(profile_id)')
-    .eq('id', params.campaignId)
+    .select('id, name, budget_total_minor, currency, advertiser_id, advertisers!inner(profile_id)')
+    .eq('id', campaignId)
     .single();
 
   if (campErr || !campaign) {
@@ -306,19 +355,265 @@ export async function fundCampaignBudgetAction(params: {
     return { success: false, error: 'Forbidden: You do not own this campaign' };
   }
 
-  // Update campaign status to active upon funded budget
-  const { error: updateErr } = await supabase
-    .from('campaigns')
-    .update({ status: 'active' })
-    .eq('id', params.campaignId);
-
-  if (updateErr) {
-    return { success: false, error: updateErr.message };
+  const amountMinor = Number(campaign.budget_total_minor) || 1000;
+  if (amountMinor < 1000) {
+    return { success: false, error: 'Minimum campaign budget is $10.00 (1000 minor units)' };
   }
 
-  return {
-    success: true,
-    transactionId: `tx_ad_fund_${params.campaignId}_${Date.now()}`,
-  };
+  try {
+    const { ProviderRegistry } = await import('@caribbean/payments');
+    const registry = new ProviderRegistry();
+    const paypal = registry.get('paypal');
+
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://www.tukubi.com';
+    const returnUrl = `${appUrl}/ads?checkout=success&campaignId=${campaign.id}`;
+    const cancelUrl = `${appUrl}/ads?checkout=cancel&campaignId=${campaign.id}`;
+
+    const chargeResult = await paypal.charge({
+      amountMinor,
+      currency: campaign.currency || 'USD',
+      idempotencyKey: `ad_fund_${campaign.id}_${Date.now()}`,
+      returnUrl,
+      cancelUrl,
+      metadata: {
+        productType: 'business_ad',
+        campaignId: campaign.id,
+      },
+    });
+
+    if (!chargeResult.success || !chargeResult.redirectUrl) {
+      return { success: false, error: chargeResult.errorMessage || 'Failed to obtain PayPal approval URL' };
+    }
+
+    // Record pending payment intent in database
+    const { data: intent } = await supabase.from('payment_intents').insert({
+      user_id: user.id,
+      amount_minor: amountMinor,
+      currency: campaign.currency || 'USD',
+      status: 'requires_payment_method',
+      metadata: {
+        productType: 'business_ad',
+        campaignId: campaign.id,
+        paypalOrderId: chargeResult.providerTransactionId,
+      },
+    }).select('id').single();
+
+    return {
+      success: true,
+      approvalUrl: chargeResult.redirectUrl,
+      orderId: chargeResult.providerTransactionId,
+      intentId: intent?.id,
+    };
+  } catch (err: any) {
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : 'Failed to initiate PayPal checkout',
+    };
+  }
+}
+
+/**
+ * Staff / Admin: Fetches campaigns awaiting moderation review.
+ */
+export async function fetchPendingCampaignsForAdminAction(): Promise<{
+  campaigns: any[];
+  error?: string;
+}> {
+  const auth = await getAuthorizedUser(['admin', 'management', 'superadmin', 'super_admin', 'moderator']);
+  if (!auth.isLoggedIn || !auth.isAuthorized || !auth.user) {
+    return { campaigns: [], error: 'Forbidden: Administrative access required' };
+  }
+
+  const serviceClient = await createServiceSupabaseClient();
+  if (!serviceClient) return { campaigns: [], error: 'Service temporarily unavailable' };
+
+  const { data, error } = await serviceClient
+    .from('campaigns')
+    .select(`
+      id,
+      name,
+      objective,
+      objective_v2,
+      status,
+      moderation_status,
+      moderation_reason,
+      budget_total_minor,
+      funded_amount_minor,
+      currency,
+      created_at,
+      source_post_id,
+      page_id,
+      advertisers (
+        id,
+        name,
+        profile_id,
+        profiles (
+          id,
+          display_name,
+          username,
+          avatar_url
+        )
+      ),
+      ad_sets (
+        id,
+        name,
+        placement,
+        country_iso,
+        bid_cpm_minor,
+        ads (
+          id,
+          headline,
+          body,
+          media_path,
+          destination_url,
+          creative_type,
+          is_approved,
+          rejection_reason
+        )
+      )
+    `)
+    .eq('moderation_status', 'pending')
+    .order('created_at', { ascending: false });
+
+  if (error) return { campaigns: [], error: error.message };
+  return { campaigns: data || [] };
+}
+
+/**
+ * Staff / Admin: Approves a campaign and all its ads for delivery.
+ */
+export async function approveCampaignAdminAction(campaignId: string): Promise<{
+  success: boolean;
+  error?: string;
+}> {
+  const auth = await getAuthorizedUser(['admin', 'management', 'superadmin', 'super_admin', 'moderator']);
+  if (!auth.isLoggedIn || !auth.isAuthorized || !auth.user) {
+    return { success: false, error: 'Forbidden: Administrative access required' };
+  }
+
+  const serviceClient = await createServiceSupabaseClient();
+  if (!serviceClient) return { success: false, error: 'Service temporarily unavailable' };
+
+  // Fetch campaign to check funded status
+  const { data: campaign, error: fetchErr } = await serviceClient
+    .from('campaigns')
+    .select('id, funded_amount_minor, spent_amount_minor')
+    .eq('id', campaignId)
+    .single();
+
+  if (fetchErr || !campaign) {
+    return { success: false, error: 'Campaign not found' };
+  }
+
+  const isFunded = Number(campaign.funded_amount_minor || 0) > Number(campaign.spent_amount_minor || 0);
+
+  const { error: campErr } = await serviceClient
+    .from('campaigns')
+    .update({
+      moderation_status: 'approved',
+      moderated_at: new Date().toISOString(),
+      moderated_by: auth.user.id,
+      status: isFunded ? 'active' : 'draft',
+    })
+    .eq('id', campaignId);
+
+  if (campErr) return { success: false, error: campErr.message };
+
+  // Approve child ads
+  const { data: adSets } = await serviceClient
+    .from('ad_sets')
+    .select('id')
+    .eq('campaign_id', campaignId);
+
+  if (adSets && adSets.length > 0) {
+    const adSetIds = adSets.map((s: any) => s.id);
+    await serviceClient
+      .from('ads')
+      .update({
+        is_approved: true,
+        moderated_at: new Date().toISOString(),
+        moderated_by: auth.user.id,
+        rejection_reason: null,
+      })
+      .in('ad_set_id', adSetIds);
+  }
+
+  // Audit log entry
+  try {
+    await serviceClient.from('audit_logs').insert({
+      actor_id: auth.user.id,
+      action: 'campaign.approve',
+      target_type: 'campaign',
+      target_id: campaignId,
+      metadata: { isFunded },
+    });
+  } catch {}
+
+  return { success: true };
+}
+
+/**
+ * Staff / Admin: Rejects a campaign with a documented policy reason.
+ */
+export async function rejectCampaignAdminAction(campaignId: string, reason: string): Promise<{
+  success: boolean;
+  error?: string;
+}> {
+  const auth = await getAuthorizedUser(['admin', 'management', 'superadmin', 'super_admin', 'moderator']);
+  if (!auth.isLoggedIn || !auth.isAuthorized || !auth.user) {
+    return { success: false, error: 'Forbidden: Administrative access required' };
+  }
+
+  if (!reason || reason.trim().length === 0) {
+    return { success: false, error: 'Rejection reason is required' };
+  }
+
+  const serviceClient = await createServiceSupabaseClient();
+  if (!serviceClient) return { success: false, error: 'Service temporarily unavailable' };
+
+  const { error: campErr } = await serviceClient
+    .from('campaigns')
+    .update({
+      moderation_status: 'rejected',
+      moderation_reason: reason.trim(),
+      moderated_at: new Date().toISOString(),
+      moderated_by: auth.user.id,
+      status: 'paused',
+    })
+    .eq('id', campaignId);
+
+  if (campErr) return { success: false, error: campErr.message };
+
+  // Reject child ads
+  const { data: adSets } = await serviceClient
+    .from('ad_sets')
+    .select('id')
+    .eq('campaign_id', campaignId);
+
+  if (adSets && adSets.length > 0) {
+    const adSetIds = adSets.map((s: any) => s.id);
+    await serviceClient
+      .from('ads')
+      .update({
+        is_approved: false,
+        rejection_reason: reason.trim(),
+        moderated_at: new Date().toISOString(),
+        moderated_by: auth.user.id,
+      })
+      .in('ad_set_id', adSetIds);
+  }
+
+  // Audit log entry
+  try {
+    await serviceClient.from('audit_logs').insert({
+      actor_id: auth.user.id,
+      action: 'campaign.reject',
+      target_type: 'campaign',
+      target_id: campaignId,
+      metadata: { reason: reason.trim() },
+    });
+  } catch {}
+
+  return { success: true };
 }
 

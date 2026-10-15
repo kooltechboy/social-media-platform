@@ -138,4 +138,33 @@ Return JSON with this exact structure:
 Headline: max 40 chars. primaryText: max 150 chars. cta: max 20 chars. hashtags: 5 items.`;
 }
 
+export interface ReachEstimate {
+  minReach: number;
+  maxReach: number;
+  estimatedImpressions: number;
+  estimatedCpmMinor: number;
+}
+
+export function estimateCampaignReach(
+  budgetMinor: number,
+  currency: string = 'USD',
+  placement: AdPlacement = 'feed'
+): ReachEstimate {
+  const safeBudget = Math.max(0, budgetMinor);
+  let cpmMinor = 600; // $6.00 CPM Caribbean baseline
+  if (placement === 'reels' || placement === 'video') cpmMinor = 750;
+  if (placement === 'stories') cpmMinor = 500;
+
+  const estimatedImpressions = Math.round((safeBudget / cpmMinor) * 1000);
+  const minReach = Math.round(estimatedImpressions * 0.65);
+  const maxReach = Math.round(estimatedImpressions * 0.95);
+
+  return {
+    minReach,
+    maxReach,
+    estimatedImpressions,
+    estimatedCpmMinor: cpmMinor,
+  };
+}
+
 export * from './delivery';

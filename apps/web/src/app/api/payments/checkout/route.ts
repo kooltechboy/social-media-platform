@@ -24,6 +24,7 @@ export async function POST(request: NextRequest) {
       productId,
       tierId,
       planId,
+      campaignId,
       quantity: rawQuantity,
       platform = 'web',
       provider: requestedProvider,
@@ -113,8 +114,38 @@ export async function POST(request: NextRequest) {
       resolvedCreatorId = rawCreatorId || null;
       resolvedProductType = 'creator_tip';
       itemDescription = 'Creator Fan Tip';
+    } else if (campaignId || productType === 'business_ad') {
+      // TUKUBI Advertising Campaign Funding
+      const targetCampId = campaignId || body.referenceId;
+      if (!targetCampId) {
+        return NextResponse.json({ error: 'Campaign ID is required for advertising checkout.' }, { status: 400 });
+      }
+
+      const { data: campaign, error: campErr } = await supabase
+        .from('campaigns')
+        .select('id, name, budget_total_minor, currency, advertiser_id, advertisers!inner(profile_id)')
+        .eq('id', targetCampId)
+        .maybeSingle();
+
+      if (campErr || !campaign) {
+        return NextResponse.json({ error: 'Campaign not found' }, { status: 404 });
+      }
+
+      const advProfileId = (campaign.advertisers as any)?.profile_id;
+      if (advProfileId !== user.id) {
+        return NextResponse.json({ error: 'Forbidden. You do not own this advertising campaign.' }, { status: 403 });
+      }
+
+      grossAmountMinor = campaign.budget_total_minor;
+      if (grossAmountMinor < 1000) {
+        return NextResponse.json({ error: 'Minimum ad campaign budget is $10.00 (1000 minor units)' }, { status: 400 });
+      }
+
+      resolvedCurrency = (campaign.currency || 'USD').toUpperCase();
+      resolvedProductType = 'business_ad';
+      itemDescription = `TUKUBI Ad Campaign: ${campaign.name}`;
     } else {
-      return NextResponse.json({ error: 'Invalid checkout target. Missing productId, tierId, or planId.' }, { status: 400 });
+      return NextResponse.json({ error: 'Invalid checkout target. Missing productId, tierId, planId, or campaignId.' }, { status: 400 });
     }
 
     if (grossAmountMinor <= 0) {
@@ -162,8 +193,8 @@ export async function POST(request: NextRequest) {
         id: intent.id,
         payer_id: intent.payerId,
         product_type: intent.productType,
-        reference_type: productId ? 'order' : (tierId || planId ? 'subscription' : 'tip'),
-        reference_id: productId || tierId || planId || null,
+        reference_type: productId ? 'order' : (tierId || planId ? 'subscription' : (campaignId || productType === 'business_ad' ? 'ad_campaign' : 'tip')),
+        reference_id: productId || tierId || planId || campaignId || body.referenceId || null,
         amount_minor: intent.amountMinor,
         currency: intent.currency,
         status: 'requires_payment',
@@ -184,13 +215,17 @@ export async function POST(request: NextRequest) {
     const registry = new ProviderRegistry();
     const adapter = registry.get(selectedProvider);
 
+    const isAd = Boolean(campaignId || productType === 'business_ad');
+    const adReturnUrl = `${request.nextUrl.origin}/ads?checkout=success&intentId=${intent.id}&campaignId=${campaignId || body.referenceId}`;
+    const adCancelUrl = `${request.nextUrl.origin}/ads?checkout=cancelled&campaignId=${campaignId || body.referenceId}`;
+
     const chargeResult = await adapter.charge({
       amountMinor: grossAmountMinor,
       currency: resolvedCurrency,
       idempotencyKey: intent.id,
       customerEmail: user.email || undefined,
-      returnUrl: returnUrl || `${request.nextUrl.origin}/financial-center/transactions?status=success&intentId=${intent.id}`,
-      cancelUrl: cancelUrl || `${request.nextUrl.origin}/financial-center?status=cancelled`,
+      returnUrl: returnUrl || (isAd ? adReturnUrl : `${request.nextUrl.origin}/financial-center/transactions?status=success&intentId=${intent.id}`),
+      cancelUrl: cancelUrl || (isAd ? adCancelUrl : `${request.nextUrl.origin}/financial-center?status=cancelled`),
       metadata: {
         intentId: intent.id,
         payerId: user.id,

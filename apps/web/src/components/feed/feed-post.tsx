@@ -28,6 +28,7 @@ import {
   EyeOff,
   ThumbsDown,
   Edit3,
+  Megaphone,
   Building2,
 } from 'lucide-react';
 import UserAvatar from '../user-avatar';
@@ -488,6 +489,14 @@ export default function FeedPost({
 
               {isAuthor ? (
                 <>
+                  <Link
+                    href={`/ads/new?postId=${post.id}`}
+                    onClick={() => setIsMenuOpen(false)}
+                    className="w-full text-left px-3 py-2.5 rounded-xl text-amber-300 hover:bg-amber-500/10 flex items-center gap-2.5 font-semibold transition-colors min-h-[40px]"
+                  >
+                    <Megaphone className="w-4 h-4 text-amber-400" />
+                    <span>Promote Post (TUKUBI Ads)</span>
+                  </Link>
                   <button
                     type="button"
                     onClick={handlePinToggle}

@@ -2,7 +2,7 @@ import React from 'react';
 import { redirect } from 'next/navigation';
 import {
   LayoutDashboard, Users, Wallet, Shield, ShieldCheck, Flag, BarChart3, ToggleLeft,
-  Globe, Database, Bell, Settings, Sparkles, BookOpen
+  Globe, Database, Bell, Settings, Sparkles, BookOpen, Megaphone
 } from 'lucide-react';
 import Link from 'next/link';
 import { createServiceSupabaseClient, getAuthorizedUser } from '../../lib/supabase/server';
@@ -97,6 +97,7 @@ export default async function AdminPage() {
     { label: 'Audit Logs', icon: Database, href: '/admin/audit-logs' },
     { label: 'Users', icon: Users, href: '/admin/users' },
     { label: 'Payments', icon: Wallet, href: '/admin/payments' },
+    { label: 'Ads Moderation', icon: Megaphone, href: '/admin/ads' },
     { label: 'Trust & Safety', icon: ShieldCheck, href: '/admin/trust-safety' },
     { label: 'Reports', icon: Flag, href: '/admin/reports' },
     { label: 'Analytics', icon: BarChart3, href: '/admin/analytics' },

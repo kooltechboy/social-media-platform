@@ -27,6 +27,8 @@ export default async function AdsDashboardPage() {
     );
   }
 
+  const totalFundedMinor = campaigns?.reduce((sum, c) => sum + (c.fundedAmountMinor || 0), 0) || 0;
+  const totalFunded = (totalFundedMinor / 100).toFixed(2);
   const totalSpendMinor = campaigns?.reduce((sum, c) => sum + (c.spendMinor || 0), 0) || 0;
   const totalSpend = (totalSpendMinor / 100).toFixed(2);
   const totalImpressions = campaigns?.reduce((sum, c) => sum + (c.impressions || 0), 0) || 0;
@@ -50,7 +52,11 @@ export default async function AdsDashboardPage() {
 
       {campaigns && campaigns.length > 0 ? (
         <>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+            <div className="bg-slate-900/50 border border-slate-800 p-5 rounded-2xl">
+              <div className="text-slate-400 text-sm font-bold mb-1">Prepaid Funded</div>
+              <div className="text-2xl font-black text-emerald-400">${totalFunded}</div>
+            </div>
             <div className="bg-slate-900/50 border border-slate-800 p-5 rounded-2xl">
               <div className="text-slate-400 text-sm font-bold mb-1">Total Spend</div>
               <div className="text-2xl font-black text-white">${totalSpend}</div>
@@ -60,12 +66,12 @@ export default async function AdsDashboardPage() {
               <div className="text-2xl font-black text-white">{totalImpressions.toLocaleString()}</div>
             </div>
             <div className="bg-slate-900/50 border border-slate-800 p-5 rounded-2xl">
-              <div className="text-slate-400 text-sm font-bold mb-1">Avg. CTR</div>
-              <div className="text-2xl font-black text-brand-caribbeanSea">{avgCtr}%</div>
-            </div>
-            <div className="bg-slate-900/50 border border-slate-800 p-5 rounded-2xl">
               <div className="text-slate-400 text-sm font-bold mb-1">Clicks</div>
               <div className="text-2xl font-black text-brand-goldenHour">{totalClicks.toLocaleString()}</div>
+            </div>
+            <div className="bg-slate-900/50 border border-slate-800 p-5 rounded-2xl">
+              <div className="text-slate-400 text-sm font-bold mb-1">Avg. CTR</div>
+              <div className="text-2xl font-black text-brand-caribbeanSea">{avgCtr}%</div>
             </div>
           </div>
 
@@ -75,7 +81,9 @@ export default async function AdsDashboardPage() {
                 <tr className="bg-slate-950/50 text-xs uppercase tracking-wider text-slate-400 border-b border-slate-800">
                   <th className="p-4 font-bold">Campaign Name</th>
                   <th className="p-4 font-bold">Status</th>
+                  <th className="p-4 font-bold">Moderation</th>
                   <th className="p-4 font-bold">Objective</th>
+                  <th className="p-4 font-bold">Funded</th>
                   <th className="p-4 font-bold">Spend</th>
                   <th className="p-4 font-bold">Impressions</th>
                   <th className="p-4 font-bold">CTR</th>

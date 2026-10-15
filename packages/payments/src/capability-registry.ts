@@ -182,6 +182,10 @@ export const DEFAULT_CAPABILITY_RULES: CapabilityRule[] = [
   { countryIso: '*', platform: 'web', productType: 'digital_subscription', provider: 'stripe', methodKind: 'card', minAmountMinor: 299, maxAmountMinor: 99900, isEnabled: true },
   { countryIso: '*', platform: 'web', productType: 'digital_subscription', provider: 'paypal', methodKind: 'paypal', minAmountMinor: 299, maxAmountMinor: 99900, isEnabled: true },
 
+  // Business Advertising & Sponsored Promotions
+  { countryIso: '*', platform: 'web', productType: 'business_ad', provider: 'paypal', methodKind: 'paypal', minAmountMinor: 1000, maxAmountMinor: 5000000, isEnabled: true },
+  { countryIso: '*', platform: 'web', productType: 'business_ad', provider: 'stripe', methodKind: 'card', minAmountMinor: 1000, maxAmountMinor: 5000000, isEnabled: true },
+
   // Mobile App Store compliance rules (§3.1.1)
   { countryIso: '*', platform: 'ios', productType: 'digital_subscription', provider: 'apple_pay', methodKind: 'apple_pay', minAmountMinor: 99, maxAmountMinor: 99900, isEnabled: true },
   { countryIso: '*', platform: 'android', productType: 'digital_subscription', provider: 'google_pay', methodKind: 'google_pay', minAmountMinor: 99, maxAmountMinor: 99900, isEnabled: true },
