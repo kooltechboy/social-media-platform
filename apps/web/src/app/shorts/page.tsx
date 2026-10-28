@@ -30,7 +30,7 @@ export default async function ShortsPage({
   let dynamicShorts: ShortItem[] = [];
 
   // Sanitize URL-derived values before they reach PostgREST filter strings.
-  const ALLOWED_CATEGORIES = new Set(['culture', 'music', 'food', 'comedy', 'island_life']);
+  const ALLOWED_CATEGORIES = new Set(['culture', 'music', 'food', 'comedy', 'island_life', 'travel']);
   const safeCategory =
     selectedCategory && ALLOWED_CATEGORIES.has(selectedCategory) ? selectedCategory : null;
   const safeCountry = selectedCountry
@@ -144,7 +144,7 @@ export default async function ShortsPage({
 
         // Determine creator attribution: Page takes precedence if page_id is populated
         const creatorName = b?.name || p?.display_name || (p?.username ? `@${p.username}` : 'Caribbean Creator');
-        const handle = b?.slug ? `@${b.slug}` : (p?.username ? `@${p.username}` : '');
+        const handle = (b?.slug || p?.username || '').replace(/^@+/, '');
         const avatarUrl = b?.avatar_url || p?.avatar_url || null;
         const isVerified = b?.is_verified || p?.is_verified || false;
 

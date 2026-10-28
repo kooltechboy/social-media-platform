@@ -72,8 +72,10 @@ export async function fetchUniversalPagesAction(options?: {
       .limit(options?.limit || 40);
 
     if (options?.query && options.query.trim()) {
-      const q = options.query.trim();
-      query = query.or(`name.ilike.%${q}%,description.ilike.%${q}%,category.ilike.%${q}%`);
+      const q = options.query.replace(/[,().%_\\]/g, ' ').trim();
+      if (q) {
+        query = query.or(`name.ilike.%${q}%,description.ilike.%${q}%,category.ilike.%${q}%`);
+      }
     }
 
     if (options?.territoryIso && options.territoryIso !== 'all') {
@@ -440,8 +442,9 @@ export async function fetchPageDetailsAction(slug: string): Promise<{
         .order('created_at', { ascending: false }),
       supabase
         .from('posts')
-        .select('id, content, likes_count, comments_count, shares_count, created_at, cultural_tags, media_urls, author_id, profiles:profiles!posts_author_id_fkey(id, username, display_name, avatar_url)')
+        .select('id, content, likes_count, comments_count, shares_count, created_at, cultural_tags, media_urls, author_id, page_id, publisher_type, post_status, is_pinned, link_preview, profiles:profiles!posts_author_id_fkey(id, username, display_name, avatar_url, is_verified), businesses:businesses!posts_page_id_fkey(id, name, slug, avatar_url, is_verified)')
         .eq('page_id', business.id)
+        .or('post_status.is.null,post_status.eq.published')
         .order('created_at', { ascending: false })
         .limit(20),
       canManage
@@ -562,7 +565,7 @@ export async function createUniversalPageAction(
       contact_email: contactEmail || null,
       avatar_url: avatarUrl,
       cover_image_url: coverImageUrl,
-      is_verified: true,
+      is_verified: false,
       is_archived: false,
       is_deactivated: false,
     })
@@ -1046,7 +1049,11 @@ export async function createPagePostAction(
 
   const { error: insertErr } = await supabase.from('posts').insert({
     author_id: user.id,
+    created_by_user_id: user.id,
     page_id: pageId,
+    publisher_type: 'page',
+    publisher_entity_id: pageId,
+    post_status: 'published',
     content: content.trim(),
     cultural_tags: culturalTags,
     media_urls: mediaUrls,

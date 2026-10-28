@@ -2,7 +2,7 @@
 
 > **North Star:** The digital home of the Caribbean and its global diaspora.
 > **TUKUBI** = Where people discover, socialize, create, sell, and buy.
-> Visual Brand Identity: **TUKUBI — Caribbean Digital Ecosystem & Social Commerce**.
+> Visual Brand Identity: **TUKUBI — The Caribbean Connected. (Born in the Caribbean. Built for the World.)**
 
 ---
 

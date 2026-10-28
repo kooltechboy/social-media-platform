@@ -65,7 +65,7 @@ export default async function PagesDirectoryPage({
               <Building2 className="w-3.5 h-3.5" /> Universal Caribbean Pages
             </div>
             <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black text-white tracking-tight flex items-center gap-3">
-              Pages Ecosystem
+              Pages Directory
             </h1>
             <p className="text-sm sm:text-base text-brand-sandstone/80 leading-relaxed">
               Official public identities for Creators, Brands, Businesses, Cultural Groups, Educational Institutions, and Diaspora Foundations.
@@ -275,7 +275,7 @@ export default async function PagesDirectoryPage({
         )}
       </div>
 
-      <RightRail ariaLabel="Pages Ecosystem & Actions">
+      <RightRail ariaLabel="Pages Directory & Actions">
         <PagesRail myPages={myPages} />
       </RightRail>
     </div>

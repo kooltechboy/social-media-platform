@@ -165,7 +165,7 @@ function ActiveLivePlayer({
       });
 
     // Send heartbeat
-    if (user) {
+    if (user?.id) {
       void recordLiveViewerHeartbeatAction(stream.id);
       const interval = setInterval(() => {
         void recordLiveViewerHeartbeatAction(stream.id);

@@ -127,7 +127,7 @@ export default function CreatorContentManager({
     });
   }
 
-  const loadScheduledPosts = async () => {
+  const loadScheduledPosts = React.useCallback(async () => {
     const supabase = createSupabaseBrowserClient();
     if (!supabase) return;
     setIsLoadingScheduled(true);
@@ -145,17 +145,17 @@ export default function CreatorContentManager({
     } finally {
       setIsLoadingScheduled(false);
     }
-  };
+  }, [user.id]);
 
   useEffect(() => {
     loadScheduledPosts();
-  }, [user.id]);
+  }, [loadScheduledPosts]);
 
   useEffect(() => {
     if (activeTab === 'scheduled') {
       loadScheduledPosts();
     }
-  }, [activeTab]);
+  }, [activeTab, loadScheduledPosts]);
 
   function clearFeedback() {
     setFeedback(null);

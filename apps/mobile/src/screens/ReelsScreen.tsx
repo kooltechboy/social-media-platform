@@ -368,7 +368,7 @@ export function ReelsScreen({ navigation }: any) {
               accessibilityLabel={`Audio: ${soundTitle}`}
             >
               <View style={styles.soundIconBadge}>
-                <Ionicons name="musical-notes" size={12} color="#FFF" />
+                <Ionicons name="musical-notes" size={12} color={TOKENS.actionText} />
               </View>
               <Text style={styles.soundName} numberOfLines={1}>
                 {soundTitle}
@@ -471,7 +471,7 @@ export function ReelsScreen({ navigation }: any) {
               style={styles.createButton}
               onPress={() => navigation?.navigate('Create')}
             >
-              <Ionicons name="add-circle" size={20} color="#FFF" style={{ marginRight: 8 }} />
+              <Ionicons name="add-circle" size={20} color={TOKENS.actionText} style={{ marginRight: 8 }} />
               <Text style={styles.createButtonText}>Create Reel</Text>
             </TouchableOpacity>
           </View>
@@ -561,9 +561,9 @@ export function ReelsScreen({ navigation }: any) {
                 accessibilityLabel="Post comment"
               >
                 {submittingComment ? (
-                  <ActivityIndicator size="small" color="#FFF" />
+                  <ActivityIndicator size="small" color={TOKENS.actionText} />
                 ) : (
-                  <Ionicons name="arrow-up" size={18} color="#FFF" />
+                  <Ionicons name="arrow-up" size={18} color={TOKENS.actionText} />
                 )}
               </TouchableOpacity>
             </View>
@@ -747,7 +747,7 @@ const styles = StyleSheet.create({
     borderRadius: 24,
   },
   createButtonText: {
-    color: '#FFF',
+    color: TOKENS.actionText,
     fontWeight: '800',
     fontSize: 15,
   },

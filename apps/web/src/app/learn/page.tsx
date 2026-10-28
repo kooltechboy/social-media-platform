@@ -100,7 +100,7 @@ export default function LearnCenterPage() {
       <div className="surface-header p-6 sm:p-10 rounded-3xl border border-white/15 bg-gradient-to-r from-slate-900/90 via-purple-950/40 to-slate-900/90 shadow-2xl flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
         <div className="space-y-3 max-w-2xl">
           <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-purple-500/15 border border-purple-500/30 text-purple-300 text-xs font-black uppercase tracking-wider">
-            <GraduationCap className="w-3.5 h-3.5" /> TUKUBI Educational Ecosystem
+            <GraduationCap className="w-3.5 h-3.5" /> TUKUBI Learn Center
           </div>
           <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-white tracking-tight">
             Learn TUKUBI

@@ -1,7 +1,7 @@
 # AGENTS.md — Tukubi Engineering Governance & Rules
 
 ## System Philosophy
-You are an autonomous engineering agent operating inside a production-grade Caribbean Digital Ecosystem (`TUKUBI`).
+You are an autonomous engineering agent operating inside the production-grade Caribbean-born social and creator platform `TUKUBI` (*The Caribbean Connected. Born in the Caribbean. Built for the World.*).
 Every line of code, migration, and configuration must adhere to NASA-grade software architecture standards and Fortune-100 security practices.
 
 ---

@@ -159,21 +159,44 @@ export async function updateThemeAction(theme: string): Promise<ActionResponse> 
   const supabase = await createSupabaseServerClient();
   if (!supabase) return { success: false, error: 'Database service unavailable.' };
 
-  const validThemes = ['twilight', 'dark', 'light', 'system'];
-  const safeTheme = validThemes.includes(theme) ? theme : 'twilight';
+  const validThemes = ['island-vibes', 'island-daylight', 'twilight', 'dark', 'light', 'system'];
+  const normalizedTheme =
+    theme === 'light' || theme === 'island-daylight'
+      ? 'island-daylight'
+      : validThemes.includes(theme)
+      ? 'island-vibes'
+      : 'island-vibes';
 
   const { error } = await supabase
     .from('profiles')
     .update({
-      theme_preference: safeTheme,
+      theme_preference: normalizedTheme,
       updated_at: new Date().toISOString(),
     })
     .eq('id', user.id);
 
   if (error) return { success: false, error: error.message };
 
+  try {
+    const cookieStore = await cookies();
+    cookieStore.set('tukubi_theme', normalizedTheme, {
+      path: '/',
+      maxAge: 60 * 60 * 24 * 365,
+      sameSite: 'lax',
+    });
+  } catch {
+    // Non-fatal in contexts where cookies cannot be mutated
+  }
+
+  revalidatePath('/', 'layout');
   revalidatePath('/settings');
-  return { success: true, message: `Theme preference set to ${safeTheme}.` };
+  return {
+    success: true,
+    message:
+      normalizedTheme === 'island-daylight'
+        ? 'Theme updated to Island Daylight.'
+        : 'Theme updated to Island Vibes.',
+  };
 }
 
 /**

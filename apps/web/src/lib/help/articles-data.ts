@@ -35,7 +35,7 @@ export const HELP_ARTICLES: HelpArticleDefinition[] = [
       },
       {
         type: 'steps',
-        title: 'Core Pillars of the TUKUBI Ecosystem',
+        title: 'Core Pillars of TUKUBI',
         steps: [
           {
             number: 1,
@@ -955,7 +955,7 @@ export const HELP_ARTICLES: HelpArticleDefinition[] = [
     categorySlug: 'creators',
     categoryTitle: 'Creators',
     featureSlug: 'creator-hub',
-    seoTitle: 'Creator Hub Overview — TUKUBI Creator Ecosystem',
+    seoTitle: 'Creator Hub Overview — TUKUBI Help Center',
     seoDescription: 'Your home base for Caribbean creators: audience growth, brand sponsorships, and creative identity.',
     ctaHref: '/creator-hub',
     ctaLabel: 'Open Creator Hub',
@@ -1350,6 +1350,206 @@ export const HELP_ARTICLES: HelpArticleDefinition[] = [
       },
     ],
   },
+  // 34. Cultural Events
+  {
+    slug: 'cultural-events-and-rsvps',
+    title: 'Discovering, Creating & RSVPing to Cultural Events',
+    description: 'Find island fetes, concerts, diaspora meetups, and cultural festivals or host your own event on TUKUBI.',
+    categorySlug: 'events',
+    categoryTitle: 'Cultural Events',
+    featureSlug: 'events',
+    seoTitle: 'Cultural Events & RSVPs — TUKUBI Help Center',
+    seoDescription: 'Learn how to discover, RSVP, and host Caribbean cultural events, carnivals, and diaspora meetups on TUKUBI.',
+    ctaHref: '/events',
+    ctaLabel: 'Explore Cultural Events',
+    sections: [
+      {
+        type: 'intro',
+        content: 'TUKUBI Cultural Events (/events) connects island communities and the global diaspora around carnivals, concerts, cultural panels, and local meetups.',
+      },
+      {
+        type: 'steps',
+        title: 'How to RSVP or Host an Event',
+        steps: [
+          {
+            number: 1,
+            title: 'Browse by Territory or Category',
+            content: 'Filter events on /events by island territory, diaspora city, or event type (Carnival, Music, Food, Community).',
+          },
+          {
+            number: 2,
+            title: 'RSVP & Share with Friends',
+            content: 'Open any event card to view venue details, date/time, and click Going or Interested to add it to your calendar.',
+          },
+          {
+            number: 3,
+            title: 'Create a New Cultural Event',
+            content: 'Click Create Event on /events to publish an event with cover artwork, schedule, location, and optional ticket details.',
+          },
+        ],
+      },
+    ],
+  },
+  // 35. Pages & Stores
+  {
+    slug: 'creating-and-managing-pages',
+    title: 'Creating & Managing Official Pages on TUKUBI',
+    description: 'Build an official public Page for your brand, business, cultural organization, or creator identity and publish updates.',
+    categorySlug: 'pages-stores',
+    categoryTitle: 'Pages & Stores',
+    featureSlug: 'pages',
+    seoTitle: 'Creating & Managing Pages — TUKUBI Help Center',
+    seoDescription: 'Complete guide to launching an official Page, assigning team roles, and publishing as a Page on TUKUBI.',
+    ctaHref: '/pages',
+    ctaLabel: 'Browse Official Pages',
+    sections: [
+      {
+        type: 'intro',
+        content: 'TUKUBI Pages (/pages) give creators, businesses, cultural groups, and organizations a dedicated public identity separate from a personal profile.',
+      },
+      {
+        type: 'steps',
+        title: 'Launching and Operating Your Page',
+        steps: [
+          {
+            number: 1,
+            title: 'Create Your Page',
+            content: 'Navigate to /pages/create and choose your Page name, unique @slug, category, island territory, avatar, and cover banner.',
+          },
+          {
+            number: 2,
+            title: 'Publish as Your Page',
+            content: 'Use the Identity Switcher in the header or composer, or post directly from your Page timeline (/pages/[slug]) so updates appear under your Page identity.',
+          },
+          {
+            number: 3,
+            title: 'Manage Roles & Settings',
+            content: 'Open /pages/[slug]/manage to update Page contact details, assign Admin/Editor/Moderator roles, or connect your storefront.',
+          },
+        ],
+      },
+    ],
+  },
+  // 36. Profile & Settings
+  {
+    slug: 'customizing-profile-and-settings',
+    title: 'Customizing Your Profile, Theme & Account Settings',
+    description: 'Update your bio, avatar, cover photo, Island Vibes / Island Daylight theme, language, and notification preferences.',
+    categorySlug: 'profile-settings',
+    categoryTitle: 'Profile & Settings',
+    featureSlug: 'settings',
+    seoTitle: 'Profile & Settings Guide — TUKUBI Help Center',
+    seoDescription: 'Manage your TUKUBI profile, privacy visibility, appearance theme, language, and data export.',
+    ctaHref: '/settings',
+    ctaLabel: 'Open Settings',
+    sections: [
+      {
+        type: 'intro',
+        content: 'Your TUKUBI Profile (/profile) and Settings (/settings) give you granular control over how you appear across the platform, who can view your content, and how you receive notifications.',
+      },
+      {
+        type: 'steps',
+        title: 'Key Profile & Settings Controls',
+        steps: [
+          {
+            number: 1,
+            title: 'Edit Profile & Cultural Heritage',
+            content: 'Update your display name, bio, website, avatar, cover photo, and optional island heritage badges from your profile or /settings.',
+          },
+          {
+            number: 2,
+            title: 'Theme & Language Preferences',
+            content: 'Switch between Island Vibes (Twilight) and Island Daylight themes, and select English, French, Spanish, or Dutch in /settings.',
+          },
+          {
+            number: 3,
+            title: 'Data Export & Account Controls',
+            content: 'Download a portable JSON archive of your account data or manage account deactivation in the Data & Account section of /settings.',
+          },
+        ],
+      },
+    ],
+  },
+  // 37. Troubleshooting
+  {
+    slug: 'troubleshooting-common-issues',
+    title: 'Troubleshooting Media Uploads, Playback & Sign-In Issues',
+    description: 'Quick solutions for common sign-in, audio/video playback, media upload, and browser cache issues on TUKUBI.',
+    categorySlug: 'troubleshooting',
+    categoryTitle: 'Troubleshooting',
+    featureSlug: 'troubleshooting',
+    seoTitle: 'Troubleshooting Common Issues — TUKUBI Help Center',
+    seoDescription: 'Resolve media upload errors, video playback issues, and login recovery on TUKUBI.',
+    ctaHref: '/help',
+    ctaLabel: 'Back to Help Center',
+    sections: [
+      {
+        type: 'intro',
+        content: 'If a photo, video, Short, or message fails to load or upload on TUKUBI, follow these verified troubleshooting steps to resolve the issue quickly.',
+      },
+      {
+        type: 'steps',
+        title: 'Step-by-Step Diagnostic Checklist',
+        steps: [
+          {
+            number: 1,
+            title: 'Check Supported Media Formats & Size Limits',
+            content: 'Post images support JPEG, PNG, WebP, GIF, and AVIF. Shorts and Reels support MP4, WebM, and MOV up to 100 MB.',
+          },
+          {
+            number: 2,
+            title: 'Verify Browser Audio & Microphone Permissions',
+            content: 'Browser autoplay policies start feed videos muted—tap the speaker icon to unmute. For voice notes or live streaming, allow microphone/camera access in your browser site settings.',
+          },
+          {
+            number: 3,
+            title: 'Refresh Session or Reset Password',
+            content: 'If actions return a "Sign in required" message, sign out and sign back in at /login, or request a password reset link at /forgot-password.',
+          },
+        ],
+      },
+    ],
+  },
+  // 38. What's New
+  {
+    slug: 'whats-new-on-tukubi',
+    title: "What's New on TUKUBI: Latest Platform Releases",
+    description: 'Explore recent upgrades across Unified Home Feed, Universal Pages, Shorts, Dual-Host Live, Self-Serve Ads, and Island Vibes UX.',
+    categorySlug: 'whats-new',
+    categoryTitle: "What's New",
+    featureSlug: 'whats-new',
+    seoTitle: "What's New on TUKUBI — Release Notes & Highlights",
+    seoDescription: 'Discover the latest features and engineering improvements launched on TUKUBI.',
+    ctaHref: '/',
+    ctaLabel: 'Go to Home Feed',
+    sections: [
+      {
+        type: 'intro',
+        content: 'TUKUBI continuously ships improvements across social publishing, creator tools, messaging, accessibility, and Caribbean commerce.',
+      },
+      {
+        type: 'steps',
+        title: 'Recent Platform Highlights',
+        steps: [
+          {
+            number: 1,
+            title: 'Unified Home Feed & Page Publishing',
+            content: 'Publish seamlessly as your personal profile or any managed Page, with automatic distribution to followers in the Home Feed and Page feeds.',
+          },
+          {
+            number: 2,
+            title: 'TUKUBI Shorts & Dual-Host Collaborative Live',
+            content: 'Create and remix vertical Shorts (/shorts) and invite co-hosts to broadcast together in real time on /live.',
+          },
+          {
+            number: 3,
+            title: 'Self-Serve Ads Manager & Financial Center',
+            content: 'Launch moderated ad campaigns on /ads with verified PayPal checkout and double-entry ledger protection.',
+          },
+        ],
+      },
+    ],
+  },
 ];
 
 export function getArticleBySlug(slug: string): HelpArticleDefinition | undefined {
@@ -1372,7 +1572,7 @@ export function searchArticles(query: string, limit = 10): HelpArticleDefinition
       a.sections.some(
         (s) =>
           (s.content && s.content.toLowerCase().includes(q)) ||
-          (s.steps && s.steps.some((st) => st.title.toLowerCase().includes(st.title) || st.content.toLowerCase().includes(q)))
+          (s.steps && s.steps.some((st) => st.title.toLowerCase().includes(q) || st.content.toLowerCase().includes(q)))
       )
   ).slice(0, limit);
 }

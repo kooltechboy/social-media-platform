@@ -29,6 +29,21 @@ public class WinCred {
 }
 '@
 
+if ($env:SUPABASE_ACCESS_TOKEN) {
+    Write-Output $env:SUPABASE_ACCESS_TOKEN.Trim()
+    exit 0
+}
+
+foreach ($envFile in @(".env.local", "$HOME\.env")) {
+    if (Test-Path $envFile) {
+        $match = Select-String -Path $envFile -Pattern "^SUPABASE_ACCESS_TOKEN=(.+)$" | Select-Object -First 1
+        if ($match) {
+            Write-Output $match.Matches[0].Groups[1].Value.Trim()
+            exit 0
+        }
+    }
+}
+
 Add-Type -TypeDefinition $code -ErrorAction SilentlyContinue
 $token = [WinCred]::GetSecret("Supabase CLI:supabase")
 if ($token) {

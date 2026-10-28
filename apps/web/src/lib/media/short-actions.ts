@@ -56,17 +56,27 @@ export async function publishShortAction(formData: FormData): Promise<ShortActio
   const supabase = await createSupabaseServerClient();
   if (!supabase) return { success: false, error: 'Database service is currently unavailable.' };
 
-  // If publishing on behalf of a Page, verify authorization
+  // If publishing on behalf of a Page, verify authorization (owner_id or page_roles)
   let validatedPageId: string | null = null;
   if (pageId) {
-    const { data: pageRole } = await supabase
-      .from('page_roles')
-      .select('role')
-      .eq('page_id', pageId)
-      .eq('user_id', user.id)
-      .maybeSingle();
+    const [{ data: pageRole }, { data: ownedPage }] = await Promise.all([
+      supabase
+        .from('page_roles')
+        .select('role')
+        .eq('page_id', pageId)
+        .eq('user_id', user.id)
+        .maybeSingle(),
+      supabase
+        .from('businesses')
+        .select('id, owner_id')
+        .eq('id', pageId)
+        .maybeSingle(),
+    ]);
 
-    if (!pageRole || !['owner', 'admin', 'editor'].includes(pageRole.role)) {
+    const isOwner = ownedPage?.owner_id === user.id;
+    const hasRole = Boolean(pageRole && ['owner', 'admin', 'editor'].includes(pageRole.role));
+
+    if (!isOwner && !hasRole) {
       return {
         success: false,
         error: 'You do not have permission to publish Shorts on behalf of this Page.',
@@ -344,11 +354,18 @@ export async function recordShortShareAction(shortId: string, shareType: string 
 
   if (supabase && user) {
     try {
-      await supabase.from('post_shares').insert({
-        post_id: shortId,
+      const { error } = await supabase.from('video_shares').insert({
+        video_id: shortId,
         user_id: user.id,
         share_type: shareType,
       });
+      if (error) {
+        await supabase.from('post_shares').insert({
+          post_id: shortId,
+          user_id: user.id,
+          share_type: shareType,
+        });
+      }
     } catch {
       // Non-blocking
     }
@@ -367,14 +384,22 @@ export async function saveShortAction(shortId: string): Promise<ShortActionResul
   const supabase = await createSupabaseServerClient();
   if (!supabase) return { success: false, error: 'Database unavailable.' };
 
-  const { error } = await supabase
-    .from('saved_posts')
+  const { error: videoSaveErr } = await supabase
+    .from('video_saves')
     .upsert(
-      { profile_id: user.id, post_id: shortId },
-      { onConflict: 'profile_id,post_id' }
+      { profile_id: user.id, video_id: shortId },
+      { onConflict: 'profile_id,video_id' }
     );
 
-  if (error) return { success: false, error: error.message };
+  if (videoSaveErr) {
+    const { error } = await supabase
+      .from('saved_posts')
+      .upsert(
+        { profile_id: user.id, post_id: shortId },
+        { onConflict: 'profile_id,post_id' }
+      );
+    if (error) return { success: false, error: error.message };
+  }
   return { success: true, data: { saved: true } };
 }
 
@@ -388,13 +413,18 @@ export async function unsaveShortAction(shortId: string): Promise<ShortActionRes
   const supabase = await createSupabaseServerClient();
   if (!supabase) return { success: false, error: 'Database unavailable.' };
 
-  const { error } = await supabase
+  await supabase
+    .from('video_saves')
+    .delete()
+    .eq('profile_id', user.id)
+    .eq('video_id', shortId);
+
+  await supabase
     .from('saved_posts')
     .delete()
     .eq('profile_id', user.id)
     .eq('post_id', shortId);
 
-  if (error) return { success: false, error: error.message };
   return { success: true, data: { saved: false } };
 }
 
@@ -409,13 +439,24 @@ export async function reportShortAction(shortId: string, reason: string, details
   if (!supabase) return { success: false, error: 'Database unavailable.' };
 
   try {
-    await supabase.from('moderation_reports').insert({
+    const normalizedReason = reason || 'inappropriate_content';
+    await supabase.from('reports').insert({
       reporter_id: user.id,
-      content_type: 'video',
-      content_id: shortId,
-      reason: reason || 'inappropriate_content',
-      notes: details || null,
+      target_type: 'video',
+      target_id: shortId,
+      reason: normalizedReason,
+      details: details || null,
       status: 'pending',
+    });
+
+    await supabase.from('moderation_cases').insert({
+      target_type: 'video',
+      target_id: shortId,
+      source: 'user_report',
+      severity: 'medium',
+      status: 'open',
+      reason_summary: details ? `${normalizedReason}: ${details}` : normalizedReason,
+      created_by: user.id,
     });
   } catch {
     // Non-blocking report log
@@ -446,14 +487,21 @@ export async function deleteShortAction(shortId: string): Promise<ShortActionRes
   let isAuthorized = video.creator_id === user.id;
 
   if (!isAuthorized && video.page_id) {
-    const { data: pageRole } = await supabase
-      .from('page_roles')
-      .select('role')
-      .eq('page_id', video.page_id)
-      .eq('user_id', user.id)
-      .maybeSingle();
+    const [{ data: pageRole }, { data: pageRecord }] = await Promise.all([
+      supabase
+        .from('page_roles')
+        .select('role')
+        .eq('page_id', video.page_id)
+        .eq('user_id', user.id)
+        .maybeSingle(),
+      supabase
+        .from('businesses')
+        .select('owner_id')
+        .eq('id', video.page_id)
+        .maybeSingle(),
+    ]);
 
-    if (pageRole && ['owner', 'admin'].includes(pageRole.role)) {
+    if ((pageRole && ['owner', 'admin'].includes(pageRole.role)) || pageRecord?.owner_id === user.id) {
       isAuthorized = true;
     }
   }
@@ -482,22 +530,32 @@ export async function fetchUserManagedPagesAction(): Promise<{ id: string; name:
   if (!supabase) return [];
 
   try {
-    const { data, error } = await supabase
-      .from('page_roles')
-      .select('page_id, businesses(id, name, avatar_url)')
-      .eq('user_id', user.id)
-      .in('role', ['owner', 'admin', 'editor']);
+    const [{ data: roleData }, { data: ownedData }] = await Promise.all([
+      supabase
+        .from('page_roles')
+        .select('page_id, businesses(id, name, avatar_url)')
+        .eq('user_id', user.id)
+        .in('role', ['owner', 'admin', 'editor']),
+      supabase
+        .from('businesses')
+        .select('id, name, avatar_url')
+        .eq('owner_id', user.id),
+    ]);
 
-    if (error || !data) return [];
+    const pageMap = new Map<string, { id: string; name: string; avatar_url: string | null }>();
+    for (const item of roleData ?? []) {
+      const b = (item as any).businesses;
+      if (b?.id && b?.name) {
+        pageMap.set(b.id, { id: b.id, name: b.name, avatar_url: b.avatar_url || null });
+      }
+    }
+    for (const b of ownedData ?? []) {
+      if (b?.id && b?.name && !pageMap.has(b.id)) {
+        pageMap.set(b.id, { id: b.id, name: b.name, avatar_url: b.avatar_url || null });
+      }
+    }
 
-    return data
-      .map((item: any) => item.businesses)
-      .filter((b: any) => b && b.id && b.name)
-      .map((b: any) => ({
-        id: b.id,
-        name: b.name,
-        avatar_url: b.avatar_url || null,
-      }));
+    return Array.from(pageMap.values());
   } catch (err) {
     console.warn('[fetchUserManagedPagesAction] Error:', err);
     return [];

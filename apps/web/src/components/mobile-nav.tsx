@@ -276,7 +276,7 @@ export default function MobileNav() {
         </div>
       )}
 
-      {/* ── 2. Full Ecosystem Menu Sheet ── */}
+      {/* ── 2. Full Platform Menu Sheet ── */}
       {isMenuSheetOpen && (
         <div
           className="fixed inset-0 z-[60] bg-black/75 backdrop-blur-md flex items-end animate-fadeIn"
@@ -324,10 +324,10 @@ export default function MobileNav() {
               <IdentitySwitcher variant="compact" />
             </div>
 
-            {/* Ecosystem Navigation Links */}
+            {/* Platform Navigation Links */}
             <div className="space-y-1 pt-1">
               <p className="text-[10px] font-black uppercase tracking-wider text-brand-sandstone/50 px-2 py-1">
-                Ecosystem Destinations
+                Platform Destinations
               </p>
 
               <div className="grid grid-cols-2 gap-2">

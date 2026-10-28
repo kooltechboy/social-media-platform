@@ -179,8 +179,9 @@ export default function TukubiVideoPlayer({
 
   // Register with AudioManager singleton for single-audio master control
   useEffect(() => {
+    const playerId = playerIdRef.current;
     const audioMgr = AudioManager.getInstance();
-    const unregister = audioMgr.register(playerIdRef.current, {
+    const unregister = audioMgr.register(playerId, {
       onMute: () => {
         const video = videoRef.current;
         if (video) {
@@ -201,7 +202,7 @@ export default function TukubiVideoPlayer({
 
     return () => {
       unregister();
-      audioMgr.releaseAudio(playerIdRef.current);
+      audioMgr.releaseAudio(playerId);
     };
   }, []);
 

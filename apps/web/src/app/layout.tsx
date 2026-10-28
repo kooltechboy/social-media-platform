@@ -89,6 +89,11 @@ export default async function RootLayout({
   const activeLocale: Locale = isLocale(rawLocale) ? rawLocale : DEFAULT_LOCALE;
   const dir = LOCALE_DETAILS[activeLocale]?.dir || 'ltr';
 
+  const rawTheme = cookieStore.get('tukubi_theme')?.value || user?.theme_preference || 'island-vibes';
+  const activeTheme =
+    rawTheme === 'island-daylight' || rawTheme === 'light' ? 'island-daylight' : 'island-vibes';
+  const isDaylight = activeTheme === 'island-daylight';
+
   let unreadNotificationsCount = 0;
   let unreadMessagesCount = 0;
   if (user) {
@@ -113,7 +118,13 @@ export default async function RootLayout({
   }
 
   return (
-    <html lang={activeLocale} dir={dir} className="dark overflow-x-hidden max-w-full" suppressHydrationWarning>
+    <html
+      lang={activeLocale}
+      dir={dir}
+      data-theme={activeTheme}
+      className={`${isDaylight ? '' : 'dark '}overflow-x-hidden max-w-full`}
+      suppressHydrationWarning
+    >
       <body
         className="min-h-screen relative overflow-x-clip max-w-full antialiased text-white selection:bg-[#FF7A59]/30 selection:text-white"
         suppressHydrationWarning

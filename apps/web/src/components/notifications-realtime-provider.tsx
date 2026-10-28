@@ -49,20 +49,21 @@ export function NotificationsRealtimeProvider({
   }, [pathname]);
 
   useEffect(() => {
-    if (!user) return;
+    const userId = user?.id;
+    if (!userId) return;
 
     const supabase = createSupabaseBrowserClient();
     if (!supabase) return;
 
     const channel = supabase
-      .channel(`public:notifications:recipient_id=eq.${user.id}`)
+      .channel(`public:notifications:recipient_id=eq.${userId}`)
       .on(
         'postgres_changes',
         {
           event: 'INSERT',
           schema: 'public',
           table: 'notifications',
-          filter: `recipient_id=eq.${user.id}`,
+          filter: `recipient_id=eq.${userId}`,
         },
         (payload: { new?: { kind?: string } }) => {
           const currentPath = pathnameRef.current;

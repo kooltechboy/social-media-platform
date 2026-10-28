@@ -60,6 +60,11 @@ export default function IdentitySwitcher({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isOpen]);
 
+  const onIdentityChangeRef = useRef(onIdentityChange);
+  useEffect(() => {
+    onIdentityChangeRef.current = onIdentityChange;
+  }, [onIdentityChange]);
+
   // Load identities from secure server action
   useEffect(() => {
     if (!user) return;
@@ -77,9 +82,7 @@ export default function IdentitySwitcher({
           const found = stored ? identityList.find((i) => i.id === stored) : null;
           const selected = found || identityList[0];
           setActiveIdentity(selected);
-          if (onIdentityChange) {
-            onIdentityChange(selected);
-          }
+          onIdentityChangeRef.current?.(selected);
         }
       } catch (err) {
         console.warn('Failed to load identities via server action:', err);

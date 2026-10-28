@@ -205,6 +205,47 @@ export class TransactionLedgerService {
       } catch (ledgerErr) {
         console.error('[TransactionLedgerService] Ledger posting skipped or failed:', ledgerErr);
       }
+    } else if (payerId && !recipientId && tx.gross_amount_minor > 0) {
+      // Platform-direct transaction (AD_PAYMENT, TUKUBI_SUBSCRIPTION, BOOST_PAYMENT)
+      try {
+        const [escrowAccRes, platRevAccRes] = await Promise.all([
+          supabase.rpc('ensure_ledger_account', {
+            p_owner_id: payerId,
+            p_account_type: tx.provider === 'paypal' ? 'paypal_escrow' : 'Payments_wallet',
+            p_currency: tx.currency,
+          }),
+          supabase.rpc('ensure_ledger_account', {
+            p_owner_id: payerId,
+            p_account_type: 'platform_revenue',
+            p_currency: tx.currency,
+          }),
+        ]);
+
+        const escrowAccId = escrowAccRes.data;
+        const platRevAccId = platRevAccRes.data;
+
+        if (escrowAccId && platRevAccId) {
+          const pair = this.ledger.createDoubleEntryPayload({
+            transactionId: tx.id,
+            sourceAccountId: escrowAccId,
+            destinationAccountId: platRevAccId,
+            amount: tx.gross_amount_minor,
+            currency: tx.currency,
+            idempotencyKey: `${tx.idempotency_key}_settled`,
+            description: `Platform settlement for ${tx.transaction_type} [${tx.id}]`,
+          });
+
+          const { error: ledgerError } = await supabase
+            .from('ledger_entries')
+            .insert([pair.debitEntry, pair.creditEntry]);
+
+          if (ledgerError && ledgerError.code !== '23505') {
+            console.error('[TransactionLedgerService] Warning: platform ledger entry insert failed:', ledgerError);
+          }
+        }
+      } catch (ledgerErr) {
+        console.error('[TransactionLedgerService] Platform ledger posting skipped or failed:', ledgerErr);
+      }
     }
 
     // 3. Write point-of-sale commission snapshot if marketplace or creator

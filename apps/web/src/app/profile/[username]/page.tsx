@@ -150,7 +150,7 @@ export default async function ProfilePage({
               href="/search"
               className="bg-brand-caribbeanSea hover:bg-brand-caribbeanSea text-slate-950 text-xs font-black px-4 py-2 rounded-xl transition-colors"
             >
-              Search Ecosystem
+              Search TUKUBI
             </Link>
           </div>
         </div>
@@ -164,12 +164,33 @@ export default async function ProfilePage({
     is_official?: boolean;
     is_system_account?: boolean;
     is_private?: boolean;
+    profile_visibility?: 'public' | 'followers' | 'private';
   };
 
   const isOwnProfile = currentUser?.id === profileData.id;
 
-  // Privacy barrier: if profile is private and viewer is not the owner
-  if (profileData.is_private && !isOwnProfile) {
+  // Evaluate viewer relationship first so approved followers can view follower-visible profiles
+  const relationshipBatch =
+    currentUser && !isOwnProfile
+      ? await getRelationshipBatchAction([profileData.id])
+      : ({} as Record<string, any>);
+
+  const viewerRelationship = relationshipBatch[profileData.id] || {
+    state: 'none',
+    isFollowing: false,
+    isFollower: false,
+    friendshipStatus: 'none',
+    isBlocked: false,
+  };
+  const isFollowing = !!viewerRelationship.isFollowing || viewerRelationship.friendshipStatus === 'friends';
+
+  // Privacy barrier: if profile is private (or followers-only and viewer is not a follower) and viewer is not the owner
+  const isBlockedByVisibility =
+    !isOwnProfile &&
+    (profileData.profile_visibility === 'private' ||
+      ((profileData.is_private || profileData.profile_visibility === 'followers') && !isFollowing));
+
+  if (isBlockedByVisibility) {
     return (
       <div className="min-h-screen bg-transparent text-brand-sandstone flex items-center justify-center p-6">
         <div className="bg-brand-dusk/80 border border-slate-800 rounded-3xl p-8 text-center max-w-md space-y-4">
@@ -191,22 +212,20 @@ export default async function ProfilePage({
     );
   }
 
-  // Fetch real counts, relationship status, posts, and recognition in parallel
+  // Fetch real counts, posts, and recognition in parallel
   const isOfficialTukubi = profileData.username.toLowerCase() === 'tukubi';
   const recognitionService = new RecognitionService(supabase);
-  const [countsResult, relationshipBatch, postsResult, recognition, friendsResult, pagesResult, communitiesResult, podcastsResult] = await Promise.all([
+  const [countsResult, postsResult, recognition, friendsResult, pagesResult, communitiesResult, podcastsResult] = await Promise.all([
     supabase
       .from('profile_counts')
       .select('followers_count, following_count, posts_count, likes_received_count, friends_count')
       .eq('profile_id', profileData.id)
       .maybeSingle(),
-    currentUser && !isOwnProfile
-      ? getRelationshipBatchAction([profileData.id])
-      : Promise.resolve({} as Record<string, any>),
     supabase
       .from('posts')
-      .select('id, author_id, content, created_at, media_urls, cultural_tags, likes_count, comments_count, shares_count, is_pinned, is_official, official_content_type, post_status, profiles:profiles!posts_author_id_fkey(display_name, username, avatar_url, is_verified)')
+      .select('id, author_id, page_id, publisher_type, content, created_at, media_urls, cultural_tags, likes_count, comments_count, shares_count, is_pinned, is_official, official_content_type, post_status, profiles:profiles!posts_author_id_fkey(display_name, username, avatar_url, is_verified)')
       .eq('author_id', profileData.id)
+      .is('page_id', null)
       .or('post_status.is.null,post_status.eq.published')
       .order('is_pinned', { ascending: false, nullsFirst: false })
       .order('created_at', { ascending: false })
@@ -239,14 +258,6 @@ export default async function ProfilePage({
     .filter(Boolean);
   const userPodcasts = (podcastsResult?.data ?? []) as any[];
 
-  const viewerRelationship = relationshipBatch[profileData.id] || {
-    state: 'none',
-    isFollowing: false,
-    isFollower: false,
-    friendshipStatus: 'none',
-    isBlocked: false,
-  };
-  const isFollowing = !!viewerRelationship.isFollowing;
   const rawPosts = postsResult.data ?? [];
   let posts: FeedPostData[] = rawPosts.length > 0
     ? await hydratePostsEngagement(rawPosts, supabase, { currentUserId: currentUser?.id })
@@ -278,9 +289,18 @@ export default async function ProfilePage({
   };
 
   // Privacy filters for visitor view
-  const canViewDob = isOwnProfile || profileData.dob_visibility === 'public';
-  const canViewAddress = isOwnProfile || profileData.address_visibility === 'public';
-  const canViewRelationship = isOwnProfile || profileData.relationship_visibility === 'public';
+  const canViewDob =
+    isOwnProfile ||
+    profileData.dob_visibility === 'public' ||
+    (profileData.dob_visibility === 'followers' && isFollowing);
+  const canViewAddress =
+    isOwnProfile ||
+    profileData.address_visibility === 'public' ||
+    (profileData.address_visibility === 'followers' && isFollowing);
+  const canViewRelationship =
+    isOwnProfile ||
+    profileData.relationship_visibility === 'public' ||
+    (profileData.relationship_visibility === 'followers' && isFollowing);
 
   const social = profileData.social_links || {};
   const hasSocialLinks = Object.keys(social).some((k) => !!social[k]);

@@ -108,31 +108,50 @@ export async function POST(
 
     if (providerId === 'paypal') {
       switch (eventType) {
-        case 'PAYMENT.CAPTURE.COMPLETED':
         case 'CHECKOUT.ORDER.APPROVED': {
+          // Order approval occurs BEFORE funds are captured. Do not settle or credit ledger/campaigns here.
+          break;
+        }
+
+        case 'PAYMENT.CAPTURE.COMPLETED': {
           const rawCustomId = resource.custom_id || resource.invoice_id;
           const customId = typeof rawCustomId === 'string' ? rawCustomId.replace(/[^a-zA-Z0-9_-]/g, '') : '';
+          const relatedOrderId = resource.supplementary_data?.related_ids?.order_id;
+          const safeOrderId = typeof relatedOrderId === 'string' ? relatedOrderId.replace(/[^a-zA-Z0-9_-]/g, '') : '';
           const captureId = resource.id;
           const amountMinor = resource.amount?.value ? Math.round(parseFloat(resource.amount.value) * 100) : 0;
           const currency = resource.amount?.currency_code || 'USD';
 
-          if (customId) {
-            // Find related payment intent
+          if (customId || safeOrderId) {
+            const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+            const filters: string[] = [];
+            if (customId) {
+              filters.push(`idempotency_key.eq.${customId}`);
+              if (uuidRegex.test(customId)) {
+                filters.push(`id.eq.${customId}`);
+                filters.push(`reference_id.eq.${customId}`);
+              }
+            }
+            if (safeOrderId) {
+              filters.push(`provider_transaction_id.eq.${safeOrderId}`);
+            }
+
             const { data: intent } = await supabase
               .from('payment_intents')
               .select('*')
-              .or(`id.eq.${customId},idempotency_key.eq.${customId},reference_id.eq.${customId}`)
+              .or(filters.join(','))
               .maybeSingle();
 
-            if (intent) {
+            // Idempotency guard: only settle & fulfill if intent has not already succeeded
+            if (intent && intent.status !== 'succeeded') {
               await supabase
                 .from('payment_intents')
                 .update({ status: 'succeeded', provider_transaction_id: captureId })
                 .eq('id', intent.id);
 
-              // Record in transaction ledger
+              // Record in transaction ledger using canonical intent-scoped idempotency key
               const tx = await ledgerService.recordTransaction(supabase, {
-                idempotencyKey: `wh_${captureId}`,
+                idempotencyKey: `settle_intent_${intent.id}`,
                 transactionType: intent.product_type === 'digital_subscription'
                   ? (intent.creator_id ? 'CREATOR_SUBSCRIPTION' : 'TUKUBI_SUBSCRIPTION')
                   : (intent.product_type === 'business_ad' || intent.reference_type === 'ad_campaign' ? 'AD_PAYMENT' : 'MARKETPLACE_PURCHASE'),
@@ -159,16 +178,18 @@ export async function POST(
               } else if (intent.reference_type === 'ad_campaign' && intent.reference_id) {
                 const { data: campaign } = await supabase
                   .from('campaigns')
-                  .select('id, moderation_status')
+                  .select('id, moderation_status, funded_amount_minor')
                   .eq('id', intent.reference_id)
                   .maybeSingle();
 
                 if (campaign) {
                   const isApproved = campaign.moderation_status === 'approved';
+                  const nextFundedMinor =
+                    Number(campaign.funded_amount_minor || 0) + Number(amountMinor || intent.amount_minor || 0);
                   await supabase
                     .from('campaigns')
                     .update({
-                      funded_amount_minor: amountMinor || intent.amount_minor,
+                      funded_amount_minor: nextFundedMinor,
                       status: isApproved ? 'active' : 'draft',
                     })
                     .eq('id', campaign.id);

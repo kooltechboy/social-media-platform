@@ -213,7 +213,7 @@ export function CommunitiesScreen({ navigation }: any) {
           <Text style={styles.screenSubtitle}>Island circles, diaspora meetups & cultural guilds</Text>
         </View>
         <TouchableOpacity style={styles.createHubBtn} onPress={() => setModalVisible(true)}>
-          <Ionicons name="add" size={16} color="#FFF" style={{ marginRight: 4 }} />
+          <Ionicons name="add" size={16} color={TOKENS.actionText} style={{ marginRight: 4 }} />
           <Text style={styles.createHubText}>New Hub</Text>
         </TouchableOpacity>
       </View>
@@ -363,7 +363,7 @@ export function CommunitiesScreen({ navigation }: any) {
               onPress={handleCreateHub}
             >
               {creatingHub ? (
-                <ActivityIndicator color="#FFF" />
+                <ActivityIndicator color={TOKENS.actionText} />
               ) : (
                 <Text style={styles.submitBtnText}>Create Community Hub</Text>
               )}
@@ -402,7 +402,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
   },
-  createHubText: { color: '#FFFFFF', fontSize: 12, fontWeight: '800' },
+  createHubText: { color: TOKENS.actionText, fontSize: 12, fontWeight: '800' },
 
   tabsBar: {
     flexDirection: 'row',
@@ -425,7 +425,7 @@ const styles = StyleSheet.create({
     borderColor: TOKENS.action,
   },
   tabText: { color: TOKENS.textMuted, fontSize: 12, fontWeight: '700' },
-  tabTextActive: { color: '#FFF' },
+  tabTextActive: { color: TOKENS.actionText },
 
   container: { padding: 16, paddingBottom: 40 },
   card: {
@@ -454,7 +454,7 @@ const styles = StyleSheet.create({
   joinBtn: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 999 },
   unjoinedBtn: { backgroundColor: TOKENS.action },
   joinedBtn: { backgroundColor: TOKENS.raised, borderWidth: 1, borderColor: TOKENS.border },
-  joinBtnText: { color: '#FFFFFF', fontSize: 11, fontWeight: '800' },
+  joinBtnText: { color: TOKENS.actionText, fontSize: 11, fontWeight: '800' },
   joinedBtnText: { color: TOKENS.textMuted, fontSize: 11, fontWeight: '700' },
 
   emptyContainer: {
@@ -470,7 +470,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderRadius: 16,
   },
-  emptyBtnText: { color: '#FFF', fontSize: 13, fontWeight: '800' },
+  emptyBtnText: { color: TOKENS.actionText, fontSize: 13, fontWeight: '800' },
 
   modalOverlay: {
     flex: 1,
@@ -525,5 +525,5 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 10,
   },
-  submitBtnText: { color: '#FFF', fontSize: 14, fontWeight: '800' },
+  submitBtnText: { color: TOKENS.actionText, fontSize: 14, fontWeight: '800' },
 });

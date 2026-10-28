@@ -287,64 +287,76 @@ export async function hydratePostsEngagement(
       const postsWithLinks = rawPosts
         .filter((p) => p.id && p.link_preview && !p.post_external_media && !p.link_previews)
         .map((p) => p.id);
-      if (postsWithLinks.length > 0) {
-        const [extRes, mediaRes] = await Promise.all([
-          supabase
-            .from('post_external_media')
-            .select(
-              'post_id, original_url, canonical_url, provider_id, content_type, title, description, author_name, site_name, thumbnail_url, embed_url, aspect_ratio, duration_seconds, is_embeddable, display_order'
-            )
-            .in('post_id', postsWithLinks),
-          supabase
-            .from('post_media')
-            .select('post_id, public_url, media_type, width, height, duration_sec, thumbnail_url, sort_order')
-            .in('post_id', postsWithLinks),
-        ]);
-        if (extRes?.data) {
-          const sortedExt = [...extRes.data].sort(
-            (a: any, b: any) => (a.display_order ?? 0) - (b.display_order ?? 0)
-          );
-          for (const row of sortedExt) {
-            const list = externalMediaMap.get(row.post_id) || [];
-            list.push({
-              url: row.original_url,
-              canonicalUrl: row.canonical_url || row.original_url,
-              provider: row.provider_id,
-              contentType: row.content_type,
-              title: row.title,
-              description: row.description,
-              authorName: row.author_name,
-              siteName: row.site_name,
-              thumbnailUrl: row.thumbnail_url,
-              embedUrl: row.embed_url,
-              aspectRatio: row.aspect_ratio,
-              durationSeconds: row.duration_seconds,
-              isEmbeddable: row.is_embeddable ?? Boolean(row.embed_url),
-            });
-            externalMediaMap.set(row.post_id, list);
-          }
+      const postsNeedingMedia = rawPosts
+        .filter(
+          (p) =>
+            p.id &&
+            !p.post_media &&
+            ((Array.isArray(p.media_urls) && p.media_urls.length > 0) || Boolean(p.link_preview))
+        )
+        .map((p) => p.id);
+
+      const [extRes, mediaRes] = await Promise.all([
+        postsWithLinks.length > 0
+          ? supabase
+              .from('post_external_media')
+              .select(
+                'post_id, original_url, canonical_url, provider_id, content_type, title, description, author_name, site_name, thumbnail_url, embed_url, aspect_ratio, duration_seconds, is_embeddable, display_order'
+              )
+              .in('post_id', postsWithLinks)
+          : Promise.resolve({ data: null }),
+        postsNeedingMedia.length > 0
+          ? supabase
+              .from('post_media')
+              .select('post_id, public_url, media_type, width, height, duration_sec, thumbnail_url, sort_order')
+              .in('post_id', postsNeedingMedia)
+          : Promise.resolve({ data: null }),
+      ]);
+
+      if (extRes?.data) {
+        const sortedExt = [...extRes.data].sort(
+          (a: any, b: any) => (a.display_order ?? 0) - (b.display_order ?? 0)
+        );
+        for (const row of sortedExt) {
+          const list = externalMediaMap.get(row.post_id) || [];
+          list.push({
+            url: row.original_url,
+            canonicalUrl: row.canonical_url || row.original_url,
+            provider: row.provider_id,
+            contentType: row.content_type,
+            title: row.title,
+            description: row.description,
+            authorName: row.author_name,
+            siteName: row.site_name,
+            thumbnailUrl: row.thumbnail_url,
+            embedUrl: row.embed_url,
+            aspectRatio: row.aspect_ratio,
+            durationSeconds: row.duration_seconds,
+            isEmbeddable: row.is_embeddable ?? Boolean(row.embed_url),
+          });
+          externalMediaMap.set(row.post_id, list);
         }
-        if (mediaRes?.data) {
-          const sortedMedia = [...mediaRes.data].sort(
-            (a: any, b: any) => (a.sort_order ?? 0) - (b.sort_order ?? 0)
-          );
-          for (const row of sortedMedia) {
-            if (!row.public_url) continue;
-            const list = postMediaMap.get(row.post_id) || [];
-            list.push({
-              url: row.public_url,
-              type: row.media_type === 'video' ? 'video' : 'image',
-              width: row.width ?? undefined,
-              height: row.height ?? undefined,
-              aspectRatio:
-                row.width && row.height && row.height > 0
-                  ? Number((row.width / row.height).toFixed(4))
-                  : undefined,
-              durationSec: row.duration_sec ?? undefined,
-              posterUrl: row.thumbnail_url ?? undefined,
-            });
-            postMediaMap.set(row.post_id, list);
-          }
+      }
+      if (mediaRes?.data) {
+        const sortedMedia = [...mediaRes.data].sort(
+          (a: any, b: any) => (a.sort_order ?? 0) - (b.sort_order ?? 0)
+        );
+        for (const row of sortedMedia) {
+          if (!row.public_url) continue;
+          const list = postMediaMap.get(row.post_id) || [];
+          list.push({
+            url: row.public_url,
+            type: row.media_type === 'video' ? 'video' : 'image',
+            width: row.width ?? undefined,
+            height: row.height ?? undefined,
+            aspectRatio:
+              row.width && row.height && row.height > 0
+                ? Number((row.width / row.height).toFixed(4))
+                : undefined,
+            durationSec: row.duration_sec ?? undefined,
+            posterUrl: row.thumbnail_url ?? undefined,
+          });
+          postMediaMap.set(row.post_id, list);
         }
       }
     } catch {

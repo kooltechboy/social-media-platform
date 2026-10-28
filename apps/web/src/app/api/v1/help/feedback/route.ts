@@ -10,15 +10,17 @@ export async function POST(request: NextRequest) {
 
     const supabase = await createServiceSupabaseClient();
     if (supabase && (article_id || slug)) {
-      // Find article UUID if only slug was passed
-      let articleUuid = article_id;
-      if (!articleUuid || !articleUuid.includes('-')) {
+      // Find article UUID if a slug or non-UUID identifier was passed
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      let articleUuid = typeof article_id === 'string' && uuidRegex.test(article_id) ? article_id : null;
+      const lookupSlug = slug || (typeof article_id === 'string' && !articleUuid ? article_id : null);
+      if (!articleUuid && lookupSlug) {
         const { data: art } = await supabase
           .from('help_articles')
           .select('id')
-          .eq('slug', slug)
+          .eq('slug', lookupSlug)
           .maybeSingle();
-        if (art) articleUuid = art.id;
+        if (art?.id && uuidRegex.test(art.id)) articleUuid = art.id;
       }
 
       if (articleUuid) {

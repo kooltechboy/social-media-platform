@@ -431,7 +431,7 @@ export default function MessageThread({
   // Handle voice note send
   async function handleSendVoiceNote(audioBlob: Blob, durationSec: number) {
     setIsRecordingVoice(false);
-    const audioUrl = URL.createObjectURL(audioBlob);
+    const localPreviewUrl = URL.createObjectURL(audioBlob);
     const clientMsgId = generateClientMessageId();
 
     const optimisticMessage: ThreadMessage = {
@@ -439,7 +439,7 @@ export default function MessageThread({
       client_message_id: clientMsgId,
       sender_id: currentUserId,
       body: `[Voice Note: ${Math.round(durationSec)}s]`,
-      audio_url: audioUrl,
+      audio_url: localPreviewUrl,
       message_kind: 'voice',
       created_at: new Date().toISOString(),
       status: 'sending',
@@ -448,12 +448,19 @@ export default function MessageThread({
 
     setMessages((prev) => [...prev, optimisticMessage]);
 
+    const persistentAudioUrl = await new Promise<string>((resolve) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(typeof reader.result === 'string' ? reader.result : localPreviewUrl);
+      reader.onerror = () => resolve(localPreviewUrl);
+      reader.readAsDataURL(audioBlob);
+    });
+
     startTransition(async () => {
       const formData = new FormData();
       formData.set('conversationId', conversationId);
       formData.set('body', `[Voice Note: ${Math.round(durationSec)}s]`);
       formData.set('message_kind', 'voice');
-      formData.set('audio_url', audioUrl);
+      formData.set('audio_url', persistentAudioUrl);
       formData.set('client_message_id', clientMsgId);
 
       const res = await sendMessageAction({ error: null }, formData);
@@ -628,8 +635,13 @@ export default function MessageThread({
           </div>
         ) : (
           messages.map((msg, index) => {
-            const isMine = Boolean(currentUserId && msg.sender_id === currentUserId);
-            const isVoice = msg.message_kind === 'voice' || !!msg.audio_url;
+            const isMine = Boolean(
+              currentUserId &&
+              msg.sender_id === currentUserId &&
+              msg.message_kind !== 'ai_response'
+            );
+            const voiceUrl = msg.audio_url || msg.metadata?.audio_url;
+            const isVoice = msg.message_kind === 'voice' || !!voiceUrl;
             const isDeleted = !!msg.deleted_at;
             const repliedMsg = msg.reply_to_id ? messages.find((m) => m.id === msg.reply_to_id) : null;
             const isRichCard = [
@@ -707,7 +719,7 @@ export default function MessageThread({
                         {isVoice && !isDeleted ? (
                           <div className="min-w-[220px] sm:min-w-[260px]">
                             <AudioVoiceNotePlayer
-                              audioUrl={msg.audio_url || ''}
+                              audioUrl={voiceUrl || ''}
                               isCurrentUser={isMine}
                             />
                           </div>

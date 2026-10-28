@@ -1,0 +1,3023 @@
+{
+  "generatedAt": "2026-10-28T10:32:03.684Z",
+  "generator": "tukubi-ast-graph-v1 (TypeScript Compiler AST)",
+  "summary": {
+    "totalWorkspaces": 31,
+    "applicationsCount": 6,
+    "packagesCount": 25,
+    "workspaceEdgesCount": 53,
+    "webPageRoutesCount": 118,
+    "webApiRoutesCount": 38,
+    "serverModulesCount": 82,
+    "sqlMigrationsCount": 117,
+    "sqlTablesCount": 226,
+    "sqlFunctionsCount": 93
+  },
+  "workspaces": {
+    "nodes": [
+      {
+        "id": "caribbean-admin",
+        "type": "application",
+        "path": "apps/admin",
+        "version": "1.0.0",
+        "scripts": [
+          "dev",
+          "build",
+          "start",
+          "lint",
+          "typecheck"
+        ]
+      },
+      {
+        "id": "caribbean-business-studio",
+        "type": "application",
+        "path": "apps/business-studio",
+        "version": "1.0.0",
+        "scripts": [
+          "dev",
+          "build",
+          "start",
+          "lint",
+          "typecheck"
+        ]
+      },
+      {
+        "id": "caribbean-creator-studio",
+        "type": "application",
+        "path": "apps/creator-studio",
+        "version": "1.0.0",
+        "scripts": [
+          "dev",
+          "build",
+          "start",
+          "lint",
+          "typecheck"
+        ]
+      },
+      {
+        "id": "caribbean-mobile",
+        "type": "application",
+        "path": "apps/mobile",
+        "version": "1.0.0",
+        "scripts": [
+          "start",
+          "android",
+          "ios",
+          "web",
+          "typecheck"
+        ]
+      },
+      {
+        "id": "caribbean-moderation",
+        "type": "application",
+        "path": "apps/moderation",
+        "version": "1.0.0",
+        "scripts": [
+          "dev",
+          "build",
+          "start",
+          "lint",
+          "typecheck"
+        ]
+      },
+      {
+        "id": "caribbean-web",
+        "type": "application",
+        "path": "apps/web",
+        "version": "1.0.0",
+        "scripts": [
+          "dev",
+          "build",
+          "start",
+          "start:e2e",
+          "lint",
+          "typecheck"
+        ]
+      },
+      {
+        "id": "@caribbean/advertising",
+        "type": "package",
+        "path": "packages/advertising",
+        "version": "1.0.0",
+        "scripts": [
+          "typecheck"
+        ]
+      },
+      {
+        "id": "@caribbean/ai",
+        "type": "package",
+        "path": "packages/ai",
+        "version": "1.0.0",
+        "scripts": [
+          "typecheck",
+          "test",
+          "test:watch"
+        ]
+      },
+      {
+        "id": "@caribbean/analytics",
+        "type": "package",
+        "path": "packages/analytics",
+        "version": "1.0.0",
+        "scripts": [
+          "typecheck"
+        ]
+      },
+      {
+        "id": "@caribbean/api",
+        "type": "package",
+        "path": "packages/api",
+        "version": "1.0.0",
+        "scripts": [
+          "typecheck"
+        ]
+      },
+      {
+        "id": "@caribbean/auth",
+        "type": "package",
+        "path": "packages/auth",
+        "version": "1.0.0",
+        "scripts": [
+          "typecheck"
+        ]
+      },
+      {
+        "id": "@caribbean/business",
+        "type": "package",
+        "path": "packages/business",
+        "version": "1.0.0",
+        "scripts": [
+          "typecheck"
+        ]
+      },
+      {
+        "id": "@caribbean/communities",
+        "type": "package",
+        "path": "packages/communities",
+        "version": "1.0.0",
+        "scripts": [
+          "typecheck"
+        ]
+      },
+      {
+        "id": "@caribbean/creator",
+        "type": "package",
+        "path": "packages/creator",
+        "version": "1.0.0",
+        "scripts": [
+          "typecheck"
+        ]
+      },
+      {
+        "id": "@caribbean/database",
+        "type": "package",
+        "path": "packages/database",
+        "version": "1.0.0",
+        "scripts": [
+          "typecheck"
+        ]
+      },
+      {
+        "id": "@caribbean/design-system",
+        "type": "package",
+        "path": "packages/design-system",
+        "version": "1.0.0",
+        "scripts": [
+          "typecheck"
+        ]
+      },
+      {
+        "id": "@caribbean/jobs",
+        "type": "package",
+        "path": "packages/jobs",
+        "version": "1.0.0",
+        "scripts": [
+          "typecheck"
+        ]
+      },
+      {
+        "id": "@caribbean/live",
+        "type": "package",
+        "path": "packages/live",
+        "version": "1.0.0",
+        "scripts": [
+          "typecheck"
+        ]
+      },
+      {
+        "id": "@caribbean/localization",
+        "type": "package",
+        "path": "packages/localization",
+        "version": "1.0.0",
+        "scripts": [
+          "typecheck"
+        ]
+      },
+      {
+        "id": "@caribbean/marketplace",
+        "type": "package",
+        "path": "packages/marketplace",
+        "version": "1.0.0",
+        "scripts": [
+          "typecheck"
+        ]
+      },
+      {
+        "id": "@caribbean/media",
+        "type": "package",
+        "path": "packages/media",
+        "version": "1.0.0",
+        "scripts": [
+          "typecheck"
+        ]
+      },
+      {
+        "id": "@caribbean/messaging",
+        "type": "package",
+        "path": "packages/messaging",
+        "version": "1.0.0",
+        "scripts": [
+          "typecheck"
+        ]
+      },
+      {
+        "id": "@caribbean/notifications",
+        "type": "package",
+        "path": "packages/notifications",
+        "version": "1.0.0",
+        "scripts": [
+          "typecheck"
+        ]
+      },
+      {
+        "id": "@caribbean/payments",
+        "type": "package",
+        "path": "packages/payments",
+        "version": "1.0.0",
+        "scripts": [
+          "typecheck"
+        ]
+      },
+      {
+        "id": "@caribbean/podcasts",
+        "type": "package",
+        "path": "packages/podcasts",
+        "version": "1.0.0",
+        "scripts": [
+          "typecheck"
+        ]
+      },
+      {
+        "id": "@caribbean/recommendations",
+        "type": "package",
+        "path": "packages/recommendations",
+        "version": "1.0.0",
+        "scripts": [
+          "typecheck"
+        ]
+      },
+      {
+        "id": "@caribbean/sdk",
+        "type": "package",
+        "path": "packages/sdk",
+        "version": "1.0.0",
+        "scripts": [
+          "typecheck"
+        ]
+      },
+      {
+        "id": "@caribbean/search",
+        "type": "package",
+        "path": "packages/search",
+        "version": "1.0.0",
+        "scripts": [
+          "typecheck"
+        ]
+      },
+      {
+        "id": "@caribbean/social",
+        "type": "package",
+        "path": "packages/social",
+        "version": "1.0.0",
+        "scripts": [
+          "typecheck"
+        ]
+      },
+      {
+        "id": "@caribbean/trust-safety",
+        "type": "package",
+        "path": "packages/trust-safety",
+        "version": "1.0.0",
+        "scripts": [
+          "typecheck"
+        ]
+      },
+      {
+        "id": "@caribbean/ui",
+        "type": "package",
+        "path": "packages/ui",
+        "version": "1.0.0",
+        "scripts": [
+          "typecheck"
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "from": "caribbean-admin",
+        "to": "@caribbean/ai",
+        "type": "workspace_depends_on"
+      },
+      {
+        "from": "caribbean-admin",
+        "to": "@caribbean/analytics",
+        "type": "workspace_depends_on"
+      },
+      {
+        "from": "caribbean-admin",
+        "to": "@caribbean/database",
+        "type": "workspace_depends_on"
+      },
+      {
+        "from": "caribbean-admin",
+        "to": "@caribbean/design-system",
+        "type": "workspace_depends_on"
+      },
+      {
+        "from": "caribbean-admin",
+        "to": "@caribbean/payments",
+        "type": "workspace_depends_on"
+      },
+      {
+        "from": "caribbean-admin",
+        "to": "@caribbean/trust-safety",
+        "type": "workspace_depends_on"
+      },
+      {
+        "from": "caribbean-business-studio",
+        "to": "@caribbean/advertising",
+        "type": "workspace_depends_on"
+      },
+      {
+        "from": "caribbean-business-studio",
+        "to": "@caribbean/business",
+        "type": "workspace_depends_on"
+      },
+      {
+        "from": "caribbean-business-studio",
+        "to": "@caribbean/database",
+        "type": "workspace_depends_on"
+      },
+      {
+        "from": "caribbean-business-studio",
+        "to": "@caribbean/design-system",
+        "type": "workspace_depends_on"
+      },
+      {
+        "from": "caribbean-business-studio",
+        "to": "@caribbean/jobs",
+        "type": "workspace_depends_on"
+      },
+      {
+        "from": "caribbean-business-studio",
+        "to": "@caribbean/payments",
+        "type": "workspace_depends_on"
+      },
+      {
+        "from": "caribbean-creator-studio",
+        "to": "@caribbean/analytics",
+        "type": "workspace_depends_on"
+      },
+      {
+        "from": "caribbean-creator-studio",
+        "to": "@caribbean/creator",
+        "type": "workspace_depends_on"
+      },
+      {
+        "from": "caribbean-creator-studio",
+        "to": "@caribbean/database",
+        "type": "workspace_depends_on"
+      },
+      {
+        "from": "caribbean-creator-studio",
+        "to": "@caribbean/design-system",
+        "type": "workspace_depends_on"
+      },
+      {
+        "from": "caribbean-creator-studio",
+        "to": "@caribbean/jobs",
+        "type": "workspace_depends_on"
+      },
+      {
+        "from": "caribbean-creator-studio",
+        "to": "@caribbean/media",
+        "type": "workspace_depends_on"
+      },
+      {
+        "from": "caribbean-creator-studio",
+        "to": "@caribbean/payments",
+        "type": "workspace_depends_on"
+      },
+      {
+        "from": "caribbean-mobile",
+        "to": "@caribbean/ai",
+        "type": "workspace_depends_on"
+      },
+      {
+        "from": "caribbean-mobile",
+        "to": "@caribbean/design-system",
+        "type": "workspace_depends_on"
+      },
+      {
+        "from": "caribbean-mobile",
+        "to": "@caribbean/localization",
+        "type": "workspace_depends_on"
+      },
+      {
+        "from": "caribbean-mobile",
+        "to": "@caribbean/payments",
+        "type": "workspace_depends_on"
+      },
+      {
+        "from": "caribbean-moderation",
+        "to": "@caribbean/trust-safety",
+        "type": "workspace_depends_on"
+      },
+      {
+        "from": "caribbean-moderation",
+        "to": "@caribbean/database",
+        "type": "workspace_depends_on"
+      },
+      {
+        "from": "caribbean-moderation",
+        "to": "@caribbean/design-system",
+        "type": "workspace_depends_on"
+      },
+      {
+        "from": "caribbean-web",
+        "to": "@caribbean/advertising",
+        "type": "workspace_depends_on"
+      },
+      {
+        "from": "caribbean-web",
+        "to": "@caribbean/ai",
+        "type": "workspace_depends_on"
+      },
+      {
+        "from": "caribbean-web",
+        "to": "@caribbean/analytics",
+        "type": "workspace_depends_on"
+      },
+      {
+        "from": "caribbean-web",
+        "to": "@caribbean/api",
+        "type": "workspace_depends_on"
+      },
+      {
+        "from": "caribbean-web",
+        "to": "@caribbean/business",
+        "type": "workspace_depends_on"
+      },
+      {
+        "from": "caribbean-web",
+        "to": "@caribbean/communities",
+        "type": "workspace_depends_on"
+      },
+      {
+        "from": "caribbean-web",
+        "to": "@caribbean/creator",
+        "type": "workspace_depends_on"
+      },
+      {
+        "from": "caribbean-web",
+        "to": "@caribbean/database",
+        "type": "workspace_depends_on"
+      },
+      {
+        "from": "caribbean-web",
+        "to": "@caribbean/design-system",
+        "type": "workspace_depends_on"
+      },
+      {
+        "from": "caribbean-web",
+        "to": "@caribbean/live",
+        "type": "workspace_depends_on"
+      },
+      {
+        "from": "caribbean-web",
+        "to": "@caribbean/localization",
+        "type": "workspace_depends_on"
+      },
+      {
+        "from": "caribbean-web",
+        "to": "@caribbean/marketplace",
+        "type": "workspace_depends_on"
+      },
+      {
+        "from": "caribbean-web",
+        "to": "@caribbean/media",
+        "type": "workspace_depends_on"
+      },
+      {
+        "from": "caribbean-web",
+        "to": "@caribbean/messaging",
+        "type": "workspace_depends_on"
+      },
+      {
+        "from": "caribbean-web",
+        "to": "@caribbean/notifications",
+        "type": "workspace_depends_on"
+      },
+      {
+        "from": "caribbean-web",
+        "to": "@caribbean/payments",
+        "type": "workspace_depends_on"
+      },
+      {
+        "from": "caribbean-web",
+        "to": "@caribbean/podcasts",
+        "type": "workspace_depends_on"
+      },
+      {
+        "from": "caribbean-web",
+        "to": "@caribbean/recommendations",
+        "type": "workspace_depends_on"
+      },
+      {
+        "from": "caribbean-web",
+        "to": "@caribbean/search",
+        "type": "workspace_depends_on"
+      },
+      {
+        "from": "caribbean-web",
+        "to": "@caribbean/social",
+        "type": "workspace_depends_on"
+      },
+      {
+        "from": "caribbean-web",
+        "to": "@caribbean/trust-safety",
+        "type": "workspace_depends_on"
+      },
+      {
+        "from": "caribbean-web",
+        "to": "@caribbean/ui",
+        "type": "workspace_depends_on"
+      },
+      {
+        "from": "@caribbean/api",
+        "to": "@caribbean/auth",
+        "type": "workspace_depends_on"
+      },
+      {
+        "from": "@caribbean/api",
+        "to": "@caribbean/payments",
+        "type": "workspace_depends_on"
+      },
+      {
+        "from": "@caribbean/media",
+        "to": "@caribbean/localization",
+        "type": "workspace_depends_on"
+      },
+      {
+        "from": "@caribbean/social",
+        "to": "@caribbean/database",
+        "type": "workspace_depends_on"
+      },
+      {
+        "from": "@caribbean/ui",
+        "to": "@caribbean/design-system",
+        "type": "workspace_depends_on"
+      }
+    ]
+  },
+  "database": {
+    "migrationCount": 117,
+    "tablesDefinedCount": 226,
+    "functionsDefinedCount": 93,
+    "duplicatePrefixes": [
+      {
+        "prefix": "00089",
+        "files": [
+          "00089_favorites_and_identity_switcher.sql",
+          "00089_post_media_url_and_type_compatibility.sql"
+        ]
+      },
+      {
+        "prefix": "00108",
+        "files": [
+          "00108_page_publishing_rls_and_feed_distribution.sql",
+          "00108_phase2_security_rls_and_publishing_lifecycle.sql"
+        ]
+      }
+    ],
+    "latestMigrations": [
+      "00107_post_composer_idempotency_and_external_media.sql",
+      "00108_page_publishing_rls_and_feed_distribution.sql",
+      "00108_phase2_security_rls_and_publishing_lifecycle.sql",
+      "00109_messaging_sender_read_sync_and_presence.sql",
+      "00110_tukubi_shorts_video_infrastructure.sql",
+      "00111_transfer_kool_tech_page_ownership.sql",
+      "00112_page_management_storage_and_profile_customization.sql",
+      "00113_dual_host_collaborative_livestreams.sql",
+      "00114_tukubi_ads_production_hardening.sql",
+      "00115_security_ads_and_rpc_hardening.sql"
+    ]
+  },
+  "webRoutes": [
+    {
+      "route": "/admin/administrators/new",
+      "file": "apps/web/src/app/admin/administrators/new/page.tsx"
+    },
+    {
+      "route": "/admin/administrators",
+      "file": "apps/web/src/app/admin/administrators/page.tsx"
+    },
+    {
+      "route": "/admin/administrators/roles",
+      "file": "apps/web/src/app/admin/administrators/roles/page.tsx"
+    },
+    {
+      "route": "/admin/ads",
+      "file": "apps/web/src/app/admin/ads/page.tsx"
+    },
+    {
+      "route": "/admin/analytics",
+      "file": "apps/web/src/app/admin/analytics/page.tsx"
+    },
+    {
+      "route": "/admin/audit-logs",
+      "file": "apps/web/src/app/admin/audit-logs/page.tsx"
+    },
+    {
+      "route": "/admin/bootstrap",
+      "file": "apps/web/src/app/admin/bootstrap/page.tsx"
+    },
+    {
+      "route": "/admin/help",
+      "file": "apps/web/src/app/admin/help/page.tsx"
+    },
+    {
+      "route": "/admin/official-accounts",
+      "file": "apps/web/src/app/admin/official-accounts/page.tsx"
+    },
+    {
+      "route": "/admin",
+      "file": "apps/web/src/app/admin/page.tsx"
+    },
+    {
+      "route": "/admin/payments",
+      "file": "apps/web/src/app/admin/payments/page.tsx"
+    },
+    {
+      "route": "/admin/reports",
+      "file": "apps/web/src/app/admin/reports/page.tsx"
+    },
+    {
+      "route": "/admin/trust-safety",
+      "file": "apps/web/src/app/admin/trust-safety/page.tsx"
+    },
+    {
+      "route": "/admin/users",
+      "file": "apps/web/src/app/admin/users/page.tsx"
+    },
+    {
+      "route": "/ads/new",
+      "file": "apps/web/src/app/ads/new/page.tsx"
+    },
+    {
+      "route": "/ads",
+      "file": "apps/web/src/app/ads/page.tsx"
+    },
+    {
+      "route": "/caribbean",
+      "file": "apps/web/src/app/caribbean/page.tsx"
+    },
+    {
+      "route": "/communities/create",
+      "file": "apps/web/src/app/communities/create/page.tsx"
+    },
+    {
+      "route": "/communities",
+      "file": "apps/web/src/app/communities/page.tsx"
+    },
+    {
+      "route": "/communities/[slug]/manage",
+      "file": "apps/web/src/app/communities/[slug]/manage/page.tsx"
+    },
+    {
+      "route": "/communities/[slug]",
+      "file": "apps/web/src/app/communities/[slug]/page.tsx"
+    },
+    {
+      "route": "/create",
+      "file": "apps/web/src/app/create/page.tsx"
+    },
+    {
+      "route": "/creator-hub",
+      "file": "apps/web/src/app/creator-hub/page.tsx"
+    },
+    {
+      "route": "/creator-marketplace",
+      "file": "apps/web/src/app/creator-marketplace/page.tsx"
+    },
+    {
+      "route": "/creator-studio/captions",
+      "file": "apps/web/src/app/creator-studio/captions/page.tsx"
+    },
+    {
+      "route": "/creator-studio/monetization",
+      "file": "apps/web/src/app/creator-studio/monetization/page.tsx"
+    },
+    {
+      "route": "/creator-studio",
+      "file": "apps/web/src/app/creator-studio/page.tsx"
+    },
+    {
+      "route": "/creator-studio/repurpose",
+      "file": "apps/web/src/app/creator-studio/repurpose/page.tsx"
+    },
+    {
+      "route": "/creator-studio/videos",
+      "file": "apps/web/src/app/creator-studio/videos/page.tsx"
+    },
+    {
+      "route": "/diaspora",
+      "file": "apps/web/src/app/diaspora/page.tsx"
+    },
+    {
+      "route": "/embed/[type]/[id]",
+      "file": "apps/web/src/app/embed/[type]/[id]/page.tsx"
+    },
+    {
+      "route": "/events",
+      "file": "apps/web/src/app/events/page.tsx"
+    },
+    {
+      "route": "/explore/diaspora",
+      "file": "apps/web/src/app/explore/diaspora/page.tsx"
+    },
+    {
+      "route": "/explore/diaspora/[hub]",
+      "file": "apps/web/src/app/explore/diaspora/[hub]/page.tsx"
+    },
+    {
+      "route": "/explore",
+      "file": "apps/web/src/app/explore/page.tsx"
+    },
+    {
+      "route": "/explore/vibe/[vibe]",
+      "file": "apps/web/src/app/explore/vibe/[vibe]/page.tsx"
+    },
+    {
+      "route": "/explore/[slug]",
+      "file": "apps/web/src/app/explore/[slug]/page.tsx"
+    },
+    {
+      "route": "/feeds",
+      "file": "apps/web/src/app/feeds/page.tsx"
+    },
+    {
+      "route": "/feeds/[tab]",
+      "file": "apps/web/src/app/feeds/[tab]/page.tsx"
+    },
+    {
+      "route": "/financial-center/accounts",
+      "file": "apps/web/src/app/financial-center/accounts/page.tsx"
+    },
+    {
+      "route": "/financial-center/creator",
+      "file": "apps/web/src/app/financial-center/creator/page.tsx"
+    },
+    {
+      "route": "/financial-center/events",
+      "file": "apps/web/src/app/financial-center/events/page.tsx"
+    },
+    {
+      "route": "/financial-center/help",
+      "file": "apps/web/src/app/financial-center/help/page.tsx"
+    },
+    {
+      "route": "/financial-center/merchant",
+      "file": "apps/web/src/app/financial-center/merchant/page.tsx"
+    },
+    {
+      "route": "/financial-center",
+      "file": "apps/web/src/app/financial-center/page.tsx"
+    },
+    {
+      "route": "/financial-center/payment-methods",
+      "file": "apps/web/src/app/financial-center/payment-methods/page.tsx"
+    },
+    {
+      "route": "/financial-center/refunds",
+      "file": "apps/web/src/app/financial-center/refunds/page.tsx"
+    },
+    {
+      "route": "/financial-center/security",
+      "file": "apps/web/src/app/financial-center/security/page.tsx"
+    },
+    {
+      "route": "/financial-center/statements",
+      "file": "apps/web/src/app/financial-center/statements/page.tsx"
+    },
+    {
+      "route": "/financial-center/subscriptions",
+      "file": "apps/web/src/app/financial-center/subscriptions/page.tsx"
+    },
+    {
+      "route": "/financial-center/transactions",
+      "file": "apps/web/src/app/financial-center/transactions/page.tsx"
+    },
+    {
+      "route": "/financial-center/transfers",
+      "file": "apps/web/src/app/financial-center/transfers/page.tsx"
+    },
+    {
+      "route": "/forgot-password",
+      "file": "apps/web/src/app/forgot-password/page.tsx"
+    },
+    {
+      "route": "/friends",
+      "file": "apps/web/src/app/friends/page.tsx"
+    },
+    {
+      "route": "/help",
+      "file": "apps/web/src/app/help/page.tsx"
+    },
+    {
+      "route": "/help/search",
+      "file": "apps/web/src/app/help/search/page.tsx"
+    },
+    {
+      "route": "/help/[slug]",
+      "file": "apps/web/src/app/help/[slug]/page.tsx"
+    },
+    {
+      "route": "/home",
+      "file": "apps/web/src/app/home/page.tsx"
+    },
+    {
+      "route": "/labs",
+      "file": "apps/web/src/app/labs/page.tsx"
+    },
+    {
+      "route": "/learn",
+      "file": "apps/web/src/app/learn/page.tsx"
+    },
+    {
+      "route": "/learn/[category]",
+      "file": "apps/web/src/app/learn/[category]/page.tsx"
+    },
+    {
+      "route": "/live/broadcast",
+      "file": "apps/web/src/app/live/broadcast/page.tsx"
+    },
+    {
+      "route": "/live",
+      "file": "apps/web/src/app/live/page.tsx"
+    },
+    {
+      "route": "/login",
+      "file": "apps/web/src/app/login/page.tsx"
+    },
+    {
+      "route": "/map",
+      "file": "apps/web/src/app/map/page.tsx"
+    },
+    {
+      "route": "/marketplace/disputes",
+      "file": "apps/web/src/app/marketplace/disputes/page.tsx"
+    },
+    {
+      "route": "/marketplace/offers",
+      "file": "apps/web/src/app/marketplace/offers/page.tsx"
+    },
+    {
+      "route": "/marketplace/orders",
+      "file": "apps/web/src/app/marketplace/orders/page.tsx"
+    },
+    {
+      "route": "/marketplace",
+      "file": "apps/web/src/app/marketplace/page.tsx"
+    },
+    {
+      "route": "/marketplace/seller-center/create",
+      "file": "apps/web/src/app/marketplace/seller-center/create/page.tsx"
+    },
+    {
+      "route": "/marketplace/seller-center",
+      "file": "apps/web/src/app/marketplace/seller-center/page.tsx"
+    },
+    {
+      "route": "/marketplace/wishlist",
+      "file": "apps/web/src/app/marketplace/wishlist/page.tsx"
+    },
+    {
+      "route": "/marketplace/[id]",
+      "file": "apps/web/src/app/marketplace/[id]/page.tsx"
+    },
+    {
+      "route": "/members",
+      "file": "apps/web/src/app/members/page.tsx"
+    },
+    {
+      "route": "/merchant",
+      "file": "apps/web/src/app/merchant/page.tsx"
+    },
+    {
+      "route": "/messages",
+      "file": "apps/web/src/app/messages/page.tsx"
+    },
+    {
+      "route": "/messages/[username]",
+      "file": "apps/web/src/app/messages/[username]/page.tsx"
+    },
+    {
+      "route": "/moderation/analytics",
+      "file": "apps/web/src/app/moderation/analytics/page.tsx"
+    },
+    {
+      "route": "/moderation/appeals",
+      "file": "apps/web/src/app/moderation/appeals/page.tsx"
+    },
+    {
+      "route": "/moderation/cases",
+      "file": "apps/web/src/app/moderation/cases/page.tsx"
+    },
+    {
+      "route": "/moderation",
+      "file": "apps/web/src/app/moderation/page.tsx"
+    },
+    {
+      "route": "/moderation/signup",
+      "file": "apps/web/src/app/moderation/signup/page.tsx"
+    },
+    {
+      "route": "/moderator/signup",
+      "file": "apps/web/src/app/moderator/signup/page.tsx"
+    },
+    {
+      "route": "/notifications",
+      "file": "apps/web/src/app/notifications/page.tsx"
+    },
+    {
+      "route": "/offline",
+      "file": "apps/web/src/app/offline/page.tsx"
+    },
+    {
+      "route": "/onboarding",
+      "file": "apps/web/src/app/onboarding/page.tsx"
+    },
+    {
+      "route": "/",
+      "file": "apps/web/src/app/page.tsx"
+    },
+    {
+      "route": "/pages/create",
+      "file": "apps/web/src/app/pages/create/page.tsx"
+    },
+    {
+      "route": "/pages",
+      "file": "apps/web/src/app/pages/page.tsx"
+    },
+    {
+      "route": "/pages/[slug]/manage",
+      "file": "apps/web/src/app/pages/[slug]/manage/page.tsx"
+    },
+    {
+      "route": "/pages/[slug]",
+      "file": "apps/web/src/app/pages/[slug]/page.tsx"
+    },
+    {
+      "route": "/people",
+      "file": "apps/web/src/app/people/page.tsx"
+    },
+    {
+      "route": "/podcast",
+      "file": "apps/web/src/app/podcast/page.tsx"
+    },
+    {
+      "route": "/podcasts",
+      "file": "apps/web/src/app/podcasts/page.tsx"
+    },
+    {
+      "route": "/podcasts/[slug]",
+      "file": "apps/web/src/app/podcasts/[slug]/page.tsx"
+    },
+    {
+      "route": "/post/[id]",
+      "file": "apps/web/src/app/post/[id]/page.tsx"
+    },
+    {
+      "route": "/privacy",
+      "file": "apps/web/src/app/privacy/page.tsx"
+    },
+    {
+      "route": "/profile",
+      "file": "apps/web/src/app/profile/page.tsx"
+    },
+    {
+      "route": "/profile/[username]",
+      "file": "apps/web/src/app/profile/[username]/page.tsx"
+    },
+    {
+      "route": "/recognition/achievements",
+      "file": "apps/web/src/app/recognition/achievements/page.tsx"
+    },
+    {
+      "route": "/recognition/hall-of-fame",
+      "file": "apps/web/src/app/recognition/hall-of-fame/page.tsx"
+    },
+    {
+      "route": "/recognition",
+      "file": "apps/web/src/app/recognition/page.tsx"
+    },
+    {
+      "route": "/reels",
+      "file": "apps/web/src/app/reels/page.tsx"
+    },
+    {
+      "route": "/relief",
+      "file": "apps/web/src/app/relief/page.tsx"
+    },
+    {
+      "route": "/reset-password",
+      "file": "apps/web/src/app/reset-password/page.tsx"
+    },
+    {
+      "route": "/saved",
+      "file": "apps/web/src/app/saved/page.tsx"
+    },
+    {
+      "route": "/search",
+      "file": "apps/web/src/app/search/page.tsx"
+    },
+    {
+      "route": "/settings",
+      "file": "apps/web/src/app/settings/page.tsx"
+    },
+    {
+      "route": "/shorts",
+      "file": "apps/web/src/app/shorts/page.tsx"
+    },
+    {
+      "route": "/signup/account",
+      "file": "apps/web/src/app/signup/account/page.tsx"
+    },
+    {
+      "route": "/signup/caribbean",
+      "file": "apps/web/src/app/signup/caribbean/page.tsx"
+    },
+    {
+      "route": "/signup/complete",
+      "file": "apps/web/src/app/signup/complete/page.tsx"
+    },
+    {
+      "route": "/signup/interests",
+      "file": "apps/web/src/app/signup/interests/page.tsx"
+    },
+    {
+      "route": "/signup",
+      "file": "apps/web/src/app/signup/page.tsx"
+    },
+    {
+      "route": "/sounds",
+      "file": "apps/web/src/app/sounds/page.tsx"
+    },
+    {
+      "route": "/sounds/[id]",
+      "file": "apps/web/src/app/sounds/[id]/page.tsx"
+    },
+    {
+      "route": "/store/[slug]",
+      "file": "apps/web/src/app/store/[slug]/page.tsx"
+    },
+    {
+      "route": "/terms",
+      "file": "apps/web/src/app/terms/page.tsx"
+    }
+  ],
+  "apiRoutes": [
+    {
+      "route": "/api/ads/click",
+      "file": "apps/web/src/app/api/ads/click/route.ts"
+    },
+    {
+      "route": "/api/ads/impression",
+      "file": "apps/web/src/app/api/ads/impression/route.ts"
+    },
+    {
+      "route": "/api/auth/check-username",
+      "file": "apps/web/src/app/api/auth/check-username/route.ts"
+    },
+    {
+      "route": "/api/discovery/ai-search",
+      "file": "apps/web/src/app/api/discovery/ai-search/route.ts"
+    },
+    {
+      "route": "/api/discovery/feedback",
+      "file": "apps/web/src/app/api/discovery/feedback/route.ts"
+    },
+    {
+      "route": "/api/discovery/recommendations",
+      "file": "apps/web/src/app/api/discovery/recommendations/route.ts"
+    },
+    {
+      "route": "/api/discovery/search",
+      "file": "apps/web/src/app/api/discovery/search/route.ts"
+    },
+    {
+      "route": "/api/oembed",
+      "file": "apps/web/src/app/api/oembed/route.ts"
+    },
+    {
+      "route": "/api/payments/checkout",
+      "file": "apps/web/src/app/api/payments/checkout/route.ts"
+    },
+    {
+      "route": "/api/payments/payouts",
+      "file": "apps/web/src/app/api/payments/payouts/route.ts"
+    },
+    {
+      "route": "/api/payments/paypal/capture",
+      "file": "apps/web/src/app/api/payments/paypal/capture/route.ts"
+    },
+    {
+      "route": "/api/payments/providers",
+      "file": "apps/web/src/app/api/payments/providers/route.ts"
+    },
+    {
+      "route": "/api/payments/subscriptions",
+      "file": "apps/web/src/app/api/payments/subscriptions/route.ts"
+    },
+    {
+      "route": "/api/payments/webhooks/[provider]",
+      "file": "apps/web/src/app/api/payments/webhooks/[provider]/route.ts"
+    },
+    {
+      "route": "/api/recognition/achievements",
+      "file": "apps/web/src/app/api/recognition/achievements/route.ts"
+    },
+    {
+      "route": "/api/recognition/badges",
+      "file": "apps/web/src/app/api/recognition/badges/route.ts"
+    },
+    {
+      "route": "/api/recognition/founders/claim",
+      "file": "apps/web/src/app/api/recognition/founders/claim/route.ts"
+    },
+    {
+      "route": "/api/recognition/hall-of-fame",
+      "file": "apps/web/src/app/api/recognition/hall-of-fame/route.ts"
+    },
+    {
+      "route": "/api/recognition/labs",
+      "file": "apps/web/src/app/api/recognition/labs/route.ts"
+    },
+    {
+      "route": "/api/recognition/labs/[id]/feedback",
+      "file": "apps/web/src/app/api/recognition/labs/[id]/feedback/route.ts"
+    },
+    {
+      "route": "/api/recognition/labs/[id]/join",
+      "file": "apps/web/src/app/api/recognition/labs/[id]/join/route.ts"
+    },
+    {
+      "route": "/api/recognition/spotlights",
+      "file": "apps/web/src/app/api/recognition/spotlights/route.ts"
+    },
+    {
+      "route": "/api/recognition/summary",
+      "file": "apps/web/src/app/api/recognition/summary/route.ts"
+    },
+    {
+      "route": "/api/translate",
+      "file": "apps/web/src/app/api/translate/route.ts"
+    },
+    {
+      "route": "/api/v1/ai",
+      "file": "apps/web/src/app/api/v1/ai/route.ts"
+    },
+    {
+      "route": "/api/v1/ask",
+      "file": "apps/web/src/app/api/v1/ask/route.ts"
+    },
+    {
+      "route": "/api/v1/communities",
+      "file": "apps/web/src/app/api/v1/communities/route.ts"
+    },
+    {
+      "route": "/api/v1/forge/publish",
+      "file": "apps/web/src/app/api/v1/forge/publish/route.ts"
+    },
+    {
+      "route": "/api/v1/health",
+      "file": "apps/web/src/app/api/v1/health/route.ts"
+    },
+    {
+      "route": "/api/v1/help/feedback",
+      "file": "apps/web/src/app/api/v1/help/feedback/route.ts"
+    },
+    {
+      "route": "/api/v1/help/search",
+      "file": "apps/web/src/app/api/v1/help/search/route.ts"
+    },
+    {
+      "route": "/api/v1/media/health",
+      "file": "apps/web/src/app/api/v1/media/health/route.ts"
+    },
+    {
+      "route": "/api/v1/media/resolve-url",
+      "file": "apps/web/src/app/api/v1/media/resolve-url/route.ts"
+    },
+    {
+      "route": "/api/v1/notifications",
+      "file": "apps/web/src/app/api/v1/notifications/route.ts"
+    },
+    {
+      "route": "/api/v1/podcasts/[id]/rss",
+      "file": "apps/web/src/app/api/v1/podcasts/[id]/rss/route.ts"
+    },
+    {
+      "route": "/api/webhooks/carriers",
+      "file": "apps/web/src/app/api/webhooks/carriers/route.ts"
+    },
+    {
+      "route": "/api/webhooks/stripe",
+      "file": "apps/web/src/app/api/webhooks/stripe/route.ts"
+    },
+    {
+      "route": "/auth/callback",
+      "file": "apps/web/src/app/auth/callback/route.ts"
+    }
+  ],
+  "topTablesByUsage": [
+    {
+      "table": "profiles",
+      "referenceCount": 44
+    },
+    {
+      "table": "posts",
+      "referenceCount": 26
+    },
+    {
+      "table": "products",
+      "referenceCount": 18
+    },
+    {
+      "table": "businesses",
+      "referenceCount": 16
+    },
+    {
+      "table": "videos",
+      "referenceCount": 15
+    },
+    {
+      "table": "podcasts",
+      "referenceCount": 13
+    },
+    {
+      "table": "livestreams",
+      "referenceCount": 12
+    },
+    {
+      "table": "follows",
+      "referenceCount": 12
+    },
+    {
+      "table": "creator_accounts",
+      "referenceCount": 11
+    },
+    {
+      "table": "communities",
+      "referenceCount": 11
+    },
+    {
+      "table": "community_members",
+      "referenceCount": 10
+    },
+    {
+      "table": "events",
+      "referenceCount": 10
+    },
+    {
+      "table": "ledger_accounts",
+      "referenceCount": 10
+    },
+    {
+      "table": "payment_intents",
+      "referenceCount": 9
+    },
+    {
+      "table": "ledger_entries",
+      "referenceCount": 9
+    },
+    {
+      "table": "moderation_cases",
+      "referenceCount": 8
+    },
+    {
+      "table": "orders",
+      "referenceCount": 8
+    },
+    {
+      "table": "subscriptions",
+      "referenceCount": 8
+    },
+    {
+      "table": "accounts",
+      "referenceCount": 7
+    },
+    {
+      "table": "profile_counts",
+      "referenceCount": 7
+    },
+    {
+      "table": "friendships",
+      "referenceCount": 7
+    },
+    {
+      "table": "feature_flags",
+      "referenceCount": 6
+    },
+    {
+      "table": "audit_logs",
+      "referenceCount": 5
+    },
+    {
+      "table": "official_accounts",
+      "referenceCount": 5
+    },
+    {
+      "table": "official_account_operators",
+      "referenceCount": 5
+    },
+    {
+      "table": "reports",
+      "referenceCount": 5
+    },
+    {
+      "table": "creator_subscription_plans",
+      "referenceCount": 5
+    },
+    {
+      "table": "podcast_episodes",
+      "referenceCount": 5
+    },
+    {
+      "table": "page_roles",
+      "referenceCount": 5
+    },
+    {
+      "table": "blocks",
+      "referenceCount": 5
+    },
+    {
+      "table": "saved_posts",
+      "referenceCount": 5
+    },
+    {
+      "table": "help_articles",
+      "referenceCount": 4
+    },
+    {
+      "table": "ads",
+      "referenceCount": 4
+    },
+    {
+      "table": "monetization_tier_configs",
+      "referenceCount": 4
+    },
+    {
+      "table": "campaigns",
+      "referenceCount": 4
+    },
+    {
+      "table": "payouts",
+      "referenceCount": 4
+    },
+    {
+      "table": "commercial_subscriptions",
+      "referenceCount": 4
+    },
+    {
+      "table": "notifications",
+      "referenceCount": 4
+    },
+    {
+      "table": "creator_content_drafts",
+      "referenceCount": 4
+    },
+    {
+      "table": "marketplace_wishlists",
+      "referenceCount": 4
+    }
+  ],
+  "serverActionModules": [
+    {
+      "file": "apps/web/src/lib/admin/actions.ts",
+      "isUseServer": true,
+      "exportedFunctions": [
+        "toggleFeatureFlagAction"
+      ],
+      "tablesQueried": [
+        "feature_flags"
+      ],
+      "rpcsCalled": [],
+      "internalImports": [
+        "../supabase/server"
+      ]
+    },
+    {
+      "file": "apps/web/src/lib/admin/staff-actions.ts",
+      "isUseServer": true,
+      "exportedFunctions": [
+        "createStaffAccountAction",
+        "updateStaffRoleAction",
+        "toggleAccountStatusAction",
+        "revokeStaffAccessAction",
+        "bootstrapSuperAdminAction"
+      ],
+      "tablesQueried": [
+        "profiles",
+        "accounts",
+        "audit_logs"
+      ],
+      "rpcsCalled": [],
+      "internalImports": [
+        "../supabase/server",
+        "./types"
+      ]
+    },
+    {
+      "file": "apps/web/src/lib/advertising/actions.ts",
+      "isUseServer": true,
+      "exportedFunctions": [
+        "createCampaignAction",
+        "createAdSetAction",
+        "createAdAction",
+        "fetchAdvertiserCampaignsAction",
+        "updateCampaignStatusAction",
+        "generateAIAdCopyAction",
+        "initiateCampaignCheckoutAction",
+        "fetchPendingCampaignsForAdminAction",
+        "approveCampaignAdminAction",
+        "rejectCampaignAdminAction"
+      ],
+      "tablesQueried": [
+        "advertisers",
+        "profiles",
+        "campaigns",
+        "ad_sets",
+        "ads",
+        "ad_events",
+        "ad_impressions",
+        "ad_clicks",
+        "payment_intents",
+        "audit_logs"
+      ],
+      "rpcsCalled": [],
+      "internalImports": [
+        "../supabase/server",
+        "@caribbean/advertising"
+      ]
+    },
+    {
+      "file": "apps/web/src/lib/ai/ask-caribbean.ts",
+      "isUseServer": false,
+      "exportedFunctions": [
+        "extractKeywords",
+        "askCaribbean"
+      ],
+      "tablesQueried": [
+        "events",
+        "communities",
+        "posts",
+        "businesses",
+        "profiles",
+        "podcasts",
+        "livestreams",
+        "products"
+      ],
+      "rpcsCalled": [],
+      "internalImports": [
+        "@caribbean/ai",
+        "../supabase/server"
+      ]
+    },
+    {
+      "file": "apps/web/src/lib/ai/creation-actions.ts",
+      "isUseServer": true,
+      "exportedFunctions": [
+        "generateCaptionAction",
+        "generateHashtagsAction"
+      ],
+      "tablesQueried": [],
+      "rpcsCalled": [],
+      "internalImports": [
+        "@caribbean/ai",
+        "../rate-limit/sliding-window",
+        "./creation-utils"
+      ]
+    },
+    {
+      "file": "apps/web/src/lib/ai/creation-utils.ts",
+      "isUseServer": false,
+      "exportedFunctions": [
+        "extractJsonFromAiResponse"
+      ],
+      "tablesQueried": [],
+      "rpcsCalled": [],
+      "internalImports": []
+    },
+    {
+      "file": "apps/web/src/lib/ai/creator-actions.ts",
+      "isUseServer": true,
+      "exportedFunctions": [
+        "creatorAIInsightAction"
+      ],
+      "tablesQueried": [],
+      "rpcsCalled": [],
+      "internalImports": [
+        "@caribbean/ai"
+      ]
+    },
+    {
+      "file": "apps/web/src/lib/auth/actions.ts",
+      "isUseServer": true,
+      "exportedFunctions": [
+        "initiateMfaLogin",
+        "verifyMfaChallenge",
+        "setupMfa",
+        "validateMfaSession",
+        "completeFullRegistrationAction",
+        "signUpAction",
+        "signInAction",
+        "signOutAction",
+        "fetchUserOperatingIdentitiesAction"
+      ],
+      "tablesQueried": [
+        "profiles",
+        "profile_identity",
+        "accounts",
+        "creator_accounts",
+        "businesses",
+        "page_roles",
+        "community_members",
+        "official_account_operators",
+        "official_accounts"
+      ],
+      "rpcsCalled": [],
+      "internalImports": [
+        "@/lib/supabase/server",
+        "./redirect-utils"
+      ]
+    },
+    {
+      "file": "apps/web/src/lib/auth/banned-testers.ts",
+      "isUseServer": false,
+      "exportedFunctions": [
+        "isBannedTesterAccount"
+      ],
+      "tablesQueried": [],
+      "rpcsCalled": [],
+      "internalImports": []
+    },
+    {
+      "file": "apps/web/src/lib/auth/recovery-actions.ts",
+      "isUseServer": true,
+      "exportedFunctions": [
+        "requestPasswordResetAction",
+        "updatePasswordAction"
+      ],
+      "tablesQueried": [],
+      "rpcsCalled": [],
+      "internalImports": [
+        "../supabase/server"
+      ]
+    },
+    {
+      "file": "apps/web/src/lib/auth/redirect-utils.ts",
+      "isUseServer": false,
+      "exportedFunctions": [
+        "sanitizeRedirectUrl"
+      ],
+      "tablesQueried": [],
+      "rpcsCalled": [],
+      "internalImports": []
+    },
+    {
+      "file": "apps/web/src/lib/auth/signup-session.ts",
+      "isUseServer": false,
+      "exportedFunctions": [
+        "getSignupSession",
+        "saveSignupSession",
+        "clearSignupSession"
+      ],
+      "tablesQueried": [],
+      "rpcsCalled": [],
+      "internalImports": []
+    },
+    {
+      "file": "apps/web/src/lib/auth/user-sync.ts",
+      "isUseServer": false,
+      "exportedFunctions": [
+        "ensureUserProfile"
+      ],
+      "tablesQueried": [
+        "profiles",
+        "profile_counts",
+        "notification_preferences"
+      ],
+      "rpcsCalled": [],
+      "internalImports": [
+        "../supabase/server"
+      ]
+    },
+    {
+      "file": "apps/web/src/lib/business/actions.ts",
+      "isUseServer": true,
+      "exportedFunctions": [
+        "createBusinessPageAction",
+        "fetchBusinessPageAction",
+        "updateBusinessPageAction",
+        "archiveBusinessPageAction",
+        "deleteBusinessPageAction",
+        "upgradeSellerPlanAction"
+      ],
+      "tablesQueried": [
+        "businesses",
+        "ledger_accounts",
+        "products",
+        "user_active_identity",
+        "payment_intents",
+        "business_subscriptions"
+      ],
+      "rpcsCalled": [],
+      "internalImports": [
+        "../supabase/server"
+      ]
+    },
+    {
+      "file": "apps/web/src/lib/cache/redis-cache.ts",
+      "isUseServer": false,
+      "exportedFunctions": [
+        "cacheGet",
+        "cacheSet",
+        "cacheDelete",
+        "cacheDeletePattern"
+      ],
+      "tablesQueried": [],
+      "rpcsCalled": [],
+      "internalImports": []
+    },
+    {
+      "file": "apps/web/src/lib/commerce/actions.ts",
+      "isUseServer": true,
+      "exportedFunctions": [
+        "mapDbStorefrontToConfig",
+        "createOrUpdateStorefrontAction",
+        "fetchStorefrontConfigAction",
+        "placeOrderWithEscrowAction",
+        "fetchOrderEscrowDetailsAction"
+      ],
+      "tablesQueried": [
+        "storefront_configs",
+        "orders"
+      ],
+      "rpcsCalled": [
+        "place_order_with_escrow"
+      ],
+      "internalImports": [
+        "../supabase/server",
+        "@caribbean/marketplace",
+        "./types"
+      ]
+    },
+    {
+      "file": "apps/web/src/lib/commerce/cart-store.ts",
+      "isUseServer": false,
+      "exportedFunctions": [
+        "getCartLines",
+        "addCartLine",
+        "updateCartQuantity",
+        "removeCartLine",
+        "clearCart",
+        "subscribeCart",
+        "useCartStore"
+      ],
+      "tablesQueried": [],
+      "rpcsCalled": [],
+      "internalImports": [
+        "@caribbean/marketplace"
+      ]
+    },
+    {
+      "file": "apps/web/src/lib/communities/actions.ts",
+      "isUseServer": true,
+      "exportedFunctions": [
+        "joinCommunityAction",
+        "leaveCommunityAction",
+        "createCommunityAction",
+        "fetchCommunityAction",
+        "updateCommunityAction",
+        "archiveCommunityAction",
+        "deleteCommunityAction"
+      ],
+      "tablesQueried": [
+        "communities",
+        "community_members",
+        "user_active_identity"
+      ],
+      "rpcsCalled": [],
+      "internalImports": [
+        "../supabase/server",
+        "@caribbean/communities"
+      ]
+    },
+    {
+      "file": "apps/web/src/lib/constants/caribbean-sounds.ts",
+      "isUseServer": false,
+      "exportedFunctions": [
+        "searchCaribbeanSounds"
+      ],
+      "tablesQueried": [],
+      "rpcsCalled": [],
+      "internalImports": []
+    },
+    {
+      "file": "apps/web/src/lib/constants/caribbean-territories.ts",
+      "isUseServer": false,
+      "exportedFunctions": [
+        "normalizeCaribbeanCountryIso"
+      ],
+      "tablesQueried": [],
+      "rpcsCalled": [],
+      "internalImports": []
+    },
+    {
+      "file": "apps/web/src/lib/creator/actions.ts",
+      "isUseServer": true,
+      "exportedFunctions": [
+        "setupCreatorAccountAction",
+        "requestPayoutAction",
+        "sendTipAction"
+      ],
+      "tablesQueried": [
+        "creator_accounts"
+      ],
+      "rpcsCalled": [],
+      "internalImports": [
+        "../supabase/server"
+      ]
+    },
+    {
+      "file": "apps/web/src/lib/creator/analytics-actions.ts",
+      "isUseServer": true,
+      "exportedFunctions": [
+        "fetchCreatorAnalyticsAction"
+      ],
+      "tablesQueried": [
+        "profile_counts",
+        "posts",
+        "videos",
+        "ledger_accounts",
+        "follows",
+        "ledger_entries"
+      ],
+      "rpcsCalled": [],
+      "internalImports": [
+        "../supabase/server",
+        "@caribbean/payments"
+      ]
+    },
+    {
+      "file": "apps/web/src/lib/creator/draft-actions.ts",
+      "isUseServer": true,
+      "exportedFunctions": [
+        "saveDraftAction",
+        "deleteDraftAction",
+        "clearAllCreatorDraftsAction",
+        "getCreatorDraftsAction"
+      ],
+      "tablesQueried": [
+        "creator_content_drafts"
+      ],
+      "rpcsCalled": [],
+      "internalImports": [
+        "../supabase/server"
+      ]
+    },
+    {
+      "file": "apps/web/src/lib/creator/monetization-actions.ts",
+      "isUseServer": true,
+      "exportedFunctions": [
+        "createCreatorPlanAction",
+        "toggleCreatorPlanStatusAction",
+        "requestCreatorPayoutAction"
+      ],
+      "tablesQueried": [
+        "creator_accounts",
+        "creator_subscription_plans",
+        "ledger_accounts",
+        "ledger_entries",
+        "payouts"
+      ],
+      "rpcsCalled": [],
+      "internalImports": [
+        "../supabase/server",
+        "@caribbean/payments"
+      ]
+    },
+    {
+      "file": "apps/web/src/lib/creator/repurpose-actions.ts",
+      "isUseServer": true,
+      "exportedFunctions": [
+        "repurposePodcastEpisodeAction",
+        "saveRepurposedContentAction"
+      ],
+      "tablesQueried": [
+        "podcast_episodes"
+      ],
+      "rpcsCalled": [],
+      "internalImports": [
+        "@caribbean/ai",
+        "../../lib/supabase/server"
+      ]
+    },
+    {
+      "file": "apps/web/src/lib/discovery/actions.ts",
+      "isUseServer": true,
+      "exportedFunctions": [
+        "universalSearchAction",
+        "fetchPeopleYouMayKnowAction",
+        "fetchFriendsOverviewAction",
+        "fetchMembersDirectoryAction"
+      ],
+      "tablesQueried": [
+        "profiles",
+        "businesses",
+        "communities",
+        "events",
+        "products",
+        "posts",
+        "videos",
+        "sounds",
+        "livestreams",
+        "podcasts",
+        "blocks",
+        "follows",
+        "friendships"
+      ],
+      "rpcsCalled": [],
+      "internalImports": [
+        "../supabase/server",
+        "@caribbean/search",
+        "@caribbean/recommendations",
+        "../social/relationship-actions",
+        "../constants/caribbean-territories"
+      ]
+    },
+    {
+      "file": "apps/web/src/lib/emoji/emoji-search.ts",
+      "isUseServer": false,
+      "exportedFunctions": [
+        "searchEmojis"
+      ],
+      "tablesQueried": [],
+      "rpcsCalled": [],
+      "internalImports": [
+        "./unicode-dataset",
+        "./types"
+      ]
+    },
+    {
+      "file": "apps/web/src/lib/emoji/recent-store.ts",
+      "isUseServer": false,
+      "exportedFunctions": [
+        "getRecentEmojis",
+        "addRecentEmoji",
+        "clearRecentEmojis",
+        "getFavoriteEmojis",
+        "toggleFavoriteEmoji",
+        "isFavoriteEmoji",
+        "clearFavoriteEmojis"
+      ],
+      "tablesQueried": [],
+      "rpcsCalled": [],
+      "internalImports": []
+    },
+    {
+      "file": "apps/web/src/lib/emoji/skin-tones.ts",
+      "isUseServer": false,
+      "exportedFunctions": [
+        "supportsSkinTone",
+        "applySkinTone"
+      ],
+      "tablesQueried": [],
+      "rpcsCalled": [],
+      "internalImports": [
+        "./types",
+        "./unicode-dataset"
+      ]
+    },
+    {
+      "file": "apps/web/src/lib/events/actions.ts",
+      "isUseServer": true,
+      "exportedFunctions": [
+        "createEventAction",
+        "rsvpAction",
+        "checkInAttendeeAction",
+        "rsvpEventFormAction",
+        "updateEventAction",
+        "cancelEventAction",
+        "deleteEventAction"
+      ],
+      "tablesQueried": [
+        "events",
+        "event_attendees"
+      ],
+      "rpcsCalled": [],
+      "internalImports": [
+        "../supabase/server",
+        "./types"
+      ]
+    },
+    {
+      "file": "apps/web/src/lib/events/types.ts",
+      "isUseServer": false,
+      "exportedFunctions": [
+        "validateRSVPTransition",
+        "canUserAccessEvent",
+        "formatEventDateTime",
+        "isEventLive"
+      ],
+      "tablesQueried": [],
+      "rpcsCalled": [],
+      "internalImports": []
+    },
+    {
+      "file": "apps/web/src/lib/explore/actions.ts",
+      "isUseServer": true,
+      "exportedFunctions": [
+        "fetchTrendingSignalsAction",
+        "fetchExploreDataAction"
+      ],
+      "tablesQueried": [
+        "trending_signals"
+      ],
+      "rpcsCalled": [],
+      "internalImports": [
+        "../supabase/server",
+        "./discovery-engine",
+        "./constants",
+        "./canonical-geography"
+      ]
+    },
+    {
+      "file": "apps/web/src/lib/explore/canonical-geography.ts",
+      "isUseServer": false,
+      "exportedFunctions": [
+        "resolveGeography",
+        "getDiasporaHubsForGeography",
+        "getOriginNationsForHub"
+      ],
+      "tablesQueried": [],
+      "rpcsCalled": [],
+      "internalImports": []
+    },
+    {
+      "file": "apps/web/src/lib/explore/discovery-engine.ts",
+      "isUseServer": false,
+      "exportedFunctions": [
+        "executeDiscoveryQuery"
+      ],
+      "tablesQueried": [
+        "countries",
+        "posts",
+        "profiles",
+        "events",
+        "communities",
+        "businesses",
+        "products",
+        "videos",
+        "podcasts",
+        "livestreams",
+        "trending_signals"
+      ],
+      "rpcsCalled": [],
+      "internalImports": [
+        "../supabase/server",
+        "./canonical-geography",
+        "./constants",
+        "../constants/caribbean-territories",
+        "../constants/diaspora-hubs",
+        "../constants/caribbean-sounds"
+      ]
+    },
+    {
+      "file": "apps/web/src/lib/feed/hydrate-posts.ts",
+      "isUseServer": false,
+      "exportedFunctions": [
+        "formatRelativeTime",
+        "hydratePostsEngagement"
+      ],
+      "tablesQueried": [
+        "post_reactions",
+        "saved_posts",
+        "user_favorites",
+        "hidden_posts",
+        "businesses",
+        "communities",
+        "posts",
+        "post_external_media",
+        "post_media"
+      ],
+      "rpcsCalled": [],
+      "internalImports": [
+        "../../components/reactions/reaction-picker",
+        "../../components/feed-stream",
+        "../auth/banned-testers"
+      ]
+    },
+    {
+      "file": "apps/web/src/lib/feed/load-feed.ts",
+      "isUseServer": false,
+      "exportedFunctions": [
+        "loadFeedPageData"
+      ],
+      "tablesQueried": [
+        "friendships",
+        "follows",
+        "user_favorites",
+        "profiles",
+        "trending_signals",
+        "ads"
+      ],
+      "rpcsCalled": [],
+      "internalImports": [
+        "../supabase/server",
+        "@caribbean/social",
+        "@caribbean/database",
+        "./ranking",
+        "./hydrate-posts",
+        "../../components/feed-stream",
+        "@caribbean/advertising"
+      ]
+    },
+    {
+      "file": "apps/web/src/lib/feed/ranking.ts",
+      "isUseServer": false,
+      "exportedFunctions": [
+        "buildRankedFeed",
+        "invalidateFeedCache"
+      ],
+      "tablesQueried": [
+        "feature_flags",
+        "posts",
+        "follows",
+        "page_followers",
+        "friendships",
+        "community_members",
+        "user_favorites",
+        "creator_accounts",
+        "profiles"
+      ],
+      "rpcsCalled": [],
+      "internalImports": [
+        "@caribbean/social",
+        "@caribbean/database",
+        "@caribbean/recommendations",
+        "../cache/redis-cache"
+      ]
+    },
+    {
+      "file": "apps/web/src/lib/help/articles-data.ts",
+      "isUseServer": false,
+      "exportedFunctions": [
+        "getArticleBySlug",
+        "getArticlesByCategory",
+        "searchArticles"
+      ],
+      "tablesQueried": [],
+      "rpcsCalled": [],
+      "internalImports": [
+        "../../components/help/article-content"
+      ]
+    },
+    {
+      "file": "apps/web/src/lib/live/actions.ts",
+      "isUseServer": true,
+      "exportedFunctions": [
+        "sendGiftAction",
+        "sendLiveMessageAction",
+        "deleteLiveMessageAction",
+        "createLivestreamAction",
+        "startScheduledLivestreamAction",
+        "endLivestreamAction",
+        "saveLiveReplayToReelAction",
+        "recordLiveViewerHeartbeatAction",
+        "deleteLivestreamAction"
+      ],
+      "tablesQueried": [
+        "live_gifts",
+        "live_messages",
+        "livestreams",
+        "live_replays",
+        "videos",
+        "live_viewers"
+      ],
+      "rpcsCalled": [],
+      "internalImports": [
+        "../supabase/server",
+        "@caribbean/live"
+      ]
+    },
+    {
+      "file": "apps/web/src/lib/live/stream-actions.ts",
+      "isUseServer": true,
+      "exportedFunctions": [
+        "createLiveStreamAction",
+        "endLiveStreamAction",
+        "getLiveStreamStatusAction",
+        "inviteCoHostAction",
+        "respondCoHostInviteAction",
+        "removeCoHostAction"
+      ],
+      "tablesQueried": [
+        "livestreams"
+      ],
+      "rpcsCalled": [],
+      "internalImports": [
+        "@caribbean/live",
+        "../supabase/server"
+      ]
+    },
+    {
+      "file": "apps/web/src/lib/logger/index.ts",
+      "isUseServer": false,
+      "exportedFunctions": [
+        "createScopedLogger"
+      ],
+      "tablesQueried": [],
+      "rpcsCalled": [],
+      "internalImports": []
+    },
+    {
+      "file": "apps/web/src/lib/marketplace/actions.ts",
+      "isUseServer": true,
+      "exportedFunctions": [
+        "createOrderAction",
+        "createProductAction",
+        "cancelOrderAction",
+        "submitOfferAction",
+        "respondOfferAction",
+        "toggleWishlistAction",
+        "openDisputeAction",
+        "reportListingAction",
+        "createAffiliateLinkAction",
+        "pinLivestreamProductAction",
+        "unpinLivestreamProductAction",
+        "getLivestreamProductsAction",
+        "createMultiVendorOrderAction",
+        "updateProductListingAction",
+        "toggleProductStatusAction",
+        "deleteProductListingAction"
+      ],
+      "tablesQueried": [
+        "feature_flags",
+        "products",
+        "orders",
+        "order_items",
+        "affiliate_referrals",
+        "businesses",
+        "business_subscriptions",
+        "payment_intents",
+        "commission_snapshots",
+        "marketplace_product_media",
+        "marketplace_offers",
+        "marketplace_wishlists",
+        "marketplace_disputes",
+        "marketplace_reports",
+        "marketplace_affiliate_links",
+        "livestream_products"
+      ],
+      "rpcsCalled": [
+        "pin_livestream_product",
+        "unpin_livestream_product"
+      ],
+      "internalImports": [
+        "../supabase/server",
+        "@caribbean/marketplace",
+        "@caribbean/live",
+        "@caribbean/payments"
+      ]
+    },
+    {
+      "file": "apps/web/src/lib/marketplace/creator-marketplace-actions.ts",
+      "isUseServer": true,
+      "exportedFunctions": [
+        "fetchCreatorMarketplaceListingsAction",
+        "upsertCreatorMarketplaceProfileAction",
+        "createBriefAction",
+        "applyToBriefAction",
+        "fetchMyApplicationsAction",
+        "fetchMyCreatorMarketplaceProfileAction"
+      ],
+      "tablesQueried": [
+        "creator_marketplace_profiles",
+        "brand_campaign_briefs",
+        "creator_applications"
+      ],
+      "rpcsCalled": [],
+      "internalImports": [
+        "../supabase/server"
+      ]
+    },
+    {
+      "file": "apps/web/src/lib/media/reel-actions.ts",
+      "isUseServer": true,
+      "exportedFunctions": [
+        "toggleReelLikeAction",
+        "postReelCommentAction",
+        "fetchReelCommentsAction",
+        "recordReelShareAction",
+        "recordReelViewAction",
+        "publishReelAction",
+        "saveReelAction",
+        "unsaveReelAction"
+      ],
+      "tablesQueried": [
+        "video_views",
+        "videos",
+        "comments",
+        "post_shares",
+        "sound_usage",
+        "profiles",
+        "posts",
+        "saved_posts"
+      ],
+      "rpcsCalled": [],
+      "internalImports": [
+        "../supabase/server",
+        "../auth/banned-testers"
+      ]
+    },
+    {
+      "file": "apps/web/src/lib/media/short-actions.ts",
+      "isUseServer": true,
+      "exportedFunctions": [
+        "publishShortAction",
+        "toggleShortLikeAction",
+        "postShortCommentAction",
+        "fetchShortCommentsAction",
+        "recordShortViewAction",
+        "recordShortShareAction",
+        "saveShortAction",
+        "unsaveShortAction",
+        "reportShortAction",
+        "deleteShortAction",
+        "fetchUserManagedPagesAction"
+      ],
+      "tablesQueried": [
+        "page_roles",
+        "businesses",
+        "videos",
+        "sound_usage",
+        "profiles",
+        "posts",
+        "video_views",
+        "comments",
+        "video_shares",
+        "post_shares",
+        "video_saves",
+        "saved_posts",
+        "reports",
+        "moderation_cases"
+      ],
+      "rpcsCalled": [],
+      "internalImports": [
+        "../supabase/server",
+        "../auth/banned-testers"
+      ]
+    },
+    {
+      "file": "apps/web/src/lib/messaging/actions.ts",
+      "isUseServer": true,
+      "exportedFunctions": [
+        "sendMessageAction",
+        "shareToChatAction",
+        "updateConversationCategoryAction",
+        "generateBusinessAiResponseAction",
+        "getOrCreateDirectConversationAction",
+        "markConversationReadAction",
+        "editMessageAction",
+        "deleteMessageAction",
+        "toggleMessageReactionAction",
+        "handleMessageRequestAction"
+      ],
+      "tablesQueried": [
+        "conversation_members",
+        "conversations",
+        "blocks",
+        "messages",
+        "stores",
+        "products",
+        "message_reactions"
+      ],
+      "rpcsCalled": [
+        "mark_conversation_read",
+        "get_or_create_direct_conversation"
+      ],
+      "internalImports": [
+        "../supabase/server",
+        "./rate-limiter",
+        "@caribbean/messaging",
+        "@caribbean/media"
+      ]
+    },
+    {
+      "file": "apps/web/src/lib/messaging/direct-conversations.ts",
+      "isUseServer": true,
+      "exportedFunctions": [
+        "getOrCreateDirectConversation"
+      ],
+      "tablesQueried": [
+        "blocks",
+        "conversations",
+        "conversation_members"
+      ],
+      "rpcsCalled": [
+        "get_or_create_direct_conversation"
+      ],
+      "internalImports": [
+        "../supabase/server",
+        "./identity"
+      ]
+    },
+    {
+      "file": "apps/web/src/lib/messaging/identity.ts",
+      "isUseServer": false,
+      "exportedFunctions": [
+        "resolveUserForMessaging",
+        "getProfileByUserId",
+        "getUserByUsername"
+      ],
+      "tablesQueried": [
+        "profiles"
+      ],
+      "rpcsCalled": [],
+      "internalImports": [
+        "../supabase/server"
+      ]
+    },
+    {
+      "file": "apps/web/src/lib/messaging/rate-limiter.ts",
+      "isUseServer": false,
+      "exportedFunctions": [
+        "checkMessageRateLimit"
+      ],
+      "tablesQueried": [],
+      "rpcsCalled": [],
+      "internalImports": []
+    },
+    {
+      "file": "apps/web/src/lib/moderation/actions.ts",
+      "isUseServer": true,
+      "exportedFunctions": [
+        "submitModerationActionAction",
+        "resolveAppealAction",
+        "submitModeratorApplicationAction"
+      ],
+      "tablesQueried": [
+        "moderation_cases",
+        "moderation_actions",
+        "posts",
+        "comments",
+        "reports",
+        "audit_logs"
+      ],
+      "rpcsCalled": [],
+      "internalImports": [
+        "../supabase/server"
+      ]
+    },
+    {
+      "file": "apps/web/src/lib/monitoring/analytics.ts",
+      "isUseServer": false,
+      "exportedFunctions": [
+        "track"
+      ],
+      "tablesQueried": [],
+      "rpcsCalled": [],
+      "internalImports": [
+        "@caribbean/analytics"
+      ]
+    },
+    {
+      "file": "apps/web/src/lib/notifications/actions.ts",
+      "isUseServer": true,
+      "exportedFunctions": [
+        "markNotificationReadAction",
+        "markAllNotificationsReadAction"
+      ],
+      "tablesQueried": [
+        "notifications"
+      ],
+      "rpcsCalled": [],
+      "internalImports": [
+        "../supabase/server"
+      ]
+    },
+    {
+      "file": "apps/web/src/lib/official/actions.ts",
+      "isUseServer": true,
+      "exportedFunctions": [
+        "createOfficialDraftAction",
+        "publishOfficialDraftAction",
+        "directPublishOfficialPostAction",
+        "togglePinOfficialPostAction"
+      ],
+      "tablesQueried": [],
+      "rpcsCalled": [],
+      "internalImports": [
+        "../supabase/server",
+        "./official-service",
+        "./types"
+      ]
+    },
+    {
+      "file": "apps/web/src/lib/official/bot-publisher.ts",
+      "isUseServer": false,
+      "exportedFunctions": [],
+      "tablesQueried": [
+        "posts",
+        "official_post_drafts"
+      ],
+      "rpcsCalled": [],
+      "internalImports": [
+        "./official-service",
+        "./types"
+      ]
+    },
+    {
+      "file": "apps/web/src/lib/official/official-service.ts",
+      "isUseServer": false,
+      "exportedFunctions": [],
+      "tablesQueried": [
+        "profiles",
+        "official_accounts",
+        "accounts",
+        "official_account_operators",
+        "official_post_drafts",
+        "posts",
+        "audit_logs"
+      ],
+      "rpcsCalled": [],
+      "internalImports": [
+        "./types"
+      ]
+    },
+    {
+      "file": "apps/web/src/lib/pages/actions.ts",
+      "isUseServer": true,
+      "exportedFunctions": [
+        "fetchUniversalPagesAction",
+        "fetchMyPagesAction",
+        "fetchFollowedPagesAction",
+        "fetchPageDetailsAction",
+        "createUniversalPageAction",
+        "updatePageDetailsAction",
+        "uploadPageImageAction",
+        "removePageImageAction",
+        "togglePageFollowAction",
+        "createPagePostAction",
+        "updatePageRoleAction",
+        "removePageRoleAction",
+        "togglePageDeactivationAction",
+        "deletePagePermanentlyAction"
+      ],
+      "tablesQueried": [
+        "businesses",
+        "page_followers",
+        "page_roles",
+        "products",
+        "posts",
+        "profiles"
+      ],
+      "rpcsCalled": [],
+      "internalImports": [
+        "../supabase/server",
+        "../auth/banned-testers",
+        "../constants/caribbean-territories"
+      ]
+    },
+    {
+      "file": "apps/web/src/lib/pages/categories.ts",
+      "isUseServer": false,
+      "exportedFunctions": [
+        "findCategoryBySlug",
+        "searchCategories"
+      ],
+      "tablesQueried": [],
+      "rpcsCalled": [],
+      "internalImports": []
+    },
+    {
+      "file": "apps/web/src/lib/payments/connect-actions.ts",
+      "isUseServer": true,
+      "exportedFunctions": [
+        "createStripeConnectOnboardingAction",
+        "getMerchantPayoutStatusAction"
+      ],
+      "tablesQueried": [
+        "profiles"
+      ],
+      "rpcsCalled": [],
+      "internalImports": [
+        "@caribbean/payments",
+        "../supabase/server"
+      ]
+    },
+    {
+      "file": "apps/web/src/lib/podcasts/actions.ts",
+      "isUseServer": true,
+      "exportedFunctions": [
+        "createPodcastAction",
+        "publishEpisodeAction",
+        "deletePodcastAction",
+        "deletePodcastEpisodeAction",
+        "publishDraftEpisodeAction",
+        "followPodcastAction",
+        "unfollowPodcastAction",
+        "savePodcastProgressAction",
+        "getPodcastProgressAction",
+        "recordPodcastPlayAction",
+        "fetchEpisodeTimedLinksAction",
+        "fetchEpisodeTranscriptsAction",
+        "addPodcastCommentAction",
+        "fetchPodcastCommentsAction",
+        "fetchPodcastDistributionDestinationsAction",
+        "updatePodcastDistributionDestinationAction",
+        "generateFeedTokenAction",
+        "generateCaribAiPodcastMetadataAction"
+      ],
+      "tablesQueried": [
+        "podcasts",
+        "podcast_distribution_destinations",
+        "podcast_episodes",
+        "podcast_timed_links",
+        "podcast_transcripts",
+        "podcast_followers",
+        "podcast_progress",
+        "podcast_analytics",
+        "podcast_comments",
+        "podcast_feed_tokens"
+      ],
+      "rpcsCalled": [
+        "increment_podcast_followers",
+        "decrement_podcast_followers"
+      ],
+      "internalImports": [
+        "../supabase/server",
+        "@caribbean/podcasts",
+        "@caribbean/ai"
+      ]
+    },
+    {
+      "file": "apps/web/src/lib/polls/actions.ts",
+      "isUseServer": true,
+      "exportedFunctions": [
+        "fetchPollByPostIdAction",
+        "votePollAction",
+        "createPollAction"
+      ],
+      "tablesQueried": [
+        "polls",
+        "poll_options",
+        "poll_votes"
+      ],
+      "rpcsCalled": [],
+      "internalImports": [
+        "../supabase/server",
+        "./types"
+      ]
+    },
+    {
+      "file": "apps/web/src/lib/profile/profile-actions.ts",
+      "isUseServer": true,
+      "exportedFunctions": [
+        "updateProfileBasicAction",
+        "updateProfilePersonalInfoAction",
+        "updateProfileProfessionalAction",
+        "updateProfileSocialAction",
+        "updateProfilePrivacyAction",
+        "uploadAvatarAction",
+        "uploadCoverAction",
+        "removeCoverAction",
+        "updateFullProfileAction"
+      ],
+      "tablesQueried": [
+        "profiles",
+        "avatars"
+      ],
+      "rpcsCalled": [],
+      "internalImports": [
+        "../supabase/server"
+      ]
+    },
+    {
+      "file": "apps/web/src/lib/pwa/use-pwa-install.ts",
+      "isUseServer": false,
+      "exportedFunctions": [
+        "trackPwaEvent",
+        "detectPwaPlatform",
+        "checkIsStandalone",
+        "usePwaInstall"
+      ],
+      "tablesQueried": [],
+      "rpcsCalled": [],
+      "internalImports": []
+    },
+    {
+      "file": "apps/web/src/lib/rate-limit/sliding-window.ts",
+      "isUseServer": false,
+      "exportedFunctions": [
+        "checkRateLimit",
+        "getRateLimitHeaders"
+      ],
+      "tablesQueried": [],
+      "rpcsCalled": [],
+      "internalImports": []
+    },
+    {
+      "file": "apps/web/src/lib/recognition/eligibility-engine.ts",
+      "isUseServer": false,
+      "exportedFunctions": [],
+      "tablesQueried": [
+        "profiles",
+        "founder_programs",
+        "recognition_referrals",
+        "products",
+        "recognition_achievements",
+        "user_achievements",
+        "user_badges"
+      ],
+      "rpcsCalled": [],
+      "internalImports": []
+    },
+    {
+      "file": "apps/web/src/lib/recognition/recognition-service.ts",
+      "isUseServer": false,
+      "exportedFunctions": [],
+      "tablesQueried": [
+        "labs_programs",
+        "labs_members",
+        "spotlights"
+      ],
+      "rpcsCalled": [
+        "get_profile_recognition",
+        "allocate_founder_number",
+        "evaluate_user_reputation",
+        "award_badge",
+        "revoke_badge"
+      ],
+      "internalImports": [
+        "./types"
+      ]
+    },
+    {
+      "file": "apps/web/src/lib/relief/actions.ts",
+      "isUseServer": true,
+      "exportedFunctions": [
+        "createReliefCampaignAction",
+        "donateToReliefCampaignAction",
+        "verifyReliefCampaignAction",
+        "fetchReliefCampaignAction"
+      ],
+      "tablesQueried": [
+        "relief_campaigns",
+        "relief_donations"
+      ],
+      "rpcsCalled": [],
+      "internalImports": [
+        "../supabase/server",
+        "./types",
+        "./types"
+      ]
+    },
+    {
+      "file": "apps/web/src/lib/relief/types.ts",
+      "isUseServer": false,
+      "exportedFunctions": [
+        "calculateCampaignProgress",
+        "formatDonationAmount",
+        "validateDonationAmount",
+        "isDisasterDeclarationVerified"
+      ],
+      "tablesQueried": [],
+      "rpcsCalled": [],
+      "internalImports": []
+    },
+    {
+      "file": "apps/web/src/lib/safety/actions.ts",
+      "isUseServer": true,
+      "exportedFunctions": [
+        "updateAgeVerificationAction",
+        "linkParentGuardianAction"
+      ],
+      "tablesQueried": [
+        "profiles"
+      ],
+      "rpcsCalled": [],
+      "internalImports": [
+        "../supabase/server",
+        "./age-service"
+      ]
+    },
+    {
+      "file": "apps/web/src/lib/safety/age-service.ts",
+      "isUseServer": false,
+      "exportedFunctions": [
+        "calculateAge",
+        "resolveAgeTier",
+        "getSafetySettingsForTier",
+        "canInitiateDirectMessage"
+      ],
+      "tablesQueried": [],
+      "rpcsCalled": [],
+      "internalImports": []
+    },
+    {
+      "file": "apps/web/src/lib/settings/settings-actions.ts",
+      "isUseServer": true,
+      "exportedFunctions": [
+        "updateAccountAction",
+        "updatePasswordAction",
+        "updateNotificationPreferencesAction",
+        "updateThemeAction",
+        "updateLanguageAction",
+        "exportAccountDataAction",
+        "deactivateAccountAction",
+        "reactivateAccountAction"
+      ],
+      "tablesQueried": [
+        "profiles",
+        "notification_preferences",
+        "profile_counts",
+        "posts"
+      ],
+      "rpcsCalled": [],
+      "internalImports": [
+        "../supabase/server",
+        "../profile/profile-actions"
+      ]
+    },
+    {
+      "file": "apps/web/src/lib/social/actions.ts",
+      "isUseServer": true,
+      "exportedFunctions": [
+        "createPostAction",
+        "fetchFeedPostsAction",
+        "createStoryAction",
+        "fetchActiveStoriesAction",
+        "recordStoryViewAction",
+        "deleteStoryAction",
+        "toggleLikeAction",
+        "createCommentAction",
+        "repostPostAction",
+        "fetchPostCommentsAction",
+        "deletePostAction",
+        "togglePinPostAction",
+        "updatePostAction",
+        "deleteCommentAction",
+        "incrementPostShareAction",
+        "reportPostAction",
+        "toggleReactionAction",
+        "fetchPostReactionSummaryAction",
+        "savePostAction",
+        "unsavePostAction",
+        "getSavedPostIdsAction",
+        "hidePostAction",
+        "unhidePostAction"
+      ],
+      "tablesQueried": [
+        "accounts",
+        "official_account_operators",
+        "profiles",
+        "official_accounts",
+        "businesses",
+        "page_roles",
+        "creator_accounts",
+        "community_members",
+        "posts",
+        "post_media",
+        "product_tags",
+        "creator_content_drafts",
+        "post_external_media",
+        "post_shares",
+        "ads",
+        "stories",
+        "story_views",
+        "comments",
+        "reports",
+        "moderation_cases",
+        "post_reactions",
+        "saved_posts",
+        "hidden_posts"
+      ],
+      "rpcsCalled": [],
+      "internalImports": [
+        "@caribbean/ai",
+        "@caribbean/social",
+        "../supabase/server",
+        "../auth/user-sync",
+        "../feed/ranking",
+        "../feed/hydrate-posts",
+        "@caribbean/advertising",
+        "./media-utils",
+        "@caribbean/media",
+        "../logger",
+        "../auth/banned-testers"
+      ]
+    },
+    {
+      "file": "apps/web/src/lib/social/draft-manager.ts",
+      "isUseServer": false,
+      "exportedFunctions": [
+        "hasMeaningfulDraftContent",
+        "getComposerDraft",
+        "saveComposerDraft",
+        "clearComposerDraft",
+        "subscribeToDraftChanges"
+      ],
+      "tablesQueried": [],
+      "rpcsCalled": [],
+      "internalImports": []
+    },
+    {
+      "file": "apps/web/src/lib/social/media-utils.ts",
+      "isUseServer": false,
+      "exportedFunctions": [
+        "parseMediaPayload"
+      ],
+      "tablesQueried": [],
+      "rpcsCalled": [],
+      "internalImports": []
+    },
+    {
+      "file": "apps/web/src/lib/social/onboarding-actions.ts",
+      "isUseServer": true,
+      "exportedFunctions": [
+        "updateOnboardingIdentity"
+      ],
+      "tablesQueried": [
+        "profile_identity",
+        "profiles"
+      ],
+      "rpcsCalled": [],
+      "internalImports": [
+        "../supabase/server",
+        "@caribbean/localization"
+      ]
+    },
+    {
+      "file": "apps/web/src/lib/social/posting-state-machine.ts",
+      "isUseServer": false,
+      "exportedFunctions": [
+        "generateCorrelationId",
+        "generateIdempotencyKey",
+        "isRetryableError",
+        "formatFriendlyErrorMessage"
+      ],
+      "tablesQueried": [],
+      "rpcsCalled": [],
+      "internalImports": []
+    },
+    {
+      "file": "apps/web/src/lib/social/profile-actions.ts",
+      "isUseServer": true,
+      "exportedFunctions": [
+        "updateProfileAction",
+        "followAction",
+        "unfollowAction"
+      ],
+      "tablesQueried": [
+        "profiles",
+        "follows"
+      ],
+      "rpcsCalled": [],
+      "internalImports": [
+        "../supabase/server"
+      ]
+    },
+    {
+      "file": "apps/web/src/lib/social/relationship-actions.ts",
+      "isUseServer": true,
+      "exportedFunctions": [
+        "followUserAction",
+        "unfollowUserAction",
+        "sendFriendRequestAction",
+        "acceptFriendRequestAction",
+        "declineFriendRequestAction",
+        "cancelFriendRequestAction",
+        "unfriendAction",
+        "blockUserAction",
+        "unblockUserAction",
+        "dismissRecommendationAction",
+        "getRelationshipBatchAction",
+        "fetchProfileFriendsAction"
+      ],
+      "tablesQueried": [
+        "follows",
+        "profiles",
+        "blocks",
+        "friendships",
+        "recommendation_feedback"
+      ],
+      "rpcsCalled": [
+        "get_profile_friends"
+      ],
+      "internalImports": [
+        "../supabase/server",
+        "@caribbean/social"
+      ]
+    },
+    {
+      "file": "apps/web/src/lib/social/translate-actions.ts",
+      "isUseServer": true,
+      "exportedFunctions": [
+        "translatePostAction"
+      ],
+      "tablesQueried": [
+        "content_translations_cache"
+      ],
+      "rpcsCalled": [],
+      "internalImports": [
+        "@caribbean/ai"
+      ]
+    },
+    {
+      "file": "apps/web/src/lib/sounds/actions.ts",
+      "isUseServer": true,
+      "exportedFunctions": [
+        "fetchSoundsAction",
+        "getSoundDetailsAction",
+        "uploadSoundAction",
+        "recordSoundUsageAction"
+      ],
+      "tablesQueried": [
+        "sounds",
+        "videos",
+        "sound_usage"
+      ],
+      "rpcsCalled": [],
+      "internalImports": [
+        "../supabase/server",
+        "../constants/caribbean-sounds"
+      ]
+    },
+    {
+      "file": "apps/web/src/lib/supabase/browser.ts",
+      "isUseServer": false,
+      "exportedFunctions": [
+        "createSupabaseBrowserClient"
+      ],
+      "tablesQueried": [],
+      "rpcsCalled": [],
+      "internalImports": []
+    },
+    {
+      "file": "apps/web/src/lib/supabase/server.ts",
+      "isUseServer": false,
+      "exportedFunctions": [
+        "createSupabaseServerClient",
+        "createServiceSupabaseClient",
+        "getAuthorizedUser",
+        "getSuperAdminUser",
+        "getStaffUser",
+        "checkIsOfficialOperator"
+      ],
+      "tablesQueried": [
+        "accounts",
+        "official_accounts",
+        "official_account_operators"
+      ],
+      "rpcsCalled": [],
+      "internalImports": [
+        "../auth/user-sync"
+      ]
+    },
+    {
+      "file": "apps/web/src/lib/supabase.ts",
+      "isUseServer": false,
+      "exportedFunctions": [
+        "createServerSupabase",
+        "flagEmoji"
+      ],
+      "tablesQueried": [],
+      "rpcsCalled": [],
+      "internalImports": []
+    }
+  ]
+}

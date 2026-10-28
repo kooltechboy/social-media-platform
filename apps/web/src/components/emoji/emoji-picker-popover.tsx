@@ -201,7 +201,7 @@ export function EmojiPickerPopoverContent({
       }));
     }
 
-    if (activeCategory === 'recents') {
+    if (activeCategory === 'recents' && favoritesVersion >= 0) {
       const favs = getFavoriteEmojis();
       const recents = getRecentEmojis();
       const combined = Array.from(new Set([...favs, ...recents]));

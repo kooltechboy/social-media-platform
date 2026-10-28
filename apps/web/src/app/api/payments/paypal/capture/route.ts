@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ProviderRegistry, TransactionLedgerService, type TransactionType } from '@caribbean/payments';
-import { createServiceSupabaseClient } from '@/lib/supabase/server';
+import { createServiceSupabaseClient, getCurrentUser } from '@/lib/supabase/server';
 
 export async function POST(request: NextRequest) {
   try {
@@ -9,20 +9,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Missing token or intentId' }, { status: 400 });
     }
 
-    const registry = new ProviderRegistry();
-    const adapter = registry.get('paypal') as any;
-
-    // 1. Authoritatively capture order from PayPal
-    const captureResult = await adapter.captureOrder(token);
-
-    if (captureResult.status !== 'COMPLETED') {
-      return NextResponse.json({ error: 'PayPal order capture was not completed' }, { status: 400 });
-    }
-
     const supabase = await createServiceSupabaseClient();
     if (!supabase) throw new Error('Supabase client unavailable');
 
-    // 2. Retrieve payment intent
+    // 1. Retrieve payment intent FIRST to enforce idempotency and order-to-intent binding
     const { data: intent, error: intentErr } = await supabase
       .from('payment_intents')
       .select('*')
@@ -33,44 +23,116 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Payment intent record not found' }, { status: 404 });
     }
 
+    // Verify caller ownership when session is available
+    const user = await getCurrentUser().catch(() => null);
+    const intentPayerId = intent.payer_id || intent.user_id;
+    if (user && intentPayerId && intentPayerId !== user.id) {
+      return NextResponse.json({ error: 'Forbidden: payment intent belongs to another user' }, { status: 403 });
+    }
+
+    // Idempotency guard: if already succeeded, return early without double-crediting
+    if (intent.status === 'succeeded') {
+      return NextResponse.json({
+        success: true,
+        duplicate: true,
+        captureId: intent.provider_transaction_id || token,
+        status: 'succeeded',
+      });
+    }
+
+    // Order-to-intent binding check: prevent swapping a cheap PayPal order token onto a high-value intentId
+    const expectedOrderId = intent.provider_transaction_id || intent.metadata?.paypalOrderId;
+    if (expectedOrderId && expectedOrderId !== token) {
+      return NextResponse.json(
+        { error: 'PayPal order token does not match payment intent' },
+        { status: 400 }
+      );
+    }
+
+    const registry = new ProviderRegistry();
+    const adapter = registry.get('paypal') as any;
+
+    // 2. Authoritatively capture order from PayPal
+    const captureResult = await adapter.captureOrder(token);
+
+    if (captureResult.status !== 'COMPLETED') {
+      return NextResponse.json({ error: 'PayPal order capture was not completed' }, { status: 400 });
+    }
+
+    // Verify captured amount & currency when present in PayPal capture response
+    const captureUnit = captureResult.purchase_units?.[0]?.payments?.captures?.[0];
+    if (captureUnit?.amount?.value && intent.amount_minor) {
+      const capturedMinor = Math.round(parseFloat(captureUnit.amount.value) * 100);
+      if (capturedMinor !== Number(intent.amount_minor)) {
+        return NextResponse.json(
+          { error: 'Captured PayPal amount does not match payment intent amount' },
+          { status: 400 }
+        );
+      }
+    }
+    if (
+      captureUnit?.amount?.currency_code &&
+      intent.currency &&
+      String(captureUnit.amount.currency_code).toUpperCase() !== String(intent.currency).toUpperCase()
+    ) {
+      return NextResponse.json(
+        { error: 'Captured PayPal currency does not match payment intent currency' },
+        { status: 400 }
+      );
+    }
+
+    const authoritativeCaptureId = captureUnit?.id || captureResult.id || token;
+
     // 3. Determine transaction type
+    const productType = intent.product_type || intent.metadata?.productType;
+    const referenceType =
+      intent.reference_type || (productType === 'business_ad' ? 'ad_campaign' : null);
+    const referenceId = intent.reference_id || intent.metadata?.campaignId || null;
+
     let txType: TransactionType = 'MARKETPLACE_PURCHASE';
-    if (intent.product_type === 'digital_subscription') {
+    if (productType === 'digital_subscription') {
       txType = intent.creator_id ? 'CREATOR_SUBSCRIPTION' : 'TUKUBI_SUBSCRIPTION';
-    } else if (intent.product_type === 'creator_tip') {
+    } else if (productType === 'creator_tip') {
       txType = 'CREATOR_TIP';
-    } else if (intent.product_type === 'physical_goods' || intent.product_type === 'store_product') {
+    } else if (productType === 'physical_goods' || productType === 'store_product') {
       txType = 'MARKETPLACE_PURCHASE';
-    } else if (intent.product_type === 'business_ad' || intent.reference_type === 'ad_campaign') {
+    } else if (productType === 'business_ad' || referenceType === 'ad_campaign') {
       txType = 'AD_PAYMENT';
     }
 
-    // 4. Record & Settle in Immutable Transaction Ledger
+    // 4. Record & Settle in Immutable Transaction Ledger (canonical intent-scoped idempotency key)
     const ledgerService = new TransactionLedgerService();
     const tx = await ledgerService.recordTransaction(supabase, {
-      idempotencyKey: `paypal_${captureResult.id || intent.id}`,
+      idempotencyKey: `settle_intent_${intent.id}`,
       transactionType: txType,
-      payerId: intent.payer_id,
+      payerId: intentPayerId,
       recipientId: intent.merchant_id || intent.creator_id || null,
       creatorId: intent.creator_id,
       merchantId: intent.merchant_id,
-      orderId: intent.reference_type === 'order' ? intent.reference_id : null,
+      orderId: referenceType === 'order' ? referenceId : null,
       paymentIntentId: intent.id,
       provider: 'paypal',
-      providerTransactionId: captureResult.id || token,
+      providerTransactionId: authoritativeCaptureId,
       grossAmountMinor: intent.amount_minor,
-      currency: intent.currency,
+      currency: intent.currency || 'USD',
       metadata: {
-        paypalCaptureId: captureResult.id,
+        paypalOrderId: token,
+        paypalCaptureId: authoritativeCaptureId,
         payerEmail: captureResult.payer?.email_address,
       },
       initialStatus: 'PENDING',
     });
 
     await ledgerService.settleTransaction(supabase, tx.id, {
-      providerTransactionId: captureResult.id || token,
-      sellerCategory: intent.creator_id ? 'creator' : (intent.merchant_id ? 'merchant' : (intent.product_type === 'business_ad' ? 'business' : 'user')),
-      productType: intent.product_type,
+      providerTransactionId: authoritativeCaptureId,
+      sellerCategory: intent.creator_id
+        ? 'creator'
+        : intent.merchant_id
+        ? 'merchant'
+        : productType === 'business_ad'
+        ? 'business'
+        : 'user',
+      productType,
     });
 
     // 5. Update Intent status
@@ -78,30 +140,32 @@ export async function POST(request: NextRequest) {
       .from('payment_intents')
       .update({
         status: 'succeeded',
-        provider_transaction_id: captureResult.id || token,
+        provider_transaction_id: authoritativeCaptureId,
       })
       .eq('id', intent.id);
 
     // 6. Fulfill Order, Subscription, or Ad Campaign
-    if (intent.reference_type === 'order' && intent.reference_id) {
+    if (referenceType === 'order' && referenceId) {
       await supabase
         .from('orders')
         .update({ status: 'paid' })
-        .eq('id', intent.reference_id);
-    } else if (intent.reference_type === 'ad_campaign' && intent.reference_id) {
-      // Fulfill Ad Campaign Prepaid Funding
+        .eq('id', referenceId);
+    } else if (referenceType === 'ad_campaign' && referenceId) {
+      // Fulfill Ad Campaign Prepaid Funding (increment existing funded balance for top-ups)
       const { data: campaign } = await supabase
         .from('campaigns')
-        .select('id, moderation_status, budget_total_minor')
-        .eq('id', intent.reference_id)
+        .select('id, status, moderation_status, budget_total_minor, funded_amount_minor')
+        .eq('id', referenceId)
         .maybeSingle();
 
       if (campaign) {
         const isApproved = campaign.moderation_status === 'approved';
+        const nextFundedMinor =
+          Number(campaign.funded_amount_minor || 0) + Number(intent.amount_minor || 0);
         await supabase
           .from('campaigns')
           .update({
-            funded_amount_minor: intent.amount_minor,
+            funded_amount_minor: nextFundedMinor,
             status: isApproved ? 'active' : 'draft',
           })
           .eq('id', campaign.id);

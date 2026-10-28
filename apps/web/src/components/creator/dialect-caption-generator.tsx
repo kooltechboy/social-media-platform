@@ -92,7 +92,7 @@ export default function DialectCaptionGenerator({
     selectedDialect === 'auto' ? detectedInfo.dialect : selectedDialect;
 
   // Generate captions when transcript or settings change
-  const handleGenerate = () => {
+  const handleGenerate = React.useCallback(() => {
     if (!transcript.trim()) return;
     const track = generateDialectCaptions(
       transcript,
@@ -103,14 +103,14 @@ export default function DialectCaptionGenerator({
     setCurrentTime(0);
     setIsPlaying(false);
     onSaveTrack?.(track);
-  };
+  }, [transcript, durationSec, selectedDialect, onSaveTrack]);
 
   // Initial generation
   useEffect(() => {
     if (transcript.trim() && !captionTrack) {
       handleGenerate();
     }
-  }, []);
+  }, [transcript, captionTrack, handleGenerate]);
 
   // Playback timer simulation loop
   useEffect(() => {

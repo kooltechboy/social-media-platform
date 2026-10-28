@@ -219,7 +219,7 @@ export default function TukubiMediaViewer({
         clearTimeout(inactivityTimerRef.current);
       }
     };
-  }, [isOpen, initialIndex, normalizedItems.length]);
+  }, [isOpen, initialIndex, normalizedItems.length, resetInactivityTimer]);
 
   // Lock document scroll when viewer is open
   useEffect(() => {

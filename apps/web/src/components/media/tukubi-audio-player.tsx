@@ -43,7 +43,8 @@ export default function TukubiAudioPlayer({
 
   // Register with AudioManager singleton for single-audio-master policy
   useEffect(() => {
-    const unregister = AudioManager.register(playerIdRef.current, {
+    const playerId = playerIdRef.current;
+    const unregister = AudioManager.register(playerId, {
       onPause: () => {
         if (audioRef.current && !audioRef.current.paused) {
           audioRef.current.pause();
@@ -61,7 +62,7 @@ export default function TukubiAudioPlayer({
 
     return () => {
       unregister();
-      AudioManager.releaseAudio(playerIdRef.current);
+      AudioManager.releaseAudio(playerId);
     };
   }, []);
 

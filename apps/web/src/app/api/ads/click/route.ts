@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createSupabaseServerClient } from '../../../../lib/supabase/server';
+import {
+  createServiceSupabaseClient,
+  createSupabaseServerClient,
+  getCurrentUser,
+} from '../../../../lib/supabase/server';
 
 export async function POST(request: NextRequest) {
   try {
@@ -10,9 +14,22 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'impressionId is required' }, { status: 400 });
     }
 
-    const supabase = await createSupabaseServerClient();
+    const supabase = (await createServiceSupabaseClient()) || (await createSupabaseServerClient());
     if (!supabase) {
       return NextResponse.json({ error: 'Database service unavailable' }, { status: 503 });
+    }
+
+    const user = await getCurrentUser().catch(() => null);
+
+    // Check if click was already recorded for this impressionId (deduplication)
+    const { data: existingClick } = await supabase
+      .from('ad_clicks')
+      .select('id')
+      .eq('impression_id', impressionId)
+      .maybeSingle();
+
+    if (existingClick?.id) {
+      return NextResponse.json({ success: true, deduplicated: true });
     }
 
     const { error } = await supabase.from('ad_clicks').insert({
@@ -21,6 +38,23 @@ export async function POST(request: NextRequest) {
 
     if (error) {
       return NextResponse.json({ success: false, error: error.message }, { status: 400 });
+    }
+
+    // Also record in ad_events if impression maps to an ad_id
+    const { data: imp } = await supabase
+      .from('ad_impressions')
+      .select('ad_id, placement')
+      .eq('id', impressionId)
+      .maybeSingle();
+
+    if (imp?.ad_id) {
+      await supabase.from('ad_events').insert({
+        ad_id: imp.ad_id,
+        viewer_id: user?.id || null,
+        event_type: 'click',
+        placement: imp.placement || 'feed',
+        cost_charged_minor: 0,
+      });
     }
 
     return NextResponse.json({ success: true });
@@ -40,32 +74,45 @@ export async function GET(request: NextRequest) {
   let verifiedDestination: string | null = null;
 
   if (impressionIdStr) {
-    const impressionId = parseInt(impressionIdStr, 10);
-    if (!isNaN(impressionId)) {
-      try {
-        const supabase = await createSupabaseServerClient();
-        if (supabase) {
+    try {
+      const supabase = (await createServiceSupabaseClient()) || (await createSupabaseServerClient());
+      if (supabase) {
+        const { data: existingClick } = await supabase
+          .from('ad_clicks')
+          .select('id')
+          .eq('impression_id', impressionIdStr)
+          .maybeSingle();
+
+        if (!existingClick?.id) {
           await supabase.from('ad_clicks').insert({
-            impression_id: impressionId,
+            impression_id: impressionIdStr,
           });
+        }
 
-          // Fetch verified destination URL from the database ad record
-          const { data: impression } = await supabase
-            .from('ad_impressions')
-            .select('ad_id, ads(destination_url)')
-            .eq('id', impressionId)
-            .maybeSingle();
+        // Fetch verified destination URL from the database ad record
+        const { data: impression } = await supabase
+          .from('ad_impressions')
+          .select('ad_id, placement, ads(destination_url)')
+          .eq('id', impressionIdStr)
+          .maybeSingle();
 
-          if (impression && impression.ads) {
-            const ad = Array.isArray(impression.ads) ? impression.ads[0] : impression.ads;
-            if (ad?.destination_url) {
-              verifiedDestination = (ad as any).destination_url;
-            }
+        if (impression && impression.ads) {
+          const ad = Array.isArray(impression.ads) ? impression.ads[0] : impression.ads;
+          if (ad?.destination_url) {
+            verifiedDestination = (ad as any).destination_url;
+          }
+          if (!existingClick?.id && impression.ad_id) {
+            await supabase.from('ad_events').insert({
+              ad_id: impression.ad_id,
+              event_type: 'click',
+              placement: impression.placement || 'feed',
+              cost_charged_minor: 0,
+            });
           }
         }
-      } catch {
-        // Non-blocking telemetry failure
       }
+    } catch {
+      // Non-blocking telemetry failure
     }
   }
 

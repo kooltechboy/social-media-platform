@@ -49,3 +49,13 @@ playwright/.auth/
 .env*
 .superpowers/
 scripts/generated_audio/
+
+# Obsidian local workspace state & caches (keep markdown notes tracked)
+.obsidian/workspace.json
+.obsidian/workspace-mobile.json
+.obsidian/cache
+.obsidian/plugins/*/data.json
+TUKUBI Engineering Intelligence/.obsidian/workspace.json
+TUKUBI Engineering Intelligence/.obsidian/workspace-mobile.json
+TUKUBI Engineering Intelligence/.obsidian/cache
+

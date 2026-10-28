@@ -116,6 +116,7 @@ export async function loadFeedPageData(rawMode?: string, cursor?: string) {
           media_path,
           destination_url,
           cta_text,
+          ai_generated_cta,
           is_approved,
           ad_sets!inner (
             id,
@@ -126,6 +127,7 @@ export async function loadFeedPageData(rawMode?: string, cursor?: string) {
               id,
               advertiser_id,
               status,
+              moderation_status,
               budget_daily_minor,
               funded_amount_minor,
               spent_amount_minor,
@@ -138,7 +140,8 @@ export async function loadFeedPageData(rawMode?: string, cursor?: string) {
         `)
         .eq('is_approved', true)
         .eq('ad_sets.placement', 'feed')
-        .eq('ad_sets.campaigns.status', 'active');
+        .eq('ad_sets.campaigns.status', 'active')
+        .eq('ad_sets.campaigns.moderation_status', 'approved');
 
       if (rawAds && rawAds.length > 0) {
         const candidates: AdCandidate[] = rawAds.map((a: any) => {
@@ -155,7 +158,7 @@ export async function loadFeedPageData(rawMode?: string, cursor?: string) {
             body: a.body,
             mediaPath: a.media_path,
             destinationUrl: a.destination_url,
-            ctaText: a.cta_text,
+            ctaText: a.cta_text || a.ai_generated_cta || 'Learn More',
             isApproved: Boolean(a.is_approved),
             campaignStatus: campaign?.status || 'draft',
             placement: 'feed',

@@ -74,8 +74,10 @@ export default function SoundDetailViewer({
   const playerIdRef = useRef(`sound-detail-${sound.id}`);
 
   useEffect(() => {
+    const playerId = `sound-detail-${sound.id}`;
+    playerIdRef.current = playerId;
     const audioMgr = AudioManager.getInstance();
-    const unregister = audioMgr.register(playerIdRef.current, {
+    const unregister = audioMgr.register(playerId, {
       onPause: () => {
         if (audioRef.current && !audioRef.current.paused) {
           audioRef.current.pause();
@@ -93,7 +95,7 @@ export default function SoundDetailViewer({
 
     return () => {
       unregister();
-      audioMgr.releaseAudio(playerIdRef.current);
+      audioMgr.releaseAudio(playerId);
     };
   }, [sound.id]);
 

@@ -199,6 +199,19 @@ export default function PodcastNetworkFeed({ podcasts, user }: PodcastNetworkFee
     };
   }, []);
 
+  const skip = React.useCallback(
+    (seconds: number) => {
+      const el = mediaMode === 'video' ? videoRef.current : audioRef.current;
+      const baseTime = el ? el.currentTime : currentTime;
+      const maxDur = el && Number.isFinite(el.duration) && el.duration > 0 ? el.duration : duration;
+      const target = Math.min(maxDur, Math.max(0, baseTime + seconds));
+      setCurrentTime(target);
+      if (audioRef.current) audioRef.current.currentTime = target;
+      if (videoRef.current) videoRef.current.currentTime = target;
+    },
+    [mediaMode, currentTime, duration]
+  );
+
   // MediaSession API Integration (Lock Screen, Car Display, Headphones)
   useEffect(() => {
     if ('mediaSession' in navigator && activePodcast) {
@@ -234,7 +247,7 @@ export default function PodcastNetworkFeed({ podcasts, user }: PodcastNetworkFee
         skip(15);
       });
     }
-  }, [activePodcast, activeEpisode, mediaMode]);
+  }, [activePodcast, activeEpisode, mediaMode, skip]);
 
   // Restore saved listening progress
   useEffect(() => {
@@ -287,7 +300,10 @@ export default function PodcastNetworkFeed({ podcasts, user }: PodcastNetworkFee
   }, [sleepTimerSeconds]);
 
   // Chapters list and current active chapter calculation
-  const chapters: Chapter[] = activeEpisode?.chapters || activePodcast?.chapters || [];
+  const chapters = useMemo<Chapter[]>(
+    () => activeEpisode?.chapters || activePodcast?.chapters || [],
+    [activeEpisode?.chapters, activePodcast?.chapters]
+  );
   const currentChapter = useMemo(() => {
     if (!chapters || chapters.length === 0) return null;
     let active: Chapter = chapters[0];
@@ -345,13 +361,6 @@ export default function PodcastNetworkFeed({ podcasts, user }: PodcastNetworkFee
     setCurrentTime(val);
     if (audioRef.current) audioRef.current.currentTime = val;
     if (videoRef.current) videoRef.current.currentTime = val;
-  }
-
-  function skip(seconds: number) {
-    const target = Math.min(duration, Math.max(0, currentTime + seconds));
-    setCurrentTime(target);
-    if (audioRef.current) audioRef.current.currentTime = target;
-    if (videoRef.current) videoRef.current.currentTime = target;
   }
 
   function jumpToTimestamp(seconds: number) {

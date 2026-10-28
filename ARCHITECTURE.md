@@ -34,9 +34,9 @@ TUKUBI is engineered as a modular monorepo combining Next.js 15 (Web), Expo Reac
 ```
 
 ### The System Model:
-- **TUKUBI**: The digital ecosystem where Caribbean people and the diaspora discover, socialize, create, sell, and buy.
+- **TUKUBI**: The Caribbean-born social and creator platform where Caribbean people, the diaspora, and the world discover, socialize, create, sell, and buy.
 - **TUKUBI Financial Center**: Universal payment orchestration layer providing tokenized payment methods, store-compliant digital goods routing, double-entry cryptographic ledger accounts, and authorized provider adapters (Stripe, PayPal, CX Pay, WiPay).
-- **Brand Identity:** *TUKUBI: Caribbean Digital Ecosystem — Social • Culture • Commerce*.
+- **Brand Identity:** *TUKUBI — The Caribbean Connected. (Born in the Caribbean. Built for the World.)*
 
 ---
 

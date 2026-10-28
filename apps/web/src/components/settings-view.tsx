@@ -153,10 +153,15 @@ export default function SettingsView({
   };
 
   const handleThemeChange = (theme: string) => {
+    const normalized = theme === 'island-daylight' || theme === 'light' ? 'island-daylight' : 'island-vibes';
+    if (typeof document !== 'undefined') {
+      document.documentElement.setAttribute('data-theme', normalized);
+      document.documentElement.classList.toggle('dark', normalized !== 'island-daylight');
+    }
+    setProfile((p) => ({ ...p, theme_preference: normalized }));
     startTransition(async () => {
-      const res = await updateThemeAction(theme);
+      const res = await updateThemeAction(normalized);
       if (res.success) {
-        setProfile((p) => ({ ...p, theme_preference: theme }));
         setFeedback({ error: null, success: res.message || 'Theme updated.' });
       } else {
         setFeedback({ error: res.error || 'Failed to update theme.', success: null });
@@ -739,27 +744,69 @@ export default function SettingsView({
                   Theme &amp; Appearance
                 </h2>
                 <p className="text-xs md:text-sm text-brand-sandstone/60">
-                  TUKUBI is standardized on the unified Island Vibes design system.
+                  Choose between TUKUBI Island Vibes (Twilight) and Island Daylight (Warm Limestone).
                 </p>
               </div>
 
-              <div className="bg-[#131D33] border border-brand-caribbeanSea/30 rounded-2xl p-5 md:p-6 space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3.5">
-                    <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-gradient-to-tr from-brand-sunriseCoral via-brand-goldenHour to-brand-caribbeanSea flex items-center justify-center text-lg md:text-xl shadow-lg">
-                      🌴
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {[
+                  {
+                    id: 'island-vibes',
+                    icon: '🌴',
+                    title: 'Island Vibes (Default)',
+                    desc: 'Caribbean Futurism: Twilight purple, sunset coral, golden hour amber & sea blue.',
+                    active:
+                      profile.theme_preference !== 'island-daylight' &&
+                      profile.theme_preference !== 'light',
+                  },
+                  {
+                    id: 'island-daylight',
+                    icon: '☀️',
+                    title: 'Island Daylight',
+                    desc: 'Warm Caribbean limestone canvas with high-contrast coral & sea-blue accents.',
+                    active:
+                      profile.theme_preference === 'island-daylight' ||
+                      profile.theme_preference === 'light',
+                  },
+                ].map((themeOption) => (
+                  <button
+                    key={themeOption.id}
+                    type="button"
+                    disabled={isPending}
+                    onClick={() => handleThemeChange(themeOption.id)}
+                    aria-pressed={themeOption.active}
+                    className={`text-left rounded-2xl p-5 md:p-6 space-y-3 border transition-all ${
+                      themeOption.active
+                        ? 'bg-[#131D33] border-brand-caribbeanSea/60 ring-1 ring-brand-caribbeanSea/40'
+                        : 'bg-[#131D33]/60 border-white/10 hover:border-white/25'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-3.5">
+                        <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-gradient-to-tr from-brand-sunriseCoral via-brand-goldenHour to-brand-caribbeanSea flex items-center justify-center text-lg md:text-xl shadow-lg">
+                          {themeOption.icon}
+                        </div>
+                        <div>
+                          <h3 className="text-sm md:text-base font-black text-brand-sandstone">
+                            {themeOption.title}
+                          </h3>
+                          <p className="text-xs md:text-sm text-brand-sandstone/60">
+                            {themeOption.desc}
+                          </p>
+                        </div>
+                      </div>
+                      {themeOption.active ? (
+                        <span className="flex items-center gap-1.5 text-xs font-bold text-brand-caribbeanSea bg-brand-caribbeanSea/10 px-3 py-1 rounded-full border border-brand-caribbeanSea/30 shrink-0">
+                          <CheckCircle className="w-3.5 h-3.5" /> Active
+                        </span>
+                      ) : (
+                        <span className="text-xs font-bold text-brand-sandstone/70 bg-white/5 px-3 py-1 rounded-full border border-white/10 shrink-0">
+                          Select
+                        </span>
+                      )}
                     </div>
-                    <div>
-                      <h3 className="text-sm md:text-base font-black text-brand-sandstone">Island Vibes (Default &amp; Standard)</h3>
-                      <p className="text-xs md:text-sm text-brand-sandstone/60">
-                        Caribbean Futurism: Twilight purple, sunset coral, golden hour amber &amp; sea blue.
-                      </p>
-                    </div>
-                  </div>
-                  <span className="flex items-center gap-1.5 text-xs md:text-sm font-bold text-brand-caribbeanSea bg-brand-caribbeanSea/10 px-3.5 py-1.5 rounded-full border border-brand-caribbeanSea/30">
-                    <CheckCircle className="w-4 h-4" /> Active
-                  </span>
-                </div>
+                  </button>
+                ))}
               </div>
             </section>
           )}

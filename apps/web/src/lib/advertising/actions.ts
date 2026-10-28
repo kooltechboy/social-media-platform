@@ -119,6 +119,22 @@ export async function createAdAction(input: any): Promise<{adId: string | null; 
   const supabase = await createSupabaseServerClient();
   if (!supabase) return { adId: null, error: 'Internal Error' };
 
+  const rawDestUrl = String(input.destination_url || 'https://tukubi.com').trim();
+  let safeDestUrl = 'https://tukubi.com';
+  if (rawDestUrl.startsWith('/') && !rawDestUrl.startsWith('//')) {
+    safeDestUrl = rawDestUrl;
+  } else {
+    try {
+      const parsed = new URL(rawDestUrl);
+      if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+        return { adId: null, error: 'Destination URL must use http:// or https://' };
+      }
+      safeDestUrl = parsed.toString();
+    } catch {
+      return { adId: null, error: 'Invalid destination URL' };
+    }
+  }
+
   const { data, error } = await supabase
     .from('ads')
     .insert({
@@ -126,7 +142,8 @@ export async function createAdAction(input: any): Promise<{adId: string | null; 
       headline: input.headline,
       body: input.body,
       media_path: input.media_path,
-      destination_url: input.destination_url || 'https://tukubi.com',
+      destination_url: safeDestUrl,
+      cta_text: input.cta_text || input.ai_generated_cta || 'Learn More',
       is_approved: false, // Requires moderation clearance before delivery
       creative_type: input.creative_type || 'single_image',
       ai_brief: input.ai_brief,
@@ -183,18 +200,17 @@ export async function fetchAdvertiserCampaignsAction(): Promise<{campaigns: any[
     let impressions = 0;
     let clicks = 0;
     
-    // We fetch impressions and clicks for ads belonging to this campaign
+    // We fetch impressions and clicks for ads belonging to this campaign without double-counting dual-written rows
     for (const adSet of camp.ad_sets || []) {
       for (const ad of adSet.ads || []) {
         const { count: impCount } = await supabase.from('ad_events').select('*', { count: 'exact', head: true }).eq('ad_id', ad.id).eq('event_type', 'impression');
         const { count: clickCount } = await supabase.from('ad_events').select('*', { count: 'exact', head: true }).eq('ad_id', ad.id).eq('event_type', 'click');
         
-        // Also fallback to older ad_impressions for backward compatibility if any
         const { data: impOld } = await supabase.from('ad_impressions').select('cost_minor').eq('ad_id', ad.id);
         const { count: clickOld } = await supabase.from('ad_clicks').select('id, impression_id!inner(ad_id)', { count: 'exact', head: true }).eq('impression_id.ad_id', ad.id);
         
-        impressions += (impCount || 0) + (impOld?.length || 0);
-        clicks += (clickCount || 0) + (clickOld || 0);
+        impressions += Math.max(impCount || 0, impOld?.length || 0);
+        clicks += Math.max(clickCount || 0, clickOld || 0);
         if (impOld) {
           spendMinor += impOld.reduce((acc: number, row: any) => acc + (row.cost_minor || 0), 0);
         }
@@ -261,6 +277,9 @@ export async function updateCampaignStatusAction(campaignId: string, status: 'ac
     }
     if (campaign.moderation_status === 'rejected') {
       return { error: `Campaign was rejected by moderation: ${campaign.moderation_reason || 'Policy violation'}.` };
+    }
+    if (campaign.moderation_status !== 'approved') {
+      return { error: 'Campaign is awaiting moderation approval before it can be activated.' };
     }
   }
 
@@ -365,19 +384,41 @@ export async function initiateCampaignCheckoutAction(campaignId: string): Promis
     const registry = new ProviderRegistry();
     const paypal = registry.get('paypal');
 
+    const idempotencyKey = `ad_fund_${campaign.id}_${Date.now()}`;
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://www.tukubi.com';
-    const returnUrl = `${appUrl}/ads?checkout=success&campaignId=${campaign.id}`;
+    const serviceClient = (await createServiceSupabaseClient()) || supabase;
+
+    // Pre-create or record payment intent with canonical schema columns
+    const { data: preIntent } = await serviceClient
+      .from('payment_intents')
+      .insert({
+        payer_id: user.id,
+        amount_minor: amountMinor,
+        currency: campaign.currency || 'USD',
+        product_type: 'business_ad',
+        reference_type: 'ad_campaign',
+        reference_id: campaign.id,
+        idempotency_key: idempotencyKey,
+        selected_provider: 'paypal',
+        status: 'requires_payment',
+      })
+      .select('id')
+      .single();
+
+    const intentQuery = preIntent?.id ? `&intentId=${encodeURIComponent(preIntent.id)}` : '';
+    const returnUrl = `${appUrl}/ads?checkout=success&campaignId=${campaign.id}${intentQuery}`;
     const cancelUrl = `${appUrl}/ads?checkout=cancel&campaignId=${campaign.id}`;
 
     const chargeResult = await paypal.charge({
       amountMinor,
       currency: campaign.currency || 'USD',
-      idempotencyKey: `ad_fund_${campaign.id}_${Date.now()}`,
+      idempotencyKey,
       returnUrl,
       cancelUrl,
       metadata: {
         productType: 'business_ad',
         campaignId: campaign.id,
+        intentId: preIntent?.id || idempotencyKey,
       },
     });
 
@@ -385,24 +426,20 @@ export async function initiateCampaignCheckoutAction(campaignId: string): Promis
       return { success: false, error: chargeResult.errorMessage || 'Failed to obtain PayPal approval URL' };
     }
 
-    // Record pending payment intent in database
-    const { data: intent } = await supabase.from('payment_intents').insert({
-      user_id: user.id,
-      amount_minor: amountMinor,
-      currency: campaign.currency || 'USD',
-      status: 'requires_payment_method',
-      metadata: {
-        productType: 'business_ad',
-        campaignId: campaign.id,
-        paypalOrderId: chargeResult.providerTransactionId,
-      },
-    }).select('id').single();
+    if (preIntent?.id && chargeResult.providerTransactionId) {
+      await serviceClient
+        .from('payment_intents')
+        .update({
+          provider_transaction_id: chargeResult.providerTransactionId,
+        })
+        .eq('id', preIntent.id);
+    }
 
     return {
       success: true,
       approvalUrl: chargeResult.redirectUrl,
       orderId: chargeResult.providerTransactionId,
-      intentId: intent?.id,
+      intentId: preIntent?.id,
     };
   } catch (err: any) {
     return {

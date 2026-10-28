@@ -40,7 +40,7 @@ export default async function HelpArticlePage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const article = getArticleBySlug(slug);
+  let article = getArticleBySlug(slug);
 
   if (!article) {
     // Attempt to lookup dynamically in database
@@ -54,6 +54,30 @@ export default async function HelpArticlePage({
           .maybeSingle();
 
         if (!dbArticle) notFound();
+
+        const catRel = Array.isArray(dbArticle.help_categories)
+          ? dbArticle.help_categories[0]
+          : dbArticle.help_categories;
+        article = {
+          slug: dbArticle.slug,
+          title: dbArticle.title,
+          description: dbArticle.summary || dbArticle.seo_description || '',
+          categorySlug: catRel?.slug || 'getting-started',
+          categoryTitle: catRel?.title || 'Help Guide',
+          featureSlug: dbArticle.feature_slug || dbArticle.slug,
+          seoTitle: dbArticle.seo_title || dbArticle.title,
+          seoDescription: dbArticle.seo_description || dbArticle.summary || '',
+          ctaHref: dbArticle.cta_href || '/',
+          ctaLabel: dbArticle.cta_label || 'Explore TUKUBI',
+          sections: Array.isArray(dbArticle.sections)
+            ? dbArticle.sections
+            : [
+                {
+                  type: 'intro',
+                  content: dbArticle.body_markdown || dbArticle.summary || '',
+                },
+              ],
+        };
 
         // Increment view count asynchronously
         void supabase.rpc('increment_help_article_views', { article_uuid: dbArticle.id });

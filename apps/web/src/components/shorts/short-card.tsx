@@ -384,7 +384,10 @@ export default function ShortCard({
 
           {/* Creator Profile Avatar & Follow Button */}
           <div className="relative mt-1">
-            <Link href={`/profile/${short.handle}`} aria-label="Creator Profile">
+            <Link
+              href={short.pageSlug ? `/pages/${short.pageSlug}` : `/profile/${short.handle.replace(/^@+/, '')}`}
+              aria-label="Creator Profile"
+            >
               <div className="w-11 h-11 rounded-full border-2 border-white overflow-hidden bg-brand-twilight flex items-center justify-center shadow-lg">
                 {short.avatarUrl ? (
                   <img src={short.avatarUrl} alt={short.creator} className="w-full h-full object-cover" />
@@ -424,9 +427,12 @@ export default function ShortCard({
           ) : null}
 
           <div className="flex items-center gap-2 flex-wrap">
-            <Link href={`/profile/${short.handle}`} className="flex items-center gap-1.5 hover:underline">
+            <Link
+              href={short.pageSlug ? `/pages/${short.pageSlug}` : `/profile/${short.handle.replace(/^@+/, '')}`}
+              className="flex items-center gap-1.5 hover:underline"
+            >
               <span className="text-sm font-extrabold text-white drop-shadow-md">{short.creator}</span>
-              <span className="text-xs font-semibold text-white/80 drop-shadow-md">@{short.handle}</span>
+              <span className="text-xs font-semibold text-white/80 drop-shadow-md">@{short.handle.replace(/^@+/, '')}</span>
             </Link>
 
             {short.pageId && (

@@ -265,12 +265,37 @@ export default async function MessagesPage({
   if (selectedId) {
     const threadResult = await supabase
       .from('messages')
-      .select('id, sender_id, body, created_at, message_kind, client_message_id, sequence_number, reply_to_id, metadata, profiles:profiles!messages_sender_id_fkey(display_name)')
+      .select('id, sender_id, body, created_at, edited_at, deleted_at, deleted_for, message_kind, client_message_id, sequence_number, reply_to_id, metadata, profiles:profiles!messages_sender_id_fkey(display_name)')
       .eq('conversation_id', selectedId)
       .order('created_at', { ascending: true })
       .limit(100);
 
-    threadMessages = (threadResult.data ?? []) as unknown as ThreadMessage[];
+    const visibleRows = (threadResult.data ?? []).filter((row: any) => {
+      if (Array.isArray(row.deleted_for) && user?.id && row.deleted_for.includes(user.id)) {
+        return false;
+      }
+      return true;
+    });
+
+    const msgIds = visibleRows.map((r: any) => r.id).filter(Boolean);
+    const reactionsByMsg = new Map<string, { emoji: string; user_id: string }[]>();
+    if (msgIds.length > 0) {
+      const { data: reactionRows } = await supabase
+        .from('message_reactions')
+        .select('message_id, emoji, user_id')
+        .in('message_id', msgIds);
+      for (const rx of reactionRows ?? []) {
+        const list = reactionsByMsg.get(rx.message_id) ?? [];
+        list.push({ emoji: rx.emoji, user_id: rx.user_id });
+        reactionsByMsg.set(rx.message_id, list);
+      }
+    }
+
+    threadMessages = visibleRows.map((row: any) => ({
+      ...row,
+      audio_url: row.audio_url || row.metadata?.audio_url || undefined,
+      reactions: reactionsByMsg.get(row.id) ?? [],
+    })) as unknown as ThreadMessage[];
 
     // Mark as read in background
     try {

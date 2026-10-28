@@ -98,6 +98,9 @@ export class PayPalAdapter implements PSPAdapter {
           purchase_units: [
             {
               reference_id: params.idempotencyKey,
+              custom_id: params.metadata?.intentId
+                ? String(params.metadata.intentId)
+                : params.idempotencyKey,
               amount: {
                 currency_code: params.currency.toUpperCase(),
                 value: amountValue,

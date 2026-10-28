@@ -7,14 +7,16 @@ DECLARE
     v_page_id UUID := '9bbbb1b0-aec2-4a38-9133-913cb2ab7cd3';
     v_target_user_id UUID := 'b4be9228-99d1-4d3b-a930-59537adcc8f6';
 BEGIN
-    -- 1. Verify target user exists
+    -- 1. Verify target user exists (skip gracefully on clean/CI databases)
     IF NOT EXISTS (SELECT 1 FROM public.profiles WHERE id = v_target_user_id) THEN
-        RAISE EXCEPTION 'Target profile % (danieljwilliams2401) not found', v_target_user_id;
+        RAISE NOTICE 'Target profile % (danieljwilliams2401) not found; skipping data migration.', v_target_user_id;
+        RETURN;
     END IF;
 
-    -- 2. Verify page exists
+    -- 2. Verify page exists (skip gracefully on clean/CI databases)
     IF NOT EXISTS (SELECT 1 FROM public.businesses WHERE id = v_page_id) THEN
-        RAISE EXCEPTION 'Page % (KOOL TECH SOLUTIONS) not found', v_page_id;
+        RAISE NOTICE 'Page % (KOOL TECH SOLUTIONS) not found; skipping data migration.', v_page_id;
+        RETURN;
     END IF;
 
     -- 3. Update business owner

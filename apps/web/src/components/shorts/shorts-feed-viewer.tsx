@@ -10,6 +10,7 @@ import ShortCard, { type ShortItem } from './short-card';
 import ShortReportModal from './short-report-modal';
 import CreateShortModal from './create-short-modal';
 import {
+  fetchShortCommentsAction,
   postShortCommentAction,
   recordShortShareAction,
   recordShortViewAction,
@@ -132,6 +133,8 @@ export default function ShortsFeedViewer({ initialShorts, user }: ShortsFeedView
     return () => observer.disconnect();
   }, [shorts]);
 
+  const toggleMute = useCallback(() => setIsMuted(prev => !prev), []);
+
   // Keyboard navigation: ArrowDown / ArrowUp to move between Shorts
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
@@ -160,9 +163,7 @@ export default function ShortsFeedViewer({ initialShorts, user }: ShortsFeedView
     }
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [shorts, activeShortId]);
-
-  const toggleMute = useCallback(() => setIsMuted(prev => !prev), []);
+  }, [shorts, activeShortId, toggleMute]);
 
   const handleTabChange = (tab: string) => {
     const params = new URLSearchParams(searchParams?.toString());
@@ -180,9 +181,27 @@ export default function ShortsFeedViewer({ initialShorts, user }: ShortsFeedView
     router.push(`?${params.toString()}`);
   };
 
-  const handleOpenComments = (shortId: string) => {
+  const handleOpenComments = async (shortId: string) => {
     setActiveCommentsShortId(shortId);
     setIsCommentsOpen(true);
+    try {
+      const dbComments = await fetchShortCommentsAction(shortId);
+      if (dbComments && dbComments.length > 0) {
+        setCommentsByShort((prev) => ({
+          ...prev,
+          [shortId]: dbComments.map((c) => ({
+            id: c.id,
+            user: c.user,
+            handle: (c.handle || '').replace(/^@+/, ''),
+            avatar: c.avatar || '🌴',
+            text: c.text,
+            time: new Date(c.time).toLocaleDateString(),
+          })),
+        }));
+      }
+    } catch {
+      // Fallback to existing state
+    }
   };
 
   const handleOpenShare = (shortId: string) => {

@@ -300,7 +300,7 @@ export function FinancialCenterScreen({ navigation }: any) {
               activeOpacity={0.8}
               onPress={() => setPayoutModalVisible(true)}
             >
-              <Ionicons name="arrow-up-circle" size={18} color="#FFF" style={{ marginRight: 6 }} />
+              <Ionicons name="arrow-up-circle" size={18} color={TOKENS.actionText} style={{ marginRight: 6 }} />
               <Text style={styles.btnPrimaryText}>Request Payout</Text>
             </TouchableOpacity>
 
@@ -493,7 +493,7 @@ export function FinancialCenterScreen({ navigation }: any) {
               onPress={handleSaveConnection}
             >
               {savingConnection ? (
-                <ActivityIndicator color="#FFF" />
+                <ActivityIndicator color={TOKENS.actionText} />
               ) : (
                 <Text style={styles.submitBtnText}>Authorize &amp; Connect</Text>
               )}
@@ -549,7 +549,7 @@ export function FinancialCenterScreen({ navigation }: any) {
               onPress={handleRequestPayout}
             >
               {submittingPayout ? (
-                <ActivityIndicator color="#FFF" />
+                <ActivityIndicator color={TOKENS.actionText} />
               ) : (
                 <Text style={styles.submitBtnText}>Confirm Payout Request</Text>
               )}
@@ -615,7 +615,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  btnPrimaryText: { color: '#FFFFFF', fontWeight: '800', fontSize: 13 },
+  btnPrimaryText: { color: TOKENS.actionText, fontWeight: '800', fontSize: 13 },
   btnSecondary: {
     flex: 1,
     backgroundColor: TOKENS.raised,
@@ -681,7 +681,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 12,
   },
-  connectRailBtnText: { color: '#FFF', fontSize: 12, fontWeight: '800' },
+  connectRailBtnText: { color: TOKENS.actionText, fontSize: 12, fontWeight: '800' },
 
   methodCard: {
     backgroundColor: TOKENS.surface,
@@ -805,5 +805,5 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 8,
   },
-  submitBtnText: { color: '#FFF', fontSize: 14, fontWeight: '800' },
+  submitBtnText: { color: TOKENS.actionText, fontSize: 14, fontWeight: '800' },
 });

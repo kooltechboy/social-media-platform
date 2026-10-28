@@ -259,7 +259,9 @@ export function SoundsScreen({ navigation }: any) {
                       onPress={() => handleTogglePlay(sound)}
                       activeOpacity={0.8}
                     >
-                      <Text style={styles.playBtnText}>{isPlaying ? '⏸' : '▶'}</Text>
+                      <Text style={[styles.playBtnText, isPlaying && styles.playBtnTextActive]}>
+                        {isPlaying ? '⏸' : '▶'}
+                      </Text>
                     </TouchableOpacity>
 
                     {/* Sound Details */}
@@ -361,6 +363,9 @@ const styles = StyleSheet.create({
   playBtnText: {
     fontSize: 16,
     color: TOKENS.textPrimary,
+  },
+  playBtnTextActive: {
+    color: TOKENS.actionText,
   },
   soundInfo: {
     flex: 1,

@@ -94,9 +94,19 @@ export default function CampaignRow({ campaign }: { campaign: any }) {
           )}
           <button
             onClick={toggleStatus}
-            disabled={isUpdating || Number(campaign.fundedAmountMinor || 0) === 0 || campaign.moderationStatus === 'rejected'}
+            disabled={
+              isUpdating ||
+              Number(campaign.fundedAmountMinor || 0) === 0 ||
+              (status !== 'active' && campaign.moderationStatus !== 'approved')
+            }
             className="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors disabled:opacity-40"
-            title={status === 'active' ? 'Pause Campaign' : 'Resume Campaign'}
+            title={
+              campaign.moderationStatus !== 'approved'
+                ? 'Campaign must be approved by moderation before activation'
+                : status === 'active'
+                ? 'Pause Campaign'
+                : 'Resume Campaign'
+            }
           >
             {isUpdating ? <Loader2 className="w-4 h-4 animate-spin" /> : 
              status === 'active' ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
