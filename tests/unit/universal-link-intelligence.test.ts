@@ -304,5 +304,23 @@ describe('Universal Link Intelligence & Provider Architecture Suite', () => {
       expect(res!.isPlayable).toBe(true);
       expect(res!.aspectRatio).toBe('16:9');
     });
+
+    it('resolves direct image URLs with image contentType and clean filename title', async () => {
+      const url = new URL('https://cdn.caribbean.com/art/barbados-crop-over-costume.png?quality=90');
+      const res = await provider.resolve(url);
+      expect(res).not.toBeNull();
+      expect(res!.contentType).toBe('image');
+      expect(res!.isPlayable).toBe(false);
+      expect(res!.thumbnailUrl).toBe('https://cdn.caribbean.com/art/barbados-crop-over-costume.png?quality=90');
+      expect(res!.title).toBe('Barbados crop over costume');
+    });
+  });
+
+  describe('9. Messaging Universal Link Integration', () => {
+    it('detects external links in message bodies and formats rich_link metadata payload', () => {
+      const detected = detectUrls('Check out this soca track https://www.youtube.com/watch?v=dQw4w9WgXcQ wah gwaan');
+      expect(detected.hasUrls).toBe(true);
+      expect(detected.primaryUrl).toBe('https://www.youtube.com/watch?v=dQw4w9WgXcQ');
+    });
   });
 });

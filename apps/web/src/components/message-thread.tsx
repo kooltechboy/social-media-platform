@@ -46,6 +46,8 @@ import CallOverlayModal, { type CallMode } from './calls/call-overlay-modal';
 import MessageContextCard from './messages/cards/message-context-card';
 import UserAvatar from './user-avatar';
 import { generateClientMessageId, type MessageKind, type MessageMetadata } from '@caribbean/messaging';
+import { detectUrls } from '@caribbean/media';
+import UniversalContentCard from './media/universal-content-card';
 
 export interface ThreadMessage {
   id: string;
@@ -121,6 +123,68 @@ export default function MessageThread({
   // Realtime typing indicator state
   const [typingUsers, setTypingUsers] = useState<string[]>([]);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Live Link Preview in Messaging
+  const [detectedPreview, setDetectedPreview] = useState<any>(null);
+  const [isDismissedPreview, setIsDismissedPreview] = useState(false);
+  const [isResolvingUrl, setIsResolvingUrl] = useState(false);
+  const urlAbortRef = useRef<AbortController | null>(null);
+
+  useEffect(() => {
+    if (!messageInput.trim() || isDismissedPreview) {
+      if (!messageInput.trim()) {
+        setDetectedPreview(null);
+        setIsDismissedPreview(false);
+      }
+      return;
+    }
+
+    const detected = detectUrls(messageInput);
+    if (!detected.hasUrls || !detected.primaryUrl) {
+      setDetectedPreview(null);
+      return;
+    }
+
+    const targetUrl = detected.primaryUrl;
+    if (detectedPreview?.url === targetUrl || detectedPreview?.normalizedUrl === targetUrl) {
+      return;
+    }
+
+    if (urlAbortRef.current) {
+      urlAbortRef.current.abort();
+    }
+    const controller = new AbortController();
+    urlAbortRef.current = controller;
+
+    const timer = setTimeout(async () => {
+      setIsResolvingUrl(true);
+      try {
+        const res = await fetch('/api/v1/media/resolve-url', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url: targetUrl }),
+          signal: controller.signal,
+        });
+        if (res.ok && !controller.signal.aborted) {
+          const data = await res.json();
+          if (data?.metadata && data.metadata.status !== 'failed') {
+            setDetectedPreview(data.metadata);
+          }
+        }
+      } catch {
+        // Non-blocking
+      } finally {
+        if (!controller.signal.aborted) {
+          setIsResolvingUrl(false);
+        }
+      }
+    }, 400);
+
+    return () => {
+      clearTimeout(timer);
+      controller.abort();
+    };
+  }, [messageInput, isDismissedPreview, detectedPreview]);
 
   // Focus input and sync messages on conversationId change
   useEffect(() => {
@@ -313,6 +377,8 @@ export default function MessageThread({
     const bodyText = messageInput.trim();
     const clientMsgId = generateClientMessageId();
     const replyId = replyingTo?.id;
+    const activePreview = !isDismissedPreview ? detectedPreview : null;
+    const msgKind: MessageKind = activePreview ? 'rich_link' : 'text';
 
     // Optimistic Message
     const optimisticMessage: ThreadMessage = {
@@ -321,7 +387,8 @@ export default function MessageThread({
       sender_id: currentUserId,
       body: bodyText,
       created_at: new Date().toISOString(),
-      message_kind: 'text',
+      message_kind: msgKind,
+      metadata: activePreview ? { link_preview: activePreview } : undefined,
       reply_to_id: replyId,
       status: isOffline ? 'failed' : 'sending',
       profiles: { display_name: 'You' },
@@ -330,6 +397,8 @@ export default function MessageThread({
     setMessages((prev) => [...prev, optimisticMessage]);
     setMessageInput('');
     setReplyingTo(null);
+    setDetectedPreview(null);
+    setIsDismissedPreview(false);
 
     if (isOffline) {
       setState({ error: 'You are currently offline. Message saved to retry.' });
@@ -340,7 +409,10 @@ export default function MessageThread({
       const formData = new FormData();
       formData.set('conversationId', conversationId);
       formData.set('body', bodyText);
-      formData.set('message_kind', 'text');
+      formData.set('message_kind', msgKind);
+      if (activePreview) {
+        formData.set('metadata', JSON.stringify({ link_preview: activePreview }));
+      }
       formData.set('client_message_id', clientMsgId);
       if (replyId) formData.set('reply_to_id', replyId);
 
@@ -918,6 +990,17 @@ export default function MessageThread({
           <VoiceNoteRecorder
             onSendVoiceNote={handleSendVoiceNote}
             onCancel={() => setIsRecordingVoice(false)}
+          />
+        </div>
+      )}
+
+      {/* 5b. Live Link Preview Banner */}
+      {detectedPreview && !isDismissedPreview && !isRecordingVoice && !editingMessage && (
+        <div className="px-4 py-2 border-t border-white/10 bg-[#140C22] animate-fadeIn">
+          <UniversalContentCard
+            metadata={detectedPreview}
+            compact
+            onRemove={() => setIsDismissedPreview(true)}
           />
         </div>
       )}

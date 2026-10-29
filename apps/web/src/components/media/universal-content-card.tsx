@@ -227,18 +227,20 @@ export default function UniversalContentCard({
         </div>
       )}
 
-      {/* C. HERO IMAGE FOR ARTICLES & PRODUCTS */}
+      {/* C. HERO IMAGE FOR ARTICLES, PRODUCTS & DIRECT IMAGES */}
       {contentType !== 'video' && !((contentType === 'audio' || contentType === 'podcast') && embedUrl && isSafeEmbedUrl(embedUrl) && metadata.canEmbed !== false) && thumbnailUrl && (
-        <div className="relative w-full aspect-[1.91/1] max-h-64 bg-slate-900 overflow-hidden">
+        <div className={`relative w-full ${contentType === 'image' ? 'max-h-96 bg-black/80 flex items-center justify-center' : 'aspect-[1.91/1] max-h-64 bg-slate-900'} overflow-hidden`}>
           <TukubiImage
             src={thumbnailUrl}
             alt={title}
             width={600}
-            height={315}
-            objectFit="cover"
+            height={contentType === 'image' ? 600 : 315}
+            objectFit={contentType === 'image' ? 'contain' : 'cover'}
             className="w-full h-full group-hover:scale-101 transition-transform duration-300"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+          {contentType !== 'image' && (
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+          )}
         </div>
       )}
 
