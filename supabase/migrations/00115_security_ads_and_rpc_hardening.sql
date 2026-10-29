@@ -26,13 +26,31 @@
 BEGIN;
 
 -- -----------------------------------------------------------------------------
--- 1. Schema Extensions for Ledger & Ads Compatibility
+-- 1. Schema Extensions for Ledger, Ads, Posts & Videos Compatibility
 -- -----------------------------------------------------------------------------
 ALTER TABLE public.ledger_entries
     ADD COLUMN IF NOT EXISTS category VARCHAR(40);
 
 ALTER TABLE public.ads
     ADD COLUMN IF NOT EXISTS cta_text TEXT DEFAULT 'Learn More';
+
+ALTER TABLE public.posts
+    ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ;
+
+ALTER TABLE public.videos
+    ADD COLUMN IF NOT EXISTS shares_count INTEGER NOT NULL DEFAULT 0;
+
+ALTER TABLE public.ad_clicks
+    ALTER COLUMN impression_id DROP NOT NULL,
+    ADD COLUMN IF NOT EXISTS ad_id UUID REFERENCES public.ads(id) ON DELETE CASCADE,
+    ADD COLUMN IF NOT EXISTS viewer_id UUID REFERENCES public.profiles(id) ON DELETE SET NULL;
+
+ALTER TABLE public.ad_impressions
+    ADD COLUMN IF NOT EXISTS occurred_at TIMESTAMPTZ NOT NULL DEFAULT now();
+
+ALTER TABLE public.ad_events
+    ADD COLUMN IF NOT EXISTS placement TEXT DEFAULT 'feed',
+    ADD COLUMN IF NOT EXISTS cost_charged_minor INTEGER NOT NULL DEFAULT 0;
 
 -- -----------------------------------------------------------------------------
 -- 2. Harden Page Role & Staff Helper Functions (Prevent IDOR Enumeration)
@@ -238,18 +256,11 @@ CREATE POLICY "View posts policy"
                 -- 4. Community privacy boundary
                 AND (
                     community_id IS NULL
+                    OR public.is_active_community_member(community_id)
                     OR EXISTS (
                         SELECT 1 FROM public.communities c
                         WHERE c.id = posts.community_id
-                          AND (
-                              c.privacy_level = 'public'
-                              OR ((SELECT auth.uid()) IS NOT NULL AND EXISTS (
-                                  SELECT 1 FROM public.community_members cm
-                                  WHERE cm.community_id = c.id
-                                    AND cm.profile_id = (SELECT auth.uid())
-                                    AND cm.membership_status = 'active'
-                              ))
-                          )
+                          AND c.join_policy = 'public'
                     )
                 )
                 -- 5. Post visibility rules
@@ -288,6 +299,49 @@ CREATE POLICY "View posts policy"
                     )
                 )
             )
+        )
+    );
+
+CREATE POLICY "posts_insert_policy"
+    ON public.posts
+    FOR INSERT
+    TO authenticated
+    WITH CHECK (
+        (SELECT auth.uid()) = author_id
+        AND (
+            page_id IS NULL
+            OR public.is_page_member(page_id, (SELECT auth.uid()), ARRAY['owner', 'admin', 'editor'])
+        )
+    );
+
+CREATE POLICY "posts_update_policy"
+    ON public.posts
+    FOR UPDATE
+    TO authenticated
+    USING (
+        (SELECT auth.uid()) = author_id
+        OR (
+            page_id IS NOT NULL
+            AND public.is_page_member(page_id, (SELECT auth.uid()), ARRAY['owner', 'admin'])
+        )
+    )
+    WITH CHECK (
+        (SELECT auth.uid()) = author_id
+        OR (
+            page_id IS NOT NULL
+            AND public.is_page_member(page_id, (SELECT auth.uid()), ARRAY['owner', 'admin'])
+        )
+    );
+
+CREATE POLICY "posts_delete_policy"
+    ON public.posts
+    FOR DELETE
+    TO authenticated
+    USING (
+        (SELECT auth.uid()) = author_id
+        OR (
+            page_id IS NOT NULL
+            AND public.is_page_member(page_id, (SELECT auth.uid()), ARRAY['owner', 'admin'])
         )
     );
 
@@ -353,7 +407,16 @@ CREATE POLICY "Public view active ad sets"
 DROP POLICY IF EXISTS "Public view active advertisers" ON public.advertisers;
 CREATE POLICY "Public view active advertisers"
     ON public.advertisers FOR SELECT
-    USING (is_active = true);
+    USING (
+        EXISTS (
+            SELECT 1 FROM public.campaigns c
+            WHERE c.advertiser_id = advertisers.id
+              AND c.status = 'active'
+              AND c.moderation_status = 'approved'
+        )
+        OR profile_id = (SELECT auth.uid())
+        OR public.is_staff_or_ad_moderator((SELECT auth.uid()))
+    );
 
 DROP POLICY IF EXISTS "Advertisers and staff view impressions" ON public.ad_impressions;
 CREATE POLICY "Advertisers and staff view impressions"
@@ -468,7 +531,7 @@ AS $$
 DECLARE
     v_campaign RECORD;
     v_new_funded INTEGER;
-    v_new_status public.campaign_status;
+    v_new_status TEXT;
 BEGIN
     IF p_amount_minor IS NULL OR p_amount_minor <= 0 THEN
         RETURN jsonb_build_object('funded', false, 'reason', 'invalid_amount');
@@ -487,7 +550,7 @@ BEGIN
     v_new_funded := COALESCE(v_campaign.funded_amount_minor, 0) + p_amount_minor;
     v_new_status := CASE
         WHEN v_campaign.moderation_status = 'approved' AND v_campaign.status IN ('draft', 'completed')
-        THEN 'active'::public.campaign_status
+        THEN 'active'::TEXT
         ELSE v_campaign.status
     END;
 
@@ -523,7 +586,7 @@ SET search_path = public, pg_temp
 AS $$
 DECLARE
     v_campaign_id UUID;
-    v_campaign_status public.campaign_status;
+    v_campaign_status TEXT;
     v_moderation_status TEXT;
     v_funded INTEGER;
     v_spent INTEGER;
@@ -667,7 +730,7 @@ BEGIN
     -- 5. Update campaign spend and auto-complete if budget reached
     UPDATE public.campaigns
     SET spent_amount_minor = v_new_spent,
-        status = CASE WHEN v_new_spent >= v_funded THEN 'completed'::public.campaign_status ELSE status END,
+        status = CASE WHEN v_new_spent >= v_funded THEN 'completed'::TEXT ELSE status END,
         updated_at = now()
     WHERE id = v_campaign_id;
 

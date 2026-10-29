@@ -596,8 +596,7 @@ CREATE POLICY "Owner read affiliate referrals"
     FOR SELECT
     USING (
         auth.role() = 'service_role'
-        OR affiliate_id = (SELECT auth.uid())
-        OR referred_user_id = (SELECT auth.uid())
+        OR creator_id = (SELECT auth.uid())
     );
 
 -- 9. Unified Draft Lifecycle Schema Enhancements on public.creator_content_drafts
