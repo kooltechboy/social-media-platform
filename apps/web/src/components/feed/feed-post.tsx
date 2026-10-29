@@ -159,6 +159,42 @@ export default function FeedPost({
 }: FeedPostProps) {
   const { t, locale } = useTranslation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [openUpward, setOpenUpward] = useState(false);
+  const menuRef = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    if (!isMenuOpen) return;
+    function handleClickOutside(event: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setIsMenuOpen(false);
+      }
+    }
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === 'Escape') {
+        setIsMenuOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isMenuOpen]);
+
+  const handleToggleMenu = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!isMenuOpen && menuRef.current) {
+      const rect = menuRef.current.getBoundingClientRect();
+      const spaceBelow = window.innerHeight - rect.bottom;
+      if (spaceBelow < 420 && rect.top > spaceBelow) {
+        setOpenUpward(true);
+      } else {
+        setOpenUpward(false);
+      }
+    }
+    setIsMenuOpen((prev) => !prev);
+  };
   const [isEmojiPickerOpen, setIsEmojiPickerOpen] = useState(false);
   const [isCommentEmojiPickerOpen, setIsCommentEmojiPickerOpen] = useState(false);
   const [isHidden, setIsHidden] = useState(false);
@@ -274,7 +310,9 @@ export default function FeedPost({
     <article
       id={post.id}
       aria-label={`Post by ${post.author}`}
-      className="glass-aerospace rounded-2xl sm:rounded-3xl p-4 sm:p-5 md:p-6 space-y-3 sm:space-y-3.5 md:space-y-4 hover:border-white/25 transition-all duration-300 relative group overflow-hidden shadow-xl sm:shadow-2xl"
+      className={`glass-aerospace rounded-2xl sm:rounded-3xl p-4 sm:p-5 md:p-6 space-y-3 sm:space-y-3.5 md:space-y-4 hover:border-white/25 transition-all duration-300 relative group shadow-xl sm:shadow-2xl ${
+        isMenuOpen ? 'z-40' : 'z-0'
+      }`}
     >
       {/* Specular high-definition light reflection line */}
       <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/25 to-transparent pointer-events-none" />
@@ -373,7 +411,7 @@ export default function FeedPost({
         </div>
 
         {/* Right Header Options */}
-        <div className="flex items-center gap-2 relative shrink-0">
+        <div ref={menuRef} className="flex items-center gap-2 relative shrink-0">
           {post.tag && (
             <Link
               href={`/explore?q=${encodeURIComponent(post.tag.replace('#', ''))}`}
@@ -388,7 +426,7 @@ export default function FeedPost({
             type="button"
             aria-label="Post options"
             aria-expanded={isMenuOpen}
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
+            onClick={handleToggleMenu}
             className="p-2 rounded-full text-brand-sandstone/60 hover:text-brand-sandstone hover:bg-white/10 transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-caribbeanSea"
           >
             <MoreHorizontal className="w-5 h-5" />
@@ -396,7 +434,11 @@ export default function FeedPost({
 
           {/* Dropdown Menu */}
           {isMenuOpen && (
-            <div className="absolute right-0 top-12 z-30 w-52 rounded-2xl bg-brand-dusk border border-slate-700 shadow-2xl p-1.5 space-y-1 animate-fadeIn text-xs sm:text-sm">
+            <div
+              className={`absolute right-0 ${
+                openUpward ? 'bottom-12' : 'top-12'
+              } z-50 w-56 sm:w-60 rounded-2xl bg-[#140C22]/95 backdrop-blur-2xl border border-slate-700/80 shadow-[0_20px_50px_rgba(0,0,0,0.85)] p-1.5 space-y-1 animate-fadeIn text-xs sm:text-sm max-h-[min(480px,80vh)] overflow-y-auto overscroll-contain scrollbar-thin`}
+            >
               <button
                 type="button"
                 onClick={() => {
@@ -523,9 +565,9 @@ export default function FeedPost({
                       onDeletePost(post.id);
                       setIsMenuOpen(false);
                     }}
-                    className="w-full text-left px-3 py-2.5 rounded-xl text-rose-400 hover:bg-rose-950/50 flex items-center gap-2.5 font-bold transition-colors min-h-[40px]"
+                    className="w-full text-left px-3 py-2.5 rounded-xl text-rose-400 hover:text-white hover:bg-rose-600/30 border border-transparent hover:border-rose-500/30 flex items-center gap-2.5 font-bold transition-all min-h-[40px] group/del"
                   >
-                    <Trash2 className="w-4 h-4 text-rose-400" />
+                    <Trash2 className="w-4 h-4 text-rose-400 group-hover/del:scale-110 transition-transform" />
                     <span>Delete Post</span>
                   </button>
                 </>
