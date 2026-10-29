@@ -2,6 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import {
   Image as ImageIcon,
   Video,
@@ -1564,7 +1565,7 @@ export default function UniversalComposer({
               <div className="flex items-center gap-3 md:gap-3.5">
                 <div className="w-10 h-10 md:w-12 md:h-12 rounded-2xl overflow-hidden bg-gradient-to-tr from-brand-caribbeanSea to-brand-sunriseCoral text-slate-950 font-black flex items-center justify-center text-xs md:text-sm shadow-md flex-shrink-0">
                   {selectedIdentity?.avatarUrl ? (
-                    <img src={selectedIdentity.avatarUrl} alt={selectedIdentity.name} className="w-full h-full object-cover" />
+                    <Image src={selectedIdentity.avatarUrl} alt={selectedIdentity.name} width={48} height={48} unoptimized className="w-full h-full object-cover" />
                   ) : (
                     avatarInitials
                   )}
@@ -1625,7 +1626,7 @@ export default function UniversalComposer({
                                 <div className="flex items-center gap-2 truncate">
                                   <div className="w-6 h-6 rounded-full overflow-hidden bg-white/10 flex items-center justify-center shrink-0 text-[10px]">
                                     {item.avatarUrl ? (
-                                      <img src={item.avatarUrl} alt={item.name} className="w-full h-full object-cover" />
+                                      <Image src={item.avatarUrl} alt={item.name} width={24} height={24} unoptimized className="w-full h-full object-cover" />
                                     ) : (
                                       item.name.charAt(0)
                                     )}

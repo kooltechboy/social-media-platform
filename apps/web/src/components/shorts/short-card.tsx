@@ -2,6 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import {
   Video as VideoIcon, Heart, MessageCircle, MessageSquare, Share2,
   Volume2, VolumeX, Plus, Check, Disc, Bookmark, Subtitles,
@@ -390,7 +391,7 @@ export default function ShortCard({
             >
               <div className="w-11 h-11 rounded-full border-2 border-white overflow-hidden bg-brand-twilight flex items-center justify-center shadow-lg">
                 {short.avatarUrl ? (
-                  <img src={short.avatarUrl} alt={short.creator} className="w-full h-full object-cover" />
+                  <Image src={short.avatarUrl} alt={short.creator} width={44} height={44} unoptimized className="w-full h-full object-cover" />
                 ) : (
                   <span className="text-base">🌴</span>
                 )}

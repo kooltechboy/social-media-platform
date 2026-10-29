@@ -25,6 +25,7 @@ const IGNORED_DIRS = new Set([
   ".temp",
   "scratch",
   ".superpowers",
+  "graphify-out",
 ]);
 
 let violations = [];

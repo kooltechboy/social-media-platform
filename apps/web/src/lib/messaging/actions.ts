@@ -172,7 +172,43 @@ export async function sendMessageAction(
     }
   }
 
-  const finalBody = audioUrl ? (body || `[Voice Note: ${audioUrl}]`) : (body || `[${messageKind.toUpperCase()}]`);
+  const finalBody = audioUrl ? (body || '[Voice Note]') : (body || `[${messageKind.toUpperCase()}]`);
+
+  // 3b. Voice Note Media Offloading: Convert Base64 data URLs to Supabase Storage objects
+  if (metadata.audio_url && metadata.audio_url.startsWith('data:audio/')) {
+    try {
+      const match = metadata.audio_url.match(/^data:(audio\/[a-zA-Z0-9.-]+);base64,(.+)$/);
+      if (match && typeof supabase.storage?.from === 'function') {
+        const mimeType = match[1];
+        const base64Data = match[2];
+        const buffer = Buffer.from(base64Data, 'base64');
+        const ext = mimeType.includes('ogg')
+          ? 'ogg'
+          : mimeType.includes('mp4') || mimeType.includes('m4a')
+            ? 'm4a'
+            : mimeType.includes('wav')
+              ? 'wav'
+              : 'webm';
+        const storagePath = `voice-notes/${user.id}/${conversationId}/${Date.now()}-${crypto.randomUUID().slice(0, 8)}.${ext}`;
+
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from('post-media')
+          .upload(storagePath, buffer, {
+            contentType: mimeType,
+            upsert: true,
+          });
+
+        if (!uploadError && uploadData) {
+          const { data: pubData } = supabase.storage.from('post-media').getPublicUrl(storagePath);
+          if (pubData?.publicUrl) {
+            metadata.audio_url = pubData.publicUrl;
+          }
+        }
+      }
+    } catch {
+      // Graceful fallback: maintain existing inline audio_url if storage is unavailable
+    }
+  }
 
   // 4. Authoritative Message Insert with graceful fallback
   let inserted: any = null;

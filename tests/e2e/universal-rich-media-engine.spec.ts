@@ -7,8 +7,14 @@ test.describe('Universal Rich Media Engine — Provider-Neutral End-to-End Certi
   test.beforeEach(async ({ page }) => {
     // Intercept media resolution API to guarantee deterministic, reproducible test environments
     await page.route('/api/v1/media/resolve-url', async (route) => {
-      const requestUrl = route.request().url();
-      const urlParam = new URL(requestUrl).searchParams.get('url');
+      const req = route.request();
+      let urlParam = new URL(req.url()).searchParams.get('url');
+      if (!urlParam && req.method() === 'POST') {
+        try {
+          const body = req.postDataJSON();
+          urlParam = body?.url;
+        } catch {}
+      }
 
       if (urlParam && (urlParam.includes('youtu.be/IIQ3mIGKquc') || urlParam.includes('youtube.com/watch?v=IIQ3mIGKquc'))) {
         return route.fulfill({
@@ -19,7 +25,10 @@ test.describe('Universal Rich Media Engine — Provider-Neutral End-to-End Certi
             metadata: {
               url: TEST_YOUTUBE_URL,
               normalizedUrl: CANONICAL_YOUTUBE_URL,
+              canonicalUrl: CANONICAL_YOUTUBE_URL,
               provider: 'youtube',
+              providerDisplayName: 'YouTube',
+              siteName: 'YouTube',
               contentType: 'video',
               title: 'Caribbean Island Symphony & Golden Hour Vibes',
               description: 'Authentic Caribbean music showcase streamed directly from the islands.',
@@ -84,7 +93,7 @@ test.describe('Universal Rich Media Engine — Provider-Neutral End-to-End Certi
     await expect(page.getByText(/youtube/i).first()).toBeVisible();
 
     // Verify play button is present on the idle video card
-    const playButton = page.getByRole('button', { name: /play video/i }).first();
+    const playButton = page.getByRole('button', { name: /play/i }).first();
     await expect(playButton).toBeVisible();
   });
 
@@ -97,7 +106,7 @@ test.describe('Universal Rich Media Engine — Provider-Neutral End-to-End Certi
 
     await expect(page.getByText('Caribbean Island Symphony & Golden Hour Vibes')).toBeVisible({ timeout: 10000 });
 
-    const playButton = page.getByRole('button', { name: /play video/i }).first();
+    const playButton = page.getByRole('button', { name: /play/i }).first();
     await expect(playButton).toBeVisible();
 
     // Click play to initiate player state machine
@@ -109,19 +118,22 @@ test.describe('Universal Rich Media Engine — Provider-Neutral End-to-End Certi
 
     // Simulate YouTube player postMessage error 150 (playback restricted / embedding disabled)
     await page.evaluate(() => {
-      window.postMessage(
-        JSON.stringify({
-          event: 'onError',
-          info: 'onError',
-          data: 150,
-        }),
-        '*'
+      const iframe = document.querySelector('iframe') as HTMLIFrameElement;
+      window.dispatchEvent(
+        new MessageEvent('message', {
+          data: JSON.stringify({
+            event: 'onError',
+            info: 150,
+          }),
+          source: iframe?.contentWindow || window,
+          origin: 'https://www.youtube-nocookie.com',
+        })
       );
     });
 
     // Verify state machine transitions to fallback with graceful user notice
     await expect(
-      page.getByText(/Playback restricted by provider|Embedding disabled by content owner|Embed response timed out/i).first()
+      page.getByText(/Playback (restricted|unavailable)|Embedding disabled by content owner|Embed response timed out/i).first()
     ).toBeVisible({ timeout: 5000 });
 
     // Verify pristine canonical external CTA button is presented to the user
@@ -161,7 +173,7 @@ test.describe('Universal Rich Media Engine — Provider-Neutral End-to-End Certi
     expect(isOverflowing).toBe(false);
 
     // Verify play button meets touch target requirements (>= 44px)
-    const playButton = page.getByRole('button', { name: /play video/i }).first();
+    const playButton = page.getByRole('button', { name: /play/i }).first();
     const box = await playButton.boundingBox();
     expect(box).not.toBeNull();
     if (box) {

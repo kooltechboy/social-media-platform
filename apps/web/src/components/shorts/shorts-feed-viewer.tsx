@@ -185,17 +185,17 @@ export default function ShortsFeedViewer({ initialShorts, user }: ShortsFeedView
     setActiveCommentsShortId(shortId);
     setIsCommentsOpen(true);
     try {
-      const dbComments = await fetchShortCommentsAction(shortId);
-      if (dbComments && dbComments.length > 0) {
+      const res = await fetchShortCommentsAction(shortId);
+      if (res?.comments && res.comments.length > 0) {
         setCommentsByShort((prev) => ({
           ...prev,
-          [shortId]: dbComments.map((c) => ({
+          [shortId]: res.comments.map((c: any) => ({
             id: c.id,
             user: c.user,
             handle: (c.handle || '').replace(/^@+/, ''),
             avatar: c.avatar || '🌴',
             text: c.text,
-            time: new Date(c.time).toLocaleDateString(),
+            time: typeof c.time === 'string' ? c.time : new Date(c.time).toLocaleDateString(),
           })),
         }));
       }

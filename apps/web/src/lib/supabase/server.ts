@@ -57,6 +57,7 @@ export interface SessionUser {
   status?: string;
   permissions?: string[];
   language_preference?: string;
+  theme_preference?: string;
   isOfficial?: boolean;
   isVerified?: boolean;
 }
@@ -71,7 +72,13 @@ export interface AuthCheckResult {
 import { ensureUserProfile } from '../auth/user-sync';
 
 export const getCurrentUser = cache(async function getCurrentUser(): Promise<SessionUser | null> {
-  if (process.env.NODE_ENV !== 'production' && process.env.PLAYWRIGHT_TEST === '1') {
+  const isE2ETest =
+    process.env.PLAYWRIGHT_TEST === '1' &&
+    !process.env.VERCEL &&
+    process.env.NEXT_PUBLIC_VERCEL_ENV !== 'production' &&
+    process.env.APP_ENV !== 'production';
+
+  if (isE2ETest) {
     try {
       const cookieStore = await cookies();
       const testCookie = cookieStore.get('tukubi_user_session')?.value;

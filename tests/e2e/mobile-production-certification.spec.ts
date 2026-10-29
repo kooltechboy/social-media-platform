@@ -20,49 +20,49 @@ test.describe('Mobile-First Production Certification Suite', () => {
       const notifBtn = page.locator('header a[href="/notifications"]');
       await expect(notifBtn).toBeVisible();
 
-      // Direct Messages button (certified mobile visibility)
-      const msgBtn = page.locator('header a[href="/messages"]');
-      await expect(msgBtn).toBeVisible();
+      // Mobile menu button (certified mobile visibility)
+      const menuBtn = page.locator('header button[aria-label="Open TUKUBI Navigation Menu"]');
+      await expect(menuBtn).toBeVisible();
 
       // Verify touch target dimensions (>= 40x40px)
-      const msgBox = await msgBtn.boundingBox();
-      expect(msgBox).not.toBeNull();
-      if (msgBox) {
-        expect(msgBox.width).toBeGreaterThanOrEqual(40);
-        expect(msgBox.height).toBeGreaterThanOrEqual(40);
+      const menuBox = await menuBtn.boundingBox();
+      expect(menuBox).not.toBeNull();
+      if (menuBox) {
+        expect(menuBox.width).toBeGreaterThanOrEqual(40);
+        expect(menuBox.height).toBeGreaterThanOrEqual(40);
       }
     });
 
-    test('bottom 5-tab bar renders Home, Explore, Create (FAB), Messages, and Menu', async ({ page }) => {
+    test('bottom navigation bar renders Home, Shorts, Create (FAB), Explore, and Messages', async ({ page }) => {
       await page.goto('/');
       await page.waitForLoadState('networkidle');
 
       const nav = page.locator('nav[aria-label="Main mobile navigation"]');
       await expect(nav).toBeVisible();
 
-      // 5 tabs
+      // Core mobile navigation tabs
       await expect(nav.getByRole('tab', { name: 'Home' })).toBeVisible();
-      await expect(nav.getByRole('tab', { name: 'Explore Caribbean' })).toBeVisible();
+      await expect(nav.getByRole('tab', { name: 'TUKUBI Shorts' })).toBeVisible();
       await expect(nav.getByRole('tab', { name: 'Create on TUKUBI' })).toBeVisible();
+      await expect(nav.getByRole('tab', { name: 'Explore Caribbean' })).toBeVisible();
       await expect(nav.getByRole('tab', { name: 'Messages' })).toBeVisible();
-      await expect(nav.getByRole('tab', { name: 'Ecosystem Menu' })).toBeVisible();
     });
 
     test('menu sheet drawer opens and displays ecosystem destinations including Messages', async ({ page }) => {
       await page.goto('/');
       await page.waitForLoadState('networkidle');
 
-      const menuTab = page.locator('nav[aria-label="Main mobile navigation"]').getByRole('tab', { name: 'Ecosystem Menu' });
-      await menuTab.click();
+      const menuBtn = page.locator('header button[aria-label="Open TUKUBI Navigation Menu"]');
+      await menuBtn.click();
 
-      const menuDialog = page.getByRole('dialog', { name: 'TUKUBI Ecosystem Menu' });
+      const menuDialog = page.getByRole('dialog', { name: 'Ecosystem Menu' });
       await expect(menuDialog).toBeVisible();
 
       // Verify Direct Messages destination in Menu
-      await expect(menuDialog.getByRole('link', { name: /Messages & Direct Chat/i })).toBeVisible();
+      await expect(menuDialog.locator('a[href="/messages"]')).toBeVisible();
 
       // Verify Key Ecosystem Destinations
-      await expect(menuDialog.getByRole('link', { name: /Pages/i })).toBeVisible();
+      await expect(menuDialog.getByRole('link', { name: 'Pages', exact: true })).toBeVisible();
       await expect(menuDialog.getByRole('link', { name: /Communities/i })).toBeVisible();
       await expect(menuDialog.getByRole('link', { name: /Marketplace/i })).toBeVisible();
       await expect(menuDialog.getByRole('link', { name: /Cultural Events/i })).toBeVisible();

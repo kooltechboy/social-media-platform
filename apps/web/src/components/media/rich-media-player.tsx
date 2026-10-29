@@ -68,7 +68,7 @@ export default function RichMediaPlayer({
   } = metadata;
 
   const isShort = aspectRatio === '9:16' || Boolean(extra?.isShort);
-  const targetExternalUrl = canonicalUrl || url;
+  const targetExternalUrl = canonicalUrl || (metadata as any).normalizedUrl || url;
 
   const triggerFallback = useCallback(
     (reason: string) => {

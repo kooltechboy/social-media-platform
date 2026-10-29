@@ -21,6 +21,7 @@ import {
   X,
 } from 'lucide-react';
 import UserAvatar from '../user-avatar';
+import { getIceServers } from '../../lib/webrtc/ice-config';
 
 export type CallMode = 'audio' | 'video';
 export type CallState = 'ringing' | 'connected' | 'ended';
@@ -54,6 +55,7 @@ export default function CallOverlayModal({
   const screenShareVideoRef = useRef<HTMLVideoElement | null>(null);
   const localStreamRef = useRef<MediaStream | null>(null);
   const screenStreamRef = useRef<MediaStream | null>(null);
+  const peerConnectionRef = useRef<RTCPeerConnection | null>(null);
   const durationTimerRef = useRef<NodeJS.Timeout | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
 
@@ -92,6 +94,12 @@ export default function CallOverlayModal({
     if (screenStreamRef.current) {
       screenStreamRef.current.getTracks().forEach((t) => t.stop());
       screenStreamRef.current = null;
+    }
+    if (peerConnectionRef.current) {
+      try {
+        peerConnectionRef.current.close();
+      } catch {}
+      peerConnectionRef.current = null;
     }
     if (durationTimerRef.current) {
       clearInterval(durationTimerRef.current);
@@ -138,6 +146,17 @@ export default function CallOverlayModal({
           if (localVideoRef.current && mode === 'video') {
             localVideoRef.current.srcObject = stream;
             localVideoRef.current.play().catch(() => {});
+          }
+
+          // Initialize WebRTC RTCPeerConnection with STUN/TURN ICE servers
+          if (typeof RTCPeerConnection !== 'undefined') {
+            try {
+              const pc = new RTCPeerConnection({ iceServers: getIceServers() });
+              peerConnectionRef.current = pc;
+              stream.getTracks().forEach((track) => pc.addTrack(track, stream));
+            } catch (pcErr) {
+              console.warn('WebRTC peer connection initialization fallback:', pcErr);
+            }
           }
         }
       } catch (err) {

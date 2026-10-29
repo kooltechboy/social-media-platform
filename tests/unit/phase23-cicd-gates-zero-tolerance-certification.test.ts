@@ -33,6 +33,7 @@ describe('Phase 23 — CI/CD Gates & Zero-Tolerance Compliance Certification', (
       const ignoredDirs = new Set([
         'node_modules', '.git', '.turbo', '.vercel', 'dist',
         '.next', 'test-results', '.temp', 'scratch', '.superpowers',
+        'graphify-out',
       ]);
 
       const violations: string[] = [];

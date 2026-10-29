@@ -37,13 +37,13 @@ related:
 | `DEFECT-18` / `DEFECT-19` | Profiles | `P1` | Personal profile feed included Page posts; `is_private` blocked approved followers and ignored `followers` visibility on profile fields. | Added `.is('page_id', null)` filter and evaluated `viewerRelationship` before privacy checks in `profile/[username]/page.tsx`. | `RESOLVED` |
 | `DEFECT-20` – `DEFECT-23` | Help Center | `P2` | 5 of 12 Help categories had 0 articles; `searchArticles` had `st.title.toLowerCase` typo; feedback route passed slug into UUID column; DB article override discarded. | Added 5 comprehensive guides across all missing categories, fixed `.toLowerCase()`, validated UUID before insert, and assigned `dbArticle` override. | `RESOLVED` |
 | `P2-UX-01` / `P2-UX-02` / `LINT-01` | UI/UX & Accessibility | `P2` | 4 secondary mobile screens used `#FFFFFF` on `#FF7A59` (2.56:1); `/settings` lacked `Island Daylight` selector; 12 ESLint hook/ref warnings in `apps/web`. | Updated all 4 mobile screens to `TOKENS.actionText` (`#110D17`, 7.48:1 AAA), wired `Island Daylight` theme toggle in `/settings` + SSR root layout, and resolved all 12 ESLint warnings. | `RESOLVED` |
+| `TD-02` | Messaging Storage | `P2` | Voice notes encoded as large inline base64/Data URLs in message rows risking DB bloat. | Offloaded audio payloads to dedicated `voice-notes` Supabase Storage bucket with signed/public URL access and resilient Data URL fallback in `messaging/actions.ts`. | `RESOLVED` |
+| `TD-03` | Live Video & Calls | `P2` | WebRTC signaling lacked enterprise STUN/TURN server configuration for symmetric NAT/firewall traversal. | Hardened ICE configuration in `apps/web/src/lib/webrtc/ice-config.ts` with Xirsys/Cloudflare Calls/Google STUN fallbacks and wired into `call-overlay-modal.tsx`. | `RESOLVED` |
 
 ---
 
-## 2. Residual Technical Debt & Tracked Items (`P2` / `P3`)
+## 2. Residual Technical Debt & Tracked Items (`P3`)
 
 | ID | Area | Description | Priority | Recommended Next Step |
 |---|---|---|---|---|
 | `TD-01` | Migration Numbering | Historical duplicate numeric prefixes (`00089_*` x3 and `00108_*` x2) remain in `supabase/migrations/` for backwards compatibility with existing environments. Policy semantics are reconciled by `00115`. | `P3` | Keep existing filenames immutable for deployed state history; enforce unique monotonic prefixes in CI for all future migrations (`>= 00116`). |
-| `TD-02` | Voice Note Storage | Voice notes currently encode to persistent Data URLs in `messages.metadata.audio_url` so they work without bucket provisioning. | `P2` | Upload large voice notes (`> 60s`) to a dedicated `voice-notes` Supabase Storage bucket with signed URLs while keeping Data URL fallback. |
-| `TD-03` | Live Video WebRTC | `webrtc-call-modal.tsx` and `/live` use browser media streams and Supabase Realtime signaling; TURN server credentials are required for symmetric NAT traversal at scale. | `P2` | Configure managed Cloudflare Calls / LiveKit TURN credentials in production environment variables. |
