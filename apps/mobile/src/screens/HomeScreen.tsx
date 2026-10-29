@@ -12,6 +12,7 @@ import {
   Image,
   Share,
   Alert,
+  Linking,
 } from 'react-native';
 import { TOKENS } from '../theme/tokens';
 import { supabase, type MobilePost } from '../lib/supabase';
@@ -61,6 +62,8 @@ export function HomeScreen({ navigation }: any) {
           id,
           content,
           media_urls,
+          link_preview,
+          link_previews,
           created_at,
           likes_count,
           comments_count,
@@ -125,6 +128,8 @@ export function HomeScreen({ navigation }: any) {
             likes: item.likes_count || 0,
             comments: item.comments_count || 0,
             mediaUrls: item.media_urls || [],
+            linkPreview: item.link_preview,
+            linkPreviews: item.link_previews,
           };
         });
         setPosts(formatted);
@@ -522,6 +527,39 @@ export function HomeScreen({ navigation }: any) {
                 />
               )}
 
+              {post.linkPreview && (
+                <TouchableOpacity
+                  style={styles.linkPreviewCard}
+                  onPress={() => {
+                    const target = post.linkPreview.original_url || post.linkPreview.url;
+                    if (target) Linking.openURL(target).catch(() => {});
+                  }}
+                  accessibilityRole="link"
+                  accessibilityLabel={`Link: ${post.linkPreview.title || post.linkPreview.url}`}
+                >
+                  {post.linkPreview.thumbnail_url && (
+                    <Image
+                      source={{ uri: post.linkPreview.thumbnail_url }}
+                      style={styles.linkPreviewThumb}
+                      resizeMode="cover"
+                    />
+                  )}
+                  <View style={styles.linkPreviewMeta}>
+                    <Text style={styles.linkPreviewDomain} numberOfLines={1}>
+                      {(post.linkPreview.provider_name || 'Link').toUpperCase()}
+                    </Text>
+                    <Text style={styles.linkPreviewTitle} numberOfLines={2}>
+                      {post.linkPreview.title || post.linkPreview.url}
+                    </Text>
+                    {post.linkPreview.description && (
+                      <Text style={styles.linkPreviewDesc} numberOfLines={2}>
+                        {post.linkPreview.description}
+                      </Text>
+                    )}
+                  </View>
+                </TouchableOpacity>
+              )}
+
               <View style={styles.actionRow}>
                 <TouchableOpacity
                   style={styles.actionBtn}
@@ -882,6 +920,41 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 20,
     marginBottom: 12,
+  },
+  linkPreviewCard: {
+    backgroundColor: TOKENS.surface,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: TOKENS.border,
+    overflow: 'hidden',
+    marginBottom: 12,
+  },
+  linkPreviewThumb: {
+    width: '100%',
+    height: 160,
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+  },
+  linkPreviewMeta: {
+    padding: 12,
+  },
+  linkPreviewDomain: {
+    color: TOKENS.action,
+    fontSize: 10,
+    fontWeight: '800',
+    letterSpacing: 0.8,
+    marginBottom: 4,
+  },
+  linkPreviewTitle: {
+    color: TOKENS.textPrimary,
+    fontSize: 14,
+    fontWeight: '700',
+    lineHeight: 18,
+    marginBottom: 4,
+  },
+  linkPreviewDesc: {
+    color: TOKENS.textMuted,
+    fontSize: 12,
+    lineHeight: 16,
   },
   actionRow: {
     flexDirection: 'row',

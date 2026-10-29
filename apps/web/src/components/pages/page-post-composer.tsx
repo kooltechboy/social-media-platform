@@ -1,8 +1,10 @@
 'use client';
 
-import React, { useState, useTransition } from 'react';
-import { Send, Image as ImageIcon, Hash, Loader2, Sparkles } from 'lucide-react';
+import React, { useState, useEffect, useRef, useTransition } from 'react';
+import { Send, Image as ImageIcon, Hash, Loader2, Sparkles, Link2 } from 'lucide-react';
 import { createPagePostAction } from '../../lib/pages/actions';
+import { detectUrls, type ResolvedContentMetadata } from '@caribbean/media';
+import MultiLinkContainer from '../media/multi-link-container';
 
 interface PagePostComposerProps {
   pageId: string;
@@ -16,11 +18,87 @@ export default function PagePostComposer({ pageId, pageName }: PagePostComposerP
   const [showMediaInput, setShowMediaInput] = useState(false);
   const [showTagInput, setShowTagInput] = useState(false);
   const [statusMessage, setStatusMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [linkPreviews, setLinkPreviews] = useState<ResolvedContentMetadata[]>([]);
+  const [dismissedUrls, setDismissedUrls] = useState<Set<string>>(new Set());
+  const [isResolvingUrl, setIsResolvingUrl] = useState(false);
   const [isPending, startTransition] = useTransition();
+  const abortRef = useRef<AbortController | null>(null);
+
+  // Real-time debounced URL resolution
+  useEffect(() => {
+    const combinedText = `${content} ${mediaUrlInput}`.trim();
+    if (!combinedText) {
+      if (abortRef.current) abortRef.current.abort();
+      setIsResolvingUrl(false);
+      return;
+    }
+
+    const detected = detectUrls(combinedText);
+    if (!detected.hasUrls) return;
+
+    const urlsToResolve = detected.urls.filter(
+      (u) =>
+        !dismissedUrls.has(u) &&
+        !linkPreviews.some((p) => p.url === u || p.normalizedUrl === u)
+    );
+
+    if (urlsToResolve.length === 0) return;
+
+    if (abortRef.current) abortRef.current.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
+
+    const timer = setTimeout(async () => {
+      setIsResolvingUrl(true);
+      try {
+        for (const targetUrl of urlsToResolve) {
+          if (controller.signal.aborted) break;
+          const res = await fetch('/api/v1/media/resolve-url', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ url: targetUrl }),
+            signal: controller.signal,
+          });
+          if (res.ok && !controller.signal.aborted) {
+            const data = await res.json();
+            if (data?.metadata) {
+              setLinkPreviews((prev) => {
+                if (prev.some((p) => p.normalizedUrl === data.metadata.normalizedUrl)) {
+                  return prev;
+                }
+                return [...prev, data.metadata];
+              });
+            }
+          }
+        }
+      } catch (err: any) {
+        if (err?.name !== 'AbortError') {
+          // Non-fatal resolution warning
+        }
+      } finally {
+        if (!controller.signal.aborted) {
+          setIsResolvingUrl(false);
+        }
+      }
+    }, 400);
+
+    return () => {
+      clearTimeout(timer);
+      controller.abort();
+    };
+  }, [content, mediaUrlInput, dismissedUrls, linkPreviews]);
+
+  const handleRemovePreview = (index: number) => {
+    const target = linkPreviews[index];
+    if (target) {
+      setDismissedUrls((prev) => new Set([...prev, target.url, target.normalizedUrl]));
+    }
+    setLinkPreviews((prev) => prev.filter((_, i) => i !== index));
+  };
 
   async function handlePublish(e: React.FormEvent) {
     e.preventDefault();
-    if (!content.trim() && !mediaUrlInput.trim()) return;
+    if (!content.trim() && !mediaUrlInput.trim() && linkPreviews.length === 0) return;
 
     setStatusMessage(null);
     startTransition(async () => {
@@ -32,13 +110,22 @@ export default function PagePostComposer({ pageId, pageName }: PagePostComposerP
 
         const media = mediaUrlInput.trim() ? [mediaUrlInput.trim()] : [];
 
-        const res = await createPagePostAction(pageId, content, tags, media);
+        const res = await createPagePostAction(
+          pageId,
+          content,
+          tags,
+          media,
+          linkPreviews[0] || null,
+          linkPreviews
+        );
+
         if (res.error) {
           setStatusMessage({ type: 'error', text: res.error });
         } else {
           setContent('');
           setTagInput('');
           setMediaUrlInput('');
+          setLinkPreviews([]);
           setShowMediaInput(false);
           setShowTagInput(false);
           setStatusMessage({ type: 'success', text: 'Published post to Page!' });
@@ -50,7 +137,7 @@ export default function PagePostComposer({ pageId, pageName }: PagePostComposerP
   }
 
   return (
-    <div className="surface-card rounded-3xl p-5 sm:p-6 border border-brand-sunriseCoral/30 shadow-xl space-y-4">
+    <div className="surface-card rounded-3xl p-5 sm:p-6 border border-brand-sunriseCoral/30 shadow-xl space-y-4 text-left">
       <div className="flex items-center justify-between">
         <span className="text-xs font-black uppercase tracking-wider text-brand-sunriseCoral flex items-center gap-1.5">
           <Sparkles className="w-3.5 h-3.5" /> Post as {pageName}
@@ -108,6 +195,23 @@ export default function PagePostComposer({ pageId, pageName }: PagePostComposerP
           />
         )}
 
+        {/* Live Multi-Link Previews */}
+        {linkPreviews.length > 0 && (
+          <div className="pt-2">
+            <MultiLinkContainer
+              previews={linkPreviews}
+              onRemovePreview={handleRemovePreview}
+            />
+          </div>
+        )}
+
+        {isResolvingUrl && (
+          <div className="flex items-center gap-2 text-[11px] text-brand-caribbeanSea font-bold px-2 py-1">
+            <Loader2 className="w-3 h-3 animate-spin" />
+            <span>Resolving universal link preview...</span>
+          </div>
+        )}
+
         <div className="flex items-center justify-between pt-1">
           <div className="flex items-center gap-2">
             <button
@@ -120,7 +224,7 @@ export default function PagePostComposer({ pageId, pageName }: PagePostComposerP
               }`}
             >
               <ImageIcon className="w-3.5 h-3.5" />
-              <span>Photo</span>
+              <span>Media</span>
             </button>
             <button
               type="button"
@@ -138,7 +242,7 @@ export default function PagePostComposer({ pageId, pageName }: PagePostComposerP
 
           <button
             type="submit"
-            disabled={isPending || (!content.trim() && !mediaUrlInput.trim())}
+            disabled={isPending || (!content.trim() && !mediaUrlInput.trim() && linkPreviews.length === 0)}
             className="px-5 py-2.5 rounded-2xl bg-brand-sunriseCoral hover:brightness-110 disabled:opacity-50 text-slate-950 font-black text-xs flex items-center gap-1.5 transition-all shadow-md"
           >
             {isPending ? (

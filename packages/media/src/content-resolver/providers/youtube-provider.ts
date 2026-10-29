@@ -68,6 +68,27 @@ export class YouTubeProvider extends BaseContentProvider {
     return null;
   }
 
+  extractPlaylistId(url: URL): string | null {
+    const list = url.searchParams.get('list');
+    if (list && /^[a-zA-Z0-9_-]+$/.test(list)) {
+      return list;
+    }
+    return null;
+  }
+
+  extractChannelHandle(url: URL): string | null {
+    const pathname = url.pathname;
+    const handleMatch = pathname.match(/\/@([a-zA-Z0-9_.-]+)/i);
+    if (handleMatch && handleMatch[1]) {
+      return `@${handleMatch[1]}`;
+    }
+    const channelMatch = pathname.match(/\/channel\/([a-zA-Z0-9_-]+)/i);
+    if (channelMatch && channelMatch[1]) {
+      return channelMatch[1];
+    }
+    return null;
+  }
+
   private extractTimestampSeconds(url: URL): number | null {
     const tParam = url.searchParams.get('t') || (url.hash.includes('t=') ? url.hash.split('t=')[1] : null);
     if (!tParam) return null;
@@ -93,6 +114,86 @@ export class YouTubeProvider extends BaseContentProvider {
     options?: ContentResolutionOptions
   ): Promise<ResolvedContentMetadata | null> {
     const videoId = this.extractVideoId(url);
+    const playlistId = this.extractPlaylistId(url);
+    const channelHandle = this.extractChannelHandle(url);
+
+    // Case 1: Playlist
+    if (!videoId && playlistId) {
+      const embedUrl = `https://www.youtube-nocookie.com/embed/videoseries?list=${playlistId}`;
+      let title = 'YouTube Playlist';
+      let authorName: string | undefined = undefined;
+
+      try {
+        const oembedUrl = `https://www.youtube.com/oembed?url=${encodeURIComponent(url.toString())}&format=json`;
+        const res = await safeFetch(oembedUrl, {
+          timeoutMs: options?.timeoutMs ?? 3500,
+          allowPrivateIps: options?.allowPrivateIps,
+        });
+        if (res.ok) {
+          const data = await res.json<{ title?: string; author_name?: string }>();
+          if (data.title) title = this.sanitizeText(data.title);
+          if (data.author_name) authorName = this.sanitizeText(data.author_name);
+        }
+      } catch {
+        // Safe fallback
+      }
+
+      return this.buildBaseMetadata({
+        url,
+        contentType: 'video',
+        title,
+        description: authorName ? `Playlist by ${authorName} on YouTube` : 'View playlist on YouTube',
+        authorName,
+        embedUrl,
+        embedHtml: `<iframe src="${embedUrl}" width="100%" height="100%" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen title="${title}"></iframe>`,
+        aspectRatio: '16:9',
+        isPlayable: true,
+        canEmbed: true,
+        status: 'resolved',
+        extra: { playlistId },
+      });
+    }
+
+    // Case 2: Channel Handle
+    if (!videoId && channelHandle) {
+      let title = `YouTube Channel (${channelHandle})`;
+      let description = `View ${channelHandle} on YouTube`;
+      let thumbnailUrl: string | undefined = undefined;
+
+      try {
+        const res = await safeFetch(url.toString(), {
+          timeoutMs: options?.timeoutMs ?? 3500,
+          allowPrivateIps: options?.allowPrivateIps,
+        });
+        if (res.ok) {
+          const html = await res.text();
+          const ogTitle = html.match(/<meta[^>]*property=["']og:title["'][^>]*content=["']([^"']*)["']/i)?.[1];
+          const ogDesc = html.match(/<meta[^>]*property=["']og:description["'][^>]*content=["']([^"']*)["']/i)?.[1];
+          const ogImage = html.match(/<meta[^>]*property=["']og:image["'][^>]*content=["']([^"']*)["']/i)?.[1];
+          if (ogTitle) title = this.sanitizeText(ogTitle);
+          if (ogDesc) description = this.sanitizeText(ogDesc);
+          if (ogImage && ogImage.startsWith('http')) thumbnailUrl = ogImage;
+        }
+      } catch {
+        // Safe fallback
+      }
+
+      return this.buildBaseMetadata({
+        url,
+        contentType: 'website',
+        title,
+        description,
+        thumbnailUrl,
+        authorName: channelHandle,
+        aspectRatio: '16:9',
+        isPlayable: false,
+        canEmbed: false,
+        status: 'resolved',
+        extra: { channelHandle },
+      });
+    }
+
+    // Case 3: Video / Shorts
     if (!videoId) {
       return this.buildFallback(url, 'Not a recognized YouTube video ID');
     }

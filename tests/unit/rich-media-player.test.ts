@@ -4,6 +4,7 @@ import {
   detectUrls,
   extractDomain,
 } from '../../packages/media/src/index';
+import { isSafeEmbedUrl, ALLOWED_EMBED_ORIGINS } from '../../apps/web/src/components/media/rich-media-player';
 
 describe('Universal Rich Media Engine — Controlled Player State Machine & Fallback', () => {
   const TEST_YOUTUBE_URL = 'https://youtu.be/IIQ3mIGKquc?si=faAZYkCPvSl1iH44';
@@ -204,6 +205,29 @@ describe('Universal Rich Media Engine — Controlled Player State Machine & Fall
 
       expect(player.state).toBe('fallback');
       expect(player.externalUrl).toBe('https://www.youtube.com/watch?v=IIQ3mIGKquc');
+    });
+  });
+
+  describe('3. Embed Origin Security Gate & Host Whitelisting', () => {
+    it('approves legitimate video & audio embed origins including Facebook and Instagram', () => {
+      expect(isSafeEmbedUrl('https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ')).toBe(true);
+      expect(isSafeEmbedUrl('https://www.youtube.com/embed/videoseries?list=PL123')).toBe(true);
+      expect(isSafeEmbedUrl('https://www.facebook.com/plugins/video.php?href=https%3A%2F%2Ffb.com')).toBe(true);
+      expect(isSafeEmbedUrl('https://web.facebook.com/plugins/post.php?href=xyz')).toBe(true);
+      expect(isSafeEmbedUrl('https://www.instagram.com/p/C4s9-123/embed/')).toBe(true);
+      expect(isSafeEmbedUrl('https://www.instagram.com/reel/C4s9-456/embed/')).toBe(true);
+      expect(isSafeEmbedUrl('https://www.tiktok.com/embed/v2/123456789')).toBe(true);
+      expect(isSafeEmbedUrl('https://open.spotify.com/embed/track/123')).toBe(true);
+      expect(isSafeEmbedUrl('https://player.vimeo.com/video/123')).toBe(true);
+    });
+
+    it('rejects unapproved, HTTP, and malicious origins', () => {
+      expect(isSafeEmbedUrl('http://www.youtube.com/embed/123')).toBe(false);
+      expect(isSafeEmbedUrl('https://attacker-embed.com/video')).toBe(false);
+      expect(isSafeEmbedUrl('javascript:alert(1)')).toBe(false);
+      expect(isSafeEmbedUrl('https://169.254.169.254/embed')).toBe(false);
+      expect(isSafeEmbedUrl('')).toBe(false);
+      expect(isSafeEmbedUrl(undefined)).toBe(false);
     });
   });
 });

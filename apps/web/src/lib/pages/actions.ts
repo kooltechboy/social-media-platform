@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { createSupabaseServerClient, createServiceSupabaseClient, getCurrentUser } from '../supabase/server';
 import { isBannedTesterAccount } from '../auth/banned-testers';
 import { normalizeCaribbeanCountryIso } from '../constants/caribbean-territories';
+import { detectUrls, resolveContentUrl, type ResolvedContentMetadata } from '@caribbean/media';
 
 export interface PageActionResult {
   error: string | null;
@@ -1007,7 +1008,9 @@ export async function createPagePostAction(
   pageId: string,
   content: string,
   culturalTags: string[] = [],
-  mediaUrls: string[] = []
+  mediaUrls: string[] = [],
+  linkPreviewInput?: ResolvedContentMetadata | null,
+  linkPreviewsInput?: ResolvedContentMetadata[]
 ): Promise<PageActionResult> {
   const user = await getCurrentUser();
   if (!user) return { error: 'Sign in required.' };
@@ -1047,6 +1050,24 @@ export async function createPagePostAction(
     return { error: 'You do not have permission to publish content for this Page.' };
   }
 
+  // Automatic universal link resolution if not explicitly provided
+  let linkPreview: ResolvedContentMetadata | null = linkPreviewInput || null;
+  let linkPreviews: ResolvedContentMetadata[] = Array.isArray(linkPreviewsInput) ? linkPreviewsInput : [];
+
+  if (!linkPreview) {
+    const detected = detectUrls(content);
+    if (detected.primaryUrl) {
+      try {
+        linkPreview = await resolveContentUrl(detected.primaryUrl);
+        if (linkPreview && linkPreviews.length === 0) {
+          linkPreviews = [linkPreview];
+        }
+      } catch {
+        // Non-blocking
+      }
+    }
+  }
+
   const { error: insertErr } = await supabase.from('posts').insert({
     author_id: user.id,
     created_by_user_id: user.id,
@@ -1058,6 +1079,8 @@ export async function createPagePostAction(
     cultural_tags: culturalTags,
     media_urls: mediaUrls,
     visibility: 'public',
+    link_preview: linkPreview || null,
+    link_previews: linkPreviews.length > 0 ? linkPreviews : linkPreview ? [linkPreview] : [],
   });
 
   if (insertErr) return { error: insertErr.message };

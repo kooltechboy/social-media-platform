@@ -49,8 +49,8 @@ export abstract class BaseContentProvider implements ContentProvider {
   protected sanitizeText(input?: string | null, maxLength = 300): string {
     if (!input || typeof input !== 'string') return '';
 
-    // Strip HTML tags
-    let clean = input.replace(/<\/?[^>]+(>|$)/g, '');
+    // Strip raw HTML tags first
+    let clean = input.replace(/<\/?[a-zA-Z][^>]*>/g, '');
 
     // Decode common HTML entities
     clean = clean
@@ -59,9 +59,13 @@ export abstract class BaseContentProvider implements ContentProvider {
       .replace(/&gt;/g, '>')
       .replace(/&quot;/g, '"')
       .replace(/&#39;/g, "'")
+      .replace(/&#x27;/g, "'")
       .replace(/&nbsp;/g, ' ')
-      .replace(/\s+/g, ' ')
-      .trim();
+      .replace(/&mdash;/g, '—')
+      .replace(/&ndash;/g, '–');
+
+    // Collapse multiple whitespace
+    clean = clean.replace(/\s+/g, ' ').trim();
 
     if (clean.length > maxLength) {
       return `${clean.slice(0, maxLength - 1).trim()}…`;
@@ -153,13 +157,14 @@ export abstract class BaseContentProvider implements ContentProvider {
     status: ContentResolutionStatus = 'fallback'
   ): ResolvedContentMetadata {
     const domain = extractDomain(url.toString());
+    const fallbackTitle = this.name === 'generic' ? domain : `${this.displayName} Link`;
     return {
       url: url.toString(),
       normalizedUrl: normalizeUrl(url.toString()),
       provider: this.name,
       providerDisplayName: this.displayName,
       contentType: 'website',
-      title: `${this.displayName} Link`,
+      title: fallbackTitle,
       description: `View content on ${domain}`,
       siteName: this.displayName,
       faviconUrl: this.getFaviconUrl(url),

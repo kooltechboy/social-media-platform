@@ -457,7 +457,7 @@ export default function FeedStream({
           try {
             const { data: postWithProfile } = await supabase
               .from('posts')
-              .select('id, author_id, content, created_at, media_urls, cultural_tags, likes_count, comments_count, shares_count, is_official, is_pinned, official_content_type, link_preview, profiles:profiles!posts_author_id_fkey(display_name, username, avatar_url, is_verified, is_official)')
+              .select('id, author_id, content, created_at, media_urls, cultural_tags, likes_count, comments_count, shares_count, is_official, is_pinned, official_content_type, link_preview, link_previews, profiles:profiles!posts_author_id_fkey(display_name, username, avatar_url, is_verified, is_official)')
               .eq('id', newRow.id)
               .maybeSingle();
 

@@ -18,6 +18,9 @@ export const ALLOWED_EMBED_ORIGINS = [
   'https://embed.podcasts.apple.com',
   'https://embed.music.apple.com',
   'https://www.tiktok.com',
+  'https://www.facebook.com',
+  'https://web.facebook.com',
+  'https://www.instagram.com',
 ];
 
 export function isSafeEmbedUrl(urlStr?: string): boolean {

@@ -67,3 +67,21 @@ related:
 - **Context:** Multi-agent engineering teams require an accurate, up-to-date map of workspace dependencies, routes, server actions, and database migrations without sending proprietary code to external SaaS indexers.
 - **Decision:** Implement a zero-network local generator (`scripts/code-intelligence/generate-codebase-graph.js`) that scans `apps/*`, `packages/*`, `apps/web/src/**`, and `supabase/migrations/*` to produce `TUKUBI Engineering Intelligence/03 Codebase Intelligence/graph.json`.
 - **Consequences:** Fast (`< 2s`), reproducible, local-first code intelligence graph integrated directly into the Obsidian vault.
+
+---
+
+## ADR-018: Universal Link Intelligence, Hardened Provider Adapters & Multi-Link Resilience
+
+- **Status:** Accepted & Implemented (`2026-10-28`)
+- **Context:** External links pasted into TUKUBI's post composer previously exhibited inconsistent behavior across third-party providers. Facebook was limited to static placeholder text without thumbnails or embeds; Instagram embeds were disabled; TikTok failed silently without deterministic fallback upon anti-bot challenge; YouTube rejected channel and playlist URLs; Twitter/X rejected profile URLs; extracted image URLs were not validated against SSRF private ranges; and realtime post subscriptions omitted `link_previews`.
+- **Decision:**
+  1. Upgrade provider adapters in `@caribbean/media`:
+     - **Facebook:** Detect video, Reel, Watch, post, and photo URLs; generate official plugin embed URLs (`facebook.com/plugins/video.php` and `post.php`); provide rich fallback with author and link.
+     - **Instagram:** Extract post and Reel IDs; generate official embed URLs (`instagram.com/p/:id/embed/` and `reel/:id/embed/`); enforce `9:16` for Reels and `1:1` for photo posts.
+     - **TikTok:** Provide deterministic fallback with video ID extraction (`tiktok.com/embed/v2/:id`), `9:16` vertical video ratio, and playable player.
+     - **YouTube:** Add playlist embed (`videoseries?list=`) and channel handle resolution (`/@handle`).
+     - **Twitter/X:** Expand domain matching to all `x.com` and `twitter.com` routes; resolve profile cards and tweet fallbacks.
+     - **Generic Web:** Add `isDangerousExtractedMediaUrl` SSRF validation on extracted thumbnails/favicons; decode HTML entities in titles and descriptions; sanitize text against XSS.
+  2. Security & Embed Whitelisting: Update `ALLOWED_EMBED_ORIGINS` in `rich-media-player.tsx` to whitelist `facebook.com`, `web.facebook.com`, and `instagram.com` alongside existing providers.
+  3. Composers & Realtime Sync: Include `link_previews` in `feed-stream.tsx` realtime select query; upgrade `PagePostComposer` to feature real-time URL detection, preview cards, and multi-link persistence.
+- **Consequences:** Every supported external link (Facebook, Instagram, TikTok, YouTube, X, and arbitrary websites) generates a reliable, rich, responsive preview with official embed playback when permitted and graceful fallback when restricted, without breaking posts or feed loading.
