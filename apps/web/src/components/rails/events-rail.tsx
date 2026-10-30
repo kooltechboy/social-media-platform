@@ -39,14 +39,14 @@ export default function EventsRail({
   return (
     <div className="space-y-5">
       {/* 1. Host Event CTA */}
-      <div className="glass rounded-3xl p-5 border border-amber-500/30 bg-gradient-to-br from-amber-500/10 to-transparent space-y-3 shadow-xl">
+      <div className="tk-panel p-5 border border-amber-500/30 bg-gradient-to-br from-amber-500/10 to-transparent space-y-3 shadow-xl">
         <div className="flex items-center gap-2.5">
           <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-amber-400 to-brand-sunriseCoral flex items-center justify-center text-slate-950 font-black shadow-md">
             <Calendar className="w-4 h-4" />
           </div>
           <div>
             <h3 className="text-sm font-black text-white">Create an Event</h3>
-            <p className="text-[10px] text-brand-sandstone/60">
+            <p className="text-[10px] text-brand-mist">
               Concerts, fetes &amp; cultural summits
             </p>
           </div>
@@ -64,8 +64,8 @@ export default function EventsRail({
       </div>
 
       {/* 2. Event Filters */}
-      <section aria-label="Event Categories" className="glass rounded-3xl p-4 sm:p-5 space-y-2 border border-white/10">
-        <h4 className="text-xs font-black text-white uppercase tracking-wider">
+      <section aria-label="Event Categories" className="tk-panel p-4 sm:p-5 space-y-2 border border-white/10">
+        <h4 className="text-[13.5px] font-semibold text-white">
           Event Discovery
         </h4>
         <nav className="space-y-1 pt-1">
@@ -93,8 +93,8 @@ export default function EventsRail({
       </section>
 
       {/* 3. Major Caribbean Festivals Calendar */}
-      <section aria-label="Major Festivals" className="glass rounded-3xl p-4 sm:p-5 space-y-3 border border-white/10">
-        <h4 className="text-xs font-black text-white uppercase tracking-wider">
+      <section aria-label="Major Festivals" className="tk-panel p-4 sm:p-5 space-y-3 border border-white/10">
+        <h4 className="text-[13.5px] font-semibold text-white">
           Major Annual Carnivals
         </h4>
         <div className="space-y-2 pt-0.5">
@@ -104,7 +104,7 @@ export default function EventsRail({
               className="p-2.5 rounded-xl bg-white/5 border border-white/5 space-y-0.5"
             >
               <p className="text-xs font-black text-white">{f.title}</p>
-              <div className="flex items-center justify-between text-[10px] text-brand-sandstone/60">
+              <div className="flex items-center justify-between text-[10px] text-brand-mist">
                 <span>{f.date}</span>
                 <span>{f.location}</span>
               </div>

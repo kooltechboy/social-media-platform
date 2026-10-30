@@ -157,23 +157,23 @@ export default function IdentitySwitcher({
         aria-haspopup="dialog"
         aria-expanded={isOpen}
         aria-label={`Switch identity. Currently operating as ${activeIdentity.name}`}
-        className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 hover:border-brand-caribbeanSea/40 transition-all text-left group min-h-[38px] cursor-pointer"
+        className="flex items-center gap-2 px-3 h-10 rounded-xl bg-white/[0.03] hover:bg-white/[0.06] border border-white/[0.08] transition-colors text-left group cursor-pointer"
       >
         <div className="flex items-center gap-1.5 min-w-0">
           {getIcon(activeIdentity.type)}
-          <span className="text-xs font-bold text-white truncate max-w-[130px] sm:max-w-[160px]">
+          <span className="text-[13px] font-medium text-white truncate max-w-[130px] sm:max-w-[150px]">
             {activeIdentity.name}
           </span>
-          <span className={`text-[9px] font-black px-1.5 py-0.2 rounded-full border ${getBadgeStyle(activeIdentity.type)} uppercase tracking-wider hidden sm:inline-block`}>
+          <span className={`text-[9.5px] font-semibold px-1.5 py-0.5 rounded-md border ${getBadgeStyle(activeIdentity.type)} uppercase tracking-wider hidden xl:inline-block leading-none`}>
             {activeIdentity.badge}
           </span>
         </div>
-        <ChevronDown className={`w-3.5 h-3.5 text-white/50 group-hover:text-white transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+        <ChevronDown className={`w-3.5 h-3.5 text-brand-mist group-hover:text-white transition-transform ${isOpen ? 'rotate-180' : ''}`} />
       </button>
 
       {/* Popover / Dropdown Drawer */}
       {isOpen && (
-        <div className="absolute right-0 top-12 z-50 w-72 sm:w-80 rounded-3xl bg-[#110D17]/95 backdrop-blur-2xl border border-white/15 p-3 shadow-2xl space-y-3 animate-fadeIn">
+        <div className="absolute right-0 top-12 z-50 w-72 sm:w-80 rounded-2xl bg-[#0B1424]/96 backdrop-blur-2xl border border-white/[0.09] p-2.5 shadow-panel-lg space-y-2.5 animate-fadeIn">
           <div className="flex items-center justify-between pb-2 border-b border-white/10 px-1">
             <div>
               <p className="text-xs font-black text-white flex items-center gap-1.5">
@@ -195,7 +195,7 @@ export default function IdentitySwitcher({
                   onClick={() => handleSelectIdentity(item)}
                   className={`w-full flex items-center justify-between p-2.5 rounded-2xl transition-all text-left ${
                     isSelected
-                      ? 'bg-gradient-to-r from-brand-caribbeanSea/20 to-brand-sunriseCoral/10 border border-brand-caribbeanSea/30 text-white'
+                      ? 'bg-gradient-to-r from-brand-caribbeanTeal/20 to-brand-caribbeanSea/10 border border-brand-caribbeanSea/30 text-white'
                       : 'hover:bg-white/5 border border-transparent text-slate-300'
                   }`}
                 >

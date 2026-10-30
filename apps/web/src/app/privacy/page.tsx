@@ -13,11 +13,11 @@ export default function PrivacyPage() {
         <h1 className="text-3xl font-extrabold text-white tracking-tight mb-2">
           Privacy Policy
         </h1>
-        <p className="text-sm text-[#FDF2E9]/50 mb-8">
+        <p className="text-sm text-[#E8EDF5]/50 mb-8">
           Effective Date: September 15, 2026 &middot; Last Updated: September 15, 2026
         </p>
 
-        <section className="space-y-4 text-[#FDF2E9]/80 text-sm leading-relaxed">
+        <section className="space-y-4 text-[#E8EDF5]/80 text-sm leading-relaxed">
           <h2 className="text-lg font-bold text-white mt-8">1. Introduction</h2>
           <p>
             TUKUBI Inc. (&ldquo;TUKUBI,&rdquo; &ldquo;we,&rdquo; &ldquo;us&rdquo;) is committed to protecting the privacy and security of your personal information. This Privacy Policy explains how we collect, use, share, and safeguard data when you use the TUKUBI platform and associated services.
@@ -31,8 +31,8 @@ export default function PrivacyPage() {
           <p><strong className="text-white">Payment Information:</strong> Transaction details processed by our regulated payment service providers. TUKUBI does not store full payment card numbers.</p>
 
           <h2 className="text-lg font-bold text-white mt-8">3. Caribbean Identity &amp; Location Privacy</h2>
-          <div className="bg-[#1D1429] border border-[#8B5CF6]/20 rounded-xl p-4">
-            <p className="text-[#FFB347] font-semibold text-sm mb-2">Your Identity, Your Choice</p>
+          <div className="bg-[#0D1628] border border-[#8B5CF6]/20 rounded-xl p-4">
+            <p className="text-[#F4AE45] font-semibold text-sm mb-2">Your Identity, Your Choice</p>
             <p>
               Caribbean cultural identity and geographic location are <strong className="text-white">optional and private by default</strong>. You control what identity information is visible to others. TUKUBI will never infer or expose cultural, ethnic, or national attributes as facts. Any location or identity data you share can be modified or removed at any time through your privacy settings.
             </p>
@@ -79,7 +79,7 @@ export default function PrivacyPage() {
           </ul>
           <p>
             To exercise these rights, contact us at{' '}
-            <a href="mailto:privacy@tukubi.com" className="text-[#00B4D8] underline underline-offset-2">privacy@tukubi.com</a>.
+            <a href="mailto:privacy@tukubi.com" className="text-[#0EA5E9] underline underline-offset-2">privacy@tukubi.com</a>.
           </p>
 
           <h2 className="text-lg font-bold text-white mt-8">9. Cookies &amp; Tracking</h2>
@@ -105,11 +105,11 @@ export default function PrivacyPage() {
           <h2 className="text-lg font-bold text-white mt-8">13. Contact Us</h2>
           <p>
             For privacy-related inquiries, contact our Data Protection team at{' '}
-            <a href="mailto:privacy@tukubi.com" className="text-[#00B4D8] underline underline-offset-2">privacy@tukubi.com</a>.
+            <a href="mailto:privacy@tukubi.com" className="text-[#0EA5E9] underline underline-offset-2">privacy@tukubi.com</a>.
           </p>
         </section>
 
-        <div className="mt-12 pt-6 border-t border-[#2A1B38] text-xs text-[#FDF2E9]/30">
+        <div className="mt-12 pt-6 border-t border-[#15213A] text-xs text-[#E8EDF5]/30">
           <p>TUKUBI — The Caribbean Connected.</p>
         </div>
       </article>

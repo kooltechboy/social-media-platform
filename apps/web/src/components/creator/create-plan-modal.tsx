@@ -42,7 +42,7 @@ export default function CreatePlanModal() {
 
       {isOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fadeIn">
-          <div className="bg-[#1D1429] border border-purple-500/20 rounded-3xl p-6 max-w-lg w-full shadow-2xl relative space-y-5">
+          <div className="bg-[#0D1628] border border-purple-500/20 rounded-3xl p-6 max-w-lg w-full shadow-2xl relative space-y-5">
             <button
               type="button"
               onClick={() => setIsOpen(false)}

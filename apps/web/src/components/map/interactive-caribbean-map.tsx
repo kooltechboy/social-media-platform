@@ -289,7 +289,7 @@ export default function InteractiveCaribbeanMap() {
     bg: 'bg-brand-caribbeanSea/20',
     text: 'text-brand-caribbeanSea',
     border: 'border-brand-caribbeanSea/40',
-    glow: '#00B4D8',
+    glow: '#0EA5E9',
     badge: selectedEntity.classification,
   };
 
@@ -507,9 +507,9 @@ export default function InteractiveCaribbeanMap() {
                 >
                   <defs>
                     <linearGradient id="mapFlightArcGrad" x1="0%" y1="100%" x2="100%" y2="0%">
-                      <stop offset="0%" stopColor="#00B4D8" stopOpacity="0.7" />
-                      <stop offset="50%" stopColor="#FFB347" stopOpacity="0.6" />
-                      <stop offset="100%" stopColor="#FF7A59" stopOpacity="0.7" />
+                      <stop offset="0%" stopColor="#0EA5E9" stopOpacity="0.7" />
+                      <stop offset="50%" stopColor="#F4AE45" stopOpacity="0.6" />
+                      <stop offset="100%" stopColor="#F2775A" stopOpacity="0.7" />
                     </linearGradient>
 
                     <filter id="nodeGlow" x="-50%" y="-50%" width="200%" height="200%">
@@ -539,7 +539,7 @@ export default function InteractiveCaribbeanMap() {
                               key={`arc-${diaspora.iso}-${targetIsland.iso}`}
                               d={`M ${diaspora.x} ${diaspora.y} Q ${midX} ${midY} ${targetIsland.x} ${targetIsland.y}`}
                               fill="none"
-                              stroke={isHighlighted ? '#FFB347' : 'url(#mapFlightArcGrad)'}
+                              stroke={isHighlighted ? '#F4AE45' : 'url(#mapFlightArcGrad)'}
                               strokeWidth={isHighlighted ? 2.2 : 0.9}
                               strokeDasharray={isHighlighted ? 'none' : '4 6'}
                               className="transition-all duration-300 pointer-events-none"
@@ -597,7 +597,7 @@ export default function InteractiveCaribbeanMap() {
                           cx={entity.x}
                           cy={entity.y}
                           r={entity.r * (isProminent ? 2.8 : 1.7)}
-                          fill={isSelected ? '#FF7A59' : entityColors.glow}
+                          fill={isSelected ? '#F2775A' : entityColors.glow}
                           fillOpacity={isProminent ? 0.6 : 0.25}
                           className="animate-pulse"
                           style={{
@@ -610,7 +610,7 @@ export default function InteractiveCaribbeanMap() {
                           cx={entity.x}
                           cy={entity.y}
                           r={entity.r * (isSelected ? 1.3 : 1)}
-                          fill={isSelected ? '#FF7A59' : entityColors.glow}
+                          fill={isSelected ? '#F2775A' : entityColors.glow}
                           stroke="#FFFFFF"
                           strokeWidth={isProminent ? 2.5 : 1}
                           filter="url(#nodeGlow)"
@@ -623,7 +623,7 @@ export default function InteractiveCaribbeanMap() {
                             x={entity.x}
                             y={entity.y + entity.r + 14}
                             textAnchor="middle"
-                            fill={isSelected ? '#FFB347' : '#FDF2E9'}
+                            fill={isSelected ? '#F4AE45' : '#E8EDF5'}
                             fillOpacity={isProminent ? 1 : 0.9}
                             fontSize={isProminent ? '12' : '10.5'}
                             fontWeight={isProminent ? '800' : '600'}

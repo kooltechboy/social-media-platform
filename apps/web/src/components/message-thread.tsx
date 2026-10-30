@@ -602,7 +602,7 @@ export default function MessageThread({
   return (
     <div className="flex flex-col h-full bg-[#0E0919] relative overflow-hidden">
       {/* 1. Header with Peer Details & Calls */}
-      <div className="p-3.5 sm:p-4 border-b border-white/10 bg-[#0E0818]/95 backdrop-blur-xl flex items-center justify-between gap-3 sticky top-0 z-20 flex-shrink-0">
+      <div className="p-3.5 sm:p-4 border-b border-white/10 bg-[#08101E]/95 backdrop-blur-xl flex items-center justify-between gap-3 sticky top-0 z-20 flex-shrink-0">
         <div className="flex items-center gap-3 min-w-0">
           {onBack && (
             <button
@@ -617,7 +617,7 @@ export default function MessageThread({
           <div className="relative flex-shrink-0">
             <UserAvatar name={peerName} avatarUrl={peerAvatarUrl} size="md" />
             <span
-              className={`absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border border-[#0E0818] ${
+              className={`absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border border-[#08101E] ${
                 isOnline ? 'bg-emerald-500' : 'bg-slate-500'
               }`}
             />
@@ -659,7 +659,7 @@ export default function MessageThread({
               setIsCallOpen(true);
             }}
             title="Start HD Video Call"
-            className="p-2 sm:px-3 sm:py-1.5 md:px-3.5 md:py-2 rounded-xl bg-gradient-to-r from-brand-caribbeanSea/20 to-brand-sunriseCoral/20 hover:from-brand-caribbeanSea/30 hover:to-brand-sunriseCoral/30 text-brand-caribbeanSea border border-brand-caribbeanSea/30 text-xs md:text-sm font-bold flex items-center gap-1.5 md:gap-2 transition-all shadow-sm min-h-[36px] md:min-h-[40px] cursor-pointer"
+            className="p-2 sm:px-3 sm:py-1.5 md:px-3.5 md:py-2 rounded-xl bg-gradient-to-r from-brand-caribbeanTeal/20 to-brand-caribbeanSea/20 hover:from-brand-caribbeanSea/30 hover:to-brand-sunriseCoral/30 text-brand-caribbeanSea border border-brand-caribbeanSea/30 text-xs md:text-sm font-bold flex items-center gap-1.5 md:gap-2 transition-all shadow-sm min-h-[36px] md:min-h-[40px] cursor-pointer"
           >
             <Video className="w-3.5 h-3.5 md:w-4 md:h-4" />
             <span className="hidden sm:inline">Video</span>
@@ -769,7 +769,7 @@ export default function MessageThread({
                             className={`p-3 md:p-3.5 rounded-2xl text-xs md:text-sm ${
                               isMine
                                 ? 'bg-gradient-to-tr from-brand-caribbeanSea via-teal-500 to-brand-sunriseCoral text-slate-950 font-bold'
-                                : 'bg-[#181126] border border-white/10 text-white'
+                                : 'bg-[#0B1424] border border-white/10 text-white'
                             }`}
                           >
                             <p className="whitespace-pre-wrap break-words leading-relaxed md:leading-[1.6]">{msg.body}</p>
@@ -784,7 +784,7 @@ export default function MessageThread({
                             ? 'bg-white/5 border border-white/10 text-slate-400 italic'
                             : isMine
                             ? 'bg-gradient-to-tr from-brand-caribbeanSea via-teal-500 to-brand-sunriseCoral text-slate-950 font-bold rounded-br-none shadow-brand-caribbeanSea/10'
-                            : 'bg-[#181126] border border-white/10 text-white rounded-bl-none shadow-black/30'
+                            : 'bg-[#0B1424] border border-white/10 text-white rounded-bl-none shadow-black/30'
                         }`}
                       >
                         {/* Voice Note Player or Text Content */}
@@ -986,7 +986,7 @@ export default function MessageThread({
 
       {/* 5. Voice Note Recorder Ribbon */}
       {isRecordingVoice && (
-        <div className="p-3 border-t border-white/10 bg-[#140C22] animate-fadeIn">
+        <div className="p-3 border-t border-white/10 bg-[#0B1424] animate-fadeIn">
           <VoiceNoteRecorder
             onSendVoiceNote={handleSendVoiceNote}
             onCancel={() => setIsRecordingVoice(false)}
@@ -996,7 +996,7 @@ export default function MessageThread({
 
       {/* 5b. Live Link Preview Banner */}
       {detectedPreview && !isDismissedPreview && !isRecordingVoice && !editingMessage && (
-        <div className="px-4 py-2 border-t border-white/10 bg-[#140C22] animate-fadeIn">
+        <div className="px-4 py-2 border-t border-white/10 bg-[#0B1424] animate-fadeIn">
           <UniversalContentCard
             metadata={detectedPreview}
             compact
@@ -1009,7 +1009,7 @@ export default function MessageThread({
       {!isRecordingVoice && !editingMessage && (
         <form
           onSubmit={handleSend}
-          className="p-3 sm:p-4 md:p-5 border-t border-white/10 bg-[#0E0818]/90 backdrop-blur-xl flex items-center gap-2 md:gap-3"
+          className="p-3 sm:p-4 md:p-5 border-t border-white/10 bg-[#08101E]/90 backdrop-blur-xl flex items-center gap-2 md:gap-3"
         >
           {/* Emoji Popover Trigger */}
           <div className="relative">

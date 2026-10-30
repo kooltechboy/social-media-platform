@@ -160,7 +160,7 @@ export default function AppHeader() {
   return (
     <header
       ref={headerRef}
-      className="sticky top-0 z-50 glass-aerospace border-b border-white/12 px-3 sm:px-6 lg:px-8 3xl:px-10 py-3 flex items-center justify-between gap-2 sm:gap-4 backdrop-blur-3xl shadow-xl shadow-black/30"
+      className="sticky top-0 z-50 border-b border-white/[0.07] bg-[#070D1A]/80 backdrop-blur-2xl backdrop-saturate-150 px-3 sm:px-6 lg:px-8 3xl:px-10 py-2.5 flex items-center justify-between gap-2 sm:gap-4"
       role="banner"
     >
       {/* ────────────────────────────────────────────────────────── */}
@@ -176,7 +176,7 @@ export default function AppHeader() {
       <div className="hidden md:flex flex-1 justify-center max-w-2xl 3xl:max-w-3xl mx-auto px-4">
         <div ref={searchRef} className="relative w-full max-w-xl 3xl:max-w-2xl">
           <form onSubmit={handleFormSubmit} action="/search" method="GET" className="w-full relative">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 md:w-5 md:h-5 text-brand-caribbeanSea pointer-events-none" aria-hidden="true" />
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-brand-mist pointer-events-none" aria-hidden="true" />
             <input
               type="text"
               name="q"
@@ -185,7 +185,7 @@ export default function AppHeader() {
               onFocus={() => query.trim() && setIsOpen(true)}
               placeholder={t('search.placeholder')}
               aria-label={t('a11y.search')}
-              className="w-full bg-black/40 hover:bg-black/60 border border-white/12 hover:border-brand-caribbeanSea/50 rounded-full pl-11 md:pl-12 pr-10 py-2.5 md:py-3 text-xs sm:text-sm md:text-base min-h-[44px] md:min-h-[46px] text-white placeholder-white/40 focus:outline-none focus:border-brand-caribbeanSea focus:ring-2 focus:ring-brand-caribbeanSea/30 transition-all shadow-inner"
+              className="w-full bg-white/[0.04] hover:bg-white/[0.06] border border-white/[0.08] rounded-xl pl-11 pr-10 py-2.5 text-sm min-h-[44px] text-white placeholder-[#7C8AA0] focus:outline-none focus:bg-white/[0.06] focus:border-brand-caribbeanSea/60 focus:ring-4 focus:ring-brand-caribbeanSea/10 transition-colors"
             />
             {query && (
               <button
@@ -203,7 +203,7 @@ export default function AppHeader() {
 
           {/* Instant Live Dropdown */}
           {isOpen && (
-            <div className="absolute top-14 left-0 right-0 bg-[#0C1226]/95 backdrop-blur-3xl border border-white/15 rounded-3xl p-3 shadow-2xl z-50 space-y-3 animate-fadeIn">
+            <div className="absolute top-14 left-0 right-0 bg-[#0B1424]/95 backdrop-blur-2xl border border-white/[0.08] rounded-2xl p-2.5 shadow-panel-lg z-50 space-y-2 animate-fadeIn">
               <div className="flex items-center justify-between px-2 pt-1 border-b border-white/10 pb-2">
                 <span className="text-[10px] md:text-xs font-black uppercase tracking-widest text-brand-caribbeanSea flex items-center gap-1.5">
                   <User className="w-3.5 h-3.5 md:w-4 md:h-4" /> {t('nav.people_creators')}
@@ -272,7 +272,7 @@ export default function AppHeader() {
                             className={`text-[10px] md:text-xs font-black px-3.5 py-1.5 md:py-2 min-h-[36px] rounded-xl transition-all disabled:opacity-50 ${
                               isFollowing
                                 ? 'bg-white/10 text-white border border-white/15 hover:bg-rose-500/20 hover:text-rose-300 hover:border-rose-500/40'
-                                : 'bg-gradient-to-r from-brand-caribbeanSea to-brand-sunriseCoral hover:brightness-110 text-slate-950 shadow-md shadow-brand-caribbeanSea/20'
+                                : 'tk-btn-primary'
                             }`}
                           >
                             {pendingFollowId === person.id ? '…' : isFollowing ? 'Following' : '+ Follow'}
@@ -303,32 +303,32 @@ export default function AppHeader() {
 
         <Link
           href="/financial-center"
-          className="hidden sm:flex items-center gap-1.5 bg-gradient-to-r from-brand-sunriseCoral/15 to-brand-goldenHour/15 hover:from-brand-sunriseCoral/25 hover:to-brand-goldenHour/25 text-brand-sunriseCoral px-3.5 md:px-4 py-2 rounded-full border border-brand-sunriseCoral/30 text-xs md:text-sm font-black transition-all shadow-md shadow-brand-sunriseCoral/10 min-h-[44px]"
+          className="hidden lg:flex items-center gap-2 px-3.5 py-2 rounded-xl border border-white/[0.08] bg-white/[0.03] hover:bg-white/[0.06] text-[13px] font-medium text-[#C3CCDA] hover:text-white transition-colors min-h-[40px]"
           aria-label={t('nav.financial_center')}
         >
-          <CreditCard className="w-4 h-4 md:w-4.5 md:h-4.5 text-brand-sunriseCoral" aria-hidden="true" />
-          <span className="hidden sm:inline">{t('nav.financial_center')}</span>
+          <CreditCard className="w-[18px] h-[18px] text-brand-goldenHour" aria-hidden="true" />
+          <span>{t('nav.financial_center')}</span>
         </Link>
 
         <Link
           href="/notifications"
-          className="p-2 sm:p-2.5 md:p-3 text-white/70 hover:text-white rounded-full hover:bg-white/10 relative transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
+          className="w-11 h-11 text-[#C3CCDA] hover:text-white rounded-xl hover:bg-white/[0.06] relative transition-colors flex items-center justify-center"
           aria-label={t('nav.notifications')}
         >
-          <Bell className="w-5 h-5 md:w-[22px] md:h-[22px]" aria-hidden="true" />
+          <Bell className="w-5 h-5" aria-hidden="true" />
           {unreadCount > 0 && (
-            <span className="absolute top-2 right-2 w-2.5 h-2.5 bg-brand-goldenHour rounded-full animate-pulse shadow-[0_0_8px_rgba(255,179,71,0.9)]" />
+            <span className="absolute top-2 right-2 w-2 h-2 bg-brand-goldenHour rounded-full ring-2 ring-[#070D1A]" />
           )}
         </Link>
 
         <Link
           href="/messages"
-          className="hidden md:flex p-2 sm:p-2.5 md:p-3 text-white/70 hover:text-white rounded-full hover:bg-white/10 relative transition-colors min-h-[44px] min-w-[44px] items-center justify-center"
+          className="hidden md:flex w-11 h-11 text-[#C3CCDA] hover:text-white rounded-xl hover:bg-white/[0.06] relative transition-colors items-center justify-center"
           aria-label={t('nav.messages')}
         >
-          <MessageSquare className="w-5 h-5 md:w-[22px] md:h-[22px]" aria-hidden="true" />
+          <MessageSquare className="w-5 h-5" aria-hidden="true" />
           {unreadMessagesCount > 0 && (
-            <span className="absolute top-2 right-2 w-2.5 h-2.5 bg-brand-caribbeanSea rounded-full animate-pulse shadow-[0_0_8px_rgba(0,168,150,0.9)]" />
+            <span className="absolute top-2 right-2 w-2 h-2 bg-brand-caribbeanSea rounded-full ring-2 ring-[#070D1A]" />
           )}
         </Link>
 

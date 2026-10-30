@@ -52,7 +52,7 @@ export default function MessageReactionBar({
 
       {/* Floating Hover Trigger Bar */}
       <div
-        className={`opacity-0 group-hover/msg:opacity-100 transition-opacity duration-200 flex items-center gap-1 bg-[#130B1E]/95 backdrop-blur-xl border border-white/20 rounded-full px-2 py-1 shadow-xl absolute -top-8 ${
+        className={`opacity-0 group-hover/msg:opacity-100 transition-opacity duration-200 flex items-center gap-1 bg-[#0A1222]/95 backdrop-blur-xl border border-white/20 rounded-full px-2 py-1 shadow-xl absolute -top-8 ${
           isOwnMessage ? 'right-0' : 'left-0'
         } z-20`}
       >

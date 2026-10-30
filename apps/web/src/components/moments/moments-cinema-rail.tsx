@@ -118,7 +118,7 @@ export default function MomentsCinemaRail({
 
               {/* Author Badge Top-Left */}
               <div className="absolute top-2.5 left-2.5 z-10 flex items-center gap-1.5">
-                <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-brand-caribbeanSea to-brand-sunriseCoral p-[2px] shadow-md shadow-black/50">
+                <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-brand-caribbeanTeal to-brand-caribbeanSea p-[2px] shadow-md shadow-black/50">
                   <div className="w-full h-full bg-[#0A1024] rounded-full flex items-center justify-center font-black text-[10px] text-white">
                     {story.authorName.slice(0, 1).toUpperCase()}
                   </div>

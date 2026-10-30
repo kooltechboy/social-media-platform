@@ -160,7 +160,7 @@ export default function FeedsView({
                     aria-selected={isActive}
                     className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs sm:text-sm font-black whitespace-nowrap min-h-[42px] transition-all ${
                       isActive
-                        ? 'bg-gradient-to-r from-brand-caribbeanSea to-brand-sunriseCoral text-slate-950 shadow-md shadow-brand-caribbeanSea/20'
+                        ? 'bg-gradient-to-r from-brand-caribbeanTeal to-brand-caribbeanSea text-slate-950 shadow-md shadow-brand-caribbeanSea/20'
                         : 'bg-white/5 hover:bg-white/10 text-brand-sandstone/80 hover:text-white border border-white/10'
                     }`}
                   >

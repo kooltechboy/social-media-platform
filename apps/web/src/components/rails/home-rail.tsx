@@ -140,382 +140,299 @@ export default function HomeRail({
   const displayPeople = suggestedPeople && suggestedPeople.length > 0 ? suggestedPeople : DEFAULT_SUGGESTED_PEOPLE;
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-4">
       {/* 1. Live Broadcast Callout (if active) */}
       {activeLiveStream && (
-        <div className="glass rounded-3xl p-4 border border-rose-500/30 bg-rose-500/5 space-y-2.5">
-          <div className="flex items-center justify-between">
-            <span className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-rose-500 text-white font-black text-[10px] uppercase tracking-wider animate-pulse">
-              <Tv className="w-3 h-3" /> Live Now
-            </span>
-            {activeLiveStream.peak_viewers !== undefined && (
-              <span className="text-[11px] font-bold text-rose-300">
-                {activeLiveStream.peak_viewers} watching
-              </span>
-            )}
-          </div>
-          <div>
-            <h4 className="text-xs font-black text-white line-clamp-1">
-              {activeLiveStream.title}
-            </h4>
-            {activeLiveStream.creator_name && (
-              <p className="text-[11px] text-brand-sandstone/70 truncate mt-0.5">
-                by {activeLiveStream.creator_name}
+        <RailSection label="Live broadcast" title="Live now" icon={<Tv className="w-4 h-4 text-rose-400" />}>
+          <div className="space-y-3">
+            <div>
+              <h4 className="text-[13.5px] font-semibold text-white line-clamp-1">{activeLiveStream.title}</h4>
+              <p className="text-xs text-brand-mist truncate mt-0.5">
+                {activeLiveStream.creator_name ? `by ${activeLiveStream.creator_name}` : 'Live on TUKUBI'}
+                {activeLiveStream.peak_viewers !== undefined && ` Â· ${activeLiveStream.peak_viewers} watching`}
               </p>
-            )}
+            </div>
+            <Link
+              href={`/live?id=${activeLiveStream.id}`}
+              className="w-full flex items-center justify-center h-9 rounded-lg bg-rose-500/90 hover:bg-rose-500 text-white font-semibold text-[13px] transition-colors"
+            >
+              Watch broadcast
+            </Link>
           </div>
-          <Link
-            href={`/live?id=${activeLiveStream.id}`}
-            className="w-full flex items-center justify-center py-2 px-3 rounded-xl bg-rose-500 hover:bg-rose-600 text-white font-black text-xs transition-colors shadow-sm"
-          >
-            Watch Broadcast
-          </Link>
-        </div>
+        </RailSection>
       )}
 
-      {/* 2. Trending Now / Trending in the Caribbean (Concept Image 1 & 2 Alignment) */}
-      <section aria-label="Trending in the Caribbean" className="glass rounded-3xl p-4 sm:p-5 space-y-3.5 border border-white/10">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Flame className="w-4 h-4 text-brand-sunriseCoral" />
-            <h3 className="text-xs font-black text-white uppercase tracking-wider">
-              Trending Now
-            </h3>
-          </div>
-          <Link
-            href="/explore"
-            className="text-[11px] font-bold text-brand-caribbeanSea hover:underline flex items-center gap-0.5"
-          >
-            View all <ArrowRight className="w-3 h-3" />
-          </Link>
-        </div>
-
-        <div className="space-y-1.5 pt-0.5">
+      {/* 2. Trending in the Caribbean */}
+      <RailSection
+        label="Trending in the Caribbean"
+        title="Trending now"
+        icon={<TrendingUp className="w-4 h-4 text-brand-goldenHour" />}
+        action={{ href: '/explore', label: 'View all' }}
+      >
+        <ol className="-mx-2">
           {displayTrends.slice(0, 5).map((trend, idx) => (
-            <Link
-              key={trend.tag}
-              href={`/explore?q=${encodeURIComponent('#' + trend.tag)}`}
-              className="flex items-center justify-between p-2 rounded-xl hover:bg-white/5 transition-colors group"
-            >
-              <div className="flex items-center gap-2.5 min-w-0">
-                <span className="text-xs font-black text-brand-sandstone/50 w-4 shrink-0 text-center">
-                  {idx + 1}
-                </span>
-                <div className="min-w-0">
-                  <p className="text-xs font-black text-white group-hover:text-brand-caribbeanSea transition-colors truncate">
-                    #{trend.tag}
-                  </p>
+            <li key={trend.tag}>
+              <Link
+                href={`/explore?q=${encodeURIComponent('#' + trend.tag)}`}
+                className="flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-white/[0.04] transition-colors group"
+              >
+                <span className="text-xs font-medium text-[#6B7A90] w-4 shrink-0 text-center tabular-nums">{idx + 1}</span>
+                <div className="min-w-0 flex-1">
+                  <p className="text-[13.5px] font-semibold text-white truncate">#{trend.tag}</p>
                   {trend.post_count !== undefined && (
-                    <span className="text-[10px] text-brand-sandstone/60">
-                      {formatPostCount(trend.post_count)}
-                    </span>
+                    <span className="text-[11.5px] text-brand-mist">{formatPostCount(trend.post_count)}</span>
                   )}
                 </div>
-              </div>
-              <ArrowRight className="w-3 h-3 text-brand-sandstone/30 group-hover:text-white transition-colors shrink-0" />
-            </Link>
+                <ArrowRight className="w-3.5 h-3.5 text-[#6B7A90] opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
+              </Link>
+            </li>
           ))}
-        </div>
-      </section>
+        </ol>
+      </RailSection>
 
-      {/* 3. Suggested People / Creators (Concept Image 1 & 2 Alignment) */}
-      <section aria-label="Suggested People" className="glass rounded-3xl p-4 sm:p-5 space-y-3.5 border border-white/10">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Users className="w-4 h-4 text-brand-caribbeanSea" />
-            <h3 className="text-xs font-black text-white uppercase tracking-wider">
-              Suggested People
-            </h3>
-          </div>
-          <Link
-            href="/people"
-            className="text-[11px] font-bold text-brand-caribbeanSea hover:underline"
-          >
-            See more
-          </Link>
-        </div>
-
-        <div className="space-y-3 pt-0.5">
+      {/* 3. Suggested People / Creators */}
+      <RailSection
+        label="Suggested people"
+        title="Suggested people"
+        icon={<Users className="w-4 h-4 text-brand-caribbeanSea" />}
+        action={{ href: '/people', label: 'See more' }}
+      >
+        <ul className="space-y-3">
           {displayPeople.slice(0, 4).map((person) => (
-            <div key={person.id} className="flex items-center justify-between gap-3 group">
-              <Link
-                href={`/profile/${person.username}`}
-                className="flex items-center gap-2.5 min-w-0 flex-1"
-              >
-                <UserAvatar
-                  src={person.avatar_url}
-                  name={person.display_name}
-                  size="sm"
-                />
+            <li key={person.id} className="flex items-center justify-between gap-3">
+              <Link href={`/profile/${person.username}`} className="flex items-center gap-3 min-w-0 flex-1 group">
+                <UserAvatar src={person.avatar_url} name={person.display_name} size="sm" />
                 <div className="min-w-0">
-                  <p className="text-xs font-bold text-white truncate group-hover:text-brand-caribbeanSea transition-colors flex items-center gap-1">
-                    <span>{person.display_name}</span>
-                    {person.is_verified && (
-                      <CheckCircle className="w-3 h-3 text-brand-caribbeanSea shrink-0" />
-                    )}
+                  <p className="text-[13.5px] font-semibold text-white truncate flex items-center gap-1 group-hover:underline decoration-white/30 underline-offset-2">
+                    <span className="truncate">{person.display_name}</span>
+                    {person.is_verified && <CheckCircle className="w-3.5 h-3.5 text-brand-caribbeanSea shrink-0" />}
                   </p>
-                  <p className="text-[10px] text-brand-sandstone/60 truncate">
+                  <p className="text-[11.5px] text-brand-mist truncate">
                     @{person.username}
-                    {person.origin_country_iso && ` • ${person.origin_country_iso}`}
+                    {person.origin_country_iso && ` Â· ${person.origin_country_iso}`}
                   </p>
                 </div>
               </Link>
-
               <div className="shrink-0">
-                <FollowButton
-                  targetUserId={person.id}
-                  isFollowing={!!person.is_following}
-                />
+                <FollowButton targetUserId={person.id} isFollowing={!!person.is_following} />
               </div>
-            </div>
+            </li>
           ))}
-        </div>
-      </section>
+        </ul>
+      </RailSection>
 
       {/* 4. Pages You Manage (Ecosystem RBAC) */}
       {managedPages && managedPages.length > 0 && (
-        <section aria-label="Pages You Manage" className="glass rounded-3xl p-4 sm:p-5 space-y-3.5 border border-white/10">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Building2 className="w-4 h-4 text-orange-400" />
-              <h3 className="text-xs font-black text-white uppercase tracking-wider">
-                Pages You Manage
-              </h3>
-            </div>
-            <Link
-              href="/pages?tab=my-pages"
-              className="text-[11px] font-bold text-orange-400 hover:underline"
-            >
-              All ({managedPages.length})
-            </Link>
-          </div>
-
-          <div className="space-y-2 pt-0.5">
+        <RailSection
+          label="Pages you manage"
+          title="Pages you manage"
+          icon={<Building2 className="w-4 h-4 text-brand-goldenHour" />}
+          action={{ href: '/pages?tab=my-pages', label: `All (${managedPages.length})` }}
+        >
+          <ul className="space-y-2">
             {managedPages.slice(0, 3).map((page) => (
-              <div
+              <li
                 key={page.id}
-                className="flex items-center justify-between gap-3 p-2 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/5 transition-colors group"
+                className="flex items-center justify-between gap-3 p-2 rounded-xl bg-white/[0.03] border border-white/[0.05]"
               >
-                <Link
-                  href={`/pages/${page.slug}`}
-                  className="flex items-center gap-2.5 min-w-0 flex-1"
-                >
-                  <div className="w-8 h-8 rounded-xl overflow-hidden bg-white/10 flex items-center justify-center shrink-0 border border-white/10">
-                    {page.avatarUrl ? (
-                      <img src={page.avatarUrl} alt={page.name} className="w-full h-full object-cover" />
-                    ) : (
-                      <Building2 className="w-4 h-4 text-orange-300" />
-                    )}
-                  </div>
+                <Link href={`/pages/${page.slug}`} className="flex items-center gap-3 min-w-0 flex-1 group">
+                  <PageThumb src={page.avatarUrl} name={page.name} />
                   <div className="min-w-0">
-                    <p className="text-xs font-bold text-white truncate group-hover:text-orange-300 transition-colors flex items-center gap-1">
-                      <span>{page.name}</span>
-                      {page.isVerified && (
-                        <CheckCircle className="w-3 h-3 text-brand-caribbeanSea shrink-0" />
-                      )}
+                    <p className="text-[13px] font-semibold text-white truncate flex items-center gap-1 group-hover:underline decoration-white/30 underline-offset-2">
+                      <span className="truncate">{page.name}</span>
+                      {page.isVerified && <CheckCircle className="w-3.5 h-3.5 text-brand-caribbeanSea shrink-0" />}
                     </p>
-                    <p className="text-[10px] text-brand-sandstone/60 truncate">
-                      {page.userRole ? `${page.userRole.charAt(0).toUpperCase() + page.userRole.slice(1)} • ` : ''}
+                    <p className="text-[11.5px] text-brand-mist truncate">
+                      {page.userRole ? `${page.userRole.charAt(0).toUpperCase() + page.userRole.slice(1)} Â· ` : ''}
                       {page.followerCount !== undefined ? `${page.followerCount} followers` : page.category || 'Page'}
                     </p>
                   </div>
                 </Link>
                 <Link
                   href={`/pages/${page.slug}/manage`}
-                  className="shrink-0 text-[10px] font-black uppercase px-2 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-colors"
+                  className="shrink-0 text-xs font-semibold px-2.5 h-7 flex items-center rounded-md bg-white/[0.06] hover:bg-white/[0.10] text-[#C3CCDA] hover:text-white transition-colors"
                   title="Manage Page"
                 >
                   Manage
                 </Link>
-              </div>
+              </li>
             ))}
-          </div>
-
-          <div className="pt-0.5">
-            <Link
-              href="/pages/create"
-              className="w-full flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-orange-500/15 hover:bg-orange-500/25 border border-orange-500/30 text-orange-300 font-bold text-xs transition-colors"
-            >
-              <Plus className="w-3.5 h-3.5" /> Create a New Page
-            </Link>
-          </div>
-        </section>
+          </ul>
+          <Link
+            href="/pages/create"
+            className="mt-3 w-full flex items-center justify-center gap-1.5 h-9 rounded-lg border border-dashed border-white/[0.14] hover:border-white/25 text-[#C3CCDA] hover:text-white font-medium text-[13px] transition-colors"
+          >
+            <Plus className="w-3.5 h-3.5" /> Create a new page
+          </Link>
+        </RailSection>
       )}
 
       {/* 5. Pages You Follow */}
       {followedPages && followedPages.length > 0 && (
-        <section aria-label="Pages You Follow" className="glass rounded-3xl p-4 sm:p-5 space-y-3 border border-white/10">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <ShieldCheck className="w-4 h-4 text-sky-400" />
-              <h3 className="text-xs font-black text-white uppercase tracking-wider">
-                Pages You Follow
-              </h3>
-            </div>
-            <Link
-              href="/pages"
-              className="text-[11px] font-bold text-sky-400 hover:underline"
-            >
-              Explore
-            </Link>
-          </div>
-
-          <div className="space-y-2 pt-0.5">
+        <RailSection
+          label="Pages you follow"
+          title="Pages you follow"
+          icon={<ShieldCheck className="w-4 h-4 text-brand-caribbeanSea" />}
+          action={{ href: '/pages', label: 'Explore' }}
+        >
+          <ul className="-mx-2">
             {followedPages.slice(0, 3).map((page) => (
-              <Link
-                key={page.id}
-                href={`/pages/${page.slug}`}
-                className="flex items-center justify-between gap-3 p-2 rounded-xl hover:bg-white/5 transition-colors group"
-              >
-                <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                  <div className="w-7 h-7 rounded-lg overflow-hidden bg-white/10 flex items-center justify-center shrink-0 border border-white/10">
-                    {page.avatarUrl ? (
-                      <img src={page.avatarUrl} alt={page.name} className="w-full h-full object-cover" />
-                    ) : (
-                      <Building2 className="w-3.5 h-3.5 text-sky-300" />
-                    )}
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-xs font-bold text-white truncate group-hover:text-sky-300 transition-colors flex items-center gap-1">
-                      <span>{page.name}</span>
-                      {page.isVerified && (
-                        <CheckCircle className="w-3 h-3 text-brand-caribbeanSea shrink-0" />
-                      )}
+              <li key={page.id}>
+                <Link
+                  href={`/pages/${page.slug}`}
+                  className="flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-white/[0.04] transition-colors group"
+                >
+                  <PageThumb src={page.avatarUrl} name={page.name} />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[13px] font-semibold text-white truncate flex items-center gap-1">
+                      <span className="truncate">{page.name}</span>
+                      {page.isVerified && <CheckCircle className="w-3.5 h-3.5 text-brand-caribbeanSea shrink-0" />}
                     </p>
-                    <p className="text-[10px] text-brand-sandstone/60 truncate">
+                    <p className="text-[11.5px] text-brand-mist truncate">
                       {page.followerCount !== undefined ? `${page.followerCount} followers` : page.category || 'Page'}
                     </p>
                   </div>
-                </div>
-                <ArrowRight className="w-3.5 h-3.5 text-white/40 group-hover:text-white transition-colors shrink-0" />
-              </Link>
+                  <ArrowRight className="w-3.5 h-3.5 text-[#6B7A90] opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
+                </Link>
+              </li>
             ))}
-          </div>
-        </section>
+          </ul>
+        </RailSection>
       )}
 
       {/* 6. Page Promotion Callout when user has no managed pages */}
       {(!managedPages || managedPages.length === 0) && (
-        <section aria-label="Create a Caribbean Page" className="glass rounded-3xl p-4 sm:p-5 space-y-2.5 border border-white/10 bg-gradient-to-br from-orange-500/10 via-transparent to-transparent">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 text-orange-400">
-              <Building2 className="w-4 h-4" />
-              <h3 className="text-xs font-black uppercase tracking-wider">
-                Caribbean Pages
-              </h3>
-            </div>
-            <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-orange-500/20 text-orange-300 border border-orange-500/30">
-              New
-            </span>
-          </div>
-          <p className="text-xs text-brand-sandstone/70 leading-relaxed">
-            Create an official public identity for your business, creator brand, music project, or community foundation.
+        <RailSection
+          label="Create a Caribbean page"
+          title="Caribbean Pages"
+          icon={<Building2 className="w-4 h-4 text-brand-goldenHour" />}
+        >
+          <p className="text-[13px] text-brand-mist leading-relaxed">
+            An official public identity for your business, creator brand, music project, or community foundation.
           </p>
           <Link
             href="/pages/create"
-            className="inline-flex items-center justify-center gap-1.5 w-full py-2 px-3 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 hover:brightness-110 text-slate-950 font-black text-xs transition-all shadow-sm"
+            className="mt-3 w-full flex items-center justify-center gap-1.5 h-9 rounded-lg bg-white/[0.06] hover:bg-white/[0.10] border border-white/[0.08] text-white font-semibold text-[13px] transition-colors"
           >
-            <Plus className="w-3.5 h-3.5" /> Create a Page
+            <Plus className="w-3.5 h-3.5" /> Create a page
           </Link>
-        </section>
+        </RailSection>
       )}
 
       {/* 7. Upcoming Cultural Events Spotlight */}
       {upcomingEvents.length > 0 && (
-        <section aria-label="Upcoming Cultural Events" className="glass rounded-3xl p-4 sm:p-5 space-y-3 border border-white/10">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Calendar className="w-4 h-4 text-amber-400" />
-              <h3 className="text-xs font-black text-white uppercase tracking-wider">
-                Upcoming Events
-              </h3>
-            </div>
-            <Link
-              href="/events"
-              className="text-[11px] font-bold text-amber-400 hover:underline"
-            >
-              View All
-            </Link>
-          </div>
-
-          <div className="space-y-2 pt-0.5">
+        <RailSection
+          label="Upcoming cultural events"
+          title="Upcoming events"
+          icon={<Calendar className="w-4 h-4 text-brand-goldenHour" />}
+          action={{ href: '/events', label: 'View all' }}
+        >
+          <ul className="space-y-1 -mx-2">
             {upcomingEvents.slice(0, 3).map((event) => {
-              const dateStr = new Date(event.start_time).toLocaleDateString('en-US', {
-                month: 'short',
-                day: 'numeric',
-              });
+              const d = new Date(event.start_time);
               return (
-                <Link
-                  key={event.id}
-                  href={`/events`}
-                  className="p-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 transition-colors block group"
-                >
-                  <p className="text-xs font-black text-white line-clamp-1 group-hover:text-amber-300 transition-colors">
-                    {event.title}
-                  </p>
-                  <p className="text-[10px] text-brand-sandstone/60 truncate mt-0.5">
-                    {dateStr} {event.location_name ? `• ${event.location_name}` : ''}
-                  </p>
-                </Link>
+                <li key={event.id}>
+                  <Link href="/events" className="flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-white/[0.04] transition-colors">
+                    <div className="w-10 h-10 rounded-lg bg-white/[0.04] border border-white/[0.06] flex flex-col items-center justify-center shrink-0 leading-none">
+                      <span className="text-[9.5px] font-semibold uppercase tracking-wider text-brand-goldenHour">
+                        {d.toLocaleDateString('en-US', { month: 'short' })}
+                      </span>
+                      <span className="text-[15px] font-semibold text-white mt-0.5">{d.getDate()}</span>
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-[13px] font-semibold text-white line-clamp-1">{event.title}</p>
+                      {event.location_name && <p className="text-[11.5px] text-brand-mist truncate">{event.location_name}</p>}
+                    </div>
+                  </Link>
+                </li>
               );
             })}
-          </div>
-        </section>
+          </ul>
+        </RailSection>
       )}
 
       {/* 8. Marketplace Highlights */}
       {marketplaceItems.length > 0 && (
-        <section aria-label="Marketplace Highlights" className="glass rounded-3xl p-4 sm:p-5 space-y-3 border border-white/10">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <ShoppingBag className="w-4 h-4 text-brand-sunriseCoral" />
-              <h3 className="text-xs font-black text-white uppercase tracking-wider">
-                Market Highlights
-              </h3>
-            </div>
-            <Link
-              href="/marketplace"
-              className="text-[11px] font-bold text-brand-sunriseCoral hover:underline"
-            >
-              Shop All
-            </Link>
-          </div>
-
-          <div className="space-y-2 pt-0.5">
+        <RailSection
+          label="Marketplace highlights"
+          title="Marketplace"
+          icon={<ShoppingBag className="w-4 h-4 text-brand-goldenHour" />}
+          action={{ href: '/marketplace', label: 'Shop all' }}
+        >
+          <ul className="space-y-1 -mx-2">
             {marketplaceItems.slice(0, 3).map((item) => (
-              <Link
-                key={item.id}
-                href={`/marketplace/${item.id}`}
-                className="p-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 transition-colors block group"
-              >
-                <p className="text-xs font-black text-white line-clamp-1 group-hover:text-brand-sunriseCoral transition-colors">
-                  {item.title}
-                </p>
-                <div className="flex items-center justify-between mt-1 text-[11px]">
-                  <span className="font-extrabold text-brand-sunriseCoral">
-                    ${(item.price_minor / 100).toFixed(2)} {item.currency}
+              <li key={item.id}>
+                <Link href={`/marketplace/${item.id}`} className="flex items-center justify-between gap-3 px-2 py-2 rounded-lg hover:bg-white/[0.04] transition-colors">
+                  <div className="min-w-0">
+                    <p className="text-[13px] font-semibold text-white line-clamp-1">{item.title}</p>
+                    {item.seller_name && <p className="text-[11.5px] text-brand-mist truncate">{item.seller_name}</p>}
+                  </div>
+                  <span className="text-[13px] font-semibold text-white tabular-nums shrink-0">
+                    ${(item.price_minor / 100).toFixed(2)}
+                    <span className="text-[11px] text-brand-mist font-medium ml-1">{item.currency}</span>
                   </span>
-                  {item.seller_name && (
-                    <span className="text-brand-sandstone/60 truncate max-w-[120px]">
-                      {item.seller_name}
-                    </span>
-                  )}
-                </div>
-              </Link>
+                </Link>
+              </li>
             ))}
-          </div>
-        </section>
+          </ul>
+        </RailSection>
       )}
 
-      {/* 9. Caribbean Diaspora Connected Banner */}
-      <div className="p-4 rounded-2xl bg-gradient-to-br from-brand-caribbeanSea/10 via-brand-sunsetPurple/20 to-brand-sunriseCoral/10 border border-white/10 text-center space-y-1.5">
-        <p className="text-xs font-black text-brand-sandstone flex items-center justify-center gap-1.5">
+      {/* 9. Caribbean Diaspora Connected footnote */}
+      <div className="px-1 pt-1 space-y-1">
+        <p className="text-[12px] font-semibold text-[#C3CCDA] flex items-center gap-1.5">
           <Sparkles className="w-3.5 h-3.5 text-brand-goldenHour" /> The Caribbean Connected
         </p>
-        <p className="text-[11px] text-brand-sandstone/70 leading-relaxed">
+        <p className="text-[11.5px] text-[#6B7A90] leading-relaxed">
           From the Greater &amp; Lesser Antilles to London, Miami, Montreal &amp; New York.
         </p>
       </div>
+    </div>
+  );
+}
+
+/** Shared right-rail section â€” quiet panel, small title, single text action. */
+function RailSection({
+  label,
+  title,
+  icon,
+  action,
+  children,
+}: {
+  label: string;
+  title: string;
+  icon?: React.ReactNode;
+  action?: { href: string; label: string };
+  children: React.ReactNode;
+}) {
+  return (
+    <section aria-label={label} className="tk-panel p-4">
+      <header className="flex items-center justify-between mb-3">
+        <h3 className="flex items-center gap-2 text-[13.5px] font-semibold text-white">
+          {icon}
+          {title}
+        </h3>
+        {action && (
+          <Link href={action.href} className="text-xs font-medium text-brand-mist hover:text-white transition-colors">
+            {action.label}
+          </Link>
+        )}
+      </header>
+      {children}
+    </section>
+  );
+}
+
+function PageThumb({ src, name }: { src?: string | null; name: string }) {
+  return (
+    <div className="w-9 h-9 rounded-lg overflow-hidden bg-white/[0.05] flex items-center justify-center shrink-0 border border-white/[0.06]">
+      {src ? (
+        <img src={src} alt="" className="w-full h-full object-cover" />
+      ) : (
+        <span className="text-xs font-semibold text-[#C3CCDA]" aria-hidden="true">
+          {name.slice(0, 2).toUpperCase()}
+        </span>
+      )}
     </div>
   );
 }

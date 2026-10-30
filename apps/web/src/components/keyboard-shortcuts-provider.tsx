@@ -283,7 +283,7 @@ export function KeyboardShortcutsProvider({ children }: { children: React.ReactN
             {/* Header */}
             <div className="flex items-center justify-between pb-4 border-b border-white/10">
               <div className="flex items-center gap-3">
-                <div className="p-2.5 rounded-2xl bg-gradient-to-br from-brand-caribbeanSea/20 to-brand-sunriseCoral/20 border border-brand-caribbeanSea/30 text-brand-caribbeanSea">
+                <div className="p-2.5 rounded-2xl bg-gradient-to-br from-brand-caribbeanTeal/20 to-brand-caribbeanSea/20 border border-brand-caribbeanSea/30 text-brand-caribbeanSea">
                   <Keyboard className="w-6 h-6" />
                 </div>
                 <div>

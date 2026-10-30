@@ -10,7 +10,7 @@ export default function SidebarSkeleton() {
   return (
     <div className="space-y-5 w-full animate-pulse" aria-label="Loading sidebar discovery" role="status">
       {/* 1. Official Platform Identity Widget Skeleton */}
-      <div className="rounded-3xl border border-white/10 bg-[#130B1E]/80 p-5 space-y-4 shadow-xl">
+      <div className="rounded-3xl border border-white/10 bg-[#0A1222]/80 p-5 space-y-4 shadow-xl">
         <div className="flex items-center gap-3">
           <div className="w-12 h-12 rounded-2xl bg-white/10 shrink-0" />
           <div className="space-y-2 flex-1">
@@ -28,7 +28,7 @@ export default function SidebarSkeleton() {
       </div>
 
       {/* 2. Friends & Members Widget Skeleton */}
-      <div className="rounded-3xl border border-white/10 bg-[#130B1E]/80 p-5 space-y-3.5 shadow-xl">
+      <div className="rounded-3xl border border-white/10 bg-[#0A1222]/80 p-5 space-y-3.5 shadow-xl">
         <div className="flex items-center justify-between">
           <div className="w-36 h-4 rounded-lg bg-white/15" />
           <div className="w-16 h-5 rounded-full bg-white/10" />
@@ -51,7 +51,7 @@ export default function SidebarSkeleton() {
       </div>
 
       {/* 3. Tukubi Live Ticker Skeleton */}
-      <div className="rounded-3xl border border-white/10 bg-[#130B1E]/80 p-5 space-y-3 shadow-xl">
+      <div className="rounded-3xl border border-white/10 bg-[#0A1222]/80 p-5 space-y-3 shadow-xl">
         <div className="flex items-center justify-between">
           <div className="w-28 h-4 rounded-lg bg-white/15" />
           <div className="w-14 h-4 rounded-full bg-white/10" />
@@ -60,7 +60,7 @@ export default function SidebarSkeleton() {
       </div>
 
       {/* 4. Financial Center Quick Card Skeleton */}
-      <div className="rounded-3xl border border-white/10 bg-[#130B1E]/80 p-5 space-y-3 shadow-xl">
+      <div className="rounded-3xl border border-white/10 bg-[#0A1222]/80 p-5 space-y-3 shadow-xl">
         <div className="flex items-center justify-between">
           <div className="w-32 h-4 rounded-lg bg-white/15" />
           <div className="w-14 h-4 rounded-full bg-emerald-500/10" />

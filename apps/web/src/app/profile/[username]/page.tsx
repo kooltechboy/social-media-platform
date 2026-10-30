@@ -874,7 +874,7 @@ export default async function ProfilePage({
         {tab === 'friends' && !isOfficialTukubi && (
           <section className="space-y-6 animate-fadeIn">
             {friendsResult?.isRestricted ? (
-              <div className="surface-card rounded-3xl p-10 text-center space-y-3 border border-white/15 bg-[#140C22]/80 max-w-md mx-auto">
+              <div className="surface-card rounded-3xl p-10 text-center space-y-3 border border-white/15 bg-[#0B1424]/80 max-w-md mx-auto">
                 <div className="w-14 h-14 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center mx-auto text-amber-400">
                   <Lock className="w-6 h-6" />
                 </div>
@@ -888,7 +888,7 @@ export default async function ProfilePage({
                 {friendsResult.friends.map((friend) => (
                   <div
                     key={friend.id}
-                    className="surface-card rounded-2xl p-4 sm:p-5 flex items-center justify-between gap-3 border border-white/10 bg-[#140C22]/80 hover:border-brand-caribbeanSea/30 transition-all"
+                    className="surface-card rounded-2xl p-4 sm:p-5 flex items-center justify-between gap-3 border border-white/10 bg-[#0B1424]/80 hover:border-brand-caribbeanSea/30 transition-all"
                   >
                     <Link
                       href={`/profile/${friend.username}`}
@@ -931,7 +931,7 @@ export default async function ProfilePage({
                 ))}
               </div>
             ) : (
-              <div className="surface-card rounded-3xl p-12 text-center space-y-4 border border-white/15 bg-[#140C22]/80 max-w-md mx-auto">
+              <div className="surface-card rounded-3xl p-12 text-center space-y-4 border border-white/15 bg-[#0B1424]/80 max-w-md mx-auto">
                 <Users className="w-12 h-12 text-brand-caribbeanSea/60 mx-auto" />
                 <div className="space-y-1">
                   <h3 className="text-base sm:text-lg font-black text-white">
@@ -946,7 +946,7 @@ export default async function ProfilePage({
                 {isOwnProfile && (
                   <Link
                     href="/friends"
-                    className="inline-flex items-center gap-2 text-xs font-black px-5 py-2.5 rounded-xl bg-gradient-to-r from-brand-caribbeanSea to-brand-sunriseCoral text-slate-950 shadow-md hover:brightness-110 transition-all"
+                    className="inline-flex items-center gap-2 text-xs font-black px-5 py-2.5 rounded-xl bg-gradient-to-r from-brand-caribbeanTeal to-brand-caribbeanSea text-slate-950 shadow-md hover:brightness-110 transition-all"
                   >
                     <span>Explore Members</span>
                   </Link>
@@ -973,7 +973,7 @@ export default async function ProfilePage({
                 {userPages.map((p: any) => (
                   <div
                     key={p.id}
-                    className="surface-card rounded-2xl p-5 border border-white/10 bg-[#140C22]/80 hover:border-brand-caribbeanSea/40 transition-all space-y-3"
+                    className="surface-card rounded-2xl p-5 border border-white/10 bg-[#0B1424]/80 hover:border-brand-caribbeanSea/40 transition-all space-y-3"
                   >
                     <div className="flex items-center gap-3">
                       <div className="w-12 h-12 rounded-2xl bg-brand-twilight border border-white/10 flex items-center justify-center overflow-hidden shrink-0">
@@ -1011,7 +1011,7 @@ export default async function ProfilePage({
                 ))}
               </div>
             ) : (
-              <div className="surface-card rounded-3xl p-12 text-center space-y-4 border border-white/15 bg-[#140C22]/80 max-w-md mx-auto">
+              <div className="surface-card rounded-3xl p-12 text-center space-y-4 border border-white/15 bg-[#0B1424]/80 max-w-md mx-auto">
                 <Building2 className="w-12 h-12 text-brand-caribbeanSea/60 mx-auto" />
                 <div className="space-y-1">
                   <h3 className="text-base sm:text-lg font-black text-white">No Pages Managed</h3>
@@ -1024,7 +1024,7 @@ export default async function ProfilePage({
                 {isOwnProfile && (
                   <Link
                     href="/pages/create"
-                    className="inline-flex items-center gap-2 text-xs font-black px-5 py-2.5 rounded-xl bg-gradient-to-r from-brand-caribbeanSea to-brand-sunriseCoral text-slate-950 shadow-md hover:brightness-110 transition-all"
+                    className="inline-flex items-center gap-2 text-xs font-black px-5 py-2.5 rounded-xl bg-gradient-to-r from-brand-caribbeanTeal to-brand-caribbeanSea text-slate-950 shadow-md hover:brightness-110 transition-all"
                   >
                     <span>Create a Page</span>
                   </Link>
@@ -1042,7 +1042,7 @@ export default async function ProfilePage({
                 {userCommunities.map((c: any) => (
                   <div
                     key={c.id}
-                    className="surface-card rounded-2xl p-5 border border-white/10 bg-[#140C22]/80 hover:border-brand-sunriseCoral/40 transition-all space-y-3"
+                    className="surface-card rounded-2xl p-5 border border-white/10 bg-[#0B1424]/80 hover:border-brand-sunriseCoral/40 transition-all space-y-3"
                   >
                     <div className="flex items-center gap-3">
                       <div className="w-12 h-12 rounded-2xl bg-brand-twilight border border-white/10 flex items-center justify-center text-xl shrink-0">
@@ -1074,7 +1074,7 @@ export default async function ProfilePage({
                 ))}
               </div>
             ) : (
-              <div className="surface-card rounded-3xl p-12 text-center space-y-4 border border-white/15 bg-[#140C22]/80 max-w-md mx-auto">
+              <div className="surface-card rounded-3xl p-12 text-center space-y-4 border border-white/15 bg-[#0B1424]/80 max-w-md mx-auto">
                 <Users className="w-12 h-12 text-brand-sunriseCoral/60 mx-auto" />
                 <div className="space-y-1">
                   <h3 className="text-base sm:text-lg font-black text-white">No Communities Joined</h3>
@@ -1087,7 +1087,7 @@ export default async function ProfilePage({
                 {isOwnProfile && (
                   <Link
                     href="/communities"
-                    className="inline-flex items-center gap-2 text-xs font-black px-5 py-2.5 rounded-xl bg-gradient-to-r from-brand-caribbeanSea to-brand-sunriseCoral text-slate-950 shadow-md hover:brightness-110 transition-all"
+                    className="inline-flex items-center gap-2 text-xs font-black px-5 py-2.5 rounded-xl bg-gradient-to-r from-brand-caribbeanTeal to-brand-caribbeanSea text-slate-950 shadow-md hover:brightness-110 transition-all"
                   >
                     <span>Browse Communities</span>
                   </Link>
@@ -1105,7 +1105,7 @@ export default async function ProfilePage({
                 {userPodcasts.map((pod: any) => (
                   <div
                     key={pod.id}
-                    className="surface-card rounded-2xl p-5 border border-white/10 bg-[#140C22]/80 hover:border-purple-500/40 transition-all space-y-3"
+                    className="surface-card rounded-2xl p-5 border border-white/10 bg-[#0B1424]/80 hover:border-purple-500/40 transition-all space-y-3"
                   >
                     <div className="flex items-center gap-3">
                       <div className="w-12 h-12 rounded-2xl bg-purple-600/20 text-purple-400 border border-purple-500/30 flex items-center justify-center text-xl shrink-0">
@@ -1137,7 +1137,7 @@ export default async function ProfilePage({
                 ))}
               </div>
             ) : (
-              <div className="surface-card rounded-3xl p-12 text-center space-y-4 border border-white/15 bg-[#140C22]/80 max-w-md mx-auto">
+              <div className="surface-card rounded-3xl p-12 text-center space-y-4 border border-white/15 bg-[#0B1424]/80 max-w-md mx-auto">
                 <Mic className="w-12 h-12 text-purple-400/60 mx-auto" />
                 <div className="space-y-1">
                   <h3 className="text-base sm:text-lg font-black text-white">No Podcasts Published</h3>

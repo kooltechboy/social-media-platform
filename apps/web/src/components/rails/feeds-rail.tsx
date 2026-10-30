@@ -57,15 +57,15 @@ export default function FeedsRail({
   return (
     <div className="space-y-5">
       {/* 1. Feed Channels Quick Switcher */}
-      <section aria-label="Feed Channels" className="glass rounded-3xl p-4 sm:p-5 space-y-3 border border-white/10">
+      <section aria-label="Feed Channels" className="tk-panel p-4 sm:p-5 space-y-3 border border-white/10">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Layers className="w-4 h-4 text-brand-caribbeanSea" />
-            <h3 className="text-xs font-black text-white uppercase tracking-wider">
+            <h3 className="text-[13.5px] font-semibold text-white">
               Feed Channels
             </h3>
           </div>
-          <span className="text-[10px] font-bold text-brand-sandstone/60 uppercase">
+          <span className="text-[10px] font-bold text-brand-mist uppercase">
             Active: {activeMode.replace('_', ' ')}
           </span>
         </div>
@@ -82,7 +82,7 @@ export default function FeedsRail({
                 href={targetUrl}
                 className={`flex items-center justify-between p-2.5 rounded-2xl transition-all ${
                   isActive
-                    ? 'bg-gradient-to-r from-brand-caribbeanSea/20 to-brand-sunriseCoral/10 text-white border border-brand-caribbeanSea/40 shadow-sm'
+                    ? 'bg-gradient-to-r from-brand-caribbeanTeal/20 to-brand-caribbeanSea/10 text-white border border-brand-caribbeanSea/40 shadow-sm'
                     : 'text-slate-300 hover:bg-white/5 hover:text-white border border-transparent'
                 }`}
               >
@@ -90,7 +90,7 @@ export default function FeedsRail({
                   <Icon className={`w-4 h-4 shrink-0 ${ch.color}`} />
                   <div className="min-w-0">
                     <p className="text-xs font-bold truncate">{ch.label}</p>
-                    <p className="text-[10px] text-brand-sandstone/60 truncate">{ch.desc}</p>
+                    <p className="text-[10px] text-brand-mist truncate">{ch.desc}</p>
                   </div>
                 </div>
                 {isActive && (
@@ -103,12 +103,12 @@ export default function FeedsRail({
       </section>
 
       {/* 2. Social Graph Metrics */}
-      <section aria-label="Your Social Graph" className="glass rounded-3xl p-4 sm:p-5 space-y-3.5 border border-white/10">
+      <section aria-label="Your Social Graph" className="tk-panel p-4 sm:p-5 space-y-3.5 border border-white/10">
         <div className="space-y-0.5">
-          <h3 className="text-xs font-black text-white uppercase tracking-wider">
+          <h3 className="text-[13.5px] font-semibold text-white">
             Your Connections
           </h3>
-          <p className="text-[11px] text-brand-sandstone/60">
+          <p className="text-[11px] text-brand-mist">
             People &amp; entities powering your feed
           </p>
         </div>
@@ -119,14 +119,14 @@ export default function FeedsRail({
             className="p-2.5 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 transition-colors block"
           >
             <p className="text-base font-black text-white">{friendsCount}</p>
-            <p className="text-[9px] text-brand-sandstone/60 uppercase font-black">Friends</p>
+            <p className="text-[9px] text-brand-mist uppercase font-black">Friends</p>
           </Link>
           <Link
             href="/people"
             className="p-2.5 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 transition-colors block"
           >
             <p className="text-base font-black text-white">{followingCount}</p>
-            <p className="text-[9px] text-brand-sandstone/60 uppercase font-black">Following</p>
+            <p className="text-[9px] text-brand-mist uppercase font-black">Following</p>
           </Link>
           <Link
             href="/saved"
@@ -146,18 +146,18 @@ export default function FeedsRail({
               <Bookmark className="w-4 h-4 text-brand-goldenHour" />
               Saved Content &amp; Bookmarks
             </span>
-            <ArrowRight className="w-3.5 h-3.5 text-brand-sandstone/60" />
+            <ArrowRight className="w-3.5 h-3.5 text-brand-mist" />
           </Link>
         </div>
       </section>
 
       {/* 3. Suggested Creators */}
       {suggestedCreators.length > 0 && (
-        <section aria-label="Suggested Creators" className="glass rounded-3xl p-4 sm:p-5 space-y-3 border border-white/10">
+        <section aria-label="Suggested Creators" className="tk-panel p-4 sm:p-5 space-y-3 border border-white/10">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Sparkles className="w-4 h-4 text-brand-goldenHour" />
-              <h3 className="text-xs font-black text-white uppercase tracking-wider">
+              <h3 className="text-[13.5px] font-semibold text-white">
                 Caribbean Creators
               </h3>
             </div>
@@ -185,7 +185,7 @@ export default function FeedsRail({
                     <p className="text-xs font-bold text-white truncate group-hover:text-brand-caribbeanSea transition-colors">
                       {creator.display_name}
                     </p>
-                    <p className="text-[10px] text-brand-sandstone/60 truncate">
+                    <p className="text-[10px] text-brand-mist truncate">
                       @{creator.username}
                     </p>
                   </div>
@@ -201,18 +201,18 @@ export default function FeedsRail({
       )}
 
       {/* 4. Trending Signals in Feeds */}
-      <section aria-label="Trending Hashtags" className="glass rounded-3xl p-4 sm:p-5 space-y-3 border border-white/10">
+      <section aria-label="Trending Hashtags" className="tk-panel p-4 sm:p-5 space-y-3 border border-white/10">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <TrendingUp className="w-4 h-4 text-brand-caribbeanSea" />
-            <h3 className="text-xs font-black text-white uppercase tracking-wider">
+            <h3 className="text-[13.5px] font-semibold text-white">
               Trending Hashtags
             </h3>
           </div>
         </div>
 
         {displayTrends.length === 0 ? (
-          <p className="text-xs text-brand-sandstone/60 py-2">
+          <p className="text-xs text-brand-mist py-2">
             Trending topics will appear here as the TUKUBI community grows.
           </p>
         ) : (

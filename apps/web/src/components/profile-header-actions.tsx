@@ -319,7 +319,7 @@ export default function ProfileHeaderActions({
                 relState.isFollowing
                   ? 'bg-white/10 hover:bg-rose-500/20 text-brand-sandstone hover:text-rose-300 border border-white/15'
                   : isOfficial
-                  ? 'bg-gradient-to-r from-brand-caribbeanSea to-brand-sunriseCoral text-slate-950 hover:brightness-110 shadow-brand-caribbeanSea/20'
+                  ? 'bg-gradient-to-r from-brand-caribbeanTeal to-brand-caribbeanSea text-slate-950 hover:brightness-110 shadow-brand-caribbeanSea/20'
                   : relState.isFollower
                   ? 'bg-brand-goldenHour hover:brightness-110 text-slate-950 shadow-brand-goldenHour/20'
                   : 'bg-brand-sunriseCoral hover:brightness-110 text-slate-950 shadow-brand-sunriseCoral/20'
@@ -361,7 +361,7 @@ export default function ProfileHeaderActions({
           <div className="flex items-center gap-2">
             <Link
               href="/login"
-              className="flex items-center gap-2 bg-gradient-to-r from-brand-caribbeanSea to-brand-sunriseCoral hover:brightness-110 text-slate-950 font-black text-xs sm:text-sm md:text-base px-5 md:px-6 py-2.5 rounded-2xl transition-all shadow-md min-h-[44px] md:min-h-[48px]"
+              className="flex items-center gap-2 bg-gradient-to-r from-brand-caribbeanTeal to-brand-caribbeanSea hover:brightness-110 text-slate-950 font-black text-xs sm:text-sm md:text-base px-5 md:px-6 py-2.5 rounded-2xl transition-all shadow-md min-h-[44px] md:min-h-[48px]"
             >
               <UserPlus className="w-4 h-4 md:w-5 md:h-5" />
               <span>Sign in to Connect</span>
@@ -406,7 +406,7 @@ export default function ProfileHeaderActions({
             </button>
 
             {isMenuOpen && (
-              <div className="absolute right-0 top-12 w-48 bg-[#1D1429] border border-white/15 rounded-2xl p-1.5 shadow-2xl z-30 space-y-1 text-xs animate-fadeIn">
+              <div className="absolute right-0 top-12 w-48 bg-[#0D1628] border border-white/15 rounded-2xl p-1.5 shadow-2xl z-30 space-y-1 text-xs animate-fadeIn">
                 {relState.friendshipStatus === 'accepted' && (
                   <button
                     type="button"

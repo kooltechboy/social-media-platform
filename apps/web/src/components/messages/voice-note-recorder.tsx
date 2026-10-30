@@ -249,7 +249,7 @@ export default function VoiceNoteRecorder({
               <button
                 type="button"
                 onClick={handleSend}
-                className="px-4 py-1.5 rounded-xl bg-gradient-to-r from-brand-caribbeanSea to-brand-sunriseCoral text-slate-950 font-black text-xs flex items-center gap-1.5 shadow-lg hover:brightness-110 transition-all"
+                className="px-4 py-1.5 rounded-xl bg-gradient-to-r from-brand-caribbeanTeal to-brand-caribbeanSea text-slate-950 font-black text-xs flex items-center gap-1.5 shadow-lg hover:brightness-110 transition-all"
                 title="Send Voice Note"
               >
                 <Send className="w-3.5 h-3.5" />

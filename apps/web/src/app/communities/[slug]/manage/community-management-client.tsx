@@ -432,7 +432,7 @@ export default function CommunityManagementClient({
             <button
               type="submit"
               disabled={isSaving}
-              className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-brand-caribbeanSea to-brand-sunriseCoral text-slate-950 font-black text-xs hover:opacity-95 transition-opacity disabled:opacity-50 cursor-pointer shadow-lg shadow-brand-caribbeanSea/20"
+              className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-brand-caribbeanTeal to-brand-caribbeanSea text-slate-950 font-black text-xs hover:opacity-95 transition-opacity disabled:opacity-50 cursor-pointer shadow-lg shadow-brand-caribbeanSea/20"
             >
               {isSaving ? 'Saving...' : 'Save Hub Settings'}
             </button>

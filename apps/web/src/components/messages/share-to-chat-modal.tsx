@@ -196,7 +196,7 @@ export default function ShareToChatModal({
         </div>
 
         {/* Footer Actions */}
-        <div className="p-4 border-t border-white/10 bg-[#0E0818] flex items-center justify-end gap-2">
+        <div className="p-4 border-t border-white/10 bg-[#08101E] flex items-center justify-end gap-2">
           <button
             type="button"
             onClick={onClose}
@@ -209,7 +209,7 @@ export default function ShareToChatModal({
             type="button"
             onClick={handleShare}
             disabled={pending || !selectedTarget || success}
-            className="px-5 py-2 rounded-xl bg-gradient-to-r from-brand-caribbeanSea to-brand-sunriseCoral text-slate-950 text-xs font-black flex items-center gap-1.5 shadow-md hover:opacity-95 disabled:opacity-40 transition-all cursor-pointer"
+            className="px-5 py-2 rounded-xl bg-gradient-to-r from-brand-caribbeanTeal to-brand-caribbeanSea text-slate-950 text-xs font-black flex items-center gap-1.5 shadow-md hover:opacity-95 disabled:opacity-40 transition-all cursor-pointer"
           >
             {success ? (
               <>

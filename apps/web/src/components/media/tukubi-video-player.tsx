@@ -472,7 +472,7 @@ export default function TukubiVideoPlayer({
   if (hasError) {
     return (
       <div
-        className={`w-full bg-[#0D0818] rounded-2xl flex items-center justify-center p-4 text-center border border-slate-800 ${className}`}
+        className={`w-full bg-[#070D1A] rounded-2xl flex items-center justify-center p-4 text-center border border-slate-800 ${className}`}
         style={{ aspectRatio: containerStyle.aspectRatio }}
       >
         <div className="space-y-2">
@@ -505,7 +505,7 @@ export default function TukubiVideoPlayer({
 
       {/* Sub-200ms Poster & Shimmer Loading Skeleton */}
       {posterUrl && !isLoaded && (
-        <div className="absolute inset-0 z-20 flex items-center justify-center overflow-hidden bg-[#0D0818]">
+        <div className="absolute inset-0 z-20 flex items-center justify-center overflow-hidden bg-[#070D1A]">
           <img
             src={posterUrl}
             alt={altText || 'Video preview'}
@@ -584,8 +584,8 @@ export default function TukubiVideoPlayer({
       {/* Double-Tap Pulsing Heart Overlay */}
       {showHeart && (
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-30 animate-in fade-in zoom-in duration-300">
-          <div className="p-4 rounded-full bg-black/50 backdrop-blur-md shadow-[0_0_35px_#FF7A59] animate-bounce">
-            <Heart className="w-16 h-16 text-[#FF7A59] fill-[#FF7A59] drop-shadow-[0_0_18px_#FF7A59]" />
+          <div className="p-4 rounded-full bg-black/50 backdrop-blur-md shadow-[0_0_35px_#F2775A] animate-bounce">
+            <Heart className="w-16 h-16 text-[#F2775A] fill-[#F2775A] drop-shadow-[0_0_18px_#F2775A]" />
           </div>
         </div>
       )}
@@ -632,7 +632,7 @@ export default function TukubiVideoPlayer({
 
           {/* Glowing Scrubber Thumb */}
           <div
-            className="absolute top-1/2 -translate-y-1/2 -ml-1.5 w-3 h-3 rounded-full bg-white shadow-[0_0_10px_rgba(255,122,89,0.9)] scale-0 group-hover/scrubber:scale-100 transition-transform pointer-events-none"
+            className="absolute top-1/2 -translate-y-1/2 -ml-1.5 w-3 h-3 rounded-full bg-white shadow-[0_0_10px_rgba(242,119,90,0.9)] scale-0 group-hover/scrubber:scale-100 transition-transform pointer-events-none"
             style={{ left: `${progressPercent}%` }}
           />
 

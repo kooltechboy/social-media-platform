@@ -5,6 +5,7 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./apps/web/src', import.meta.url)),
+      'next/font/google': fileURLToPath(new URL('./tests/mocks/next-font-google.ts', import.meta.url)),
     },
   },
   test: {

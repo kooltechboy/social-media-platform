@@ -283,7 +283,7 @@ export default function RichMediaPlayer({
                 href={targetExternalUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-brand-caribbeanSea to-brand-sunriseCoral text-slate-950 font-black text-xs hover:brightness-110 transition-all shadow-lg shadow-cyan-500/20 active:scale-98"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-brand-caribbeanTeal to-brand-caribbeanSea text-slate-950 font-black text-xs hover:brightness-110 transition-all shadow-lg shadow-cyan-500/20 active:scale-98"
                 aria-label={`Watch on ${providerDisplayName}`}
               >
                 <span>Watch on {providerDisplayName}</span>
@@ -342,7 +342,7 @@ export default function RichMediaPlayer({
           {/* Centered Play Button or External Link Chip */}
           {embedUrl && isSafeEmbedUrl(embedUrl) && canEmbed !== false ? (
             <div className="absolute inset-0 flex items-center justify-center">
-              <div className="w-14 h-14 rounded-full bg-gradient-to-tr from-brand-caribbeanSea to-brand-sunriseCoral text-slate-950 flex items-center justify-center shadow-2xl group-hover/thumb:scale-110 transition-transform">
+              <div className="w-14 h-14 rounded-full bg-gradient-to-tr from-brand-caribbeanTeal to-brand-caribbeanSea text-slate-950 flex items-center justify-center shadow-2xl group-hover/thumb:scale-110 transition-transform">
                 <Play className="w-6 h-6 fill-current ml-0.5" />
               </div>
             </div>

@@ -330,7 +330,7 @@ export default function CallOverlayModal({
         {/* Top Bar Status & HUD */}
         <div className="p-4 sm:p-5 flex items-center justify-between border-b border-white/10 bg-white/[0.02] z-20">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-2xl bg-gradient-to-tr from-brand-caribbeanSea to-brand-sunriseCoral text-slate-950 font-black flex items-center justify-center text-xs shadow-md">
+            <div className="w-9 h-9 rounded-2xl bg-gradient-to-tr from-brand-caribbeanTeal to-brand-caribbeanSea text-slate-950 font-black flex items-center justify-center text-xs shadow-md">
               {mode === 'video' ? <Video className="w-4 h-4" /> : <Phone className="w-4 h-4" />}
             </div>
             <div>
@@ -424,7 +424,7 @@ export default function CallOverlayModal({
             /* Audio Mode Experience (Aesthetic Soundwaves & Avatar) */
             <div className="flex flex-col items-center justify-center text-center space-y-6 max-w-sm">
               <div className="relative">
-                <div className="w-28 h-28 sm:w-36 sm:h-36 rounded-3xl bg-gradient-to-tr from-brand-caribbeanSea via-teal-400 to-brand-sunriseCoral p-1 shadow-2xl animate-pulse">
+                <div className="w-28 h-28 sm:w-36 sm:h-36 rounded-3xl bg-gradient-to-tr from-brand-caribbeanTeal to-brand-caribbeanSea p-1 shadow-2xl animate-pulse">
                   <div className="w-full h-full rounded-[22px] bg-[#120722] flex items-center justify-center overflow-hidden">
                     <UserAvatar name={peerName} src={peerAvatarUrl} size="lg" />
                   </div>

@@ -389,13 +389,13 @@ export default function PeopleHubClient({
       {/* ────────────────────────────────────────────────────────── */}
       {/* PRIMARY NAVIGATION TABS (DISCOVER, FRIENDS, REQUESTS, ETC) */}
       {/* ────────────────────────────────────────────────────────── */}
-      <div className="flex items-center gap-1.5 p-1.5 bg-[#140C22]/90 border border-white/10 rounded-2xl overflow-x-auto scrollbar-none shadow-xl backdrop-blur-xl">
+      <div className="flex items-center gap-1.5 p-1.5 bg-[#0B1424]/90 border border-white/10 rounded-2xl overflow-x-auto scrollbar-none shadow-xl backdrop-blur-xl">
         <button
           type="button"
           onClick={() => handleTabChange('discover')}
           className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-black transition-all whitespace-nowrap min-h-[42px] ${
             activeTab === 'discover'
-              ? 'bg-gradient-to-r from-brand-caribbeanSea to-brand-sunriseCoral text-slate-950 shadow-md shadow-brand-caribbeanSea/20'
+              ? 'bg-gradient-to-r from-brand-caribbeanTeal to-brand-caribbeanSea text-slate-950 shadow-md shadow-brand-caribbeanSea/20'
               : 'text-brand-sandstone/80 hover:text-white hover:bg-white/5'
           }`}
         >
@@ -408,7 +408,7 @@ export default function PeopleHubClient({
           onClick={() => handleTabChange('friends')}
           className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-black transition-all whitespace-nowrap min-h-[42px] ${
             activeTab === 'friends'
-              ? 'bg-gradient-to-r from-brand-caribbeanSea to-brand-sunriseCoral text-slate-950 shadow-md shadow-brand-caribbeanSea/20'
+              ? 'bg-gradient-to-r from-brand-caribbeanTeal to-brand-caribbeanSea text-slate-950 shadow-md shadow-brand-caribbeanSea/20'
               : 'text-brand-sandstone/80 hover:text-white hover:bg-white/5'
           }`}
         >
@@ -430,7 +430,7 @@ export default function PeopleHubClient({
           onClick={() => handleTabChange('requests')}
           className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-black transition-all whitespace-nowrap min-h-[42px] ${
             activeTab === 'requests'
-              ? 'bg-gradient-to-r from-brand-caribbeanSea to-brand-sunriseCoral text-slate-950 shadow-md shadow-brand-caribbeanSea/20'
+              ? 'bg-gradient-to-r from-brand-caribbeanTeal to-brand-caribbeanSea text-slate-950 shadow-md shadow-brand-caribbeanSea/20'
               : 'text-brand-sandstone/80 hover:text-white hover:bg-white/5'
           }`}
         >
@@ -448,7 +448,7 @@ export default function PeopleHubClient({
           onClick={() => handleTabChange('following')}
           className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-black transition-all whitespace-nowrap min-h-[42px] ${
             activeTab === 'following'
-              ? 'bg-gradient-to-r from-brand-caribbeanSea to-brand-sunriseCoral text-slate-950 shadow-md shadow-brand-caribbeanSea/20'
+              ? 'bg-gradient-to-r from-brand-caribbeanTeal to-brand-caribbeanSea text-slate-950 shadow-md shadow-brand-caribbeanSea/20'
               : 'text-brand-sandstone/80 hover:text-white hover:bg-white/5'
           }`}
         >
@@ -470,7 +470,7 @@ export default function PeopleHubClient({
           onClick={() => handleTabChange('followers')}
           className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-black transition-all whitespace-nowrap min-h-[42px] ${
             activeTab === 'followers'
-              ? 'bg-gradient-to-r from-brand-caribbeanSea to-brand-sunriseCoral text-slate-950 shadow-md shadow-brand-caribbeanSea/20'
+              ? 'bg-gradient-to-r from-brand-caribbeanTeal to-brand-caribbeanSea text-slate-950 shadow-md shadow-brand-caribbeanSea/20'
               : 'text-brand-sandstone/80 hover:text-white hover:bg-white/5'
           }`}
         >
@@ -494,7 +494,7 @@ export default function PeopleHubClient({
       {activeTab === 'discover' && (
         <div className="space-y-6 animate-fadeIn">
           {/* Territory & Category Filter Bar */}
-          <div className="surface-card rounded-2xl p-4 sm:p-5 space-y-4 border border-white/10 bg-[#140C22]/80">
+          <div className="surface-card rounded-2xl p-4 sm:p-5 space-y-4 border border-white/10 bg-[#0B1424]/80">
             <div className="flex flex-col md:flex-row gap-3">
               {/* Keyword Search */}
               <div className="relative flex-1">
@@ -517,7 +517,7 @@ export default function PeopleHubClient({
                   className="w-full px-3 py-2.5 rounded-xl bg-white/5 border border-white/15 text-white text-xs sm:text-sm focus:outline-none focus:border-brand-caribbeanSea transition-colors"
                 >
                   {territoryOptions.map((t) => (
-                    <option key={t.iso} value={t.iso} className="bg-[#1D1429] text-white">
+                    <option key={t.iso} value={t.iso} className="bg-[#0D1628] text-white">
                       {t.name}
                     </option>
                   ))}
@@ -603,7 +603,7 @@ export default function PeopleHubClient({
               ))}
             </div>
           ) : (
-            <div className="surface-card rounded-2xl p-10 text-center space-y-3 border border-white/10 bg-[#140C22]/80">
+            <div className="surface-card rounded-2xl p-10 text-center space-y-3 border border-white/10 bg-[#0B1424]/80">
               <Compass className="w-10 h-10 text-brand-goldenHour/60 mx-auto" />
               <h4 className="text-base font-extrabold text-white">No members found</h4>
               <p className="text-xs text-brand-sandstone/70 max-w-sm mx-auto">
@@ -664,7 +664,7 @@ export default function PeopleHubClient({
               ))}
             </div>
           ) : (
-            <div className="surface-card rounded-2xl p-12 text-center space-y-4 border border-white/10 bg-[#140C22]/80 max-w-md mx-auto">
+            <div className="surface-card rounded-2xl p-12 text-center space-y-4 border border-white/10 bg-[#0B1424]/80 max-w-md mx-auto">
               <Users className="w-12 h-12 text-brand-caribbeanSea/60 mx-auto" />
               <div className="space-y-1">
                 <h4 className="text-base sm:text-lg font-black text-white">
@@ -679,7 +679,7 @@ export default function PeopleHubClient({
               <button
                 type="button"
                 onClick={() => handleTabChange('discover')}
-                className="inline-flex items-center gap-2 text-xs font-black px-5 py-2.5 rounded-xl bg-gradient-to-r from-brand-caribbeanSea to-brand-sunriseCoral text-slate-950 shadow-md hover:brightness-110 transition-all"
+                className="inline-flex items-center gap-2 text-xs font-black px-5 py-2.5 rounded-xl bg-gradient-to-r from-brand-caribbeanTeal to-brand-caribbeanSea text-slate-950 shadow-md hover:brightness-110 transition-all"
               >
                 <span>Discover People</span>
                 <ArrowRight className="w-4 h-4" />
@@ -750,7 +750,7 @@ export default function PeopleHubClient({
                   ))}
                 </div>
               ) : (
-                <div className="surface-card rounded-2xl p-12 text-center space-y-3 border border-white/10 bg-[#140C22]/80 max-w-md mx-auto">
+                <div className="surface-card rounded-2xl p-12 text-center space-y-3 border border-white/10 bg-[#0B1424]/80 max-w-md mx-auto">
                   <UserCheck className="w-12 h-12 text-emerald-400/60 mx-auto" />
                   <h4 className="text-base font-extrabold text-white">You&apos;re all caught up!</h4>
                   <p className="text-xs text-brand-sandstone/70">
@@ -779,7 +779,7 @@ export default function PeopleHubClient({
                   ))}
                 </div>
               ) : (
-                <div className="surface-card rounded-2xl p-12 text-center space-y-3 border border-white/10 bg-[#140C22]/80 max-w-md mx-auto">
+                <div className="surface-card rounded-2xl p-12 text-center space-y-3 border border-white/10 bg-[#0B1424]/80 max-w-md mx-auto">
                   <Clock className="w-12 h-12 text-brand-goldenHour/60 mx-auto" />
                   <h4 className="text-base font-extrabold text-white">No pending sent requests</h4>
                   <p className="text-xs text-brand-sandstone/70">
@@ -830,7 +830,7 @@ export default function PeopleHubClient({
               ))}
             </div>
           ) : (
-            <div className="surface-card rounded-2xl p-12 text-center space-y-4 border border-white/10 bg-[#140C22]/80 max-w-md mx-auto">
+            <div className="surface-card rounded-2xl p-12 text-center space-y-4 border border-white/10 bg-[#0B1424]/80 max-w-md mx-auto">
               <Radio className="w-12 h-12 text-brand-goldenHour/60 mx-auto" />
               <div className="space-y-1">
                 <h4 className="text-base sm:text-lg font-black text-white">
@@ -845,7 +845,7 @@ export default function PeopleHubClient({
               <button
                 type="button"
                 onClick={() => handleTabChange('discover')}
-                className="inline-flex items-center gap-2 text-xs font-black px-5 py-2.5 rounded-xl bg-gradient-to-r from-brand-caribbeanSea to-brand-sunriseCoral text-slate-950 shadow-md hover:brightness-110 transition-all"
+                className="inline-flex items-center gap-2 text-xs font-black px-5 py-2.5 rounded-xl bg-gradient-to-r from-brand-caribbeanTeal to-brand-caribbeanSea text-slate-950 shadow-md hover:brightness-110 transition-all"
               >
                 <span>Discover People &amp; Creators</span>
                 <ArrowRight className="w-4 h-4" />
@@ -893,7 +893,7 @@ export default function PeopleHubClient({
               ))}
             </div>
           ) : (
-            <div className="surface-card rounded-2xl p-12 text-center space-y-4 border border-white/10 bg-[#140C22]/80 max-w-md mx-auto">
+            <div className="surface-card rounded-2xl p-12 text-center space-y-4 border border-white/10 bg-[#0B1424]/80 max-w-md mx-auto">
               <Sparkles className="w-12 h-12 text-brand-sunriseCoral/60 mx-auto" />
               <div className="space-y-1">
                 <h4 className="text-base sm:text-lg font-black text-white">

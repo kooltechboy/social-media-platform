@@ -42,18 +42,18 @@ export default function PagesRail({
   if (activePage) {
     return (
       <div className="space-y-5">
-        <div className="glass rounded-3xl p-5 border border-white/10 space-y-2.5 shadow-lg">
+        <div className="tk-panel p-5 border border-white/10 space-y-2.5 shadow-lg">
           <span className="text-[10px] font-black uppercase tracking-wider text-brand-sunriseCoral">
             Official Page
           </span>
           <h3 className="text-lg font-black text-white">{activePage.name}</h3>
           {activePage.category && (
-            <p className="text-xs text-brand-sandstone/70 font-bold">{activePage.category}</p>
+            <p className="text-xs text-brand-mist font-bold">{activePage.category}</p>
           )}
         </div>
 
-        <section aria-label="Page Controls" className="glass rounded-3xl p-4 sm:p-5 space-y-2 border border-white/10">
-          <h4 className="text-xs font-black text-white uppercase tracking-wider">
+        <section aria-label="Page Controls" className="tk-panel p-4 sm:p-5 space-y-2 border border-white/10">
+          <h4 className="text-[13.5px] font-semibold text-white">
             Page Navigator
           </h4>
           <nav className="space-y-1 pt-1">
@@ -120,14 +120,14 @@ export default function PagesRail({
   return (
     <div className="space-y-5">
       {/* Create Page CTA */}
-      <div className="glass rounded-3xl p-5 border border-brand-sunriseCoral/30 bg-gradient-to-br from-brand-sunriseCoral/10 via-amber-500/5 to-transparent space-y-3 shadow-xl">
+      <div className="tk-panel p-5 border border-brand-sunriseCoral/30 bg-gradient-to-br from-brand-sunriseCoral/10 via-amber-500/5 to-transparent space-y-3 shadow-xl">
         <div className="flex items-center gap-2.5">
           <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-brand-sunriseCoral to-amber-400 flex items-center justify-center text-slate-950 font-black shadow-md">
             <Building2 className="w-4 h-4" />
           </div>
           <div>
             <h3 className="text-sm font-black text-white">Create a Page</h3>
-            <p className="text-[10px] text-brand-sandstone/60">
+            <p className="text-[10px] text-brand-mist">
               Creators, brands, NGOs &amp; businesses
             </p>
           </div>
@@ -146,9 +146,9 @@ export default function PagesRail({
 
       {/* My Managed Pages */}
       {myPages.length > 0 && (
-        <section aria-label="My Pages" className="glass rounded-3xl p-4 sm:p-5 space-y-3 border border-white/10">
+        <section aria-label="My Pages" className="tk-panel p-4 sm:p-5 space-y-3 border border-white/10">
           <div className="flex items-center justify-between">
-            <h4 className="text-xs font-black text-white uppercase tracking-wider">
+            <h4 className="text-[13.5px] font-semibold text-white">
               Your Managed Pages
             </h4>
             <span className="text-[10px] font-bold text-brand-sunriseCoral px-2 py-0.5 rounded-full bg-brand-sunriseCoral/10">
@@ -174,12 +174,12 @@ export default function PagesRail({
                     )}
                   </Link>
                   {page.userRole && (
-                    <span className="text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded bg-white/10 text-brand-sandstone/70">
+                    <span className="text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded bg-white/10 text-brand-mist">
                       {page.userRole}
                     </span>
                   )}
                 </div>
-                <div className="flex items-center justify-between text-[11px] text-brand-sandstone/60">
+                <div className="flex items-center justify-between text-[11px] text-brand-mist">
                   <span>{page.followerCount ?? 0} followers</span>
                   <Link
                     href={`/pages/${page.slug}/manage`}
@@ -196,11 +196,11 @@ export default function PagesRail({
 
       {/* Universal Directory Link */}
       <div className="p-4 rounded-3xl bg-white/5 border border-white/10 space-y-2">
-        <h4 className="text-xs font-black text-white uppercase tracking-wider flex items-center gap-2">
+        <h4 className="text-[13.5px] font-semibold text-white flex items-center gap-2">
           <Layers className="w-3.5 h-3.5 text-brand-caribbeanSea" />
           <span>Universal Directory</span>
         </h4>
-        <p className="text-[11px] text-brand-sandstone/70 leading-relaxed">
+        <p className="text-[11px] text-brand-mist leading-relaxed">
           Discover verified Caribbean creators, organizations, institutions, and businesses basin-wide.
         </p>
         <Link

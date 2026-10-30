@@ -36,9 +36,9 @@ export const metadata: Metadata = {
 };
 
 const CATEGORIES = [
-  { slug: 'getting-started', title: 'Getting Started', desc: 'Account setup, home feed, navigation, and identity.', icon: Sparkles, color: '#FF7A59', count: 5 },
+  { slug: 'getting-started', title: 'Getting Started', desc: 'Account setup, home feed, navigation, and identity.', icon: Sparkles, color: '#F2775A', count: 5 },
   { slug: 'explore', title: 'Explore TUKUBI', desc: 'Caribbean discovery, interactive map, vibes, and diaspora hubs.', icon: Compass, color: '#38BDF8', count: 4 },
-  { slug: 'create', title: 'Create & Publish', desc: 'Posts, photos, videos, Moments stories, and camera tools.', icon: PlusCircle, color: '#FF7A59', count: 3 },
+  { slug: 'create', title: 'Create & Publish', desc: 'Posts, photos, videos, Moments stories, and camera tools.', icon: PlusCircle, color: '#F2775A', count: 3 },
   { slug: 'reels-video', title: 'Reels & Video', desc: 'Vertical video creation, discovery, and Caribbean sounds.', icon: Video, color: '#EC4899', count: 3 },
   { slug: 'live', title: 'Live Streaming', desc: 'Broadcasting live video, chat, and stream discovery.', icon: Tv, color: '#EF4444', count: 2 },
   { slug: 'podcasts', title: 'Podcasts', desc: 'Caribbean podcast network, in-browser listening, and RSS.', icon: Mic, color: '#A855F7', count: 1 },
@@ -47,7 +47,7 @@ const CATEGORIES = [
   { slug: 'creators', title: 'Creators', desc: 'Creator Hub, Creator Studio, monetization, and brand deals.', icon: Radio, color: '#F59E0B', count: 4 },
   { slug: 'marketplace', title: 'Marketplace', desc: 'Buying and selling authentic Caribbean goods and services.', icon: ShoppingBag, color: '#F97316', count: 3 },
   { slug: 'events', title: 'Cultural Events', desc: 'Finding, RSVPing, and creating island fetes and events.', icon: Calendar, color: '#EAB308', count: 1 },
-  { slug: 'pages-stores', title: 'Pages & Stores', desc: 'Business pages, brand presence, and custom storefronts.', icon: Building2, color: '#FF7A59', count: 1 },
+  { slug: 'pages-stores', title: 'Pages & Stores', desc: 'Business pages, brand presence, and custom storefronts.', icon: Building2, color: '#F2775A', count: 1 },
   { slug: 'financial-center', title: 'Financial Center', desc: 'Double-entry ledger, balances, and creator payouts.', icon: Wallet, color: '#22C55E', count: 2 },
   { slug: 'profile-settings', title: 'Profile & Settings', desc: 'Profile editing, notifications, and preferences.', icon: Settings, color: '#94A3B8', count: 1 },
   { slug: 'privacy-security', title: 'Privacy & Security', desc: 'Two-factor auth, blocking, muting, and reporting.', icon: Shield, color: '#3B82F6', count: 1 },

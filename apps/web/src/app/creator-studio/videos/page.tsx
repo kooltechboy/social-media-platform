@@ -98,7 +98,7 @@ export default async function CreatorStudioVideosPage({
           </Link>
           <Link
             href="/create"
-            className="bg-gradient-to-r from-brand-caribbeanSea to-brand-sunriseCoral text-slate-950 font-black px-4 py-2 rounded-xl text-xs flex items-center gap-2 transition-all shadow-md self-start sm:self-auto"
+            className="bg-gradient-to-r from-brand-caribbeanTeal to-brand-caribbeanSea text-slate-950 font-black px-4 py-2 rounded-xl text-xs flex items-center gap-2 transition-all shadow-md self-start sm:self-auto"
           >
             <Plus className="w-4 h-4" /> New Video Post
           </Link>

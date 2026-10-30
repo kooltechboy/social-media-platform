@@ -22,7 +22,7 @@ export default function MessagesRail({
   return (
     <div className="space-y-5">
       {/* 1. Direct Messaging Hub Overview */}
-      <div className="glass rounded-3xl p-5 border border-cyan-500/30 bg-gradient-to-br from-cyan-500/10 to-transparent space-y-2.5 shadow-xl">
+      <div className="tk-panel p-5 border border-cyan-500/30 bg-gradient-to-br from-cyan-500/10 to-transparent space-y-2.5 shadow-xl">
         <div className="flex items-center gap-2">
           <MessageSquare className="w-4 h-4 text-cyan-400" />
           <h3 className="text-sm font-black text-white">Direct Conversations</h3>
@@ -33,8 +33,8 @@ export default function MessagesRail({
       </div>
 
       {/* 2. Message Navigation Folders */}
-      <section aria-label="Message Folders" className="glass rounded-3xl p-4 sm:p-5 space-y-2 border border-white/10">
-        <h4 className="text-xs font-black text-white uppercase tracking-wider">
+      <section aria-label="Message Folders" className="tk-panel p-4 sm:p-5 space-y-2 border border-white/10">
+        <h4 className="text-[13.5px] font-semibold text-white">
           Folders &amp; Filters
         </h4>
         <nav className="space-y-1 pt-1">
@@ -76,7 +76,7 @@ export default function MessagesRail({
         <p className="text-xs font-black text-white flex items-center gap-1.5">
           <Users className="w-3.5 h-3.5 text-brand-caribbeanSea" /> Looking for Friends?
         </p>
-        <p className="text-[11px] text-brand-sandstone/70 leading-relaxed">
+        <p className="text-[11px] text-brand-mist leading-relaxed">
           Search members across the Caribbean islands or connect with people you know.
         </p>
         <Link

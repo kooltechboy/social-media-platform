@@ -96,9 +96,9 @@ export default function ConversationDetailsPanel({
   const isGroup = conversation.kind === 'group';
 
   return (
-    <aside className="w-full h-full flex flex-col bg-[#0D0816]/95 border-l border-white/10 overflow-y-auto custom-scrollbar select-none">
+    <aside className="w-full h-full flex flex-col bg-[#070E1B]/95 border-l border-white/10 overflow-y-auto custom-scrollbar select-none">
       {/* Header Bar */}
-      <div className="p-4 border-b border-white/10 flex items-center justify-between sticky top-0 bg-[#0D0816]/95 backdrop-blur-xl z-10">
+      <div className="p-4 border-b border-white/10 flex items-center justify-between sticky top-0 bg-[#070E1B]/95 backdrop-blur-xl z-10">
         <h3 className="text-xs font-black uppercase tracking-wider text-white flex items-center gap-2">
           {isGroup ? <Users className="w-3.5 h-3.5 text-brand-caribbeanSea" /> : null}
           <span>{isGroup ? 'Group Information' : 'Contact Details'}</span>
@@ -122,7 +122,7 @@ export default function ConversationDetailsPanel({
           />
           {!isGroup && (
             <span
-              className={`absolute bottom-1 right-1 w-3.5 h-3.5 rounded-full border-2 border-[#0D0816] ${
+              className={`absolute bottom-1 right-1 w-3.5 h-3.5 rounded-full border-2 border-[#070E1B] ${
                 isOnline ? 'bg-emerald-500' : 'bg-slate-500'
               }`}
               title={isOnline ? 'Online now' : 'Offline'}

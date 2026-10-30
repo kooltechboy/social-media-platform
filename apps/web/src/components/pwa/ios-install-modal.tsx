@@ -122,7 +122,7 @@ export function IosInstallModal({ isOpen, onClose }: IosInstallModalProps) {
         <button
           type="button"
           onClick={onClose}
-          className="w-full py-2.5 px-4 bg-gradient-to-r from-brand-caribbeanSea to-brand-sunriseCoral text-slate-950 font-black text-xs rounded-xl transition-all shadow-md shadow-brand-caribbeanSea/20 hover:opacity-95 cursor-pointer"
+          className="w-full py-2.5 px-4 bg-gradient-to-r from-brand-caribbeanTeal to-brand-caribbeanSea text-slate-950 font-black text-xs rounded-xl transition-all shadow-md shadow-brand-caribbeanSea/20 hover:opacity-95 cursor-pointer"
         >
           Got It
         </button>

@@ -22,43 +22,65 @@ module.exports = {
         'app-xl': '2200px',
         'app-ultra': '2800px',
       },
+      fontFamily: {
+        sans: ['var(--font-sans)', 'Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+        display: ['var(--font-display)', 'var(--font-sans)', 'Inter', 'sans-serif'],
+      },
+      // Mature typographic weight scale (ADR-UI-002 "Midnight Reef"):
+      // the legacy UI leaned on font-black (900) for small labels, which reads
+      // loud / juvenile. Weights are re-mapped centrally so every surface calms down
+      // without touching thousands of call sites.
+      fontWeight: {
+        extrabold: '650',
+        black: '700',
+      },
       colors: {
         brand: {
-          twilight: '#110D17',        // Deep Twilight Base (Island Vibes night sky)
-          dusk: '#1D1429',            // Warm Dusk Surface 
-          sunsetPlum: '#2A1B38',      // Deep Plum Raised Surface
-          oceanDepth: '#0B1F33',      // Deep Ocean Navy Trust & Financial Surface
-          sunriseCoral: '#FF7A59',    // Vibrant Sunrise Coral
+          // ── Official TUKUBI identity (packages/design-system OFFICIAL_BRAND_PALETTE) ──
+          caribbeanTeal: '#00C2A8',   // Signature teal (logo mark)
+          oceanBlue: '#0EA5E9',       // Official ocean blue (interactive)
+          deepNavy: '#0B1B3B',        // Official deep navy
+          ink: '#060B16',             // Midnight ink — deepest canvas
+          porcelain: '#E8EDF5',       // Primary text on dark
+          mist: '#94A3B8',            // Secondary text on dark
+
+          // ── Legacy semantic names, re-pointed to the "Midnight Reef" palette ──
+          // Names are kept so 6,000+ existing call sites inherit the new identity.
+          twilight: '#070D1A',        // Canvas (was purple twilight #110D17)
+          dusk: '#0D1628',            // Surface (was #1D1429)
+          sunsetPlum: '#15213A',      // Raised surface (was #2A1B38)
+          oceanDepth: '#0B1B3B',      // Trust & financial surface
+          sunriseCoral: '#F2775A',    // Refined sunset coral — warm accent, used sparingly
           emberCoral: '#C2410C',      // Light-Mode Accessible Deep Ember Coral
-          goldenHour: '#FFB347',      // Warm Golden Hour
-          caribbeanSea: '#00B4D8',    // Beautiful Tropical Sea
+          goldenHour: '#F4AE45',      // Golden hour amber (official sunset orange family)
+          caribbeanSea: '#0EA5E9',    // Primary interactive accent = official ocean blue
           deepSea: '#0E7490',         // Light-Mode Accessible Deep Sea Cyan
-          sandstone: '#FDF2E9',       // Warm Sandstone Text/White
-          sunsetPurple: '#8B5CF6',    // Deep Sunset Purple
+          sandstone: '#E8EDF5',       // Primary text (cool porcelain, was warm #FDF2E9)
+          sunsetPurple: '#8B5CF6',    // Official violet
           oceanSurge: '#0284C7',      // Deep Ocean Blue Accent
           palmGreen: '#10B981',       // Tropical Emerald Green
-          amberGlow: '#F59E0B',       // Amber Glow
+          amberGlow: '#F59E0B',       // Official sunset orange
         },
         islandVibes: {
-          canvas: '#110D17',
-          surface: '#1D1429',
-          surfaceRaised: '#2A1B38',
-          surfaceTrust: '#0B1F33',
-          surfaceOpaque: '#161022',
-          surfaceElevated: '#1D1429',
-          surfaceCard: 'rgba(22, 16, 34, 0.94)',
-          surfaceHeader: 'rgba(17, 13, 23, 0.92)',
-          surfaceGlass: 'rgba(17, 13, 23, 0.70)',
-          border: 'rgba(255, 255, 255, 0.10)',
-          borderHover: 'rgba(255, 122, 89, 0.40)',
-          primary: '#FF7A59',
-          onPrimary: '#110D17',
-          secondary: '#8B5CF6',
-          accent: '#FFB347',
-          sea: '#00B4D8',
-          textPrimary: '#FDF2E9',
-          textMuted: '#B4B4BE',
-          textDim: '#A1A1AA',
+          canvas: '#070D1A',
+          surface: '#0D1628',
+          surfaceRaised: '#15213A',
+          surfaceTrust: '#0B1B3B',
+          surfaceOpaque: '#0B1424',
+          surfaceElevated: '#0D1628',
+          surfaceCard: 'rgba(11, 19, 35, 0.92)',
+          surfaceHeader: 'rgba(7, 13, 26, 0.88)',
+          surfaceGlass: 'rgba(9, 16, 30, 0.72)',
+          border: 'rgba(148, 163, 184, 0.12)',
+          borderHover: 'rgba(14, 165, 233, 0.35)',
+          primary: '#0EA5E9',
+          onPrimary: '#04101F',
+          secondary: '#00C2A8',
+          accent: '#F4AE45',
+          sea: '#0EA5E9',
+          textPrimary: '#E8EDF5',
+          textMuted: '#A7B3C5',
+          textDim: '#94A3B8',
           success: '#10B981',
           warning: '#FFB347',
           danger: '#F43F5E',
@@ -78,10 +100,13 @@ module.exports = {
         },
       },
       boxShadow: {
-        'glow-coral': '0 0 25px -5px rgba(255, 122, 89, 0.4)',
-        'glow-gold': '0 0 25px -5px rgba(255, 179, 71, 0.4)',
-        'glow-sea': '0 0 25px -5px rgba(0, 180, 216, 0.4)',
-        'glow-purple': '0 0 25px -5px rgba(139, 92, 246, 0.4)',
+        // Glows are intentionally subtle in the mature identity
+        'glow-coral': '0 0 24px -8px rgba(242, 119, 90, 0.30)',
+        'glow-gold': '0 0 24px -8px rgba(244, 174, 69, 0.30)',
+        'glow-sea': '0 0 24px -8px rgba(14, 165, 233, 0.35)',
+        'glow-purple': '0 0 24px -8px rgba(139, 92, 246, 0.30)',
+        'panel': '0 1px 0 0 rgba(255,255,255,0.04) inset, 0 12px 32px -16px rgba(0,0,0,0.65)',
+        'panel-lg': '0 1px 0 0 rgba(255,255,255,0.05) inset, 0 24px 48px -24px rgba(0,0,0,0.75)',
       },
       fontSize: {
         'desktop-post': ['1.0625rem', { lineHeight: '1.6' }],

@@ -30,14 +30,14 @@ export default function CreatorStudioRail() {
   return (
     <div className="space-y-5">
       {/* 1. Quick Upload Action */}
-      <div className="glass rounded-3xl p-5 border border-brand-goldenHour/30 bg-gradient-to-br from-brand-goldenHour/10 to-brand-sunsetPurple/20 space-y-3 shadow-xl">
+      <div className="tk-panel p-5 border border-brand-goldenHour/30 bg-gradient-to-br from-brand-goldenHour/10 to-brand-sunsetPurple/20 space-y-3 shadow-xl">
         <div className="flex items-center gap-2.5">
           <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-brand-goldenHour to-brand-sunriseCoral flex items-center justify-center text-slate-950 font-black shadow-md">
             <Radio className="w-4 h-4" />
           </div>
           <div>
             <h3 className="text-sm font-black text-white">Creator Studio</h3>
-            <p className="text-[10px] text-brand-sandstone/60">
+            <p className="text-[10px] text-brand-mist">
               Media &amp; Monetization suite
             </p>
           </div>
@@ -55,8 +55,8 @@ export default function CreatorStudioRail() {
       </div>
 
       {/* 2. Studio Navigation Links */}
-      <section aria-label="Studio Modules" className="glass rounded-3xl p-4 sm:p-5 space-y-2 border border-white/10">
-        <h4 className="text-xs font-black text-white uppercase tracking-wider">
+      <section aria-label="Studio Modules" className="tk-panel p-4 sm:p-5 space-y-2 border border-white/10">
+        <h4 className="text-[13.5px] font-semibold text-white">
           Studio Modules
         </h4>
         <nav className="space-y-1 pt-1">
@@ -82,7 +82,7 @@ export default function CreatorStudioRail() {
       {/* 3. Creator Payout Policy Guarantee */}
       <div className="p-4 rounded-2xl bg-white/5 border border-white/10 space-y-1 text-center">
         <p className="text-xs font-black text-brand-caribbeanSea">Ledger Guaranteed Payouts</p>
-        <p className="text-[10px] text-brand-sandstone/70">
+        <p className="text-[10px] text-brand-mist">
           All creator earnings and tips are secured with double-entry idempotency and direct Caribbean settlement.
         </p>
       </div>

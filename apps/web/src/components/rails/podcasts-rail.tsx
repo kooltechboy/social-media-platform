@@ -25,14 +25,14 @@ export default function PodcastsRail() {
   return (
     <div className="space-y-5">
       {/* 1. Host Podcast CTA */}
-      <div className="glass rounded-3xl p-5 border border-purple-500/30 bg-gradient-to-br from-purple-500/10 to-transparent space-y-3 shadow-xl">
+      <div className="tk-panel p-5 border border-purple-500/30 bg-gradient-to-br from-purple-500/10 to-transparent space-y-3 shadow-xl">
         <div className="flex items-center gap-2.5">
           <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-purple-400 to-brand-sunriseCoral flex items-center justify-center text-slate-950 font-black shadow-md">
             <Mic className="w-4 h-4" />
           </div>
           <div>
             <h3 className="text-sm font-black text-white">Host a Podcast</h3>
-            <p className="text-[10px] text-brand-sandstone/60">
+            <p className="text-[10px] text-brand-mist">
               Caribbean audio network
             </p>
           </div>
@@ -50,8 +50,8 @@ export default function PodcastsRail() {
       </div>
 
       {/* 2. Podcasts Channels */}
-      <section aria-label="Podcast Navigation" className="glass rounded-3xl p-4 sm:p-5 space-y-2 border border-white/10">
-        <h4 className="text-xs font-black text-white uppercase tracking-wider">
+      <section aria-label="Podcast Navigation" className="tk-panel p-4 sm:p-5 space-y-2 border border-white/10">
+        <h4 className="text-[13.5px] font-semibold text-white">
           Audio Channels
         </h4>
         <nav className="space-y-1 pt-1">
@@ -79,8 +79,8 @@ export default function PodcastsRail() {
       </section>
 
       {/* 3. Audio Categories */}
-      <section aria-label="Podcast Categories" className="glass rounded-3xl p-4 sm:p-5 space-y-2.5 border border-white/10">
-        <h4 className="text-xs font-black text-white uppercase tracking-wider">
+      <section aria-label="Podcast Categories" className="tk-panel p-4 sm:p-5 space-y-2.5 border border-white/10">
+        <h4 className="text-[13.5px] font-semibold text-white">
           Categories
         </h4>
         <div className="space-y-1 pt-0.5">

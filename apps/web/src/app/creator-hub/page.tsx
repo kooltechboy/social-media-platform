@@ -218,7 +218,7 @@ export default async function CreatorHubPage() {
           </Link>
           <Link
             href="/creator-studio"
-            className="px-5 md:px-6 py-2.5 md:py-3 rounded-xl bg-gradient-to-r from-brand-caribbeanSea to-brand-sunriseCoral hover:brightness-110 text-slate-950 text-xs md:text-sm font-black transition-all shadow-lg shadow-brand-caribbeanSea/20 flex items-center gap-2 min-h-[44px] md:min-h-[48px]"
+            className="px-5 md:px-6 py-2.5 md:py-3 rounded-xl bg-gradient-to-r from-brand-caribbeanTeal to-brand-caribbeanSea hover:brightness-110 text-slate-950 text-xs md:text-sm font-black transition-all shadow-lg shadow-brand-caribbeanSea/20 flex items-center gap-2 min-h-[44px] md:min-h-[48px]"
           >
             <Radio className="w-4 h-4 md:w-5 md:h-5 stroke-[2.5]" /> Open Creator Studio
           </Link>
@@ -599,7 +599,7 @@ function CreatorHubOnboarding({ user }: { user: any }) {
   return (
     <div className="min-h-screen bg-transparent text-brand-sandstone flex items-center justify-center p-6">
       <div className="surface-card rounded-3xl p-8 sm:p-12 md:p-14 max-w-lg w-full text-center space-y-6 border border-white/15 shadow-2xl bg-slate-900/80">
-        <div className="w-16 h-16 md:w-20 md:h-20 rounded-2xl bg-gradient-to-tr from-brand-caribbeanSea to-brand-sunriseCoral p-0.5 mx-auto">
+        <div className="w-16 h-16 md:w-20 md:h-20 rounded-2xl bg-gradient-to-tr from-brand-caribbeanTeal to-brand-caribbeanSea p-0.5 mx-auto">
           <div className="w-full h-full rounded-2xl bg-slate-950 flex items-center justify-center text-brand-sunriseCoral">
             <Sparkles className="w-8 h-8 md:w-10 md:h-10" />
           </div>

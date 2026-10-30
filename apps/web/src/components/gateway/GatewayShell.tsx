@@ -15,17 +15,17 @@ interface GatewayShellProps {
 export function GatewayShell({ children, activeIslandIso }: GatewayShellProps) {
   return (
     <div
-      className="min-h-screen w-full flex flex-col lg:flex-row bg-[#081020] text-brand-sandstone relative overflow-hidden selection:bg-[#FF7A59]/30"
+      className="min-h-screen w-full flex flex-col lg:flex-row bg-[#070D1A] text-brand-sandstone relative overflow-hidden selection:bg-brand-caribbeanSea/30"
       style={{
         backgroundImage:
-          'radial-gradient(circle at 50% 0%, rgba(0, 180, 216, 0.12) 0%, transparent 60%), radial-gradient(circle, rgba(0, 180, 216, 0.08) 1px, transparent 1px)',
+          'radial-gradient(circle at 50% 0%, rgba(14, 165, 233, 0.12) 0%, transparent 60%), radial-gradient(circle, rgba(14, 165, 233, 0.08) 1px, transparent 1px)',
         backgroundSize: '100% 100%, 32px 32px',
       }}
     >
       {/* ── Top Atmospheric Horizon Glow ── */}
-      <div className="fixed top-0 left-0 right-0 h-[320px] bg-gradient-to-b from-[#00B4D8]/18 via-[#FFB347]/10 to-transparent pointer-events-none z-0" />
-      <div className="fixed -top-20 -left-20 w-[800px] h-[550px] rounded-full bg-[#00B4D8]/20 blur-[180px] pointer-events-none z-0" />
-      <div className="fixed -bottom-20 -right-20 w-[700px] h-[550px] rounded-full bg-[#FF7A59]/15 blur-[180px] pointer-events-none z-0" />
+      <div className="fixed top-0 left-0 right-0 h-[320px] bg-gradient-to-b from-[#0EA5E9]/18 via-[#F4AE45]/10 to-transparent pointer-events-none z-0" />
+      <div className="fixed -top-20 -left-20 w-[800px] h-[550px] rounded-full bg-[#0EA5E9]/20 blur-[180px] pointer-events-none z-0" />
+      <div className="fixed -bottom-20 -right-20 w-[700px] h-[550px] rounded-full bg-[#00C2A8]/12 blur-[180px] pointer-events-none z-0" />
 
       {/* ── LEFT PANEL: Desktop Brand, Story & Glowing Caribbean Map ── */}
       <div className="hidden lg:flex lg:flex-1 relative flex-col justify-between p-10 xl:p-14 overflow-hidden border-r border-white/10 select-none z-10">
@@ -52,7 +52,7 @@ export function GatewayShell({ children, activeIslandIso }: GatewayShellProps) {
 
             <h2 className="text-4xl xl:text-5xl font-black text-white tracking-tight leading-[1.12]">
               One Caribbean.{' '}
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-caribbeanSea via-brand-goldenHour to-brand-sunriseCoral">
+              <span className="tk-text-gradient">
                 One Community.
               </span>{' '}
               One Digital Home.

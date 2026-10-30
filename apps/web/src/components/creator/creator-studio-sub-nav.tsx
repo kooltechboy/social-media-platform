@@ -43,7 +43,7 @@ export default function CreatorStudioSubNav() {
                 href={tab.href}
                 className={`flex items-center gap-2 px-3 sm:px-4 py-2 rounded-xl text-xs font-bold transition-all shrink-0 min-h-[38px] ${
                   isActive
-                    ? 'bg-gradient-to-r from-brand-caribbeanSea to-brand-sunriseCoral text-slate-950 shadow-md shadow-brand-caribbeanSea/20'
+                    ? 'bg-gradient-to-r from-brand-caribbeanTeal to-brand-caribbeanSea text-slate-950 shadow-md shadow-brand-caribbeanSea/20'
                     : 'text-brand-sandstone/70 hover:text-brand-sandstone hover:bg-white/5'
                 }`}
               >

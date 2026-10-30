@@ -265,7 +265,7 @@ export default function FeedsTimelineClient({
                 <button
                   type="button"
                   onClick={() => setShowComposer((prev) => !prev)}
-                  className="bg-gradient-to-r from-brand-caribbeanSea via-teal-400 to-brand-sunriseCoral hover:brightness-110 text-slate-950 font-black px-5 py-2.5 rounded-2xl text-xs sm:text-sm flex items-center gap-2 transition-all shadow-md shadow-brand-caribbeanSea/20 self-start sm:self-auto min-h-[42px] cursor-pointer"
+                  className="bg-gradient-to-r from-brand-caribbeanTeal to-brand-caribbeanSea hover:brightness-110 text-slate-950 font-black px-5 py-2.5 rounded-2xl text-xs sm:text-sm flex items-center gap-2 transition-all shadow-md shadow-brand-caribbeanSea/20 self-start sm:self-auto min-h-[42px] cursor-pointer"
                 >
                   <PlusCircle className="w-4 h-4" />
                   <span>{showComposer ? 'Close Composer' : 'Create Post'}</span>
@@ -291,7 +291,7 @@ export default function FeedsTimelineClient({
                   aria-current={isActive ? 'page' : undefined}
                   className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all min-h-[38px] ${
                     isActive
-                      ? 'bg-gradient-to-r from-brand-caribbeanSea/30 to-brand-sunriseCoral/20 text-white border border-brand-caribbeanSea/50 shadow-md shadow-brand-caribbeanSea/10'
+                      ? 'bg-gradient-to-r from-brand-caribbeanTeal/30 to-brand-caribbeanSea/20 text-white border border-brand-caribbeanSea/50 shadow-md shadow-brand-caribbeanSea/10'
                       : 'text-slate-300 hover:bg-white/5 hover:text-white border border-transparent'
                   }`}
                 >
@@ -431,11 +431,11 @@ export default function FeedsTimelineClient({
                   <select
                     value={secondaryMode}
                     onChange={(e) => changeSecondaryMode(e.target.value as FeedMode)}
-                    className="bg-[#181126] text-white text-xs font-bold rounded-lg px-2 py-1 border border-white/15 focus:outline-none focus:border-brand-caribbeanSea"
+                    className="bg-[#0B1424] text-white text-xs font-bold rounded-lg px-2 py-1 border border-white/15 focus:outline-none focus:border-brand-caribbeanSea"
                     aria-label="Select secondary feed channel"
                   >
                     {FEED_CHANNELS_LIST.map((channel) => (
-                      <option key={channel.id} value={channel.id} className="bg-[#181126]">
+                      <option key={channel.id} value={channel.id} className="bg-[#0B1424]">
                         {channel.label}
                       </option>
                     ))}

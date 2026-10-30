@@ -111,27 +111,27 @@ export default async function CommunitiesPage({
     <div className="flex flex-col lg:flex-row gap-6 xl:gap-8 items-start w-full">
       <div className="flex-1 min-w-0 space-y-8 w-full max-w-[820px] xl:max-w-[860px] mx-auto lg:mx-0 animate-fadeIn">
         {/* Top Header */}
-        <div className="surface-header rounded-3xl p-6 sm:p-8 flex flex-col md:flex-row md:items-center justify-between gap-4 border border-brand-sunriseCoral/30 shadow-xl">
+        <div className="tk-panel rounded-2xl p-6 sm:p-7 flex flex-col md:flex-row md:items-center justify-between gap-4 border border-white/[0.08]">
           <div>
             <div className="flex items-center gap-2.5">
-              <span className="w-3 h-3 rounded-full bg-brand-sunriseCoral animate-ping" />
-              <h1 className="text-xl sm:text-2xl lg:text-3xl font-black text-white flex items-center gap-3">
-                <Users className="w-7 h-7 sm:w-8 sm:h-8 text-brand-sunriseCoral" /> Caribbean Communities
+              <span className="w-2.5 h-2.5 rounded-full bg-[#00C2A8]" />
+              <h1 className="font-display text-xl sm:text-2xl font-bold text-white flex items-center gap-2.5 tracking-tight">
+                <Users className="w-6 h-6 text-[#00C2A8]" /> Caribbean Communities
               </h1>
             </div>
-            <p className="text-xs sm:text-sm text-brand-sandstone/80 mt-1 leading-relaxed">
+            <p className="text-xs sm:text-sm text-[#94A3B8] mt-1.5 leading-relaxed">
               Find your people across diaspora city hubs, professional guilds, cultural organizations, and alumni circles.
             </p>
           </div>
 
-          <div className="flex items-center gap-3 self-start md:self-auto">
+          <div className="flex items-center gap-3 self-start md:self-auto shrink-0">
             {user && <CreateCommunityForm initialOpen={create === 'true'} />}
             {!user && (
               <Link
                 href="/login"
-                className="bg-brand-sunriseCoral hover:brightness-110 text-slate-950 font-black px-6 py-3 rounded-xl text-xs sm:text-sm flex items-center justify-center gap-2 transition-all shadow-md shadow-brand-sunriseCoral/20 min-h-[44px]"
+                className="tk-btn-primary px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center gap-2 min-h-[42px]"
               >
-                <Plus className="w-4 h-4 stroke-[3]" /> Create Diaspora Hub
+                <Plus className="w-4 h-4 stroke-[2.5]" /> Create Diaspora Hub
               </Link>
             )}
           </div>
@@ -139,11 +139,13 @@ export default async function CommunitiesPage({
 
         {/* Communities Grid */}
         {communities.length === 0 ? (
-          <div className="surface-card rounded-3xl p-10 sm:p-12 text-center space-y-5 max-w-xl mx-auto border border-white/10">
-            <Users className="w-12 h-12 text-brand-sunriseCoral/70 mx-auto" />
+          <div className="tk-panel rounded-2xl p-10 sm:p-12 text-center space-y-5 max-w-xl mx-auto border border-white/[0.08]">
+            <div className="w-12 h-12 rounded-2xl bg-[#00C2A8]/10 border border-[#00C2A8]/25 flex items-center justify-center mx-auto">
+              <Users className="w-6 h-6 text-[#00C2A8]" />
+            </div>
             <div className="space-y-2">
-              <h3 className="text-lg sm:text-xl font-black text-white">No diaspora communities found</h3>
-              <p className="text-xs sm:text-sm text-brand-sandstone/80 leading-relaxed">
+              <h3 className="font-display text-lg sm:text-xl font-bold text-white">No diaspora communities found</h3>
+              <p className="text-xs sm:text-sm text-[#94A3B8] leading-relaxed">
                 {hub || country || q
                   ? 'No communities currently match your search or filter. Try clearing filters or create a new hub!'
                   : 'Be the first to launch an island guild or diaspora city hub for your community!'}
@@ -153,16 +155,16 @@ export default async function CommunitiesPage({
               {(hub || country || q) && (
                 <Link
                   href="/communities"
-                  className="px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/15 text-white text-xs sm:text-sm font-bold border border-white/15 transition-all"
+                  className="tk-btn-secondary px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold"
                 >
                   Reset Filters
                 </Link>
               )}
               <Link
                 href="/communities/create"
-                className="bg-brand-sunriseCoral hover:brightness-110 text-slate-950 font-black px-5 py-2.5 rounded-xl text-xs sm:text-sm inline-flex items-center gap-2 transition-all shadow-md shadow-brand-sunriseCoral/20 min-h-[42px]"
+                className="tk-btn-primary px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold inline-flex items-center gap-2 min-h-[42px]"
               >
-                <Plus className="w-4 h-4 stroke-[3]" /> Create Diaspora Hub
+                <Plus className="w-4 h-4 stroke-[2.5]" /> Create Diaspora Hub
               </Link>
             </div>
           </div>

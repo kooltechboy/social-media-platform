@@ -109,7 +109,7 @@ export function MagicLinkForm({ onBackToPassword }: MagicLinkFormProps) {
       <button
         type="submit"
         disabled={loading || !email}
-        className="w-full py-3 px-4 rounded-xl font-bold text-sm bg-gradient-to-r from-brand-caribbeanSea to-brand-sunriseCoral text-[#060A12] hover:opacity-95 active:scale-[0.99] transition-all shadow-lg shadow-brand-caribbeanSea/20 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+        className="w-full py-3 px-4 rounded-xl font-bold text-sm bg-gradient-to-r from-brand-caribbeanTeal to-brand-caribbeanSea text-[#060A12] hover:opacity-95 active:scale-[0.99] transition-all shadow-lg shadow-brand-caribbeanSea/20 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
       >
         {loading ? (
           <span className="w-4 h-4 border-2 border-slate-950 border-t-transparent rounded-full animate-spin" />

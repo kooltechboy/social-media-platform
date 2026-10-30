@@ -130,11 +130,11 @@ export default async function ShortsPage({
       }
 
       const gradients = [
-        'from-purple-900/60 via-slate-900 to-[#110D17]',
-        'from-amber-900/60 via-slate-900 to-[#110D17]',
-        'from-sky-900/60 via-slate-900 to-[#110D17]',
-        'from-rose-900/60 via-slate-900 to-[#110D17]',
-        'from-emerald-900/60 via-slate-900 to-[#110D17]',
+        'from-purple-900/60 via-slate-900 to-[#070D1A]',
+        'from-amber-900/60 via-slate-900 to-[#070D1A]',
+        'from-sky-900/60 via-slate-900 to-[#070D1A]',
+        'from-rose-900/60 via-slate-900 to-[#070D1A]',
+        'from-emerald-900/60 via-slate-900 to-[#070D1A]',
       ];
 
       dynamicShorts = validVideos.map((v: any, index: number) => {

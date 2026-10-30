@@ -625,7 +625,7 @@ export default function SocialSearchClient({
                             )}
                             <span className={`text-[9px] font-black px-1.5 py-0.2 rounded-full border ${
                               relBadge.type === 'official'
-                                ? 'bg-gradient-to-r from-brand-caribbeanSea/20 to-brand-sunriseCoral/20 text-brand-caribbeanSea border-brand-caribbeanSea/40'
+                                ? 'bg-gradient-to-r from-brand-caribbeanTeal/20 to-brand-caribbeanSea/20 text-brand-caribbeanSea border-brand-caribbeanSea/40'
                                 : relBadge.type === 'friend'
                                 ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
                                 : 'bg-white/5 text-brand-sandstone/70 border-white/10'

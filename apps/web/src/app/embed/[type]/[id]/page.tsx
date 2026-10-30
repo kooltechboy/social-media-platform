@@ -77,16 +77,16 @@ export default async function EmbedViewerPage({ params }: EmbedPageProps) {
   };
 
   return (
-    <div className="w-full h-full min-h-[360px] p-4 bg-[#110D17] text-[#FDF2E9] flex flex-col justify-between font-sans antialiased box-border">
+    <div className="w-full h-full min-h-[360px] p-4 bg-[#070D1A] text-[#E8EDF5] flex flex-col justify-between font-sans antialiased box-border">
       {/* Top Author & Brand Bar */}
-      <div className="flex items-center justify-between pb-3 border-b border-[#2A1B38]">
+      <div className="flex items-center justify-between pb-3 border-b border-[#15213A]">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-[#FF7A59] via-[#FFB347] to-[#8B5CF6] flex items-center justify-center font-bold text-sm text-white">
+          <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-[#F2775A] via-[#F4AE45] to-[#8B5CF6] flex items-center justify-center font-bold text-sm text-white">
             {authorName.charAt(0).toUpperCase()}
           </div>
           <div>
             <p className="font-bold text-sm text-white">{authorName}</p>
-            <p className="text-[11px] text-[#00B4D8]">@{authorHandle} • {subtitle}</p>
+            <p className="text-[11px] text-[#0EA5E9]">@{authorHandle} • {subtitle}</p>
           </div>
         </div>
 
@@ -96,30 +96,30 @@ export default async function EmbedViewerPage({ params }: EmbedPageProps) {
       </div>
 
       {/* Main Content Showcase */}
-      <div className="my-4 p-4 rounded-xl bg-[#1D1429] border border-[#2A1B38] space-y-2">
-        <span className="text-xs font-semibold text-[#FF7A59] uppercase tracking-wider">
+      <div className="my-4 p-4 rounded-xl bg-[#0D1628] border border-[#15213A] space-y-2">
+        <span className="text-xs font-semibold text-[#F2775A] uppercase tracking-wider">
           {typeLabels[type] || '🌴 Caribbean Moment'}
         </span>
         <h2 className="text-sm sm:text-base font-bold text-white line-clamp-3 leading-relaxed">
           {title}
         </h2>
-        <p className="text-[10px] text-[#FDF2E9]/50 font-mono">Verified TUKUBI Publication</p>
+        <p className="text-[10px] text-[#E8EDF5]/50 font-mono">Verified TUKUBI Publication</p>
       </div>
 
       {/* Footer Branding & Call to Action */}
-      <div className="pt-3 border-t border-[#2A1B38] flex items-center justify-between">
+      <div className="pt-3 border-t border-[#15213A] flex items-center justify-between">
         <div className="flex items-center gap-1.5">
-          <span className="font-extrabold text-sm tracking-tight bg-gradient-to-r from-[#FF7A59] to-[#FFB347] bg-clip-text text-transparent">
+          <span className="font-extrabold text-sm tracking-tight bg-gradient-to-r from-[#F2775A] to-[#F4AE45] bg-clip-text text-transparent">
             TUKUBI
           </span>
-          <span className="text-[11px] text-[#FDF2E9]/50">• The Caribbean Connected</span>
+          <span className="text-[11px] text-[#E8EDF5]/50">• The Caribbean Connected</span>
         </div>
 
         <a
           href={targetUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-[#FF7A59] text-white hover:opacity-90 transition-opacity"
+          className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-[#F2775A] text-white hover:opacity-90 transition-opacity"
         >
           View on Tukubi →
         </a>

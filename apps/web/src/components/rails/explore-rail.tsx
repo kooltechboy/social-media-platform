@@ -88,7 +88,7 @@ export default function ExploreRail({
     return (
       <div className="space-y-5">
         {/* 1. Geography Identity Card */}
-        <div className="glass rounded-3xl p-5 border border-white/15 bg-gradient-to-b from-brand-caribbeanSea/15 via-white/5 to-transparent space-y-3.5 shadow-xl">
+        <div className="tk-panel p-5 border border-white/15 bg-gradient-to-b from-brand-caribbeanSea/15 via-white/5 to-transparent space-y-3.5 shadow-xl">
           <div className="flex items-start justify-between gap-3">
             <div className="space-y-1">
               <span className="text-[10px] font-black uppercase tracking-wider text-brand-caribbeanSea px-2 py-0.5 rounded-full bg-brand-caribbeanSea/15 border border-brand-caribbeanSea/30 inline-block">
@@ -98,13 +98,13 @@ export default function ExploreRail({
                 <span>{geography.flagEmoji}</span>
                 <span>{geography.name}</span>
               </h3>
-              <p className="text-[11px] text-brand-sandstone/70">
+              <p className="text-[11px] text-brand-mist">
                 {geography.officialName}
               </p>
             </div>
             <Link
               href="/explore"
-              className="text-[10px] font-bold text-brand-sandstone/60 hover:text-white px-2 py-1 rounded-lg bg-white/5 hover:bg-white/10 transition-colors"
+              className="text-[10px] font-bold text-brand-mist hover:text-white px-2 py-1 rounded-lg bg-white/5 hover:bg-white/10 transition-colors"
             >
               Reset
             </Link>
@@ -127,11 +127,11 @@ export default function ExploreRail({
         </div>
 
         {/* 2. Contextual Geographic Navigation Links */}
-        <section aria-label={`${demonymOrName} Contextual Actions`} className="glass rounded-3xl p-4 sm:p-5 space-y-3 border border-white/10">
+        <section aria-label={`${demonymOrName} Contextual Actions`} className="tk-panel p-4 sm:p-5 space-y-3 border border-white/10">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Compass className="w-4 h-4 text-brand-caribbeanSea" />
-              <h4 className="text-xs font-black text-white uppercase tracking-wider">
+              <h4 className="text-[13.5px] font-semibold text-white">
                 {demonymOrName} Navigator
               </h4>
             </div>
@@ -159,10 +159,10 @@ export default function ExploreRail({
 
         {/* 3. Cultural Heritage & Music */}
         {geography.musicGenres.length > 0 && (
-          <section aria-label="Music & Rhythms" className="glass rounded-3xl p-4 sm:p-5 space-y-3 border border-white/10">
+          <section aria-label="Music & Rhythms" className="tk-panel p-4 sm:p-5 space-y-3 border border-white/10">
             <div className="flex items-center gap-2">
               <Music className="w-4 h-4 text-rose-400" />
-              <h4 className="text-xs font-black text-white uppercase tracking-wider">
+              <h4 className="text-[13.5px] font-semibold text-white">
                 Signature Sounds
               </h4>
             </div>
@@ -182,10 +182,10 @@ export default function ExploreRail({
 
         {/* 4. Cuisine & Cultural Tags */}
         {geography.cuisineTags.length > 0 && (
-          <section aria-label="Culinary & Culture" className="glass rounded-3xl p-4 sm:p-5 space-y-3 border border-white/10">
+          <section aria-label="Culinary & Culture" className="tk-panel p-4 sm:p-5 space-y-3 border border-white/10">
             <div className="flex items-center gap-2">
               <Utensils className="w-4 h-4 text-brand-goldenHour" />
-              <h4 className="text-xs font-black text-white uppercase tracking-wider">
+              <h4 className="text-[13.5px] font-semibold text-white">
                 Cuisine &amp; Taste
               </h4>
             </div>
@@ -204,14 +204,14 @@ export default function ExploreRail({
 
         {/* 5. Global Diaspora Connections */}
         {geography.diasporaHubs.length > 0 && (
-          <section aria-label="Diaspora Hubs" className="glass rounded-3xl p-4 sm:p-5 space-y-2.5 border border-white/10">
+          <section aria-label="Diaspora Hubs" className="tk-panel p-4 sm:p-5 space-y-2.5 border border-white/10">
             <div className="flex items-center gap-2">
               <Globe className="w-4 h-4 text-sky-400" />
-              <h4 className="text-xs font-black text-white uppercase tracking-wider">
+              <h4 className="text-[13.5px] font-semibold text-white">
                 Major Diaspora Hubs
               </h4>
             </div>
-            <p className="text-[11px] text-brand-sandstone/70">
+            <p className="text-[11px] text-brand-mist">
               {geography.diasporaHubs.join(' • ')}
             </p>
           </section>
@@ -226,14 +226,14 @@ export default function ExploreRail({
   return (
     <div className="space-y-5">
       {/* 1. Explore Caribbean Overview Card */}
-      <div className="glass rounded-3xl p-5 border border-white/10 space-y-3 shadow-lg">
+      <div className="tk-panel p-5 border border-white/10 space-y-3 shadow-lg">
         <div className="flex items-center gap-2.5">
           <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-brand-caribbeanSea to-brand-goldenHour flex items-center justify-center text-slate-950 font-black shadow-md">
             <Compass className="w-4 h-4" />
           </div>
           <div>
             <h3 className="text-sm font-black text-white">Caribbean Geographic Engine</h3>
-            <p className="text-[10px] text-brand-sandstone/60">
+            <p className="text-[10px] text-brand-mist">
               30+ nations, territories &amp; diaspora hubs
             </p>
           </div>
@@ -244,11 +244,11 @@ export default function ExploreRail({
       </div>
 
       {/* 2. Popular Island Quick Select */}
-      <section aria-label="Select an Island" className="glass rounded-3xl p-4 sm:p-5 space-y-3 border border-white/10">
+      <section aria-label="Select an Island" className="tk-panel p-4 sm:p-5 space-y-3 border border-white/10">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <MapPin className="w-4 h-4 text-brand-sunriseCoral" />
-            <h4 className="text-xs font-black text-white uppercase tracking-wider">
+            <h4 className="text-[13.5px] font-semibold text-white">
               Explore by Island
             </h4>
           </div>
@@ -271,10 +271,10 @@ export default function ExploreRail({
       </section>
 
       {/* 3. Caribbean Cultural Vibes */}
-      <section aria-label="Cultural Vibes" className="glass rounded-3xl p-4 sm:p-5 space-y-3 border border-white/10">
+      <section aria-label="Cultural Vibes" className="tk-panel p-4 sm:p-5 space-y-3 border border-white/10">
         <div className="flex items-center gap-2">
           <Sparkles className="w-4 h-4 text-brand-goldenHour" />
-          <h4 className="text-xs font-black text-white uppercase tracking-wider">
+          <h4 className="text-[13.5px] font-semibold text-white">
             Cultural Vibes
           </h4>
         </div>
@@ -302,16 +302,16 @@ export default function ExploreRail({
       </section>
 
       {/* 4. Global Diaspora Hubs */}
-      <div className="p-4 rounded-2xl bg-gradient-to-br from-brand-caribbeanSea/10 via-brand-sunsetPurple/20 to-transparent border border-white/10 space-y-2">
-        <p className="text-xs font-black text-white flex items-center gap-1.5">
+      <div className="tk-panel p-4 space-y-2">
+        <p className="text-[13px] font-semibold text-white flex items-center gap-1.5">
           <Globe className="w-3.5 h-3.5 text-brand-caribbeanSea" /> Global Caribbean Diaspora
         </p>
-        <p className="text-[11px] text-slate-300 leading-relaxed">
+        <p className="text-xs text-brand-mist leading-relaxed">
           Explore thriving Caribbean communities in New York, Miami, London, Toronto, and beyond.
         </p>
         <Link
           href="/diaspora"
-          className="inline-flex items-center gap-1 text-xs font-bold text-brand-caribbeanSea hover:underline pt-1"
+          className="inline-flex items-center gap-1 text-xs font-semibold text-brand-caribbeanSea hover:text-white transition-colors pt-1"
         >
           View Diaspora Hubs →
         </Link>

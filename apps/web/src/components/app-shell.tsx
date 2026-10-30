@@ -56,7 +56,7 @@ function AppShellContent({ children }: { children: React.ReactNode }) {
       <div className="flex-1 w-full max-w-[2560px] 5xl:max-w-[2800px] mx-auto flex">
         {/* Left Navigation: Responsive 240-260px expanded, 72px compact rail when collapsed */}
         <aside
-          className={`hidden md:flex md:flex-col shrink-0 self-start sticky shell-left-rail overflow-hidden px-2 sm:px-2.5 py-1.5 sm:py-2 z-20 transition-[width] duration-300 ease-in-out ${
+          className={`hidden md:flex md:flex-col shrink-0 self-start sticky shell-left-rail overflow-hidden pl-3 pr-1.5 lg:pl-4 py-4 z-20 transition-[width] duration-300 ease-in-out ${
             isCollapsed ? 'w-[72px]' : isMessagesRoute ? 'w-[72px] xl:w-[240px]' : 'w-[240px] xl:w-[260px]'
           }`}
           aria-label="Desktop primary navigation"
@@ -71,7 +71,7 @@ function AppShellContent({ children }: { children: React.ReactNode }) {
               ? 'p-0'
               : isMessagesRoute
               ? 'p-0 sm:p-2 lg:p-3'
-              : 'px-3.5 sm:px-6 lg:px-8 3xl:px-10 py-6'
+              : 'px-4 sm:px-6 lg:px-8 3xl:px-10 py-6'
           } pb-24 md:pb-6 min-h-[85vh]`}
         >
           {children}

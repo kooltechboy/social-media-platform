@@ -20,8 +20,8 @@ export default async function MessagesPage({
   if (!user || !supabase) {
     return (
       <div className="min-h-screen bg-transparent text-white flex items-center justify-center p-6">
-        <div className="bg-[#140C22]/95 backdrop-blur-2xl border border-white/15 rounded-3xl p-8 text-center max-w-sm shadow-2xl space-y-4">
-          <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-brand-caribbeanSea to-brand-sunriseCoral text-slate-950 font-black flex items-center justify-center mx-auto shadow-md">
+        <div className="bg-[#0B1424]/95 backdrop-blur-2xl border border-white/15 rounded-3xl p-8 text-center max-w-sm shadow-2xl space-y-4">
+          <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-brand-caribbeanTeal to-brand-caribbeanSea text-slate-950 font-black flex items-center justify-center mx-auto shadow-md">
             <MessageSquare className="w-6 h-6" />
           </div>
           <div className="space-y-1">
@@ -32,7 +32,7 @@ export default async function MessagesPage({
           </div>
           <Link
             href="/login?next=/messages"
-            className="inline-block w-full bg-gradient-to-r from-brand-caribbeanSea to-brand-sunriseCoral hover:opacity-90 text-slate-950 font-black px-5 py-2.5 rounded-xl text-xs transition-opacity shadow-md"
+            className="inline-block w-full bg-gradient-to-r from-brand-caribbeanTeal to-brand-caribbeanSea hover:opacity-90 text-slate-950 font-black px-5 py-2.5 rounded-xl text-xs transition-opacity shadow-md"
           >
             Sign In to Chat
           </Link>
@@ -328,7 +328,7 @@ export default async function MessagesPage({
   return (
     <div className="h-screen max-h-screen flex flex-col bg-[#0A0612] text-white overflow-hidden">
       {/* Header Bar */}
-      <header className="h-14 flex-shrink-0 bg-[#0E0818]/95 backdrop-blur-xl border-b border-white/10 px-4 sm:px-6 flex items-center justify-between z-30">
+      <header className="h-14 flex-shrink-0 bg-[#08101E]/95 backdrop-blur-xl border-b border-white/10 px-4 sm:px-6 flex items-center justify-between z-30">
         <div className="flex items-center gap-3">
           <Link
             href="/"

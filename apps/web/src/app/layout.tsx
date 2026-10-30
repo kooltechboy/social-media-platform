@@ -17,6 +17,20 @@ import { PwaProvider } from '../components/pwa/pwa-provider';
 import { NotificationsRealtimeProvider } from '../components/notifications-realtime-provider';
 import { createSupabaseServerClient } from '../lib/supabase/server';
 import { PostHogProvider } from '../components/posthog-provider';
+import { Inter, Plus_Jakarta_Sans } from 'next/font/google';
+
+// Self-hosted at build time by next/font (no runtime request to Google).
+const fontSans = Inter({
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-sans',
+});
+const fontDisplay = Plus_Jakarta_Sans({
+  subsets: ['latin'],
+  display: 'swap',
+  weight: ['500', '600', '700'],
+  variable: '--font-display',
+});
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://www.tukubi.com'),
@@ -74,7 +88,7 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 5,
   userScalable: true,
-  themeColor: '#110D17',
+  themeColor: '#070D1A',
 };
 
 export default async function RootLayout({
@@ -122,11 +136,11 @@ export default async function RootLayout({
       lang={activeLocale}
       dir={dir}
       data-theme={activeTheme}
-      className={`${isDaylight ? '' : 'dark '}overflow-x-hidden max-w-full`}
+      className={`${isDaylight ? '' : 'dark '}${fontSans.variable} ${fontDisplay.variable} overflow-x-hidden max-w-full`}
       suppressHydrationWarning
     >
       <body
-        className="min-h-screen relative overflow-x-clip max-w-full antialiased text-white selection:bg-[#FF7A59]/30 selection:text-white"
+        className="min-h-screen relative overflow-x-clip max-w-full antialiased text-white selection:bg-[#0EA5E9]/30 selection:text-white"
         suppressHydrationWarning
       >
         {/* Full-screen Caribbean background — always fills the entire viewport */}

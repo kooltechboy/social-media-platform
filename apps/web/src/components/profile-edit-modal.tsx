@@ -337,9 +337,9 @@ export default function ProfileEditModal({
       aria-modal="true"
       aria-labelledby="edit-profile-modal-title"
     >
-      <div className="bg-[#110D17] border border-slate-700/80 rounded-3xl w-full max-w-3xl max-h-[calc(100dvh-2rem)] flex flex-col shadow-[0_20px_60px_rgba(0,0,0,0.85)] overflow-hidden">
+      <div className="bg-[#070D1A] border border-slate-700/80 rounded-3xl w-full max-w-3xl max-h-[calc(100dvh-2rem)] flex flex-col shadow-[0_20px_60px_rgba(0,0,0,0.85)] overflow-hidden">
         {/* Sticky Header */}
-        <div className="px-5 sm:px-6 py-3.5 border-b border-slate-800 flex items-center justify-between bg-[#1D1429]/95 backdrop-blur-md shrink-0">
+        <div className="px-5 sm:px-6 py-3.5 border-b border-slate-800 flex items-center justify-between bg-[#0D1628]/95 backdrop-blur-md shrink-0">
           <div>
             <h2 id="edit-profile-modal-title" className="text-base font-black text-brand-sandstone flex items-center gap-2">
               <span>Edit Profile</span>
@@ -420,7 +420,7 @@ export default function ProfileEditModal({
         </div>
 
         {/* Tab Navigation */}
-        <div className="flex border-b border-slate-800 overflow-x-auto px-4 bg-[#181124] scrollbar-none shrink-0">
+        <div className="flex border-b border-slate-800 overflow-x-auto px-4 bg-[#0D1628] scrollbar-none shrink-0">
           {[
             { id: 'profile', label: 'Profile', icon: Camera },
             { id: 'about', label: 'About', icon: MapPin },
@@ -555,7 +555,7 @@ export default function ProfileEditModal({
                     onChange={(e) => handleChange('display_name', e.target.value)}
                     required
                     maxLength={100}
-                    className="w-full bg-[#181124] border border-slate-700 rounded-xl px-3 py-2 text-sm text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea transition-colors"
+                    className="w-full bg-[#0D1628] border border-slate-700 rounded-xl px-3 py-2 text-sm text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea transition-colors"
                   />
                 </div>
 
@@ -570,7 +570,7 @@ export default function ProfileEditModal({
                     disabled={isOfficial}
                     required
                     maxLength={30}
-                    className="w-full bg-[#181124] border border-slate-700 rounded-xl px-3 py-2 text-sm text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                    className="w-full bg-[#0D1628] border border-slate-700 rounded-xl px-3 py-2 text-sm text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
                   />
                   {isOfficial && (
                     <span className="text-[10px] text-brand-caribbeanSea/70 mt-0.5 block">
@@ -596,7 +596,7 @@ export default function ProfileEditModal({
                   placeholder="Share your Caribbean roots, vibe, creative story, or business mission…"
                   value={form.bio ?? ''}
                   onChange={(e) => handleChange('bio', e.target.value)}
-                  className="w-full bg-[#181124] border border-slate-700 rounded-xl px-3 py-2 text-sm text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea resize-none transition-colors"
+                  className="w-full bg-[#0D1628] border border-slate-700 rounded-xl px-3 py-2 text-sm text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea resize-none transition-colors"
                 />
               </div>
 
@@ -610,7 +610,7 @@ export default function ProfileEditModal({
                     value={form.account_type || 'personal'}
                     onChange={(e) => handleChange('account_type', e.target.value)}
                     disabled={isOfficial}
-                    className="w-full bg-[#181124] border border-slate-700 rounded-xl px-3 py-2 text-sm text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea transition-colors disabled:opacity-60"
+                    className="w-full bg-[#0D1628] border border-slate-700 rounded-xl px-3 py-2 text-sm text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea transition-colors disabled:opacity-60"
                   >
                     <option value="personal">Personal / Member Profile</option>
                     <option value="creator">Digital Creator / Artist</option>
@@ -629,7 +629,7 @@ export default function ProfileEditModal({
                     value={form.pronouns ?? ''}
                     onChange={(e) => handleChange('pronouns', e.target.value)}
                     maxLength={50}
-                    className="w-full bg-[#181124] border border-slate-700 rounded-xl px-3 py-2 text-sm text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea transition-colors"
+                    className="w-full bg-[#0D1628] border border-slate-700 rounded-xl px-3 py-2 text-sm text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea transition-colors"
                   />
                 </div>
               </div>
@@ -650,7 +650,7 @@ export default function ProfileEditModal({
                     placeholder="Select island/territory"
                     value={form.island ?? ''}
                     onChange={(e) => handleChange('island', e.target.value)}
-                    className="w-full bg-[#181124] border border-slate-700 rounded-xl px-3 py-2 text-sm text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea transition-colors"
+                    className="w-full bg-[#0D1628] border border-slate-700 rounded-xl px-3 py-2 text-sm text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea transition-colors"
                   />
                   <datalist id="caribbean-territory-options">
                     {CARIBBEAN_TERRITORIES.map((t) => (
@@ -670,7 +670,7 @@ export default function ProfileEditModal({
                     placeholder="e.g. Kingston, Port of Spain, Miami"
                     value={form.city ?? ''}
                     onChange={(e) => handleChange('city', e.target.value)}
-                    className="w-full bg-[#181124] border border-slate-700 rounded-xl px-3 py-2 text-sm text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea transition-colors"
+                    className="w-full bg-[#0D1628] border border-slate-700 rounded-xl px-3 py-2 text-sm text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea transition-colors"
                   />
                 </div>
 
@@ -682,7 +682,7 @@ export default function ProfileEditModal({
                     id="modal-origin-country"
                     value={form.origin_country_id ?? ''}
                     onChange={(e) => handleChange('origin_country_id', e.target.value)}
-                    className="w-full bg-[#181124] border border-slate-700 rounded-xl px-3 py-2 text-sm text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea transition-colors"
+                    className="w-full bg-[#0D1628] border border-slate-700 rounded-xl px-3 py-2 text-sm text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea transition-colors"
                   >
                     <option value="">Select origin country...</option>
                     {countries.map((c) => (
@@ -702,7 +702,7 @@ export default function ProfileEditModal({
                     placeholder="e.g. New York, Toronto, London"
                     value={form.current_city ?? ''}
                     onChange={(e) => handleChange('current_city', e.target.value)}
-                    className="w-full bg-[#181124] border border-slate-700 rounded-xl px-3 py-2 text-sm text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea transition-colors"
+                    className="w-full bg-[#0D1628] border border-slate-700 rounded-xl px-3 py-2 text-sm text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea transition-colors"
                   />
                 </div>
 
@@ -716,7 +716,7 @@ export default function ProfileEditModal({
                     placeholder="Select country"
                     value={form.country ?? ''}
                     onChange={(e) => handleChange('country', e.target.value)}
-                    className="w-full bg-[#181124] border border-slate-700 rounded-xl px-3 py-2 text-sm text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea transition-colors"
+                    className="w-full bg-[#0D1628] border border-slate-700 rounded-xl px-3 py-2 text-sm text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea transition-colors"
                   />
                   <datalist id="world-diaspora-country-options">
                     {DIASPORA_COUNTRIES.map((c) => (
@@ -743,7 +743,7 @@ export default function ProfileEditModal({
                     placeholder="e.g. Creative Director, Engineer, Merchant"
                     value={form.job_title ?? ''}
                     onChange={(e) => handleChange('job_title', e.target.value)}
-                    className="w-full bg-[#181124] border border-slate-700 rounded-xl px-3 py-2 text-sm text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea transition-colors"
+                    className="w-full bg-[#0D1628] border border-slate-700 rounded-xl px-3 py-2 text-sm text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea transition-colors"
                   />
                 </div>
 
@@ -756,7 +756,7 @@ export default function ProfileEditModal({
                     placeholder="e.g. Island Media, Self-Employed"
                     value={form.employer ?? ''}
                     onChange={(e) => handleChange('employer', e.target.value)}
-                    className="w-full bg-[#181124] border border-slate-700 rounded-xl px-3 py-2 text-sm text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea transition-colors"
+                    className="w-full bg-[#0D1628] border border-slate-700 rounded-xl px-3 py-2 text-sm text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea transition-colors"
                   />
                 </div>
               </div>
@@ -771,7 +771,7 @@ export default function ProfileEditModal({
                     placeholder="e.g. B.Sc. Computer Science"
                     value={form.education ?? ''}
                     onChange={(e) => handleChange('education', e.target.value)}
-                    className="w-full bg-[#181124] border border-slate-700 rounded-xl px-3 py-2 text-sm text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea transition-colors"
+                    className="w-full bg-[#0D1628] border border-slate-700 rounded-xl px-3 py-2 text-sm text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea transition-colors"
                   />
                 </div>
 
@@ -784,7 +784,7 @@ export default function ProfileEditModal({
                     placeholder="e.g. University of the West Indies"
                     value={form.school ?? ''}
                     onChange={(e) => handleChange('school', e.target.value)}
-                    className="w-full bg-[#181124] border border-slate-700 rounded-xl px-3 py-2 text-sm text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea transition-colors"
+                    className="w-full bg-[#0D1628] border border-slate-700 rounded-xl px-3 py-2 text-sm text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea transition-colors"
                   />
                 </div>
               </div>
@@ -799,7 +799,7 @@ export default function ProfileEditModal({
                     type="date"
                     value={form.date_of_birth ?? ''}
                     onChange={(e) => handleChange('date_of_birth', e.target.value)}
-                    className="w-full bg-[#181124] border border-slate-700 rounded-xl px-3 py-2 text-sm text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea transition-colors"
+                    className="w-full bg-[#0D1628] border border-slate-700 rounded-xl px-3 py-2 text-sm text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea transition-colors"
                   />
                 </div>
 
@@ -812,7 +812,7 @@ export default function ProfileEditModal({
                     placeholder="e.g. Female, Male, Non-binary"
                     value={form.gender ?? ''}
                     onChange={(e) => handleChange('gender', e.target.value)}
-                    className="w-full bg-[#181124] border border-slate-700 rounded-xl px-3 py-2 text-sm text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea transition-colors"
+                    className="w-full bg-[#0D1628] border border-slate-700 rounded-xl px-3 py-2 text-sm text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea transition-colors"
                   />
                 </div>
 
@@ -824,7 +824,7 @@ export default function ProfileEditModal({
                     id="modal-relationshipStatus"
                     value={form.relationship_status ?? ''}
                     onChange={(e) => handleChange('relationship_status', e.target.value)}
-                    className="w-full bg-[#181124] border border-slate-700 rounded-xl px-3 py-2 text-sm text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea transition-colors"
+                    className="w-full bg-[#0D1628] border border-slate-700 rounded-xl px-3 py-2 text-sm text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea transition-colors"
                   >
                     <option value="">Prefer not to say</option>
                     <option value="Single">Single</option>
@@ -850,7 +850,7 @@ export default function ProfileEditModal({
                       e.target.value.split(',').map((s) => s.trim()).filter(Boolean)
                     )
                   }
-                  className="w-full bg-[#181124] border border-slate-700 rounded-xl px-3 py-2 text-sm text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea transition-colors"
+                  className="w-full bg-[#0D1628] border border-slate-700 rounded-xl px-3 py-2 text-sm text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea transition-colors"
                 />
               </div>
             </div>
@@ -869,7 +869,7 @@ export default function ProfileEditModal({
                   placeholder="https://yourwebsite.com"
                   value={form.website ?? ''}
                   onChange={(e) => handleChange('website', e.target.value)}
-                  className="w-full bg-[#181124] border border-slate-700 rounded-xl px-3 py-2 text-sm text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea transition-colors"
+                  className="w-full bg-[#0D1628] border border-slate-700 rounded-xl px-3 py-2 text-sm text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea transition-colors"
                 />
               </div>
 
@@ -885,7 +885,7 @@ export default function ProfileEditModal({
                       placeholder="username"
                       value={form.social_links?.instagram ?? ''}
                       onChange={(e) => handleSocialChange('instagram', e.target.value.replace(/^@/, ''))}
-                      className="w-full bg-[#181124] border border-slate-700 rounded-xl pl-8 pr-3 py-2 text-sm text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea transition-colors"
+                      className="w-full bg-[#0D1628] border border-slate-700 rounded-xl pl-8 pr-3 py-2 text-sm text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea transition-colors"
                     />
                   </div>
                 </div>
@@ -901,7 +901,7 @@ export default function ProfileEditModal({
                       placeholder="username"
                       value={form.social_links?.twitter ?? ''}
                       onChange={(e) => handleSocialChange('twitter', e.target.value.replace(/^@/, ''))}
-                      className="w-full bg-[#181124] border border-slate-700 rounded-xl pl-8 pr-3 py-2 text-sm text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea transition-colors"
+                      className="w-full bg-[#0D1628] border border-slate-700 rounded-xl pl-8 pr-3 py-2 text-sm text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea transition-colors"
                     />
                   </div>
                 </div>
@@ -917,7 +917,7 @@ export default function ProfileEditModal({
                       placeholder="username"
                       value={form.social_links?.tiktok ?? ''}
                       onChange={(e) => handleSocialChange('tiktok', e.target.value.replace(/^@/, ''))}
-                      className="w-full bg-[#181124] border border-slate-700 rounded-xl pl-8 pr-3 py-2 text-sm text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea transition-colors"
+                      className="w-full bg-[#0D1628] border border-slate-700 rounded-xl pl-8 pr-3 py-2 text-sm text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea transition-colors"
                     />
                   </div>
                 </div>
@@ -931,7 +931,7 @@ export default function ProfileEditModal({
                     placeholder="https://youtube.com/@channel"
                     value={form.social_links?.youtube ?? ''}
                     onChange={(e) => handleSocialChange('youtube', e.target.value)}
-                    className="w-full bg-[#181124] border border-slate-700 rounded-xl px-3 py-2 text-sm text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea transition-colors"
+                    className="w-full bg-[#0D1628] border border-slate-700 rounded-xl px-3 py-2 text-sm text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea transition-colors"
                   />
                 </div>
 
@@ -944,7 +944,7 @@ export default function ProfileEditModal({
                     placeholder="https://linkedin.com/in/username"
                     value={form.social_links?.linkedin ?? ''}
                     onChange={(e) => handleSocialChange('linkedin', e.target.value)}
-                    className="w-full bg-[#181124] border border-slate-700 rounded-xl px-3 py-2 text-sm text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea transition-colors"
+                    className="w-full bg-[#0D1628] border border-slate-700 rounded-xl px-3 py-2 text-sm text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea transition-colors"
                   />
                 </div>
 
@@ -957,7 +957,7 @@ export default function ProfileEditModal({
                     placeholder="https://facebook.com/username"
                     value={form.social_links?.facebook ?? ''}
                     onChange={(e) => handleSocialChange('facebook', e.target.value)}
-                    className="w-full bg-[#181124] border border-slate-700 rounded-xl px-3 py-2 text-sm text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea transition-colors"
+                    className="w-full bg-[#0D1628] border border-slate-700 rounded-xl px-3 py-2 text-sm text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea transition-colors"
                   />
                 </div>
               </div>
@@ -978,7 +978,7 @@ export default function ProfileEditModal({
                   id="modal-profileVisibility"
                   value={form.profile_visibility ?? 'public'}
                   onChange={(e) => handleChange('profile_visibility', e.target.value)}
-                  className="w-full bg-[#181124] border border-slate-700 rounded-xl px-3 py-2 text-xs text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea"
+                  className="w-full bg-[#0D1628] border border-slate-700 rounded-xl px-3 py-2 text-xs text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea"
                 >
                   <option value="public">Public (Visible to all members and diaspora search)</option>
                   <option value="followers">Followers Only (Restricted to accepted followers)</option>
@@ -995,7 +995,7 @@ export default function ProfileEditModal({
                     id="modal-dobVisibility"
                     value={form.dob_visibility ?? 'private'}
                     onChange={(e) => handleChange('dob_visibility', e.target.value)}
-                    className="w-full bg-[#181124] border border-slate-700 rounded-xl px-3 py-2 text-xs text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea"
+                    className="w-full bg-[#0D1628] border border-slate-700 rounded-xl px-3 py-2 text-xs text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea"
                   >
                     <option value="private">Only Me (Private)</option>
                     <option value="followers">Followers Only</option>
@@ -1011,7 +1011,7 @@ export default function ProfileEditModal({
                     id="modal-addressVisibility"
                     value={form.address_visibility ?? 'private'}
                     onChange={(e) => handleChange('address_visibility', e.target.value)}
-                    className="w-full bg-[#181124] border border-slate-700 rounded-xl px-3 py-2 text-xs text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea"
+                    className="w-full bg-[#0D1628] border border-slate-700 rounded-xl px-3 py-2 text-xs text-brand-sandstone focus:outline-none focus:border-brand-caribbeanSea"
                   >
                     <option value="private">Only Me (Private)</option>
                     <option value="followers">Followers Only</option>
@@ -1066,7 +1066,7 @@ export default function ProfileEditModal({
                 </p>
                 <a
                   href="/settings"
-                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#181124] hover:bg-slate-800 text-brand-caribbeanSea text-xs font-bold border border-brand-caribbeanSea/30 transition-colors"
+                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#0D1628] hover:bg-slate-800 text-brand-caribbeanSea text-xs font-bold border border-brand-caribbeanSea/30 transition-colors"
                 >
                   <KeyRound className="w-3.5 h-3.5" />
                   <span>Open Account &amp; Password Settings</span>
@@ -1114,7 +1114,7 @@ export default function ProfileEditModal({
                 </p>
                 <a
                   href="/settings"
-                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#181124] hover:bg-slate-800 text-brand-goldenHour text-xs font-bold border border-brand-goldenHour/30 transition-colors"
+                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#0D1628] hover:bg-slate-800 text-brand-goldenHour text-xs font-bold border border-brand-goldenHour/30 transition-colors"
                 >
                   <Lock className="w-3.5 h-3.5" />
                   <span>Configure MFA &amp; Manage All Sessions</span>
@@ -1126,7 +1126,7 @@ export default function ProfileEditModal({
         </div>
 
         {/* Sticky Footer Actions */}
-        <div className="px-5 sm:px-6 py-3.5 border-t border-slate-800 bg-[#1D1429]/95 backdrop-blur-md flex items-center justify-between gap-3 shrink-0">
+        <div className="px-5 sm:px-6 py-3.5 border-t border-slate-800 bg-[#0D1628]/95 backdrop-blur-md flex items-center justify-between gap-3 shrink-0">
           <button
             type="button"
             onClick={onClose}

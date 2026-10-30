@@ -289,7 +289,7 @@ export default function TukubiGallery({
           tabIndex={0}
           onKeyDown={handleKeyDown}
           style={{ aspectRatio: anchorRatio }}
-          className={`relative w-full rounded-2xl overflow-hidden border border-white/10 shadow-lg group select-none bg-gradient-to-br from-[#0D0818] via-[#150D24] to-[#081220] focus:outline-none focus:ring-2 focus:ring-brand-sunriseCoral/50 max-h-[460px] sm:max-h-[520px] md:max-h-[560px] ${className}`}
+          className={`relative w-full rounded-2xl overflow-hidden border border-white/10 shadow-lg group select-none bg-gradient-to-br from-[#070D1A] via-[#0D1628] to-[#081220] focus:outline-none focus:ring-2 focus:ring-brand-sunriseCoral/50 max-h-[460px] sm:max-h-[520px] md:max-h-[560px] ${className}`}
         >
           {/* View Mode Switcher Toggle */}
           {renderViewModeToggle()}
@@ -393,7 +393,7 @@ export default function TukubiGallery({
                 }}
                 className={`pointer-events-auto cursor-pointer ${
                   dotIdx === activeIndex
-                    ? 'w-4 h-1.5 rounded-full bg-brand-sunriseCoral transition-all duration-300 shadow-[0_0_8px_rgba(255,122,89,0.5)]'
+                    ? 'w-4 h-1.5 rounded-full bg-brand-sunriseCoral transition-all duration-300 shadow-[0_0_8px_rgba(242,119,90,0.5)]'
                     : 'w-1.5 h-1.5 rounded-full bg-white/40 transition-all hover:bg-white/70'
                 }`}
               />

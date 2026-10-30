@@ -50,7 +50,7 @@ function mapDbSoundToCaribbeanSound(row: any): CaribbeanSound {
     durationSeconds: row.duration_seconds || 30,
     durationFormatted: `${Math.floor((row.duration_seconds || 30) / 60)}:${String((row.duration_seconds || 30) % 60).padStart(2, '0')}`,
     audioUrl: row.audio_url,
-    coverGradient: row.cover_gradient || 'from-purple-900 via-rose-950 to-[#110D17]',
+    coverGradient: row.cover_gradient || 'from-purple-900 via-rose-950 to-[#070D1A]',
     usageCount: row.usage_count || 0,
     usageCountFormatted: row.usage_count ? `${row.usage_count.toLocaleString()} uses` : '0 uses',
     bpm: row.bpm || 120,

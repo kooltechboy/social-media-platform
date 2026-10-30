@@ -59,7 +59,7 @@ export default function MessageContextCard({
     const priceFormatted = `$${(product.priceMinor / 100).toFixed(2)} ${product.currency || 'USD'}`;
 
     return (
-      <div className="rounded-2xl bg-[#140C22] border border-white/15 p-3.5 space-y-3 max-w-sm shadow-xl hover:border-brand-caribbeanSea/40 transition-all text-left">
+      <div className="rounded-2xl bg-[#0B1424] border border-white/15 p-3.5 space-y-3 max-w-sm shadow-xl hover:border-brand-caribbeanSea/40 transition-all text-left">
         <div className="flex items-center justify-between text-[11px] font-black text-slate-400">
           <span className="flex items-center gap-1.5 text-brand-caribbeanSea">
             <ShoppingBag className="w-3.5 h-3.5" /> Marketplace Listing
@@ -100,7 +100,7 @@ export default function MessageContextCard({
         <div className="flex items-center gap-2 pt-1 border-t border-white/10">
           <Link
             href={product.listingUrl || `/marketplace`}
-            className="flex-1 py-1.5 px-3 rounded-xl bg-gradient-to-r from-brand-caribbeanSea to-brand-sunriseCoral text-slate-950 text-xs font-black flex items-center justify-center gap-1 hover:opacity-95 transition-opacity"
+            className="flex-1 py-1.5 px-3 rounded-xl bg-gradient-to-r from-brand-caribbeanTeal to-brand-caribbeanSea text-slate-950 text-xs font-black flex items-center justify-center gap-1 hover:opacity-95 transition-opacity"
           >
             <span>View Product</span>
             <ExternalLink className="w-3 h-3" />
@@ -116,7 +116,7 @@ export default function MessageContextCard({
     const totalFormatted = `$${(order.totalMinor / 100).toFixed(2)} ${order.currency || 'USD'}`;
 
     return (
-      <div className="rounded-2xl bg-[#140C22] border border-white/15 p-3.5 space-y-3 max-w-sm shadow-xl text-left">
+      <div className="rounded-2xl bg-[#0B1424] border border-white/15 p-3.5 space-y-3 max-w-sm shadow-xl text-left">
         <div className="flex items-center justify-between text-[11px] font-black text-slate-400">
           <span className="flex items-center gap-1.5 text-brand-sunriseCoral">
             <Package className="w-3.5 h-3.5" /> Order #{order.orderNumber}
@@ -152,7 +152,7 @@ export default function MessageContextCard({
     const isAir = shipment.transitMode === 'air_cargo';
 
     return (
-      <div className="rounded-2xl bg-[#140C22] border border-white/15 p-3.5 space-y-3 max-w-sm shadow-xl text-left hover:border-brand-caribbeanSea/40 transition-all">
+      <div className="rounded-2xl bg-[#0B1424] border border-white/15 p-3.5 space-y-3 max-w-sm shadow-xl text-left hover:border-brand-caribbeanSea/40 transition-all">
         <div className="flex items-center justify-between text-[11px] font-black text-slate-400">
           <span className="flex items-center gap-1.5 text-brand-caribbeanSea">
             {isAir ? <Plane className="w-3.5 h-3.5" /> : isMaritime ? <Ship className="w-3.5 h-3.5" /> : <Truck className="w-3.5 h-3.5" />}
@@ -183,7 +183,7 @@ export default function MessageContextCard({
           {/* Progress Bar */}
           <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden mt-2">
             <div
-              className="h-full bg-gradient-to-r from-brand-caribbeanSea to-brand-sunriseCoral rounded-full transition-all duration-300"
+              className="h-full bg-gradient-to-r from-brand-caribbeanTeal to-brand-caribbeanSea rounded-full transition-all duration-300"
               style={{ width: `${Math.min(100, Math.max(10, shipment.progressPercent || 20))}%` }}
             />
           </div>
@@ -212,7 +212,7 @@ export default function MessageContextCard({
   if (kind === 'event' && metadata.event) {
     const event: EventContextPayload = metadata.event;
     return (
-      <div className="rounded-2xl bg-[#140C22] border border-white/15 p-3.5 space-y-3 max-w-sm shadow-xl text-left">
+      <div className="rounded-2xl bg-[#0B1424] border border-white/15 p-3.5 space-y-3 max-w-sm shadow-xl text-left">
         <div className="flex items-center gap-1.5 text-[11px] font-black text-brand-goldenHour">
           <Calendar className="w-3.5 h-3.5" /> Caribbean Event
         </div>
@@ -262,7 +262,7 @@ export default function MessageContextCard({
   if (kind === 'livestream' && metadata.livestream) {
     const live: LivestreamContextPayload = metadata.livestream;
     return (
-      <div className="rounded-2xl bg-[#140C22] border border-white/15 p-3.5 space-y-3 max-w-sm shadow-xl text-left">
+      <div className="rounded-2xl bg-[#0B1424] border border-white/15 p-3.5 space-y-3 max-w-sm shadow-xl text-left">
         <div className="flex items-center justify-between text-[11px] font-black">
           <span className="flex items-center gap-1.5 text-rose-500 animate-pulse">
             <Radio className="w-3.5 h-3.5" /> LIVE STREAM
@@ -292,7 +292,7 @@ export default function MessageContextCard({
   if (kind === 'store' && metadata.store) {
     const store: StoreContextPayload = metadata.store;
     return (
-      <div className="rounded-2xl bg-[#140C22] border border-white/15 p-3.5 space-y-3 max-w-sm shadow-xl text-left">
+      <div className="rounded-2xl bg-[#0B1424] border border-white/15 p-3.5 space-y-3 max-w-sm shadow-xl text-left">
         <div className="flex items-center gap-1.5 text-[11px] font-black text-brand-caribbeanSea">
           <Store className="w-3.5 h-3.5" /> Caribbean Storefront
         </div>
@@ -338,7 +338,7 @@ export default function MessageContextCard({
   if (kind === 'community' && metadata.community) {
     const comm: CommunityContextPayload = metadata.community;
     return (
-      <div className="rounded-2xl bg-[#140C22] border border-white/15 p-3.5 space-y-3 max-w-sm shadow-xl text-left">
+      <div className="rounded-2xl bg-[#0B1424] border border-white/15 p-3.5 space-y-3 max-w-sm shadow-xl text-left">
         <div className="flex items-center gap-1.5 text-[11px] font-black text-brand-caribbeanSea">
           <Users className="w-3.5 h-3.5" /> Caribbean Community
         </div>
@@ -369,7 +369,7 @@ export default function MessageContextCard({
   if (kind === 'profile' && metadata.profile) {
     const prof: ProfileContextPayload = metadata.profile;
     return (
-      <div className="rounded-2xl bg-[#140C22] border border-white/15 p-3.5 space-y-3 max-w-sm shadow-xl text-left">
+      <div className="rounded-2xl bg-[#0B1424] border border-white/15 p-3.5 space-y-3 max-w-sm shadow-xl text-left">
         <div className="flex items-center gap-1.5 text-[11px] font-black text-slate-400">
           <User className="w-3.5 h-3.5 text-brand-caribbeanSea" /> Caribbean Profile
         </div>

@@ -121,7 +121,7 @@ export default function TukubiAudioPlayer({
 
   return (
     <div
-      className={`rounded-2xl p-4 bg-gradient-to-br from-[#1A1028] via-[#140C22] to-[#0D0717] border border-brand-caribbeanSea/30 shadow-xl text-left relative overflow-hidden transition-all hover:border-brand-caribbeanSea/50 ${className}`}
+      className={`rounded-2xl p-4 bg-gradient-to-br from-[#101C33] via-[#0B1424] to-[#070D1A] border border-brand-caribbeanSea/30 shadow-xl text-left relative overflow-hidden transition-all hover:border-brand-caribbeanSea/50 ${className}`}
     >
       <audio
         ref={audioRef}
@@ -222,7 +222,7 @@ export default function TukubiAudioPlayer({
           className="w-full h-2 bg-white/10 rounded-full cursor-pointer relative overflow-hidden group py-1"
         >
           <div
-            className="h-full bg-gradient-to-r from-brand-caribbeanSea via-teal-400 to-brand-sunriseCoral rounded-full transition-all duration-100 group-hover:brightness-125"
+            className="h-full bg-gradient-to-r from-brand-caribbeanTeal to-brand-caribbeanSea rounded-full transition-all duration-100 group-hover:brightness-125"
             style={{ width: `${Math.max(0, Math.min(100, progressPercent))}%` }}
           />
         </div>

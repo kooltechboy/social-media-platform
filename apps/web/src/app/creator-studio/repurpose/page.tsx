@@ -197,7 +197,7 @@ export default function RepurposePage() {
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
           
           {/* Summary */}
-          <div className="surface-card bg-[#140C22]/80 backdrop-blur border border-white/10 p-6 rounded-3xl space-y-3">
+          <div className="surface-card bg-[#0B1424]/80 backdrop-blur border border-white/10 p-6 rounded-3xl space-y-3">
             <h3 className="text-lg font-black text-white">Executive Summary</h3>
             <p className="text-sm leading-relaxed text-brand-sandstone/90">{result.summary}</p>
           </div>
@@ -238,7 +238,7 @@ export default function RepurposePage() {
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {result.socialPosts.map((post: string, idx: number) => (
-                <div key={idx} className="bg-[#140C22]/80 backdrop-blur border border-white/10 p-5 rounded-2xl flex flex-col justify-between gap-4">
+                <div key={idx} className="bg-[#0B1424]/80 backdrop-blur border border-white/10 p-5 rounded-2xl flex flex-col justify-between gap-4">
                   <p className="text-sm text-brand-sandstone/90 whitespace-pre-wrap">{post}</p>
                   <div className="flex gap-2 justify-end">
                     <button 
@@ -265,7 +265,7 @@ export default function RepurposePage() {
             <h3 className="text-lg font-black text-white flex items-center gap-2">
               Reel / Short Ideas <span className="text-xs font-normal text-brand-sandstone/60 px-2 py-0.5 rounded-full bg-white/5 border border-white/10">{result.contentIdeas.length}</span>
             </h3>
-            <div className="surface-card bg-[#140C22]/80 backdrop-blur border border-white/10 p-6 rounded-3xl">
+            <div className="surface-card bg-[#0B1424]/80 backdrop-blur border border-white/10 p-6 rounded-3xl">
               <ul className="space-y-4">
                 {result.contentIdeas.map((idea: string, idx: number) => (
                   <li key={idx} className="flex gap-3 items-start pb-4 border-b border-white/5 last:border-0 last:pb-0">

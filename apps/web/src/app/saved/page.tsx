@@ -62,7 +62,7 @@ export default async function SavedPostsPage() {
           <div className="pt-2">
             <Link
               href="/"
-              className="inline-flex items-center justify-center bg-gradient-to-r from-brand-caribbeanSea to-brand-sunriseCoral hover:brightness-110 text-slate-950 font-black px-5 py-2.5 rounded-xl text-xs sm:text-sm transition-all shadow-md shadow-brand-caribbeanSea/20 min-h-[42px]"
+              className="inline-flex items-center justify-center bg-gradient-to-r from-brand-caribbeanTeal to-brand-caribbeanSea hover:brightness-110 text-slate-950 font-black px-5 py-2.5 rounded-xl text-xs sm:text-sm transition-all shadow-md shadow-brand-caribbeanSea/20 min-h-[42px]"
             >
               Discover Posts to Save
             </Link>

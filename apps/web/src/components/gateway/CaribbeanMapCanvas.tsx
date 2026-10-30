@@ -115,9 +115,9 @@ export function CaribbeanMapCanvas({ highlightIso, onSelectIsland }: CaribbeanMa
       >
         <defs>
           <linearGradient id="arcGradTealGold" x1="0%" y1="100%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#00B4D8" stopOpacity="0.6" />
-            <stop offset="50%" stopColor="#FFB347" stopOpacity="0.5" />
-            <stop offset="100%" stopColor="#FF7A59" stopOpacity="0.6" />
+            <stop offset="0%" stopColor="#0EA5E9" stopOpacity="0.6" />
+            <stop offset="50%" stopColor="#F4AE45" stopOpacity="0.5" />
+            <stop offset="100%" stopColor="#F2775A" stopOpacity="0.6" />
           </linearGradient>
 
           <filter id="f100Glow" x="-50%" y="-50%" width="200%" height="200%">
@@ -152,7 +152,7 @@ export function CaribbeanMapCanvas({ highlightIso, onSelectIsland }: CaribbeanMa
                     <path
                       d={`M ${island.x} ${island.y} Q ${midX} ${midY} ${diaspora.x} ${diaspora.y}`}
                       fill="none"
-                      stroke={isHighlight ? '#FFB347' : 'url(#arcGradTealGold)'}
+                      stroke={isHighlight ? '#F4AE45' : 'url(#arcGradTealGold)'}
                       strokeWidth={isHighlight ? 1.8 : 0.8}
                       strokeDasharray={isHighlight ? 'none' : '4 6'}
                       className="transition-all duration-500"
@@ -182,7 +182,7 @@ export function CaribbeanMapCanvas({ highlightIso, onSelectIsland }: CaribbeanMa
                 cx={island.x}
                 cy={island.y}
                 r={island.r * (isHighlighted ? 5.5 : 3)}
-                fill={isTargeted ? '#FFB347' : '#00B4D8'}
+                fill={isTargeted ? '#F4AE45' : '#0EA5E9'}
                 fillOpacity={isHighlighted ? 0.35 : 0.08}
                 className="transition-all duration-300"
               />
@@ -192,7 +192,7 @@ export function CaribbeanMapCanvas({ highlightIso, onSelectIsland }: CaribbeanMa
                 cx={island.x}
                 cy={island.y}
                 r={island.r * (isHighlighted ? 3 : 1.8)}
-                fill={isHighlighted ? '#FF7A59' : '#FFB347'}
+                fill={isHighlighted ? '#F2775A' : '#F4AE45'}
                 fillOpacity={isHighlighted ? 0.6 : 0.2}
                 className="animate-pulse"
                 style={{
@@ -206,7 +206,7 @@ export function CaribbeanMapCanvas({ highlightIso, onSelectIsland }: CaribbeanMa
                 cx={island.x}
                 cy={island.y}
                 r={island.r * (isTargeted ? 1.3 : 1)}
-                fill={isTargeted ? '#FF7A59' : isHovered ? '#FFB347' : '#00B4D8'}
+                fill={isTargeted ? '#F2775A' : isHovered ? '#F4AE45' : '#0EA5E9'}
                 stroke="#FFFFFF"
                 strokeWidth={isHighlighted ? 2.5 : 1}
                 filter="url(#f100Glow)"
@@ -219,7 +219,7 @@ export function CaribbeanMapCanvas({ highlightIso, onSelectIsland }: CaribbeanMa
                   x={island.x}
                   y={island.y + island.r + 14}
                   textAnchor="middle"
-                  fill="#FDF2E9"
+                  fill="#E8EDF5"
                   fillOpacity={isHighlighted ? 1 : 0.8}
                   fontSize={isHighlighted ? '12' : '11'}
                   fontWeight={isHighlighted ? '800' : '600'}
@@ -236,13 +236,13 @@ export function CaribbeanMapCanvas({ highlightIso, onSelectIsland }: CaribbeanMa
         {/* Diaspora Hub Points */}
         {DIASPORA_POINTS.map((hub) => (
           <g key={hub.id} className="cursor-pointer">
-            <circle cx={hub.x} cy={hub.y} r="10" fill="#FFB347" fillOpacity="0.25" />
-            <circle cx={hub.x} cy={hub.y} r="4.5" fill="#FFB347" stroke="#FFF" strokeWidth="2" filter="url(#f100Glow)" />
+            <circle cx={hub.x} cy={hub.y} r="10" fill="#F4AE45" fillOpacity="0.25" />
+            <circle cx={hub.x} cy={hub.y} r="4.5" fill="#F4AE45" stroke="#FFF" strokeWidth="2" filter="url(#f100Glow)" />
             <text
               x={hub.x}
               y={hub.y - 12}
               textAnchor="middle"
-              fill="#FFB347"
+              fill="#F4AE45"
               fontSize="11"
               fontWeight="800"
               letterSpacing="0.04em"

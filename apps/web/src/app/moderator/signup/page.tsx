@@ -95,7 +95,7 @@ export default function ModeratorSignupPage() {
   };
 
   return (
-    <div className="min-h-screen bg-transparent text-brand-sandstone flex flex-col justify-between selection:bg-[#FF7A59]/30">
+    <div className="min-h-screen bg-transparent text-brand-sandstone flex flex-col justify-between selection:bg-[#F2775A]/30">
       {/* ── Top Header ── */}
       <header className="sticky shell-sticky-below-header z-30 bg-[#081020]/90 backdrop-blur-xl border-b border-white/10 px-4 sm:px-8 py-3.5 flex items-center justify-between">
         <TukubiLogo variant="horizontal" size="sm" href="/" />
@@ -148,7 +148,7 @@ export default function ModeratorSignupPage() {
             <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link
                 href="/"
-                className="w-full sm:w-auto px-6 py-3 rounded-xl bg-gradient-to-r from-brand-caribbeanSea to-brand-sunriseCoral text-slate-950 font-black text-xs transition-all shadow-lg hover:opacity-95"
+                className="w-full sm:w-auto px-6 py-3 rounded-xl bg-gradient-to-r from-brand-caribbeanTeal to-brand-caribbeanSea text-slate-950 font-black text-xs transition-all shadow-lg hover:opacity-95"
               >
                 Return to Tukubi
               </Link>

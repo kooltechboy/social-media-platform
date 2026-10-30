@@ -113,7 +113,7 @@ export default function FeedNavigation({
               {isActive && (
                 <span
                   aria-hidden="true"
-                  className="absolute bottom-0 left-2 right-2 h-0.5 bg-gradient-to-r from-brand-caribbeanSea via-brand-sunriseCoral to-brand-goldenHour rounded-full shadow-[0_0_8px_rgba(0,180,216,0.6)]"
+                  className="absolute bottom-0 left-2 right-2 h-0.5 bg-gradient-to-r from-brand-caribbeanSea via-brand-sunriseCoral to-brand-goldenHour rounded-full shadow-[0_0_8px_rgba(14,165,233,0.6)]"
                 />
               )}
             </button>

@@ -1563,7 +1563,7 @@ export default function UniversalComposer({
             {/* Header: Author, Audience & Mode Badge */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 md:pb-4 border-b border-slate-800/80">
               <div className="flex items-center gap-3 md:gap-3.5">
-                <div className="w-10 h-10 md:w-12 md:h-12 rounded-2xl overflow-hidden bg-gradient-to-tr from-brand-caribbeanSea to-brand-sunriseCoral text-slate-950 font-black flex items-center justify-center text-xs md:text-sm shadow-md flex-shrink-0">
+                <div className="w-10 h-10 md:w-12 md:h-12 rounded-2xl overflow-hidden bg-gradient-to-tr from-brand-caribbeanTeal to-brand-caribbeanSea text-slate-950 font-black flex items-center justify-center text-xs md:text-sm shadow-md flex-shrink-0">
                   {selectedIdentity?.avatarUrl ? (
                     <Image src={selectedIdentity.avatarUrl} alt={selectedIdentity.name} width={48} height={48} unoptimized className="w-full h-full object-cover" />
                   ) : (
@@ -1600,7 +1600,7 @@ export default function UniversalComposer({
                         </button>
 
                         {isIdentityDropdownOpen && (
-                          <div className="absolute left-0 top-8 z-50 w-64 rounded-2xl bg-[#110D17]/95 backdrop-blur-2xl border border-white/20 p-2 shadow-2xl space-y-1 animate-fadeIn">
+                          <div className="absolute left-0 top-8 z-50 w-64 rounded-2xl bg-[#070D1A]/95 backdrop-blur-2xl border border-white/20 p-2 shadow-2xl space-y-1 animate-fadeIn">
                             <p className="text-[10px] font-bold text-brand-sandstone/60 px-2 py-1 uppercase tracking-wider">
                               Select Publisher Identity
                             </p>

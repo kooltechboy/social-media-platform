@@ -13,11 +13,11 @@ export default function TermsPage() {
         <h1 className="text-3xl font-extrabold text-white tracking-tight mb-2">
           Terms of Service
         </h1>
-        <p className="text-sm text-[#FDF2E9]/50 mb-8">
+        <p className="text-sm text-[#E8EDF5]/50 mb-8">
           Effective Date: September 15, 2026 &middot; Last Updated: September 15, 2026
         </p>
 
-        <section className="space-y-4 text-[#FDF2E9]/80 text-sm leading-relaxed">
+        <section className="space-y-4 text-[#E8EDF5]/80 text-sm leading-relaxed">
           <h2 className="text-lg font-bold text-white mt-8">1. Acceptance of Terms</h2>
           <p>
             By accessing or using TUKUBI (&ldquo;the Platform&rdquo;), operated by TUKUBI Inc., you agree to be bound by these Terms of Service (&ldquo;Terms&rdquo;). If you do not agree, you may not use the Platform.
@@ -66,7 +66,7 @@ export default function TermsPage() {
           <h2 className="text-lg font-bold text-white mt-8">10. Privacy</h2>
           <p>
             Your use of TUKUBI is also governed by our{' '}
-            <a href="/privacy" className="text-[#00B4D8] underline underline-offset-2">Privacy Policy</a>.
+            <a href="/privacy" className="text-[#0EA5E9] underline underline-offset-2">Privacy Policy</a>.
             Caribbean identity and location are optional and private by default.
           </p>
 
@@ -93,11 +93,11 @@ export default function TermsPage() {
           <h2 className="text-lg font-bold text-white mt-8">15. Contact</h2>
           <p>
             For questions about these Terms, contact us at{' '}
-            <a href="mailto:legal@tukubi.com" className="text-[#00B4D8] underline underline-offset-2">legal@tukubi.com</a>.
+            <a href="mailto:legal@tukubi.com" className="text-[#0EA5E9] underline underline-offset-2">legal@tukubi.com</a>.
           </p>
         </section>
 
-        <div className="mt-12 pt-6 border-t border-[#2A1B38] text-xs text-[#FDF2E9]/30">
+        <div className="mt-12 pt-6 border-t border-[#15213A] text-xs text-[#E8EDF5]/30">
           <p>TUKUBI — The Caribbean Connected.</p>
         </div>
       </article>

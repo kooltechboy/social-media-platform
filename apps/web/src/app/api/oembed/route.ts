@@ -86,7 +86,7 @@ export async function GET(request: Request | NextRequest) {
 
   const title = titles[resourceType] || 'TUKUBI Embed';
 
-  const html = `<iframe src="${embedSrc}" width="${width}" height="${height}" frameborder="0" scrolling="no" allow="autoplay; clipboard-write; encrypted-media" sandbox="allow-scripts allow-same-origin allow-popups" title="${title}" style="border: 1px solid #2A1B38; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.4); max-width: 100%;"></iframe>`;
+  const html = `<iframe src="${embedSrc}" width="${width}" height="${height}" frameborder="0" scrolling="no" allow="autoplay; clipboard-write; encrypted-media" sandbox="allow-scripts allow-same-origin allow-popups" title="${title}" style="border: 1px solid #15213A; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.4); max-width: 100%;"></iframe>`;
 
   const oembedData: OEmbedResponse = {
     type: 'rich',

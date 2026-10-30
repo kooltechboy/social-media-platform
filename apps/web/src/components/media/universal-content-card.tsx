@@ -115,7 +115,7 @@ export default function UniversalContentCard({
   if (compact) {
     return (
       <div
-        className={`group relative flex items-center gap-3 p-2.5 rounded-xl bg-[#140C22]/90 border border-white/10 hover:border-brand-caribbeanSea/40 transition-all text-left max-w-full overflow-hidden ${className}`}
+        className={`group relative flex items-center gap-3 p-2.5 rounded-xl bg-[#0A1324]/95 border border-white/[0.08] hover:border-brand-caribbeanSea/35 transition-colors text-left max-w-full overflow-hidden ${className}`}
       >
         {onRemove && (
           <button
@@ -190,7 +190,7 @@ export default function UniversalContentCard({
   // 4. FULL RICH MEDIA CARDS
   return (
     <div
-      className={`group relative rounded-2xl bg-gradient-to-b from-[#180E28] to-[#10091B] border border-white/12 hover:border-brand-caribbeanSea/35 transition-all shadow-xl overflow-hidden text-left ${className}`}
+      className={`group relative rounded-xl bg-[#0A1324]/95 border border-white/[0.09] hover:border-white/[0.16] transition-colors shadow-panel overflow-hidden text-left ${className}`}
     >
       {/* Remove preview button (used in Composer) */}
       {onRemove && (
@@ -266,19 +266,19 @@ export default function UniversalContentCard({
             )}
           </div>
 
-          <span className="text-[11px] font-black uppercase tracking-wider text-brand-caribbeanSea/80">
+          <span className="text-[10.5px] font-semibold uppercase tracking-[0.08em] text-brand-mist">
             {contentType}
           </span>
         </div>
 
         {/* Title */}
-        <h3 className="text-sm md:text-base font-black text-white group-hover:text-brand-caribbeanSea transition-colors line-clamp-2 leading-snug">
+        <h3 className="text-[15px] font-semibold text-white group-hover:text-sky-200 transition-colors line-clamp-2 leading-snug">
           {String(title)}
         </h3>
 
         {/* Description Snippet */}
         {description ? (
-          <p className="text-xs md:text-sm text-slate-300 line-clamp-2 leading-relaxed">
+          <p className="text-[13px] text-brand-mist line-clamp-2 leading-relaxed">
             {description}
           </p>
         ) : null}
@@ -317,7 +317,7 @@ export default function UniversalContentCard({
             href={url}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 text-xs font-black text-brand-caribbeanSea hover:text-brand-sunriseCoral transition-colors group/link"
+            className="inline-flex items-center gap-1.5 text-xs font-medium text-brand-caribbeanSea hover:text-sky-300 transition-colors group/link"
           >
             <span>Open on {providerDisplayName}</span>
             <ExternalLink className="w-3.5 h-3.5 group-hover/link:translate-x-0.5 transition-transform" />

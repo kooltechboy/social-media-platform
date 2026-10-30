@@ -49,7 +49,7 @@ export function StepProgress({ currentStep, totalSteps = 5, backHref }: StepProg
               key={stepNum}
               className={`h-1.5 rounded-full transition-all duration-500 ${
                 isActive
-                  ? 'bg-gradient-to-r from-brand-caribbeanSea to-brand-sunriseCoral shadow-sm shadow-brand-caribbeanSea/30'
+                  ? 'bg-gradient-to-r from-brand-caribbeanTeal to-brand-caribbeanSea shadow-sm shadow-brand-caribbeanSea/30'
                   : 'bg-white/10'
               }`}
             />

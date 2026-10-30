@@ -47,14 +47,14 @@ export default function CommunitiesRail({
   if (activeCommunity) {
     return (
       <div className="space-y-5">
-        <div className="glass rounded-3xl p-5 border border-white/10 space-y-3 shadow-lg">
+        <div className="tk-panel p-5 border border-white/10 space-y-3 shadow-lg">
           <div className="space-y-1">
             <span className="text-[10px] font-black uppercase tracking-wider text-cyan-400">
               Community Hub
             </span>
             <h3 className="text-lg font-black text-white">{activeCommunity.name}</h3>
             {activeCommunity.members_count !== undefined && (
-              <p className="text-xs font-bold text-brand-sandstone/70">
+              <p className="text-xs font-bold text-brand-mist">
                 {activeCommunity.members_count} active members
               </p>
             )}
@@ -67,8 +67,8 @@ export default function CommunitiesRail({
         </div>
 
         {/* Community Navigation */}
-        <section aria-label="Community Sections" className="glass rounded-3xl p-4 sm:p-5 space-y-2.5 border border-white/10">
-          <h4 className="text-xs font-black text-white uppercase tracking-wider">
+        <section aria-label="Community Sections" className="tk-panel p-4 sm:p-5 space-y-2.5 border border-white/10">
+          <h4 className="text-[13.5px] font-semibold text-white">
             Hub Navigation
           </h4>
           <nav className="space-y-1 pt-0.5">
@@ -107,10 +107,10 @@ export default function CommunitiesRail({
 
         {/* Community Guidelines */}
         {activeCommunity.rules && activeCommunity.rules.length > 0 && (
-          <section aria-label="Community Rules" className="glass rounded-3xl p-4 sm:p-5 space-y-2.5 border border-white/10">
+          <section aria-label="Community Rules" className="tk-panel p-4 sm:p-5 space-y-2.5 border border-white/10">
             <div className="flex items-center gap-2">
               <BookOpen className="w-4 h-4 text-brand-goldenHour" />
-              <h4 className="text-xs font-black text-white uppercase tracking-wider">
+              <h4 className="text-[13.5px] font-semibold text-white">
                 Community Rules
               </h4>
             </div>
@@ -132,14 +132,14 @@ export default function CommunitiesRail({
   return (
     <div className="space-y-5">
       {/* 1. Create Community CTA */}
-      <div className="glass rounded-3xl p-5 border border-cyan-500/30 bg-gradient-to-br from-cyan-500/10 to-brand-sunsetPurple/20 space-y-3 shadow-xl">
+      <div className="tk-panel p-5 border border-cyan-500/30 bg-gradient-to-br from-cyan-500/10 to-brand-sunsetPurple/20 space-y-3 shadow-xl">
         <div className="flex items-center gap-2.5">
           <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-cyan-400 to-brand-caribbeanSea flex items-center justify-center text-slate-950 font-black shadow-md">
             <Users className="w-4 h-4" />
           </div>
           <div>
             <h3 className="text-sm font-black text-white">Create a Community</h3>
-            <p className="text-[10px] text-brand-sandstone/60">
+            <p className="text-[10px] text-brand-mist">
               Gather islanders &amp; diaspora
             </p>
           </div>
@@ -158,11 +158,11 @@ export default function CommunitiesRail({
 
       {/* 2. My Joined Communities */}
       {myCommunities.length > 0 && (
-        <section aria-label="My Communities" className="glass rounded-3xl p-4 sm:p-5 space-y-3 border border-white/10">
+        <section aria-label="My Communities" className="tk-panel p-4 sm:p-5 space-y-3 border border-white/10">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Users className="w-4 h-4 text-brand-caribbeanSea" />
-              <h4 className="text-xs font-black text-white uppercase tracking-wider">
+              <h4 className="text-[13.5px] font-semibold text-white">
                 My Communities
               </h4>
             </div>
@@ -191,10 +191,10 @@ export default function CommunitiesRail({
 
       {/* 3. Suggested Communities */}
       {suggestedCommunities.length > 0 && (
-        <section aria-label="Suggested Communities" className="glass rounded-3xl p-4 sm:p-5 space-y-3 border border-white/10">
+        <section aria-label="Suggested Communities" className="tk-panel p-4 sm:p-5 space-y-3 border border-white/10">
           <div className="flex items-center gap-2">
             <Flame className="w-4 h-4 text-brand-goldenHour" />
-            <h4 className="text-xs font-black text-white uppercase tracking-wider">
+            <h4 className="text-[13.5px] font-semibold text-white">
               Popular Hubs to Join
             </h4>
           </div>
@@ -209,7 +209,7 @@ export default function CommunitiesRail({
                 <p className="text-xs font-black text-white group-hover:text-brand-goldenHour transition-colors truncate">
                   {comm.name}
                 </p>
-                <div className="flex items-center justify-between text-[10px] text-brand-sandstone/60 mt-1">
+                <div className="flex items-center justify-between text-[10px] text-brand-mist mt-1">
                   <span>{comm.category || 'Caribbean Hub'}</span>
                   {comm.members_count !== undefined && (
                     <span>{comm.members_count} members</span>

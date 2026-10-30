@@ -29,14 +29,14 @@ export default function MarketplaceRail({
   return (
     <div className="space-y-5">
       {/* 1. Seller Quick Action */}
-      <div className="glass rounded-3xl p-5 border border-brand-sunriseCoral/30 bg-gradient-to-br from-brand-sunriseCoral/10 to-brand-sunsetPurple/20 space-y-3 shadow-xl">
+      <div className="tk-panel p-5 border border-brand-sunriseCoral/30 bg-gradient-to-br from-brand-sunriseCoral/10 to-brand-sunsetPurple/20 space-y-3 shadow-xl">
         <div className="flex items-center gap-2.5">
           <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-brand-sunriseCoral to-brand-goldenHour flex items-center justify-center text-slate-950 font-black shadow-md">
             <Store className="w-4 h-4" />
           </div>
           <div>
             <h3 className="text-sm font-black text-white">Sell on Marketplace</h3>
-            <p className="text-[10px] text-brand-sandstone/60">
+            <p className="text-[10px] text-brand-mist">
               Caribbean merchants &amp; creators
             </p>
           </div>
@@ -54,10 +54,10 @@ export default function MarketplaceRail({
       </div>
 
       {/* 2. Marketplace Navigation & Controls */}
-      <section aria-label="Marketplace Navigation" className="glass rounded-3xl p-4 sm:p-5 space-y-3 border border-white/10">
+      <section aria-label="Marketplace Navigation" className="tk-panel p-4 sm:p-5 space-y-3 border border-white/10">
         <div className="flex items-center gap-2">
           <ShoppingBag className="w-4 h-4 text-brand-goldenHour" />
-          <h4 className="text-xs font-black text-white uppercase tracking-wider">
+          <h4 className="text-[13.5px] font-semibold text-white">
             Market Actions
           </h4>
         </div>
@@ -99,16 +99,16 @@ export default function MarketplaceRail({
       </section>
 
       {/* 3. Category Navigation */}
-      <section aria-label="Product Categories" className="glass rounded-3xl p-4 sm:p-5 space-y-3 border border-white/10">
+      <section aria-label="Product Categories" className="tk-panel p-4 sm:p-5 space-y-3 border border-white/10">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Tag className="w-4 h-4 text-brand-caribbeanSea" />
-            <h4 className="text-xs font-black text-white uppercase tracking-wider">
+            <h4 className="text-[13.5px] font-semibold text-white">
               Categories
             </h4>
           </div>
           {activeCategory && (
-            <Link href="/marketplace" className="text-[10px] font-bold text-brand-sandstone/60 hover:text-white">
+            <Link href="/marketplace" className="text-[10px] font-bold text-brand-mist hover:text-white">
               Clear
             </Link>
           )}
@@ -141,7 +141,7 @@ export default function MarketplaceRail({
       <div className="p-4 rounded-2xl bg-white/5 border border-white/10 space-y-2 text-center">
         <ShieldCheck className="w-6 h-6 text-emerald-400 mx-auto" />
         <p className="text-xs font-black text-white">TUKUBI Verified Escrow</p>
-        <p className="text-[11px] text-brand-sandstone/70 leading-relaxed">
+        <p className="text-[11px] text-brand-mist leading-relaxed">
           Protected marketplace payments with zero credit card storage and multi-currency Caribbean settlement.
         </p>
       </div>

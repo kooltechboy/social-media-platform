@@ -1,7 +1,7 @@
 // Design Tokens for TUKUBI Visual Language (The Caribbean Connected / Caribbean Futurism)
 
 export const DEFAULT_THEME = 'island-vibes' as const;
-export type ThemeMode = 'island-vibes' | 'island-daylight';
+export type ThemeMode = 'island-vibes' | 'island-daylight' | 'midnight-reef';
 
 /**
  * Official TUKUBI Brand Palette (Source of Truth)
@@ -51,28 +51,32 @@ export const colors = {
     officialSunsetOrange: '#F59E0B',
     officialDeepNavy: '#0B1B3B',
     officialSand: '#F8FAFC',
+    // Core Foundation Tokens — Aligned to Official TUKUBI "Midnight Reef" Brand Architecture
+    // Legacy token keys preserved for monorepo compatibility across web, mobile, and studios
     caribbeanTeal: '#00C2A8',
     oceanBlue: '#0EA5E9',
     violet: '#8B5CF6',
     sunsetOrange: '#F59E0B',
     deepNavy: '#0B1B3B',
     sand: '#F8FAFC',
+    ink: '#060B16',
+    porcelain: '#E8EDF5',
+    mist: '#94A3B8',
 
-    // Core Foundation Tokens (Preserved for compatibility & existing themes)
-    twilight: '#110D17',        // Deep Twilight Base (Island Vibes night sky)
-    dusk: '#1D1429',            // Warm Dusk Surface 
-    sunsetPlum: '#2A1B38',      // Deep Plum Raised Surface
-    oceanDepth: '#0B1F33',      // Deep Ocean Navy Trust & Financial Surface (D-01)
-    sunriseCoral: '#FF7A59',    // Vibrant Sunrise Coral
+    twilight: '#110D17',        // Legacy Mobile Twilight Canvas
+    dusk: '#1D1429',            // Legacy Mobile Dusk Surface
+    sunsetPlum: '#2A1B38',      // Legacy Mobile Elevated Surface
+    oceanDepth: '#0B1F33',      // Financial & Trust Surface (D-01)
+    sunriseCoral: '#FF7A59',    // Legacy Mobile Primary Accent
     emberCoral: '#C2410C',      // Light-Mode Accessible Deep Ember Coral (5.18:1)
-    goldenHour: '#FFB347',      // Warm Golden Hour
-    caribbeanSea: '#00B4D8',    // Beautiful Tropical Sea
+    goldenHour: '#FFB347',      // Legacy Mobile Golden Hour Amber
+    caribbeanSea: '#00B4D8',    // Legacy Mobile Caribbean Sea Cyan
     deepSea: '#0E7490',         // Light-Mode Accessible Deep Sea Cyan (5.36:1)
-    sandstone: '#FDF2E9',       // Warm Sandstone Text/White
-    sunsetPurple: '#8B5CF6',    // Deep Sunset Purple
+    sandstone: '#FDF2E9',       // Legacy Mobile Warm Sandstone Text
+    sunsetPurple: '#8B5CF6',    // Official Violet Secondary Accent
     oceanSurge: '#0284C7',      // Deep Ocean Blue Accent
     palmGreen: '#10B981',       // Tropical Emerald Green
-    amberGlow: '#F59E0B',       // Amber Glow
+    amberGlow: '#F59E0B',       // Official Sunset Orange
   },
   islandVibes: {
     name: 'Island Vibes',
@@ -81,23 +85,49 @@ export const colors = {
     surface: '#1D1429',
     surfaceRaised: '#2A1B38',
     surfaceTrust: '#0B1F33',
-    surfaceOpaque: '#161022',
+    surfaceOpaque: '#181126',
     surfaceElevated: '#1D1429',
-    surfaceCard: 'rgba(22, 16, 34, 0.94)',
-    surfaceHeader: 'rgba(17, 13, 23, 0.92)',
+    surfaceCard: 'rgba(24, 17, 38, 0.90)',
+    surfaceHeader: 'rgba(17, 13, 23, 0.88)',
     surfaceGlass: 'rgba(17, 13, 23, 0.70)',
     border: 'rgba(255, 255, 255, 0.10)',
-    borderHover: 'rgba(255, 122, 89, 0.40)',
+    borderHover: 'rgba(255, 122, 89, 0.35)',
     primary: '#FF7A59',
     onPrimary: '#110D17',
-    secondary: '#8B5CF6',
+    secondary: '#00B4D8',
     accent: '#FFB347',
     sea: '#00B4D8',
     textPrimary: '#FDF2E9',
-    textMuted: '#B4B4BE',
+    textMuted: '#D4D4D8',
     textDim: '#A1A1AA',
     success: '#10B981',
     warning: '#FFB347',
+    danger: '#F43F5E',
+  },
+  midnightReef: {
+    name: 'Midnight Reef',
+    id: 'midnight-reef',
+    canvas: '#070D1A',
+    surface: '#0D1628',
+    surfaceRaised: '#15213A',
+    surfaceTrust: '#0B1B3B',
+    surfaceOpaque: '#0B1424',
+    surfaceElevated: '#0D1628',
+    surfaceCard: 'rgba(11, 19, 35, 0.92)',
+    surfaceHeader: 'rgba(7, 13, 26, 0.88)',
+    surfaceGlass: 'rgba(10, 18, 34, 0.86)',
+    border: 'rgba(148, 163, 184, 0.12)',
+    borderHover: 'rgba(14, 165, 233, 0.35)',
+    primary: '#0EA5E9',
+    onPrimary: '#04101F',
+    secondary: '#00C2A8',
+    accent: '#F4AE45',
+    sea: '#0EA5E9',
+    textPrimary: '#E8EDF5',
+    textMuted: '#A7B3C5',
+    textDim: '#94A3B8',
+    success: '#10B981',
+    warning: '#F4AE45',
     danger: '#F43F5E',
   },
   islandDaylight: {
@@ -128,15 +158,16 @@ export const colors = {
     danger: '#E11D48',
   },
   gradients: {
-    tukubiAmbient: 'linear-gradient(135deg, #110D17 0%, #1D1429 50%, #2A1B38 100%)',
-    islandVibesHeader: 'linear-gradient(135deg, #00B4D8 0%, #FFB347 50%, #FF7A59 100%)',
+    tukubiAmbient: 'linear-gradient(180deg, #070D1A 0%, #0D1628 55%, #15213A 100%)',
+    islandVibesHeader: 'linear-gradient(135deg, #00C2A8 0%, #0EA5E9 100%)',
+    brandPrimary: 'linear-gradient(135deg, #00C2A8 0%, #0EA5E9 100%)',
     brandSpectrum: 'linear-gradient(90deg, #00C2A8 0%, #0EA5E9 33%, #8B5CF6 66%, #F59E0B 100%)',
-    oceanTrust: 'linear-gradient(135deg, #0B1F33 0%, #110D17 100%)',
-    sunriseGlow: 'radial-gradient(circle at 80% 20%, rgba(255, 122, 89, 0.2), transparent 40%)',
-    goldenGlow: 'radial-gradient(circle at 20% 80%, rgba(255, 179, 71, 0.15), transparent 40%)',
-    oceanGlow: 'radial-gradient(circle at 50% 50%, rgba(0, 180, 216, 0.15), transparent 50%)',
-    violetGlow: 'radial-gradient(circle at 20% 80%, rgba(139, 92, 246, 0.20), transparent 40%)',
-    islandSunset: 'linear-gradient(to bottom, rgba(24, 10, 36, 0.35) 0%, rgba(24, 10, 36, 0.10) 25%, rgba(24, 10, 36, 0.25) 60%, rgba(17, 13, 23, 0.75) 100%)',
+    oceanTrust: 'linear-gradient(135deg, #0B1B3B 0%, #070D1A 100%)',
+    sunriseGlow: 'radial-gradient(circle at 80% 20%, rgba(242, 119, 90, 0.14), transparent 45%)',
+    goldenGlow: 'radial-gradient(circle at 80% 10%, rgba(244, 174, 69, 0.16), transparent 45%)',
+    oceanGlow: 'radial-gradient(circle at 50% 50%, rgba(14, 165, 233, 0.14), transparent 50%)',
+    violetGlow: 'radial-gradient(circle at 20% 80%, rgba(139, 92, 246, 0.14), transparent 45%)',
+    islandSunset: 'linear-gradient(180deg, rgba(6, 11, 22, 0.55) 0%, rgba(6, 11, 22, 0.72) 30%, rgba(6, 11, 22, 0.86) 65%, rgba(6, 11, 22, 0.94) 100%)',
   },
   neutral: {
     50: '#FAFAFA',

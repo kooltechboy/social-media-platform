@@ -310,12 +310,11 @@ export default function FeedPost({
     <article
       id={post.id}
       aria-label={`Post by ${post.author}`}
-      className={`glass-aerospace rounded-2xl sm:rounded-3xl p-4 sm:p-5 md:p-6 space-y-3 sm:space-y-3.5 md:space-y-4 hover:border-white/25 transition-all duration-300 relative group shadow-xl sm:shadow-2xl ${
+      className={`tk-panel p-4 sm:p-5 md:p-6 space-y-3 sm:space-y-4 hover:border-white/[0.14] transition-colors duration-200 relative group ${
         isMenuOpen ? 'z-40' : 'z-0'
       }`}
     >
-      {/* Specular high-definition light reflection line */}
-      <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/25 to-transparent pointer-events-none" />
+      {/* (Specular light line retired in Midnight Reef — panels use an inset hairline) */}
 
       {/* ────────────────────────────────────────────────────────── */}
       {/* 1. POST HEADER                                            */}
@@ -338,7 +337,7 @@ export default function FeedPost({
             <div className="flex items-center gap-1.5 flex-wrap">
               <Link
                 href={authorHref}
-                className="font-black text-sm sm:text-base md:text-[17px] text-white hover:text-brand-caribbeanSea transition-colors tracking-tight truncate"
+                className="font-semibold text-[15px] text-white hover:underline decoration-white/30 underline-offset-2 truncate"
               >
                 {post.author}
               </Link>
@@ -356,7 +355,7 @@ export default function FeedPost({
                 </span>
               ) : post.verified ? (
                 <span title="Verified Member" aria-label="Verified Member" className="inline-flex items-center">
-                  <CheckCircle className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-brand-caribbeanSea fill-brand-caribbeanSea/20 drop-shadow-[0_0_6px_rgba(0,180,216,0.5)]" />
+                  <CheckCircle className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-brand-caribbeanSea fill-brand-caribbeanSea/20 drop-shadow-[0_0_6px_rgba(14,165,233,0.5)]" />
                 </span>
               ) : null}
 
@@ -437,7 +436,7 @@ export default function FeedPost({
             <div
               className={`absolute right-0 ${
                 openUpward ? 'bottom-12' : 'top-12'
-              } z-50 w-56 sm:w-60 rounded-2xl bg-[#140C22]/95 backdrop-blur-2xl border border-slate-700/80 shadow-[0_20px_50px_rgba(0,0,0,0.85)] p-1.5 space-y-1 animate-fadeIn text-xs sm:text-sm max-h-[min(480px,80vh)] overflow-y-auto overscroll-contain scrollbar-thin`}
+              } z-50 w-56 sm:w-60 rounded-xl bg-[#0B1424]/95 backdrop-blur-2xl border border-white/[0.08] shadow-panel-lg p-1.5 space-y-1 animate-fadeIn text-xs sm:text-sm max-h-[min(480px,80vh)] overflow-y-auto overscroll-contain scrollbar-thin`}
             >
               <button
                 type="button"
@@ -622,7 +621,7 @@ export default function FeedPost({
               type="button"
               onClick={handleSaveEdit}
               disabled={isSubmittingEdit || !editedContent.trim()}
-              className="px-4 py-1.5 rounded-xl bg-gradient-to-r from-brand-caribbeanSea to-brand-sunriseCoral text-slate-950 font-black text-xs hover:brightness-110 transition-all disabled:opacity-50 flex items-center gap-1.5"
+              className="px-4 py-1.5 rounded-xl bg-gradient-to-r from-brand-caribbeanTeal to-brand-caribbeanSea text-slate-950 font-black text-xs hover:brightness-110 transition-all disabled:opacity-50 flex items-center gap-1.5"
             >
               {isSubmittingEdit ? (
                 <>
@@ -636,7 +635,7 @@ export default function FeedPost({
           </div>
         </div>
       ) : (
-        <p className="text-[15px] sm:text-base md:text-[17px] text-slate-100 leading-[1.6] font-medium whitespace-pre-wrap break-words">
+        <p className="text-[15px] sm:text-[15.5px] text-[#E8EDF5] leading-[1.62] font-normal whitespace-pre-wrap break-words">
           {translation?.translatedText && !translation?.isShowingOriginal
             ? translation.translatedText
             : displayedContent}
@@ -705,7 +704,7 @@ export default function FeedPost({
         ) : (
           <div className="flex items-center gap-2">
             <div className="relative inline-flex items-center">
-              <Globe className="w-4 h-4 text-brand-caribbeanSea mr-1.5 shrink-0" />
+              <Globe className="w-3.5 h-3.5 text-brand-mist mr-0.5 shrink-0" />
               <select
                 defaultValue=""
                 onChange={(e) => {
@@ -715,7 +714,7 @@ export default function FeedPost({
                   }
                 }}
                 aria-label="Translate post to language"
-                className="bg-brand-twilight/80 hover:bg-brand-twilight border border-slate-700 hover:border-brand-caribbeanSea/60 text-xs font-semibold text-brand-caribbeanSea rounded-full pl-3 pr-7 py-1.5 focus:outline-none focus:border-brand-caribbeanSea cursor-pointer transition-colors appearance-none min-h-[36px]"
+                className="bg-transparent hover:bg-white/[0.04] border border-transparent hover:border-white/[0.08] text-xs font-medium text-brand-mist hover:text-white rounded-lg pl-2 pr-5 py-1 focus:outline-none focus:border-brand-caribbeanSea/50 cursor-pointer transition-colors appearance-none"
               >
                 <option value="" disabled>
                   Translate to ▾
@@ -839,14 +838,14 @@ export default function FeedPost({
       {/* ────────────────────────────────────────────────────────── */}
       {/* 4. INTERACTION BAR                                        */}
       {/* ────────────────────────────────────────────────────────── */}
-      <div className="flex items-center justify-between pt-3 border-t border-slate-800/70 text-brand-sandstone/70 text-xs sm:text-sm">
+      <div className="flex items-center justify-between pt-2 border-t border-white/[0.06] text-brand-mist text-[13px]">
         {/* Reaction Picker & Counter */}
         <div className="flex items-center gap-1.5">
           <ReactionPicker
             currentReaction={currentReaction}
             onSelect={(type) => onToggleReaction(post.id, type)}
           />
-          <span className="text-xs sm:text-sm font-semibold text-slate-200 tabular-nums">
+          <span className="text-[13px] font-medium text-[#C3CCDA] tabular-nums">
             {likeCount || 0}
           </span>
         </div>
@@ -856,8 +855,8 @@ export default function FeedPost({
           type="button"
           aria-label={`View comments (${post.comments})`}
           onClick={() => onToggleComments(post.id)}
-          className={`flex items-center gap-1.5 sm:gap-2 hover:text-brand-caribbeanSea transition-colors px-2.5 py-2 min-h-[44px] rounded-xl font-semibold select-none ${
-            isCommentsExpanded ? 'text-brand-caribbeanSea font-bold' : ''
+          className={`flex items-center gap-2 hover:text-white hover:bg-white/[0.04] transition-colors px-2.5 py-2 min-h-[44px] rounded-lg font-medium select-none ${
+            isCommentsExpanded ? 'text-white' : ''
           }`}
         >
           <MessageCircle className="w-5 h-5" />
@@ -869,7 +868,7 @@ export default function FeedPost({
           type="button"
           aria-label="Share post"
           onClick={() => onShare(post)}
-          className="flex items-center gap-1.5 sm:gap-2 hover:text-brand-sunriseCoral transition-colors px-2.5 py-2 min-h-[44px] rounded-xl font-semibold select-none"
+          className="flex items-center gap-2 hover:text-white hover:bg-white/[0.04] transition-colors px-2.5 py-2 min-h-[44px] rounded-lg font-medium select-none"
         >
           <Share2 className="w-5 h-5" />
           <span>{post.reposts > 0 ? post.reposts : 'Share'}</span>
@@ -893,7 +892,7 @@ export default function FeedPost({
           type="button"
           aria-label={`Send Tip to ${post.author}`}
           onClick={() => onTipCreator({ name: post.author, handle: post.handle })}
-          className="flex items-center gap-1.5 text-brand-sunriseCoral font-extrabold hover:text-emerald-300 transition-all bg-brand-sunriseCoral/10 hover:bg-brand-sunriseCoral/20 px-3 sm:px-4 py-2 min-h-[44px] rounded-full border border-brand-sunriseCoral/25 text-xs sm:text-sm shadow-sm"
+          className="flex items-center gap-1.5 text-brand-goldenHour font-semibold hover:bg-brand-goldenHour/10 transition-colors px-3 sm:px-3.5 py-2 min-h-[44px] rounded-lg border border-brand-goldenHour/25 text-[13px]"
         >
           <Wallet className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
           <span className="hidden sm:inline">Tip</span>

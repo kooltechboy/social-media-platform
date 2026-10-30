@@ -103,7 +103,7 @@ export default function HelpSearch({ placeholder = 'Search for help...', size = 
 
       {/* Dropdown results */}
       {isOpen && (
-        <div className="absolute top-full left-0 right-0 mt-2 bg-[#1D1429] border border-white/15 rounded-2xl shadow-2xl z-50 overflow-hidden">
+        <div className="absolute top-full left-0 right-0 mt-2 bg-[#0D1628] border border-white/15 rounded-2xl shadow-2xl z-50 overflow-hidden">
           {isLoading ? (
             <div className="p-4 text-center text-sm text-brand-sandstone/60">Searching…</div>
           ) : results.length === 0 ? (

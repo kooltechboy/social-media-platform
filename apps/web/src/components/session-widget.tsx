@@ -56,9 +56,9 @@ export default function SessionWidget() {
     return (
       <Link
         href="/login"
-        className="bg-gradient-to-r from-brand-goldenHour via-brand-caribbeanSea to-brand-sunriseCoral hover:from-amber-300 hover:to-emerald-300 text-slate-950 font-black text-xs px-4 py-2 rounded-full shadow-lg shadow-brand-goldenHour/20 transition-all hover:scale-105"
+        className="tk-btn-primary text-[13px] px-4 h-10 inline-flex items-center justify-center rounded-xl"
       >
-        Sign In
+        Sign in
       </Link>
     );
   }
@@ -75,25 +75,21 @@ export default function SessionWidget() {
         aria-haspopup="menu"
         aria-expanded={isOpen}
         aria-label={`Account menu for ${user.displayName || user.username}`}
-        className="flex items-center gap-1.5 p-1 rounded-full hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-brand-caribbeanSea/50 transition-all group cursor-pointer"
+        className="flex items-center gap-1.5 px-1.5 h-10 rounded-xl hover:bg-white/[0.06] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-caribbeanSea/60 transition-colors group cursor-pointer"
       >
         <div className="relative">
           <UserAvatar
             src={user.avatarUrl}
             name={user.displayName || user.username}
             size="sm"
-            className={
-              isOfficial
-                ? 'ring-2 ring-brand-caribbeanSea/80 shadow-md shadow-brand-caribbeanSea/20'
-                : 'ring-1 ring-white/20 group-hover:ring-brand-caribbeanSea/60 transition-all'
-            }
+            ringVariant={isOfficial ? 'brand' : 'subtle'}
           />
-          <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 ring-2 ring-[#0F172A]" />
+          <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 ring-2 ring-[#070D1A]" />
         </div>
 
         <ChevronDown
-          className={`w-3.5 h-3.5 text-white/50 group-hover:text-white transition-transform duration-200 ${
-            isOpen ? 'rotate-180 text-brand-caribbeanSea' : ''
+          className={`w-3.5 h-3.5 text-brand-mist group-hover:text-white transition-transform duration-200 ${
+            isOpen ? 'rotate-180 text-white' : ''
           }`}
           aria-hidden="true"
         />
@@ -104,7 +100,7 @@ export default function SessionWidget() {
         <div
           role="menu"
           aria-label="User Account Menu"
-          className="absolute right-0 top-12 w-72 bg-[#0C1226]/95 backdrop-blur-3xl border border-white/15 rounded-3xl p-3 shadow-2xl z-50 animate-fadeIn space-y-2 text-brand-sandstone"
+          className="absolute right-0 top-12 w-72 bg-[#0B1424]/96 backdrop-blur-2xl border border-white/[0.09] rounded-2xl p-2 shadow-panel-lg z-50 animate-fadeIn space-y-1.5 text-brand-sandstone"
         >
           {/* Identity Header */}
           <Link

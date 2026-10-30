@@ -478,7 +478,7 @@ export default function MessagesCenterClient({
       {/* COLUMN 1: Inbox & Navigation (Left Sidebar)                               */}
       {/* ========================================================================= */}
       <aside
-        className={`w-full md:w-80 lg:w-84 xl:w-96 flex-shrink-0 flex flex-col h-full border-r border-white/10 bg-[#0D0816]/95 z-10 ${
+        className={`w-full md:w-80 lg:w-84 xl:w-96 flex-shrink-0 flex flex-col h-full border-r border-white/10 bg-[#070E1B]/95 z-10 ${
           mobileView === 'thread' ? 'hidden md:flex' : 'flex'
         }`}
       >
@@ -498,7 +498,7 @@ export default function MessagesCenterClient({
           <button
             onClick={() => setIsComposeOpen(true)}
             aria-label="Start new chat"
-            className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-brand-caribbeanSea to-brand-sunriseCoral hover:opacity-95 text-slate-950 font-black text-xs flex items-center gap-1.5 shadow-md shadow-brand-caribbeanSea/20 transition-all cursor-pointer"
+            className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-brand-caribbeanTeal to-brand-caribbeanSea hover:opacity-95 text-slate-950 font-black text-xs flex items-center gap-1.5 shadow-md shadow-brand-caribbeanSea/20 transition-all cursor-pointer"
           >
             <Plus className="w-3.5 h-3.5" />
             <span>New</span>
@@ -559,7 +559,7 @@ export default function MessagesCenterClient({
                   >
                     <div className="relative">
                       <UserAvatar name={friend.name} avatarUrl={friend.avatarUrl} size="md" />
-                      <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 border-2 border-[#0D0816]" />
+                      <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 border-2 border-[#070E1B]" />
                     </div>
                     <span className="text-[10px] text-slate-300 font-bold group-hover:text-brand-caribbeanSea truncate max-w-[52px]">
                       {friend.name.split(' ')[0]}
@@ -633,7 +633,7 @@ export default function MessagesCenterClient({
                       <div className="relative flex-shrink-0">
                         <UserAvatar name={person.name} avatarUrl={person.avatarUrl} size="sm" />
                         {person.isOnline && (
-                          <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 border border-[#0D0816]" />
+                          <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 border border-[#070E1B]" />
                         )}
                       </div>
                       <div className="flex-1 min-w-0">
@@ -756,7 +756,7 @@ export default function MessagesCenterClient({
               <div className="flex flex-col gap-2 pt-1">
                 <button
                   onClick={() => setIsComposeOpen(true)}
-                  className="px-4 py-2 rounded-xl bg-gradient-to-r from-brand-caribbeanSea to-brand-sunriseCoral text-slate-950 font-black text-xs inline-flex items-center justify-center gap-1.5 shadow-md shadow-brand-caribbeanSea/20 hover:brightness-110 transition-all cursor-pointer"
+                  className="px-4 py-2 rounded-xl bg-gradient-to-r from-brand-caribbeanTeal to-brand-caribbeanSea text-slate-950 font-black text-xs inline-flex items-center justify-center gap-1.5 shadow-md shadow-brand-caribbeanSea/20 hover:brightness-110 transition-all cursor-pointer"
                 >
                   <Plus className="w-3.5 h-3.5" /> New Conversation
                 </button>
@@ -799,7 +799,7 @@ export default function MessagesCenterClient({
                       size="md"
                     />
                     {c.isOnline && (
-                      <span className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-emerald-500 border-2 border-[#0D0816]" />
+                      <span className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-emerald-500 border-2 border-[#070E1B]" />
                     )}
                   </div>
 
@@ -867,7 +867,7 @@ export default function MessagesCenterClient({
           <div className="h-full overflow-y-auto p-6 lg:p-10 flex flex-col items-center justify-center text-center space-y-8 custom-scrollbar">
             {/* Hero Header */}
             <div className="max-w-md space-y-3">
-              <div className="w-16 h-16 rounded-3xl bg-gradient-to-tr from-brand-caribbeanSea via-teal-400 to-brand-sunriseCoral text-slate-950 font-black flex items-center justify-center shadow-2xl shadow-brand-caribbeanSea/25 mx-auto">
+              <div className="w-16 h-16 rounded-3xl bg-gradient-to-tr from-brand-caribbeanTeal to-brand-caribbeanSea text-slate-950 font-black flex items-center justify-center shadow-2xl shadow-brand-caribbeanSea/25 mx-auto">
                 <MessageSquare className="w-8 h-8" />
               </div>
               <h3 className="text-2xl font-black text-white tracking-tight">
@@ -927,7 +927,7 @@ export default function MessagesCenterClient({
                   </div>
                   <Link
                     href="/friends"
-                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-gradient-to-r from-brand-caribbeanSea to-brand-sunriseCoral text-slate-950 font-black text-xs shadow-md hover:brightness-105 transition-all"
+                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-gradient-to-r from-brand-caribbeanTeal to-brand-caribbeanSea text-slate-950 font-black text-xs shadow-md hover:brightness-105 transition-all"
                   >
                     <Users className="w-3.5 h-3.5" /> Find & Add Caribbean Friends
                   </Link>
@@ -954,7 +954,7 @@ export default function MessagesCenterClient({
                             <div className="flex items-center gap-2.5 min-w-0">
                               <div className="relative flex-shrink-0">
                                 <UserAvatar name={friend.name} avatarUrl={friend.avatarUrl} size="sm" />
-                                <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 border border-[#140C22]" />
+                                <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 border border-[#0B1424]" />
                               </div>
                               <div className="min-w-0">
                                 <h5 className="text-xs font-bold text-white truncate">{friend.name}</h5>

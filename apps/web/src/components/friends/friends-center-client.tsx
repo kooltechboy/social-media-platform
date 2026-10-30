@@ -280,7 +280,7 @@ export default function FriendsCenterClient({
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Filter by name, @..."
-            className="w-full bg-[#181126]/95 border border-white/15 rounded-full pl-10 pr-4 py-2 text-xs sm:text-sm text-white placeholder-brand-sandstone/50 focus:outline-none focus:border-brand-caribbeanSea focus:ring-2 focus:ring-brand-caribbeanSea/30 transition-all min-h-[40px]"
+            className="w-full bg-[#0B1424]/95 border border-white/15 rounded-full pl-10 pr-4 py-2 text-xs sm:text-sm text-white placeholder-brand-sandstone/50 focus:outline-none focus:border-brand-caribbeanSea focus:ring-2 focus:ring-brand-caribbeanSea/30 transition-all min-h-[40px]"
           />
         </div>
       </div>
@@ -303,7 +303,7 @@ export default function FriendsCenterClient({
                 <button
                   type="button"
                   onClick={() => setActiveTab('pymk')}
-                  className="inline-flex items-center gap-2 text-xs sm:text-sm font-black px-5 py-2.5 rounded-xl bg-gradient-to-r from-brand-caribbeanSea to-brand-sunriseCoral text-slate-950 shadow-md shadow-brand-caribbeanSea/20 hover:brightness-110 transition-all min-h-[42px]"
+                  className="inline-flex items-center gap-2 text-xs sm:text-sm font-black px-5 py-2.5 rounded-xl bg-gradient-to-r from-brand-caribbeanTeal to-brand-caribbeanSea text-slate-950 shadow-md shadow-brand-caribbeanSea/20 hover:brightness-110 transition-all min-h-[42px]"
                 >
                   <Sparkles className="w-4 h-4" /> View All Suggested Members ({pymkList.length})
                 </button>
@@ -462,7 +462,7 @@ export default function FriendsCenterClient({
                       </button>
 
                       {activeMenuId === friend.id && (
-                        <div className="absolute right-0 top-10 w-44 bg-[#1D1429] border border-white/15 rounded-2xl p-1.5 shadow-2xl z-30 space-y-1 text-xs">
+                        <div className="absolute right-0 top-10 w-44 bg-[#0D1628] border border-white/15 rounded-2xl p-1.5 shadow-2xl z-30 space-y-1 text-xs">
                           <button
                             type="button"
                             onClick={() => handleUnfriend(friend.id)}
@@ -703,7 +703,7 @@ export default function FriendsCenterClient({
                         </button>
 
                         {activeMenuId === person.id && (
-                          <div className="absolute right-0 top-10 w-44 bg-[#1D1429] border border-white/15 rounded-2xl p-1.5 shadow-2xl z-30 space-y-1 text-xs">
+                          <div className="absolute right-0 top-10 w-44 bg-[#0D1628] border border-white/15 rounded-2xl p-1.5 shadow-2xl z-30 space-y-1 text-xs">
                             <button
                               type="button"
                               onClick={() => handleDismissRecommendation(person.id)}

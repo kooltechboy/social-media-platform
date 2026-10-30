@@ -183,7 +183,7 @@ export function SignInForm() {
           <button
             type="submit"
             disabled={isPending}
-            className="w-full py-3.5 px-4 rounded-xl font-black text-sm tracking-wide bg-gradient-to-r from-brand-caribbeanSea via-brand-goldenHour to-brand-sunriseCoral text-[#060A12] hover:opacity-95 active:scale-[0.99] transition-all shadow-lg shadow-brand-caribbeanSea/25 flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white cursor-pointer"
+            className="tk-btn-primary w-full py-3.5 px-4 rounded-xl text-sm tracking-wide flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white cursor-pointer"
           >
             {isPending ? (
               <>
@@ -218,7 +218,7 @@ export function SignInForm() {
           {t('auth.dont_have_account')}{' '}
           <Link
             href="/signup"
-            className="font-bold text-transparent bg-clip-text bg-gradient-to-r from-brand-caribbeanSea to-brand-sunriseCoral hover:underline underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-caribbeanSea rounded-md px-1"
+            className="font-bold text-transparent bg-clip-text bg-gradient-to-r from-brand-caribbeanTeal to-brand-caribbeanSea hover:underline underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-caribbeanSea rounded-md px-1"
           >
             {t('gateway.create_account')}
           </Link>

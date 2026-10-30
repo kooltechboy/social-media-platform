@@ -151,23 +151,23 @@ export function TukubiLogo({
     // Horizontal format: Approved Emblem + Crisp Typography & Tagline
     const iconSize = size === 'xs' ? 28 : size === 'sm' ? 36 : size === 'lg' ? 52 : size === 'xl' ? 64 : 42;
     content = (
-      <div className={`inline-flex items-center gap-3 shrink-0 group ${className}`}>
-        <div className="relative shrink-0 transition-transform duration-300 group-hover:scale-105">
+      <div className={`inline-flex items-center gap-2.5 shrink-0 group ${className}`}>
+        <div className="relative shrink-0">
           <Image
-            src="/brand/tukubi-emblem.png"
+            src="/brand/tukubi-symbol.svg"
             alt=""
             aria-hidden="true"
             width={iconSize}
             height={iconSize}
             priority={priority}
-            className="object-contain drop-shadow-[0_4px_12px_rgba(0,194,168,0.35)]"
+            className="object-contain"
           />
         </div>
-        <div className="flex flex-col tracking-tight leading-tight">
-          <span className="text-xl sm:text-2xl font-black bg-gradient-to-r from-[#00C2A8] via-[#0EA5E9] to-[#F59E0B] bg-clip-text text-transparent tracking-wider">
+        <div className="flex flex-col leading-none">
+          <span className="font-display text-[20px] sm:text-[22px] font-bold text-white tracking-[0.04em]">
             TUKUBI
           </span>
-          <span className="hidden sm:inline text-[10.5px] sm:text-[11px] font-bold text-brand-sandstone/85 tracking-wide -mt-0.5 group-hover:text-brand-caribbeanSea transition-colors">
+          <span className="hidden sm:inline text-[10.5px] font-medium text-brand-mist tracking-[0.02em] mt-1">
             The Caribbean Connected.
           </span>
         </div>

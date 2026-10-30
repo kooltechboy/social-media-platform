@@ -304,7 +304,7 @@ export function EmojiPickerPopoverContent({
       aria-label="Emoji picker"
       aria-modal="false"
       onKeyDown={handleKeyDown}
-      className={`absolute z-50 ${positionClasses} w-80 sm:w-96 bg-[#130B1E]/95 backdrop-blur-2xl border border-white/20 rounded-3xl shadow-2xl p-4 space-y-3 animate-fadeIn text-white overflow-hidden ${className}`}
+      className={`absolute z-50 ${positionClasses} w-80 sm:w-96 bg-[#0A1222]/95 backdrop-blur-2xl border border-white/20 rounded-3xl shadow-2xl p-4 space-y-3 animate-fadeIn text-white overflow-hidden ${className}`}
     >
       {/* Specular Edge Top Highlight */}
       <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/30 to-transparent pointer-events-none" />

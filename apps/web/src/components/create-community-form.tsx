@@ -39,9 +39,9 @@ export default function CreateCommunityForm({ initialOpen = false }: CreateCommu
     return (
       <button
         onClick={() => setOpen(true)}
-        className="bg-brand-caribbeanSea hover:bg-brand-caribbeanSea text-slate-950 font-bold px-4 py-2 rounded-xl text-xs flex items-center gap-2 transition-colors"
+        className="tk-btn-primary font-bold px-5 py-2.5 rounded-xl text-xs sm:text-sm flex items-center gap-2 min-h-[42px]"
       >
-        <Plus className="w-4 h-4" /> Create Community
+        <Plus className="w-4 h-4 stroke-[2.5]" /> Create Community
       </button>
     );
   }

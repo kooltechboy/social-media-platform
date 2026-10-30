@@ -140,7 +140,7 @@ export default function MobileNav() {
           >
             <div className="flex items-center justify-between pb-1 border-b border-white/10">
               <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-brand-caribbeanSea to-brand-sunriseCoral flex items-center justify-center text-slate-950 font-black shadow-sm">
+                <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-brand-caribbeanTeal to-brand-caribbeanSea flex items-center justify-center text-slate-950 font-black shadow-sm">
                   <Sparkles className="w-4 h-4" />
                 </div>
                 <div>
@@ -519,7 +519,7 @@ export default function MobileNav() {
 
       {/* ── 3. Bottom 5-Tab Bar (Home, Explore, Create, Messages, Profile) ── */}
       <nav
-        className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#110D17]/95 backdrop-blur-2xl border-t border-white/10 shadow-2xl pb-[max(0.35rem,env(safe-area-inset-bottom))]"
+        className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#070D1A]/95 backdrop-blur-2xl border-t border-white/10 shadow-2xl pb-[max(0.35rem,env(safe-area-inset-bottom))]"
         aria-label="Main mobile navigation"
       >
         <ul className="flex items-center justify-around px-2 py-1" role="tablist">
@@ -568,7 +568,7 @@ export default function MobileNav() {
               onClick={() => setIsCreateSheetOpen(true)}
               className="flex flex-col items-center gap-0.5 px-2 py-1 rounded-2xl transition-all min-w-[44px] min-h-[44px] sm:min-w-[48px] sm:min-h-[48px] justify-center"
             >
-              <span className="w-11 h-11 rounded-full bg-gradient-to-tr from-brand-caribbeanSea to-brand-sunriseCoral flex items-center justify-center -mt-4 shadow-lg shadow-brand-caribbeanSea/40 border-2 border-[#110D17] text-slate-950 hover:scale-105 active:scale-95 transition-transform">
+              <span className="w-11 h-11 rounded-full bg-gradient-to-tr from-brand-caribbeanTeal to-brand-caribbeanSea flex items-center justify-center -mt-4 shadow-lg shadow-brand-caribbeanSea/40 border-2 border-[#070D1A] text-slate-950 hover:scale-105 active:scale-95 transition-transform">
                 <PlusCircle className="w-6 h-6 text-slate-950" />
               </span>
               <span className="text-[10px] font-black text-brand-caribbeanSea">Create</span>

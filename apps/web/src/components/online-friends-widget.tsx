@@ -201,7 +201,7 @@ export default function OnlineFriendsWidget({ initialUserId }: OnlineFriendsWidg
   }, [friends, onlineUserIds, search, activeFilter]);
 
   return (
-    <div className="bg-[#130B1E]/95 backdrop-blur-2xl border border-white/15 rounded-3xl p-5 shadow-2xl space-y-4 relative overflow-hidden">
+    <div className="bg-[#0A1222]/95 backdrop-blur-2xl border border-white/15 rounded-3xl p-5 shadow-2xl space-y-4 relative overflow-hidden">
       {/* Specular top highlight */}
       <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/25 to-transparent pointer-events-none" />
 
@@ -252,7 +252,7 @@ export default function OnlineFriendsWidget({ initialUserId }: OnlineFriendsWidg
 
         <Link
           href="/messages"
-          className="text-[11px] md:text-xs font-bold px-2.5 md:px-3 py-1.5 md:py-2 min-h-[34px] md:min-h-[38px] rounded-xl bg-gradient-to-r from-brand-caribbeanSea/20 to-brand-sunriseCoral/20 hover:from-brand-caribbeanSea/30 hover:to-brand-sunriseCoral/30 border border-brand-caribbeanSea/30 text-white flex items-center gap-1.5 transition-all"
+          className="text-[11px] md:text-xs font-bold px-2.5 md:px-3 py-1.5 md:py-2 min-h-[34px] md:min-h-[38px] rounded-xl bg-gradient-to-r from-brand-caribbeanTeal/20 to-brand-caribbeanSea/20 hover:from-brand-caribbeanSea/30 hover:to-brand-sunriseCoral/30 border border-brand-caribbeanSea/30 text-white flex items-center gap-1.5 transition-all"
           title="Open Messages"
         >
           <MessageCircle className="w-3.5 h-3.5 md:w-4 md:h-4 text-brand-caribbeanSea" />
@@ -316,7 +316,7 @@ export default function OnlineFriendsWidget({ initialUserId }: OnlineFriendsWidg
                   />
                   {friend.isOnline && (
                     <span
-                      className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-emerald-400 border-2 border-[#130B1E] shadow-sm"
+                      className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-emerald-400 border-2 border-[#0A1222] shadow-sm"
                       title="Online now"
                     />
                   )}

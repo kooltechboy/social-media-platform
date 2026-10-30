@@ -305,7 +305,7 @@ export default function StoryCreatorModal({ isOpen, onClose, onStoryCreated }: S
           {mode === 'question' && (
             <div className="w-full p-6">
               <div className="bg-white rounded-2xl p-6 shadow-xl relative overflow-hidden">
-                <div className="absolute top-0 inset-x-0 h-2 bg-gradient-to-r from-brand-caribbeanSea to-brand-sunriseCoral" />
+                <div className="absolute top-0 inset-x-0 h-2 bg-gradient-to-r from-brand-caribbeanTeal to-brand-caribbeanSea" />
                 <textarea
                   value={question.prompt}
                   onChange={e => setQuestion({prompt: e.target.value})}
@@ -343,7 +343,7 @@ export default function StoryCreatorModal({ isOpen, onClose, onStoryCreated }: S
           <button
             onClick={handlePublish}
             disabled={isPending || Boolean(uploadStatus)}
-            className="w-full bg-gradient-to-r from-brand-caribbeanSea to-brand-sunriseCoral text-black font-black py-4 rounded-2xl flex items-center justify-center gap-2 shadow-lg shadow-brand-caribbeanSea/20 hover:brightness-110 disabled:opacity-50"
+            className="w-full bg-gradient-to-r from-brand-caribbeanTeal to-brand-caribbeanSea text-black font-black py-4 rounded-2xl flex items-center justify-center gap-2 shadow-lg shadow-brand-caribbeanSea/20 hover:brightness-110 disabled:opacity-50"
           >
             {uploadStatus || (isPending ? 'Publishing...' : <><Send size={18} /> Publish Story</>)}
           </button>

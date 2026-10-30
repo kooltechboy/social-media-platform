@@ -47,7 +47,7 @@ export default function AskTukubiPanel() {
   return (
     <div className="surface-card rounded-3xl p-6 sm:p-8 border border-brand-caribbeanSea/30 bg-gradient-to-br from-brand-caribbeanSea/10 via-slate-900/90 to-brand-sunriseCoral/10 shadow-2xl space-y-5">
       <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-brand-caribbeanSea to-brand-sunriseCoral p-0.5 shadow-md">
+        <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-brand-caribbeanTeal to-brand-caribbeanSea p-0.5 shadow-md">
           <div className="w-full h-full rounded-2xl bg-slate-950 flex items-center justify-center text-brand-caribbeanSea">
             <Sparkles className="w-5 h-5" />
           </div>
@@ -76,7 +76,7 @@ export default function AskTukubiPanel() {
         <button
           type="submit"
           disabled={isSearching || !question.trim()}
-          className="absolute right-2 top-1/2 -translate-y-1/2 px-4 py-2 rounded-xl bg-gradient-to-r from-brand-caribbeanSea to-brand-sunriseCoral hover:brightness-110 text-slate-950 text-xs font-black transition-all flex items-center gap-1.5 disabled:opacity-50"
+          className="absolute right-2 top-1/2 -translate-y-1/2 px-4 py-2 rounded-xl bg-gradient-to-r from-brand-caribbeanTeal to-brand-caribbeanSea hover:brightness-110 text-slate-950 text-xs font-black transition-all flex items-center gap-1.5 disabled:opacity-50"
         >
           {isSearching ? (
             <div className="w-3.5 h-3.5 border-2 border-slate-950 border-t-transparent rounded-full animate-spin" />

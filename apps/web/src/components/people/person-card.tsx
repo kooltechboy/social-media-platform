@@ -122,7 +122,7 @@ export default function PersonCard({
     person.messaging_permission === 'friends' && friendshipStatus !== 'accepted';
 
   return (
-    <div className="surface-card surface-card-interactive rounded-2xl p-4 sm:p-5 flex flex-col justify-between space-y-4 group relative border border-white/10 hover:border-brand-caribbeanSea/30 transition-all bg-[#140C22]/80 backdrop-blur-md shadow-lg hover:shadow-brand-caribbeanSea/5">
+    <div className="surface-card surface-card-interactive rounded-2xl p-4 sm:p-5 flex flex-col justify-between space-y-4 group relative border border-white/10 hover:border-brand-caribbeanSea/30 transition-all bg-[#0B1424]/80 backdrop-blur-md shadow-lg hover:shadow-brand-caribbeanSea/5">
       {/* Top Section: Avatar, Details & Overflow Menu */}
       <div className="flex items-start justify-between gap-3">
         <Link
@@ -151,7 +151,7 @@ export default function PersonCard({
               <span
                 className={`text-[10px] font-black px-2 py-0.5 rounded-full border ${
                   relBadge.type === 'official'
-                    ? 'bg-gradient-to-r from-brand-caribbeanSea/20 to-brand-sunriseCoral/20 text-brand-caribbeanSea border-brand-caribbeanSea/40'
+                    ? 'bg-gradient-to-r from-brand-caribbeanTeal/20 to-brand-caribbeanSea/20 text-brand-caribbeanSea border-brand-caribbeanSea/40'
                     : relBadge.type === 'friend'
                     ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
                     : 'bg-white/5 text-brand-sandstone/70 border-white/10'
@@ -190,7 +190,7 @@ export default function PersonCard({
           </button>
 
           {isMenuOpen && (
-            <div className="absolute right-0 top-10 w-48 bg-[#1D1429] border border-white/15 rounded-2xl p-1.5 shadow-2xl z-30 space-y-1 text-xs animate-fadeIn">
+            <div className="absolute right-0 top-10 w-48 bg-[#0D1628] border border-white/15 rounded-2xl p-1.5 shadow-2xl z-30 space-y-1 text-xs animate-fadeIn">
               <button
                 type="button"
                 onClick={handleShare}
@@ -316,7 +316,7 @@ export default function PersonCard({
                 isFollowing
                   ? 'bg-white/10 text-brand-sandstone border border-white/15 hover:bg-rose-500/20 hover:text-rose-300'
                   : isOfficial
-                  ? 'flex-1 bg-gradient-to-r from-brand-caribbeanSea to-brand-sunriseCoral text-slate-950 font-black hover:brightness-110 shadow-md'
+                  ? 'flex-1 bg-gradient-to-r from-brand-caribbeanTeal to-brand-caribbeanSea text-slate-950 font-black hover:brightness-110 shadow-md'
                   : isFollower
                   ? 'bg-brand-goldenHour hover:brightness-110 text-slate-950 font-black shadow-md'
                   : 'bg-brand-sunriseCoral hover:brightness-110 text-slate-950 font-black shadow-md'
@@ -376,7 +376,7 @@ export default function PersonCard({
           onClick={() => setShowUnfriendConfirm(false)}
         >
           <div
-            className="bg-[#1D1429] border border-white/20 rounded-2xl p-6 max-w-sm w-full space-y-4 shadow-2xl text-left"
+            className="bg-[#0D1628] border border-white/20 rounded-2xl p-6 max-w-sm w-full space-y-4 shadow-2xl text-left"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center gap-3">
@@ -429,7 +429,7 @@ export default function PersonCard({
           onClick={() => setShowBlockConfirm(false)}
         >
           <div
-            className="bg-[#1D1429] border border-rose-500/30 rounded-2xl p-6 max-w-sm w-full space-y-4 shadow-2xl text-left"
+            className="bg-[#0D1628] border border-rose-500/30 rounded-2xl p-6 max-w-sm w-full space-y-4 shadow-2xl text-left"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center gap-3">

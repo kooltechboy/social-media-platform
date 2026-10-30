@@ -165,8 +165,8 @@ export default function AudioVoiceNotePlayer({
           onClick={togglePlay}
           className={`w-10 h-10 rounded-2xl flex items-center justify-center transition-all transform active:scale-95 shadow-md flex-shrink-0 ${
             isOwner
-              ? 'bg-gradient-to-tr from-brand-caribbeanSea to-brand-sunriseCoral text-slate-950 hover:brightness-110'
-              : 'bg-gradient-to-tr from-brand-caribbeanSea to-brand-sunriseCoral text-slate-950 hover:brightness-110'
+              ? 'bg-gradient-to-tr from-brand-caribbeanTeal to-brand-caribbeanSea text-slate-950 hover:brightness-110'
+              : 'bg-gradient-to-tr from-brand-caribbeanTeal to-brand-caribbeanSea text-slate-950 hover:brightness-110'
           }`}
           title={isPlaying ? 'Pause voice note' : 'Play voice note'}
         >

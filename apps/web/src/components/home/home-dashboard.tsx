@@ -26,6 +26,14 @@ import {
   Building2,
   ShieldCheck,
   Palette,
+  Image as ImageIcon,
+  Video,
+  BarChart3,
+  Smile,
+  Clapperboard,
+  Radio,
+  CalendarPlus,
+  Store,
 } from 'lucide-react';
 import { type FeedMode } from '@caribbean/social';
 import UserAvatar from '../user-avatar';
@@ -188,14 +196,12 @@ export default function HomeDashboard({
 
   const activeTabMeta = FEED_TABS.find((t) => t.id === activeTab) || FEED_TABS[0];
 
-  // Quick Action Buttons
+  // Secondary creation shortcuts (icon buttons in the composer footer)
   const QUICK_ACTIONS = [
-    { label: 'Post', icon: '📝', href: '/create', color: 'hover:border-brand-caribbeanSea/50' },
-    { label: 'Reel', icon: '🎬', href: '/reels', color: 'hover:border-rose-500/50' },
-    { label: 'Go Live', icon: '🔴', href: '/live', color: 'hover:border-red-500/50' },
-    { label: 'Create Event', icon: '🎟️', href: '/events', color: 'hover:border-amber-400/50' },
-    { label: 'Sell Item', icon: '🛒', href: '/marketplace/seller-center/create', color: 'hover:border-brand-goldenHour/50' },
-    { label: 'Launch Hub', icon: '🌴', href: '/communities/create', color: 'hover:border-cyan-400/50' },
+    { label: 'Create a reel', icon: Clapperboard, href: '/reels' },
+    { label: 'Go live', icon: Radio, href: '/live' },
+    { label: 'Create an event', icon: CalendarPlus, href: '/events' },
+    { label: 'Sell an item', icon: Store, href: '/marketplace/seller-center/create' },
   ];
 
   const handleTabChange = async (tab: typeof FEED_TABS[number]) => {
@@ -291,7 +297,7 @@ export default function HomeDashboard({
                 setComposerMode('text');
                 setShowComposer((prev) => !prev);
               }}
-              className="flex-1 px-4 py-2.5 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 text-left text-xs text-brand-sandstone/70 transition-colors flex items-center justify-between"
+              className="flex-1 px-4 py-2.5 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 text-left text-xs text-brand-mist transition-colors flex items-center justify-between"
             >
               <span className="truncate">What&apos;s on your mind?</span>
               <span className="text-[10px] font-black text-brand-caribbeanSea bg-brand-caribbeanSea/10 px-2 py-0.5 rounded-full shrink-0 ml-1">
@@ -361,105 +367,76 @@ export default function HomeDashboard({
 
         {/* ── 2B. Desktop Workspace Header & Rich Horizon Discovery (Hidden on mobile) ── */}
         <div className="hidden md:block space-y-6">
-        {/* Welcome & Concept Image 1 & 2 Aligned Feed Composer */}
-        <div className="glass-aerospace rounded-3xl p-5 sm:p-6 border border-white/12 shadow-xl space-y-4">
-          <div className="flex items-center justify-between gap-4">
-            <div className="flex items-center gap-3.5 min-w-0">
-              <UserAvatar
-                src={user.avatarUrl}
-                name={user.displayName}
-                size="md"
-              />
-              <div className="min-w-0">
-                <div className="flex items-center gap-2">
-                  <h1 className="text-base sm:text-lg font-black text-white truncate">
-                    Welcome back, {user.displayName.split(' ')[0]} 🌴
-                  </h1>
-                </div>
-                <p className="text-xs text-brand-sandstone/70 truncate">
-                  The Caribbean Connected. Born in the Caribbean. Built for the World.
-                </p>
-              </div>
-            </div>
-
-            <div className="hidden sm:flex items-center gap-2 shrink-0">
-              <IdentitySwitcher variant="compact" />
-            </div>
-          </div>
-
-          {/* Quick Creation Bar Trigger Input Pill */}
-          <div className="pt-1">
+        {/* Desktop composer — calm, editorial (ADR-UI-002) */}
+        <div className="tk-panel p-4 sm:p-5">
+          <div className="flex items-center gap-3">
+            <UserAvatar
+              src={user.avatarUrl}
+              name={user.displayName}
+              size="md"
+            />
             <button
               type="button"
               onClick={() => {
                 setComposerMode('text');
                 setShowComposer((prev) => !prev);
               }}
-              className="w-full flex items-center justify-between px-4 py-3 rounded-full bg-black/40 hover:bg-black/60 border border-white/10 hover:border-brand-caribbeanSea/50 text-left transition-all group"
+              aria-expanded={showComposer}
+              className="flex-1 h-11 px-4 rounded-xl bg-white/[0.04] hover:bg-white/[0.06] border border-white/[0.07] text-left text-[14px] text-[#8C99AD] hover:text-[#C3CCDA] transition-colors"
             >
-              <span className="text-xs sm:text-sm text-brand-sandstone/60 group-hover:text-white transition-colors">
-                What&apos;s on your mind, {user.displayName.split(' ')[0]}?
-              </span>
-              <span className="px-3 py-1 rounded-xl bg-brand-caribbeanSea/20 text-brand-caribbeanSea font-bold text-xs border border-brand-caribbeanSea/30 group-hover:bg-brand-caribbeanSea group-hover:text-slate-950 transition-all">
-                {showComposer ? 'Close Composer' : 'Write Post'}
-              </span>
+              What&apos;s on your mind, {user.displayName.split(' ')[0]}?
             </button>
+            <div className="hidden xl:flex items-center shrink-0">
+              <IdentitySwitcher variant="compact" />
+            </div>
           </div>
 
-          {/* Quick Action Chips (Matches Concept Image 1 & 2: Photo, Video, Poll, Feeling) */}
-          <div className="flex items-center justify-between pt-2 border-t border-white/8 text-xs font-bold text-slate-300">
-            <button
-              type="button"
-              onClick={() => {
-                setComposerMode('photo');
-                setShowComposer(true);
-              }}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-xl hover:bg-white/5 hover:text-emerald-400 transition-colors"
-            >
-              <span className="text-emerald-400 text-sm">📷</span> Photo
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setComposerMode('video');
-                setShowComposer(true);
-              }}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-xl hover:bg-white/5 hover:text-sky-400 transition-colors"
-            >
-              <span className="text-sky-400 text-sm">🎬</span> Video
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setComposerMode('poll');
-                setShowComposer(true);
-              }}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-xl hover:bg-white/5 hover:text-amber-400 transition-colors"
-            >
-              <span className="text-amber-400 text-sm">📊</span> Poll
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setComposerMode('text');
-                setShowComposer(true);
-              }}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-xl hover:bg-white/5 hover:text-brand-sunriseCoral transition-colors"
-            >
-              <span className="text-brand-sunriseCoral text-sm">😊</span> Feeling
-            </button>
+          {/* Composer shortcuts */}
+          <div className="flex items-center gap-1 mt-3 pt-3 border-t border-white/[0.06]">
+            {([
+              { mode: 'photo', label: 'Photo', Icon: ImageIcon, tint: 'text-emerald-400' },
+              { mode: 'video', label: 'Video', Icon: Video, tint: 'text-sky-400' },
+              { mode: 'poll', label: 'Poll', Icon: BarChart3, tint: 'text-brand-goldenHour' },
+              { mode: 'text', label: 'Feeling', Icon: Smile, tint: 'text-brand-sunriseCoral' },
+            ] as const).map(({ mode, label, Icon, tint }) => (
+              <button
+                key={label}
+                type="button"
+                onClick={() => {
+                  setComposerMode(mode as ComposerMode);
+                  setShowComposer(true);
+                }}
+                className="flex items-center gap-2 px-3 h-9 rounded-lg text-[13px] font-medium text-[#C3CCDA] hover:text-white hover:bg-white/[0.05] transition-colors"
+              >
+                <Icon className={`w-[18px] h-[18px] ${tint}`} aria-hidden="true" />
+                {label}
+              </button>
+            ))}
+            <div className="ml-auto flex items-center gap-1">
+              {QUICK_ACTIONS.map((action) => (
+                <Link
+                  key={action.label}
+                  href={action.href}
+                  title={action.label}
+                  aria-label={action.label}
+                  className="w-9 h-9 rounded-lg flex items-center justify-center text-brand-mist hover:text-white hover:bg-white/[0.05] transition-colors"
+                >
+                  <action.icon className="w-[18px] h-[18px]" aria-hidden="true" />
+                </Link>
+              ))}
+            </div>
           </div>
 
           {/* Inline Composer (Expandable) */}
           {showComposer && (
-            <div className="pt-2 animate-fadeIn border-t border-white/10">
+            <div className="pt-3 mt-3 animate-fadeIn border-t border-white/[0.06]">
               <div className="flex justify-end pb-1">
                 <button
                   type="button"
                   onClick={() => setShowComposer(false)}
-                  className="text-xs text-brand-sandstone/60 hover:text-white px-2 py-0.5 rounded-lg hover:bg-white/10 transition-colors"
+                  className="text-xs font-medium text-brand-mist hover:text-white px-2 py-1 rounded-md hover:bg-white/[0.06] transition-colors"
                 >
-                  ✕ Close Composer
+                  Close composer
                 </button>
               </div>
               <UniversalComposer
@@ -473,22 +450,6 @@ export default function HomeDashboard({
               />
             </div>
           )}
-
-          {/* Quick Creation Actions Grid */}
-          <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 pt-1 border-t border-white/5">
-            {QUICK_ACTIONS.map((action) => (
-              <Link
-                key={action.label}
-                href={action.href}
-                className={`flex flex-col items-center justify-center p-2.5 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/5 transition-all text-center min-h-[66px] ${action.color}`}
-              >
-                <span className="text-lg mb-0.5">{action.icon}</span>
-                <span className="text-[11px] font-bold text-white truncate w-full">
-                  {action.label}
-                </span>
-              </Link>
-            ))}
-          </div>
         </div>
 
         {/* 3. Live Broadcast Discovery Spotlight (if active) */}
@@ -500,17 +461,17 @@ export default function HomeDashboard({
 
         {/* 4. Trending Caribbean Reels Preview */}
         {topReels && topReels.length > 0 && (
-          <section aria-label="Top Caribbean Reels" className="glass rounded-3xl p-4 sm:p-5 space-y-3.5 border border-white/10">
+          <section aria-label="Top Caribbean Reels" className="tk-panel p-4 sm:p-5 space-y-3.5 border border-white/10">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Film className="w-4 h-4 text-pink-400" />
-                <h2 className="text-xs sm:text-sm font-black text-white uppercase tracking-wider">
+                <h2 className="text-[13.5px] font-semibold text-white">
                   Trending Caribbean Reels
                 </h2>
               </div>
               <Link
                 href="/reels"
-                className="text-xs font-bold text-brand-caribbeanSea hover:underline flex items-center gap-1"
+                className="text-xs font-medium text-brand-mist hover:text-white transition-colors flex items-center gap-1"
               >
                 Watch All <ArrowRight className="w-3.5 h-3.5" />
               </Link>
@@ -548,12 +509,12 @@ export default function HomeDashboard({
         {(marketProducts.length > 0 || culturalEvents.length > 0) && (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {marketProducts.length > 0 && (
-              <section aria-label="Marketplace Discoveries" className="glass rounded-3xl p-4 sm:p-5 space-y-3 border border-white/10 flex flex-col justify-between">
+              <section aria-label="Marketplace Discoveries" className="tk-panel p-4 sm:p-5 space-y-3 border border-white/10 flex flex-col justify-between">
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <ShoppingBag className="w-4 h-4 text-brand-goldenHour" />
-                      <h3 className="text-xs font-black text-white uppercase tracking-wider">
+                      <h3 className="text-[13.5px] font-semibold text-white">
                         Marketplace
                       </h3>
                     </div>
@@ -578,7 +539,7 @@ export default function HomeDashboard({
                             <span className="font-extrabold text-brand-sunriseCoral">
                               ${(p.price_minor / 100).toFixed(2)} {p.currency || 'USD'}
                             </span>
-                            <span className="text-[10px] text-brand-sandstone/60 truncate">
+                            <span className="text-[10px] text-brand-mist truncate">
                               {biz?.name || 'Verified Merchant'}
                             </span>
                           </div>
@@ -591,12 +552,12 @@ export default function HomeDashboard({
             )}
 
             {culturalEvents.length > 0 && (
-              <section aria-label="Upcoming Cultural Events" className="glass rounded-3xl p-4 sm:p-5 space-y-3 border border-white/10 flex flex-col justify-between">
+              <section aria-label="Upcoming Cultural Events" className="tk-panel p-4 sm:p-5 space-y-3 border border-white/10 flex flex-col justify-between">
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <Calendar className="w-4 h-4 text-amber-400" />
-                      <h3 className="text-xs font-black text-white uppercase tracking-wider">
+                      <h3 className="text-[13.5px] font-semibold text-white">
                         Events Horizon
                       </h3>
                     </div>
@@ -620,7 +581,7 @@ export default function HomeDashboard({
                           <p className="text-xs font-black text-white truncate group-hover:text-amber-300 transition-colors">
                             {e.title}
                           </p>
-                          <p className="text-[10px] text-brand-sandstone/60 truncate mt-1">
+                          <p className="text-[10px] text-brand-mist truncate mt-1">
                             {dateStr} {e.location_name ? `• ${e.location_name}` : ''}
                           </p>
                         </Link>
@@ -635,27 +596,13 @@ export default function HomeDashboard({
         </div>
 
         {/* 6. PRIMARY HOME FEED ENGINE & CONTROL AREA */}
-        <section aria-label="Home Feed Stream" className="space-y-4 pt-2">
-          {/* Feed Filter Segmented Controls */}
-          <div className="glass-aerospace rounded-3xl p-3 sm:p-4 border border-white/12 shadow-xl space-y-3">
-            <div className="flex items-center justify-between px-1">
-              <div className="flex items-center gap-2">
-                <Layers className="w-4 h-4 text-brand-caribbeanSea" />
-                <h2 className="text-sm sm:text-base font-black text-white tracking-tight">
-                  Home Stream
-                </h2>
-              </div>
-              <span className="text-[11px] font-bold text-brand-sandstone/60">
-                {activeTabMeta.label}
-              </span>
-            </div>
-
-            {/* 5 Standard Feed Tabs */}
+        <section aria-label="Home Feed Stream" className="space-y-4">
+          {/* Feed tabs — understated segmented underline */}
+          <div className="tk-panel px-2 sm:px-3">
             <nav aria-label="Home Feed Tabs">
-              <div className="flex items-center gap-2 overflow-x-auto scrollbar-none pb-0.5" role="tablist">
+              <div className="flex items-center gap-1 overflow-x-auto scrollbar-none" role="tablist">
                 {FEED_TABS.map((tab) => {
                   const isActive = activeTab === tab.id;
-                  const Icon = tab.icon;
 
                   return (
                     <button
@@ -664,15 +611,21 @@ export default function HomeDashboard({
                       role="tab"
                       aria-selected={isActive}
                       aria-controls={`feed-panel-${tab.id}`}
+                      title={tab.description}
                       onClick={() => handleTabChange(tab)}
-                      className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs sm:text-sm font-black whitespace-nowrap min-h-[44px] transition-all ${
+                      className={`relative px-3.5 h-12 text-[13.5px] whitespace-nowrap transition-colors ${
                         isActive
-                          ? 'bg-gradient-to-r from-brand-caribbeanSea to-brand-sunriseCoral text-slate-950 shadow-md shadow-brand-caribbeanSea/20 scale-[1.02]'
-                          : 'bg-white/5 hover:bg-white/10 text-brand-sandstone/80 hover:text-white border border-white/10'
+                          ? 'text-white font-semibold'
+                          : 'text-brand-mist font-medium hover:text-white'
                       }`}
                     >
-                      <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-slate-950' : tab.color}`} />
-                      <span>{tab.label}</span>
+                      {tab.label}
+                      {isActive && (
+                        <span
+                          aria-hidden="true"
+                          className="absolute left-3 right-3 bottom-0 h-[2px] rounded-full bg-gradient-to-r from-brand-caribbeanTeal to-brand-caribbeanSea"
+                        />
+                      )}
                     </button>
                   );
                 })}
@@ -680,30 +633,25 @@ export default function HomeDashboard({
             </nav>
           </div>
 
-          {/* Active Stream Indicator Banner */}
-          <div className="flex items-center justify-between px-4 py-2.5 rounded-2xl bg-white/5 border border-white/10 text-xs text-brand-sandstone/80">
-            <div className="flex items-center gap-2 min-w-0">
-              <Filter className="w-3.5 h-3.5 text-brand-caribbeanSea shrink-0" />
-              <span className="truncate">
-                Showing: <strong className="text-white font-black">{activeTabMeta.label}</strong> — {activeTabMeta.description}
-              </span>
-            </div>
-            {activeTab !== 'for_you' && (
+          {/* Active stream context (only when filtered away from For You) */}
+          {activeTab !== 'for_you' && (
+            <div className="flex items-center justify-between px-1 text-[12.5px] text-brand-mist">
+              <span className="truncate">{activeTabMeta.description}</span>
               <button
                 type="button"
                 onClick={() => handleTabChange(FEED_TABS[0])}
-                className="text-brand-goldenHour hover:underline font-bold text-[11px] shrink-0 ml-2"
+                className="text-[#C3CCDA] hover:text-white font-medium shrink-0 ml-3"
               >
-                Reset to For You
+                Back to For You
               </button>
-            )}
-          </div>
+            </div>
+          )}
 
           {/* Stream Content Loading State */}
           {isLoadingTab ? (
-            <div className="glass rounded-3xl p-12 text-center space-y-3 border border-white/10 animate-fadeIn">
-              <Loader2 className="w-8 h-8 rounded-full text-brand-caribbeanSea animate-spin mx-auto" />
-              <p className="text-xs text-brand-sandstone/70">Loading {activeTabMeta.label} updates...</p>
+            <div className="tk-panel p-12 text-center space-y-3 animate-fadeIn" role="status" aria-live="polite">
+              <Loader2 className="w-6 h-6 text-brand-caribbeanSea animate-spin mx-auto" />
+              <p className="text-[13px] text-brand-mist">Loading {activeTabMeta.label}…</p>
             </div>
           ) : feedPosts && feedPosts.length > 0 ? (
             <div id={`feed-panel-${activeTab}`} role="tabpanel" aria-label={`${activeTabMeta.label} Post Stream`}>
@@ -717,7 +665,7 @@ export default function HomeDashboard({
             </div>
           ) : (
             /* Intelligent Empty State (Zero Mock Posts) */
-            <div className="glass rounded-3xl p-8 sm:p-12 text-center space-y-4 border border-white/10">
+            <div className="tk-panel p-8 sm:p-12 text-center space-y-4 border border-white/10">
               <div className="w-14 h-14 rounded-2xl bg-brand-caribbeanSea/20 flex items-center justify-center mx-auto text-brand-caribbeanSea">
                 {activeTab === 'friends' ? (
                   <Users className="w-7 h-7" />
@@ -738,7 +686,7 @@ export default function HomeDashboard({
                     ? 'No Community Posts Yet'
                     : 'No Content Found in This Feed'}
                 </h3>
-                <p className="text-xs sm:text-sm text-brand-sandstone/70 leading-relaxed">
+                <p className="text-xs sm:text-sm text-brand-mist leading-relaxed">
                   {activeTab === 'friends'
                     ? 'Friends are mutual accepted relationships. Connect with people you know from your island or diaspora community to see their personal updates here.'
                     : activeTab === 'following'

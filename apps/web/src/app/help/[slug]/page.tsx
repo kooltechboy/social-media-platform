@@ -169,7 +169,7 @@ export default async function HelpArticlePage({
               </div>
               <Link
                 href={article.ctaHref}
-                className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-brand-caribbeanSea to-brand-sunriseCoral hover:brightness-110 text-slate-950 text-xs font-black transition-all flex items-center gap-2 shadow-lg min-h-[44px]"
+                className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-brand-caribbeanTeal to-brand-caribbeanSea hover:brightness-110 text-slate-950 text-xs font-black transition-all flex items-center gap-2 shadow-lg min-h-[44px]"
               >
                 {article.ctaLabel || 'Open Feature'} <ArrowRight className="w-4 h-4" />
               </Link>

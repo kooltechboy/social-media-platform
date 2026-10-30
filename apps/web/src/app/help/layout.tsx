@@ -22,7 +22,7 @@ export default function HelpLayout({ children }: { children: React.ReactNode }) 
           </Link>
           <span className="text-white/20">|</span>
           <Link href="/help" className="flex items-center gap-2 font-black text-white text-sm sm:text-base tracking-tight hover:opacity-90">
-            <span className="w-7 h-7 rounded-xl bg-gradient-to-tr from-brand-caribbeanSea to-brand-sunriseCoral p-0.5 flex items-center justify-center shadow-md">
+            <span className="w-7 h-7 rounded-xl bg-gradient-to-tr from-brand-caribbeanTeal to-brand-caribbeanSea p-0.5 flex items-center justify-center shadow-md">
               <LifeBuoy className="w-4 h-4 text-slate-950" />
             </span>
             <span>TUKUBI <span className="text-brand-caribbeanSea">Help</span></span>

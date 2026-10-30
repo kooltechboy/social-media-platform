@@ -84,7 +84,7 @@ export default function AgeVerificationModal({
 
         {/* Header */}
         <div className="flex items-center gap-3 mb-4">
-          <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-brand-caribbeanSea to-brand-sunriseCoral p-0.5 shadow-md shadow-brand-caribbeanSea/20">
+          <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-brand-caribbeanTeal to-brand-caribbeanSea p-0.5 shadow-md shadow-brand-caribbeanSea/20">
             <div className="w-full h-full bg-[#0A1024] rounded-[14px] flex items-center justify-center text-brand-caribbeanSea">
               <ShieldCheck className="w-5 h-5" />
             </div>

@@ -126,7 +126,7 @@ export default function AiShoppingAssistant({ productContext }: AiShoppingAssist
       {isOpen && (
         <div className="fixed inset-y-0 right-0 z-50 w-full max-w-md bg-slate-950 border-l border-orange-500/30 shadow-2xl flex flex-col animate-slideLeft">
           {/* Header */}
-          <div className="p-4 border-b border-white/10 flex items-center justify-between bg-[#140C22]">
+          <div className="p-4 border-b border-white/10 flex items-center justify-between bg-[#0B1424]">
             <div className="flex items-center gap-2.5">
               <div className="w-8 h-8 rounded-xl bg-orange-500/20 border border-orange-500/40 flex items-center justify-center text-orange-400">
                 <Bot className="w-5 h-5" />
@@ -222,7 +222,7 @@ export default function AiShoppingAssistant({ productContext }: AiShoppingAssist
           </div>
 
           {/* Query Input */}
-          <form onSubmit={handleAsk} className="p-3 border-t border-white/10 bg-[#140C22] flex gap-2">
+          <form onSubmit={handleAsk} className="p-3 border-t border-white/10 bg-[#0B1424] flex gap-2">
             <input
               type="text"
               value={query}

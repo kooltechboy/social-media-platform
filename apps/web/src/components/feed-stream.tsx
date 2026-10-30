@@ -1111,7 +1111,7 @@ export default function FeedStream({
                 <button
                   type="submit"
                   disabled={isSubmittingReport}
-                  className="bg-gradient-to-r from-brand-caribbeanSea to-brand-sunriseCoral text-slate-950 font-black px-5 py-2 rounded-xl text-xs flex items-center gap-1.5 transition-all shadow-md disabled:opacity-50"
+                  className="bg-gradient-to-r from-brand-caribbeanTeal to-brand-caribbeanSea text-slate-950 font-black px-5 py-2 rounded-xl text-xs flex items-center gap-1.5 transition-all shadow-md disabled:opacity-50"
                 >
                   {isSubmittingReport ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : 'Submit Report'}
                 </button>
@@ -1164,7 +1164,7 @@ export default function FeedStream({
                   type="button"
                   onClick={handleRepostToTukubi}
                   disabled={isSubmittingRepost}
-                  className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-brand-caribbeanSea to-brand-sunriseCoral text-slate-950 font-black text-xs hover:brightness-110 transition-all disabled:opacity-50 flex items-center justify-center gap-1.5 shadow-md"
+                  className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-brand-caribbeanTeal to-brand-caribbeanSea text-slate-950 font-black text-xs hover:brightness-110 transition-all disabled:opacity-50 flex items-center justify-center gap-1.5 shadow-md"
                 >
                   {isSubmittingRepost ? (
                     <>

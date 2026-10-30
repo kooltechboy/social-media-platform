@@ -215,7 +215,7 @@ export default function DialectCaptionGenerator({
             <button
               type="button"
               onClick={handleDownloadWebVTT}
-              className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-brand-caribbeanSea to-brand-sunriseCoral text-slate-950 text-xs font-black flex items-center gap-1.5 shadow-md hover:brightness-110 transition-all cursor-pointer"
+              className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-brand-caribbeanTeal to-brand-caribbeanSea text-slate-950 text-xs font-black flex items-center gap-1.5 shadow-md hover:brightness-110 transition-all cursor-pointer"
             >
               <Download className="w-3.5 h-3.5" /> Download .vtt
             </button>
@@ -337,7 +337,7 @@ export default function DialectCaptionGenerator({
           </div>
 
           {/* Video Preview Canvas Simulation */}
-          <div className="relative aspect-video max-h-48 rounded-xl bg-gradient-to-b from-[#181124] to-[#0A0D14] border border-slate-800 overflow-hidden flex flex-col justify-between p-4 shadow-inner">
+          <div className="relative aspect-video max-h-48 rounded-xl bg-gradient-to-b from-[#0D1628] to-[#0A0D14] border border-slate-800 overflow-hidden flex flex-col justify-between p-4 shadow-inner">
             <div className="flex items-center justify-between text-[11px] text-white/50">
               <span className="px-2 py-0.5 rounded bg-black/40 border border-white/10 font-mono">
                 {captionTrack.label}

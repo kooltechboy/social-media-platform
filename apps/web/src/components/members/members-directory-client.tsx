@@ -274,7 +274,7 @@ export default function MembersDirectoryClient({
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search members by name, handle, profession..."
-              className="w-full bg-[#181126]/95 border border-white/15 hover:border-brand-caribbeanSea/60 rounded-2xl pl-10 pr-9 py-2.5 text-xs sm:text-sm text-white placeholder-brand-sandstone/50 focus:outline-none focus:border-brand-caribbeanSea focus:ring-2 focus:ring-brand-caribbeanSea/30 transition-all min-h-[42px]"
+              className="w-full bg-[#0B1424]/95 border border-white/15 hover:border-brand-caribbeanSea/60 rounded-2xl pl-10 pr-9 py-2.5 text-xs sm:text-sm text-white placeholder-brand-sandstone/50 focus:outline-none focus:border-brand-caribbeanSea focus:ring-2 focus:ring-brand-caribbeanSea/30 transition-all min-h-[42px]"
             />
             {query && (
               <button
@@ -294,10 +294,10 @@ export default function MembersDirectoryClient({
               value={selectedCountry}
               onChange={(e) => setSelectedCountry(e.target.value)}
               aria-label="Filter members by Caribbean territory"
-              className="w-full bg-[#181126]/95 border border-white/15 rounded-2xl px-3.5 py-2.5 text-xs sm:text-sm text-white focus:outline-none focus:border-brand-caribbeanSea transition-all min-h-[42px]"
+              className="w-full bg-[#0B1424]/95 border border-white/15 rounded-2xl px-3.5 py-2.5 text-xs sm:text-sm text-white focus:outline-none focus:border-brand-caribbeanSea transition-all min-h-[42px]"
             >
               {territoryOptions.map((t) => (
-                <option key={t.iso} value={t.iso} className="bg-[#1D1429] text-white">
+                <option key={t.iso} value={t.iso} className="bg-[#0D1628] text-white">
                   {t.name}
                 </option>
               ))}
@@ -310,12 +310,12 @@ export default function MembersDirectoryClient({
               value={selectedCategory}
               onChange={(e) => setSelectedCategory(e.target.value)}
               aria-label="Filter members by category"
-              className="w-full bg-[#181126]/95 border border-white/15 rounded-2xl px-3.5 py-2.5 text-xs sm:text-sm text-white focus:outline-none focus:border-brand-caribbeanSea transition-all min-h-[42px]"
+              className="w-full bg-[#0B1424]/95 border border-white/15 rounded-2xl px-3.5 py-2.5 text-xs sm:text-sm text-white focus:outline-none focus:border-brand-caribbeanSea transition-all min-h-[42px]"
             >
-              <option value="all" className="bg-[#1D1429] text-white">All Members</option>
-              <option value="creator" className="bg-[#1D1429] text-white">Creators &amp; Artists 🎨</option>
-              <option value="business" className="bg-[#1D1429] text-white">Business Accounts 🏢</option>
-              <option value="official" className="bg-[#1D1429] text-white">Official Accounts ✨</option>
+              <option value="all" className="bg-[#0D1628] text-white">All Members</option>
+              <option value="creator" className="bg-[#0D1628] text-white">Creators &amp; Artists 🎨</option>
+              <option value="business" className="bg-[#0D1628] text-white">Business Accounts 🏢</option>
+              <option value="official" className="bg-[#0D1628] text-white">Official Accounts ✨</option>
             </select>
           </div>
         </div>
@@ -411,7 +411,7 @@ export default function MembersDirectoryClient({
                     </button>
 
                     {activeMenuId === member.id && (
-                      <div className="absolute right-0 top-10 w-44 bg-[#1D1429] border border-white/15 rounded-2xl p-1.5 shadow-2xl z-30 space-y-1 text-xs">
+                      <div className="absolute right-0 top-10 w-44 bg-[#0D1628] border border-white/15 rounded-2xl p-1.5 shadow-2xl z-30 space-y-1 text-xs">
                         <button
                           type="button"
                           onClick={() => handleBlock(member.id)}

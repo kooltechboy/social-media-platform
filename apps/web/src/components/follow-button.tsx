@@ -31,12 +31,14 @@ export default function FollowButton({ targetUserId, isFollowing: initialFollowi
   return (
     <div>
       <button
+        type="button"
         onClick={handle}
         disabled={pending}
-        className={`flex items-center gap-1.5 font-bold text-xs px-4 py-2 rounded-full transition-colors disabled:opacity-50 ${
+        aria-pressed={following}
+        className={`inline-flex items-center justify-center gap-1.5 font-semibold text-xs px-3.5 min-h-[34px] rounded-full transition-colors disabled:opacity-50 ${
           following
-            ? 'bg-brand-dusk hover:bg-rose-500/20 hover:text-rose-400 hover:border-rose-500/40 text-slate-300 border border-slate-700'
-            : 'bg-brand-caribbeanSea hover:bg-brand-caribbeanSea text-slate-950'
+            ? 'bg-white/[0.05] hover:bg-rose-500/12 hover:text-rose-300 hover:border-rose-500/30 text-[#C3CCDA] border border-white/[0.10]'
+            : 'bg-brand-caribbeanSea hover:bg-[#38BDF8] text-[#04101F] shadow-sm shadow-brand-caribbeanSea/20'
         }`}
       >
         {following ? (

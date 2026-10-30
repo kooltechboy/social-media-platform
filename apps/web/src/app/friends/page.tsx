@@ -51,7 +51,7 @@ export default async function FriendsPage({
   return (
     <div className="w-full space-y-6 animate-fadeIn">
       {/* Standardized Responsive Page Header */}
-      <div className="surface-header rounded-3xl p-5 sm:p-7 shadow-xl border border-white/10 bg-[#140C22]/90 backdrop-blur-2xl">
+      <div className="surface-header rounded-3xl p-5 sm:p-7 shadow-xl border border-white/10 bg-[#0B1424]/90 backdrop-blur-2xl">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-start sm:items-center gap-3.5">
             <Link
@@ -76,7 +76,7 @@ export default async function FriendsPage({
           <div className="flex items-center gap-2.5 self-start sm:self-auto shrink-0 flex-wrap">
             <Link
               href="/search"
-              className="text-xs font-black px-4 py-2.5 rounded-xl bg-gradient-to-r from-brand-caribbeanSea to-brand-sunriseCoral text-slate-950 flex items-center gap-1.5 shadow-md shadow-brand-caribbeanSea/20 hover:brightness-110 transition-all min-h-[40px]"
+              className="text-xs font-black px-4 py-2.5 rounded-xl bg-gradient-to-r from-brand-caribbeanTeal to-brand-caribbeanSea text-slate-950 flex items-center gap-1.5 shadow-md shadow-brand-caribbeanSea/20 hover:brightness-110 transition-all min-h-[40px]"
             >
               <Search className="w-4 h-4" /> Global Search
             </Link>

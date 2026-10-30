@@ -5,7 +5,7 @@ export default function MessagesLoading() {
   return (
     <div className="min-h-screen bg-transparent text-white animate-pulse">
       {/* Header bar skeleton */}
-      <div className="sticky shell-sticky-below-header z-30 bg-[#0E0818]/90 backdrop-blur-xl border-b border-white/10 px-4 sm:px-6 py-3.5 flex items-center justify-between">
+      <div className="sticky shell-sticky-below-header z-30 bg-[#08101E]/90 backdrop-blur-xl border-b border-white/10 px-4 sm:px-6 py-3.5 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <Skeleton className="w-20 h-9 rounded-xl" />
           <Skeleton className="w-36 h-6 rounded-lg" />
@@ -15,7 +15,7 @@ export default function MessagesLoading() {
 
       {/* Main chat center grid skeleton */}
       <div className="w-full py-4 px-4 sm:px-6">
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-4 h-[calc(100vh-140px)] rounded-3xl overflow-hidden border border-white/10 bg-[#0E0818]/80">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-4 h-[calc(100vh-140px)] rounded-3xl overflow-hidden border border-white/10 bg-[#08101E]/80">
           {/* Conversation list column */}
           <div className="md:col-span-5 lg:col-span-4 border-r border-white/10 p-4 space-y-4">
             <Skeleton className="w-full h-10 rounded-2xl" />

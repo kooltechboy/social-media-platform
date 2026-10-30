@@ -11,7 +11,7 @@ const CATEGORY_META: Record<string, { title: string; description: string; color:
   'getting-started': {
     title: 'Getting Started',
     description: 'Learn the essentials of TUKUBI: account registration, profile setup, home feeds, and member relationships.',
-    color: '#FF7A59',
+    color: '#F2775A',
   },
   'explore': {
     title: 'Explore TUKUBI',
@@ -21,7 +21,7 @@ const CATEGORY_META: Record<string, { title: string; description: string; color:
   'create': {
     title: 'Create & Publish',
     description: 'Master the Universal Composer: post updates, upload photos, record video moments, and run interactive polls.',
-    color: '#FF7A59',
+    color: '#F2775A',
   },
   'reels-video': {
     title: 'Reels & Video',
@@ -66,7 +66,7 @@ const CATEGORY_META: Record<string, { title: string; description: string; color:
   'pages-stores': {
     title: 'Pages & Stores',
     description: 'Create business and official brand pages, configure custom storefronts, and manage your commercial presence.',
-    color: '#FF7A59',
+    color: '#F2775A',
   },
   'financial-center': {
     title: 'Financial Center',

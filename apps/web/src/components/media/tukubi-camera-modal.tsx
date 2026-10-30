@@ -753,7 +753,7 @@ export default function TukubiCameraModal({
                   onClick={() => setActiveMode(m.id as StudioCaptureMode)}
                   className={`px-4 py-1.5 rounded-full transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-40 ${
                     isSelected
-                      ? 'bg-gradient-to-r from-brand-caribbeanSea to-brand-sunriseCoral text-slate-950 font-black shadow-md'
+                      ? 'bg-gradient-to-r from-brand-caribbeanTeal to-brand-caribbeanSea text-slate-950 font-black shadow-md'
                       : 'text-slate-400 hover:text-white'
                   }`}
                 >

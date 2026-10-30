@@ -16,6 +16,27 @@ related:
 
 # ENGINEERING_CHANGELOG — TUKUBI
 
+## [2026-10-30] — TUKUBI: "Midnight Reef" Desktop Platform Refactor & Official Brand Alignment
+
+### 1. Visual Architecture & Surface Token System (`Midnight Reef`)
+- Upgraded the web desktop platform (`apps/web`) from legacy loud plum/purple surfaces (`#110D17`, `#1D1429`, `#140C22`) and heavy coral-rainbow rings to the executive **Midnight Reef** surface architecture grounded in `OFFICIAL_BRAND_PALETTE` (`#00C2A8` Caribbean Teal, `#0EA5E9` Ocean Blue, `#8B5CF6` Violet, `#F59E0B` / `#F4AE45` Sunset Orange / Golden Hour, `#0B1B3B` Deep Navy, `#070D1A` Midnight Canvas, `#E8EDF5` Porcelain).
+- Added `colors.midnightReef` and `ThemeMode = 'island-vibes' | 'island-daylight' | 'midnight-reef'` to `packages/design-system/src/index.ts` while preserving legacy `colors.islandVibes` and `colors.brand.twilight` mobile parity contracts.
+- Configured self-hosted `Inter` (`--font-sans`) and `Plus_Jakarta_Sans` (`--font-display`) in `apps/web/src/app/layout.tsx`, refined `:root` tokens and `.tk-panel` / `.tk-btn-primary` / `.tk-section-label` / `.tk-text-gradient` primitives in `apps/web/src/app/globals.css`, and hardened `apps/web/postcss.config.js` with explicit config resolution.
+- Generated and installed the blue-hour editorial Caribbean coastline backdrop (`apps/web/public/backgrounds/caribbean-blue-hour.jpg`) rendered by `apps/web/src/components/caribbean-sunset-background.tsx`.
+
+### 2. Core Desktop Shell, Rails, Feed & Public Front Door
+- Refactored `AppHeader`, `AppSidebar`, `AppShell`, `TukubiLogo` (vector `/brand/tukubi-symbol.svg` lockup), `HomeDashboard` (editorial composer + underline feed tabs), `FeedPost`, `UniversalContentCard`, `UserAvatar`, `FollowButton`, `SessionWidget`, `IdentitySwitcher`, `LanguageDropdown`, and all 10 contextual right rails (`home-rail.tsx`, `explore-rail.tsx`, `communities-rail.tsx`, `creator-studio-rail.tsx`, `events-rail.tsx`, `feeds-rail.tsx`, `marketplace-rail.tsx`, `messages-rail.tsx`, `pages-rail.tsx`, `podcasts-rail.tsx`).
+- Rebuilt `PublicFrontDoor` (`apps/web/src/components/public-front-door.tsx`) with a two-column executive hero and live 3-column Desktop Workspace Preview window, 6 product architecture pillars, interactive Island & Territory Explorer, and Caribbean Sounds preview, plus harmonized `TukubiMasterGateway`, `SignInForm`, and `GatewayShell`.
+- Eliminated residual hardcoded dark-purple hexes across 100+ UI components and routes in `apps/web/src` (verified 0 remaining purple surface hexes outside sovereign flag SVGs).
+
+### 3. Verification Evidence
+- **TypeScript Typecheck:** `0` errors across `@caribbean/design-system` and `apps/web` (`tsc --noEmit`).
+- **Prohibited References Gate:** Passed (`node scripts/ci/check-prohibited-references.js`).
+- **Full Repository Unit & Audit Suite:** **215 / 215 test files passed (2,336 / 2,336 tests)** via Vitest (`vitest run`), including WCAG 2.2 AA accessibility, design-system performance, desktop responsive certification, SEO/JSON-LD, and mobile token parity suites.
+- **Live Desktop Browser Verification:** Verified rendered 2x Retina desktop viewports (`1536x960`) across `/`, `/login`, `/explore`, and `/communities` via headless Chromium (Playwright).
+
+---
+
 ## [2026-10-30] — TUKUBI: Official Brand Identity Transformation
 
 ### 1. Vector Reconstruction & Master Geometry
