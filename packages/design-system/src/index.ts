@@ -1,10 +1,64 @@
-// Design Tokens for TUKUBI Visual Language (Island Vibes / Caribbean Sunrise & Sunset)
+// Design Tokens for TUKUBI Visual Language (The Caribbean Connected / Caribbean Futurism)
 
 export const DEFAULT_THEME = 'island-vibes' as const;
 export type ThemeMode = 'island-vibes' | 'island-daylight';
 
+/**
+ * Official TUKUBI Brand Palette (Source of Truth)
+ * Measured directly from the approved creative identity
+ */
+export const OFFICIAL_BRAND_PALETTE = {
+  caribbeanTeal: '#00C2A8',
+  oceanBlue: '#0EA5E9',
+  violet: '#8B5CF6',
+  sunsetOrange: '#F59E0B',
+  deepNavy: '#0B1B3B',
+  sand: '#F8FAFC',
+} as const;
+
+/**
+ * Canonical TUKUBI Brand Asset Paths
+ */
+export const BRAND_ASSETS = {
+  symbol: '/brand/tukubi-symbol.svg',
+  symbolWhite: '/brand/tukubi-symbol-white.svg',
+  symbolMonochrome: '/brand/tukubi-symbol-monochrome.svg',
+  emblem: '/brand/tukubi-emblem.png',
+  logo: '/brand/tukubi-logo.svg',
+  logoDark: '/brand/tukubi-logo-dark.svg',
+  logoWhite: '/brand/tukubi-logo-white.svg',
+  logoMonochrome: '/brand/tukubi-logo-monochrome.svg',
+  logoTransparent: '/brand/tukubi-logo-transparent.png',
+  logoCompact: '/brand/tukubi-logo-compact.svg',
+  logoStacked: '/brand/tukubi-logo-stacked.svg',
+  logoStackedDark: '/brand/tukubi-logo-stacked-dark.svg',
+  footerDark: '/brand/tukubi-footer-dark.png',
+  footerTransparent: '/brand/tukubi-footer-transparent.png',
+  appIcon1024: '/brand/tukubi-app-icon-1024.png',
+  appIcon512: '/brand/tukubi-app-icon-512.png',
+  ogCard: '/brand/tukubi-og-card.png',
+  faviconIco: '/favicon.ico',
+  faviconPng: '/favicon.png',
+  faviconSvg: '/favicon.svg',
+} as const;
+
 export const colors = {
   brand: {
+    // Official Approved Identity Palette (Source of Truth)
+    officialCaribbeanTeal: '#00C2A8',
+    officialOceanBlue: '#0EA5E9',
+    officialViolet: '#8B5CF6',
+    officialSunsetOrange: '#F59E0B',
+    officialDeepNavy: '#0B1B3B',
+    officialSand: '#F8FAFC',
+    caribbeanTeal: '#00C2A8',
+    oceanBlue: '#0EA5E9',
+    violet: '#8B5CF6',
+    sunsetOrange: '#F59E0B',
+    deepNavy: '#0B1B3B',
+    sand: '#F8FAFC',
+
+    // Core Foundation Tokens (Preserved for compatibility & existing themes)
     twilight: '#110D17',        // Deep Twilight Base (Island Vibes night sky)
     dusk: '#1D1429',            // Warm Dusk Surface 
     sunsetPlum: '#2A1B38',      // Deep Plum Raised Surface
@@ -76,10 +130,12 @@ export const colors = {
   gradients: {
     tukubiAmbient: 'linear-gradient(135deg, #110D17 0%, #1D1429 50%, #2A1B38 100%)',
     islandVibesHeader: 'linear-gradient(135deg, #00B4D8 0%, #FFB347 50%, #FF7A59 100%)',
+    brandSpectrum: 'linear-gradient(90deg, #00C2A8 0%, #0EA5E9 33%, #8B5CF6 66%, #F59E0B 100%)',
     oceanTrust: 'linear-gradient(135deg, #0B1F33 0%, #110D17 100%)',
     sunriseGlow: 'radial-gradient(circle at 80% 20%, rgba(255, 122, 89, 0.2), transparent 40%)',
     goldenGlow: 'radial-gradient(circle at 20% 80%, rgba(255, 179, 71, 0.15), transparent 40%)',
     oceanGlow: 'radial-gradient(circle at 50% 50%, rgba(0, 180, 216, 0.15), transparent 50%)',
+    violetGlow: 'radial-gradient(circle at 20% 80%, rgba(139, 92, 246, 0.20), transparent 40%)',
     islandSunset: 'linear-gradient(to bottom, rgba(24, 10, 36, 0.35) 0%, rgba(24, 10, 36, 0.10) 25%, rgba(24, 10, 36, 0.25) 60%, rgba(17, 13, 23, 0.75) 100%)',
   },
   neutral: {
@@ -143,6 +199,8 @@ export const elevations = {
   glowCoral: '0 0 25px -5px rgba(255, 122, 89, 0.4)',
   glowGold: '0 0 25px -5px rgba(255, 179, 71, 0.4)',
   glowSea: '0 0 25px -5px rgba(0, 180, 216, 0.4)',
+  glowTeal: '0 0 25px -5px rgba(0, 194, 168, 0.4)',
+  glowBlue: '0 0 25px -5px rgba(14, 165, 233, 0.4)',
   glowPurple: '0 0 25px -5px rgba(139, 92, 246, 0.4)',
 };
 
@@ -203,5 +261,3 @@ export const RECOMMENDED_MEDIA_DIMENSIONS = {
   avatar: { width: 512, height: 512 },
   cover: { width: 1920, height: 600 },
 } as const;
-
-

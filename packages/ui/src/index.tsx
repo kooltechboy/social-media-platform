@@ -323,17 +323,55 @@ export const ResponsiveTabs: React.FC<ResponsiveTabsProps> = ({
   );
 };
 
+export interface BrandSymbolProps {
+  variant?: 'color' | 'white' | 'monochrome';
+  size?: number | string;
+  className?: string;
+  alt?: string;
+}
+
+export const BrandSymbol: React.FC<BrandSymbolProps> = ({
+  variant = 'color',
+  size = 40,
+  className = '',
+  alt = 'TUKUBI Symbol',
+}) => {
+  const src = variant === 'white'
+    ? '/brand/tukubi-symbol-white.svg'
+    : variant === 'monochrome'
+      ? '/brand/tukubi-symbol-monochrome.svg'
+      : '/brand/tukubi-symbol.svg';
+
+  const dimension = typeof size === 'number' ? `${size}px` : size;
+
+  return (
+    <img
+      src={src}
+      alt={alt}
+      style={{ width: dimension, height: dimension }}
+      className={`object-contain shrink-0 drop-shadow-sm ${className}`}
+    />
+  );
+};
+
 export interface BrandLogoProps {
-  variant?: 'horizontal' | 'emblem' | 'full' | 'footer-dark';
+  variant?: 'horizontal' | 'emblem' | 'full' | 'footer-dark' | 'footer-transparent' | 'stacked' | 'compact' | 'symbol';
+  theme?: 'light' | 'dark' | 'white' | 'monochrome';
   className?: string;
   alt?: string;
 }
 
 export const BrandLogo: React.FC<BrandLogoProps> = ({
   variant = 'horizontal',
+  theme = 'light',
   className = '',
   alt = 'TUKUBI — The Caribbean Connected.',
 }) => {
+  if (variant === 'symbol') {
+    const symVariant = theme === 'white' ? 'white' : theme === 'monochrome' ? 'monochrome' : 'color';
+    return <BrandSymbol variant={symVariant} size={40} className={className} alt={alt} />;
+  }
+
   if (variant === 'emblem') {
     return (
       <img
@@ -352,6 +390,36 @@ export const BrandLogo: React.FC<BrandLogoProps> = ({
       />
     );
   }
+  if (variant === 'footer-transparent') {
+    return (
+      <img
+        src="/brand/tukubi-footer-transparent.png"
+        alt={alt}
+        className={`h-12 w-auto object-contain ${className}`}
+      />
+    );
+  }
+  if (variant === 'stacked') {
+    const src = theme === 'dark' || theme === 'white'
+      ? '/brand/tukubi-logo-stacked-dark.svg'
+      : '/brand/tukubi-logo-stacked.svg';
+    return (
+      <img
+        src={src}
+        alt={alt}
+        className={`w-36 h-auto object-contain ${className}`}
+      />
+    );
+  }
+  if (variant === 'compact') {
+    return (
+      <img
+        src="/brand/tukubi-logo-compact.svg"
+        alt={alt}
+        className={`h-9 w-auto object-contain ${className}`}
+      />
+    );
+  }
   if (variant === 'full') {
     return (
       <img
@@ -361,16 +429,18 @@ export const BrandLogo: React.FC<BrandLogoProps> = ({
       />
     );
   }
+
+  // Horizontal format (Default)
   return (
     <div className={`inline-flex items-center gap-2.5 ${className}`}>
       <img
         src="/brand/tukubi-emblem.png"
         alt=""
         aria-hidden="true"
-        className="w-9 h-9 md:w-10 md:h-10 object-contain drop-shadow-md"
+        className="w-9 h-9 md:w-10 md:h-10 object-contain drop-shadow-[0_4px_12px_rgba(0,194,168,0.3)]"
       />
       <div className="flex flex-col leading-tight">
-        <span className="text-xl md:text-2xl font-black bg-gradient-to-r from-brand-caribbeanSea via-brand-goldenHour to-brand-sunriseCoral bg-clip-text text-transparent tracking-wider">
+        <span className="text-xl md:text-2xl font-black bg-gradient-to-r from-[#00C2A8] via-[#0EA5E9] to-[#F59E0B] bg-clip-text text-transparent tracking-wider">
           TUKUBI
         </span>
         <span className="text-[10px] md:text-xs font-bold text-brand-sandstone/80 tracking-wide">
@@ -380,4 +450,3 @@ export const BrandLogo: React.FC<BrandLogoProps> = ({
     </div>
   );
 };
-

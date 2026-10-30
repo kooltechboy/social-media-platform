@@ -59,6 +59,26 @@ TUKUBI is a Caribbean-born social, creator, community, commerce, and cultural co
 ## 4. Aesthetic & Design System (`Caribbean Futurism`)
 
 Defined in `@caribbean/design-system` (`packages/design-system/src/index.ts`) and `apps/web/src/app/globals.css`:
+
+### 4.1 Official Brand Master Palette
+Formally measured from the definitive brand board (`media_1793323302123_b3aab962.jpg`):
+- **Caribbean Teal:** `#00C2A8` (Primary symbol gradient stop & highlight)
+- **Ocean Blue:** `#0EA5E9` (Sky/sea midtone gradient stop)
+- **Violet:** `#8B5CF6` (Twilight transition gradient stop)
+- **Sunset Orange:** `#F59E0B` (Swoop foot and warm energy gradient stop)
+- **Deep Navy:** `#0B1B3B` (Primary brand container & dark contrast anchor)
+- **Sand:** `#F8FAFC` (Pure crisp light surface & text token)
+
+### 4.2 Official Brand Mark & Asset System
+Canonical assets located in `packages/design-system/brand/` and mirrored across all web, admin, moderation, studio, and mobile applications:
+- **Symbol:** Stylized "T" with ribbon swoop fold and 3 radiating Caribbean fronds/splashes (`tukubi-symbol.svg`, `tukubi-symbol-white.svg`, `tukubi-symbol-monochrome.svg`).
+- **Horizontal Primary Logo:** Approved symbol + geometric "TUKUBI" wordmark + "The Caribbean Connected" tagline (`tukubi-logo.svg`, `tukubi-logo-dark.svg`, `tukubi-logo-white.svg`, `tukubi-logo-monochrome.svg`).
+- **Stacked & Compact Variants:** `tukubi-logo-stacked.svg`, `tukubi-logo-compact.svg`.
+- **Mobile Icons & Launcher:** Squircle container on `#0B1B3B` (`tukubi-app-icon.svg`, `tukubi-app-icon-1024.png`, `tukubi-adaptive-foreground.png`, `tukubi-adaptive-background.png`).
+- **Web & PWA Icons:** `favicon.ico` (multi-res 16/32/48), `apple-touch-icon.png` (180x180), `icon-192.png`, `icon-512.png`, `icon-maskable-192.png`, `icon-maskable-512.png`.
+- **OpenGraph Card:** `tukubi-og-card.png` (1200x630).
+
+### 4.3 Theme Surface Palettes
 - **Primary Dark Theme (`Island Vibes`):**
   - Background Primary: `#110D17` (`Deep Twilight`)
   - Background Secondary: `#1B1426` (`Dusk`)

@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="120" height="120">
+  <defs>
+    <!-- Crossbar Horizontal Gradient: Bright Caribbean Teal to Ocean Blue -->
+    <linearGradient id="sym-cbGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#00E5C9" />
+      <stop offset="35%" stop-color="#00C2A8" />
+      <stop offset="75%" stop-color="#0EA5E9" />
+      <stop offset="100%" stop-color="#0284C7" />
+    </linearGradient>
+
+    <!-- Stem Vertical Gradient: Ocean Blue -> Electric Violet -> Sunset Coral -> Sunset Orange -->
+    <linearGradient id="sym-stemGrad" x1="15%" y1="0%" x2="75%" y2="100%">
+      <stop offset="0%" stop-color="#0EA5E9" />
+      <stop offset="18%" stop-color="#2563EB" />
+      <stop offset="38%" stop-color="#6366F1" />
+      <stop offset="52%" stop-color="#8B5CF6" />
+      <stop offset="70%" stop-color="#C026D3" />
+      <stop offset="84%" stop-color="#F43F5E" />
+      <stop offset="94%" stop-color="#F97316" />
+      <stop offset="100%" stop-color="#F59E0B" />
+    </linearGradient>
+
+    <!-- 3D Ribbon Fold Highlight -->
+    <linearGradient id="sym-foldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38BDF8" stop-opacity="0.8" />
+      <stop offset="32%" stop-color="#818CF8" stop-opacity="0.85" />
+      <stop offset="62%" stop-color="#C084FC" stop-opacity="0.9" />
+      <stop offset="85%" stop-color="#FB7185" stop-opacity="0.95" />
+      <stop offset="100%" stop-color="#FBBF24" />
+    </linearGradient>
+
+    <!-- Splash Fronds Gradient -->
+    <linearGradient id="sym-splashGrad" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#00C2A8" />
+      <stop offset="60%" stop-color="#0EA5E9" />
+      <stop offset="100%" stop-color="#38BDF8" />
+    </linearGradient>
+
+    <!-- Brand Typography Linear Gradient for dark backgrounds (optional glow) -->
+    <linearGradient id="sym-textGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#FFFFFF" />
+      <stop offset="100%" stop-color="#F8FAFC" />
+    </linearGradient>
+
+    <!-- Clipping masks for crossbar and stem separation -->
+    <clipPath id="sym-cbClip">
+      <path d="M 0 0 L 100 0 L 100 24.5 L 68 24.5 L 56 26 L 33 26 L 0 26 Z" />
+    </clipPath>
+    <clipPath id="sym-stemClip">
+      <path d="M 0 24 L 100 24 L 100 90 L 0 90 Z" />
+    </clipPath>
+  </defs>
+  <g id="sym-symbol" transform="translate(7.5, 6)">
+    <!-- Crossbar -->
+    <path d="M 81.82 0.00 L 86.36 0.00 L 90.91 0.00 L 95.45 0.00 L 98.48 1.52 L 96.97 6.06 L 93.94 10.61 L 90.91 15.15 L 86.36 18.18 L 81.82 15.15 L 77.27 13.64 L 72.73 15.15 L 68.18 16.67 L 63.64 19.70 L 60.61 24.24 L 59.09 28.79 L 57.58 33.33 L 59.09 37.88 L 59.09 42.42 L 59.09 46.97 L 59.09 51.52 L 59.09 56.06 L 59.09 60.61 L 59.09 65.15 L 59.09 69.70 L 57.58 74.24 L 54.55 78.79 L 51.52 83.33 L 46.97 86.36 L 42.42 84.85 L 37.88 81.82 L 33.33 78.79 L 30.30 75.76 L 28.79 71.21 L 28.79 66.67 L 28.79 62.12 L 30.30 57.58 L 30.30 53.03 L 31.82 48.48 L 31.82 43.94 L 33.33 39.39 L 34.85 34.85 L 34.85 30.30 L 34.85 25.76 L 30.30 25.76 L 25.76 25.76 L 21.21 25.76 L 16.67 25.76 L 12.12 25.76 L 7.58 25.76 L 3.03 25.76 L 0.00 24.24 L 1.52 19.70 L 3.03 15.15 L 7.58 10.61 L 12.12 7.58 L 16.67 4.55 L 21.21 4.55 L 25.76 4.55 L 30.30 4.55 L 34.85 3.03 L 39.39 3.03 L 43.94 3.03 L 48.48 3.03 L 53.03 3.03 L 57.58 1.52 L 62.12 1.52 L 66.67 1.52 L 71.21 1.52 L 75.76 1.52 L 80.30 1.52 Z" fill="url(#sym-cbGrad)" clip-path="url(#sym-cbClip)" />
+    <!-- Stem -->
+    <path d="M 81.82 0.00 L 86.36 0.00 L 90.91 0.00 L 95.45 0.00 L 98.48 1.52 L 96.97 6.06 L 93.94 10.61 L 90.91 15.15 L 86.36 18.18 L 81.82 15.15 L 77.27 13.64 L 72.73 15.15 L 68.18 16.67 L 63.64 19.70 L 60.61 24.24 L 59.09 28.79 L 57.58 33.33 L 59.09 37.88 L 59.09 42.42 L 59.09 46.97 L 59.09 51.52 L 59.09 56.06 L 59.09 60.61 L 59.09 65.15 L 59.09 69.70 L 57.58 74.24 L 54.55 78.79 L 51.52 83.33 L 46.97 86.36 L 42.42 84.85 L 37.88 81.82 L 33.33 78.79 L 30.30 75.76 L 28.79 71.21 L 28.79 66.67 L 28.79 62.12 L 30.30 57.58 L 30.30 53.03 L 31.82 48.48 L 31.82 43.94 L 33.33 39.39 L 34.85 34.85 L 34.85 30.30 L 34.85 25.76 L 30.30 25.76 L 25.76 25.76 L 21.21 25.76 L 16.67 25.76 L 12.12 25.76 L 7.58 25.76 L 3.03 25.76 L 0.00 24.24 L 1.52 19.70 L 3.03 15.15 L 7.58 10.61 L 12.12 7.58 L 16.67 4.55 L 21.21 4.55 L 25.76 4.55 L 30.30 4.55 L 34.85 3.03 L 39.39 3.03 L 43.94 3.03 L 48.48 3.03 L 53.03 3.03 L 57.58 1.52 L 62.12 1.52 L 66.67 1.52 L 71.21 1.52 L 75.76 1.52 L 80.30 1.52 Z" fill="url(#sym-stemGrad)" clip-path="url(#sym-stemClip)" />
+    <!-- 3D Ribbon Fold Highlight -->
+    <path d="M 41 32 C 37.5 43, 38.5 57, 44 68 C 46.5 73, 49.5 77.5, 51 80 C 53 78.5, 53.5 76, 52.5 73.5 C 50 67, 52 58, 56 48 C 57.5 43, 57 37, 54 32 C 49 32, 45 32, 41 32 Z" fill="url(#sym-foldGrad)" opacity="0.92" />
+    <!-- 3 Splash Fronds -->
+    <path d="M 74.24 18.18 L 75.76 18.18 L 77.27 18.18 L 78.79 18.18 L 80.30 18.18 L 81.82 19.70 L 80.30 19.70 L 78.79 19.70 L 77.27 19.70 L 75.76 21.21 L 74.24 21.21 L 72.73 22.73 L 71.21 22.73 L 69.70 24.24 L 68.18 25.76 L 66.67 27.27 L 65.15 28.79 L 65.15 27.27 L 66.67 25.76 L 66.67 24.24 L 68.18 22.73 L 69.70 21.21 L 71.21 19.70 L 72.73 19.70 Z" fill="url(#sym-splashGrad)" />
+    <path d="M 75.76 24.24 L 77.27 24.24 L 78.79 24.24 L 80.30 24.24 L 81.82 24.24 L 83.33 24.24 L 84.85 25.76 L 83.33 25.76 L 81.82 25.76 L 80.30 25.76 L 78.79 25.76 L 77.27 25.76 L 75.76 25.76 L 74.24 25.76 L 72.73 27.27 L 71.21 27.27 L 72.73 25.76 L 74.24 25.76 Z" fill="url(#sym-splashGrad)" />
+    <path d="M 75.76 28.79 L 77.27 28.79 L 78.79 28.79 L 80.30 28.79 L 81.82 28.79 L 83.33 30.30 L 84.85 31.82 L 83.33 31.82 L 81.82 31.82 L 80.30 30.30 L 78.79 30.30 L 77.27 30.30 L 75.76 30.30 L 74.24 30.30 L 72.73 30.30 L 74.24 30.30 Z" fill="url(#sym-splashGrad)" />
+  </g>
+</svg>

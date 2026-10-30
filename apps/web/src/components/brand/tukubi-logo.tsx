@@ -4,10 +4,12 @@ import React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 
-export type LogoVariant = 'full' | 'emblem' | 'horizontal' | 'footer-dark' | 'footer-transparent';
+export type LogoVariant = 'full' | 'emblem' | 'horizontal' | 'footer-dark' | 'footer-transparent' | 'stacked' | 'compact' | 'symbol';
+export type LogoTheme = 'light' | 'dark' | 'white' | 'monochrome' | 'auto';
 
 export interface TukubiLogoProps {
   variant?: LogoVariant;
+  theme?: LogoTheme;
   size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl' | 'custom';
   width?: number;
   height?: number;
@@ -15,10 +17,12 @@ export interface TukubiLogoProps {
   href?: string | null;
   priority?: boolean;
   alt?: string;
+  useVector?: boolean;
 }
 
 export function TukubiLogo({
   variant = 'horizontal',
+  theme = 'auto',
   size = 'md',
   width,
   height,
@@ -26,10 +30,31 @@ export function TukubiLogo({
   href = '/',
   priority = false,
   alt = 'TUKUBI — The Caribbean Connected.',
+  useVector = false,
 }: TukubiLogoProps) {
   let content: React.ReactNode;
 
-  if (variant === 'emblem') {
+  if (variant === 'symbol') {
+    const symSize = width ?? (size === 'xs' ? 24 : size === 'sm' ? 32 : size === 'lg' ? 64 : size === 'xl' ? 96 : 40);
+    const symSrc = theme === 'white'
+      ? '/brand/tukubi-symbol-white.svg'
+      : theme === 'monochrome'
+        ? '/brand/tukubi-symbol-monochrome.svg'
+        : '/brand/tukubi-symbol.svg';
+
+    content = (
+      <div className={`relative inline-flex items-center justify-center shrink-0 ${className}`}>
+        <Image
+          src={symSrc}
+          alt={alt}
+          width={symSize}
+          height={symSize}
+          priority={priority}
+          className="object-contain drop-shadow-sm"
+        />
+      </div>
+    );
+  } else if (variant === 'emblem') {
     const w = width ?? (size === 'xs' ? 32 : size === 'sm' ? 44 : size === 'lg' ? 64 : size === 'xl' ? 96 : 48);
     const h = height ?? w;
     content = (
@@ -40,7 +65,7 @@ export function TukubiLogo({
           width={w}
           height={h}
           priority={priority}
-          className="object-contain drop-shadow-md"
+          className="object-contain drop-shadow-[0_4px_12px_rgba(0,194,168,0.3)]"
         />
       </div>
     );
@@ -55,7 +80,7 @@ export function TukubiLogo({
           width={w}
           height={h}
           priority={priority}
-          className="object-contain rounded-lg shadow-lg border border-white/10"
+          className="object-contain rounded-xl shadow-lg border border-white/10"
         />
       </div>
     );
@@ -66,6 +91,39 @@ export function TukubiLogo({
       <div className={`relative inline-flex items-center justify-center shrink-0 ${className}`}>
         <Image
           src="/brand/tukubi-footer-transparent.png"
+          alt={alt}
+          width={w}
+          height={h}
+          priority={priority}
+          className="object-contain"
+        />
+      </div>
+    );
+  } else if (variant === 'stacked') {
+    const w = width ?? (size === 'sm' ? 140 : size === 'lg' ? 260 : size === 'xl' ? 320 : 190);
+    const h = height ?? Math.round(w * 0.83);
+    const src = theme === 'dark' || theme === 'white'
+      ? '/brand/tukubi-logo-stacked-dark.svg'
+      : '/brand/tukubi-logo-stacked.svg';
+    content = (
+      <div className={`relative inline-flex flex-col items-center justify-center shrink-0 ${className}`}>
+        <Image
+          src={src}
+          alt={alt}
+          width={w}
+          height={h}
+          priority={priority}
+          className="object-contain"
+        />
+      </div>
+    );
+  } else if (variant === 'compact') {
+    const w = width ?? (size === 'xs' ? 120 : size === 'sm' ? 140 : size === 'lg' ? 200 : size === 'xl' ? 240 : 160);
+    const h = height ?? Math.round(w * 0.22);
+    content = (
+      <div className={`relative inline-flex items-center shrink-0 ${className}`}>
+        <Image
+          src="/brand/tukubi-logo-compact.svg"
           alt={alt}
           width={w}
           height={h}
@@ -90,7 +148,7 @@ export function TukubiLogo({
       </div>
     );
   } else {
-    // Horizontal format: Emblem icon + Crisp Typography & Tagline
+    // Horizontal format: Approved Emblem + Crisp Typography & Tagline
     const iconSize = size === 'xs' ? 28 : size === 'sm' ? 36 : size === 'lg' ? 52 : size === 'xl' ? 64 : 42;
     content = (
       <div className={`inline-flex items-center gap-3 shrink-0 group ${className}`}>
@@ -102,11 +160,11 @@ export function TukubiLogo({
             width={iconSize}
             height={iconSize}
             priority={priority}
-            className="object-contain drop-shadow-[0_4px_12px_rgba(0,180,216,0.3)]"
+            className="object-contain drop-shadow-[0_4px_12px_rgba(0,194,168,0.35)]"
           />
         </div>
         <div className="flex flex-col tracking-tight leading-tight">
-          <span className="text-xl sm:text-2xl font-black bg-gradient-to-r from-brand-caribbeanSea via-brand-goldenHour to-brand-sunriseCoral bg-clip-text text-transparent tracking-wider">
+          <span className="text-xl sm:text-2xl font-black bg-gradient-to-r from-[#00C2A8] via-[#0EA5E9] to-[#F59E0B] bg-clip-text text-transparent tracking-wider">
             TUKUBI
           </span>
           <span className="hidden sm:inline text-[10.5px] sm:text-[11px] font-bold text-brand-sandstone/85 tracking-wide -mt-0.5 group-hover:text-brand-caribbeanSea transition-colors">
