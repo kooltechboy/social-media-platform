@@ -33,7 +33,9 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   ShieldCheck,
+  CheckCircle,
 } from 'lucide-react';
+import UserAvatar from './user-avatar';
 import { useTranslation, TranslationKey } from '@caribbean/localization';
 import { useUnreadNotificationsCount, useUnreadMessagesCount } from './notifications-realtime-provider';
 import { useSidebar } from './sidebar-context';
@@ -60,7 +62,7 @@ export default function AppSidebar({ currentPath }: { currentPath?: string }) {
   const activePath = currentPath || pathname || '/';
   const isOfficialUser = user?.isOfficial || user?.username?.toLowerCase() === 'tukubi';
 
-  // 1. PRIMARY NAVIGATION (11 Unified Global Destinations)
+  // 1. PRIMARY NAVIGATION (11 Unified Global Destinations — Image 2 Alignment)
   const PRIMARY_NAV: NavItem[] = [
     {
       href: '/',
@@ -75,35 +77,21 @@ export default function AppSidebar({ currentPath }: { currentPath?: string }) {
       icon: Compass,
     },
     {
-      href: '/caribbean',
-      labelKey: 'nav.caribbean',
-      fallbackLabel: 'Caribbean',
-      icon: Globe,
-    },
-    {
       href: '/shorts',
       fallbackLabel: 'Shorts',
       icon: Film,
       badge: 'HOT',
     },
     {
-      href: '/reels',
-      labelKey: 'nav.reels',
-      fallbackLabel: 'Reels & Sounds',
-      icon: Film,
-    },
-    {
-      href: '/live',
-      labelKey: 'nav.live_streams',
-      fallbackLabel: 'Live',
-      icon: Tv,
-      badge: 'LIVE',
-    },
-    {
       href: '/communities',
       labelKey: 'nav.communities',
       fallbackLabel: 'Communities',
       icon: Users,
+    },
+    {
+      href: '/pages',
+      fallbackLabel: 'Pages',
+      icon: Building2,
     },
     {
       href: '/marketplace',
@@ -118,9 +106,54 @@ export default function AppSidebar({ currentPath }: { currentPath?: string }) {
       icon: Calendar,
     },
     {
-      href: '/pages',
-      fallbackLabel: 'Pages',
-      icon: Building2,
+      href: '/creator-studio',
+      labelKey: 'nav.creator_studio',
+      fallbackLabel: 'Creator Studio',
+      icon: Radio,
+      badge: 'STUDIO',
+    },
+    {
+      href: '/messages',
+      labelKey: 'nav.messages',
+      fallbackLabel: 'Messages',
+      icon: MessageSquare,
+      badgeCount: unreadMessages,
+    },
+    {
+      href: '/notifications',
+      labelKey: 'nav.notifications',
+      fallbackLabel: 'Notifications',
+      icon: Bell,
+      badgeCount: unreadNotifications,
+    },
+    {
+      href: '/settings',
+      labelKey: 'nav.settings',
+      fallbackLabel: 'Settings',
+      icon: Settings,
+    },
+  ];
+
+  // 2. TOOLS & ECOSYSTEM (Collapsible)
+  const TOOLS_NAV: NavItem[] = [
+    {
+      href: '/caribbean',
+      labelKey: 'nav.caribbean',
+      fallbackLabel: 'Caribbean',
+      icon: Globe,
+    },
+    {
+      href: '/reels',
+      labelKey: 'nav.reels',
+      fallbackLabel: 'Reels & Sounds',
+      icon: Film,
+    },
+    {
+      href: '/live',
+      labelKey: 'nav.live_streams',
+      fallbackLabel: 'Live Streams',
+      icon: Tv,
+      badge: 'LIVE',
     },
     {
       href: '/pages?tab=my-pages',
@@ -140,49 +173,6 @@ export default function AppSidebar({ currentPath }: { currentPath?: string }) {
       fallbackLabel: 'Podcasts',
       icon: Mic,
     },
-    {
-      href: '/creator-studio',
-      labelKey: 'nav.creator_studio',
-      fallbackLabel: 'Creator Studio',
-      icon: Radio,
-      badge: 'STUDIO',
-    },
-  ];
-
-  // 2. PERSONAL & CONNECT NAVIGATION
-  const SECONDARY_NAV: NavItem[] = [
-    {
-      href: '/messages',
-      labelKey: 'nav.messages',
-      fallbackLabel: 'Messages',
-      icon: MessageSquare,
-      badgeCount: unreadMessages,
-    },
-    {
-      href: '/notifications',
-      labelKey: 'nav.notifications',
-      fallbackLabel: 'Notifications',
-      icon: Bell,
-      badgeCount: unreadNotifications,
-    },
-    {
-      href: user ? (isOfficialUser ? '/profile/tukubi' : '/profile') : '/login',
-      labelKey: user ? undefined : 'nav.sign_in',
-      label: user ? `@${user.username}` : undefined,
-      fallbackLabel: 'Profile',
-      icon: User,
-      badge: isOfficialUser ? 'OFFICIAL' : undefined,
-    },
-    {
-      href: '/settings',
-      labelKey: 'nav.settings',
-      fallbackLabel: 'Settings',
-      icon: Settings,
-    },
-  ];
-
-  // 3. TOOLS & ECOSYSTEM (Collapsible)
-  const TOOLS_NAV: NavItem[] = [
     {
       href: '/sounds',
       labelKey: 'nav.sounds',
@@ -393,19 +383,7 @@ export default function AppSidebar({ currentPath }: { currentPath?: string }) {
 
         {renderNavList(PRIMARY_NAV)}
 
-        <div className="h-px bg-white/10 my-0.5 shrink-0" />
-
-        {!isCollapsed && (
-          <div className="px-2 pt-0.5 pb-0.5 shrink-0">
-            <span className="text-[9px] font-black uppercase tracking-wider text-brand-sandstone/50">
-              Personal &amp; Connect
-            </span>
-          </div>
-        )}
-
-        {renderNavList(SECONDARY_NAV)}
-
-        <div className="h-px bg-white/10 my-0.5 shrink-0" />
+        <div className="h-px bg-white/10 my-1 shrink-0" />
 
         {/* ── 3. More Tools & Ecosystem Accordion / Compact Menu ── */}
         {isCollapsed ? (
@@ -416,11 +394,11 @@ export default function AppSidebar({ currentPath }: { currentPath?: string }) {
               type="button"
               onClick={() => setIsToolsOpen((prev) => !prev)}
               aria-expanded={isToolsOpen}
-              className="w-full flex items-center justify-between px-2.5 py-1 rounded-lg text-xs font-bold text-slate-400 hover:text-white hover:bg-white/5 transition-colors min-h-[28px]"
+              className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-bold text-slate-400 hover:text-white hover:bg-white/5 transition-colors min-h-[30px]"
             >
               <span className="flex items-center gap-2">
                 <Sparkles className="w-3.5 h-3.5 text-brand-goldenHour" />
-                Tools &amp; Ecosystem
+                More Discoveries &amp; Tools
               </span>
               <ChevronDown
                 className={`w-3.5 h-3.5 transition-transform duration-200 ${
@@ -437,57 +415,87 @@ export default function AppSidebar({ currentPath }: { currentPath?: string }) {
           </div>
         )}
 
+        {/* ── 3.5. Creator Ecosystem Action Card ── */}
         {!isCollapsed && (
-          <>
-            <div className="nav-fit-hide-short h-px bg-white/10 my-0.5 shrink-0" />
-
-            {/* Creator Ecosystem Action Card - Compact & Elegant (hidden on short viewports: links duplicated in nav) */}
-            <div className="nav-fit-hide-short glass rounded-xl p-2 space-y-1 shrink-0 border border-white/5">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-1 text-[10px] font-black text-brand-caribbeanSea uppercase tracking-wider">
-                  <Sparkles className="w-3 h-3 text-brand-goldenHour" /> Caribbean Creator Ecosystem
-                </div>
-                <Link
-                  href="/creator-studio"
-                  className="text-[9.5px] font-black px-1.5 py-0.5 rounded bg-brand-caribbeanSea/20 text-brand-caribbeanSea hover:brightness-125 transition-all"
-                  title="Create, manage, analyze & monetize content"
-                >
-                  Studio →
-                </Link>
+          <div className="nav-fit-hide-short glass rounded-xl p-2 space-y-1 shrink-0 border border-white/5 my-1">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-1 text-[10px] font-black text-brand-caribbeanSea uppercase tracking-wider">
+                <Sparkles className="w-3 h-3 text-brand-goldenHour" /> Caribbean Creator Ecosystem
               </div>
-
-              <div className="flex items-center gap-1.5 pt-0.5">
-                <Link
-                  href="/creator-hub"
-                  className="flex-1 flex items-center justify-between p-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/5 transition-all group min-h-[30px]"
-                >
-                  <div className="min-w-0">
-                    <p className="text-[10px] font-black text-brand-goldenHour flex items-center gap-1 truncate">
-                      <Sparkles className="w-3 h-3 shrink-0" /> Creator Hub
-                    </p>
-                    <p className="text-[8.5px] text-brand-sandstone/60 truncate">
-                      Your home base, audience &amp; business
-                    </p>
-                  </div>
-                  <ArrowRight className="w-3 h-3 text-brand-goldenHour opacity-0 group-hover:opacity-100 transition-opacity shrink-0 ml-1" />
-                </Link>
-
-                <Link
-                  href="/creator-studio"
-                  className="shrink-0 bg-gradient-to-r from-brand-caribbeanSea to-brand-sunriseCoral hover:brightness-110 text-slate-950 font-black text-[10px] px-2.5 py-1.5 rounded-lg transition-all shadow-sm text-center min-h-[30px] flex items-center justify-center whitespace-nowrap"
-                >
-                  Open Studio
-                </Link>
-              </div>
-
-              <p className="text-[8.5px] text-center text-brand-sandstone/50 truncate">
-                Create, manage, analyze &amp; monetize content
-              </p>
+              <Link
+                href="/creator-studio"
+                className="text-[9.5px] font-black px-1.5 py-0.5 rounded bg-brand-caribbeanSea/20 text-brand-caribbeanSea hover:brightness-125 transition-all"
+                title="Create, manage, analyze &amp; monetize content"
+              >
+                Studio →
+              </Link>
             </div>
-          </>
+
+            <div className="flex items-center gap-1.5 pt-0.5">
+              <Link
+                href="/creator-hub"
+                className="flex-1 flex items-center justify-between p-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/5 transition-all group min-h-[30px]"
+              >
+                <div className="min-w-0">
+                  <p className="text-[10px] font-black text-brand-goldenHour flex items-center gap-1 truncate">
+                    <Sparkles className="w-3 h-3 shrink-0" /> Creator Hub
+                  </p>
+                  <p className="text-[8.5px] text-brand-sandstone/60 truncate">
+                    Your home base, audience &amp; business
+                  </p>
+                </div>
+                <ArrowRight className="w-3 h-3 text-brand-goldenHour opacity-0 group-hover:opacity-100 transition-opacity shrink-0 ml-1" />
+              </Link>
+
+              <Link
+                href="/creator-studio"
+                className="shrink-0 bg-gradient-to-r from-brand-caribbeanSea to-brand-sunriseCoral hover:brightness-110 text-slate-950 font-black text-[10px] px-2.5 py-1.5 rounded-lg transition-all shadow-sm text-center min-h-[30px] flex items-center justify-center whitespace-nowrap"
+              >
+                Open Studio
+              </Link>
+            </div>
+
+            <p className="text-[8.5px] text-center text-brand-sandstone/50 truncate">
+              Create, manage, analyze &amp; monetize content
+            </p>
+          </div>
         )}
 
-        {/* ── 4. Diaspora / Brand Identity Footer (Safely docked inside scroll container to prevent overlap) ── */}
+        {/* ── 4. Bottom User Profile Card (Matches Concept Image 1 & 2) ── */}
+        {user && (
+          <div className="pt-2 mt-auto border-t border-white/10 shrink-0">
+            <Link
+              href={isOfficialUser ? '/profile/tukubi' : '/profile'}
+              className={`flex items-center gap-2.5 p-1.5 rounded-xl hover:bg-white/10 transition-colors group ${
+                isCollapsed ? 'justify-center' : ''
+              }`}
+              title="View your profile"
+            >
+              <UserAvatar
+                src={user.avatarUrl}
+                name={user.displayName || user.username}
+                size="sm"
+              />
+              {!isCollapsed && (
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-1">
+                    <span className="text-xs font-bold text-white truncate group-hover:text-brand-caribbeanSea transition-colors">
+                      {user.displayName || user.username}
+                    </span>
+                    {user.isVerified && (
+                      <CheckCircle className="w-3.5 h-3.5 text-brand-caribbeanSea shrink-0" />
+                    )}
+                  </div>
+                  <span className="text-[10px] text-brand-sandstone/60 truncate block">
+                    @{user.username}
+                  </span>
+                </div>
+              )}
+            </Link>
+          </div>
+        )}
+
+        {/* ── 5. Diaspora / Brand Identity Footer ── */}
         {!isCollapsed && (
           <div className="nav-fit-hide-short px-2 pt-1.5 pb-0.5 text-center border-t border-white/5 mt-0.5 shrink-0">
             <p className="text-[9.5px] font-black tracking-wider text-brand-sandstone/60 leading-tight">

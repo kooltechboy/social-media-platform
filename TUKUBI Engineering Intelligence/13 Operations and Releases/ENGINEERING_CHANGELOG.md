@@ -57,3 +57,58 @@ related:
 - Fixed 4 mobile screens (`CommunitiesScreen.tsx`, `FinancialCenterScreen.tsx`, `SoundsScreen.tsx`, `ReelsScreen.tsx`) to use `TOKENS.actionText` (`#110D17` on `#FF7A59` = 7.48:1 AAA contrast) (`P2-UX-01`).
 - Wired live `Island Vibes` & `Island Daylight` theme selector in `/settings` and `apps/web/src/app/layout.tsx` (`P2-UX-02`).
 - Resolved all 12 ESLint React Hook and stale-ref cleanup warnings across `apps/web/src/components/**`.
+
+---
+
+## [2026-10-29] — TUKUBI: Trust, Signup, Privacy & Platform Maturity Transformation
+
+### 1. Legal Compliance, Privacy & Statutory Gating (`supabase/migrations/00116`)
+- **Added `supabase/migrations/00116_legal_consent_and_account_lifecycle.sql`:**
+  - Created `public.legal_consent_records` table with audit trail columns (`user_id`, `document_type`, `document_version`, `consented`, `consented_at`, `ip_country`, `user_agent`, `jurisdiction`).
+  - Enabled RLS on `legal_consent_records` with strict user-only read/write policies and service-role management.
+  - Created `public.account_deletion_requests` table with 30-day grace period pipeline (`status: 'scheduled'`, `scheduled_deletion_at: now() + interval '30 days'`).
+  - Implemented `public.request_account_deletion` and `public.cancel_account_deletion` stored procedures with `SECURITY DEFINER` and pinned `search_path = public, pg_temp`.
+  - Implemented `public.record_legal_consent` RPC with owner validation.
+
+### 2. Registration UX & Child Safety Standards (Law 136-03, COPPA, GDPR-K)
+- **`apps/web/src/app/signup/account/page.tsx`:**
+  - Added Date-of-Birth (DOB) field with live age calculation.
+  - Under-13 protection: Users under 13 are respectfully blocked from unassisted registration with clear notification of Dominican Republic Law 136-03 parental authorization requirements.
+  - Adolescent protection (13–17): Automatic minor safety disclosure and database trigger `trg_calculate_profile_age_tier` activation (`age_tier = '13_to_17'`).
+  - Adult mode (18+): Full adult profile activation.
+  - Mandatory legal consent: Checkbox explicitly linking Terms of Service (`/terms`), Privacy Policy (`/privacy`), and Community Standards (`/help`).
+  - Unbundled optional marketing consent: Dedicated checkbox for cultural highlights and product newsletters.
+- **`apps/web/src/lib/auth/signup-session.ts`:**
+  - Added `dateOfBirth`, `marketingConsent`, `termsVersion`, and `privacyVersion` fields while maintaining strict credential isolation (passwords never written to browser storage).
+- **`apps/web/src/lib/auth/actions.ts`:**
+  - Updated `completeFullRegistrationAction` to persist `date_of_birth` on `public.profiles` and record statutory `legal_consent_records` rows upon registration.
+- **`apps/web/src/app/signup/complete/page.tsx`:**
+  - Wired `dateOfBirth`, `marketingConsent`, and document versions (`2026.1`) into `completeFullRegistrationAction`.
+
+### 3. True Privacy Lifecycle & Account Erasure Pipeline
+- **`apps/web/src/lib/settings/settings-actions.ts`:**
+  - Enhanced `exportAccountDataAction` to assemble complete GDPR / Law 172-13 data package (profile, cultural identity, notifications, statistics, posts, comments, saved items).
+  - Implemented `requestAccountDeletionAction` (scheduled 30-day deletion pipeline).
+  - Implemented `cancelAccountDeletionAction` (allows user to cancel scheduled deletion during grace period).
+- **`apps/web/src/components/settings-view.tsx`:**
+  - Replaced mere deactivation call with true `requestAccountDeletionAction` inside confirmation modal.
+  - Added prominent banner for accounts in `pending_deletion` with 1-tap cancellation button.
+  - Clear legal disclosure: Anonymized double-entry financial ledger records are retained in accordance with statutory accounting and anti-money laundering requirements.
+
+### 4. Visual Redesign & Experience Alignment (TUKUBI NEXT / Stage C)
+- **`apps/web/src/components/app-sidebar.tsx`:**
+  - Aligned primary navigation to 11 unified global destinations matching concept mockup Image 2 (`Home`, `Explore`, `Shorts`, `Communities`, `Pages`, `Marketplace`, `Events`, `Creator Studio`, `Messages`, `Notifications`, `Settings`).
+  - Added bottom User Profile mini-card with user avatar, display name, verified checkmark, `@username`, and direct profile navigation.
+- **`apps/web/src/components/rails/home-rail.tsx`:**
+  - Elevated "Trending in the Caribbean" / "Trending Now" to top ranking card with formatted post counts and direct tag explore links.
+  - Positioned "Suggested People" as second card with verified badges, island flags, and 1-tap follow actions.
+- **`apps/web/src/components/home/home-dashboard.tsx`:**
+  - Redesigned central feed horizon composer to match concept mockups Image 1 & 2: User avatar + rounded input pill ("What's on your mind?") + quick action chips (`Photo`, `Video`, `Poll`, `Feeling`).
+  - Wired chips to expand `UniversalComposer` in corresponding mode on both mobile and desktop.
+  - Preserved quick access shortcuts (`Reel`, `Live`, `Event`, `Market`, `Hub`) with zero feature loss.
+
+### 5. Verification & Testing Evidence
+- **`tests/migration-00116.test.ts`:** 6 unit tests verifying migration 00116 tables, constraints, RLS policies, and stored procedures (`PASS`).
+- **`tests/unit/signup-session-security.test.ts`:** 3 unit tests verifying credential isolation and statutory metadata persistence (`PASS`).
+- **Combined Test Gate:** 129 tests passing across 7 critical test suites (WCAG accessibility, RLS financial audit, universal content resolver, link intelligence, shorts viewer, migration 00116, signup security).
+- **TypeScript Gate:** 31 packages and apps typechecked with zero errors (`turbo run typecheck`).

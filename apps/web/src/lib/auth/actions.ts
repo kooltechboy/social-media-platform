@@ -46,10 +46,28 @@ export interface CompleteRegistrationPayload {
   isDiaspora?: boolean;
   diasporaCountryIso?: string;
   interests?: string[];
+  dateOfBirth?: string;
+  marketingConsent?: boolean;
+  termsVersion?: string;
+  privacyVersion?: string;
 }
 
 export async function completeFullRegistrationAction(payload: CompleteRegistrationPayload) {
-  const { email, password, username, displayName, accountType = 'personal', originCountryIso, isDiaspora, diasporaCountryIso, interests = [] } = payload;
+  const {
+    email,
+    password,
+    username,
+    displayName,
+    accountType = 'personal',
+    originCountryIso,
+    isDiaspora,
+    diasporaCountryIso,
+    interests = [],
+    dateOfBirth,
+    marketingConsent,
+    termsVersion = '2026.1',
+    privacyVersion = '2026.1',
+  } = payload;
 
   if (!email || !password || !username) {
     return { error: 'Email, password, and username are required.' };
@@ -101,14 +119,20 @@ export async function completeFullRegistrationAction(payload: CompleteRegistrati
   // Write profile record immediately if available
   if (data.user) {
     try {
-      await supabase.from('profiles').upsert({
+      const profileUpdates: Record<string, any> = {
         id: data.user.id,
         username: cleanUsername,
         display_name: (displayName || cleanUsername).trim(),
         account_type: validDbAccountType as any,
         cultural_interests: interests,
         updated_at: new Date().toISOString(),
-      });
+      };
+
+      if (dateOfBirth) {
+        profileUpdates.date_of_birth = dateOfBirth;
+      }
+
+      await supabase.from('profiles').upsert(profileUpdates);
 
       // Only persist Caribbean origin when the user explicitly selected one
       if (originCountryIso) {
@@ -119,6 +143,49 @@ export async function completeFullRegistrationAction(payload: CompleteRegistrati
           updated_at: new Date().toISOString(),
         });
       }
+
+      // Record statutory legal consent records (Law 126-02, Law 172-13, GDPR Art. 7)
+      const consentRecords: Array<{
+        user_id: string;
+        document_type: string;
+        document_version: string;
+        consented: boolean;
+        jurisdiction: string;
+      }> = [
+        {
+          user_id: data.user.id,
+          document_type: 'terms_of_service',
+          document_version: termsVersion,
+          consented: true,
+          jurisdiction: 'DO',
+        },
+        {
+          user_id: data.user.id,
+          document_type: 'privacy_notice',
+          document_version: privacyVersion,
+          consented: true,
+          jurisdiction: 'DO',
+        },
+        {
+          user_id: data.user.id,
+          document_type: 'community_standards',
+          document_version: termsVersion,
+          consented: true,
+          jurisdiction: 'DO',
+        },
+      ];
+
+      if (typeof marketingConsent === 'boolean') {
+        consentRecords.push({
+          user_id: data.user.id,
+          document_type: 'marketing_communications',
+          document_version: termsVersion,
+          consented: marketingConsent,
+          jurisdiction: 'DO',
+        });
+      }
+
+      await supabase.from('legal_consent_records').insert(consentRecords);
     } catch (dbErr) {
       console.warn('Profile identity post-signup write deferred to trigger:', dbErr);
     }
@@ -357,4 +424,3 @@ export async function fetchUserOperatingIdentitiesAction(): Promise<UserOperatin
 
   return list;
 }
-

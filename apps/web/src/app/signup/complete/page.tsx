@@ -49,6 +49,10 @@ export default function SignupCompletePage() {
           isDiaspora: data.isDiaspora,
           diasporaCountryIso: data.diasporaCountryIso,
           interests: data.interests || [],
+          dateOfBirth: data.dateOfBirth,
+          marketingConsent: data.marketingConsent,
+          termsVersion: data.termsVersion || '2026.1',
+          privacyVersion: data.privacyVersion || '2026.1',
         });
 
         if (res.error) {

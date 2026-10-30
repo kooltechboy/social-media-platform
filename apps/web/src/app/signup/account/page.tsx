@@ -15,6 +15,9 @@ import {
   XCircle,
   ArrowRight,
   Sparkles,
+  Calendar,
+  AlertTriangle,
+  ShieldCheck,
 } from 'lucide-react';
 import { GatewayShell } from '../../../components/gateway/GatewayShell';
 import { StepProgress } from '../../../components/gateway/signup/StepProgress';
@@ -39,6 +42,25 @@ function calculatePasswordStrength(pass: string): { score: number; label: string
   return { score, ...(map[score] || { label: '', color: '' }) };
 }
 
+function calculateAgeFromDob(dobString: string): number | null {
+  if (!dobString) return null;
+  const parts = dobString.split('-');
+  if (parts.length !== 3) return null;
+  const birthYear = parseInt(parts[0], 10);
+  const birthMonth = parseInt(parts[1], 10) - 1;
+  const birthDay = parseInt(parts[2], 10);
+  const birthDate = new Date(birthYear, birthMonth, birthDay);
+  if (isNaN(birthDate.getTime())) return null;
+
+  const today = new Date();
+  let age = today.getFullYear() - birthDate.getFullYear();
+  const m = today.getMonth() - birthDate.getMonth();
+  if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+    age--;
+  }
+  return age;
+}
+
 export default function SignupAccountPage() {
   const router = useRouter();
   const [session, setSession] = useState<SignupState>({});
@@ -49,8 +71,10 @@ export default function SignupAccountPage() {
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [dateOfBirth, setDateOfBirth] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [agreeTerms, setAgreeTerms] = useState(false);
+  const [marketingConsent, setMarketingConsent] = useState(false);
 
   // Username live check state
   const [usernameChecking, setUsernameChecking] = useState(false);
@@ -66,6 +90,8 @@ export default function SignupAccountPage() {
     if (s.username) setUsername(s.username);
     if (s.email) setEmail(s.email);
     if (s.phone) setPhone(s.phone);
+    if (s.dateOfBirth) setDateOfBirth(s.dateOfBirth);
+    if (typeof s.marketingConsent === 'boolean') setMarketingConsent(s.marketingConsent);
   }, []);
 
   // Debounced username check
@@ -103,6 +129,11 @@ export default function SignupAccountPage() {
 
   const strength = calculatePasswordStrength(password);
   const passwordsMatch = !confirmPassword || password === confirmPassword;
+  const userAge = calculateAgeFromDob(dateOfBirth);
+  const isUnder13 = userAge !== null && userAge < 13;
+  const isMinor13To17 = userAge !== null && userAge >= 13 && userAge < 18;
+  const isAdult18Plus = userAge !== null && userAge >= 18;
+
   const isFormValid =
     firstName.trim() &&
     lastName.trim() &&
@@ -111,7 +142,12 @@ export default function SignupAccountPage() {
     email.trim() &&
     password.length >= 8 &&
     passwordsMatch &&
+    dateOfBirth.trim() &&
+    !isUnder13 &&
     agreeTerms;
+
+  // Max date is today
+  const todayDateString = new Date().toISOString().split('T')[0];
 
   const handleContinue = (e: React.FormEvent) => {
     e.preventDefault();
@@ -125,6 +161,10 @@ export default function SignupAccountPage() {
       email: email.trim(),
       phone: phone.trim() || undefined,
       password,
+      dateOfBirth: dateOfBirth.trim(),
+      marketingConsent,
+      termsVersion: '2026.1',
+      privacyVersion: '2026.1',
     });
 
     router.push('/signup/interests');
@@ -281,6 +321,57 @@ export default function SignupAccountPage() {
             </div>
           </div>
 
+          {/* Date of Birth (Statutory Child Safety & Law 136-03 Compliance) */}
+          <div className="space-y-1">
+            <div className="flex items-center justify-between">
+              <label htmlFor="dob" className="block text-[11px] font-semibold text-brand-sandstone/80">
+                Date of Birth
+              </label>
+              {userAge !== null && (
+                <span className="text-[10px] font-bold">
+                  {isUnder13 ? (
+                    <span className="text-rose-400">Under 13 ({userAge} yrs)</span>
+                  ) : isMinor13To17 ? (
+                    <span className="text-brand-goldenHour">Adolescent (13–17 yrs)</span>
+                  ) : (
+                    <span className="text-emerald-400">Adult (18+ yrs)</span>
+                  )}
+                </span>
+              )}
+            </div>
+            <div className="relative flex items-center">
+              <Calendar className="absolute left-3 w-3.5 h-3.5 text-brand-sandstone/40 pointer-events-none" />
+              <input
+                id="dob"
+                type="date"
+                required
+                max={todayDateString}
+                value={dateOfBirth}
+                onChange={(e) => setDateOfBirth(e.target.value)}
+                className="w-full bg-[#080D18] border border-white/10 rounded-xl pl-9 pr-3 py-2.5 text-xs text-white placeholder-brand-sandstone/30 focus:outline-none focus:border-brand-caribbeanSea transition-all"
+              />
+            </div>
+
+            {/* Child Safety Feedback */}
+            {isUnder13 && (
+              <div className="p-2.5 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-[11px] flex items-start gap-2">
+                <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
+                <span>
+                  Under Dominican Republic Law 136-03 and Child Protection standards, users under 13 require verified parental or guardian authorization. Please ask a parent or legal guardian to create an account first.
+                </span>
+              </div>
+            )}
+
+            {isMinor13To17 && (
+              <div className="p-2 rounded-xl bg-brand-goldenHour/10 border border-brand-goldenHour/30 text-brand-goldenHour text-[11px] flex items-center gap-2">
+                <ShieldCheck className="w-3.5 h-3.5 shrink-0" />
+                <span>
+                  Adolescent account: Minor protection defaults will be applied automatically (restricted direct messaging and safe content filters).
+                </span>
+              </div>
+            )}
+          </div>
+
           {/* Password & Confirm */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
             <div className="space-y-1">
@@ -370,25 +461,43 @@ export default function SignupAccountPage() {
             </div>
           )}
 
-          {/* Terms Agreement */}
-          <div className="pt-2">
+          {/* 1. Mandatory Legal Terms & Community Standards Agreement */}
+          <div className="pt-2 space-y-2 border-t border-white/5">
             <label className="flex items-start gap-2.5 cursor-pointer group">
               <input
                 type="checkbox"
+                required
                 checked={agreeTerms}
                 onChange={(e) => setAgreeTerms(e.target.checked)}
-                className="mt-0.5 w-4 h-4 rounded border-slate-700 bg-[#080D18] text-brand-caribbeanSea focus:ring-brand-caribbeanSea"
+                className="mt-0.5 w-4 h-4 rounded border-slate-700 bg-[#080D18] text-brand-caribbeanSea focus:ring-brand-caribbeanSea shrink-0"
               />
               <span className="text-[11px] text-brand-sandstone/70 leading-relaxed group-hover:text-white transition-colors">
                 I agree to the{' '}
-                <Link href="/terms" className="text-brand-caribbeanSea underline underline-offset-2">
+                <Link href="/terms" target="_blank" className="text-brand-caribbeanSea underline underline-offset-2">
                   Terms of Service
-                </Link>{' '}
-                and{' '}
-                <Link href="/privacy" className="text-brand-caribbeanSea underline underline-offset-2">
+                </Link>
+                {', '}
+                <Link href="/privacy" target="_blank" className="text-brand-caribbeanSea underline underline-offset-2">
                   Privacy Policy
                 </Link>
-                . Caribbean identity is optional & private by default.
+                {', and '}
+                <Link href="/help" target="_blank" className="text-brand-caribbeanSea underline underline-offset-2">
+                  Community Standards
+                </Link>
+                . Caribbean identity is optional &amp; private by default.
+              </span>
+            </label>
+
+            {/* 2. Optional, Unbundled Marketing & Cultural Communications Consent */}
+            <label className="flex items-start gap-2.5 cursor-pointer group pt-1">
+              <input
+                type="checkbox"
+                checked={marketingConsent}
+                onChange={(e) => setMarketingConsent(e.target.checked)}
+                className="mt-0.5 w-4 h-4 rounded border-slate-700 bg-[#080D18] text-brand-goldenHour focus:ring-brand-goldenHour shrink-0"
+              />
+              <span className="text-[11px] text-brand-sandstone/60 leading-relaxed group-hover:text-brand-sandstone/90 transition-colors">
+                Keep me updated with Caribbean cultural highlights, creator spotlights, and community news via email (Optional).
               </span>
             </label>
           </div>

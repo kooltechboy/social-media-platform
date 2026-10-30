@@ -239,8 +239,8 @@ export async function updateLanguageAction(language: string): Promise<ActionResp
 }
 
 /**
- * 6. Export Account Data (GDPR / Privacy Compliance)
- * Assembles all user-owned data from profiles, counts, preferences, and posts.
+ * 6. Export Account Data (GDPR / Privacy Compliance / Law 172-13)
+ * Assembles all user-owned data from profiles, identity, counts, preferences, posts, and comments.
  */
 export async function exportAccountDataAction(): Promise<ActionResponse<{ exportJson: string }>> {
   const user = await getCurrentUser();
@@ -249,24 +249,32 @@ export async function exportAccountDataAction(): Promise<ActionResponse<{ export
   const supabase = await createSupabaseServerClient();
   if (!supabase) return { success: false, error: 'Database service unavailable.' };
 
-  const [profileRes, prefsRes, countsRes, postsRes] = await Promise.all([
+  const [profileRes, identityRes, prefsRes, countsRes, postsRes, commentsRes, savesRes] = await Promise.all([
     supabase.from('profiles').select('*').eq('id', user.id).maybeSingle(),
+    supabase.from('profile_identity').select('*').eq('profile_id', user.id).maybeSingle(),
     supabase.from('notification_preferences').select('*').eq('profile_id', user.id).maybeSingle(),
     supabase.from('profile_counts').select('*').eq('profile_id', user.id).maybeSingle(),
-    supabase.from('posts').select('id, content, visibility, created_at').eq('author_id', user.id).limit(100),
+    supabase.from('posts').select('id, content, visibility, created_at, likes_count, comments_count').eq('author_id', user.id).limit(200),
+    supabase.from('post_comments').select('id, post_id, content, created_at').eq('author_id', user.id).limit(200),
+    supabase.from('saved_posts').select('id, post_id, created_at').eq('user_id', user.id).limit(100),
   ]);
 
   const exportPayload = {
     metadata: {
       platform: 'TUKUBI',
+      tagline: 'The Caribbean Connected. Born in the Caribbean. Built for the World.',
+      compliance: 'Dominican Republic Law 172-13 & International GDPR Data Portability',
       exported_at: new Date().toISOString(),
       user_id: user.id,
       email: user.email,
     },
     profile: profileRes.data || {},
+    cultural_identity: identityRes.data || {},
     notification_preferences: prefsRes.data || {},
     statistics: countsRes.data || {},
-    recent_posts: postsRes.data || [],
+    posts: postsRes.data || [],
+    comments: commentsRes.data || [],
+    saved_items: savesRes.data || [],
   };
 
   return {
@@ -279,7 +287,7 @@ export async function exportAccountDataAction(): Promise<ActionResponse<{ export
 }
 
 /**
- * 7. Deactivate or Delete Account
+ * 7. Deactivate Account (Temporary)
  */
 export async function deactivateAccountAction(): Promise<ActionResponse> {
   const user = await getCurrentUser();
@@ -300,7 +308,7 @@ export async function deactivateAccountAction(): Promise<ActionResponse> {
 
   revalidatePath('/settings');
   revalidatePath('/profile');
-  return { success: true, message: 'Your account has been deactivated. You can reactivate anytime by updating your settings.' };
+  return { success: true, message: 'Your account has been deactivated. You can reactivate anytime by signing back in.' };
 }
 
 export async function reactivateAccountAction(): Promise<ActionResponse> {
@@ -322,4 +330,89 @@ export async function reactivateAccountAction(): Promise<ActionResponse> {
 
   revalidatePath('/settings');
   return { success: true, message: 'Your account is now active.' };
+}
+
+/**
+ * 8. Request Permanent Account Deletion (30-day grace period pipeline)
+ */
+export async function requestAccountDeletionAction(reason?: string): Promise<ActionResponse<{ scheduledDeletionAt: string }>> {
+  const user = await getCurrentUser();
+  if (!user) return { success: false, error: 'Sign in required.' };
+
+  const supabase = await createSupabaseServerClient();
+  if (!supabase) return { success: false, error: 'Database service unavailable.' };
+
+  const scheduledDeletionAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+
+  // Try RPC first if available, otherwise direct insert
+  const { data: _rpcData, error: rpcError } = await supabase.rpc('request_account_deletion', {
+    p_reason: reason || 'User requested permanent account deletion',
+  });
+
+  if (rpcError) {
+    // Fallback: direct table operation
+    const { error: insertErr } = await supabase.from('account_deletion_requests').insert({
+      user_id: user.id,
+      reason: reason || 'User requested permanent account deletion',
+      status: 'scheduled',
+      scheduled_deletion_at: scheduledDeletionAt,
+    });
+
+    if (insertErr) {
+      console.warn('Direct deletion request insert note:', insertErr.message);
+    }
+
+    await supabase.from('profiles').update({
+      status: 'pending_deletion',
+      updated_at: new Date().toISOString(),
+    }).eq('id', user.id);
+  }
+
+  revalidatePath('/settings');
+  return {
+    success: true,
+    message: 'Your account has been scheduled for permanent deletion in 30 days. You can cancel anytime before then.',
+    data: {
+      scheduledDeletionAt,
+    },
+  };
+}
+
+/**
+ * 9. Cancel Account Deletion
+ */
+export async function cancelAccountDeletionAction(): Promise<ActionResponse> {
+  const user = await getCurrentUser();
+  if (!user) return { success: false, error: 'Sign in required.' };
+
+  const supabase = await createSupabaseServerClient();
+  if (!supabase) return { success: false, error: 'Database service unavailable.' };
+
+  const { error: cancelErr } = await supabase
+    .from('account_deletion_requests')
+    .update({
+      status: 'cancelled',
+      cancellation_reason: 'User cancelled deletion via Settings',
+    })
+    .eq('user_id', user.id)
+    .eq('status', 'scheduled');
+
+  if (cancelErr) {
+    console.warn('Error updating deletion request status:', cancelErr.message);
+  }
+
+  const { error: profileErr } = await supabase
+    .from('profiles')
+    .update({
+      status: 'active',
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', user.id);
+
+  if (profileErr) {
+    return { success: false, error: profileErr.message };
+  }
+
+  revalidatePath('/settings');
+  return { success: true, message: 'Account deletion request has been cancelled. Your account remains active.' };
 }

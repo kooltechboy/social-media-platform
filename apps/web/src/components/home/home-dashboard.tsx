@@ -29,7 +29,7 @@ import {
 } from 'lucide-react';
 import { type FeedMode } from '@caribbean/social';
 import UserAvatar from '../user-avatar';
-import UniversalComposer from '../universal-composer';
+import UniversalComposer, { type ComposerMode } from '../universal-composer';
 import MomentsCinemaRail from '../moments/moments-cinema-rail';
 import LiveBroadcastDiscovery from '../feed/live-broadcast-discovery';
 import FeedStream, { type FeedPostData } from '../feed-stream';
@@ -170,6 +170,7 @@ export default function HomeDashboard({
   followedPages = [],
 }: HomeDashboardProps) {
   const [showComposer, setShowComposer] = useState(false);
+  const [composerMode, setComposerMode] = useState<ComposerMode>('text');
   const [activeTab, setActiveTab] = useState<FeedMode>(initialMode);
   const [feedPosts, setFeedPosts] = useState<FeedPostData[]>(initialPosts);
   const [currentCursor, setCurrentCursor] = useState<string | undefined>(nextCursor);
@@ -280,67 +281,87 @@ export default function HomeDashboard({
           </section>
         )}
 
-        {/* ── 2A. Mobile Creation Card (Instant, thumb-friendly 1-tap composer) ── */}
+        {/* ── 2A. Mobile Creation Card (Concept Image 1 & 2 Aligned 1-Tap Composer) ── */}
         <div className="md:hidden glass-aerospace rounded-2xl p-3.5 border border-white/12 shadow-md space-y-3">
           <div className="flex items-center gap-3">
             <UserAvatar src={user.avatarUrl} name={user.displayName} size="sm" />
             <button
               type="button"
-              onClick={() => setShowComposer((prev) => !prev)}
+              onClick={() => {
+                setComposerMode('text');
+                setShowComposer((prev) => !prev);
+              }}
               className="flex-1 px-4 py-2.5 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 text-left text-xs text-brand-sandstone/70 transition-colors flex items-center justify-between"
             >
-              <span className="truncate">What’s happening across your Caribbean?</span>
+              <span className="truncate">What&apos;s on your mind?</span>
               <span className="text-[10px] font-black text-brand-caribbeanSea bg-brand-caribbeanSea/10 px-2 py-0.5 rounded-full shrink-0 ml-1">
                 {showComposer ? 'Close' : 'Post'}
               </span>
             </button>
           </div>
 
-          {showComposer && (
-            <div className="pt-1 animate-fadeIn">
-              <UniversalComposer
-                displayName={user.displayName}
-                avatarInitials={user.username.slice(0, 2).toUpperCase()}
-                userId={user.id}
-                defaultExpanded={true}
-                onPostCreated={handlePostCreated}
-              />
-            </div>
-          )}
-
-          {/* Mobile fast actions: Photo, Reel, Live, Market */}
+          {/* Mobile fast action chips: Photo, Video, Poll, Feeling */}
           <div className="flex items-center justify-between pt-1 border-t border-white/5 text-[11px] font-bold text-slate-300">
             <button
               type="button"
-              onClick={() => setShowComposer(true)}
+              onClick={() => {
+                setComposerMode('photo');
+                setShowComposer(true);
+              }}
               className="flex items-center gap-1.5 px-2 py-1 rounded-lg hover:bg-white/5 text-emerald-400"
             >
               <span>📷</span> Photo
             </button>
-            <Link
-              href="/reels"
-              className="flex items-center gap-1.5 px-2 py-1 rounded-lg hover:bg-white/5 text-pink-400"
+            <button
+              type="button"
+              onClick={() => {
+                setComposerMode('video');
+                setShowComposer(true);
+              }}
+              className="flex items-center gap-1.5 px-2 py-1 rounded-lg hover:bg-white/5 text-sky-400"
             >
-              <span>🎬</span> Reel
-            </Link>
-            <Link
-              href="/live"
-              className="flex items-center gap-1.5 px-2 py-1 rounded-lg hover:bg-white/5 text-rose-400"
-            >
-              <span>🔴</span> Live
-            </Link>
-            <Link
-              href="/marketplace"
+              <span>🎬</span> Video
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setComposerMode('poll');
+                setShowComposer(true);
+              }}
               className="flex items-center gap-1.5 px-2 py-1 rounded-lg hover:bg-white/5 text-amber-400"
             >
-              <span>🛒</span> Market
-            </Link>
+              <span>📊</span> Poll
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setComposerMode('text');
+                setShowComposer(true);
+              }}
+              className="flex items-center gap-1.5 px-2 py-1 rounded-lg hover:bg-white/5 text-brand-sunriseCoral"
+            >
+              <span>😊</span> Feeling
+            </button>
           </div>
+
+          {showComposer && (
+            <div className="pt-1 animate-fadeIn border-t border-white/10">
+              <UniversalComposer
+                key={composerMode}
+                displayName={user.displayName}
+                avatarInitials={user.username.slice(0, 2).toUpperCase()}
+                userId={user.id}
+                defaultExpanded={true}
+                initialMode={composerMode}
+                onPostCreated={handlePostCreated}
+              />
+            </div>
+          )}
         </div>
 
         {/* ── 2B. Desktop Workspace Header & Rich Horizon Discovery (Hidden on mobile) ── */}
         <div className="hidden md:block space-y-6">
-        {/* Welcome & Post Creation Horizon Card */}
+        {/* Welcome & Concept Image 1 & 2 Aligned Feed Composer */}
         <div className="glass-aerospace rounded-3xl p-5 sm:p-6 border border-white/12 shadow-xl space-y-4">
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-3.5 min-w-0">
@@ -356,7 +377,7 @@ export default function HomeDashboard({
                   </h1>
                 </div>
                 <p className="text-xs text-brand-sandstone/70 truncate">
-                  Your primary home across the Caribbean digital ecosystem
+                  The Caribbean Connected. Born in the Caribbean. Built for the World.
                 </p>
               </div>
             </div>
@@ -366,37 +387,95 @@ export default function HomeDashboard({
             </div>
           </div>
 
-          {/* Quick Creation Bar Trigger */}
+          {/* Quick Creation Bar Trigger Input Pill */}
           <div className="pt-1">
             <button
               type="button"
-              onClick={() => setShowComposer((prev) => !prev)}
-              className="w-full flex items-center justify-between px-4 py-3 rounded-2xl bg-black/40 hover:bg-black/60 border border-white/10 hover:border-brand-caribbeanSea/50 text-left transition-all group"
+              onClick={() => {
+                setComposerMode('text');
+                setShowComposer((prev) => !prev);
+              }}
+              className="w-full flex items-center justify-between px-4 py-3 rounded-full bg-black/40 hover:bg-black/60 border border-white/10 hover:border-brand-caribbeanSea/50 text-left transition-all group"
             >
               <span className="text-xs sm:text-sm text-brand-sandstone/60 group-hover:text-white transition-colors">
-                What’s happening across your Caribbean world?
+                What&apos;s on your mind, {user.displayName.split(' ')[0]}?
               </span>
-              <span className="px-3 py-1 rounded-xl bg-brand-caribbeanSea/20 text-brand-caribbeanSea font-bold text-xs border border-brand-caribbeanSea/30">
+              <span className="px-3 py-1 rounded-xl bg-brand-caribbeanSea/20 text-brand-caribbeanSea font-bold text-xs border border-brand-caribbeanSea/30 group-hover:bg-brand-caribbeanSea group-hover:text-slate-950 transition-all">
                 {showComposer ? 'Close Composer' : 'Write Post'}
               </span>
             </button>
           </div>
 
+          {/* Quick Action Chips (Matches Concept Image 1 & 2: Photo, Video, Poll, Feeling) */}
+          <div className="flex items-center justify-between pt-2 border-t border-white/8 text-xs font-bold text-slate-300">
+            <button
+              type="button"
+              onClick={() => {
+                setComposerMode('photo');
+                setShowComposer(true);
+              }}
+              className="flex items-center gap-2 px-3 py-1.5 rounded-xl hover:bg-white/5 hover:text-emerald-400 transition-colors"
+            >
+              <span className="text-emerald-400 text-sm">📷</span> Photo
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setComposerMode('video');
+                setShowComposer(true);
+              }}
+              className="flex items-center gap-2 px-3 py-1.5 rounded-xl hover:bg-white/5 hover:text-sky-400 transition-colors"
+            >
+              <span className="text-sky-400 text-sm">🎬</span> Video
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setComposerMode('poll');
+                setShowComposer(true);
+              }}
+              className="flex items-center gap-2 px-3 py-1.5 rounded-xl hover:bg-white/5 hover:text-amber-400 transition-colors"
+            >
+              <span className="text-amber-400 text-sm">📊</span> Poll
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setComposerMode('text');
+                setShowComposer(true);
+              }}
+              className="flex items-center gap-2 px-3 py-1.5 rounded-xl hover:bg-white/5 hover:text-brand-sunriseCoral transition-colors"
+            >
+              <span className="text-brand-sunriseCoral text-sm">😊</span> Feeling
+            </button>
+          </div>
+
           {/* Inline Composer (Expandable) */}
           {showComposer && (
-            <div className="pt-2 animate-fadeIn">
+            <div className="pt-2 animate-fadeIn border-t border-white/10">
+              <div className="flex justify-end pb-1">
+                <button
+                  type="button"
+                  onClick={() => setShowComposer(false)}
+                  className="text-xs text-brand-sandstone/60 hover:text-white px-2 py-0.5 rounded-lg hover:bg-white/10 transition-colors"
+                >
+                  ✕ Close Composer
+                </button>
+              </div>
               <UniversalComposer
+                key={composerMode}
                 displayName={user.displayName}
                 avatarInitials={user.username.slice(0, 2).toUpperCase()}
                 userId={user.id}
                 defaultExpanded={true}
+                initialMode={composerMode}
                 onPostCreated={handlePostCreated}
               />
             </div>
           )}
 
           {/* Quick Creation Actions Grid */}
-          <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 pt-1">
+          <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 pt-1 border-t border-white/5">
             {QUICK_ACTIONS.map((action) => (
               <Link
                 key={action.label}

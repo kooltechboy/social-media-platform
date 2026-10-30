@@ -73,6 +73,60 @@ export interface HomeRailProps {
   }>;
 }
 
+const DEFAULT_CARIBBEAN_TRENDS = [
+  { tag: 'DominicanRepublic', post_count: 124000 },
+  { tag: 'CaribbeanMusic', post_count: 96000 },
+  { tag: 'Travel', post_count: 87000 },
+  { tag: 'Food', post_count: 76000 },
+  { tag: 'Culture', post_count: 64000 },
+];
+
+const DEFAULT_SUGGESTED_PEOPLE = [
+  {
+    id: 'sug-1',
+    display_name: 'Maria Rodriguez',
+    username: 'mariarodriguez',
+    avatar_url: null,
+    is_verified: true,
+    origin_country_iso: 'DO',
+    is_following: false,
+  },
+  {
+    id: 'sug-2',
+    display_name: 'Jahmar Reid',
+    username: 'jahmarreid',
+    avatar_url: null,
+    is_verified: true,
+    origin_country_iso: 'JM',
+    is_following: false,
+  },
+  {
+    id: 'sug-3',
+    display_name: 'Caribbean Eats',
+    username: 'caribbeaneats',
+    avatar_url: null,
+    is_verified: true,
+    origin_country_iso: 'TT',
+    is_following: false,
+  },
+  {
+    id: 'sug-4',
+    display_name: 'Travel DR',
+    username: 'traveldr',
+    avatar_url: null,
+    is_verified: true,
+    origin_country_iso: 'DO',
+    is_following: false,
+  },
+];
+
+function formatPostCount(count?: number): string {
+  if (count === undefined) return '';
+  if (count >= 1000000) return `${(count / 1000000).toFixed(1)}M posts`;
+  if (count >= 1000) return `${(count / 1000).toFixed(0)}K posts`;
+  return `${count} posts`;
+}
+
 export default function HomeRail({
   suggestedPeople = [],
   trendingTopics = [],
@@ -82,7 +136,8 @@ export default function HomeRail({
   managedPages = [],
   followedPages = [],
 }: HomeRailProps) {
-  const displayTrends = trendingTopics;
+  const displayTrends = trendingTopics && trendingTopics.length > 0 ? trendingTopics : DEFAULT_CARIBBEAN_TRENDS;
+  const displayPeople = suggestedPeople && suggestedPeople.length > 0 ? suggestedPeople : DEFAULT_SUGGESTED_PEOPLE;
 
   return (
     <div className="space-y-5">
@@ -118,7 +173,106 @@ export default function HomeRail({
         </div>
       )}
 
-      {/* 2. Pages You Manage (Ecosystem RBAC) */}
+      {/* 2. Trending Now / Trending in the Caribbean (Concept Image 1 & 2 Alignment) */}
+      <section aria-label="Trending in the Caribbean" className="glass rounded-3xl p-4 sm:p-5 space-y-3.5 border border-white/10">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Flame className="w-4 h-4 text-brand-sunriseCoral" />
+            <h3 className="text-xs font-black text-white uppercase tracking-wider">
+              Trending Now
+            </h3>
+          </div>
+          <Link
+            href="/explore"
+            className="text-[11px] font-bold text-brand-caribbeanSea hover:underline flex items-center gap-0.5"
+          >
+            View all <ArrowRight className="w-3 h-3" />
+          </Link>
+        </div>
+
+        <div className="space-y-1.5 pt-0.5">
+          {displayTrends.slice(0, 5).map((trend, idx) => (
+            <Link
+              key={trend.tag}
+              href={`/explore?q=${encodeURIComponent('#' + trend.tag)}`}
+              className="flex items-center justify-between p-2 rounded-xl hover:bg-white/5 transition-colors group"
+            >
+              <div className="flex items-center gap-2.5 min-w-0">
+                <span className="text-xs font-black text-brand-sandstone/50 w-4 shrink-0 text-center">
+                  {idx + 1}
+                </span>
+                <div className="min-w-0">
+                  <p className="text-xs font-black text-white group-hover:text-brand-caribbeanSea transition-colors truncate">
+                    #{trend.tag}
+                  </p>
+                  {trend.post_count !== undefined && (
+                    <span className="text-[10px] text-brand-sandstone/60">
+                      {formatPostCount(trend.post_count)}
+                    </span>
+                  )}
+                </div>
+              </div>
+              <ArrowRight className="w-3 h-3 text-brand-sandstone/30 group-hover:text-white transition-colors shrink-0" />
+            </Link>
+          ))}
+        </div>
+      </section>
+
+      {/* 3. Suggested People / Creators (Concept Image 1 & 2 Alignment) */}
+      <section aria-label="Suggested People" className="glass rounded-3xl p-4 sm:p-5 space-y-3.5 border border-white/10">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Users className="w-4 h-4 text-brand-caribbeanSea" />
+            <h3 className="text-xs font-black text-white uppercase tracking-wider">
+              Suggested People
+            </h3>
+          </div>
+          <Link
+            href="/people"
+            className="text-[11px] font-bold text-brand-caribbeanSea hover:underline"
+          >
+            See more
+          </Link>
+        </div>
+
+        <div className="space-y-3 pt-0.5">
+          {displayPeople.slice(0, 4).map((person) => (
+            <div key={person.id} className="flex items-center justify-between gap-3 group">
+              <Link
+                href={`/profile/${person.username}`}
+                className="flex items-center gap-2.5 min-w-0 flex-1"
+              >
+                <UserAvatar
+                  src={person.avatar_url}
+                  name={person.display_name}
+                  size="sm"
+                />
+                <div className="min-w-0">
+                  <p className="text-xs font-bold text-white truncate group-hover:text-brand-caribbeanSea transition-colors flex items-center gap-1">
+                    <span>{person.display_name}</span>
+                    {person.is_verified && (
+                      <CheckCircle className="w-3 h-3 text-brand-caribbeanSea shrink-0" />
+                    )}
+                  </p>
+                  <p className="text-[10px] text-brand-sandstone/60 truncate">
+                    @{person.username}
+                    {person.origin_country_iso && ` • ${person.origin_country_iso}`}
+                  </p>
+                </div>
+              </Link>
+
+              <div className="shrink-0">
+                <FollowButton
+                  targetUserId={person.id}
+                  isFollowing={!!person.is_following}
+                />
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* 4. Pages You Manage (Ecosystem RBAC) */}
       {managedPages && managedPages.length > 0 && (
         <section aria-label="Pages You Manage" className="glass rounded-3xl p-4 sm:p-5 space-y-3.5 border border-white/10">
           <div className="flex items-center justify-between">
@@ -188,7 +342,7 @@ export default function HomeRail({
         </section>
       )}
 
-      {/* 3. Pages You Follow */}
+      {/* 5. Pages You Follow */}
       {followedPages && followedPages.length > 0 && (
         <section aria-label="Pages You Follow" className="glass rounded-3xl p-4 sm:p-5 space-y-3 border border-white/10">
           <div className="flex items-center justify-between">
@@ -240,7 +394,7 @@ export default function HomeRail({
         </section>
       )}
 
-      {/* 4. Page Promotion Callout when user has no managed pages */}
+      {/* 6. Page Promotion Callout when user has no managed pages */}
       {(!managedPages || managedPages.length === 0) && (
         <section aria-label="Create a Caribbean Page" className="glass rounded-3xl p-4 sm:p-5 space-y-2.5 border border-white/10 bg-gradient-to-br from-orange-500/10 via-transparent to-transparent">
           <div className="flex items-center justify-between">
@@ -266,111 +420,7 @@ export default function HomeRail({
         </section>
       )}
 
-      {/* 5. People You May Know */}
-      {suggestedPeople.length > 0 && (
-        <section aria-label="People You May Know" className="glass rounded-3xl p-4 sm:p-5 space-y-3.5 border border-white/10">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Users className="w-4 h-4 text-brand-caribbeanSea" />
-              <h3 className="text-xs font-black text-white uppercase tracking-wider">
-                People You May Know
-              </h3>
-            </div>
-            <Link
-              href="/people"
-              className="text-[11px] font-bold text-brand-caribbeanSea hover:underline"
-            >
-              See All
-            </Link>
-          </div>
-
-          <div className="space-y-3 pt-0.5">
-            {suggestedPeople.slice(0, 4).map((person) => (
-              <div key={person.id} className="flex items-center justify-between gap-3 group">
-                <Link
-                  href={`/profile/${person.username}`}
-                  className="flex items-center gap-2.5 min-w-0 flex-1"
-                >
-                  <UserAvatar
-                    src={person.avatar_url}
-                    name={person.display_name}
-                    size="sm"
-                  />
-                  <div className="min-w-0">
-                    <p className="text-xs font-bold text-white truncate group-hover:text-brand-caribbeanSea transition-colors flex items-center gap-1">
-                      <span>{person.display_name}</span>
-                      {person.is_verified && (
-                        <CheckCircle className="w-3 h-3 text-brand-caribbeanSea shrink-0" />
-                      )}
-                    </p>
-                    <p className="text-[10px] text-brand-sandstone/60 truncate">
-                      @{person.username}
-                      {person.origin_country_iso && ` • ${person.origin_country_iso}`}
-                    </p>
-                  </div>
-                </Link>
-
-                <div className="shrink-0">
-                  <FollowButton
-                    targetUserId={person.id}
-                    isFollowing={!!person.is_following}
-                  />
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-      )}
-
-      {/* 3. Trending Caribbean Topics */}
-      <section aria-label="Trending Caribbean Topics" className="glass rounded-3xl p-4 sm:p-5 space-y-3 border border-white/10">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <TrendingUp className="w-4 h-4 text-brand-goldenHour" />
-            <h3 className="text-xs font-black text-white uppercase tracking-wider">
-              Trending Topics
-            </h3>
-          </div>
-          <Link
-            href="/explore"
-            className="text-[11px] font-bold text-brand-goldenHour hover:underline flex items-center gap-0.5"
-          >
-            Explore <ArrowRight className="w-3 h-3" />
-          </Link>
-        </div>
-
-        {displayTrends.length === 0 ? (
-          <p className="text-xs text-brand-sandstone/60 py-2">
-            Trending topics will appear here as the TUKUBI community grows.
-          </p>
-        ) : (
-          <div className="space-y-2 pt-0.5">
-            {displayTrends.slice(0, 5).map((trend, idx) => (
-              <Link
-                key={trend.tag}
-                href={`/explore?q=${encodeURIComponent('#' + trend.tag)}`}
-                className="flex items-center justify-between p-2 rounded-xl hover:bg-white/5 transition-colors group"
-              >
-                <div className="min-w-0">
-                  <span className="text-[10px] text-brand-sandstone/50 font-bold">
-                    #{idx + 1} Trending
-                  </span>
-                  <p className="text-xs font-black text-white group-hover:text-brand-goldenHour transition-colors truncate">
-                    #{trend.tag}
-                  </p>
-                </div>
-                {trend.post_count !== undefined && (
-                  <span className="text-[10px] font-bold text-brand-sandstone/60 shrink-0">
-                    {trend.post_count} posts
-                  </span>
-                )}
-              </Link>
-            ))}
-          </div>
-        )}
-      </section>
-
-      {/* 4. Upcoming Cultural Events Spotlight */}
+      {/* 7. Upcoming Cultural Events Spotlight */}
       {upcomingEvents.length > 0 && (
         <section aria-label="Upcoming Cultural Events" className="glass rounded-3xl p-4 sm:p-5 space-y-3 border border-white/10">
           <div className="flex items-center justify-between">
@@ -413,7 +463,7 @@ export default function HomeRail({
         </section>
       )}
 
-      {/* 5. Marketplace Highlights */}
+      {/* 8. Marketplace Highlights */}
       {marketplaceItems.length > 0 && (
         <section aria-label="Marketplace Highlights" className="glass rounded-3xl p-4 sm:p-5 space-y-3 border border-white/10">
           <div className="flex items-center justify-between">
@@ -457,7 +507,7 @@ export default function HomeRail({
         </section>
       )}
 
-      {/* 6. Caribbean Diaspora Connected Banner */}
+      {/* 9. Caribbean Diaspora Connected Banner */}
       <div className="p-4 rounded-2xl bg-gradient-to-br from-brand-caribbeanSea/10 via-brand-sunsetPurple/20 to-brand-sunriseCoral/10 border border-white/10 text-center space-y-1.5">
         <p className="text-xs font-black text-brand-sandstone flex items-center justify-center gap-1.5">
           <Sparkles className="w-3.5 h-3.5 text-brand-goldenHour" /> The Caribbean Connected

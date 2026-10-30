@@ -25,6 +25,10 @@ export interface SignupState {
   email?: string;
   phone?: string;
   password?: string;
+  dateOfBirth?: string;
+  marketingConsent?: boolean;
+  termsVersion?: string;
+  privacyVersion?: string;
   avatarUrl?: string;
   interests?: string[];
 }

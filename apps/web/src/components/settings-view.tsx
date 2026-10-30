@@ -42,6 +42,8 @@ import {
   exportAccountDataAction,
   deactivateAccountAction,
   reactivateAccountAction,
+  requestAccountDeletionAction,
+  cancelAccountDeletionAction,
 } from '../lib/settings/settings-actions';
 import type { ProfileData } from './profile-edit-modal';
 import { useTranslation, isLocale, LOCALE_DETAILS, LOCALES } from '@caribbean/localization';
@@ -192,6 +194,34 @@ export default function SettingsView({
         setFeedback({ error: null, success: res.message || 'Account status updated.' });
       } else {
         setFeedback({ error: res.error || 'Failed to update status.', success: null });
+      }
+    });
+  };
+
+  const handleCancelDeletion = () => {
+    startTransition(async () => {
+      const res = await cancelAccountDeletionAction();
+      if (res.success) {
+        setProfile((p) => ({ ...p, status: 'active' }));
+        setFeedback({ error: null, success: res.message || 'Account deletion cancelled.' });
+      } else {
+        setFeedback({ error: res.error || 'Failed to cancel deletion.', success: null });
+      }
+    });
+  };
+
+  const handleConfirmPermanentDeletion = () => {
+    startTransition(async () => {
+      const res = await requestAccountDeletionAction('User confirmed deletion in settings');
+      if (res.success) {
+        setProfile((p) => ({ ...p, status: 'pending_deletion' }));
+        setShowDeleteModal(false);
+        setFeedback({ error: null, success: res.message || 'Account scheduled for permanent deletion in 30 days.' });
+        setTimeout(async () => {
+          await signOut();
+        }, 2000);
+      } else {
+        setFeedback({ error: res.error || 'Failed to schedule deletion.', success: null });
       }
     });
   };
@@ -1015,9 +1045,34 @@ export default function SettingsView({
                   Account Management
                 </h2>
                 <p className="text-xs md:text-sm text-brand-sandstone/60">
-                  Deactivate your account temporarily or request permanent deletion.
+                  Deactivate your account temporarily or request permanent deletion under statutory privacy protections.
                 </p>
               </div>
+
+              {/* Status Alert for Pending Deletion */}
+              {profile.status === 'pending_deletion' && (
+                <div className="p-5 md:p-6 rounded-2xl bg-amber-500/10 border border-amber-500/30 space-y-3">
+                  <div className="flex items-center gap-3 text-amber-400">
+                    <AlertTriangle className="w-5 h-5 shrink-0" />
+                    <div>
+                      <h3 className="text-xs md:text-sm font-black">Account Scheduled for Permanent Deletion</h3>
+                      <p className="text-[11px] md:text-xs text-brand-sandstone/80 mt-0.5">
+                        Your account is currently within its 30-day grace period. Your profile and content are hidden from the public feed. You can cancel this request at any time before the period expires.
+                      </p>
+                    </div>
+                  </div>
+                  <div className="pt-1">
+                    <button
+                      type="button"
+                      onClick={handleCancelDeletion}
+                      disabled={isPending}
+                      className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs md:text-sm transition-colors cursor-pointer"
+                    >
+                      Cancel Deletion Request &amp; Keep Account Active
+                    </button>
+                  </div>
+                </div>
+              )}
 
               {/* Deactivate Account */}
               <div className="p-5 md:p-6 rounded-2xl bg-[#131D33] border border-slate-800 space-y-3">
@@ -1045,8 +1100,8 @@ export default function SettingsView({
               <div className="p-5 md:p-6 rounded-2xl bg-rose-950/20 border border-rose-900/40 space-y-3">
                 <div>
                   <h3 className="text-xs md:text-sm font-bold text-rose-400">Permanently Delete Account</h3>
-                  <p className="text-[11px] md:text-xs text-brand-sandstone/60">
-                    Irreversibly deletes your profile, posts, media, comments, and relationship graph.
+                  <p className="text-[11px] md:text-xs text-brand-sandstone/60 leading-relaxed">
+                    Under Dominican Republic Law 172-13 and global privacy frameworks (GDPR Art. 17), you have the right to permanent erasure. Requests enter a 30-day grace period during which your data is hidden. After 30 days, your profile, posts, comments, media, and social graph are irrevocably purged. Anonymized double-entry financial ledger records are retained in compliance with statutory financial regulations.
                   </p>
                 </div>
 
@@ -1055,7 +1110,7 @@ export default function SettingsView({
                   onClick={() => setShowDeleteModal(true)}
                   className="px-4 md:px-5 py-2 md:py-2.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 text-xs md:text-sm font-black transition-colors cursor-pointer min-h-[38px] md:min-h-[42px]"
                 >
-                  Delete My Account
+                  Request Permanent Deletion
                 </button>
               </div>
 
@@ -1068,10 +1123,10 @@ export default function SettingsView({
                 >
                   <div className="bg-[#0F172A] border border-rose-500/40 rounded-3xl p-6 md:p-8 max-w-md w-full space-y-4">
                     <h3 className="text-sm md:text-base font-black text-rose-400 flex items-center gap-2">
-                      <AlertTriangle className="w-5 h-5" /> Confirm Account Deletion
+                      <AlertTriangle className="w-5 h-5" /> Confirm Permanent Deletion
                     </h3>
                     <p className="text-xs md:text-sm text-brand-sandstone/70 leading-relaxed">
-                      This action cannot be undone. To confirm, type your username{' '}
+                      Your account will enter a 30-day scheduled grace period before personal data is permanently expunged. You can cancel anytime within 30 days. To confirm, type your username{' '}
                       <strong className="text-brand-sandstone">@{profile.username}</strong> below:
                     </p>
                     <input
@@ -1091,14 +1146,11 @@ export default function SettingsView({
                       </button>
                       <button
                         type="button"
-                        disabled={deleteConfirmText !== profile.username}
-                        onClick={async () => {
-                          await deactivateAccountAction();
-                          await signOut();
-                        }}
+                        disabled={deleteConfirmText !== profile.username || isPending}
+                        onClick={handleConfirmPermanentDeletion}
                         className="px-4 md:px-5 py-2 md:py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 disabled:opacity-40 text-white text-xs md:text-sm font-black transition-colors min-h-[38px] md:min-h-[42px]"
                       >
-                        Confirm Delete
+                        {isPending ? 'Scheduling…' : 'Schedule Permanent Deletion'}
                       </button>
                     </div>
                   </div>
