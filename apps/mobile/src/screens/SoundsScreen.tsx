@@ -11,8 +11,11 @@ import {
   RefreshControl,
 } from 'react-native';
 import { Audio } from 'expo-av';
+import { Ionicons as ExpoIonicons } from '@expo/vector-icons';
 import { TOKENS } from '../theme/tokens';
 import { supabase } from '../lib/supabase';
+
+const Ionicons = ExpoIonicons as unknown as React.ComponentType<any>;
 
 interface SoundItem {
   id: string;
@@ -24,7 +27,6 @@ interface SoundItem {
   audioUrl: string;
   usageCount: number;
   countryIso: string;
-  flag: string;
   licenseType: string;
   bpm?: number;
 }
@@ -42,17 +44,16 @@ const GENRES = [
 ];
 
 const TERRITORIES = [
-  { iso: 'ALL', name: 'All Islands', flag: '🌴' },
-  { iso: 'JAM', name: 'Jamaica', flag: '🇯🇲' },
-  { iso: 'TTO', name: 'Trinidad', flag: '🇹🇹' },
-  { iso: 'BRB', name: 'Barbados', flag: '🇧🇧' },
-  { iso: 'HTI', name: 'Haiti', flag: '🇭🇹' },
-  { iso: 'DOM', name: 'Dom. Rep.', flag: '🇩🇴' },
-  { iso: 'GUY', name: 'Guyana', flag: '🇬🇾' },
+  { iso: 'ALL', name: 'All Islands' },
+  { iso: 'JAM', name: 'Jamaica' },
+  { iso: 'TTO', name: 'Trinidad & Tobago' },
+  { iso: 'BRB', name: 'Barbados' },
+  { iso: 'HTI', name: 'Haiti' },
+  { iso: 'DOM', name: 'Dom. Rep.' },
+  { iso: 'GUY', name: 'Guyana' },
 ];
 
-
-export function SoundsScreen({ navigation }: any) {
+export function SoundsScreen({ navigation }: any = {}) {
   const [sounds, setSounds] = useState<SoundItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -78,7 +79,9 @@ export function SoundsScreen({ navigation }: any) {
         query = query.eq('country_iso', activeTerritory);
       }
       if (searchQuery.trim()) {
-        query = query.or(`title.ilike.%${searchQuery.trim()}%,artist.ilike.%${searchQuery.trim()}%`);
+        query = query.or(
+          `title.ilike.%${searchQuery.trim()}%,artist.ilike.%${searchQuery.trim()}%`
+        );
       }
 
       const { data, error } = await query;
@@ -88,12 +91,11 @@ export function SoundsScreen({ navigation }: any) {
           title: d.title,
           artist: d.artist,
           artistHandle: d.artist_handle,
-          genre: d.genre,
+          genre: d.genre || 'Caribbean',
           durationFormatted: `${Math.floor((d.duration_seconds || 30) / 60)}:${String((d.duration_seconds || 30) % 60).padStart(2, '0')}`,
           audioUrl: d.audio_url,
           usageCount: d.usage_count || 0,
           countryIso: d.country_iso || 'CAR',
-          flag: d.country_iso === 'JAM' ? '🇯🇲' : d.country_iso === 'TTO' ? '🇹🇹' : d.country_iso === 'HTI' ? '🇭🇹' : '🌴',
           licenseType: d.license_type || 'CC-BY-4.0',
           bpm: d.bpm,
         }));
@@ -125,7 +127,6 @@ export function SoundsScreen({ navigation }: any) {
   const handleTogglePlay = async (item: SoundItem) => {
     try {
       if (playingId === item.id) {
-        // Stop playing
         if (playbackInstance.current) {
           await playbackInstance.current.stopAsync();
           await playbackInstance.current.unloadAsync();
@@ -135,7 +136,6 @@ export function SoundsScreen({ navigation }: any) {
         return;
       }
 
-      // Unload previous sound
       if (playbackInstance.current) {
         await playbackInstance.current.stopAsync();
         await playbackInstance.current.unloadAsync();
@@ -161,29 +161,54 @@ export function SoundsScreen({ navigation }: any) {
   };
 
   const handleUseSoundInReel = (item: SoundItem) => {
-    navigation.navigate('Reels', { soundId: item.id, soundTitle: item.title });
+    navigation?.navigate?.('Reels', {
+      soundId: item.id,
+      soundTitle: item.title,
+    });
   };
 
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
-        {/* Header */}
+        {/* Executive Midnight Reef Header */}
         <View style={styles.header}>
-          <Text style={styles.headerTitle}>Caribbean Sounds &amp; Stems</Text>
-          <Text style={styles.headerSubtitle}>
-            Verified island riddims, soca brass, and reggae basslines with creator licensing.
-          </Text>
+          <View style={styles.headerTitleRow}>
+            <View style={styles.headerDiscBadge}>
+              <Ionicons name="musical-notes" size={18} color={TOKENS.teal} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.headerTitle}>Caribbean Sounds &amp; Stems</Text>
+              <Text style={styles.headerSubtitle}>
+                Verified island riddims, soca brass, and reggae basslines with creator licensing.
+              </Text>
+            </View>
+          </View>
         </View>
 
-        {/* Search */}
+        {/* Search Input */}
         <View style={styles.searchBox}>
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Search sounds, rhythms, or artists..."
-            placeholderTextColor={TOKENS.textMuted}
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-          />
+          <View style={styles.searchBar}>
+            <Ionicons name="search-outline" size={18} color={TOKENS.textDim} />
+            <TextInput
+              style={styles.searchInput}
+              placeholder="Search sounds, rhythms, or artists..."
+              placeholderTextColor={TOKENS.textDim}
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+            />
+            {searchQuery.length > 0 && (
+              <TouchableOpacity
+                onPress={() => setSearchQuery('')}
+                accessibilityLabel="Clear search"
+              >
+                <Ionicons
+                  name="close-circle"
+                  size={17}
+                  color={TOKENS.textMuted}
+                />
+              </TouchableOpacity>
+            )}
+          </View>
         </View>
 
         {/* Territory Rail */}
@@ -193,15 +218,26 @@ export function SoundsScreen({ navigation }: any) {
           style={styles.rail}
           contentContainerStyle={styles.railContent}
         >
-          {TERRITORIES.map((t) => (
-            <TouchableOpacity
-              key={t.iso}
-              style={[styles.chip, activeTerritory === t.iso && styles.chipActive]}
-              onPress={() => setActiveTerritory(t.iso)}
-            >
-              <Text style={styles.chipText}>{t.flag} {t.name}</Text>
-            </TouchableOpacity>
-          ))}
+          {TERRITORIES.map((t) => {
+            const isActive = activeTerritory === t.iso;
+            return (
+              <TouchableOpacity
+                key={t.iso}
+                style={[styles.chip, isActive && styles.chipActiveOcean]}
+                onPress={() => setActiveTerritory(t.iso)}
+                activeOpacity={0.8}
+              >
+                <Text
+                  style={[
+                    styles.chipText,
+                    isActive && styles.chipTextActiveOcean,
+                  ]}
+                >
+                  {t.name}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
         </ScrollView>
 
         {/* Genres Rail */}
@@ -211,26 +247,35 @@ export function SoundsScreen({ navigation }: any) {
           style={styles.rail}
           contentContainerStyle={styles.railContent}
         >
-          {GENRES.map((g) => (
-            <TouchableOpacity
-              key={g}
-              style={[styles.chip, activeGenre === g && styles.chipActive]}
-              onPress={() => setActiveGenre(g)}
-            >
-              <Text style={styles.chipText}>{g}</Text>
-            </TouchableOpacity>
-          ))}
+          {GENRES.map((g) => {
+            const isActive = activeGenre === g;
+            return (
+              <TouchableOpacity
+                key={g}
+                style={[styles.chip, isActive && styles.chipActive]}
+                onPress={() => setActiveGenre(g)}
+                activeOpacity={0.8}
+              >
+                <Text
+                  style={[styles.chipText, isActive && styles.chipTextActive]}
+                >
+                  {g}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
         </ScrollView>
 
         {/* Sounds List */}
         {loading ? (
           <View style={styles.centerBox}>
-            <ActivityIndicator size="large" color={TOKENS.action} />
+            <ActivityIndicator size="large" color={TOKENS.teal} />
           </View>
         ) : (
           <ScrollView
             style={styles.list}
             contentContainerStyle={styles.listContent}
+            showsVerticalScrollIndicator={false}
             refreshControl={
               <RefreshControl
                 refreshing={refreshing}
@@ -238,30 +283,56 @@ export function SoundsScreen({ navigation }: any) {
                   setRefreshing(true);
                   fetchSounds();
                 }}
-                tintColor={TOKENS.action}
+                tintColor={TOKENS.teal}
               />
             }
           >
             {sounds.length === 0 ? (
               <View style={styles.emptyContainer}>
-                <Text style={styles.emptyEmoji}>🎵</Text>
+                <View style={styles.emptyDiscCircle}>
+                  <Ionicons
+                    name="musical-notes"
+                    size={32}
+                    color={TOKENS.teal}
+                  />
+                </View>
                 <Text style={styles.emptyTitle}>No sounds found</Text>
-                <Text style={styles.emptySubtitle}>Try changing your genre or island filter.</Text>
+                <Text style={styles.emptySubtitle}>
+                  Try adjusting your genre, search term, or island filter.
+                </Text>
               </View>
             ) : (
               sounds.map((sound) => {
                 const isPlaying = playingId === sound.id;
                 return (
-                  <View key={sound.id} style={styles.soundCard}>
-                    {/* Play Button */}
+                  <View
+                    key={sound.id}
+                    style={[
+                      styles.soundCard,
+                      isPlaying && styles.soundCardPlaying,
+                    ]}
+                  >
+                    {/* Play / Pause Disc Badge */}
                     <TouchableOpacity
-                      style={[styles.playBtn, isPlaying && styles.playBtnActive]}
+                      style={[
+                        styles.playBtn,
+                        isPlaying && styles.playBtnActive,
+                      ]}
                       onPress={() => handleTogglePlay(sound)}
-                      activeOpacity={0.8}
+                      activeOpacity={0.85}
+                      accessibilityRole="button"
+                      accessibilityLabel={
+                        isPlaying
+                          ? `Pause ${sound.title}`
+                          : `Play ${sound.title}`
+                      }
                     >
-                      <Text style={[styles.playBtnText, isPlaying && styles.playBtnTextActive]}>
-                        {isPlaying ? '⏸' : '▶'}
-                      </Text>
+                      <Ionicons
+                        name={isPlaying ? 'pause' : 'play'}
+                        size={18}
+                        color={isPlaying ? TOKENS.actionText : TOKENS.teal}
+                        style={!isPlaying ? { marginLeft: 2 } : undefined}
+                      />
                     </TouchableOpacity>
 
                     {/* Sound Details */}
@@ -271,22 +342,43 @@ export function SoundsScreen({ navigation }: any) {
                           {sound.title}
                         </Text>
                       </View>
-                      <Text style={styles.soundArtist}>
-                        {sound.flag} {sound.artist} • {sound.genre}
-                      </Text>
+                      <View style={styles.artistRow}>
+                        <View style={styles.isoBadge}>
+                          <Text style={styles.isoBadgeText}>
+                            {sound.countryIso}
+                          </Text>
+                        </View>
+                        <Text style={styles.soundArtist} numberOfLines={1}>
+                          {sound.artist} • {sound.genre}
+                        </Text>
+                      </View>
                       <View style={styles.metaRow}>
-                        <Text style={styles.metaText}>{sound.durationFormatted}</Text>
-                        {sound.bpm && <Text style={styles.metaText}>• {sound.bpm} BPM</Text>}
-                        <Text style={styles.metaText}>• {sound.usageCount} reels</Text>
-                        <Text style={styles.licenseBadge}>{sound.licenseType}</Text>
+                        <Text style={styles.metaText}>
+                          {sound.durationFormatted}
+                        </Text>
+                        {sound.bpm ? (
+                          <Text style={styles.metaText}>
+                            • {sound.bpm} BPM
+                          </Text>
+                        ) : null}
+                        <Text style={styles.metaText}>
+                          • {sound.usageCount} shorts
+                        </Text>
+                        <View style={styles.licenseBadgeWrap}>
+                          <Text style={styles.licenseBadge}>
+                            {sound.licenseType}
+                          </Text>
+                        </View>
                       </View>
                     </View>
 
-                    {/* Use Sound Button */}
+                    {/* Use Sound Pill CTA */}
                     <TouchableOpacity
                       style={styles.useBtn}
                       onPress={() => handleUseSoundInReel(sound)}
-                      activeOpacity={0.8}
+                      activeOpacity={0.85}
+                      accessibilityRole="button"
+                      accessibilityLabel={`Use sound ${sound.title}`}
                     >
                       <Text style={styles.useBtnText}>Use Sound</Text>
                     </TouchableOpacity>
@@ -302,70 +394,144 @@ export function SoundsScreen({ navigation }: any) {
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: TOKENS.canvas },
-  container: { flex: 1 },
-  centerBox: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  header: { paddingHorizontal: 16, paddingTop: 14, paddingBottom: 6 },
-  headerTitle: { fontSize: 20, fontWeight: '900', color: TOKENS.textPrimary },
-  headerSubtitle: { fontSize: 12, color: TOKENS.textMuted, marginTop: 2, lineHeight: 16 },
-  searchBox: { paddingHorizontal: 16, marginVertical: 8 },
-  searchInput: {
+  safeArea: {
+    flex: 1,
+    backgroundColor: TOKENS.canvas,
+  },
+  container: {
+    flex: 1,
+  },
+  centerBox: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  header: {
+    paddingHorizontal: 16,
+    paddingTop: 14,
+    paddingBottom: 8,
+  },
+  headerTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 12,
+  },
+  headerDiscBadge: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: TOKENS.tealSoft,
+    borderWidth: 1,
+    borderColor: TOKENS.borderActive,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 2,
+  },
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: '800',
+    color: TOKENS.textPrimary,
+  },
+  headerSubtitle: {
+    fontSize: 12,
+    color: TOKENS.textMuted,
+    marginTop: 3,
+    lineHeight: 17,
+  },
+  searchBox: {
+    paddingHorizontal: 16,
+    marginVertical: 8,
+  },
+  searchBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
     backgroundColor: TOKENS.surface,
     borderRadius: 14,
     borderWidth: 1,
     borderColor: TOKENS.border,
     paddingHorizontal: 14,
-    paddingVertical: 10,
+  },
+  searchInput: {
+    flex: 1,
+    paddingVertical: 11,
     color: TOKENS.textPrimary,
     fontSize: 13,
   },
-  rail: { maxHeight: 42, marginVertical: 2 },
-  railContent: { paddingHorizontal: 16, gap: 8 },
+  rail: {
+    maxHeight: 42,
+    marginVertical: 2,
+  },
+  railContent: {
+    paddingHorizontal: 16,
+    alignItems: 'center',
+    gap: 8,
+  },
   chip: {
     backgroundColor: TOKENS.surface,
     paddingHorizontal: 12,
     paddingVertical: 6,
-    borderRadius: 12,
+    borderRadius: 999,
     borderWidth: 1,
     borderColor: TOKENS.border,
   },
   chipActive: {
-    backgroundColor: TOKENS.action + '25',
+    backgroundColor: TOKENS.tealSoft,
+    borderColor: TOKENS.borderActive,
+  },
+  chipActiveOcean: {
+    backgroundColor: TOKENS.oceanSoft,
     borderColor: TOKENS.action,
   },
-  chipText: { color: TOKENS.textPrimary, fontSize: 11, fontWeight: '700' },
-  list: { flex: 1, marginTop: 8 },
-  listContent: { paddingHorizontal: 16, paddingBottom: 32 },
+  chipText: {
+    color: TOKENS.textMuted,
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  chipTextActive: {
+    color: TOKENS.teal,
+    fontWeight: '800',
+  },
+  chipTextActiveOcean: {
+    color: TOKENS.action,
+    fontWeight: '800',
+  },
+  list: {
+    flex: 1,
+    marginTop: 8,
+  },
+  listContent: {
+    paddingHorizontal: 16,
+    paddingBottom: 32,
+  },
   soundCard: {
     backgroundColor: TOKENS.surface,
     borderRadius: 16,
     borderWidth: 1,
     borderColor: TOKENS.border,
-    padding: 12,
+    padding: 13,
     marginBottom: 10,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
   },
+  soundCardPlaying: {
+    borderColor: TOKENS.borderActive,
+    backgroundColor: TOKENS.raised,
+  },
   playBtn: {
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: 'rgba(255, 122, 89, 0.15)',
+    backgroundColor: TOKENS.tealSoft,
     borderWidth: 1,
-    borderColor: TOKENS.action,
+    borderColor: TOKENS.borderActive,
     alignItems: 'center',
     justifyContent: 'center',
   },
   playBtnActive: {
-    backgroundColor: TOKENS.action,
-  },
-  playBtnText: {
-    fontSize: 16,
-    color: TOKENS.textPrimary,
-  },
-  playBtnTextActive: {
-    color: TOKENS.actionText,
+    backgroundColor: TOKENS.teal,
+    borderColor: TOKENS.teal,
   },
   soundInfo: {
     flex: 1,
@@ -376,52 +542,97 @@ const styles = StyleSheet.create({
   },
   soundTitle: {
     color: TOKENS.textPrimary,
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: '800',
   },
+  artistRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 3,
+  },
+  isoBadge: {
+    backgroundColor: TOKENS.oceanSoft,
+    paddingHorizontal: 6,
+    paddingVertical: 1,
+    borderRadius: 5,
+  },
+  isoBadgeText: {
+    color: TOKENS.action,
+    fontSize: 9,
+    fontWeight: '800',
+    letterSpacing: 0.4,
+  },
   soundArtist: {
-    color: TOKENS.textMuted,
-    fontSize: 11,
-    marginTop: 2,
+    color: TOKENS.textSecondary,
+    fontSize: 12,
     fontWeight: '600',
+    flex: 1,
   },
   metaRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    flexWrap: 'wrap',
     gap: 6,
-    marginTop: 4,
+    marginTop: 5,
   },
   metaText: {
     color: TOKENS.textMuted,
     fontSize: 10,
+    fontWeight: '600',
   },
-  licenseBadge: {
-    backgroundColor: 'rgba(16, 185, 129, 0.15)',
-    color: TOKENS.success,
-    fontSize: 9,
-    fontWeight: '800',
+  licenseBadgeWrap: {
+    backgroundColor: TOKENS.tealSoft,
     paddingHorizontal: 6,
     paddingVertical: 1,
-    borderRadius: 6,
+    borderRadius: 5,
+  },
+  licenseBadge: {
+    color: TOKENS.teal,
+    fontSize: 9,
+    fontWeight: '800',
   },
   useBtn: {
-    backgroundColor: TOKENS.raised,
-    borderWidth: 1,
-    borderColor: TOKENS.border,
-    paddingHorizontal: 10,
+    backgroundColor: TOKENS.teal,
+    paddingHorizontal: 13,
     paddingVertical: 8,
-    borderRadius: 12,
+    borderRadius: 999,
   },
   useBtnText: {
-    color: TOKENS.action,
+    color: TOKENS.actionText,
     fontSize: 11,
     fontWeight: '800',
   },
   emptyContainer: {
-    padding: 40,
+    paddingVertical: 44,
+    paddingHorizontal: 28,
     alignItems: 'center',
+    backgroundColor: TOKENS.surface,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: TOKENS.border,
   },
-  emptyEmoji: { fontSize: 44, marginBottom: 8 },
-  emptyTitle: { fontSize: 16, fontWeight: '800', color: TOKENS.textPrimary },
-  emptySubtitle: { fontSize: 12, color: TOKENS.textMuted, marginTop: 4 },
+  emptyDiscCircle: {
+    width: 66,
+    height: 66,
+    borderRadius: 33,
+    backgroundColor: TOKENS.oceanSoft,
+    borderWidth: 1,
+    borderColor: TOKENS.borderStrong,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 14,
+  },
+  emptyTitle: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: TOKENS.textPrimary,
+  },
+  emptySubtitle: {
+    fontSize: 12,
+    color: TOKENS.textMuted,
+    marginTop: 5,
+    textAlign: 'center',
+    lineHeight: 18,
+  },
 });

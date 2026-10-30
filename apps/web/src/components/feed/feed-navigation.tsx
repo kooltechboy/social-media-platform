@@ -69,13 +69,13 @@ export default function FeedNavigation({
   return (
     <nav
       aria-label="Feed Navigation"
-      className={`glass-aerospace rounded-2xl border border-white/12 px-2 sm:px-4 py-1.5 shadow-lg relative ${className}`}
+      className={`border-b border-white/[0.08] md:border md:rounded-2xl md:bg-[#0D1526]/85 px-1 sm:px-3 relative ${className}`}
     >
       <div
         ref={tabListRef}
         role="tablist"
         aria-label="Feed filter modes"
-        className="flex items-center justify-between sm:justify-start gap-1 sm:gap-3 overflow-x-auto scrollbar-none"
+        className="flex items-center justify-start gap-0.5 sm:gap-2 overflow-x-auto scrollbar-none"
       >
         {FEED_CHANNELS.map((channel, index) => {
           const isActive =
@@ -96,15 +96,15 @@ export default function FeedNavigation({
               tabIndex={isActive ? 0 : -1}
               onClick={() => handleSelectMode(channel.id)}
               onKeyDown={(e) => handleKeyDown(e, index)}
-              className={`relative flex items-center justify-center gap-2 px-3.5 sm:px-4 py-2.5 min-h-[44px] rounded-xl text-xs sm:text-sm md:text-base font-black transition-all whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-caribbeanSea focus-visible:ring-offset-2 focus-visible:ring-offset-[#0A0F22] cursor-pointer select-none ${
+              className={`relative flex items-center justify-center gap-1.5 px-3 sm:px-3.5 h-11 sm:h-12 min-h-[44px] text-[13px] sm:text-[13.5px] transition-colors whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-caribbeanSea cursor-pointer select-none ${
                 isActive
-                  ? 'text-white bg-white/10 shadow-sm'
-                  : 'text-brand-sandstone/60 hover:text-white hover:bg-white/5'
+                  ? 'text-[#F8FAFC] font-semibold'
+                  : 'text-[#94A3B8] font-medium hover:text-white'
               }`}
             >
               <Icon
-                className={`w-4 h-4 sm:w-4.5 sm:h-4.5 transition-colors ${
-                  isActive ? 'text-brand-caribbeanSea' : 'text-brand-sandstone/40'
+                className={`w-3.5 h-3.5 sm:w-4 sm:h-4 transition-colors hidden sm:inline-block ${
+                  isActive ? 'text-[#00C2A8]' : 'text-[#64748B]'
                 }`}
               />
               <span>{label}</span>
@@ -113,7 +113,7 @@ export default function FeedNavigation({
               {isActive && (
                 <span
                   aria-hidden="true"
-                  className="absolute bottom-0 left-2 right-2 h-0.5 bg-gradient-to-r from-brand-caribbeanSea via-brand-sunriseCoral to-brand-goldenHour rounded-full shadow-[0_0_8px_rgba(14,165,233,0.6)]"
+                  className="absolute bottom-0 left-2.5 right-2.5 h-[2px] bg-gradient-to-r from-[#00C2A8] to-[#0EA5E9] rounded-full"
                 />
               )}
             </button>

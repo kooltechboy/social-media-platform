@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   StyleSheet,
   View,
@@ -11,12 +11,16 @@ import {
   TextInput,
   Modal,
   Alert,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { Video as ExpoVideo, ResizeMode } from 'expo-av';
+import { Ionicons as ExpoIonicons } from '@expo/vector-icons';
 import { TOKENS } from '../theme/tokens';
 import { supabase } from '../lib/supabase';
 
 const Video = ExpoVideo as unknown as React.ComponentType<any>;
+const Ionicons = ExpoIonicons as unknown as React.ComponentType<any>;
 
 interface StreamItem {
   id: string;
@@ -44,7 +48,7 @@ const LIVE_CATEGORIES = [
   'News & Diaspora',
 ];
 
-export function LiveScreen({ navigation }: any) {
+export function LiveScreen({ navigation }: any = {}) {
   const [streams, setStreams] = useState<StreamItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -58,8 +62,18 @@ export function LiveScreen({ navigation }: any) {
   const [broadcasting, setBroadcasting] = useState(false);
 
   // Live Chat state
-  const [chatMessages, setChatMessages] = useState<Array<{ id: string; user: string; text: string }>>([]);
+  const [chatMessages, setChatMessages] = useState<
+    Array<{ id: string; user: string; text: string }>
+  >([]);
   const [chatInput, setChatInput] = useState('');
+
+  const handleBack = () => {
+    if (navigation?.canGoBack && !navigation.canGoBack()) {
+      navigation?.navigate?.('Home');
+      return;
+    }
+    navigation?.goBack?.();
+  };
 
   const fetchStreams = async () => {
     try {
@@ -182,7 +196,9 @@ export function LiveScreen({ navigation }: any) {
     const text = chatInput.trim();
     setChatInput('');
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       if (user) {
         await supabase.from('live_messages').insert({
           livestream_id: activeStream.id,
@@ -202,20 +218,25 @@ export function LiveScreen({ navigation }: any) {
 
   const handleStartBroadcast = async () => {
     if (!broadcastTitle.trim()) {
-      Alert.alert('Title Required', 'Please enter a title for your live broadcast.');
+      Alert.alert(
+        'Title Required',
+        'Please enter a title for your live broadcast.'
+      );
       return;
     }
 
     setBroadcasting(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       if (!user) {
         Alert.alert('Sign In Required', 'Please sign in to go live.');
         setBroadcasting(false);
         return;
       }
 
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('livestreams')
         .insert({
           creator_id: user.id,
@@ -230,7 +251,10 @@ export function LiveScreen({ navigation }: any) {
 
       if (error) throw error;
 
-      Alert.alert('You Are Live! 🔴', 'Broadcast initialized. Your audience is joining!');
+      Alert.alert(
+        'You Are Live',
+        'Broadcast initialized. Your audience is joining!'
+      );
       setBroadcastModalVisible(false);
       setBroadcastTitle('');
       fetchStreams();
@@ -245,21 +269,40 @@ export function LiveScreen({ navigation }: any) {
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
-        {/* Header */}
+        {/* Executive Midnight Reef Header with Back Escape */}
         <View style={styles.header}>
-          <View>
-            <View style={styles.liveBadgeRow}>
-              <View style={styles.liveIndicator} />
-              <Text style={styles.liveBadgeText}>LIVE NETWORK</Text>
+          <View style={styles.headerLeft}>
+            <TouchableOpacity
+              style={styles.backBtn}
+              onPress={handleBack}
+              activeOpacity={0.8}
+              accessibilityRole="button"
+              accessibilityLabel="Exit Live"
+            >
+              <Ionicons
+                name="chevron-back"
+                size={21}
+                color={TOKENS.textPrimary}
+              />
+            </TouchableOpacity>
+            <View>
+              <View style={styles.liveBadgeRow}>
+                <View style={styles.liveIndicator} />
+                <Text style={styles.liveBadgeText}>LIVE NETWORK</Text>
+              </View>
+              <Text style={styles.headerTitle}>Caribbean Live</Text>
             </View>
-            <Text style={styles.headerTitle}>Caribbean Live Streams</Text>
           </View>
+
           <TouchableOpacity
             style={styles.goLiveBtn}
             onPress={() => setBroadcastModalVisible(true)}
-            activeOpacity={0.8}
+            activeOpacity={0.85}
+            accessibilityRole="button"
+            accessibilityLabel="Start a live broadcast"
           >
-            <Text style={styles.goLiveBtnText}>🔴 Go Live</Text>
+            <Ionicons name="radio" size={14} color={TOKENS.textPrimary} />
+            <Text style={styles.goLiveBtnText}>Go Live</Text>
           </TouchableOpacity>
         </View>
 
@@ -270,25 +313,35 @@ export function LiveScreen({ navigation }: any) {
           style={styles.categoryRail}
           contentContainerStyle={styles.categoryRailContent}
         >
-          {LIVE_CATEGORIES.map((cat) => (
-            <TouchableOpacity
-              key={cat}
-              style={[styles.chip, selectedCategory === cat && styles.chipActive]}
-              onPress={() => setSelectedCategory(cat)}
-            >
-              <Text style={styles.chipText}>{cat}</Text>
-            </TouchableOpacity>
-          ))}
+          {LIVE_CATEGORIES.map((cat) => {
+            const isActive = selectedCategory === cat;
+            return (
+              <TouchableOpacity
+                key={cat}
+                style={[styles.chip, isActive && styles.chipActive]}
+                onPress={() => setSelectedCategory(cat)}
+                activeOpacity={0.8}
+              >
+                <Text
+                  style={[styles.chipText, isActive && styles.chipTextActive]}
+                >
+                  {cat}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
         </ScrollView>
 
         {/* Active Stream Viewer or Empty */}
         {loading ? (
           <View style={styles.centerBox}>
-            <ActivityIndicator size="large" color={TOKENS.action} />
+            <ActivityIndicator size="large" color={TOKENS.teal} />
           </View>
         ) : (
           <ScrollView
             style={styles.content}
+            contentContainerStyle={styles.contentContainer}
+            showsVerticalScrollIndicator={false}
             refreshControl={
               <RefreshControl
                 refreshing={refreshing}
@@ -296,13 +349,13 @@ export function LiveScreen({ navigation }: any) {
                   setRefreshing(true);
                   fetchStreams();
                 }}
-                tintColor={TOKENS.action}
+                tintColor={TOKENS.teal}
               />
             }
           >
             {activeStream ? (
               <View style={styles.streamViewerCard}>
-                {/* Video Player or Fallback */}
+                {/* Video Player or Midnight Reef Broadcast Stage */}
                 <View style={styles.videoBox}>
                   {activeStream.videoUrl ? (
                     <Video
@@ -314,48 +367,110 @@ export function LiveScreen({ navigation }: any) {
                     />
                   ) : (
                     <View style={styles.videoPlaceholder}>
-                      <Text style={styles.broadcastIcon}>📡</Text>
-                      <Text style={styles.broadcastStatus}>Broadcasting Live from {activeStream.location}</Text>
+                      <View style={styles.broadcastSignalCircle}>
+                        <Ionicons name="radio" size={32} color={TOKENS.teal} />
+                      </View>
+                      <Text style={styles.broadcastStatus}>
+                        Broadcasting Live from {activeStream.location}
+                      </Text>
                     </View>
                   )}
 
-                  {/* Viewer Count Badge */}
+                  {/* Top-Left Live Tag */}
+                  <View style={styles.stageLivePill}>
+                    <View style={styles.stageLiveDot} />
+                    <Text style={styles.stageLiveText}>LIVE</Text>
+                  </View>
+
+                  {/* Top-Right Viewer Count Badge */}
                   <View style={styles.viewerBadge}>
-                    <Text style={styles.viewerBadgeText}>👁️ {activeStream.peakViewers} watching</Text>
+                    <Ionicons
+                      name="eye-outline"
+                      size={13}
+                      color={TOKENS.teal}
+                    />
+                    <Text style={styles.viewerBadgeText}>
+                      {activeStream.peakViewers} watching
+                    </Text>
                   </View>
                 </View>
 
                 {/* Stream Info */}
                 <View style={styles.streamDetails}>
+                  <View style={styles.streamCategoryRow}>
+                    <View style={styles.categoryPill}>
+                      <Text style={styles.categoryPillText}>
+                        {activeStream.category}
+                      </Text>
+                    </View>
+                    <Text style={styles.locationMeta}>
+                      {activeStream.location}
+                    </Text>
+                  </View>
                   <Text style={styles.streamTitle}>{activeStream.title}</Text>
-                  <Text style={styles.streamHost}>
-                    Hosted by {activeStream.creatorName} ({activeStream.creatorHandle})
-                  </Text>
+                  <View style={styles.hostRow}>
+                    <View style={styles.hostAvatarBadge}>
+                      <Text style={styles.hostAvatarInitial}>
+                        {activeStream.creatorName[0]?.toUpperCase() || 'C'}
+                      </Text>
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.streamHostName}>
+                        {activeStream.creatorName}
+                      </Text>
+                      <Text style={styles.streamHostHandle}>
+                        {activeStream.creatorHandle}
+                      </Text>
+                    </View>
+                  </View>
                 </View>
 
-                {/* Live Floating Chat */}
+                {/* Live Community Chat */}
                 <View style={styles.chatContainer}>
-                  <Text style={styles.chatHeader}>Live Community Chat</Text>
+                  <View style={styles.chatHeaderRow}>
+                    <Ionicons
+                      name="flame-outline"
+                      size={14}
+                      color={TOKENS.teal}
+                    />
+                    <Text style={styles.chatHeader}>Live Community Chat</Text>
+                  </View>
+
                   <ScrollView style={styles.chatScroll} nestedScrollEnabled>
-                    {chatMessages.map((msg) => (
-                      <View key={msg.id} style={styles.chatMsg}>
-                        <Text style={styles.chatUser}>{msg.user}: </Text>
-                        <Text style={styles.chatText}>{msg.text}</Text>
-                      </View>
-                    ))}
+                    {chatMessages.length === 0 ? (
+                      <Text style={styles.chatEmptyHint}>
+                        Say hello to {activeStream.creatorName} and the live room.
+                      </Text>
+                    ) : (
+                      chatMessages.map((msg) => (
+                        <View key={msg.id} style={styles.chatMsg}>
+                          <Text style={styles.chatUser}>{msg.user}: </Text>
+                          <Text style={styles.chatText}>{msg.text}</Text>
+                        </View>
+                      ))
+                    )}
                   </ScrollView>
 
                   {/* Chat Input */}
                   <View style={styles.chatInputRow}>
                     <TextInput
                       style={styles.chatInput}
-                      placeholder="Send comment to broadcaster..."
-                      placeholderTextColor={TOKENS.textMuted}
+                      placeholder="Send message to broadcaster..."
+                      placeholderTextColor={TOKENS.textDim}
                       value={chatInput}
                       onChangeText={setChatInput}
                       onSubmitEditing={handleSendChat}
                     />
-                    <TouchableOpacity style={styles.sendChatBtn} onPress={handleSendChat}>
+                    <TouchableOpacity
+                      style={[
+                        styles.sendChatBtn,
+                        !chatInput.trim() && styles.sendChatBtnDisabled,
+                      ]}
+                      onPress={handleSendChat}
+                      activeOpacity={0.85}
+                      accessibilityRole="button"
+                      accessibilityLabel="Send chat message"
+                    >
                       <Text style={styles.sendChatBtnText}>Send</Text>
                     </TouchableOpacity>
                   </View>
@@ -363,16 +478,30 @@ export function LiveScreen({ navigation }: any) {
               </View>
             ) : (
               <View style={styles.emptyContainer}>
-                <Text style={styles.emptyIcon}>🎙️</Text>
-                <Text style={styles.emptyTitle}>No live broadcasts right now</Text>
+                <View style={styles.emptyIconCircle}>
+                  <Ionicons
+                    name="mic-outline"
+                    size={34}
+                    color={TOKENS.teal}
+                  />
+                </View>
+                <Text style={styles.emptyTitle}>
+                  No live broadcasts right now
+                </Text>
                 <Text style={styles.emptySubtitle}>
-                  Be the first Caribbean voice to go live and connect our global community!
+                  Be the first voice to go live and connect creators across the Caribbean and global diaspora.
                 </Text>
                 <TouchableOpacity
                   style={styles.emptyGoLiveBtn}
                   onPress={() => setBroadcastModalVisible(true)}
+                  activeOpacity={0.85}
                 >
-                  <Text style={styles.emptyGoLiveText}>🔴 Start Broadcasting</Text>
+                  <Ionicons
+                    name="radio"
+                    size={16}
+                    color={TOKENS.actionText}
+                  />
+                  <Text style={styles.emptyGoLiveText}>Start Broadcasting</Text>
                 </TouchableOpacity>
               </View>
             )}
@@ -381,22 +510,40 @@ export function LiveScreen({ navigation }: any) {
             {streams.length > 1 && (
               <View style={styles.otherStreamsSection}>
                 <Text style={styles.sectionTitle}>More Live Streams</Text>
-                {streams.filter((s) => s.id !== activeStream?.id).map((stream) => (
-                  <TouchableOpacity
-                    key={stream.id}
-                    style={styles.streamRowCard}
-                    onPress={() => setActiveStream(stream)}
-                  >
-                    <View style={styles.streamRowIcon}>
-                      <Text style={{ fontSize: 20 }}>📺</Text>
-                    </View>
-                    <View style={{ flex: 1 }}>
-                      <Text style={styles.streamRowTitle}>{stream.title}</Text>
-                      <Text style={styles.streamRowMeta}>{stream.creatorName} • {stream.peakViewers} viewers</Text>
-                    </View>
-                    <Text style={styles.streamRowWatch}>Watch →</Text>
-                  </TouchableOpacity>
-                ))}
+                {streams
+                  .filter((s) => s.id !== activeStream?.id)
+                  .map((stream) => (
+                    <TouchableOpacity
+                      key={stream.id}
+                      style={styles.streamRowCard}
+                      onPress={() => setActiveStream(stream)}
+                      activeOpacity={0.85}
+                    >
+                      <View style={styles.streamRowIcon}>
+                        <Ionicons
+                          name="tv-outline"
+                          size={19}
+                          color={TOKENS.action}
+                        />
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.streamRowTitle} numberOfLines={1}>
+                          {stream.title}
+                        </Text>
+                        <Text style={styles.streamRowMeta} numberOfLines={1}>
+                          {stream.creatorName} • {stream.peakViewers} viewers
+                        </Text>
+                      </View>
+                      <View style={styles.watchActionWrap}>
+                        <Text style={styles.streamRowWatch}>Watch</Text>
+                        <Ionicons
+                          name="chevron-forward"
+                          size={14}
+                          color={TOKENS.teal}
+                        />
+                      </View>
+                    </TouchableOpacity>
+                  ))}
               </View>
             )}
           </ScrollView>
@@ -409,9 +556,31 @@ export function LiveScreen({ navigation }: any) {
           animationType="slide"
           onRequestClose={() => setBroadcastModalVisible(false)}
         >
-          <View style={styles.modalOverlay}>
+          <KeyboardAvoidingView
+            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+            style={styles.modalOverlay}
+          >
             <View style={styles.modalSheet}>
-              <Text style={styles.modalTitle}>Start Live Broadcast 🔴</Text>
+              <View style={styles.modalHeaderRow}>
+                <View style={styles.modalTitleGroup}>
+                  <View style={styles.modalIconBadge}>
+                    <Ionicons name="radio" size={18} color={TOKENS.danger} />
+                  </View>
+                  <Text style={styles.modalTitle}>Start Live Broadcast</Text>
+                </View>
+                <TouchableOpacity
+                  style={styles.modalCloseIconBtn}
+                  onPress={() => setBroadcastModalVisible(false)}
+                  accessibilityLabel="Close broadcast modal"
+                >
+                  <Ionicons
+                    name="close"
+                    size={18}
+                    color={TOKENS.textPrimary}
+                  />
+                </TouchableOpacity>
+              </View>
+
               <Text style={styles.modalSubtitle}>
                 Stream directly to followers across the Caribbean and global diaspora.
               </Text>
@@ -419,34 +588,64 @@ export function LiveScreen({ navigation }: any) {
               <Text style={styles.formLabel}>Stream Title *</Text>
               <TextInput
                 style={styles.formInput}
-                placeholder="e.g. Kingston Dub Hour / Carnival Mas Preview"
-                placeholderTextColor={TOKENS.textMuted}
+                placeholder="e.g. Kingston Dub Session / Carnival Mas Preview"
+                placeholderTextColor={TOKENS.textDim}
                 value={broadcastTitle}
                 onChangeText={setBroadcastTitle}
               />
 
               <Text style={styles.formLabel}>Category</Text>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginVertical: 6 }}>
-                {LIVE_CATEGORIES.filter((c) => c !== 'All Broadcasts').map((cat) => (
-                  <TouchableOpacity
-                    key={cat}
-                    style={[styles.chip, broadcastCategory === cat && styles.chipActive]}
-                    onPress={() => setBroadcastCategory(cat)}
-                  >
-                    <Text style={styles.chipText}>{cat}</Text>
-                  </TouchableOpacity>
-                ))}
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                style={{ marginVertical: 6 }}
+                contentContainerStyle={{ gap: 8 }}
+              >
+                {LIVE_CATEGORIES.filter((c) => c !== 'All Broadcasts').map(
+                  (cat) => {
+                    const isActive = broadcastCategory === cat;
+                    return (
+                      <TouchableOpacity
+                        key={cat}
+                        style={[styles.chip, isActive && styles.chipActive]}
+                        onPress={() => setBroadcastCategory(cat)}
+                      >
+                        <Text
+                          style={[
+                            styles.chipText,
+                            isActive && styles.chipTextActive,
+                          ]}
+                        >
+                          {cat}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  }
+                )}
               </ScrollView>
 
               <TouchableOpacity
-                style={[styles.startBroadcastBtn, broadcasting && { opacity: 0.6 }]}
+                style={[
+                  styles.startBroadcastBtn,
+                  broadcasting && { opacity: 0.6 },
+                ]}
                 onPress={handleStartBroadcast}
                 disabled={broadcasting}
+                activeOpacity={0.85}
               >
                 {broadcasting ? (
-                  <ActivityIndicator color="#FFF" />
+                  <ActivityIndicator color={TOKENS.actionText} />
                 ) : (
-                  <Text style={styles.startBroadcastBtnText}>🔴 Go Live Now</Text>
+                  <View style={styles.startBtnInner}>
+                    <Ionicons
+                      name="radio"
+                      size={16}
+                      color={TOKENS.actionText}
+                    />
+                    <Text style={styles.startBroadcastBtnText}>
+                      Go Live Now
+                    </Text>
+                  </View>
                 )}
               </TouchableOpacity>
 
@@ -457,7 +656,7 @@ export function LiveScreen({ navigation }: any) {
                 <Text style={styles.closeModalText}>Cancel</Text>
               </TouchableOpacity>
             </View>
-          </View>
+          </KeyboardAvoidingView>
         </Modal>
       </View>
     </SafeAreaView>
@@ -465,44 +664,118 @@ export function LiveScreen({ navigation }: any) {
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: TOKENS.canvas },
-  container: { flex: 1 },
-  centerBox: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  safeArea: {
+    flex: 1,
+    backgroundColor: TOKENS.canvas,
+  },
+  container: {
+    flex: 1,
+  },
+  centerBox: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
-    paddingTop: 12,
-    paddingBottom: 8,
+    paddingTop: 10,
+    paddingBottom: 12,
+    backgroundColor: TOKENS.surface,
+    borderBottomWidth: 1,
+    borderBottomColor: TOKENS.border,
   },
-  liveBadgeRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  liveIndicator: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#EF4444' },
-  liveBadgeText: { fontSize: 10, fontWeight: '900', color: '#EF4444', letterSpacing: 0.8 },
-  headerTitle: { fontSize: 20, fontWeight: '900', color: TOKENS.textPrimary, marginTop: 2 },
+  headerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  backBtn: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: TOKENS.raised,
+    borderWidth: 1,
+    borderColor: TOKENS.border,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  liveBadgeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  liveIndicator: {
+    width: 7,
+    height: 7,
+    borderRadius: 3.5,
+    backgroundColor: TOKENS.danger,
+  },
+  liveBadgeText: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: TOKENS.danger,
+    letterSpacing: 0.9,
+  },
+  headerTitle: {
+    fontSize: 19,
+    fontWeight: '800',
+    color: TOKENS.textPrimary,
+    marginTop: 1,
+  },
   goLiveBtn: {
-    backgroundColor: '#EF4444',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: TOKENS.danger,
     paddingHorizontal: 14,
-    paddingVertical: 8,
+    paddingVertical: 9,
     borderRadius: 999,
   },
-  goLiveBtnText: { color: '#FFF', fontSize: 12, fontWeight: '900' },
-  categoryRail: { maxHeight: 42, marginVertical: 4 },
-  categoryRailContent: { paddingHorizontal: 16, gap: 8 },
+  goLiveBtnText: {
+    color: TOKENS.textPrimary,
+    fontSize: 12,
+    fontWeight: '800',
+  },
+  categoryRail: {
+    maxHeight: 48,
+    marginTop: 8,
+  },
+  categoryRailContent: {
+    paddingHorizontal: 16,
+    alignItems: 'center',
+    gap: 8,
+  },
   chip: {
     backgroundColor: TOKENS.surface,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 12,
+    paddingHorizontal: 13,
+    paddingVertical: 7,
+    borderRadius: 999,
     borderWidth: 1,
     borderColor: TOKENS.border,
   },
   chipActive: {
-    backgroundColor: 'rgba(239, 68, 68, 0.25)',
-    borderColor: '#EF4444',
+    backgroundColor: TOKENS.tealSoft,
+    borderColor: TOKENS.borderActive,
   },
-  chipText: { color: TOKENS.textPrimary, fontSize: 11, fontWeight: '700' },
-  content: { flex: 1, padding: 16 },
+  chipText: {
+    color: TOKENS.textMuted,
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  chipTextActive: {
+    color: TOKENS.teal,
+    fontWeight: '800',
+  },
+  content: {
+    flex: 1,
+  },
+  contentContainer: {
+    padding: 16,
+    paddingBottom: 32,
+  },
   streamViewerCard: {
     backgroundColor: TOKENS.surface,
     borderRadius: 20,
@@ -512,40 +785,183 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   videoBox: {
-    height: 220,
-    backgroundColor: '#000',
+    height: 224,
+    backgroundColor: TOKENS.oceanDepth,
     position: 'relative',
     justifyContent: 'center',
     alignItems: 'center',
   },
-  videoPlaceholder: { alignItems: 'center' },
-  broadcastIcon: { fontSize: 44, marginBottom: 8 },
-  broadcastStatus: { color: TOKENS.textMuted, fontSize: 12, fontWeight: '700' },
-  viewerBadge: {
+  videoPlaceholder: {
+    alignItems: 'center',
+    paddingHorizontal: 24,
+  },
+  broadcastSignalCircle: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: TOKENS.tealSoft,
+    borderWidth: 1,
+    borderColor: TOKENS.borderActive,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 12,
+  },
+  broadcastStatus: {
+    color: TOKENS.textSecondary,
+    fontSize: 13,
+    fontWeight: '700',
+    textAlign: 'center',
+  },
+  stageLivePill: {
     position: 'absolute',
-    top: 10,
-    right: 10,
-    backgroundColor: 'rgba(0,0,0,0.75)',
-    paddingHorizontal: 8,
+    top: 12,
+    left: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    backgroundColor: TOKENS.scrim,
+    borderWidth: 1,
+    borderColor: TOKENS.borderStrong,
+    paddingHorizontal: 9,
     paddingVertical: 4,
     borderRadius: 8,
   },
-  viewerBadgeText: { color: '#FFF', fontSize: 10, fontWeight: '800' },
-  streamDetails: { padding: 14 },
-  streamTitle: { color: TOKENS.textPrimary, fontSize: 16, fontWeight: '900' },
-  streamHost: { color: TOKENS.textMuted, fontSize: 12, marginTop: 4 },
+  stageLiveDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: TOKENS.danger,
+  },
+  stageLiveText: {
+    color: TOKENS.textPrimary,
+    fontSize: 10,
+    fontWeight: '800',
+    letterSpacing: 0.6,
+  },
+  viewerBadge: {
+    position: 'absolute',
+    top: 12,
+    right: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    backgroundColor: TOKENS.scrim,
+    borderWidth: 1,
+    borderColor: TOKENS.borderStrong,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 8,
+  },
+  viewerBadgeText: {
+    color: TOKENS.textPrimary,
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  streamDetails: {
+    padding: 16,
+  },
+  streamCategoryRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  categoryPill: {
+    backgroundColor: TOKENS.oceanSoft,
+    paddingHorizontal: 9,
+    paddingVertical: 3,
+    borderRadius: 6,
+  },
+  categoryPillText: {
+    color: TOKENS.action,
+    fontSize: 10,
+    fontWeight: '800',
+  },
+  locationMeta: {
+    color: TOKENS.textMuted,
+    fontSize: 11,
+    fontWeight: '600',
+  },
+  streamTitle: {
+    color: TOKENS.textPrimary,
+    fontSize: 17,
+    fontWeight: '800',
+    lineHeight: 22,
+  },
+  hostRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginTop: 12,
+  },
+  hostAvatarBadge: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: TOKENS.raised,
+    borderWidth: 1,
+    borderColor: TOKENS.borderActive,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  hostAvatarInitial: {
+    color: TOKENS.teal,
+    fontSize: 14,
+    fontWeight: '800',
+  },
+  streamHostName: {
+    color: TOKENS.textPrimary,
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  streamHostHandle: {
+    color: TOKENS.textMuted,
+    fontSize: 11,
+  },
   chatContainer: {
     backgroundColor: TOKENS.raised,
-    padding: 12,
+    padding: 14,
     borderTopWidth: 1,
     borderTopColor: TOKENS.border,
   },
-  chatHeader: { color: TOKENS.textMuted, fontSize: 11, fontWeight: '800', marginBottom: 8 },
-  chatScroll: { maxHeight: 100, marginBottom: 10 },
-  chatMsg: { flexDirection: 'row', marginBottom: 4 },
-  chatUser: { color: TOKENS.action, fontSize: 11, fontWeight: '800' },
-  chatText: { color: TOKENS.textPrimary, fontSize: 11, flex: 1 },
-  chatInputRow: { flexDirection: 'row', gap: 8 },
+  chatHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 8,
+  },
+  chatHeader: {
+    color: TOKENS.textSecondary,
+    fontSize: 12,
+    fontWeight: '800',
+  },
+  chatScroll: {
+    maxHeight: 110,
+    marginBottom: 10,
+  },
+  chatEmptyHint: {
+    color: TOKENS.textDim,
+    fontSize: 12,
+    paddingVertical: 6,
+  },
+  chatMsg: {
+    flexDirection: 'row',
+    marginBottom: 5,
+  },
+  chatUser: {
+    color: TOKENS.teal,
+    fontSize: 12,
+    fontWeight: '800',
+  },
+  chatText: {
+    color: TOKENS.textPrimary,
+    fontSize: 12,
+    flex: 1,
+  },
+  chatInputRow: {
+    flexDirection: 'row',
+    gap: 8,
+  },
   chatInput: {
     flex: 1,
     backgroundColor: TOKENS.surface,
@@ -553,69 +969,123 @@ const styles = StyleSheet.create({
     borderColor: TOKENS.border,
     borderRadius: 12,
     paddingHorizontal: 12,
-    paddingVertical: 8,
+    paddingVertical: 9,
     color: TOKENS.textPrimary,
-    fontSize: 12,
+    fontSize: 13,
   },
   sendChatBtn: {
-    backgroundColor: TOKENS.action,
-    paddingHorizontal: 14,
+    backgroundColor: TOKENS.teal,
+    paddingHorizontal: 16,
     borderRadius: 12,
     justifyContent: 'center',
+    alignItems: 'center',
   },
-  sendChatBtnText: { color: '#090D1A', fontSize: 12, fontWeight: '900' },
+  sendChatBtnDisabled: {
+    opacity: 0.55,
+  },
+  sendChatBtnText: {
+    color: TOKENS.actionText,
+    fontSize: 12,
+    fontWeight: '800',
+  },
   emptyContainer: {
-    padding: 40,
+    paddingVertical: 44,
+    paddingHorizontal: 28,
     alignItems: 'center',
     backgroundColor: TOKENS.surface,
     borderRadius: 20,
     borderWidth: 1,
     borderColor: TOKENS.border,
   },
-  emptyIcon: { fontSize: 44, marginBottom: 10 },
-  emptyTitle: { color: TOKENS.textPrimary, fontSize: 16, fontWeight: '800' },
+  emptyIconCircle: {
+    width: 68,
+    height: 68,
+    borderRadius: 34,
+    backgroundColor: TOKENS.tealSoft,
+    borderWidth: 1,
+    borderColor: TOKENS.borderActive,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 14,
+  },
+  emptyTitle: {
+    color: TOKENS.textPrimary,
+    fontSize: 17,
+    fontWeight: '800',
+  },
   emptySubtitle: {
     color: TOKENS.textMuted,
-    fontSize: 12,
+    fontSize: 13,
     textAlign: 'center',
     marginTop: 6,
-    lineHeight: 18,
+    lineHeight: 19,
   },
   emptyGoLiveBtn: {
-    marginTop: 16,
-    backgroundColor: '#EF4444',
-    paddingHorizontal: 20,
-    paddingVertical: 10,
+    marginTop: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: TOKENS.teal,
+    paddingHorizontal: 22,
+    paddingVertical: 12,
     borderRadius: 999,
   },
-  emptyGoLiveText: { color: '#FFF', fontSize: 13, fontWeight: '900' },
-  otherStreamsSection: { marginTop: 14 },
-  sectionTitle: { color: TOKENS.textPrimary, fontSize: 14, fontWeight: '800', marginBottom: 10 },
+  emptyGoLiveText: {
+    color: TOKENS.actionText,
+    fontSize: 13,
+    fontWeight: '800',
+  },
+  otherStreamsSection: {
+    marginTop: 8,
+  },
+  sectionTitle: {
+    color: TOKENS.textPrimary,
+    fontSize: 15,
+    fontWeight: '800',
+    marginBottom: 10,
+  },
   streamRowCard: {
     backgroundColor: TOKENS.surface,
-    borderRadius: 14,
+    borderRadius: 16,
     borderWidth: 1,
     borderColor: TOKENS.border,
-    padding: 12,
+    padding: 13,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
-    marginBottom: 8,
+    marginBottom: 10,
   },
   streamRowIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: 'rgba(239, 68, 68, 0.15)',
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: TOKENS.oceanSoft,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  streamRowTitle: { color: TOKENS.textPrimary, fontSize: 13, fontWeight: '800' },
-  streamRowMeta: { color: TOKENS.textMuted, fontSize: 11, marginTop: 2 },
-  streamRowWatch: { color: TOKENS.action, fontSize: 12, fontWeight: '800' },
+  streamRowTitle: {
+    color: TOKENS.textPrimary,
+    fontSize: 13,
+    fontWeight: '800',
+  },
+  streamRowMeta: {
+    color: TOKENS.textMuted,
+    fontSize: 11,
+    marginTop: 2,
+  },
+  watchActionWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+  },
+  streamRowWatch: {
+    color: TOKENS.teal,
+    fontSize: 12,
+    fontWeight: '800',
+  },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.85)',
+    backgroundColor: TOKENS.scrim,
     justifyContent: 'flex-end',
   },
   modalSheet: {
@@ -624,13 +1094,57 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 24,
     padding: 24,
     borderTopWidth: 1,
-    borderColor: TOKENS.border,
+    borderColor: TOKENS.borderStrong,
   },
-  modalTitle: { color: TOKENS.textPrimary, fontSize: 18, fontWeight: '900' },
-  modalSubtitle: { color: TOKENS.textMuted, fontSize: 12, marginTop: 4, marginBottom: 16 },
-  formLabel: { color: TOKENS.textPrimary, fontSize: 12, fontWeight: '800', marginTop: 8, marginBottom: 6 },
+  modalHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  modalTitleGroup: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  modalIconBadge: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: TOKENS.raised,
+    borderWidth: 1,
+    borderColor: TOKENS.border,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  modalCloseIconBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: TOKENS.raised,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  modalTitle: {
+    color: TOKENS.textPrimary,
+    fontSize: 18,
+    fontWeight: '800',
+  },
+  modalSubtitle: {
+    color: TOKENS.textMuted,
+    fontSize: 13,
+    marginTop: 8,
+    marginBottom: 16,
+    lineHeight: 18,
+  },
+  formLabel: {
+    color: TOKENS.textSecondary,
+    fontSize: 12,
+    fontWeight: '800',
+    marginTop: 8,
+    marginBottom: 6,
+  },
   formInput: {
-    backgroundColor: TOKENS.canvas,
+    backgroundColor: TOKENS.raised,
     borderWidth: 1,
     borderColor: TOKENS.border,
     borderRadius: 14,
@@ -640,13 +1154,30 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   startBroadcastBtn: {
-    backgroundColor: '#EF4444',
+    backgroundColor: TOKENS.teal,
     paddingVertical: 14,
     borderRadius: 14,
     alignItems: 'center',
-    marginTop: 20,
+    marginTop: 22,
   },
-  startBroadcastBtnText: { color: '#FFF', fontSize: 14, fontWeight: '900' },
-  closeModalBtn: { paddingVertical: 12, alignItems: 'center', marginTop: 6 },
-  closeModalText: { color: TOKENS.textMuted, fontSize: 13, fontWeight: '700' },
+  startBtnInner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  startBroadcastBtnText: {
+    color: TOKENS.actionText,
+    fontSize: 14,
+    fontWeight: '800',
+  },
+  closeModalBtn: {
+    paddingVertical: 12,
+    alignItems: 'center',
+    marginTop: 6,
+  },
+  closeModalText: {
+    color: TOKENS.textMuted,
+    fontSize: 13,
+    fontWeight: '700',
+  },
 });

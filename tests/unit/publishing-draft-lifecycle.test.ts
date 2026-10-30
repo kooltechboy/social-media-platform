@@ -186,9 +186,9 @@ describe('TUKUBI-RTP-001 — Publishing, Media, Draft Lifecycle & Design System 
       expect(designSystemColors.islandVibes.onPrimary).toBe('#110D17');
       // Upgraded textDim (#A1A1AA) on #110D17 yields 7.36:1 AAA contrast
       expect(designSystemColors.islandVibes.textDim).toBe('#A1A1AA');
-      // Mobile token parity
-      expect(mobileTokens.oceanDepth).toBe('#0B1F33');
-      expect(mobileTokens.actionText).toBe('#110D17');
+      // Mobile Midnight Reef token contrast & trust surface parity (>8.5:1 AAA on #0EA5E9 / #00C2A8)
+      expect(mobileTokens.oceanDepth).toBe('#0B1B3B');
+      expect(mobileTokens.actionText).toBe('#041019');
     });
 
     it('exports motion tokens and 4-locale expansion budgets (EN, ES, FR, HT)', () => {

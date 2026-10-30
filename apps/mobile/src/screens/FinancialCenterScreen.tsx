@@ -18,12 +18,6 @@ import { supabase } from '../lib/supabase';
 
 const Ionicons = ExpoIonicons as unknown as React.ComponentType<any>;
 
-interface LedgerAccount {
-  id: string;
-  account_type: string;
-  currency: string;
-}
-
 interface LedgerEntry {
   id: string;
   transaction_id: string;
@@ -57,7 +51,7 @@ interface TransferRecord {
   idempotency_key: string;
 }
 
-export function FinancialCenterScreen({ navigation }: any) {
+export function FinancialCenterScreen({ navigation: _navigation }: any) {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
@@ -97,7 +91,7 @@ export function FinancialCenterScreen({ navigation }: any) {
         .eq('owner_id', user.id);
 
       if (accounts && accounts.length > 0) {
-        const accountIds = accounts.map(a => a.id);
+        const accountIds = accounts.map((a) => a.id);
         // 2. Aggregate entries strictly via double-entry principles
         const { data: ledgerData } = await supabase
           .from('ledger_entries')
@@ -241,7 +235,10 @@ export function FinancialCenterScreen({ navigation }: any) {
 
       if (error) throw error;
 
-      Alert.alert('Payout Initiated', `Your payout of ${payoutCurrency} $${amountVal.toFixed(2)} has been queued with idempotency verification.`);
+      Alert.alert(
+        'Payout Initiated',
+        `Your payout of ${payoutCurrency} $${amountVal.toFixed(2)} has been queued with idempotency verification.`
+      );
       setPayoutModalVisible(false);
       setPayoutAmount('');
       fetchFinancialData();
@@ -255,7 +252,7 @@ export function FinancialCenterScreen({ navigation }: any) {
   if (loading) {
     return (
       <SafeAreaView style={[styles.safeArea, styles.centerBox]}>
-        <ActivityIndicator size="large" color={TOKENS.action} />
+        <ActivityIndicator size="large" color={TOKENS.teal} />
       </SafeAreaView>
     );
   }
@@ -264,20 +261,21 @@ export function FinancialCenterScreen({ navigation }: any) {
     <SafeAreaView style={styles.safeArea}>
       <ScrollView
         contentContainerStyle={styles.container}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={TOKENS.action} />}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={TOKENS.teal} />}
       >
         {/* Header */}
         <View style={styles.header}>
-          <View>
+          <View style={styles.headerLeft}>
             <Text style={styles.headerTitle}>Financial Center</Text>
-            <Text style={styles.headerSubtitle}>Double-entry cryptographic ledger & Caribbean rails</Text>
+            <Text style={styles.headerSubtitle}>Double-entry cryptographic ledger &amp; Caribbean rails</Text>
           </View>
           <View style={styles.badge}>
+            <Ionicons name="shield-checkmark-outline" size={12} color={TOKENS.teal} />
             <Text style={styles.badgeText}>AUDITED</Text>
           </View>
         </View>
 
-        {/* Ledger Balance Card */}
+        {/* Official Deep Navy Settled-Ledger Balance Hero Card */}
         <View style={styles.overviewCard}>
           <View style={styles.cardHeader}>
             <Text style={styles.cardLabel}>AVAILABLE SETTLED BALANCE</Text>
@@ -297,19 +295,19 @@ export function FinancialCenterScreen({ navigation }: any) {
           <View style={styles.actionButtons}>
             <TouchableOpacity
               style={styles.btnPrimary}
-              activeOpacity={0.8}
+              activeOpacity={0.85}
               onPress={() => setPayoutModalVisible(true)}
             >
-              <Ionicons name="arrow-up-circle" size={18} color={TOKENS.actionText} style={{ marginRight: 6 }} />
+              <Ionicons name="arrow-up-circle" size={18} color={TOKENS.actionText} />
               <Text style={styles.btnPrimaryText}>Request Payout</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
               style={styles.btnSecondary}
-              activeOpacity={0.8}
+              activeOpacity={0.85}
               onPress={() => setConnectModalVisible(true)}
             >
-              <Ionicons name="link-outline" size={18} color={TOKENS.textPrimary} style={{ marginRight: 6 }} />
+              <Ionicons name="link-outline" size={18} color={TOKENS.textPrimary} />
               <Text style={styles.btnSecondaryText}>+ Connect Rail</Text>
             </TouchableOpacity>
           </View>
@@ -318,7 +316,7 @@ export function FinancialCenterScreen({ navigation }: any) {
         {/* APP STORE COMPLIANCE & PAYMENT POLICY ENGINE NOTICE (§3.1.1) */}
         <View style={styles.complianceCard}>
           <View style={styles.complianceHeader}>
-            <Ionicons name="shield-checkmark" size={16} color={TOKENS.success} />
+            <Ionicons name="shield-checkmark" size={16} color={TOKENS.teal} />
             <Text style={styles.complianceTitle}>Mobile Store Policy &amp; Rails Compliance (§3.1.1)</Text>
           </View>
           <Text style={styles.complianceText}>
@@ -340,14 +338,17 @@ export function FinancialCenterScreen({ navigation }: any) {
 
           {connections.length === 0 ? (
             <View style={styles.emptyCard}>
-              <Ionicons name="card-outline" size={32} color={TOKENS.textMuted} />
+              <View style={styles.emptyIconCircle}>
+                <Ionicons name="card-outline" size={26} color={TOKENS.teal} />
+              </View>
               <Text style={styles.emptyCardTitle}>No Payment Methods Connected</Text>
               <Text style={styles.emptyCardSub}>
-                Connect WiPay, CX Pay, or Stripe to receive marketplace payouts and creator tips.
+                Connect WiPay, CX Pay, or Stripe to receive marketplace payouts and creator settlements.
               </Text>
               <TouchableOpacity
                 style={styles.connectRailBtn}
                 onPress={() => setConnectModalVisible(true)}
+                activeOpacity={0.85}
               >
                 <Text style={styles.connectRailBtnText}>Connect Payment Rail</Text>
               </TouchableOpacity>
@@ -357,9 +358,9 @@ export function FinancialCenterScreen({ navigation }: any) {
               <View key={conn.id} style={styles.methodCard}>
                 <View style={styles.methodIconContainer}>
                   <Ionicons
-                    name={conn.provider_id === 'stripe' ? 'card' : 'globe-outline'}
+                    name={conn.provider_id === 'stripe' ? 'card-outline' : 'globe-outline'}
                     size={20}
-                    color={TOKENS.action}
+                    color={TOKENS.teal}
                   />
                 </View>
                 <View style={styles.methodInfo}>
@@ -381,15 +382,17 @@ export function FinancialCenterScreen({ navigation }: any) {
         {/* SECTION 2: RECENT LEDGER ENTRIES & PAYOUTS */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Ledger Activity & Transfers</Text>
+            <Text style={styles.sectionTitle}>Ledger Activity &amp; Transfers</Text>
           </View>
 
           {entries.length === 0 && transfers.length === 0 ? (
             <View style={styles.emptyCard}>
-              <Ionicons name="receipt-outline" size={32} color={TOKENS.textMuted} />
+              <View style={styles.emptyIconCircle}>
+                <Ionicons name="receipt-outline" size={26} color={TOKENS.action} />
+              </View>
               <Text style={styles.emptyCardTitle}>No Transactions Yet</Text>
               <Text style={styles.emptyCardSub}>
-                Sales, creator subscriptions, sound royalties, and tips will generate immutable ledger records here.
+                Sales, creator subscriptions, sound royalties, and payouts generate immutable double-entry records here.
               </Text>
             </View>
           ) : (
@@ -400,17 +403,28 @@ export function FinancialCenterScreen({ navigation }: any) {
                   <View key={entry.id} style={styles.entryRow}>
                     <View style={[styles.entryIcon, isCredit ? styles.entryCredit : styles.entryDebit]}>
                       <Ionicons
-                        name={isCredit ? 'arrow-down-circle' : 'arrow-up-circle'}
+                        name={isCredit ? 'arrow-down-circle-outline' : 'arrow-up-circle-outline'}
                         size={18}
-                        color={isCredit ? TOKENS.success : TOKENS.accent}
+                        color={isCredit ? TOKENS.success : TOKENS.textSecondary}
                       />
                     </View>
-                    <View style={{ flex: 1 }}>
-                      <Text style={styles.entryDesc}>{entry.description || (isCredit ? 'Credit Deposit' : 'Debit Charge')}</Text>
-                      <Text style={styles.entryDate}>{new Date(entry.created_at).toLocaleDateString()}</Text>
+                    <View style={styles.entryMeta}>
+                      <Text style={styles.entryDesc}>
+                        {entry.description || (isCredit ? 'Credit Settlement' : 'Debit Entry')}
+                      </Text>
+                      <View style={styles.entrySubRow}>
+                        <View style={[styles.entryTypePill, isCredit ? styles.creditPill : styles.debitPill]}>
+                          <Text style={[styles.entryTypeText, isCredit ? styles.creditPillText : styles.debitPillText]}>
+                            {isCredit ? 'CREDIT' : 'DEBIT'}
+                          </Text>
+                        </View>
+                        <Text style={styles.entryDate}>
+                          {new Date(entry.created_at).toLocaleDateString()}
+                        </Text>
+                      </View>
                     </View>
                     <Text style={[styles.entryAmount, isCredit ? styles.amountCredit : styles.amountDebit]}>
-                      {isCredit ? '+' : ''}${Math.abs(Number(entry.amount)).toFixed(2)}
+                      {isCredit ? '+' : '-'}${Math.abs(Number(entry.amount)).toFixed(2)}
                     </Text>
                   </View>
                 );
@@ -419,11 +433,13 @@ export function FinancialCenterScreen({ navigation }: any) {
               {transfers.map((tx) => (
                 <View key={tx.id} style={styles.entryRow}>
                   <View style={[styles.entryIcon, styles.entryPending]}>
-                    <Ionicons name="hourglass-outline" size={18} color={TOKENS.textMuted} />
+                    <Ionicons name="time-outline" size={18} color={TOKENS.action} />
                   </View>
-                  <View style={{ flex: 1 }}>
+                  <View style={styles.entryMeta}>
                     <Text style={styles.entryDesc}>Transfer: {tx.provider_id.toUpperCase()}</Text>
-                    <Text style={styles.entryDate}>{new Date(tx.created_at).toLocaleDateString()} • {tx.status.toUpperCase()}</Text>
+                    <Text style={styles.entryDate}>
+                      {new Date(tx.created_at).toLocaleDateString()} • {tx.status.toUpperCase()}
+                    </Text>
                   </View>
                   <Text style={styles.entryAmount}>
                     {tx.currency} ${(tx.amount_minor / 100).toFixed(2)}
@@ -437,7 +453,7 @@ export function FinancialCenterScreen({ navigation }: any) {
         {/* Protection & Compliance Guarantee */}
         <View style={styles.protectionCard}>
           <View style={styles.protHeader}>
-            <Ionicons name="shield-checkmark" size={20} color={TOKENS.sea} />
+            <Ionicons name="lock-closed-outline" size={18} color={TOKENS.action} />
             <Text style={styles.protectionTitle}>NASA-Grade Double-Entry Security</Text>
           </View>
           <Text style={styles.protectionText}>
@@ -457,8 +473,13 @@ export function FinancialCenterScreen({ navigation }: any) {
           <View style={styles.modalSheet}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Connect Payment Rail</Text>
-              <TouchableOpacity onPress={() => setConnectModalVisible(false)}>
-                <Ionicons name="close" size={24} color={TOKENS.textPrimary} />
+              <TouchableOpacity
+                onPress={() => setConnectModalVisible(false)}
+                style={styles.modalCloseBtn}
+                accessibilityRole="button"
+                accessibilityLabel="Close connect rail modal"
+              >
+                <Ionicons name="close" size={20} color={TOKENS.textMuted} />
               </TouchableOpacity>
             </View>
 
@@ -481,7 +502,7 @@ export function FinancialCenterScreen({ navigation }: any) {
             <TextInput
               style={styles.modalInput}
               placeholder="e.g. payout@islandaccount.com or bank IBAN"
-              placeholderTextColor={TOKENS.textMuted}
+              placeholderTextColor={TOKENS.textDim}
               value={accountIdentifier}
               onChangeText={setAccountIdentifier}
               autoCapitalize="none"
@@ -513,8 +534,13 @@ export function FinancialCenterScreen({ navigation }: any) {
           <View style={styles.modalSheet}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Request Payout</Text>
-              <TouchableOpacity onPress={() => setPayoutModalVisible(false)}>
-                <Ionicons name="close" size={24} color={TOKENS.textPrimary} />
+              <TouchableOpacity
+                onPress={() => setPayoutModalVisible(false)}
+                style={styles.modalCloseBtn}
+                accessibilityRole="button"
+                accessibilityLabel="Close request payout modal"
+              >
+                <Ionicons name="close" size={20} color={TOKENS.textMuted} />
               </TouchableOpacity>
             </View>
 
@@ -522,7 +548,7 @@ export function FinancialCenterScreen({ navigation }: any) {
             <TextInput
               style={styles.modalInput}
               placeholder="Amount (e.g. 50.00)"
-              placeholderTextColor={TOKENS.textMuted}
+              placeholderTextColor={TOKENS.textDim}
               keyboardType="decimal-pad"
               value={payoutAmount}
               onChangeText={setPayoutAmount}
@@ -564,32 +590,38 @@ export function FinancialCenterScreen({ navigation }: any) {
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: TOKENS.canvas },
   centerBox: { alignItems: 'center', justifyContent: 'center' },
-  container: { padding: 18, paddingBottom: 40 },
+  container: { padding: 18, paddingBottom: 44 },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 20,
+    marginBottom: 18,
+    gap: 12,
   },
-  headerTitle: { color: TOKENS.textPrimary, fontSize: 22, fontWeight: '900' },
+  headerLeft: { flex: 1 },
+  headerTitle: { color: TOKENS.textPrimary, fontSize: 22, fontWeight: '800', letterSpacing: -0.4 },
   headerSubtitle: { color: TOKENS.textMuted, fontSize: 12, marginTop: 2 },
   badge: {
-    backgroundColor: 'rgba(255, 87, 34, 0.15)',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: TOKENS.tealSoft,
     paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
+    paddingVertical: 5,
+    borderRadius: 999,
     borderWidth: 1,
-    borderColor: TOKENS.action,
+    borderColor: TOKENS.borderActive,
   },
-  badgeText: { color: TOKENS.action, fontSize: 10, fontWeight: '800' },
+  badgeText: { color: TOKENS.teal, fontSize: 10, fontWeight: '800', letterSpacing: 0.5 },
 
+  // Deep Navy Settled-Ledger Hero Card
   overviewCard: {
-    backgroundColor: TOKENS.surface,
+    backgroundColor: TOKENS.oceanDepth,
     borderRadius: 22,
     borderWidth: 1,
-    borderColor: TOKENS.border,
+    borderColor: TOKENS.borderActive,
     padding: 20,
-    marginBottom: 26,
+    marginBottom: 20,
   },
   cardHeader: {
     flexDirection: 'row',
@@ -598,42 +630,53 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   cardLabel: { color: TOKENS.textMuted, fontSize: 11, fontWeight: '800', letterSpacing: 0.8 },
-  liveIndicator: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  liveIndicator: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: TOKENS.tealSoft,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 999,
+  },
   liveDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: TOKENS.success },
-  statusLabel: { color: TOKENS.success, fontSize: 11, fontWeight: '800' },
+  statusLabel: { color: TOKENS.success, fontSize: 10, fontWeight: '800', letterSpacing: 0.4 },
   balanceAmount: { color: TOKENS.textPrimary, fontSize: 34, fontWeight: '900', marginVertical: 4 },
-  balanceCurrency: { fontSize: 18, color: TOKENS.action, fontWeight: '700' },
-  cardSubtitle: { color: TOKENS.textMuted, fontSize: 12, lineHeight: 18, marginBottom: 18 },
+  balanceCurrency: { fontSize: 17, color: TOKENS.teal, fontWeight: '700' },
+  cardSubtitle: { color: TOKENS.textSecondary, fontSize: 12, lineHeight: 18, marginBottom: 18 },
 
   actionButtons: { flexDirection: 'row', gap: 10 },
   btnPrimary: {
     flex: 1,
-    backgroundColor: TOKENS.action,
+    backgroundColor: TOKENS.teal,
     borderRadius: 14,
     paddingVertical: 13,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    gap: 6,
   },
   btnPrimaryText: { color: TOKENS.actionText, fontWeight: '800', fontSize: 13 },
   btnSecondary: {
     flex: 1,
     backgroundColor: TOKENS.raised,
     borderWidth: 1,
-    borderColor: TOKENS.border,
+    borderColor: TOKENS.borderStrong,
     borderRadius: 14,
     paddingVertical: 13,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    gap: 6,
   },
-  btnSecondaryText: { color: TOKENS.textPrimary, fontWeight: '800', fontSize: 13 },
+  btnSecondaryText: { color: TOKENS.textPrimary, fontWeight: '700', fontSize: 13 },
 
+  // Store Policy Compliance Notice
   complianceCard: {
-    backgroundColor: 'rgba(5, 150, 105, 0.08)',
+    backgroundColor: TOKENS.surface,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: 'rgba(5, 150, 105, 0.3)',
+    borderColor: TOKENS.borderActive,
     padding: 16,
     marginBottom: 24,
   },
@@ -644,26 +687,33 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   complianceTitle: {
-    color: TOKENS.success,
+    color: TOKENS.teal,
     fontSize: 13,
     fontWeight: '800',
-    letterSpacing: 0.3,
+    letterSpacing: 0.2,
+    flex: 1,
   },
   complianceText: {
-    color: TOKENS.textMuted,
+    color: TOKENS.textSecondary,
     fontSize: 12,
     lineHeight: 18,
-    marginTop: 4,
+    marginTop: 5,
   },
   complianceBold: {
     color: TOKENS.textPrimary,
     fontWeight: '700',
   },
 
-  section: { marginBottom: 26 },
-  sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
-  sectionTitle: { color: TOKENS.textPrimary, fontSize: 15, fontWeight: '800' },
-  addText: { color: TOKENS.action, fontSize: 13, fontWeight: '700' },
+  section: { marginBottom: 24 },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+    gap: 10,
+  },
+  sectionTitle: { color: TOKENS.textPrimary, fontSize: 14, fontWeight: '800', flex: 1 },
+  addText: { color: TOKENS.teal, fontSize: 13, fontWeight: '800' },
 
   emptyCard: {
     backgroundColor: TOKENS.surface,
@@ -673,13 +723,23 @@ const styles = StyleSheet.create({
     padding: 24,
     alignItems: 'center',
   },
-  emptyCardTitle: { color: TOKENS.textPrimary, fontSize: 15, fontWeight: '800', marginTop: 10, marginBottom: 4 },
-  emptyCardSub: { color: TOKENS.textMuted, fontSize: 12, textAlign: 'center', lineHeight: 16, marginBottom: 14 },
+  emptyIconCircle: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    backgroundColor: TOKENS.tealSoft,
+    borderWidth: 1,
+    borderColor: TOKENS.borderActive,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  emptyCardTitle: { color: TOKENS.textPrimary, fontSize: 15, fontWeight: '800', marginTop: 12, marginBottom: 4 },
+  emptyCardSub: { color: TOKENS.textMuted, fontSize: 12, textAlign: 'center', lineHeight: 18, marginBottom: 16 },
   connectRailBtn: {
-    backgroundColor: TOKENS.action,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 12,
+    backgroundColor: TOKENS.teal,
+    paddingHorizontal: 18,
+    paddingVertical: 10,
+    borderRadius: 999,
   },
   connectRailBtnText: { color: TOKENS.actionText, fontSize: 12, fontWeight: '800' },
 
@@ -694,10 +754,12 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   methodIconContainer: {
-    width: 38,
-    height: 38,
-    borderRadius: 10,
-    backgroundColor: TOKENS.raised,
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: TOKENS.tealSoft,
+    borderWidth: 1,
+    borderColor: TOKENS.borderActive,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
@@ -706,13 +768,16 @@ const styles = StyleSheet.create({
   methodTitle: { color: TOKENS.textPrimary, fontSize: 14, fontWeight: '700', marginBottom: 2 },
   methodSubtitle: { color: TOKENS.textMuted, fontSize: 11 },
   activePill: {
-    backgroundColor: 'rgba(52, 199, 89, 0.15)',
-    paddingHorizontal: 8,
+    backgroundColor: TOKENS.tealSoft,
+    borderWidth: 1,
+    borderColor: TOKENS.borderActive,
+    paddingHorizontal: 9,
     paddingVertical: 3,
-    borderRadius: 8,
+    borderRadius: 999,
   },
   activePillText: { color: TOKENS.success, fontSize: 11, fontWeight: '800' },
 
+  // Double-entry ledger rows
   entryRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -720,46 +785,70 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: TOKENS.border,
     borderRadius: 14,
-    padding: 12,
+    padding: 13,
     marginBottom: 8,
     gap: 12,
   },
   entryIcon: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  entryCredit: { backgroundColor: 'rgba(52, 199, 89, 0.15)' },
-  entryDebit: { backgroundColor: 'rgba(255, 87, 34, 0.15)' },
-  entryPending: { backgroundColor: TOKENS.raised },
+  entryCredit: {
+    backgroundColor: TOKENS.tealSoft,
+    borderWidth: 1,
+    borderColor: TOKENS.borderActive,
+  },
+  entryDebit: {
+    backgroundColor: TOKENS.raised,
+    borderWidth: 1,
+    borderColor: TOKENS.borderStrong,
+  },
+  entryPending: {
+    backgroundColor: TOKENS.oceanSoft,
+  },
+  entryMeta: { flex: 1 },
   entryDesc: { color: TOKENS.textPrimary, fontSize: 13, fontWeight: '700' },
-  entryDate: { color: TOKENS.textMuted, fontSize: 11, marginTop: 2 },
+  entrySubRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 4 },
+  entryTypePill: {
+    paddingHorizontal: 6,
+    paddingVertical: 1.5,
+    borderRadius: 6,
+  },
+  creditPill: { backgroundColor: TOKENS.tealSoft },
+  debitPill: { backgroundColor: TOKENS.raised },
+  entryTypeText: { fontSize: 9, fontWeight: '800', letterSpacing: 0.4 },
+  creditPillText: { color: TOKENS.success },
+  debitPillText: { color: TOKENS.textSecondary },
+  entryDate: { color: TOKENS.textDim, fontSize: 11 },
   entryAmount: { color: TOKENS.textPrimary, fontSize: 14, fontWeight: '800' },
   amountCredit: { color: TOKENS.success },
-  amountDebit: { color: TOKENS.accent },
+  amountDebit: { color: TOKENS.textSecondary },
 
   protectionCard: {
-    backgroundColor: TOKENS.surface,
+    backgroundColor: TOKENS.oceanDepth,
     borderRadius: 16,
     padding: 16,
     borderWidth: 1,
-    borderColor: TOKENS.sea + '40',
+    borderColor: TOKENS.borderStrong,
   },
   protHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 6 },
   protectionTitle: { color: TOKENS.textPrimary, fontSize: 13, fontWeight: '800' },
-  protectionText: { color: TOKENS.textMuted, fontSize: 11, lineHeight: 16 },
+  protectionText: { color: TOKENS.textSecondary, fontSize: 11, lineHeight: 17 },
 
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.6)',
+    backgroundColor: TOKENS.scrim,
     justifyContent: 'flex-end',
   },
   modalSheet: {
-    backgroundColor: TOKENS.canvas,
+    backgroundColor: TOKENS.surface,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
+    borderTopWidth: 1,
+    borderColor: TOKENS.borderStrong,
     padding: 20,
     paddingBottom: 36,
   },
@@ -767,30 +856,38 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 14,
   },
   modalTitle: { color: TOKENS.textPrimary, fontSize: 18, fontWeight: '800' },
-  inputLabel: { color: TOKENS.textMuted, fontSize: 12, fontWeight: '700', marginBottom: 8, marginTop: 10 },
+  modalCloseBtn: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: TOKENS.raised,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  inputLabel: { color: TOKENS.textSecondary, fontSize: 12, fontWeight: '700', marginBottom: 8, marginTop: 10 },
   providerPicker: { flexDirection: 'row', gap: 8, marginBottom: 12 },
   providerBtn: {
     flex: 1,
     paddingVertical: 10,
     alignItems: 'center',
     borderRadius: 10,
-    backgroundColor: TOKENS.surface,
+    backgroundColor: TOKENS.raised,
     borderWidth: 1,
     borderColor: TOKENS.border,
   },
   providerBtnActive: {
-    borderColor: TOKENS.action,
-    backgroundColor: 'rgba(255, 87, 34, 0.15)',
+    borderColor: TOKENS.borderActive,
+    backgroundColor: TOKENS.tealSoft,
   },
   providerBtnText: { color: TOKENS.textMuted, fontSize: 11, fontWeight: '700' },
-  providerBtnTextActive: { color: TOKENS.action, fontWeight: '800' },
+  providerBtnTextActive: { color: TOKENS.teal, fontWeight: '800' },
   modalInput: {
-    backgroundColor: TOKENS.surface,
+    backgroundColor: TOKENS.raised,
     borderWidth: 1,
-    borderColor: TOKENS.border,
+    borderColor: TOKENS.borderStrong,
     borderRadius: 12,
     paddingHorizontal: 14,
     paddingVertical: 12,
@@ -799,7 +896,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   submitBtn: {
-    backgroundColor: TOKENS.action,
+    backgroundColor: TOKENS.teal,
     borderRadius: 14,
     paddingVertical: 14,
     alignItems: 'center',

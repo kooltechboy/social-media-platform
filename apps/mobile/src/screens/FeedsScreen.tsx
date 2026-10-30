@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   StyleSheet,
   Text,
@@ -8,19 +8,31 @@ import {
   RefreshControl,
   SafeAreaView,
   ActivityIndicator,
+  Image,
+  Share,
+  Alert,
 } from 'react-native';
+import { Ionicons as ExpoIonicons } from '@expo/vector-icons';
 import { TOKENS } from '../theme/tokens';
 import { supabase, type MobilePost } from '../lib/supabase';
 
-type FeedFilter = 'all' | 'friends' | 'following' | 'favorites' | 'communities' | 'caribbean';
+type IoniconName = keyof typeof ExpoIonicons.glyphMap;
+const Ionicons = ExpoIonicons as unknown as React.ComponentType<{
+  name: IoniconName;
+  size?: number;
+  color?: string;
+  style?: any;
+}>;
 
-const FILTERS: Array<{ id: FeedFilter; label: string; icon: string }> = [
-  { id: 'all', label: 'All Feeds', icon: '📑' },
-  { id: 'friends', label: 'Friends', icon: '👥' },
-  { id: 'following', label: 'Following', icon: '⭐' },
-  { id: 'favorites', label: 'Favorites', icon: '🌟' },
-  { id: 'communities', label: 'Hubs', icon: '🌴' },
-  { id: 'caribbean', label: 'Islands', icon: '🌊' },
+type FeedFilter = 'all' | 'following' | 'friends' | 'favorites' | 'communities' | 'caribbean';
+
+const FILTERS: Array<{ id: FeedFilter; label: string }> = [
+  { id: 'all', label: 'All' },
+  { id: 'following', label: 'Following' },
+  { id: 'friends', label: 'Friends' },
+  { id: 'favorites', label: 'Favorites' },
+  { id: 'communities', label: 'Communities' },
+  { id: 'caribbean', label: 'Caribbean' },
 ];
 
 export function FeedsScreen({ navigation }: any) {
@@ -28,10 +40,14 @@ export function FeedsScreen({ navigation }: any) {
   const [posts, setPosts] = useState<MobilePost[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [likedPosts, setLikedPosts] = useState<Record<string, boolean>>({});
+  const [savedPosts, setSavedPosts] = useState<Record<string, boolean>>({});
 
-  const fetchFeedPosts = async () => {
+  const fetchFeedPosts = useCallback(async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       const currentUserId = user?.id;
 
       let query = supabase
@@ -70,9 +86,20 @@ export function FeedsScreen({ navigation }: any) {
           query = query.in('author_id', ['00000000-0000-0000-0000-000000000000']);
         }
       } else if (activeFilter === 'friends' && currentUserId) {
-        const { data: f1 } = await supabase.from('friendships').select('addressee_id').eq('requester_id', currentUserId).eq('status', 'accepted');
-        const { data: f2 } = await supabase.from('friendships').select('requester_id').eq('addressee_id', currentUserId).eq('status', 'accepted');
-        const friendIds = [...(f1?.map((f: any) => f.addressee_id) || []), ...(f2?.map((f: any) => f.requester_id) || [])];
+        const { data: f1 } = await supabase
+          .from('friendships')
+          .select('addressee_id')
+          .eq('requester_id', currentUserId)
+          .eq('status', 'accepted');
+        const { data: f2 } = await supabase
+          .from('friendships')
+          .select('requester_id')
+          .eq('addressee_id', currentUserId)
+          .eq('status', 'accepted');
+        const friendIds = [
+          ...(f1?.map((f: any) => f.addressee_id) || []),
+          ...(f2?.map((f: any) => f.requester_id) || []),
+        ];
         if (friendIds.length > 0) {
           query = query.in('author_id', friendIds);
         } else {
@@ -107,16 +134,19 @@ export function FeedsScreen({ navigation }: any) {
       const { data, error } = await query;
 
       if (!error && data) {
-        const formatted = data.map((item: any) => {
+        const formatted: MobilePost[] = data.map((item: any) => {
           const profile = Array.isArray(item.profiles) ? item.profiles[0] : item.profiles;
           return {
             id: item.id,
             author: profile?.display_name || profile?.username || 'Caribbean Member',
             authorHandle: profile?.username ? `@${profile.username}` : '@member',
             authorAvatar: profile?.avatar_url || null,
-            isVerified: profile?.is_verified || false,
+            isVerified: Boolean(profile?.is_verified),
             location: item.location_name || 'Caribbean',
-            time: new Date(item.created_at).toLocaleDateString(),
+            time: new Date(item.created_at).toLocaleDateString(undefined, {
+              month: 'short',
+              day: 'numeric',
+            }),
             body: item.content || '',
             likes: item.likes_count || 0,
             comments: item.comments_count || 0,
@@ -131,55 +161,122 @@ export function FeedsScreen({ navigation }: any) {
       setLoading(false);
       setRefreshing(false);
     }
-  };
+  }, [activeFilter]);
 
   useEffect(() => {
     setLoading(true);
     fetchFeedPosts();
-  }, [activeFilter]);
+  }, [fetchFeedPosts]);
 
   const onRefresh = async () => {
     setRefreshing(true);
     await fetchFeedPosts();
   };
 
+  const handleToggleLike = async (postId: string) => {
+    const isCurrentlyLiked = Boolean(likedPosts[postId]);
+    setLikedPosts((prev) => ({ ...prev, [postId]: !isCurrentlyLiked }));
+    setPosts((prev) =>
+      prev.map((p) =>
+        p.id === postId
+          ? { ...p, likes: Math.max(0, isCurrentlyLiked ? p.likes - 1 : p.likes + 1) }
+          : p
+      )
+    );
+
+    try {
+      const { data: userData } = await supabase.auth.getUser();
+      if (userData?.user) {
+        if (!isCurrentlyLiked) {
+          await supabase.from('post_reactions').insert({
+            post_id: postId,
+            profile_id: userData.user.id,
+            reaction_type: 'like',
+          });
+        } else {
+          await supabase
+            .from('post_reactions')
+            .delete()
+            .eq('post_id', postId)
+            .eq('profile_id', userData.user.id);
+        }
+      }
+    } catch {
+      // Non-blocking optimistic sync
+    }
+  };
+
+  const handleToggleSave = (postId: string) => {
+    setSavedPosts((prev) => ({ ...prev, [postId]: !prev[postId] }));
+  };
+
+  const handleSharePost = async (post: MobilePost) => {
+    try {
+      await Share.share({
+        message: `${post.author} on TUKUBI: "${post.body}"\nhttps://tukubi.com/post/${post.id}`,
+      });
+    } catch {
+      // Cancelled
+    }
+  };
+
+  const isFavoritesActive = activeFilter === 'favorites';
+
   return (
     <SafeAreaView style={styles.container}>
-      {/* Top Feeds Subheader */}
+      {/* Clean Midnight Reef Header */}
       <View style={styles.header}>
-        <View>
+        <View style={styles.headerTextBlock}>
           <Text style={styles.headerTitle}>Your Feeds</Text>
-          <Text style={styles.headerSubtitle}>Pure timeline of people and hubs you follow</Text>
+          <Text style={styles.headerSubtitle}>
+            Chronological stream of creators and communities you follow
+          </Text>
         </View>
         <TouchableOpacity
-          style={styles.favoritesButton}
-          onPress={() => setActiveFilter('favorites')}
+          style={[styles.favoritesToggle, isFavoritesActive && styles.favoritesToggleActive]}
+          onPress={() => setActiveFilter(isFavoritesActive ? 'all' : 'favorites')}
+          activeOpacity={0.8}
           accessibilityRole="button"
-          accessibilityLabel="Filter by Favorites"
+          accessibilityState={{ selected: isFavoritesActive }}
+          accessibilityLabel="Toggle Favorites filter"
         >
-          <Text style={styles.favoritesButtonText}>⭐ Favorites</Text>
+          <Ionicons
+            name={isFavoritesActive ? 'star' : 'star-outline'}
+            size={15}
+            color={isFavoritesActive ? TOKENS.accent : TOKENS.textSecondary}
+          />
+          <Text
+            style={[
+              styles.favoritesToggleText,
+              isFavoritesActive && styles.favoritesToggleTextActive,
+            ]}
+          >
+            Favorites
+          </Text>
         </TouchableOpacity>
       </View>
 
-      {/* Horizontal Filter Pill Bar */}
-      <View style={styles.filterBar}>
+      {/* Sleek Underline Mode Tabs */}
+      <View style={styles.tabsBar}>
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.filterScroll}
+          contentContainerStyle={styles.tabsScroll}
+          accessibilityRole="tablist"
         >
           {FILTERS.map((item) => {
             const isActive = activeFilter === item.id;
             return (
               <TouchableOpacity
                 key={item.id}
-                style={[styles.filterPill, isActive && styles.filterPillActive]}
+                style={[styles.modeTab, isActive && styles.modeTabActive]}
                 onPress={() => setActiveFilter(item.id)}
-                accessibilityRole="button"
+                activeOpacity={0.75}
+                accessibilityRole="tab"
+                accessibilityState={{ selected: isActive }}
                 accessibilityLabel={item.label}
               >
-                <Text style={styles.filterIcon}>{item.icon}</Text>
-                <Text style={[styles.filterText, isActive && styles.filterTextActive]}>
+                <Text style={[styles.modeTabText, isActive && styles.modeTabTextActive]}>
                   {item.label}
                 </Text>
               </TouchableOpacity>
@@ -188,75 +285,154 @@ export function FeedsScreen({ navigation }: any) {
         </ScrollView>
       </View>
 
-      {/* Feed Posts Stream */}
+      {/* Editorial Feed Stream */}
       <ScrollView
         style={styles.feedScroll}
         contentContainerStyle={styles.feedContent}
+        showsVerticalScrollIndicator={false}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={TOKENS.action} />
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={TOKENS.teal} />
         }
       >
         {loading && !refreshing ? (
           <View style={styles.centerBox}>
-            <ActivityIndicator size="large" color={TOKENS.action} />
+            <ActivityIndicator size="large" color={TOKENS.teal} />
           </View>
         ) : posts.length === 0 ? (
           <View style={styles.emptyCard}>
-            <Text style={styles.emptyIcon}>🏝️</Text>
-            <Text style={styles.emptyTitle}>No Posts in this Feed</Text>
+            <View style={styles.emptyIconCircle}>
+              <Ionicons name="newspaper-outline" size={26} color={TOKENS.teal} />
+            </View>
+            <Text style={styles.emptyTitle}>No updates in this feed</Text>
             <Text style={styles.emptyText}>
               {activeFilter === 'friends'
-                ? 'You have not added any mutual friends yet, or they have not posted recently.'
+                ? 'You have not connected with mutual friends yet, or they have not posted recently.'
                 : activeFilter === 'favorites'
-                ? 'You have no favorited creators or pages yet. Tap the star on any profile to add them.'
-                : 'No recent updates available for this filter.'}
+                ? 'No favorited creators yet. Star creators across TUKUBI to prioritize them here.'
+                : 'No recent posts match this filter.'}
             </Text>
             <TouchableOpacity
               style={styles.discoverButton}
               onPress={() => navigation?.navigate('Explore')}
+              activeOpacity={0.85}
+              accessibilityRole="button"
+              accessibilityLabel="Explore Creators and Communities"
             >
-              <Text style={styles.discoverButtonText}>Discover People &amp; Creators</Text>
+              <Ionicons name="compass-outline" size={16} color={TOKENS.actionText} />
+              <Text style={styles.discoverButtonText}>Discover Creators</Text>
             </TouchableOpacity>
           </View>
         ) : (
-          posts.map((post) => (
-            <View key={post.id} style={styles.postCard}>
-              {/* Post Header */}
-              <View style={styles.postHeader}>
-                <View style={styles.avatar}>
-                  <Text style={styles.avatarText}>{post.author.slice(0, 1).toUpperCase()}</Text>
-                </View>
-                <View style={styles.authorMeta}>
-                  <View style={styles.nameRow}>
-                    <Text style={styles.authorName}>{post.author}</Text>
-                    {post.isVerified && <Text style={styles.verifiedBadge}>✓</Text>}
+          posts.map((post) => {
+            const isLiked = Boolean(likedPosts[post.id]);
+            const isSaved = Boolean(savedPosts[post.id]);
+
+            return (
+              <View key={post.id} style={styles.postCard}>
+                {/* 2-Line Editorial Author Header */}
+                <View style={styles.postHeader}>
+                  {post.authorAvatar ? (
+                    <Image source={{ uri: post.authorAvatar }} style={styles.avatarImg} />
+                  ) : (
+                    <View style={styles.avatar}>
+                      <Text style={styles.avatarText}>
+                        {post.author.slice(0, 1).toUpperCase()}
+                      </Text>
+                    </View>
+                  )}
+
+                  <View style={styles.authorMeta}>
+                    <View style={styles.nameRow}>
+                      <Text style={styles.authorName} numberOfLines={1}>
+                        {post.author}
+                      </Text>
+                      {post.isVerified && (
+                        <Ionicons name="checkmark-circle" size={15} color={TOKENS.teal} />
+                      )}
+                    </View>
+                    <Text style={styles.authorSubline} numberOfLines={1}>
+                      {post.authorHandle || '@member'} · {post.time} · {post.location}
+                    </Text>
                   </View>
-                  <Text style={styles.authorHandle}>
-                    {post.authorHandle} • {post.time}
-                  </Text>
+                </View>
+
+                {/* Post Body */}
+                {Boolean(post.body) && <Text style={styles.postBody}>{post.body}</Text>}
+
+                {/* Media Attachment */}
+                {post.mediaUrls && post.mediaUrls.length > 0 && (
+                  <Image
+                    source={{ uri: post.mediaUrls[0] }}
+                    style={styles.postMedia}
+                    resizeMode="cover"
+                  />
+                )}
+
+                {/* Crisp Ionicons Engagement Bar */}
+                <View style={styles.actionRow}>
+                  <TouchableOpacity
+                    style={styles.actionButton}
+                    onPress={() => handleToggleLike(post.id)}
+                    activeOpacity={0.75}
+                    accessibilityRole="button"
+                    accessibilityLabel="Like post"
+                  >
+                    <Ionicons
+                      name={isLiked ? 'heart' : 'heart-outline'}
+                      size={18}
+                      color={isLiked ? TOKENS.danger : TOKENS.textMuted}
+                    />
+                    <Text
+                      style={[
+                        styles.actionText,
+                        isLiked && { color: TOKENS.danger, fontWeight: '700' },
+                      ]}
+                    >
+                      {post.likes}
+                    </Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={styles.actionButton}
+                    onPress={() =>
+                      Alert.alert('Comments', `Discussion on post by ${post.author}`)
+                    }
+                    activeOpacity={0.75}
+                    accessibilityRole="button"
+                    accessibilityLabel="Comment on post"
+                  >
+                    <Ionicons name="chatbubble-outline" size={17} color={TOKENS.textMuted} />
+                    <Text style={styles.actionText}>{post.comments}</Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={styles.actionButton}
+                    onPress={() => handleSharePost(post)}
+                    activeOpacity={0.75}
+                    accessibilityRole="button"
+                    accessibilityLabel="Share post"
+                  >
+                    <Ionicons name="arrow-redo-outline" size={18} color={TOKENS.textMuted} />
+                    <Text style={styles.actionText}>Share</Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={styles.bookmarkBtn}
+                    onPress={() => handleToggleSave(post.id)}
+                    activeOpacity={0.75}
+                    accessibilityRole="button"
+                    accessibilityLabel={isSaved ? 'Remove bookmark' : 'Bookmark post'}
+                  >
+                    <Ionicons
+                      name={isSaved ? 'bookmark' : 'bookmark-outline'}
+                      size={18}
+                      color={isSaved ? TOKENS.teal : TOKENS.textMuted}
+                    />
+                  </TouchableOpacity>
                 </View>
               </View>
-
-              {/* Post Body */}
-              <Text style={styles.postBody}>{post.body}</Text>
-
-              {/* Action Strip */}
-              <View style={styles.actionRow}>
-                <TouchableOpacity style={styles.actionButton}>
-                  <Text style={styles.actionIcon}>❤️</Text>
-                  <Text style={styles.actionText}>{post.likes}</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.actionButton}>
-                  <Text style={styles.actionIcon}>💬</Text>
-                  <Text style={styles.actionText}>{post.comments}</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.actionButton}>
-                  <Text style={styles.actionIcon}>🔁</Text>
-                  <Text style={styles.actionText}>Share</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          ))
+            );
+          })
         )}
       </ScrollView>
     </SafeAreaView>
@@ -274,144 +450,170 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 16,
     paddingTop: 12,
-    paddingBottom: 8,
+    paddingBottom: 10,
+    gap: 12,
+  },
+  headerTextBlock: {
+    flex: 1,
   },
   headerTitle: {
-    color: '#FFFFFF',
-    fontSize: 20,
-    fontWeight: '900',
+    color: TOKENS.textPrimary,
+    fontSize: 19,
+    fontWeight: '800',
   },
   headerSubtitle: {
     color: TOKENS.textMuted,
-    fontSize: 11,
+    fontSize: 12,
     marginTop: 2,
   },
-  favoritesButton: {
-    backgroundColor: 'rgba(255, 180, 0, 0.15)',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 180, 0, 0.3)',
-    borderRadius: 16,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-  },
-  favoritesButtonText: {
-    color: '#FFB400',
-    fontSize: 11,
-    fontWeight: '800',
-  },
-  filterBar: {
-    paddingVertical: 6,
-    borderBottomWidth: 1,
-    borderBottomColor: TOKENS.border,
-  },
-  filterScroll: {
-    paddingHorizontal: 12,
-    gap: 6,
-  },
-  filterPill: {
+  favoritesToggle: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 20,
-    backgroundColor: TOKENS.surface,
+    gap: 6,
+    backgroundColor: TOKENS.raised,
     borderWidth: 1,
     borderColor: TOKENS.border,
+    borderRadius: 11,
+    paddingHorizontal: 12,
+    minHeight: 38,
   },
-  filterPillActive: {
-    backgroundColor: TOKENS.action,
-    borderColor: TOKENS.action,
+  favoritesToggleActive: {
+    backgroundColor: TOKENS.amberSoft,
+    borderColor: TOKENS.accent,
   },
-  filterIcon: {
-    fontSize: 12,
-    marginRight: 6,
-  },
-  filterText: {
-    color: TOKENS.textMuted,
+  favoritesToggleText: {
+    color: TOKENS.textSecondary,
     fontSize: 12,
     fontWeight: '700',
   },
-  filterTextActive: {
-    color: '#090D1A',
-    fontWeight: '900',
+  favoritesToggleTextActive: {
+    color: TOKENS.accent,
+    fontWeight: '800',
+  },
+  tabsBar: {
+    borderBottomWidth: 1,
+    borderBottomColor: TOKENS.border,
+    backgroundColor: TOKENS.canvas,
+  },
+  tabsScroll: {
+    paddingHorizontal: 16,
+    gap: 20,
+  },
+  modeTab: {
+    minHeight: 44,
+    justifyContent: 'center',
+    paddingHorizontal: 2,
+    borderBottomWidth: 2,
+    borderBottomColor: 'transparent',
+  },
+  modeTabActive: {
+    borderBottomColor: TOKENS.teal,
+  },
+  modeTabText: {
+    color: TOKENS.textMuted,
+    fontSize: 13.5,
+    fontWeight: '600',
+  },
+  modeTabTextActive: {
+    color: TOKENS.textPrimary,
+    fontWeight: '700',
   },
   feedScroll: {
     flex: 1,
   },
   feedContent: {
-    padding: 12,
+    paddingHorizontal: 14,
+    paddingTop: 12,
     paddingBottom: 40,
   },
   centerBox: {
-    paddingVertical: 60,
+    paddingVertical: 56,
     alignItems: 'center',
     justifyContent: 'center',
   },
   emptyCard: {
     backgroundColor: TOKENS.surface,
-    borderRadius: 20,
+    borderRadius: 16,
     borderWidth: 1,
     borderColor: TOKENS.border,
-    padding: 24,
+    padding: 26,
     alignItems: 'center',
-    marginTop: 20,
+    marginTop: 12,
   },
-  emptyIcon: {
-    fontSize: 36,
-    marginBottom: 10,
+  emptyIconCircle: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    backgroundColor: TOKENS.tealSoft,
+    borderWidth: 1,
+    borderColor: TOKENS.borderActive,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 12,
   },
   emptyTitle: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '800',
+    color: TOKENS.textPrimary,
+    fontSize: 16.5,
+    fontWeight: '700',
     marginBottom: 6,
   },
   emptyText: {
     color: TOKENS.textMuted,
-    fontSize: 12,
+    fontSize: 13,
     textAlign: 'center',
-    lineHeight: 18,
-    marginBottom: 16,
+    lineHeight: 19,
+    marginBottom: 18,
   },
   discoverButton: {
-    backgroundColor: TOKENS.action,
-    borderRadius: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: TOKENS.teal,
+    borderRadius: 12,
     paddingHorizontal: 16,
-    paddingVertical: 10,
+    minHeight: 42,
   },
   discoverButtonText: {
-    color: '#090D1A',
-    fontSize: 12,
+    color: TOKENS.actionText,
+    fontSize: 13,
     fontWeight: '800',
   },
   postCard: {
     backgroundColor: TOKENS.surface,
-    borderRadius: 20,
+    borderRadius: 16,
     borderWidth: 1,
     borderColor: TOKENS.border,
-    padding: 16,
+    padding: 15,
     marginBottom: 12,
   },
   postHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 10,
+    marginBottom: 11,
   },
   avatar: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    backgroundColor: 'rgba(0, 168, 150, 0.2)',
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: TOKENS.oceanDepth,
     borderWidth: 1,
-    borderColor: 'rgba(0, 168, 150, 0.4)',
+    borderColor: TOKENS.borderActive,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 10,
+    marginRight: 11,
+  },
+  avatarImg: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: TOKENS.border,
+    marginRight: 11,
   },
   avatarText: {
-    color: TOKENS.action,
-    fontSize: 16,
-    fontWeight: '900',
+    color: TOKENS.teal,
+    fontSize: 15,
+    fontWeight: '800',
   },
   authorMeta: {
     flex: 1,
@@ -419,49 +621,56 @@ const styles = StyleSheet.create({
   nameRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 5,
   },
   authorName: {
-    color: '#FFFFFF',
-    fontSize: 14,
-    fontWeight: '800',
-    marginRight: 4,
+    color: TOKENS.textPrimary,
+    fontSize: 14.5,
+    fontWeight: '700',
+    flexShrink: 1,
   },
-  verifiedBadge: {
-    color: TOKENS.action,
-    fontSize: 12,
-    fontWeight: '900',
-  },
-  authorHandle: {
+  authorSubline: {
     color: TOKENS.textMuted,
-    fontSize: 11,
-    marginTop: 1,
+    fontSize: 12,
+    marginTop: 2,
   },
   postBody: {
     color: TOKENS.textPrimary,
-    fontSize: 14,
-    lineHeight: 20,
+    fontSize: 14.5,
+    lineHeight: 21,
+    marginBottom: 12,
+  },
+  postMedia: {
+    width: '100%',
+    height: 210,
+    borderRadius: 12,
+    backgroundColor: TOKENS.raised,
     marginBottom: 12,
   },
   actionRow: {
     flexDirection: 'row',
+    alignItems: 'center',
     borderTopWidth: 1,
-    borderTopColor: 'rgba(255, 255, 255, 0.05)',
+    borderTopColor: TOKENS.border,
     paddingTop: 10,
-    justifyContent: 'space-around',
   },
   actionButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-  },
-  actionIcon: {
-    fontSize: 14,
+    gap: 6,
+    minHeight: 36,
+    paddingRight: 20,
   },
   actionText: {
     color: TOKENS.textMuted,
-    fontSize: 12,
-    fontWeight: '700',
+    fontSize: 12.5,
+    fontWeight: '600',
+  },
+  bookmarkBtn: {
+    marginLeft: 'auto',
+    minWidth: 36,
+    minHeight: 36,
+    alignItems: 'flex-end',
+    justifyContent: 'center',
   },
 });

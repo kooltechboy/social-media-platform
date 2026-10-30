@@ -8,13 +8,22 @@ import {
   TouchableWithoutFeedback,
   ScrollView,
 } from 'react-native';
+import { Ionicons as ExpoIonicons } from '@expo/vector-icons';
 import { TOKENS } from '../theme/tokens';
+
+const Ionicons = ExpoIonicons as unknown as React.ComponentType<{
+  name: keyof typeof ExpoIonicons.glyphMap;
+  size?: number;
+  color?: string;
+}>;
 
 export interface CreateOption {
   id: string;
   title: string;
   subtitle: string;
-  icon: string;
+  icon: keyof typeof ExpoIonicons.glyphMap;
+  iconColor: string;
+  iconBg: string;
   badge?: string;
   onPress: () => void;
 }
@@ -29,9 +38,11 @@ export function CreateActionSheet({ visible, onClose, onSelectOption }: CreateAc
   const options: CreateOption[] = [
     {
       id: 'post',
-      title: 'Share Post or Moments',
+      title: 'Share Post or Moment',
       subtitle: 'Stories, cultural conversations, photos & diaspora updates',
-      icon: '✍️',
+      icon: 'create-outline',
+      iconColor: TOKENS.teal,
+      iconBg: TOKENS.tealSoft,
       onPress: () => {
         onClose();
         onSelectOption('Create');
@@ -39,10 +50,12 @@ export function CreateActionSheet({ visible, onClose, onSelectOption }: CreateAc
     },
     {
       id: 'reel',
-      title: 'Create Short Reel',
-      subtitle: 'Vertical video with Caribbean rhythm stems & filters',
-      icon: '🎬',
-      badge: 'Trending',
+      title: 'Create TUKUBI Short',
+      subtitle: 'Vertical 9:16 video with Caribbean rhythm stems',
+      icon: 'film-outline',
+      iconColor: TOKENS.action,
+      iconBg: TOKENS.oceanSoft,
+      badge: 'Shorts',
       onPress: () => {
         onClose();
         onSelectOption('Reels');
@@ -50,10 +63,12 @@ export function CreateActionSheet({ visible, onClose, onSelectOption }: CreateAc
     },
     {
       id: 'sell',
-      title: 'Sell on Marketplace',
-      subtitle: 'List spices, mas costumes, art, phones, or handmade crafts',
-      icon: '🛍️',
-      badge: 'Zero Fee',
+      title: 'List on Marketplace',
+      subtitle: 'List island crafts, fashion, culinary goods, or services',
+      icon: 'bag-handle-outline',
+      iconColor: TOKENS.accent,
+      iconBg: TOKENS.amberSoft,
+      badge: 'Escrow',
       onPress: () => {
         onClose();
         onSelectOption('SellProduct');
@@ -61,9 +76,11 @@ export function CreateActionSheet({ visible, onClose, onSelectOption }: CreateAc
     },
     {
       id: 'community',
-      title: 'Diaspora Hub / Guild',
-      subtitle: 'Create or join island communities, cultural groups & clubs',
-      icon: '🌴',
+      title: 'Diaspora Hub or Guild',
+      subtitle: 'Launch or join island communities & professional circles',
+      icon: 'people-outline',
+      iconColor: TOKENS.teal,
+      iconBg: TOKENS.tealSoft,
       onPress: () => {
         onClose();
         onSelectOption('Communities');
@@ -72,8 +89,10 @@ export function CreateActionSheet({ visible, onClose, onSelectOption }: CreateAc
     {
       id: 'sound',
       title: 'Caribbean Sounds & Stems',
-      subtitle: 'Explore or upload reggae, soca, dancehall & kompa audio',
-      icon: '🎵',
+      subtitle: 'Explore or publish reggae, soca, dancehall & kompa audio',
+      icon: 'musical-notes-outline',
+      iconColor: TOKENS.purple,
+      iconBg: TOKENS.violetSoft,
       onPress: () => {
         onClose();
         onSelectOption('Sounds');
@@ -82,8 +101,10 @@ export function CreateActionSheet({ visible, onClose, onSelectOption }: CreateAc
     {
       id: 'live',
       title: 'Go Live Broadcast',
-      subtitle: 'Stream real-time fete, talks, DJ sets with tipping & chat',
-      icon: '🔴',
+      subtitle: 'Stream live conversations, DJ sets & cultural events',
+      icon: 'radio-outline',
+      iconColor: TOKENS.danger,
+      iconBg: 'rgba(244, 63, 94, 0.14)',
       onPress: () => {
         onClose();
         onSelectOption('Live');
@@ -92,8 +113,10 @@ export function CreateActionSheet({ visible, onClose, onSelectOption }: CreateAc
     {
       id: 'podcast',
       title: 'Podcast Network',
-      subtitle: 'Original Caribbean audio storytelling & diaspora episodes',
-      icon: '🎙️',
+      subtitle: 'Original Caribbean audio storytelling & diaspora shows',
+      icon: 'mic-outline',
+      iconColor: TOKENS.purple,
+      iconBg: TOKENS.violetSoft,
       onPress: () => {
         onClose();
         onSelectOption('Podcasts');
@@ -112,20 +135,27 @@ export function CreateActionSheet({ visible, onClose, onSelectOption }: CreateAc
         <View style={styles.overlay}>
           <TouchableWithoutFeedback>
             <View style={styles.sheet}>
-              {/* Handle Bar */}
               <View style={styles.handleContainer}>
                 <View style={styles.handle} />
               </View>
 
-              {/* Title Header */}
-              <View style={styles.header}>
-                <Text style={styles.title}>Create on TUKUBI 🌴</Text>
-                <Text style={styles.subtitle}>
-                  Connect your voice, craft, music, and community with the Caribbean diaspora.
-                </Text>
+              <View style={styles.headerRow}>
+                <View style={styles.headerCopy}>
+                  <Text style={styles.title}>Create on TUKUBI</Text>
+                  <Text style={styles.subtitle}>
+                    Publish across the Caribbean and global diaspora
+                  </Text>
+                </View>
+                <TouchableOpacity
+                  onPress={onClose}
+                  style={styles.closeIconBtn}
+                  accessibilityRole="button"
+                  accessibilityLabel="Close creation menu"
+                >
+                  <Ionicons name="close" size={20} color={TOKENS.textMuted} />
+                </TouchableOpacity>
               </View>
 
-              {/* Options List */}
               <ScrollView style={styles.optionsList} showsVerticalScrollIndicator={false}>
                 {options.map((option) => (
                   <TouchableOpacity
@@ -134,29 +164,24 @@ export function CreateActionSheet({ visible, onClose, onSelectOption }: CreateAc
                     onPress={option.onPress}
                     activeOpacity={0.75}
                   >
-                    <View style={styles.iconContainer}>
-                      <Text style={styles.icon}>{option.icon}</Text>
+                    <View style={[styles.iconContainer, { backgroundColor: option.iconBg }]}>
+                      <Ionicons name={option.icon} size={20} color={option.iconColor} />
                     </View>
                     <View style={styles.optionInfo}>
                       <View style={styles.optionTitleRow}>
                         <Text style={styles.optionTitle}>{option.title}</Text>
-                        {option.badge && (
+                        {option.badge ? (
                           <View style={styles.badge}>
                             <Text style={styles.badgeText}>{option.badge}</Text>
                           </View>
-                        )}
+                        ) : null}
                       </View>
                       <Text style={styles.optionSubtitle}>{option.subtitle}</Text>
                     </View>
-                    <Text style={styles.chevron}>→</Text>
+                    <Ionicons name="chevron-forward" size={18} color={TOKENS.textDim} />
                   </TouchableOpacity>
                 ))}
               </ScrollView>
-
-              {/* Cancel Button */}
-              <TouchableOpacity style={styles.cancelBtn} onPress={onClose} activeOpacity={0.8}>
-                <Text style={styles.cancelBtnText}>Dismiss</Text>
-              </TouchableOpacity>
             </View>
           </TouchableWithoutFeedback>
         </View>
@@ -168,71 +193,87 @@ export function CreateActionSheet({ visible, onClose, onSelectOption }: CreateAc
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(9, 6, 15, 0.82)',
+    backgroundColor: TOKENS.scrim,
     justifyContent: 'flex-end',
   },
   sheet: {
     backgroundColor: TOKENS.surface,
-    borderTopLeftRadius: 28,
-    borderTopRightRadius: 28,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
     borderTopWidth: 1,
-    borderColor: TOKENS.borderActive,
-    paddingHorizontal: 20,
-    paddingTop: 12,
-    paddingBottom: 32,
-    maxHeight: '85%',
+    borderColor: TOKENS.borderStrong,
+    paddingHorizontal: 18,
+    paddingTop: 10,
+    paddingBottom: 28,
+    maxHeight: '84%',
   },
   handleContainer: {
     alignItems: 'center',
-    paddingVertical: 8,
+    paddingVertical: 6,
   },
   handle: {
-    width: 44,
+    width: 38,
     height: 4,
     borderRadius: 2,
-    backgroundColor: TOKENS.border,
+    backgroundColor: 'rgba(255, 255, 255, 0.18)',
   },
-  header: {
-    marginVertical: 12,
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: TOKENS.border,
+    marginBottom: 10,
+  },
+  headerCopy: {
+    flex: 1,
+    paddingRight: 12,
   },
   title: {
-    fontSize: 20,
-    fontWeight: '900',
-    color: TOKENS.textPrimary,
-    letterSpacing: -0.3,
+    fontSize: 18,
+    fontWeight: '800',
+    color: '#F8FAFC',
+    letterSpacing: -0.2,
   },
   subtitle: {
     fontSize: 12,
     color: TOKENS.textMuted,
-    marginTop: 4,
-    lineHeight: 18,
+    marginTop: 2,
+  },
+  closeIconBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    backgroundColor: TOKENS.raised,
+    borderWidth: 1,
+    borderColor: TOKENS.border,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   optionsList: {
-    marginTop: 8,
+    marginTop: 2,
   },
   optionCard: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: TOKENS.raised,
-    borderRadius: 18,
+    borderRadius: 15,
     borderWidth: 1,
     borderColor: TOKENS.border,
-    padding: 14,
-    marginBottom: 10,
-    gap: 14,
+    paddingVertical: 12,
+    paddingHorizontal: 13,
+    marginBottom: 8,
+    gap: 12,
   },
   iconContainer: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: 'rgba(255, 122, 89, 0.15)',
+    width: 40,
+    height: 40,
+    borderRadius: 11,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: 'rgba(255, 122, 89, 0.3)',
-  },
-  icon: {
-    fontSize: 22,
+    borderColor: TOKENS.border,
   },
   optionInfo: {
     flex: 1,
@@ -244,46 +285,28 @@ const styles = StyleSheet.create({
   },
   optionTitle: {
     fontSize: 14,
-    fontWeight: '800',
-    color: TOKENS.textPrimary,
+    fontWeight: '700',
+    color: '#F8FAFC',
   },
   badge: {
-    backgroundColor: TOKENS.action + '25',
+    backgroundColor: TOKENS.tealSoft,
     paddingHorizontal: 7,
     paddingVertical: 2,
     borderRadius: 999,
     borderWidth: 1,
-    borderColor: TOKENS.action,
+    borderColor: TOKENS.borderActive,
   },
   badgeText: {
-    fontSize: 9,
-    fontWeight: '800',
-    color: TOKENS.action,
+    fontSize: 9.5,
+    fontWeight: '700',
+    color: TOKENS.teal,
     textTransform: 'uppercase',
+    letterSpacing: 0.3,
   },
   optionSubtitle: {
-    fontSize: 11,
+    fontSize: 11.5,
     color: TOKENS.textMuted,
     marginTop: 2,
-    lineHeight: 15,
-  },
-  chevron: {
-    color: TOKENS.action,
-    fontSize: 18,
-    fontWeight: '900',
-  },
-  cancelBtn: {
-    marginTop: 10,
-    paddingVertical: 14,
-    backgroundColor: TOKENS.raised,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: TOKENS.border,
-    alignItems: 'center',
-  },
-  cancelBtnText: {
-    color: TOKENS.textMuted,
-    fontSize: 14,
-    fontWeight: '700',
+    lineHeight: 16,
   },
 });

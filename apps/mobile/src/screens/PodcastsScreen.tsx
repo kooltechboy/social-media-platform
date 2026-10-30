@@ -12,8 +12,11 @@ import {
   Alert,
 } from 'react-native';
 import { Audio } from 'expo-av';
+import { Ionicons as ExpoIonicons } from '@expo/vector-icons';
 import { TOKENS } from '../theme/tokens';
 import { supabase } from '../lib/supabase';
+
+const Ionicons = ExpoIonicons as unknown as React.ComponentType<any>;
 
 interface EpisodeItem {
   id: string;
@@ -53,19 +56,19 @@ const PODCAST_CATEGORIES = [
 ];
 
 const TERRITORIES = [
-  { iso: 'ALL', name: 'All Islands', flag: '🌴' },
-  { iso: 'TTO', name: 'Trinidad & Tobago', flag: '🇹🇹' },
-  { iso: 'JAM', name: 'Jamaica', flag: '🇯🇲' },
-  { iso: 'BRB', name: 'Barbados', flag: '🇧🇧' },
-  { iso: 'GUY', name: 'Guyana', flag: '🇬🇾' },
-  { iso: 'HTI', name: 'Haiti', flag: '🇭🇹' },
-  { iso: 'BHS', name: 'Bahamas', flag: '🇧🇸' },
-  { iso: 'DMA', name: 'Dominica', flag: '🇩🇲' },
-  { iso: 'LCA', name: 'Saint Lucia', flag: '🇱🇨' },
-  { iso: 'GRD', name: 'Grenada', flag: '🇬🇩' },
-  { iso: 'ATG', name: 'Antigua & Barbuda', flag: '🇦🇬' },
-  { iso: 'PRI', name: 'Puerto Rico', flag: '🇵🇷' },
-  { iso: 'CUB', name: 'Cuba', flag: '🇨🇺' },
+  { iso: 'ALL', name: 'All Islands' },
+  { iso: 'TTO', name: 'Trinidad & Tobago' },
+  { iso: 'JAM', name: 'Jamaica' },
+  { iso: 'BRB', name: 'Barbados' },
+  { iso: 'GUY', name: 'Guyana' },
+  { iso: 'HTI', name: 'Haiti' },
+  { iso: 'BHS', name: 'Bahamas' },
+  { iso: 'DMA', name: 'Dominica' },
+  { iso: 'LCA', name: 'Saint Lucia' },
+  { iso: 'GRD', name: 'Grenada' },
+  { iso: 'ATG', name: 'Antigua & Barbuda' },
+  { iso: 'PRI', name: 'Puerto Rico' },
+  { iso: 'CUB', name: 'Cuba' },
 ];
 
 export function PodcastsScreen() {
@@ -114,7 +117,9 @@ export function PodcastsScreen() {
               if (ep.audio_path.startsWith('http')) {
                 resolvedUrl = ep.audio_path;
               } else {
-                resolvedUrl = supabase.storage.from('podcast-audio').getPublicUrl(ep.audio_path).data.publicUrl;
+                resolvedUrl = supabase.storage
+                  .from('podcast-audio')
+                  .getPublicUrl(ep.audio_path).data.publicUrl;
               }
             }
             let resolvedVideo = '';
@@ -122,7 +127,9 @@ export function PodcastsScreen() {
               if (ep.video_path.startsWith('http')) {
                 resolvedVideo = ep.video_path;
               } else {
-                resolvedVideo = supabase.storage.from('podcast-video').getPublicUrl(ep.video_path).data.publicUrl;
+                resolvedVideo = supabase.storage
+                  .from('podcast-video')
+                  .getPublicUrl(ep.video_path).data.publicUrl;
               }
             }
             return {
@@ -142,8 +149,13 @@ export function PodcastsScreen() {
           return {
             id: d.id,
             title: d.title,
-            description: d.description || 'Caribbean audio documentary and cultural talk.',
-            author: d.profiles?.display_name || d.profiles?.username || 'Caribbean Host',
+            description:
+              d.description ||
+              'Caribbean audio documentary and cultural talk.',
+            author:
+              d.profiles?.display_name ||
+              d.profiles?.username ||
+              'Caribbean Host',
             category: d.category || 'Culture & History',
             countryIso: d.country_iso || 'CAR',
             coverUrl: d.cover_path,
@@ -206,7 +218,10 @@ export function PodcastsScreen() {
       setIsPlaying(true);
 
       if (!ep.audioUrl && !ep.videoUrl) {
-        Alert.alert('Media Unavailable', 'This episode does not have an audio or video track attached yet.');
+        Alert.alert(
+          'Media Unavailable',
+          'This episode does not have an audio or video track attached yet.'
+        );
         setIsPlaying(false);
         return;
       }
@@ -220,7 +235,9 @@ export function PodcastsScreen() {
 
       // Persist progress to DB if authenticated
       try {
-        const { data: { user } } = await supabase.auth.getUser();
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
         if (user) {
           await supabase.from('podcast_progress').upsert({
             user_id: user.id,
@@ -230,7 +247,7 @@ export function PodcastsScreen() {
             updated_at: new Date().toISOString(),
           });
         }
-      } catch (pErr) {
+      } catch {
         // Non-blocking
       }
     } catch (err) {
@@ -252,12 +269,23 @@ export function PodcastsScreen() {
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
-        {/* Header */}
+        {/* Executive Midnight Reef Header */}
         <View style={styles.header}>
-          <Text style={styles.headerTitle}>Caribbean Podcast Network</Text>
-          <Text style={styles.headerSubtitle}>
-            Voices, history, sound system culture, and authentic island discussions.
-          </Text>
+          <View style={styles.headerRow}>
+            <View style={styles.headerIconBadge}>
+              <Ionicons
+                name="headset-outline"
+                size={20}
+                color={TOKENS.purple}
+              />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.headerTitle}>Caribbean Podcast Network</Text>
+              <Text style={styles.headerSubtitle}>
+                Voices, history, sound system culture, and authentic island discussions.
+              </Text>
+            </View>
+          </View>
         </View>
 
         {/* Categories Rail */}
@@ -267,15 +295,26 @@ export function PodcastsScreen() {
           style={styles.rail}
           contentContainerStyle={styles.railContent}
         >
-          {PODCAST_CATEGORIES.map((cat) => (
-            <TouchableOpacity
-              key={cat}
-              style={[styles.chip, activeCategory === cat && styles.chipActive]}
-              onPress={() => setActiveCategory(cat)}
-            >
-              <Text style={styles.chipText}>{cat}</Text>
-            </TouchableOpacity>
-          ))}
+          {PODCAST_CATEGORIES.map((cat) => {
+            const isActive = activeCategory === cat;
+            return (
+              <TouchableOpacity
+                key={cat}
+                style={[styles.chip, isActive && styles.chipActivePurple]}
+                onPress={() => setActiveCategory(cat)}
+                activeOpacity={0.8}
+              >
+                <Text
+                  style={[
+                    styles.chipText,
+                    isActive && styles.chipTextActivePurple,
+                  ]}
+                >
+                  {cat}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
         </ScrollView>
 
         {/* Territory Rail */}
@@ -285,26 +324,38 @@ export function PodcastsScreen() {
           style={styles.rail}
           contentContainerStyle={styles.railContent}
         >
-          {TERRITORIES.map((t) => (
-            <TouchableOpacity
-              key={t.iso}
-              style={[styles.chip, activeTerritory === t.iso && styles.chipActive]}
-              onPress={() => setActiveTerritory(t.iso)}
-            >
-              <Text style={styles.chipText}>{t.flag} {t.name}</Text>
-            </TouchableOpacity>
-          ))}
+          {TERRITORIES.map((t) => {
+            const isActive = activeTerritory === t.iso;
+            return (
+              <TouchableOpacity
+                key={t.iso}
+                style={[styles.chip, isActive && styles.chipActiveTeal]}
+                onPress={() => setActiveTerritory(t.iso)}
+                activeOpacity={0.8}
+              >
+                <Text
+                  style={[
+                    styles.chipText,
+                    isActive && styles.chipTextActiveTeal,
+                  ]}
+                >
+                  {t.name}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
         </ScrollView>
 
         {/* Shows Feed */}
         {loading ? (
           <View style={styles.centerBox}>
-            <ActivityIndicator size="large" color={TOKENS.action} />
+            <ActivityIndicator size="large" color={TOKENS.teal} />
           </View>
         ) : (
           <ScrollView
             style={styles.content}
-            contentContainerStyle={{ paddingBottom: 120 }}
+            contentContainerStyle={styles.contentContainer}
+            showsVerticalScrollIndicator={false}
             refreshControl={
               <RefreshControl
                 refreshing={refreshing}
@@ -312,14 +363,22 @@ export function PodcastsScreen() {
                   setRefreshing(true);
                   fetchPodcasts();
                 }}
-                tintColor={TOKENS.action}
+                tintColor={TOKENS.teal}
               />
             }
           >
             {podcasts.length === 0 ? (
               <View style={styles.emptyCard}>
-                <Text style={{ fontSize: 44, marginBottom: 10 }}>🎙️</Text>
-                <Text style={styles.emptyTitle}>No podcasts in this category</Text>
+                <View style={styles.emptyIconCircle}>
+                  <Ionicons
+                    name="headset-outline"
+                    size={34}
+                    color={TOKENS.purple}
+                  />
+                </View>
+                <Text style={styles.emptyTitle}>
+                  No podcasts in this category
+                </Text>
                 <Text style={styles.emptySubtitle}>
                   Tune into all shows or switch territory filters to explore island audio stories.
                 </Text>
@@ -331,47 +390,97 @@ export function PodcastsScreen() {
                   <View style={styles.showTopRow}>
                     <View style={styles.coverBox}>
                       {show.coverUrl ? (
-                        <Image source={{ uri: show.coverUrl }} style={styles.coverImage} />
+                        <Image
+                          source={{ uri: show.coverUrl }}
+                          style={styles.coverImage}
+                        />
                       ) : (
-                        <Text style={{ fontSize: 28 }}>🎙️</Text>
+                        <Ionicons name="mic" size={26} color={TOKENS.purple} />
                       )}
                     </View>
                     <View style={{ flex: 1, marginLeft: 12 }}>
                       <Text style={styles.showTitle}>{show.title}</Text>
-                      <Text style={styles.showAuthor}>By {show.author} • {show.category}</Text>
-                      <Text style={styles.showFollowers}>👥 {show.followerCount} listeners</Text>
+                      <Text style={styles.showAuthor}>
+                        By {show.author} • {show.category}
+                      </Text>
+                      <View style={styles.followersRow}>
+                        <Ionicons
+                          name="people-outline"
+                          size={13}
+                          color={TOKENS.teal}
+                        />
+                        <Text style={styles.showFollowers}>
+                          {show.followerCount} listeners
+                        </Text>
+                      </View>
                     </View>
                   </View>
 
-                  <Text style={styles.showDesc} numberOfLines={2}>{show.description}</Text>
+                  <Text style={styles.showDesc} numberOfLines={2}>
+                    {show.description}
+                  </Text>
 
                   {/* Episodes List */}
                   {show.episodes.length > 0 && (
                     <View style={styles.episodesList}>
                       <Text style={styles.episodesHeader}>Episodes</Text>
                       {show.episodes.map((ep) => {
-                        const isThisPlaying = playingEpisodeId === ep.id && isPlaying;
+                        const isThisPlaying =
+                          playingEpisodeId === ep.id && isPlaying;
                         return (
-                          <View key={ep.id} style={styles.episodeRow}>
+                          <View
+                            key={ep.id}
+                            style={[
+                              styles.episodeRow,
+                              isThisPlaying && styles.episodeRowActive,
+                            ]}
+                          >
                             <TouchableOpacity
-                              style={[styles.epPlayBtn, isThisPlaying && styles.epPlayBtnActive]}
+                              style={[
+                                styles.epPlayBtn,
+                                isThisPlaying && styles.epPlayBtnActive,
+                              ]}
                               onPress={() => handleTogglePlay(ep, show.title)}
+                              activeOpacity={0.85}
+                              accessibilityRole="button"
+                              accessibilityLabel={
+                                isThisPlaying
+                                  ? `Pause ${ep.title}`
+                                  : `Play ${ep.title}`
+                              }
                             >
-                              <Text style={styles.epPlayBtnText}>{isThisPlaying ? '⏸' : '▶'}</Text>
+                              <Ionicons
+                                name={isThisPlaying ? 'pause' : 'play'}
+                                size={15}
+                                color={
+                                  isThisPlaying
+                                    ? TOKENS.actionText
+                                    : TOKENS.purple
+                                }
+                                style={
+                                  !isThisPlaying ? { marginLeft: 1 } : undefined
+                                }
+                              />
                             </TouchableOpacity>
                             <View style={{ flex: 1 }}>
-                              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                              <View style={styles.epTitleRow}>
                                 <Text style={styles.epTitle} numberOfLines={1}>
-                                  {ep.seasonNumber && ep.episodeNumber ? `S${ep.seasonNumber}E${ep.episodeNumber}: ` : ''}
+                                  {ep.seasonNumber && ep.episodeNumber
+                                    ? `S${ep.seasonNumber}E${ep.episodeNumber}: `
+                                    : ''}
                                   {ep.title}
                                 </Text>
                                 {ep.hasVideo && (
                                   <View style={styles.videoBadge}>
-                                    <Text style={styles.videoBadgeText}>VIDEO</Text>
+                                    <Text style={styles.videoBadgeText}>
+                                      VIDEO
+                                    </Text>
                                   </View>
                                 )}
                               </View>
-                              <Text style={styles.epDuration}>{ep.durationFormatted}</Text>
+                              <Text style={styles.epDuration}>
+                                {ep.durationFormatted}
+                              </Text>
                             </View>
                           </View>
                         );
@@ -384,11 +493,19 @@ export function PodcastsScreen() {
           </ScrollView>
         )}
 
-        {/* Floating Mini Player */}
+        {/* Sticky Midnight Reef Mini-Player (TOKENS.oceanDepth #0B1B3B) */}
         {playingEpisodeId && (
           <View style={styles.miniPlayer}>
-            <View style={{ flex: 1 }}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+            <View style={styles.miniIconBadge}>
+              <Ionicons
+                name="headset-outline"
+                size={18}
+                color={TOKENS.teal}
+              />
+            </View>
+
+            <View style={styles.miniTextCol}>
+              <View style={styles.miniLabelRow}>
                 <Text style={styles.miniPlayingLabel}>NOW PLAYING</Text>
                 {playingHasVideo && (
                   <View style={styles.videoBadge}>
@@ -396,10 +513,17 @@ export function PodcastsScreen() {
                   </View>
                 )}
               </View>
-              <Text style={styles.miniPlayingTitle} numberOfLines={1}>{playingTitle}</Text>
+              <Text style={styles.miniPlayingTitle} numberOfLines={1}>
+                {playingTitle}
+              </Text>
             </View>
 
-            <TouchableOpacity style={styles.rateBtn} onPress={handleCycleRate}>
+            <TouchableOpacity
+              style={styles.rateBtn}
+              onPress={handleCycleRate}
+              activeOpacity={0.8}
+              accessibilityLabel={`Playback speed ${playbackRate}x`}
+            >
               <Text style={styles.rateBtnText}>{playbackRate}x</Text>
             </TouchableOpacity>
 
@@ -416,8 +540,16 @@ export function PodcastsScreen() {
                   }
                 }
               }}
+              activeOpacity={0.85}
+              accessibilityRole="button"
+              accessibilityLabel={isPlaying ? 'Pause episode' : 'Play episode'}
             >
-              <Text style={styles.miniPlayControlText}>{isPlaying ? '⏸' : '▶'}</Text>
+              <Ionicons
+                name={isPlaying ? 'pause' : 'play'}
+                size={18}
+                color={TOKENS.actionText}
+                style={!isPlaying ? { marginLeft: 1 } : undefined}
+              />
             </TouchableOpacity>
           </View>
         )}
@@ -427,38 +559,127 @@ export function PodcastsScreen() {
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: TOKENS.canvas },
-  container: { flex: 1 },
-  centerBox: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  header: { paddingHorizontal: 16, paddingTop: 14, paddingBottom: 6 },
-  headerTitle: { fontSize: 20, fontWeight: '900', color: TOKENS.textPrimary },
-  headerSubtitle: { fontSize: 12, color: TOKENS.textMuted, marginTop: 2 },
-  rail: { maxHeight: 42, marginVertical: 3 },
-  railContent: { paddingHorizontal: 16, gap: 8 },
+  safeArea: {
+    flex: 1,
+    backgroundColor: TOKENS.canvas,
+  },
+  container: {
+    flex: 1,
+  },
+  centerBox: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  header: {
+    paddingHorizontal: 16,
+    paddingTop: 14,
+    paddingBottom: 8,
+  },
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 12,
+  },
+  headerIconBadge: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: TOKENS.violetSoft,
+    borderWidth: 1,
+    borderColor: TOKENS.purple,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 2,
+  },
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: '800',
+    color: TOKENS.textPrimary,
+  },
+  headerSubtitle: {
+    fontSize: 12,
+    color: TOKENS.textMuted,
+    marginTop: 3,
+    lineHeight: 17,
+  },
+  rail: {
+    maxHeight: 42,
+    marginVertical: 3,
+  },
+  railContent: {
+    paddingHorizontal: 16,
+    alignItems: 'center',
+    gap: 8,
+  },
   chip: {
     backgroundColor: TOKENS.surface,
     paddingHorizontal: 12,
     paddingVertical: 6,
-    borderRadius: 12,
+    borderRadius: 999,
     borderWidth: 1,
     borderColor: TOKENS.border,
   },
-  chipActive: {
-    backgroundColor: 'rgba(139, 92, 246, 0.25)',
+  chipActivePurple: {
+    backgroundColor: TOKENS.violetSoft,
     borderColor: TOKENS.purple,
   },
-  chipText: { color: TOKENS.textPrimary, fontSize: 11, fontWeight: '700' },
-  content: { flex: 1, padding: 16 },
+  chipActiveTeal: {
+    backgroundColor: TOKENS.tealSoft,
+    borderColor: TOKENS.borderActive,
+  },
+  chipText: {
+    color: TOKENS.textMuted,
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  chipTextActivePurple: {
+    color: TOKENS.purple,
+    fontWeight: '800',
+  },
+  chipTextActiveTeal: {
+    color: TOKENS.teal,
+    fontWeight: '800',
+  },
+  content: {
+    flex: 1,
+  },
+  contentContainer: {
+    padding: 16,
+    paddingBottom: 120,
+  },
   emptyCard: {
-    padding: 40,
+    paddingVertical: 44,
+    paddingHorizontal: 28,
     alignItems: 'center',
     backgroundColor: TOKENS.surface,
     borderRadius: 20,
     borderWidth: 1,
     borderColor: TOKENS.border,
   },
-  emptyTitle: { fontSize: 16, fontWeight: '800', color: TOKENS.textPrimary },
-  emptySubtitle: { fontSize: 12, color: TOKENS.textMuted, textAlign: 'center', marginTop: 6 },
+  emptyIconCircle: {
+    width: 68,
+    height: 68,
+    borderRadius: 34,
+    backgroundColor: TOKENS.violetSoft,
+    borderWidth: 1,
+    borderColor: TOKENS.purple,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 14,
+  },
+  emptyTitle: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: TOKENS.textPrimary,
+  },
+  emptySubtitle: {
+    fontSize: 12,
+    color: TOKENS.textMuted,
+    textAlign: 'center',
+    marginTop: 6,
+    lineHeight: 18,
+  },
   showCard: {
     backgroundColor: TOKENS.surface,
     borderRadius: 20,
@@ -467,94 +688,185 @@ const styles = StyleSheet.create({
     padding: 16,
     marginBottom: 14,
   },
-  showTopRow: { flexDirection: 'row', alignItems: 'center' },
+  showTopRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
   coverBox: {
-    width: 60,
-    height: 60,
+    width: 62,
+    height: 62,
     borderRadius: 14,
-    backgroundColor: TOKENS.raised,
+    backgroundColor: TOKENS.violetSoft,
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: TOKENS.border,
+    borderColor: TOKENS.borderStrong,
   },
-  coverImage: { width: '100%', height: '100%' },
-  showTitle: { color: TOKENS.textPrimary, fontSize: 15, fontWeight: '900' },
-  showAuthor: { color: TOKENS.textMuted, fontSize: 11, marginTop: 2 },
-  showFollowers: { color: TOKENS.purple, fontSize: 11, fontWeight: '700', marginTop: 3 },
-  showDesc: { color: TOKENS.textMuted, fontSize: 12, marginTop: 10, lineHeight: 16 },
-  episodesList: { marginTop: 14, paddingTop: 10, borderTopWidth: 1, borderTopColor: TOKENS.border },
-  episodesHeader: { color: TOKENS.textPrimary, fontSize: 12, fontWeight: '800', marginBottom: 8 },
+  coverImage: {
+    width: '100%',
+    height: '100%',
+  },
+  showTitle: {
+    color: TOKENS.textPrimary,
+    fontSize: 16,
+    fontWeight: '800',
+  },
+  showAuthor: {
+    color: TOKENS.textMuted,
+    fontSize: 12,
+    marginTop: 2,
+  },
+  followersRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    marginTop: 5,
+  },
+  showFollowers: {
+    color: TOKENS.teal,
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  showDesc: {
+    color: TOKENS.textSecondary,
+    fontSize: 12,
+    marginTop: 12,
+    lineHeight: 18,
+  },
+  episodesList: {
+    marginTop: 14,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: TOKENS.border,
+  },
+  episodesHeader: {
+    color: TOKENS.textMuted,
+    fontSize: 11,
+    fontWeight: '800',
+    textTransform: 'uppercase',
+    letterSpacing: 0.7,
+    marginBottom: 8,
+  },
   episodeRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 8,
+    paddingVertical: 9,
+    paddingHorizontal: 10,
+    borderRadius: 12,
     gap: 12,
+    marginBottom: 4,
+  },
+  episodeRowActive: {
+    backgroundColor: TOKENS.raised,
   },
   epPlayBtn: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
-    backgroundColor: 'rgba(139, 92, 246, 0.2)',
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: TOKENS.violetSoft,
+    borderWidth: 1,
+    borderColor: TOKENS.borderStrong,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  epPlayBtnActive: { backgroundColor: TOKENS.purple },
-  epPlayBtnText: { color: '#FFF', fontSize: 12, fontWeight: '900' },
-  epTitle: { color: TOKENS.textPrimary, fontSize: 12, fontWeight: '700' },
-  epDuration: { color: TOKENS.textMuted, fontSize: 10, marginTop: 2 },
+  epPlayBtnActive: {
+    backgroundColor: TOKENS.teal,
+    borderColor: TOKENS.teal,
+  },
+  epTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  epTitle: {
+    color: TOKENS.textPrimary,
+    fontSize: 13,
+    fontWeight: '700',
+    flexShrink: 1,
+  },
+  epDuration: {
+    color: TOKENS.textMuted,
+    fontSize: 11,
+    marginTop: 2,
+  },
   miniPlayer: {
     position: 'absolute',
     bottom: 0,
     left: 0,
     right: 0,
-    backgroundColor: TOKENS.raised,
+    backgroundColor: TOKENS.oceanDepth,
     borderTopWidth: 1,
     borderTopColor: TOKENS.borderActive,
-    paddingHorizontal: 18,
+    paddingHorizontal: 16,
     paddingVertical: 12,
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 10,
   },
-  miniPlayingLabel: { color: TOKENS.action, fontSize: 9, fontWeight: '900', letterSpacing: 0.8 },
-  miniPlayingTitle: { color: TOKENS.textPrimary, fontSize: 13, fontWeight: '800', marginTop: 1 },
+  miniIconBadge: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    backgroundColor: TOKENS.tealSoft,
+    borderWidth: 1,
+    borderColor: TOKENS.borderActive,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  miniTextCol: {
+    flex: 1,
+  },
+  miniLabelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  miniPlayingLabel: {
+    color: TOKENS.teal,
+    fontSize: 9,
+    fontWeight: '800',
+    letterSpacing: 0.9,
+  },
+  miniPlayingTitle: {
+    color: TOKENS.textPrimary,
+    fontSize: 13,
+    fontWeight: '800',
+    marginTop: 2,
+  },
   miniPlayControl: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: TOKENS.action,
+    backgroundColor: TOKENS.teal,
     alignItems: 'center',
     justifyContent: 'center',
-    marginLeft: 12,
   },
-  miniPlayControlText: { color: '#090D1A', fontSize: 14, fontWeight: '900' },
   videoBadge: {
-    backgroundColor: 'rgba(239, 68, 68, 0.2)',
+    backgroundColor: TOKENS.violetSoft,
     borderWidth: 1,
-    borderColor: '#EF4444',
+    borderColor: TOKENS.purple,
     paddingHorizontal: 5,
     paddingVertical: 1,
-    borderRadius: 6,
+    borderRadius: 5,
   },
   videoBadgeText: {
-    color: '#F87171',
+    color: TOKENS.purple,
     fontSize: 8,
-    fontWeight: '900',
+    fontWeight: '800',
     letterSpacing: 0.5,
   },
   rateBtn: {
-    paddingHorizontal: 8,
-    paddingVertical: 5,
+    paddingHorizontal: 9,
+    paddingVertical: 6,
     borderRadius: 8,
-    backgroundColor: TOKENS.surface,
+    backgroundColor: TOKENS.raised,
     borderWidth: 1,
     borderColor: TOKENS.border,
-    marginRight: 6,
   },
   rateBtnText: {
     color: TOKENS.textPrimary,
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: '800',
   },
 });

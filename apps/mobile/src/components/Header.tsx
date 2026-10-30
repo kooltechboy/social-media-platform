@@ -1,6 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, Text, View, TouchableOpacity, Image } from 'react-native';
+import { Ionicons as ExpoIonicons } from '@expo/vector-icons';
 import { TOKENS } from '../theme/tokens';
+
+const Ionicons = ExpoIonicons as unknown as React.ComponentType<{
+  name: keyof typeof ExpoIonicons.glyphMap;
+  size?: number;
+  color?: string;
+}>;
 import { supabase } from '../lib/supabase';
 
 export interface HeaderProps {
@@ -35,7 +42,7 @@ export function Header({
             setUnreadCount(count);
           }
         }
-      } catch (err) {
+      } catch {
         // Non-blocking
       }
     }
@@ -45,7 +52,7 @@ export function Header({
 
   return (
     <View style={styles.header}>
-      {/* Brand & Tagline */}
+      {/* Official Brand Lockup */}
       <View style={styles.brandContainer}>
         <Image
           source={require('../../assets/tukubi-emblem.png')}
@@ -58,41 +65,50 @@ export function Header({
         </View>
       </View>
 
-      {/* Right Quick Actions */}
+      {/* Clean Midnight Reef Quick Actions (Search · Market · Messages · Notifications 🔔 · Financial Center) */}
       <View style={styles.rightActions}>
-        {/* Marketplace Shortcut */}
+        {onSearchPress && (
+          <TouchableOpacity
+            accessibilityRole="button"
+            accessibilityLabel="Search TUKUBI"
+            style={styles.iconButton}
+            onPress={onSearchPress}
+            activeOpacity={0.75}
+          >
+            <Ionicons name="search-outline" size={20} color={TOKENS.textSecondary} />
+          </TouchableOpacity>
+        )}
+
         <TouchableOpacity
           accessibilityRole="button"
           accessibilityLabel="Caribbean Marketplace"
-          style={styles.marketBadge}
+          style={styles.iconButton}
           onPress={onMarketplacePress}
-          activeOpacity={0.8}
+          activeOpacity={0.75}
         >
-          <Text style={styles.marketText}>🛍️ Market</Text>
+          <Ionicons name="bag-handle-outline" size={20} color={TOKENS.textSecondary} />
         </TouchableOpacity>
 
-        {/* Direct Messages Icon */}
         {onMessagesPress && (
           <TouchableOpacity
             accessibilityRole="button"
             accessibilityLabel="Messages"
             style={styles.notifBadge}
             onPress={onMessagesPress}
-            activeOpacity={0.8}
+            activeOpacity={0.75}
           >
-            <Text style={styles.notifText}>💬</Text>
+            <Ionicons name="chatbubble-ellipses-outline" size={20} color={TOKENS.textSecondary} />
           </TouchableOpacity>
         )}
 
-        {/* Notifications Icon with Badge */}
         <TouchableOpacity
           accessibilityRole="button"
           accessibilityLabel="Notifications"
           style={styles.notifBadge}
           onPress={onNotificationsPress}
-          activeOpacity={0.8}
+          activeOpacity={0.75}
         >
-          <Text style={styles.notifText}>🔔</Text>
+          <Ionicons name="notifications-outline" size={20} color={TOKENS.textSecondary} />
           {unreadCount > 0 && (
             <View style={styles.unreadPill}>
               <Text style={styles.unreadPillText}>
@@ -102,15 +118,14 @@ export function Header({
           )}
         </TouchableOpacity>
 
-        {/* Financial Center Badge */}
         <TouchableOpacity
           accessibilityRole="button"
           accessibilityLabel="Financial Center"
           style={styles.walletBadge}
           onPress={onWalletPress}
-          activeOpacity={0.8}
+          activeOpacity={0.75}
         >
-          <Text style={styles.walletText}>💰</Text>
+          <Ionicons name="wallet-outline" size={18} color={TOKENS.teal} />
         </TouchableOpacity>
       </View>
     </View>
@@ -119,56 +134,47 @@ export function Header({
 
 const styles = StyleSheet.create({
   header: {
-    height: 60,
+    height: 58,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
+    paddingHorizontal: 14,
     borderBottomWidth: 1,
     borderBottomColor: TOKENS.border,
-    backgroundColor: TOKENS.surface,
+    backgroundColor: TOKENS.canvas,
   },
   brandContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 9,
   },
   logoEmblem: {
-    width: 32,
-    height: 32,
+    width: 30,
+    height: 30,
   },
   headerTitle: {
-    fontSize: 16,
-    fontWeight: '900',
-    color: TOKENS.action,
-    letterSpacing: 0.5,
-    lineHeight: 18,
+    fontSize: 16.5,
+    fontWeight: '800',
+    color: '#F8FAFC',
+    letterSpacing: 0.4,
+    lineHeight: 19,
   },
   headerTagline: {
-    fontSize: 9,
-    fontWeight: '700',
+    fontSize: 9.5,
+    fontWeight: '600',
     color: TOKENS.textMuted,
-    letterSpacing: 0.2,
+    letterSpacing: 0.15,
   },
   rightActions: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: 2,
   },
-  marketBadge: {
-    backgroundColor: 'rgba(0, 180, 216, 0.15)',
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: 'rgba(0, 180, 216, 0.35)',
-    minHeight: 36,
+  iconButton: {
+    minWidth: 40,
+    minHeight: 44,
     justifyContent: 'center',
-  },
-  marketText: {
-    color: TOKENS.sea,
-    fontSize: 11,
-    fontWeight: '800',
+    alignItems: 'center',
   },
   notifBadge: {
     minWidth: 44,
@@ -177,37 +183,34 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     position: 'relative',
   },
-  notifText: {
-    fontSize: 18,
-  },
   unreadPill: {
     position: 'absolute',
-    top: 2,
-    right: 2,
-    backgroundColor: TOKENS.action,
+    top: 7,
+    right: 6,
+    backgroundColor: TOKENS.teal,
     borderRadius: 8,
     minWidth: 16,
     height: 16,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 4,
+    borderWidth: 1.5,
+    borderColor: TOKENS.canvas,
   },
   unreadPillText: {
     color: TOKENS.actionText,
     fontSize: 9,
-    fontWeight: '900',
+    fontWeight: '800',
   },
   walletBadge: {
-    backgroundColor: 'rgba(255, 122, 89, 0.15)',
+    backgroundColor: TOKENS.tealSoft,
     width: 36,
     height: 36,
-    borderRadius: 18,
+    borderRadius: 11,
     borderWidth: 1,
-    borderColor: 'rgba(255, 122, 89, 0.40)',
+    borderColor: TOKENS.borderActive,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  walletText: {
-    fontSize: 15,
+    marginLeft: 2,
   },
 });

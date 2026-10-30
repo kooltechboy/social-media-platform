@@ -30,6 +30,8 @@ const Ionicons = ExpoIonicons as unknown as React.ComponentType<any>;
 
 const { height: screenHeight, width: screenWidth } = Dimensions.get('window');
 
+type ShortsFeedTab = 'for_you' | 'following';
+
 interface ReelItem {
   id: string;
   creator_id: string;
@@ -74,10 +76,11 @@ interface CommentItem {
   } | null;
 }
 
-export function ReelsScreen({ navigation }: any) {
+export function ReelsScreen({ navigation }: any = {}) {
   const [reels, setReels] = useState<ReelItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [activeTab, setActiveTab] = useState<ShortsFeedTab>('for_you');
   const [currentlyPlayingId, setCurrentlyPlayingId] = useState<string | null>(null);
   const videoRefs = useRef<Record<string, InstanceType<typeof ExpoVideo> | null>>({});
 
@@ -151,14 +154,21 @@ export function ReelsScreen({ navigation }: any) {
     fetchReels();
   };
 
+  const handleBack = () => {
+    if (navigation?.canGoBack && !navigation.canGoBack()) {
+      navigation?.navigate?.('Home');
+      return;
+    }
+    navigation?.goBack?.();
+  };
+
   const handleLike = async (reel: ReelItem) => {
     const isLiked = !reel.isLiked;
     const delta = isLiked ? 1 : -1;
     const newCount = Math.max(0, (reel.likes_count || 0) + delta);
 
-    // Optimistic UI update
-    setReels(current =>
-      current.map(r =>
+    setReels((current) =>
+      current.map((r) =>
         r.id === reel.id ? { ...r, isLiked, likes_count: newCount } : r
       )
     );
@@ -174,8 +184,8 @@ export function ReelsScreen({ navigation }: any) {
   };
 
   const handleSave = (reelId: string) => {
-    setReels(current =>
-      current.map(r =>
+    setReels((current) =>
+      current.map((r) =>
         r.id === reelId ? { ...r, isSaved: !r.isSaved } : r
       )
     );
@@ -184,8 +194,8 @@ export function ReelsScreen({ navigation }: any) {
   const handleShare = async (reel: ReelItem) => {
     try {
       await Share.share({
-        title: reel.title || 'TUKUBI Caribbean Reel',
-        message: `Watch this Caribbean reel on TUKUBI 🌴: https://tukubi.com/reels/${reel.id}`,
+        title: reel.title || 'TUKUBI Shorts',
+        message: `Watch this Caribbean Short on TUKUBI: https://tukubi.com/reels/${reel.id}`,
       });
     } catch (err) {
       console.warn('Error sharing reel:', err);
@@ -230,7 +240,9 @@ export function ReelsScreen({ navigation }: any) {
     setSubmittingComment(true);
 
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       if (!user) {
         Alert.alert('Authentication Required', 'Please sign in to comment.');
         return;
@@ -262,11 +274,10 @@ export function ReelsScreen({ navigation }: any) {
       }
 
       if (data) {
-        setComments(prev => [...prev, data as unknown as CommentItem]);
+        setComments((prev) => [...prev, data as unknown as CommentItem]);
         setNewComment('');
-        // Increment comments count on reel optimistically & in db
-        setReels(curr =>
-          curr.map(r =>
+        setReels((curr) =>
+          curr.map((r) =>
             r.id === activeReelId
               ? { ...r, comments_count: (r.comments_count || 0) + 1 }
               : r
@@ -274,7 +285,10 @@ export function ReelsScreen({ navigation }: any) {
         );
         await supabase
           .from('videos')
-          .update({ comments_count: (reels.find(r => r.id === activeReelId)?.comments_count || 0) + 1 })
+          .update({
+            comments_count:
+              (reels.find((r) => r.id === activeReelId)?.comments_count || 0) + 1,
+          })
           .eq('id', activeReelId);
       }
     } catch (err: any) {
@@ -305,18 +319,93 @@ export function ReelsScreen({ navigation }: any) {
     });
   }, [currentlyPlayingId]);
 
+  const displayedReels =
+    activeTab === 'following'
+      ? reels.filter((r) => Boolean(r.profiles?.username))
+      : reels;
+
+  const renderTopOverlay = () => (
+    <View style={styles.topOverlayBar} pointerEvents="box-none">
+      <TouchableOpacity
+        style={styles.topCircleBtn}
+        onPress={handleBack}
+        activeOpacity={0.8}
+        accessibilityRole="button"
+        accessibilityLabel="Go back"
+      >
+        <Ionicons name="chevron-back" size={22} color={TOKENS.textPrimary} />
+      </TouchableOpacity>
+
+      <View style={styles.topTabsRow}>
+        <TouchableOpacity
+          style={styles.topTabBtn}
+          onPress={() => setActiveTab('for_you')}
+          activeOpacity={0.85}
+          accessibilityRole="tab"
+          accessibilityState={{ selected: activeTab === 'for_you' }}
+        >
+          <Text
+            style={[
+              styles.topTabText,
+              activeTab === 'for_you' && styles.topTabTextActive,
+            ]}
+          >
+            For You
+          </Text>
+          {activeTab === 'for_you' && <View style={styles.topTabIndicator} />}
+        </TouchableOpacity>
+
+        <View style={styles.topTabDivider} />
+
+        <TouchableOpacity
+          style={styles.topTabBtn}
+          onPress={() => setActiveTab('following')}
+          activeOpacity={0.85}
+          accessibilityRole="tab"
+          accessibilityState={{ selected: activeTab === 'following' }}
+        >
+          <Text
+            style={[
+              styles.topTabText,
+              activeTab === 'following' && styles.topTabTextActive,
+            ]}
+          >
+            Following
+          </Text>
+          {activeTab === 'following' && <View style={styles.topTabIndicator} />}
+        </TouchableOpacity>
+      </View>
+
+      <TouchableOpacity
+        style={styles.topCircleBtn}
+        onPress={() => navigation?.navigate?.('Create')}
+        activeOpacity={0.8}
+        accessibilityRole="button"
+        accessibilityLabel="Create Short"
+      >
+        <Ionicons name="videocam-outline" size={21} color={TOKENS.textPrimary} />
+      </TouchableOpacity>
+    </View>
+  );
+
   const renderReel = ({ item }: { item: ReelItem }) => {
     const creator = item.profiles;
     const sound = item.sounds;
-    const creatorHandle = creator?.username ? `@${creator.username}` : '@caribbean_creator';
-    const soundTitle = sound ? `${sound.title} • ${sound.artist_name}` : (item.audio_track || 'Original Audio — Caribbean');
+    const creatorHandle = creator?.username
+      ? `@${creator.username}`
+      : '@caribbean_creator';
+    const soundTitle = sound
+      ? `${sound.title} • ${sound.artist_name}`
+      : item.audio_track || 'Original Audio — TUKUBI';
     const videoUri = item.resolvedVideoUrl || resolveReelMediaUrl(item.storage_path, 'videos');
 
     return (
       <View style={styles.reelContainer}>
         {videoUri ? (
           <Video
-            ref={(ref: InstanceType<typeof ExpoVideo> | null) => { videoRefs.current[item.id] = ref; }}
+            ref={(ref: InstanceType<typeof ExpoVideo> | null) => {
+              videoRefs.current[item.id] = ref;
+            }}
             source={{ uri: videoUri }}
             style={StyleSheet.absoluteFill}
             resizeMode={ResizeMode.COVER}
@@ -326,11 +415,14 @@ export function ReelsScreen({ navigation }: any) {
           />
         ) : (
           <View style={styles.videoPlaceholder}>
-            <Ionicons name="play-circle" size={64} color="rgba(255,255,255,0.4)" />
+            <View style={styles.placeholderPlayRing}>
+              <Ionicons name="play" size={32} color={TOKENS.teal} />
+            </View>
           </View>
         )}
 
-        {/* Semi-transparent scrim at bottom for text contrast */}
+        {/* Top & Bottom Contrast Scrims */}
+        <View style={styles.topScrim} pointerEvents="none" />
         <View style={styles.bottomScrim} pointerEvents="none" />
 
         {/* Content & Action Overlays */}
@@ -343,7 +435,7 @@ export function ReelsScreen({ navigation }: any) {
               ) : (
                 <View style={[styles.avatar, styles.avatarFallback]}>
                   <Text style={styles.avatarInitial}>
-                    {(creator?.full_name || creator?.username || 'C')[0].toUpperCase()}
+                    {(creator?.full_name || creator?.username || 'T')[0].toUpperCase()}
                   </Text>
                 </View>
               )}
@@ -351,7 +443,7 @@ export function ReelsScreen({ navigation }: any) {
                 <Text style={styles.creatorName}>{creatorHandle}</Text>
                 {item.location_tag ? (
                   <View style={styles.locationBadge}>
-                    <Ionicons name="location-sharp" size={10} color={TOKENS.action} />
+                    <Ionicons name="location-sharp" size={11} color={TOKENS.teal} />
                     <Text style={styles.locationText}>{item.location_tag}</Text>
                   </View>
                 ) : null}
@@ -359,79 +451,123 @@ export function ReelsScreen({ navigation }: any) {
             </View>
 
             <Text style={styles.description} numberOfLines={3}>
-              {item.title || 'Vibing in the Caribbean 🌴'}
+              {item.title || 'Island energy in motion'}
             </Text>
 
             <TouchableOpacity
               style={styles.soundRow}
-              onPress={() => navigation?.navigate('Sounds', { soundId: item.sound_id })}
+              onPress={() =>
+                navigation?.navigate?.('Sounds', { soundId: item.sound_id })
+              }
+              activeOpacity={0.85}
               accessibilityLabel={`Audio: ${soundTitle}`}
             >
               <View style={styles.soundIconBadge}>
-                <Ionicons name="musical-notes" size={12} color={TOKENS.actionText} />
+                <Ionicons
+                  name="musical-notes"
+                  size={12}
+                  color={TOKENS.actionText}
+                />
               </View>
               <Text style={styles.soundName} numberOfLines={1}>
                 {soundTitle}
               </Text>
-              <Ionicons name="chevron-forward" size={12} color="rgba(255,255,255,0.7)" />
+              <Ionicons
+                name="chevron-forward"
+                size={12}
+                color={TOKENS.textSecondary}
+              />
             </TouchableOpacity>
           </View>
 
-          {/* Right Rail Actions */}
+          {/* Right Vertical Engagement Stack */}
           <View style={styles.rightRail}>
             <TouchableOpacity
               style={styles.actionButton}
               onPress={() => handleLike(item)}
-              accessibilityLabel={item.isLiked ? 'Unlike reel' : 'Like reel'}
+              activeOpacity={0.8}
+              accessibilityLabel={item.isLiked ? 'Unlike short' : 'Like short'}
             >
-              <Ionicons
-                name={item.isLiked ? 'heart' : 'heart-outline'}
-                size={32}
-                color={item.isLiked ? '#FF3366' : TOKENS.textPrimary}
-              />
+              <View
+                style={[
+                  styles.railIconCircle,
+                  item.isLiked && styles.railIconCircleLiked,
+                ]}
+              >
+                <Ionicons
+                  name={item.isLiked ? 'heart' : 'heart-outline'}
+                  size={26}
+                  color={item.isLiked ? TOKENS.danger : TOKENS.textPrimary}
+                />
+              </View>
               <Text style={styles.actionText}>{item.likes_count || 0}</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
               style={styles.actionButton}
               onPress={() => openComments(item.id)}
+              activeOpacity={0.8}
               accessibilityLabel="View comments"
             >
-              <Ionicons name="chatbubble-outline" size={28} color={TOKENS.textPrimary} />
+              <View style={styles.railIconCircle}>
+                <Ionicons
+                  name="chatbubble-ellipses"
+                  size={24}
+                  color={TOKENS.textPrimary}
+                />
+              </View>
               <Text style={styles.actionText}>{item.comments_count || 0}</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
               style={styles.actionButton}
               onPress={() => handleShare(item)}
-              accessibilityLabel="Share reel"
+              activeOpacity={0.8}
+              accessibilityLabel="Share short"
             >
-              <Ionicons name="paper-plane-outline" size={26} color={TOKENS.textPrimary} />
+              <View style={styles.railIconCircle}>
+                <Ionicons
+                  name="arrow-redo"
+                  size={24}
+                  color={TOKENS.textPrimary}
+                />
+              </View>
               <Text style={styles.actionText}>Share</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
               style={styles.actionButton}
               onPress={() => handleSave(item.id)}
-              accessibilityLabel="Save reel"
+              activeOpacity={0.8}
+              accessibilityLabel="Save short"
             >
-              <Ionicons
-                name={item.isSaved ? 'bookmark' : 'bookmark-outline'}
-                size={26}
-                color={item.isSaved ? TOKENS.accent : TOKENS.textPrimary}
-              />
+              <View
+                style={[
+                  styles.railIconCircle,
+                  item.isSaved && styles.railIconCircleSaved,
+                ]}
+              >
+                <Ionicons
+                  name={item.isSaved ? 'bookmark' : 'bookmark-outline'}
+                  size={22}
+                  color={item.isSaved ? TOKENS.accent : TOKENS.textPrimary}
+                />
+              </View>
             </TouchableOpacity>
 
-            {/* Sound Stem Shortcut */}
-            {item.sound_id ? (
-              <TouchableOpacity
-                style={[styles.actionButton, styles.soundStemBtn]}
-                onPress={() => navigation?.navigate('Sounds', { soundId: item.sound_id })}
-                accessibilityLabel="Open Sound"
-              >
-                <Ionicons name="disc" size={24} color={TOKENS.action} />
-              </TouchableOpacity>
-            ) : null}
+            {/* Sound Disc Shortcut */}
+            <TouchableOpacity
+              style={styles.soundDiscBtn}
+              onPress={() =>
+                navigation?.navigate?.('Sounds', { soundId: item.sound_id })
+              }
+              activeOpacity={0.85}
+              accessibilityLabel="Open Sound"
+            >
+              <View style={styles.soundDiscInner}>
+                <Ionicons name="musical-notes" size={16} color={TOKENS.teal} />
+              </View>
+            </TouchableOpacity>
           </View>
         </View>
       </View>
@@ -441,15 +577,18 @@ export function ReelsScreen({ navigation }: any) {
   if (loading) {
     return (
       <SafeAreaView style={[styles.container, styles.centerBox]}>
-        <ActivityIndicator size="large" color={TOKENS.action} />
+        {renderTopOverlay()}
+        <ActivityIndicator size="large" color={TOKENS.teal} />
       </SafeAreaView>
     );
   }
 
   return (
     <View style={styles.container}>
+      {renderTopOverlay()}
+
       <FlatList
-        data={reels}
+        data={displayedReels}
         keyExtractor={(item) => item.id}
         renderItem={renderReel}
         pagingEnabled
@@ -460,25 +599,39 @@ export function ReelsScreen({ navigation }: any) {
         viewabilityConfig={{ itemVisiblePercentThreshold: 75 }}
         onViewableItemsChanged={handleViewableItemsChanged}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={TOKENS.action} />
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={TOKENS.teal}
+          />
         }
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
-            <Ionicons name="videocam-outline" size={64} color={TOKENS.textMuted} style={{ marginBottom: 16 }} />
-            <Text style={styles.emptyTitle}>No Reels Yet</Text>
-            <Text style={styles.emptyText}>Be the first to share vibrant Caribbean moments, rhythms, and culture 🌴</Text>
+            <View style={styles.emptyIconCircle}>
+              <Ionicons name="videocam-outline" size={38} color={TOKENS.teal} />
+            </View>
+            <Text style={styles.emptyTitle}>No Shorts Yet</Text>
+            <Text style={styles.emptyText}>
+              Share vibrant Caribbean stories, rhythms, and visual moments with the global community.
+            </Text>
             <TouchableOpacity
               style={styles.createButton}
-              onPress={() => navigation?.navigate('Create')}
+              onPress={() => navigation?.navigate?.('Create')}
+              activeOpacity={0.85}
             >
-              <Ionicons name="add-circle" size={20} color={TOKENS.actionText} style={{ marginRight: 8 }} />
-              <Text style={styles.createButtonText}>Create Reel</Text>
+              <Ionicons
+                name="add"
+                size={20}
+                color={TOKENS.actionText}
+                style={{ marginRight: 6 }}
+              />
+              <Text style={styles.createButtonText}>Create Short</Text>
             </TouchableOpacity>
           </View>
         }
       />
 
-      {/* Comments Bottom Sheet Modal */}
+      {/* Midnight Reef Comments Bottom Sheet Modal */}
       <Modal
         visible={commentsVisible}
         animationType="slide"
@@ -490,20 +643,25 @@ export function ReelsScreen({ navigation }: any) {
           style={styles.modalBackdrop}
         >
           <View style={styles.commentsSheet}>
+            <View style={styles.sheetHandleWrap}>
+              <View style={styles.sheetHandle} />
+            </View>
+
             <View style={styles.commentsHeader}>
               <Text style={styles.commentsTitle}>Comments</Text>
               <TouchableOpacity
+                style={styles.closeCommentsBtn}
                 onPress={() => setCommentsVisible(false)}
                 accessibilityLabel="Close comments"
                 hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
               >
-                <Ionicons name="close" size={24} color={TOKENS.textPrimary} />
+                <Ionicons name="close" size={20} color={TOKENS.textPrimary} />
               </TouchableOpacity>
             </View>
 
             {loadingComments ? (
               <View style={styles.commentsLoading}>
-                <ActivityIndicator size="small" color={TOKENS.action} />
+                <ActivityIndicator size="small" color={TOKENS.teal} />
               </View>
             ) : (
               <FlatList
@@ -513,20 +671,39 @@ export function ReelsScreen({ navigation }: any) {
                 showsVerticalScrollIndicator={false}
                 ListEmptyComponent={
                   <View style={styles.emptyCommentsBox}>
-                    <Text style={styles.emptyCommentsText}>No comments yet. Start the conversation!</Text>
+                    <Ionicons
+                      name="chatbubble-ellipses-outline"
+                      size={28}
+                      color={TOKENS.textDim}
+                      style={{ marginBottom: 8 }}
+                    />
+                    <Text style={styles.emptyCommentsText}>
+                      No comments yet. Start the conversation.
+                    </Text>
                   </View>
                 }
                 renderItem={({ item }) => {
                   const author = item.profiles;
-                  const handle = author?.username ? `@${author.username}` : 'Island Member';
+                  const handle = author?.username
+                    ? `@${author.username}`
+                    : 'Community Member';
                   return (
                     <View style={styles.commentRow}>
                       {author?.avatar_url ? (
-                        <Image source={{ uri: author.avatar_url }} style={styles.commentAvatar} />
+                        <Image
+                          source={{ uri: author.avatar_url }}
+                          style={styles.commentAvatar}
+                        />
                       ) : (
-                        <View style={[styles.commentAvatar, styles.avatarFallback]}>
+                        <View
+                          style={[styles.commentAvatar, styles.avatarFallback]}
+                        >
                           <Text style={styles.commentAvatarInitial}>
-                            {(author?.full_name || author?.username || 'U')[0].toUpperCase()}
+                            {(
+                              author?.full_name ||
+                              author?.username ||
+                              'U'
+                            )[0].toUpperCase()}
                           </Text>
                         </View>
                       )}
@@ -545,7 +722,7 @@ export function ReelsScreen({ navigation }: any) {
               <TextInput
                 style={styles.commentInput}
                 placeholder="Add a comment..."
-                placeholderTextColor={TOKENS.textMuted}
+                placeholderTextColor={TOKENS.textDim}
                 value={newComment}
                 onChangeText={setNewComment}
                 multiline
@@ -554,7 +731,8 @@ export function ReelsScreen({ navigation }: any) {
               <TouchableOpacity
                 style={[
                   styles.sendButton,
-                  (!newComment.trim() || submittingComment) && styles.sendButtonDisabled,
+                  (!newComment.trim() || submittingComment) &&
+                    styles.sendButtonDisabled,
                 ]}
                 disabled={!newComment.trim() || submittingComment}
                 onPress={submitComment}
@@ -563,7 +741,11 @@ export function ReelsScreen({ navigation }: any) {
                 {submittingComment ? (
                   <ActivityIndicator size="small" color={TOKENS.actionText} />
                 ) : (
-                  <Ionicons name="arrow-up" size={18} color={TOKENS.actionText} />
+                  <Ionicons
+                    name="arrow-up"
+                    size={18}
+                    color={TOKENS.actionText}
+                  />
                 )}
               </TouchableOpacity>
             </View>
@@ -577,23 +759,99 @@ export function ReelsScreen({ navigation }: any) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000',
+    backgroundColor: TOKENS.canvas,
   },
   centerBox: {
     alignItems: 'center',
     justifyContent: 'center',
   },
+  topOverlayBar: {
+    position: 'absolute',
+    top: Platform.OS === 'ios' ? 54 : 24,
+    left: 16,
+    right: 16,
+    zIndex: 25,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  topCircleBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(13, 22, 40, 0.72)',
+    borderWidth: 1,
+    borderColor: TOKENS.borderStrong,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  topTabsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(7, 13, 26, 0.58)',
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: TOKENS.border,
+    gap: 12,
+  },
+  topTabBtn: {
+    alignItems: 'center',
+    paddingVertical: 2,
+    paddingHorizontal: 4,
+  },
+  topTabDivider: {
+    width: 1,
+    height: 12,
+    backgroundColor: TOKENS.borderStrong,
+  },
+  topTabText: {
+    color: TOKENS.textMuted,
+    fontSize: 14,
+    fontWeight: '700',
+    letterSpacing: 0.2,
+  },
+  topTabTextActive: {
+    color: TOKENS.textPrimary,
+    fontWeight: '800',
+  },
+  topTabIndicator: {
+    marginTop: 4,
+    width: 22,
+    height: 2,
+    borderRadius: 1,
+    backgroundColor: TOKENS.teal,
+  },
   reelContainer: {
     height: screenHeight,
     width: screenWidth,
-    backgroundColor: '#000',
+    backgroundColor: TOKENS.canvas,
     position: 'relative',
   },
   videoPlaceholder: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: TOKENS.surface,
+    backgroundColor: TOKENS.oceanDepth,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  placeholderPlayRing: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    backgroundColor: TOKENS.tealSoft,
+    borderWidth: 1,
+    borderColor: TOKENS.borderActive,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  topScrim: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 120,
+    backgroundColor: 'rgba(7, 13, 26, 0.34)',
   },
   bottomScrim: {
     position: 'absolute',
@@ -601,14 +859,14 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     height: 320,
-    backgroundColor: 'rgba(0, 0, 0, 0.45)',
+    backgroundColor: 'rgba(7, 13, 26, 0.56)',
   },
   overlayContainer: {
     ...StyleSheet.absoluteFillObject,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-end',
-    paddingBottom: 95,
+    paddingBottom: Platform.OS === 'ios' ? 48 : 32,
     paddingHorizontal: 16,
   },
   bottomInfo: {
@@ -619,18 +877,18 @@ const styles = StyleSheet.create({
   creatorHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: 10,
   },
   avatar: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     borderWidth: 1.5,
-    borderColor: TOKENS.action,
+    borderColor: TOKENS.teal,
     marginRight: 10,
   },
   avatarFallback: {
-    backgroundColor: TOKENS.surface,
+    backgroundColor: TOKENS.raised,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -643,12 +901,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   creatorName: {
-    color: '#FFF',
+    color: TOKENS.textPrimary,
     fontSize: 15,
     fontWeight: '800',
-    textShadowColor: 'rgba(0,0,0,0.6)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 3,
   },
   locationBadge: {
     flexDirection: 'row',
@@ -657,40 +912,39 @@ const styles = StyleSheet.create({
     gap: 3,
   },
   locationText: {
-    color: 'rgba(255,255,255,0.85)',
+    color: TOKENS.textSecondary,
     fontSize: 11,
     fontWeight: '600',
   },
   description: {
-    color: '#FFF',
+    color: TOKENS.textPrimary,
     fontSize: 14,
     lineHeight: 20,
     marginBottom: 12,
-    textShadowColor: 'rgba(0,0,0,0.6)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 3,
   },
   soundRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: 'rgba(13, 22, 40, 0.82)',
+    borderWidth: 1,
+    borderColor: TOKENS.borderStrong,
     alignSelf: 'flex-start',
-    paddingVertical: 5,
+    paddingVertical: 6,
     paddingHorizontal: 10,
-    borderRadius: 16,
-    gap: 6,
-    maxWidth: '90%',
+    borderRadius: 999,
+    gap: 7,
+    maxWidth: '92%',
   },
   soundIconBadge: {
     width: 20,
     height: 20,
     borderRadius: 10,
-    backgroundColor: TOKENS.action,
+    backgroundColor: TOKENS.teal,
     alignItems: 'center',
     justifyContent: 'center',
   },
   soundName: {
-    color: '#FFF',
+    color: TOKENS.textPrimary,
     fontSize: 12,
     fontWeight: '600',
     flexShrink: 1,
@@ -698,32 +952,71 @@ const styles = StyleSheet.create({
   rightRail: {
     alignItems: 'center',
     justifyContent: 'flex-end',
-    paddingBottom: 10,
+    paddingBottom: 4,
   },
   actionButton: {
     alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: 16,
   },
-  soundStemBtn: {
-    marginTop: 4,
-    padding: 6,
-    borderRadius: 20,
-    backgroundColor: 'rgba(0,0,0,0.4)',
-  },
-  actionText: {
-    color: '#FFF',
-    fontSize: 12,
-    fontWeight: '700',
-    marginTop: 4,
-    textShadowColor: 'rgba(0,0,0,0.8)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 3,
-  },
-  emptyContainer: {
-    height: screenHeight - 150,
+  railIconCircle: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(13, 22, 40, 0.68)',
+    borderWidth: 1,
+    borderColor: TOKENS.borderStrong,
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 24,
+  },
+  railIconCircleLiked: {
+    borderColor: TOKENS.danger,
+    backgroundColor: 'rgba(244, 63, 94, 0.16)',
+  },
+  railIconCircleSaved: {
+    borderColor: TOKENS.accent,
+    backgroundColor: TOKENS.amberSoft,
+  },
+  soundDiscBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: TOKENS.oceanDepth,
+    borderWidth: 1.5,
+    borderColor: TOKENS.borderActive,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 4,
+  },
+  soundDiscInner: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: TOKENS.tealSoft,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  actionText: {
+    color: TOKENS.textPrimary,
+    fontSize: 11,
+    fontWeight: '700',
+    marginTop: 4,
+  },
+  emptyContainer: {
+    height: screenHeight,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 32,
+  },
+  emptyIconCircle: {
+    width: 76,
+    height: 76,
+    borderRadius: 38,
+    backgroundColor: TOKENS.tealSoft,
+    borderWidth: 1,
+    borderColor: TOKENS.borderActive,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 18,
   },
   emptyTitle: {
     color: TOKENS.textPrimary,
@@ -741,10 +1034,10 @@ const styles = StyleSheet.create({
   createButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: TOKENS.action,
+    backgroundColor: TOKENS.teal,
     paddingHorizontal: 24,
-    paddingVertical: 14,
-    borderRadius: 24,
+    paddingVertical: 13,
+    borderRadius: 999,
   },
   createButtonText: {
     color: TOKENS.actionText,
@@ -753,23 +1046,36 @@ const styles = StyleSheet.create({
   },
   modalBackdrop: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.6)',
+    backgroundColor: TOKENS.scrim,
     justifyContent: 'flex-end',
   },
   commentsSheet: {
-    backgroundColor: TOKENS.canvas,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    maxHeight: screenHeight * 0.65,
-    minHeight: 350,
-    paddingBottom: Platform.OS === 'ios' ? 24 : 16,
+    backgroundColor: TOKENS.surface,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    borderTopWidth: 1,
+    borderColor: TOKENS.borderStrong,
+    maxHeight: screenHeight * 0.68,
+    minHeight: 360,
+    paddingBottom: Platform.OS === 'ios' ? 28 : 16,
+  },
+  sheetHandleWrap: {
+    alignItems: 'center',
+    paddingTop: 10,
+    paddingBottom: 2,
+  },
+  sheetHandle: {
+    width: 36,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: TOKENS.borderStrong,
   },
   commentsHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 14,
+    paddingHorizontal: 18,
+    paddingVertical: 12,
     borderBottomWidth: 1,
     borderBottomColor: TOKENS.border,
   },
@@ -778,13 +1084,21 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '800',
   },
+  closeCommentsBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: TOKENS.raised,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   commentsLoading: {
     padding: 40,
     alignItems: 'center',
   },
   commentsList: {
     flex: 1,
-    paddingHorizontal: 16,
+    paddingHorizontal: 18,
   },
   emptyCommentsBox: {
     paddingVertical: 48,
@@ -805,6 +1119,8 @@ const styles = StyleSheet.create({
     height: 34,
     borderRadius: 17,
     marginRight: 10,
+    borderWidth: 1,
+    borderColor: TOKENS.border,
   },
   commentAvatarInitial: {
     color: TOKENS.textPrimary,
@@ -821,7 +1137,7 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   commentContent: {
-    color: TOKENS.textMuted,
+    color: TOKENS.textSecondary,
     fontSize: 13,
     lineHeight: 18,
   },
@@ -829,33 +1145,33 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 16,
-    paddingTop: 10,
+    paddingTop: 12,
     borderTopWidth: 1,
     borderTopColor: TOKENS.border,
-    gap: 8,
+    gap: 10,
   },
   commentInput: {
     flex: 1,
-    backgroundColor: TOKENS.surface,
+    backgroundColor: TOKENS.raised,
     color: TOKENS.textPrimary,
     borderRadius: 20,
     paddingHorizontal: 16,
-    paddingVertical: 8,
+    paddingVertical: 9,
     maxHeight: 80,
     fontSize: 14,
     borderWidth: 1,
     borderColor: TOKENS.border,
   },
   sendButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: TOKENS.action,
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: TOKENS.teal,
     alignItems: 'center',
     justifyContent: 'center',
   },
   sendButtonDisabled: {
-    backgroundColor: TOKENS.surface,
+    backgroundColor: TOKENS.raised,
     opacity: 0.5,
   },
 });

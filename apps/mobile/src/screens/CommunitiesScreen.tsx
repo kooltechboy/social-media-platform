@@ -29,7 +29,13 @@ interface CommunityItem {
   created_by?: string;
 }
 
-export function CommunitiesScreen({ navigation }: any) {
+function getHubIconName(policy: string): string {
+  if (policy === 'private') return 'lock-closed-outline';
+  if (policy === 'invite_only') return 'people-outline';
+  return 'earth-outline';
+}
+
+export function CommunitiesScreen({ navigation: _navigation }: any) {
   const [communities, setCommunities] = useState<CommunityItem[]>([]);
   const [joinedIds, setJoinedIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
@@ -147,10 +153,11 @@ export function CommunitiesScreen({ navigation }: any) {
 
     setCreatingHub(true);
     try {
-      const slug = hubName
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, '-')
-        .replace(/(^-|-$)/g, '') + `-${Date.now().toString(36)}`;
+      const slug =
+        hubName
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, '-')
+          .replace(/(^-|-$)/g, '') + `-${Date.now().toString(36)}`;
 
       const { data, error } = await supabase
         .from('communities')
@@ -169,14 +176,13 @@ export function CommunitiesScreen({ navigation }: any) {
       if (error) throw error;
 
       if (data) {
-        // Automatically add creator as member
         await supabase.from('community_members').insert({
           community_id: data.id,
           profile_id: userId,
           membership_status: 'active',
         });
 
-        Alert.alert('Hub Created', `"${hubName}" has been successfully launched!`);
+        Alert.alert('Hub Created', `"${hubName}" has been launched.`);
         setModalVisible(false);
         setHubName('');
         setHubDesc('');
@@ -199,7 +205,7 @@ export function CommunitiesScreen({ navigation }: any) {
   if (loading) {
     return (
       <View style={[styles.screen, styles.centerBox]}>
-        <ActivityIndicator size="large" color={TOKENS.action} />
+        <ActivityIndicator size="large" color={TOKENS.teal} />
       </View>
     );
   }
@@ -208,20 +214,25 @@ export function CommunitiesScreen({ navigation }: any) {
     <View style={styles.screen}>
       {/* Header */}
       <View style={styles.header}>
-        <View>
-          <Text style={styles.screenTitle}>🌴 Caribbean Hubs</Text>
-          <Text style={styles.screenSubtitle}>Island circles, diaspora meetups & cultural guilds</Text>
+        <View style={styles.headerTitleBlock}>
+          <Text style={styles.screenTitle}>Caribbean Hubs</Text>
+          <Text style={styles.screenSubtitle}>Regional circles, diaspora networks &amp; creator guilds</Text>
         </View>
-        <TouchableOpacity style={styles.createHubBtn} onPress={() => setModalVisible(true)}>
-          <Ionicons name="add" size={16} color={TOKENS.actionText} style={{ marginRight: 4 }} />
-          <Text style={styles.createHubText}>New Hub</Text>
+        <TouchableOpacity
+          style={styles.createHubBtn}
+          onPress={() => setModalVisible(true)}
+          activeOpacity={0.85}
+          accessibilityRole="button"
+          accessibilityLabel="Create a new community hub"
+        >
+          <Text style={styles.createHubText}>+ New Hub</Text>
         </TouchableOpacity>
       </View>
 
-      {/* Tabs */}
+      {/* Segmented Underline Tabs */}
       <View style={styles.tabsBar}>
         <TouchableOpacity
-          style={[styles.tabChip, filterTab === 'all' && styles.tabChipActive]}
+          style={[styles.tabItem, filterTab === 'all' && styles.tabItemActive]}
           onPress={() => setFilterTab('all')}
         >
           <Text style={[styles.tabText, filterTab === 'all' && styles.tabTextActive]}>
@@ -229,7 +240,7 @@ export function CommunitiesScreen({ navigation }: any) {
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={[styles.tabChip, filterTab === 'my' && styles.tabChipActive]}
+          style={[styles.tabItem, filterTab === 'my' && styles.tabItemActive]}
           onPress={() => setFilterTab('my')}
         >
           <Text style={[styles.tabText, filterTab === 'my' && styles.tabTextActive]}>
@@ -241,18 +252,20 @@ export function CommunitiesScreen({ navigation }: any) {
       {/* Hubs List */}
       <ScrollView
         contentContainerStyle={styles.container}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={TOKENS.action} />}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={TOKENS.teal} />}
       >
         {displayedCommunities.length === 0 ? (
           <View style={styles.emptyContainer}>
-            <Ionicons name="people-outline" size={54} color={TOKENS.textMuted} />
+            <View style={styles.emptyBadge}>
+              <Ionicons name="people-outline" size={30} color={TOKENS.teal} />
+            </View>
             <Text style={styles.emptyTitle}>
               {filterTab === 'my' ? "You Haven't Joined Any Hubs" : 'No Hubs Available Yet'}
             </Text>
             <Text style={styles.emptySub}>
               {filterTab === 'my'
-                ? 'Explore all Caribbean hubs to connect with your island culture and diaspora circles.'
-                : 'Be the first to launch a community hub for your island, diaspora city, or art movement!'}
+                ? 'Explore all Caribbean hubs to connect with regional networks and diaspora circles.'
+                : 'Launch the first community hub for your territory, diaspora city, or creative discipline.'}
             </Text>
             <TouchableOpacity style={styles.emptyBtn} onPress={() => setModalVisible(true)}>
               <Text style={styles.emptyBtnText}>+ Launch First Hub</Text>
@@ -261,30 +274,48 @@ export function CommunitiesScreen({ navigation }: any) {
         ) : (
           displayedCommunities.map((item) => {
             const isMember = joinedIds.has(item.id);
+            const iconName = getHubIconName(item.join_policy);
             return (
               <View key={item.id} style={styles.card}>
                 <View style={styles.cardIconContainer}>
-                  <Text style={styles.cardIcon}>🌴</Text>
+                  <Ionicons name={iconName} size={20} color={TOKENS.teal} />
                 </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.cardTitle}>{item.name}</Text>
+                <View style={styles.cardContent}>
+                  <Text style={styles.cardTitle} numberOfLines={1}>{item.name}</Text>
                   {item.description ? (
                     <Text style={styles.cardDesc} numberOfLines={2}>
                       {item.description}
                     </Text>
                   ) : null}
-                  <Text style={styles.cardMeta}>
-                    {item.member_count} {item.member_count === 1 ? 'member' : 'members'} • {item.join_policy.toUpperCase()}
-                    {item.country_iso ? ` • ${item.country_iso}` : ''}
-                  </Text>
+                  <View style={styles.cardMetaRow}>
+                    <Text style={styles.cardMeta}>
+                      {item.member_count} {item.member_count === 1 ? 'member' : 'members'}
+                    </Text>
+                    <Text style={styles.cardMetaDivider}>•</Text>
+                    <Text style={styles.cardPolicyTag}>
+                      {item.join_policy.replace('_', ' ').toUpperCase()}
+                    </Text>
+                    {item.country_iso ? (
+                      <>
+                        <Text style={styles.cardMetaDivider}>•</Text>
+                        <Text style={styles.cardTerritoryTag}>{item.country_iso}</Text>
+                      </>
+                    ) : null}
+                  </View>
                 </View>
                 <TouchableOpacity
                   style={[styles.joinBtn, isMember ? styles.joinedBtn : styles.unjoinedBtn]}
                   onPress={() => toggleJoin(item)}
+                  activeOpacity={0.82}
                 >
-                  <Text style={isMember ? styles.joinedBtnText : styles.joinBtnText}>
-                    {isMember ? 'Joined ✓' : 'Join Hub'}
-                  </Text>
+                  {isMember ? (
+                    <View style={styles.joinedInner}>
+                      <Ionicons name="checkmark-circle" size={14} color={TOKENS.teal} />
+                      <Text style={styles.joinedBtnText}>Joined</Text>
+                    </View>
+                  ) : (
+                    <Text style={styles.joinBtnText}>Join Hub</Text>
+                  )}
                 </TouchableOpacity>
               </View>
             );
@@ -303,8 +334,13 @@ export function CommunitiesScreen({ navigation }: any) {
           <View style={styles.modalSheet}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Launch a Caribbean Hub</Text>
-              <TouchableOpacity onPress={() => setModalVisible(false)}>
-                <Ionicons name="close" size={24} color={TOKENS.textPrimary} />
+              <TouchableOpacity
+                onPress={() => setModalVisible(false)}
+                style={styles.modalCloseBtn}
+                accessibilityRole="button"
+                accessibilityLabel="Close hub creation modal"
+              >
+                <Ionicons name="close" size={20} color={TOKENS.textMuted} />
               </TouchableOpacity>
             </View>
 
@@ -312,22 +348,22 @@ export function CommunitiesScreen({ navigation }: any) {
             <TextInput
               style={styles.modalInput}
               placeholder="e.g. Trinis in London, Soca Producers Guild"
-              placeholderTextColor={TOKENS.textMuted}
+              placeholderTextColor={TOKENS.textDim}
               value={hubName}
               onChangeText={setHubName}
             />
 
             <Text style={styles.inputLabel}>Description</Text>
             <TextInput
-              style={[styles.modalInput, { minHeight: 60, textAlignVertical: 'top' }]}
-              placeholder="What brings your Caribbean community together?"
-              placeholderTextColor={TOKENS.textMuted}
+              style={[styles.modalInput, styles.modalTextarea]}
+              placeholder="What brings your community together?"
+              placeholderTextColor={TOKENS.textDim}
               value={hubDesc}
               onChangeText={setHubDesc}
               multiline
             />
 
-            <Text style={styles.inputLabel}>Territory / Island Association</Text>
+            <Text style={styles.inputLabel}>Territory / Regional Focus</Text>
             <View style={styles.countryPicker}>
               {(['JAM', 'TTO', 'HTI', 'DOM', 'BRB', 'BHS', 'GUY'] as const).map((iso) => (
                 <TouchableOpacity
@@ -350,6 +386,11 @@ export function CommunitiesScreen({ navigation }: any) {
                   style={[styles.countryBtn, hubPolicy === pol && styles.countryBtnActive]}
                   onPress={() => setHubPolicy(pol)}
                 >
+                  <Ionicons
+                    name={getHubIconName(pol)}
+                    size={13}
+                    color={hubPolicy === pol ? TOKENS.teal : TOKENS.textMuted}
+                  />
                   <Text style={[styles.countryBtnText, hubPolicy === pol && styles.countryBtnTextActive]}>
                     {pol.replace('_', ' ').toUpperCase()}
                   </Text>
@@ -388,17 +429,20 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingTop: 12,
-    paddingBottom: 8,
+    paddingHorizontal: 18,
+    paddingTop: 14,
+    paddingBottom: 12,
+    backgroundColor: TOKENS.surface,
+    gap: 12,
   },
-  screenTitle: { color: TOKENS.textPrimary, fontSize: 18, fontWeight: '900' },
+  headerTitleBlock: { flex: 1 },
+  screenTitle: { color: TOKENS.textPrimary, fontSize: 20, fontWeight: '800', letterSpacing: -0.3 },
   screenSubtitle: { color: TOKENS.textMuted, fontSize: 12, marginTop: 2 },
   createHubBtn: {
-    backgroundColor: TOKENS.action,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 16,
+    backgroundColor: TOKENS.teal,
+    paddingHorizontal: 15,
+    paddingVertical: 9,
+    borderRadius: 999,
     flexDirection: 'row',
     alignItems: 'center',
   },
@@ -406,26 +450,22 @@ const styles = StyleSheet.create({
 
   tabsBar: {
     flexDirection: 'row',
-    gap: 8,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
+    paddingHorizontal: 18,
+    backgroundColor: TOKENS.surface,
     borderBottomWidth: 1,
     borderBottomColor: TOKENS.border,
+    gap: 20,
   },
-  tabChip: {
-    paddingHorizontal: 14,
-    paddingVertical: 6,
-    borderRadius: 14,
-    backgroundColor: TOKENS.surface,
-    borderWidth: 1,
-    borderColor: TOKENS.border,
+  tabItem: {
+    paddingVertical: 11,
+    borderBottomWidth: 2,
+    borderBottomColor: 'transparent',
   },
-  tabChipActive: {
-    backgroundColor: TOKENS.action,
-    borderColor: TOKENS.action,
+  tabItemActive: {
+    borderBottomColor: TOKENS.teal,
   },
-  tabText: { color: TOKENS.textMuted, fontSize: 12, fontWeight: '700' },
-  tabTextActive: { color: TOKENS.actionText },
+  tabText: { color: TOKENS.textMuted, fontSize: 13, fontWeight: '700' },
+  tabTextActive: { color: TOKENS.teal, fontWeight: '800' },
 
   container: { padding: 16, paddingBottom: 40 },
   card: {
@@ -437,50 +477,80 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: 13,
   },
   cardIconContainer: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
-    backgroundColor: 'rgba(255, 87, 34, 0.1)',
+    width: 44,
+    height: 44,
+    borderRadius: 14,
+    backgroundColor: TOKENS.tealSoft,
+    borderWidth: 1,
+    borderColor: TOKENS.borderActive,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  cardIcon: { fontSize: 20 },
-  cardTitle: { color: TOKENS.textPrimary, fontSize: 15, fontWeight: '800' },
-  cardDesc: { color: TOKENS.textMuted, fontSize: 12, lineHeight: 16, marginTop: 2 },
-  cardMeta: { color: TOKENS.action, fontSize: 11, fontWeight: '700', marginTop: 4 },
+  cardContent: { flex: 1 },
+  cardTitle: { color: TOKENS.textPrimary, fontSize: 15, fontWeight: '700' },
+  cardDesc: { color: TOKENS.textSecondary, fontSize: 12, lineHeight: 17, marginTop: 3 },
+  cardMetaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 6,
+    flexWrap: 'wrap',
+    gap: 5,
+  },
+  cardMeta: { color: TOKENS.teal, fontSize: 11, fontWeight: '700' },
+  cardMetaDivider: { color: TOKENS.textDim, fontSize: 11 },
+  cardPolicyTag: { color: TOKENS.textMuted, fontSize: 10, fontWeight: '700', letterSpacing: 0.4 },
+  cardTerritoryTag: { color: TOKENS.action, fontSize: 11, fontWeight: '700' },
+
   joinBtn: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 999 },
-  unjoinedBtn: { backgroundColor: TOKENS.action },
-  joinedBtn: { backgroundColor: TOKENS.raised, borderWidth: 1, borderColor: TOKENS.border },
-  joinBtnText: { color: TOKENS.actionText, fontSize: 11, fontWeight: '800' },
-  joinedBtnText: { color: TOKENS.textMuted, fontSize: 11, fontWeight: '700' },
+  unjoinedBtn: { backgroundColor: TOKENS.teal },
+  joinedBtn: {
+    backgroundColor: TOKENS.raised,
+    borderWidth: 1,
+    borderColor: TOKENS.borderActive,
+  },
+  joinedInner: { flexDirection: 'row', alignItems: 'center', gap: 5 },
+  joinBtnText: { color: TOKENS.actionText, fontSize: 12, fontWeight: '800' },
+  joinedBtnText: { color: TOKENS.teal, fontSize: 12, fontWeight: '700' },
 
   emptyContainer: {
     alignItems: 'center',
-    paddingVertical: 60,
+    paddingVertical: 56,
     paddingHorizontal: 24,
   },
-  emptyTitle: { color: TOKENS.textPrimary, fontSize: 16, fontWeight: '800', marginTop: 12, marginBottom: 4 },
-  emptySub: { color: TOKENS.textMuted, fontSize: 13, textAlign: 'center', lineHeight: 18, marginBottom: 18 },
+  emptyBadge: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: TOKENS.tealSoft,
+    borderWidth: 1,
+    borderColor: TOKENS.borderActive,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  emptyTitle: { color: TOKENS.textPrimary, fontSize: 16, fontWeight: '800', marginTop: 14, marginBottom: 6 },
+  emptySub: { color: TOKENS.textMuted, fontSize: 13, textAlign: 'center', lineHeight: 19, marginBottom: 20 },
   emptyBtn: {
-    backgroundColor: TOKENS.action,
+    backgroundColor: TOKENS.teal,
     paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 16,
+    paddingVertical: 11,
+    borderRadius: 999,
   },
   emptyBtnText: { color: TOKENS.actionText, fontSize: 13, fontWeight: '800' },
 
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.6)',
+    backgroundColor: TOKENS.scrim,
     justifyContent: 'flex-end',
   },
   modalSheet: {
-    backgroundColor: TOKENS.canvas,
+    backgroundColor: TOKENS.surface,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
+    borderTopWidth: 1,
+    borderColor: TOKENS.borderStrong,
     padding: 20,
     paddingBottom: 36,
   },
@@ -488,38 +558,53 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 14,
   },
   modalTitle: { color: TOKENS.textPrimary, fontSize: 18, fontWeight: '800' },
-  inputLabel: { color: TOKENS.textMuted, fontSize: 12, fontWeight: '700', marginBottom: 6, marginTop: 8 },
+  modalCloseBtn: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: TOKENS.raised,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  inputLabel: { color: TOKENS.textSecondary, fontSize: 12, fontWeight: '700', marginBottom: 6, marginTop: 8 },
   modalInput: {
-    backgroundColor: TOKENS.surface,
+    backgroundColor: TOKENS.raised,
     borderWidth: 1,
-    borderColor: TOKENS.border,
+    borderColor: TOKENS.borderStrong,
     borderRadius: 12,
     paddingHorizontal: 14,
-    paddingVertical: 10,
+    paddingVertical: 11,
     color: TOKENS.textPrimary,
     fontSize: 14,
-    marginBottom: 10,
+    marginBottom: 8,
+  },
+  modalTextarea: {
+    minHeight: 68,
+    textAlignVertical: 'top',
   },
   countryPicker: { flexDirection: 'row', gap: 6, flexWrap: 'wrap', marginBottom: 12 },
   countryBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
     paddingHorizontal: 12,
-    paddingVertical: 6,
+    paddingVertical: 7,
     borderRadius: 10,
-    backgroundColor: TOKENS.surface,
+    backgroundColor: TOKENS.raised,
     borderWidth: 1,
     borderColor: TOKENS.border,
   },
   countryBtnActive: {
-    borderColor: TOKENS.action,
-    backgroundColor: 'rgba(255, 87, 34, 0.15)',
+    borderColor: TOKENS.borderActive,
+    backgroundColor: TOKENS.tealSoft,
   },
   countryBtnText: { color: TOKENS.textMuted, fontSize: 11, fontWeight: '700' },
-  countryBtnTextActive: { color: TOKENS.action, fontWeight: '800' },
+  countryBtnTextActive: { color: TOKENS.teal, fontWeight: '800' },
   submitBtn: {
-    backgroundColor: TOKENS.action,
+    backgroundColor: TOKENS.teal,
     borderRadius: 14,
     paddingVertical: 14,
     alignItems: 'center',

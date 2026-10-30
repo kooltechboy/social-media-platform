@@ -288,13 +288,13 @@ export default function AppHeader() {
         </div>
       </div>
 
-      <div className="flex items-center gap-1 sm:gap-2.5 shrink-0">
+      <div className="flex items-center gap-0.5 sm:gap-2 shrink-0">
         <Link
           href="/search"
-          className="md:hidden p-2 text-white/70 hover:text-white rounded-full hover:bg-white/10 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
+          className="md:hidden text-[#C3CCDA] hover:text-white rounded-xl hover:bg-white/[0.06] transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
           aria-label={t('a11y.search')}
         >
-          <Search className="w-5 h-5" aria-hidden="true" />
+          <Search className="w-[19px] h-[19px]" aria-hidden="true" />
         </Link>
 
         <div className="hidden sm:block">
@@ -312,23 +312,23 @@ export default function AppHeader() {
 
         <Link
           href="/notifications"
-          className="w-11 h-11 text-[#C3CCDA] hover:text-white rounded-xl hover:bg-white/[0.06] relative transition-colors flex items-center justify-center"
+          className="min-h-[44px] min-w-[44px] text-[#C3CCDA] hover:text-white rounded-xl hover:bg-white/[0.06] relative transition-colors flex items-center justify-center"
           aria-label={t('nav.notifications')}
         >
-          <Bell className="w-5 h-5" aria-hidden="true" />
+          <Bell className="w-[19px] h-[19px]" aria-hidden="true" />
           {unreadCount > 0 && (
-            <span className="absolute top-2 right-2 w-2 h-2 bg-brand-goldenHour rounded-full ring-2 ring-[#070D1A]" />
+            <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-[#00C2A8] rounded-full ring-2 ring-[#070D1A]" />
           )}
         </Link>
 
         <Link
           href="/messages"
-          className="hidden md:flex w-11 h-11 text-[#C3CCDA] hover:text-white rounded-xl hover:bg-white/[0.06] relative transition-colors items-center justify-center"
+          className="hidden md:flex min-h-[44px] min-w-[44px] text-[#C3CCDA] hover:text-white rounded-xl hover:bg-white/[0.06] relative transition-colors items-center justify-center"
           aria-label={t('nav.messages')}
         >
           <MessageSquare className="w-5 h-5" aria-hidden="true" />
           {unreadMessagesCount > 0 && (
-            <span className="absolute top-2 right-2 w-2 h-2 bg-brand-caribbeanSea rounded-full ring-2 ring-[#070D1A]" />
+            <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-brand-caribbeanSea rounded-full ring-2 ring-[#070D1A]" />
           )}
         </Link>
 
@@ -340,7 +340,7 @@ export default function AppHeader() {
               window.dispatchEvent(new CustomEvent('tukubi:open-ecosystem-menu'));
             }
           }}
-          className="md:hidden p-2 text-white/70 hover:text-white rounded-full hover:bg-white/10 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
+          className="md:hidden text-[#C3CCDA] hover:text-white rounded-xl hover:bg-white/[0.06] transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
           aria-label="Open TUKUBI Navigation Menu"
         >
           <Menu className="w-5 h-5" aria-hidden="true" />

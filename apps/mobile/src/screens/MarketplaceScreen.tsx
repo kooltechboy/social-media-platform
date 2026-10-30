@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   StyleSheet,
   Text,
@@ -13,8 +13,11 @@ import {
   ActivityIndicator,
   Alert,
 } from 'react-native';
+import { Ionicons as ExpoIonicons } from '@expo/vector-icons';
 import { TOKENS } from '../theme/tokens';
 import { supabase } from '../lib/supabase';
+
+const Ionicons = ExpoIonicons as unknown as React.ComponentType<any>;
 
 interface MobileProduct {
   id: string;
@@ -44,8 +47,8 @@ const CATEGORIES = [
   'Tech',
 ];
 
-const TERRITORIES = [
-  { code: 'ALL', flag: '🌴', name: 'All' },
+const TERRITORIES: Array<{ code: string; flag?: string; name: string }> = [
+  { code: 'ALL', name: 'All' },
   { code: 'JAM', flag: '🇯🇲', name: 'Jamaica' },
   { code: 'DOM', flag: '🇩🇴', name: 'Dom. Rep.' },
   { code: 'TTO', flag: '🇹🇹', name: 'Trinidad' },
@@ -54,6 +57,12 @@ const TERRITORIES = [
   { code: 'BHS', flag: '🇧🇸', name: 'Bahamas' },
   { code: 'GUY', flag: '🇬🇾', name: 'Guyana' },
 ];
+
+function getProductKindIcon(kind: string): string {
+  if (kind === 'service') return 'shield-checkmark-outline';
+  if (kind === 'digital') return 'layers-outline';
+  return 'cube-outline';
+}
 
 export function MarketplaceScreen({ navigation }: any) {
   const [products, setProducts] = useState<MobileProduct[]>([]);
@@ -68,7 +77,7 @@ export function MarketplaceScreen({ navigation }: any) {
   const [offerSuccessMsg, setOfferSuccessMsg] = useState<string | null>(null);
   const [connectingSeller, setConnectingSeller] = useState(false);
 
-  const fetchProducts = async () => {
+  const fetchProducts = useCallback(async () => {
     try {
       let query = supabase
         .from('products')
@@ -118,7 +127,7 @@ export function MarketplaceScreen({ navigation }: any) {
           return {
             id: item.id,
             title: item.title,
-            description: item.description || 'Authentic Caribbean listing with buyer protection.',
+            description: item.description || 'Authentic Caribbean listing with escrow buyer protection.',
             priceMinor: item.price_minor,
             priceFormatted: `$${(item.price_minor / 100).toFixed(2)} ${item.currency || 'USD'}`,
             currency: item.currency || 'USD',
@@ -140,11 +149,11 @@ export function MarketplaceScreen({ navigation }: any) {
       setLoading(false);
       setRefreshing(false);
     }
-  };
+  }, [activeTerritory, activeCategory, searchQuery]);
 
   useEffect(() => {
     fetchProducts();
-  }, [activeTerritory, activeCategory, searchQuery]);
+  }, [fetchProducts]);
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -162,7 +171,7 @@ export function MarketplaceScreen({ navigation }: any) {
     setOfferSubmitting(true);
     try {
       const priceMinor = Math.round(numPrice * 100);
-      const { data, error } = await supabase.rpc('submit_marketplace_offer', {
+      const { error } = await supabase.rpc('submit_marketplace_offer', {
         p_product_id: selectedProduct.id,
         p_offered_price_minor: priceMinor,
         p_quantity: 1,
@@ -170,7 +179,6 @@ export function MarketplaceScreen({ navigation }: any) {
       });
 
       if (error) {
-        // If RPC throws authentication error
         if (error.message.includes('Authentication required')) {
           Alert.alert('Sign In Required', 'Please sign in to make an offer to the seller.');
         } else {
@@ -234,34 +242,49 @@ export function MarketplaceScreen({ navigation }: any) {
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
-        {/* Header with Sell Button */}
+        {/* Header with Sell Button & Escrow Trust Pill */}
         <View style={styles.header}>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.headerTitle}>Caribbean Marketplace</Text>
+          <View style={styles.headerLeft}>
+            <View style={styles.headerTitleRow}>
+              <Text style={styles.headerTitle}>Marketplace</Text>
+              <View style={styles.escrowTrustPill}>
+                <Ionicons name="shield-checkmark-outline" size={11} color={TOKENS.teal} />
+                <Text style={styles.escrowTrustText}>ESCROW</Text>
+              </View>
+            </View>
             <Text style={styles.headerSubtitle}>
-              Verified island crafts, spices, mas, and digital assets with buyer protection.
+              Verified crafts, culinary goods &amp; digital assets with buyer protection.
             </Text>
           </View>
           <TouchableOpacity
             style={styles.sellBtn}
             onPress={() => navigation && navigation.navigate('SellProduct')}
-            activeOpacity={0.8}
+            activeOpacity={0.85}
             accessibilityRole="button"
             accessibilityLabel="Sell an item on Caribbean Marketplace"
           >
-            <Text style={styles.sellBtnText}>+ Sell Item</Text>
+            <Ionicons name="add" size={15} color={TOKENS.actionText} />
+            <Text style={styles.sellBtnText}>Sell Item</Text>
           </TouchableOpacity>
         </View>
 
         {/* Search Input */}
         <View style={styles.searchContainer}>
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Search goods (e.g. coffee, mas, art, phone)..."
-            placeholderTextColor={TOKENS.textMuted}
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-          />
+          <View style={styles.searchInputWrap}>
+            <Ionicons name="search-outline" size={17} color={TOKENS.textDim} />
+            <TextInput
+              style={styles.searchInput}
+              placeholder="Search goods (coffee, mas, art, audio)…"
+              placeholderTextColor={TOKENS.textDim}
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+            />
+            {searchQuery.length > 0 && (
+              <TouchableOpacity onPress={() => setSearchQuery('')}>
+                <Ionicons name="close-circle" size={16} color={TOKENS.textMuted} />
+              </TouchableOpacity>
+            )}
+          </View>
         </View>
 
         {/* Territory Filter Rail */}
@@ -271,26 +294,29 @@ export function MarketplaceScreen({ navigation }: any) {
           style={styles.territoryRail}
           contentContainerStyle={styles.territoryRailContent}
         >
-          {TERRITORIES.map((t) => (
-            <TouchableOpacity
-              key={t.code}
-              onPress={() => setActiveTerritory(t.code)}
-              style={[
-                styles.territoryChip,
-                activeTerritory === t.code && styles.territoryChipActive,
-              ]}
-            >
-              <Text style={styles.territoryFlag}>{t.flag}</Text>
-              <Text
-                style={[
-                  styles.territoryText,
-                  activeTerritory === t.code && styles.territoryTextActive,
-                ]}
+          {TERRITORIES.map((t) => {
+            const active = activeTerritory === t.code;
+            return (
+              <TouchableOpacity
+                key={t.code}
+                onPress={() => setActiveTerritory(t.code)}
+                style={[styles.territoryChip, active && styles.territoryChipActive]}
               >
-                {t.name}
-              </Text>
-            </TouchableOpacity>
-          ))}
+                {t.flag ? (
+                  <Text style={styles.territoryFlag}>{t.flag}</Text>
+                ) : (
+                  <Ionicons
+                    name="earth-outline"
+                    size={13}
+                    color={active ? TOKENS.actionText : TOKENS.teal}
+                  />
+                )}
+                <Text style={[styles.territoryText, active && styles.territoryTextActive]}>
+                  {t.name}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
         </ScrollView>
 
         {/* Categories Rail */}
@@ -300,31 +326,26 @@ export function MarketplaceScreen({ navigation }: any) {
           style={styles.categoryRail}
           contentContainerStyle={styles.categoryRailContent}
         >
-          {CATEGORIES.map((c) => (
-            <TouchableOpacity
-              key={c}
-              onPress={() => setActiveCategory(c)}
-              style={[
-                styles.categoryChip,
-                activeCategory === c && styles.categoryChipActive,
-              ]}
-            >
-              <Text
-                style={[
-                  styles.categoryText,
-                  activeCategory === c && styles.categoryTextActive,
-                ]}
+          {CATEGORIES.map((c) => {
+            const active = activeCategory === c;
+            return (
+              <TouchableOpacity
+                key={c}
+                onPress={() => setActiveCategory(c)}
+                style={[styles.categoryChip, active && styles.categoryChipActive]}
               >
-                {c}
-              </Text>
-            </TouchableOpacity>
-          ))}
+                <Text style={[styles.categoryText, active && styles.categoryTextActive]}>
+                  {c}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
         </ScrollView>
 
         {/* Product Grid List */}
         {loading ? (
           <View style={styles.centerBox}>
-            <ActivityIndicator size="large" color={TOKENS.action} />
+            <ActivityIndicator size="large" color={TOKENS.teal} />
           </View>
         ) : (
           <ScrollView
@@ -334,16 +355,18 @@ export function MarketplaceScreen({ navigation }: any) {
               <RefreshControl
                 refreshing={refreshing}
                 onRefresh={onRefresh}
-                tintColor={TOKENS.action}
+                tintColor={TOKENS.teal}
               />
             }
           >
             {products.length === 0 ? (
               <View style={styles.emptyContainer}>
-                <Text style={styles.emptyIcon}>🛍️</Text>
+                <View style={styles.emptyIconBadge}>
+                  <Ionicons name="bag-handle-outline" size={30} color={TOKENS.teal} />
+                </View>
                 <Text style={styles.emptyTitle}>No Products Found</Text>
                 <Text style={styles.emptyText}>
-                  No items match this filter. Be the first to list authentic goods from this territory!
+                  No listings match this filter yet. Be the first merchant to list authentic goods for this category.
                 </Text>
                 <TouchableOpacity
                   style={styles.emptySellBtn}
@@ -360,11 +383,11 @@ export function MarketplaceScreen({ navigation }: any) {
                     style={styles.card}
                     onPress={() => {
                       setSelectedProduct(item);
-                      setOfferPriceInput((item.priceMinor * 0.9 / 100).toFixed(2));
+                      setOfferPriceInput(((item.priceMinor * 0.9) / 100).toFixed(2));
                     }}
-                    activeOpacity={0.8}
+                    activeOpacity={0.82}
                   >
-                    {/* Real Product Image or Styled Badge */}
+                    {/* Product Image or Midnight Reef Icon Placeholder */}
                     <View style={styles.cardImageContainer}>
                       {item.imageUrl ? (
                         <Image
@@ -374,9 +397,11 @@ export function MarketplaceScreen({ navigation }: any) {
                         />
                       ) : (
                         <View style={styles.cardImagePlaceholder}>
-                          <Text style={styles.cardImageEmoji}>
-                            {item.productKind === 'service' ? '🤝' : item.productKind === 'digital' ? '🎧' : '📦'}
-                          </Text>
+                          <Ionicons
+                            name={getProductKindIcon(item.productKind)}
+                            size={30}
+                            color={TOKENS.teal}
+                          />
                         </View>
                       )}
                       <View style={styles.kindBadge}>
@@ -395,6 +420,10 @@ export function MarketplaceScreen({ navigation }: any) {
                         <Text style={styles.cardPrice}>{item.priceFormatted}</Text>
                         <Text style={styles.cardCondition}>{item.condition}</Text>
                       </View>
+                      <View style={styles.cardEscrowRow}>
+                        <Ionicons name="shield-checkmark-outline" size={11} color={TOKENS.teal} />
+                        <Text style={styles.cardEscrowText}>Protected</Text>
+                      </View>
                     </View>
                   </TouchableOpacity>
                 ))}
@@ -403,7 +432,7 @@ export function MarketplaceScreen({ navigation }: any) {
           </ScrollView>
         )}
 
-        {/* Product Detail & Real Offer Modal */}
+        {/* Product Detail & Escrow Offer Modal */}
         <Modal
           visible={!!selectedProduct}
           transparent
@@ -414,13 +443,28 @@ export function MarketplaceScreen({ navigation }: any) {
             <View style={styles.modalContent}>
               {selectedProduct && (
                 <>
-                  {selectedProduct.imageUrl && (
+                  <View style={styles.modalTopRow}>
+                    <View style={styles.escrowTrustPill}>
+                      <Ionicons name="shield-checkmark-outline" size={12} color={TOKENS.teal} />
+                      <Text style={styles.escrowTrustText}>ESCROW PROTECTED</Text>
+                    </View>
+                    <TouchableOpacity
+                      onPress={() => setSelectedProduct(null)}
+                      style={styles.modalCloseIconBtn}
+                      accessibilityRole="button"
+                      accessibilityLabel="Close product details"
+                    >
+                      <Ionicons name="close" size={18} color={TOKENS.textMuted} />
+                    </TouchableOpacity>
+                  </View>
+
+                  {selectedProduct.imageUrl ? (
                     <Image
                       source={{ uri: selectedProduct.imageUrl }}
                       style={styles.modalHeroImage}
                       resizeMode="cover"
                     />
-                  )}
+                  ) : null}
 
                   <Text style={styles.modalTitle}>{selectedProduct.title}</Text>
                   <Text style={styles.modalSeller}>
@@ -429,49 +473,54 @@ export function MarketplaceScreen({ navigation }: any) {
                   <Text style={styles.modalPrice}>{selectedProduct.priceFormatted}</Text>
                   <Text style={styles.modalDescription}>{selectedProduct.description}</Text>
 
-                  {/* Actions Row: Message Seller & Make Offer */}
+                  {/* Actions Row: Message Seller */}
                   <View style={styles.modalActionButtons}>
                     <TouchableOpacity
                       style={[styles.messageSellerBtn, connectingSeller && { opacity: 0.6 }]}
                       onPress={handleContactSeller}
                       disabled={connectingSeller}
-                      activeOpacity={0.8}
+                      activeOpacity={0.82}
                     >
                       {connectingSeller ? (
-                        <ActivityIndicator size="small" color="#FFF" />
+                        <ActivityIndicator size="small" color={TOKENS.action} />
                       ) : (
-                        <Text style={styles.messageSellerBtnText}>💬 Message Seller</Text>
+                        <>
+                          <Ionicons name="chatbubble-ellipses-outline" size={16} color={TOKENS.action} />
+                          <Text style={styles.messageSellerBtnText}>Message Seller</Text>
+                        </>
                       )}
                     </TouchableOpacity>
                   </View>
 
                   {offerSuccessMsg ? (
                     <View style={styles.successBanner}>
-                      <Text style={styles.successBannerText}>
-                        ✅ {offerSuccessMsg}
-                      </Text>
+                      <Ionicons name="checkmark-circle" size={16} color={TOKENS.success} />
+                      <Text style={styles.successBannerText}>{offerSuccessMsg}</Text>
                     </View>
                   ) : (
                     <View style={styles.offerForm}>
-                      <Text style={styles.offerLabel}>Make an Offer ($USD):</Text>
+                      <Text style={styles.offerLabel}>Make an Offer (USD)</Text>
                       <TextInput
                         style={styles.offerInput}
                         keyboardType="decimal-pad"
                         value={offerPriceInput}
                         onChangeText={setOfferPriceInput}
                         placeholder="Offer price"
-                        placeholderTextColor={TOKENS.textMuted}
+                        placeholderTextColor={TOKENS.textDim}
                       />
                       <TouchableOpacity
                         style={[styles.makeOfferButton, offerSubmitting && { opacity: 0.6 }]}
                         onPress={handleMakeOffer}
                         disabled={offerSubmitting}
-                        activeOpacity={0.8}
+                        activeOpacity={0.85}
                       >
                         {offerSubmitting ? (
-                          <ActivityIndicator size="small" color="#090D1A" />
+                          <ActivityIndicator size="small" color={TOKENS.actionText} />
                         ) : (
-                          <Text style={styles.makeOfferButtonText}>Submit Offer via Escrow</Text>
+                          <>
+                            <Ionicons name="shield-checkmark-outline" size={16} color={TOKENS.actionText} />
+                            <Text style={styles.makeOfferButtonText}>Submit Offer via Escrow</Text>
+                          </>
                         )}
                       </TouchableOpacity>
                     </View>
@@ -512,48 +561,88 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 16,
     paddingTop: 14,
-    paddingBottom: 8,
+    paddingBottom: 12,
+    backgroundColor: TOKENS.surface,
+    borderBottomWidth: 1,
+    borderBottomColor: TOKENS.border,
+  },
+  headerLeft: {
+    flex: 1,
+    paddingRight: 10,
+  },
+  headerTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
   },
   headerTitle: {
     fontSize: 20,
-    fontWeight: '900',
+    fontWeight: '800',
     color: TOKENS.textPrimary,
+    letterSpacing: -0.3,
+  },
+  escrowTrustPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: TOKENS.tealSoft,
+    borderWidth: 1,
+    borderColor: TOKENS.borderActive,
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    borderRadius: 999,
+  },
+  escrowTrustText: {
+    fontSize: 9,
+    fontWeight: '800',
+    color: TOKENS.teal,
+    letterSpacing: 0.5,
   },
   headerSubtitle: {
     fontSize: 11,
     color: TOKENS.textMuted,
-    marginTop: 2,
+    marginTop: 3,
     lineHeight: 15,
   },
   sellBtn: {
-    backgroundColor: TOKENS.action,
+    backgroundColor: TOKENS.teal,
     paddingHorizontal: 14,
-    paddingVertical: 8,
+    paddingVertical: 9,
     borderRadius: 999,
-    marginLeft: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
   },
   sellBtnText: {
-    color: '#090D1A',
+    color: TOKENS.actionText,
     fontSize: 12,
-    fontWeight: '900',
+    fontWeight: '800',
   },
   searchContainer: {
     paddingHorizontal: 16,
-    paddingVertical: 8,
+    paddingTop: 10,
+    paddingBottom: 6,
   },
-  searchInput: {
+  searchInputWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
     backgroundColor: TOKENS.surface,
     borderWidth: 1,
-    borderColor: TOKENS.border,
-    borderRadius: 16,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
+    borderColor: TOKENS.borderStrong,
+    borderRadius: 14,
+    paddingHorizontal: 14,
+    minHeight: 44,
+    gap: 8,
+  },
+  searchInput: {
+    flex: 1,
+    paddingVertical: 9,
     fontSize: 14,
     color: TOKENS.textPrimary,
-    minHeight: 44,
   },
   territoryRail: {
     maxHeight: 46,
+    marginTop: 2,
   },
   territoryRailContent: {
     paddingHorizontal: 16,
@@ -562,7 +651,7 @@ const styles = StyleSheet.create({
   territoryChip: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    gap: 5,
     backgroundColor: TOKENS.surface,
     borderWidth: 1,
     borderColor: TOKENS.border,
@@ -572,8 +661,8 @@ const styles = StyleSheet.create({
     minHeight: 38,
   },
   territoryChipActive: {
-    backgroundColor: TOKENS.action,
-    borderColor: TOKENS.action,
+    backgroundColor: TOKENS.teal,
+    borderColor: TOKENS.teal,
   },
   territoryFlag: {
     fontSize: 13,
@@ -584,12 +673,12 @@ const styles = StyleSheet.create({
     color: TOKENS.textMuted,
   },
   territoryTextActive: {
-    color: '#090D1A',
-    fontWeight: '900',
+    color: TOKENS.actionText,
+    fontWeight: '800',
   },
   categoryRail: {
     maxHeight: 44,
-    marginTop: 4,
+    marginTop: 6,
   },
   categoryRailContent: {
     paddingHorizontal: 16,
@@ -602,12 +691,12 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     paddingHorizontal: 12,
     paddingVertical: 6,
-    minHeight: 38,
+    minHeight: 36,
     justifyContent: 'center',
   },
   categoryChipActive: {
-    backgroundColor: 'rgba(255, 122, 89, 0.2)',
-    borderColor: TOKENS.action,
+    backgroundColor: TOKENS.tealSoft,
+    borderColor: TOKENS.borderActive,
   },
   categoryText: {
     fontSize: 11,
@@ -615,8 +704,8 @@ const styles = StyleSheet.create({
     color: TOKENS.textMuted,
   },
   categoryTextActive: {
-    color: TOKENS.action,
-    fontWeight: '900',
+    color: TOKENS.teal,
+    fontWeight: '800',
   },
   scrollView: {
     flex: 1,
@@ -631,9 +720,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  emptyIcon: {
-    fontSize: 48,
-    marginBottom: 12,
+  emptyIconBadge: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: TOKENS.tealSoft,
+    borderWidth: 1,
+    borderColor: TOKENS.borderActive,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 14,
   },
   emptyTitle: {
     fontSize: 16,
@@ -648,16 +744,16 @@ const styles = StyleSheet.create({
     lineHeight: 18,
   },
   emptySellBtn: {
-    marginTop: 16,
-    backgroundColor: TOKENS.action,
+    marginTop: 18,
+    backgroundColor: TOKENS.teal,
     paddingHorizontal: 20,
-    paddingVertical: 10,
+    paddingVertical: 11,
     borderRadius: 999,
   },
   emptySellBtnText: {
-    color: '#090D1A',
+    color: TOKENS.actionText,
     fontSize: 13,
-    fontWeight: '900',
+    fontWeight: '800',
   },
   grid: {
     flexDirection: 'row',
@@ -670,13 +766,13 @@ const styles = StyleSheet.create({
     backgroundColor: TOKENS.surface,
     borderWidth: 1,
     borderColor: TOKENS.border,
-    borderRadius: 18,
+    borderRadius: 16,
     overflow: 'hidden',
     marginBottom: 6,
   },
   cardImageContainer: {
-    height: 120,
-    backgroundColor: TOKENS.canvas,
+    height: 122,
+    backgroundColor: TOKENS.oceanDepth,
     position: 'relative',
   },
   cardImage: {
@@ -687,39 +783,38 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  cardImageEmoji: {
-    fontSize: 40,
+    backgroundColor: TOKENS.oceanDepth,
   },
   kindBadge: {
     position: 'absolute',
     top: 8,
     left: 8,
-    backgroundColor: 'rgba(9, 6, 15, 0.75)',
+    backgroundColor: TOKENS.surface,
     borderWidth: 1,
-    borderColor: TOKENS.action,
-    paddingHorizontal: 6,
+    borderColor: TOKENS.borderActive,
+    paddingHorizontal: 7,
     paddingVertical: 2,
     borderRadius: 8,
   },
   kindBadgeText: {
     fontSize: 9,
-    fontWeight: '900',
-    color: TOKENS.action,
+    fontWeight: '800',
+    color: TOKENS.teal,
     textTransform: 'uppercase',
+    letterSpacing: 0.4,
   },
   cardBody: {
-    padding: 10,
-    gap: 2,
+    padding: 11,
+    gap: 3,
   },
   cardSeller: {
     fontSize: 10,
     fontWeight: '700',
-    color: TOKENS.sea,
+    color: TOKENS.action,
   },
   cardTitle: {
     fontSize: 13,
-    fontWeight: '800',
+    fontWeight: '700',
     color: TOKENS.textPrimary,
     minHeight: 34,
   },
@@ -731,8 +826,8 @@ const styles = StyleSheet.create({
   },
   cardPrice: {
     fontSize: 14,
-    fontWeight: '900',
-    color: TOKENS.accent,
+    fontWeight: '800',
+    color: TOKENS.teal,
   },
   cardCondition: {
     fontSize: 10,
@@ -740,30 +835,55 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     textTransform: 'capitalize',
   },
+  cardEscrowRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginTop: 3,
+  },
+  cardEscrowText: {
+    fontSize: 10,
+    color: TOKENS.textMuted,
+    fontWeight: '600',
+  },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.85)',
+    backgroundColor: TOKENS.scrim,
     justifyContent: 'flex-end',
   },
   modalContent: {
     backgroundColor: TOKENS.surface,
-    borderTopLeftRadius: 28,
-    borderTopRightRadius: 28,
+    borderTopLeftRadius: 26,
+    borderTopRightRadius: 26,
     padding: 22,
     borderTopWidth: 1,
     borderColor: TOKENS.borderActive,
     gap: 8,
     maxHeight: '90%',
   },
+  modalTopRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 4,
+  },
+  modalCloseIconBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: TOKENS.raised,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   modalHeroImage: {
     width: '100%',
     height: 160,
     borderRadius: 16,
-    marginBottom: 8,
+    marginBottom: 6,
   },
   modalTitle: {
     fontSize: 18,
-    fontWeight: '900',
+    fontWeight: '800',
     color: TOKENS.textPrimary,
   },
   modalSeller: {
@@ -773,13 +893,13 @@ const styles = StyleSheet.create({
   modalPrice: {
     fontSize: 22,
     fontWeight: '900',
-    color: TOKENS.accent,
-    marginVertical: 4,
+    color: TOKENS.teal,
+    marginVertical: 2,
   },
   modalDescription: {
     fontSize: 13,
-    color: TOKENS.textPrimary,
-    lineHeight: 18,
+    color: TOKENS.textSecondary,
+    lineHeight: 19,
   },
   modalActionButtons: {
     flexDirection: 'row',
@@ -790,15 +910,18 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: TOKENS.raised,
     borderWidth: 1,
-    borderColor: TOKENS.sea,
+    borderColor: TOKENS.borderStrong,
     paddingVertical: 12,
     borderRadius: 14,
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
+    gap: 7,
   },
   messageSellerBtnText: {
-    color: TOKENS.sea,
+    color: TOKENS.action,
     fontSize: 13,
-    fontWeight: '900',
+    fontWeight: '800',
   },
   offerForm: {
     marginTop: 8,
@@ -806,45 +929,51 @@ const styles = StyleSheet.create({
   },
   offerLabel: {
     fontSize: 12,
-    fontWeight: '800',
-    color: TOKENS.textPrimary,
+    fontWeight: '700',
+    color: TOKENS.textSecondary,
   },
   offerInput: {
-    backgroundColor: TOKENS.canvas,
+    backgroundColor: TOKENS.raised,
     borderWidth: 1,
-    borderColor: TOKENS.border,
+    borderColor: TOKENS.borderStrong,
     borderRadius: 14,
     padding: 12,
     fontSize: 16,
-    fontWeight: '900',
+    fontWeight: '800',
     color: TOKENS.textPrimary,
     minHeight: 44,
   },
   makeOfferButton: {
-    backgroundColor: TOKENS.action,
+    backgroundColor: TOKENS.teal,
     borderRadius: 14,
     padding: 14,
+    flexDirection: 'row',
     alignItems: 'center',
-    minHeight: 44,
+    justifyContent: 'center',
+    gap: 7,
+    minHeight: 46,
   },
   makeOfferButtonText: {
-    color: '#090D1A',
+    color: TOKENS.actionText,
     fontSize: 14,
-    fontWeight: '900',
+    fontWeight: '800',
   },
   successBanner: {
-    backgroundColor: 'rgba(16, 185, 129, 0.15)',
+    backgroundColor: TOKENS.tealSoft,
     borderWidth: 1,
-    borderColor: TOKENS.success,
+    borderColor: TOKENS.borderActive,
     padding: 12,
     borderRadius: 14,
     marginTop: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
   },
   successBannerText: {
     color: TOKENS.success,
     fontSize: 12,
     fontWeight: '800',
-    textAlign: 'center',
   },
   closeModalButton: {
     padding: 10,

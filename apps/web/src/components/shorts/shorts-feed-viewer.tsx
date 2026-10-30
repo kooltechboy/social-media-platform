@@ -281,9 +281,9 @@ export default function ShortsFeedViewer({ initialShorts, user }: ShortsFeedView
                 key={tab.id}
                 onClick={() => handleTabChange(tab.id)}
                 aria-label={`Tab ${tab.label}`}
-                className={`text-xs sm:text-sm font-black transition-colors whitespace-nowrap cursor-pointer ${
+                className={`text-xs sm:text-sm font-bold transition-colors whitespace-nowrap cursor-pointer ${
                   currentTab === tab.id
-                    ? 'text-white border-b-2 border-brand-sunriseCoral pb-0.5'
+                    ? 'text-white border-b-2 border-[#00C2A8] pb-0.5'
                     : 'text-white/60 hover:text-white'
                 }`}
               >
@@ -294,9 +294,9 @@ export default function ShortsFeedViewer({ initialShorts, user }: ShortsFeedView
 
           <button
             onClick={() => setIsCreateModalOpen(true)}
-            className="px-3.5 py-1.5 bg-gradient-to-r from-brand-sunriseCoral to-rose-500 text-slate-950 font-black text-xs rounded-xl hover:opacity-95 flex items-center gap-1.5 transition-all shadow-md shadow-brand-sunriseCoral/20 cursor-pointer shrink-0"
+            className="tk-btn-primary px-3.5 py-1.5 font-bold text-xs rounded-xl flex items-center gap-1.5 cursor-pointer shrink-0"
           >
-            <Plus className="w-3.5 h-3.5" /> Create Short
+            <Plus className="w-3.5 h-3.5 stroke-[2.5]" /> Create Short
           </button>
         </div>
 
@@ -325,22 +325,22 @@ export default function ShortsFeedViewer({ initialShorts, user }: ShortsFeedView
       >
         {shorts.length === 0 ? (
           <div className="w-full h-full flex flex-col items-center justify-center p-6 text-center z-10 relative">
-            <div className="surface-card rounded-3xl p-8 sm:p-10 max-w-md w-full border border-white/15 shadow-2xl space-y-5 bg-[#0D1322]/90 backdrop-blur-xl">
-              <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-brand-sunriseCoral/20 to-rose-500/20 border border-brand-sunriseCoral/40 flex items-center justify-center mx-auto text-brand-sunriseCoral shadow-lg">
+            <div className="tk-panel rounded-3xl p-8 sm:p-10 max-w-md w-full border border-white/[0.10] shadow-2xl space-y-5 bg-[#0D1628]/95 backdrop-blur-xl">
+              <div className="w-16 h-16 rounded-2xl bg-[#00C2A8]/12 border border-[#00C2A8]/30 flex items-center justify-center mx-auto text-[#00C2A8] shadow-lg">
                 <Film className="w-8 h-8" />
               </div>
               <div className="space-y-2">
-                <h2 className="text-xl sm:text-2xl font-black text-white">No Shorts in this feed yet</h2>
-                <p className="text-xs sm:text-sm text-brand-sandstone/80 leading-relaxed">
+                <h2 className="font-display text-xl sm:text-2xl font-bold text-white">No Shorts in this feed yet</h2>
+                <p className="text-xs sm:text-sm text-[#94A3B8] leading-relaxed">
                   Be the first creator to publish short-form video moments, carnival rhythms, and island culture to the global Caribbean diaspora.
                 </p>
               </div>
               <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
                 <button
                   onClick={() => setIsCreateModalOpen(true)}
-                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-gradient-to-r from-brand-sunriseCoral to-rose-500 hover:brightness-110 text-slate-950 font-black px-6 py-3 rounded-2xl text-xs sm:text-sm transition-all shadow-md shadow-brand-sunriseCoral/20 min-h-[44px] cursor-pointer"
+                  className="tk-btn-primary w-full sm:w-auto inline-flex items-center justify-center gap-2 font-bold px-6 py-3 rounded-xl text-xs sm:text-sm min-h-[44px] cursor-pointer"
                 >
-                  <Plus className="w-4 h-4" /> Create First Short
+                  <Plus className="w-4 h-4 stroke-[2.5]" /> Create First Short
                 </button>
                 <Link
                   href="/sounds"

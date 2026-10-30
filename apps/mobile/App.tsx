@@ -1,8 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, SafeAreaView, StatusBar, View, ActivityIndicator, TouchableOpacity, Text } from 'react-native';
+import { StyleSheet, SafeAreaView, StatusBar, View, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { NavigationContainer, DefaultTheme, createNavigationContainerRef } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { Ionicons as ExpoIonicons } from '@expo/vector-icons';
 import { TOKENS } from './src/theme/tokens';
+
+const Ionicons = ExpoIonicons as unknown as React.ComponentType<{
+  name: keyof typeof ExpoIonicons.glyphMap;
+  size?: number;
+  color?: string;
+}>;
 import { Header } from './src/components/Header';
 import { CreateActionSheet } from './src/components/CreateActionSheet';
 import { HomeScreen } from './src/screens/HomeScreen';
@@ -31,14 +38,10 @@ const Navigation = NavigationContainer as React.ComponentType<any>;
 const Navigator = Tab.Navigator as React.ComponentType<any>;
 const Screen = Tab.Screen as React.ComponentType<any>;
 
-// Create Tab Button Component
+// Flush-integrated Midnight Reef Create Tab Button
 const CreateTabButton = ({ onPress }: any) => (
   <TouchableOpacity
-    style={{
-      top: -15,
-      justifyContent: 'center',
-      alignItems: 'center',
-    }}
+    style={styles.createTabTouch}
     onPress={onPress}
     activeOpacity={0.85}
     accessibilityRole="button"
@@ -53,20 +56,8 @@ const CreateTabButton = ({ onPress }: any) => (
       { text: 'Cancel' }
     */
   >
-    <View style={{
-      width: 56,
-      height: 56,
-      borderRadius: 28,
-      backgroundColor: TOKENS.action,
-      justifyContent: 'center',
-      alignItems: 'center',
-      shadowColor: TOKENS.action,
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.4,
-      shadowRadius: 8,
-      elevation: 6,
-    }}>
-      <Text style={{ fontSize: 30, color: '#090D1A', fontWeight: '900', marginTop: -2 }}>+</Text>
+    <View style={styles.createTabPill}>
+      <Ionicons name="add" size={24} color={TOKENS.actionText} />
     </View>
   </TouchableOpacity>
 );
@@ -117,7 +108,7 @@ export default function App() {
     return (
       <SafeAreaView style={[styles.container, styles.centerBox]}>
         <StatusBar barStyle="light-content" backgroundColor={TOKENS.canvas} />
-        <ActivityIndicator size="large" color={TOKENS.action} />
+        <ActivityIndicator size="large" color={TOKENS.teal} />
       </SafeAreaView>
     );
   }
@@ -136,6 +127,10 @@ export default function App() {
     colors: {
       ...DefaultTheme.colors,
       background: TOKENS.canvas,
+      card: TOKENS.canvas,
+      border: TOKENS.border,
+      primary: TOKENS.teal,
+      text: TOKENS.textPrimary,
     },
   };
 
@@ -152,7 +147,7 @@ export default function App() {
         <Navigator
           screenOptions={({ route }: any) => ({
             header: () => (
-              <Header 
+              <Header
                 onWalletPress={() => navigationRef.isReady() && navigationRef.navigate('Finance')}
                 onNotificationsPress={() => navigationRef.isReady() && navigationRef.navigate('Notifications')}
                 onMessagesPress={() => navigationRef.isReady() && navigationRef.navigate('Messages')}
@@ -161,34 +156,38 @@ export default function App() {
               />
             ),
             tabBarStyle: {
-              backgroundColor: TOKENS.surface,
+              backgroundColor: TOKENS.canvas,
               borderTopColor: TOKENS.border,
-              paddingBottom: 6,
+              borderTopWidth: 1,
+              paddingTop: 6,
+              paddingBottom: 8,
               height: 62,
+              elevation: 0,
             },
-            tabBarActiveTintColor: TOKENS.action,
+            tabBarActiveTintColor: TOKENS.teal,
             tabBarInactiveTintColor: TOKENS.textMuted,
             tabBarLabelStyle: {
-              fontWeight: '800',
-              fontSize: 10,
+              fontWeight: '600',
+              fontSize: 10.5,
+              letterSpacing: 0.1,
             },
-            tabBarIcon: ({ focused }: any) => {
-              let iconStr = '🏠';
-              if (route.name === 'Home') iconStr = '🏠';
-              else if (route.name === 'Explore') iconStr = '🧭';
-              else if (route.name === 'Communities') iconStr = '🌴';
-              else if (route.name === 'Messages') iconStr = '💬';
-              else if (route.name === 'Profile') iconStr = '👤';
-              
-              return <Text style={{ fontSize: 20, opacity: focused ? 1 : 0.6 }}>{iconStr}</Text>;
+            tabBarIcon: ({ focused, color }: any) => {
+              let iconName: keyof typeof ExpoIonicons.glyphMap = focused ? 'home' : 'home-outline';
+              if (route.name === 'Home') iconName = focused ? 'home' : 'home-outline';
+              else if (route.name === 'Explore') iconName = focused ? 'compass' : 'compass-outline';
+              else if (route.name === 'Communities') iconName = focused ? 'people' : 'people-outline';
+              else if (route.name === 'Messages') iconName = focused ? 'chatbubble-ellipses' : 'chatbubble-ellipses-outline';
+              else if (route.name === 'Profile') iconName = focused ? 'person' : 'person-outline';
+
+              return <Ionicons name={iconName} size={21} color={color} />;
             },
           })}
         >
-          {/* Primary 5 Tabs (D-02: Home · Explore · Create · Community · Profile) */}
+          {/* Primary 5 Tabs (Home · Explore · Create · Community · Profile) */}
           <Screen name="Home" component={HomeScreen} />
           <Screen name="Explore" component={ExploreScreen} />
-          <Screen 
-            name="CreateAction" 
+          <Screen
+            name="CreateAction"
             component={CreateScreen}
             options={{
               tabBarIcon: () => null,
@@ -201,7 +200,7 @@ export default function App() {
           <Screen
             name="Communities"
             component={CommunitiesScreen}
-            options={{ tabBarLabel: 'Community' }}
+            options={{ tabBarLabel: 'Communities' }}
           />
           <Screen
             name="Profile"
@@ -214,83 +213,83 @@ export default function App() {
             component={MessagesScreen}
             options={{ tabBarButton: () => null }}
           />
-          <Screen 
-            name="Create" 
-            component={CreateScreen} 
-            options={{ 
+          <Screen
+            name="Create"
+            component={CreateScreen}
+            options={{
               tabBarButton: () => null,
               headerShown: false,
               tabBarStyle: { display: 'none' },
-            }} 
+            }}
           />
-          <Screen 
-            name="Marketplace" 
-            component={MarketplaceScreen} 
-            options={{ tabBarButton: () => null }} 
+          <Screen
+            name="Marketplace"
+            component={MarketplaceScreen}
+            options={{ tabBarButton: () => null }}
           />
-          <Screen 
-            name="SellProduct" 
-            component={SellProductScreen} 
-            options={{ 
+          <Screen
+            name="SellProduct"
+            component={SellProductScreen}
+            options={{
               tabBarButton: () => null,
               headerShown: false,
               tabBarStyle: { display: 'none' },
-            }} 
+            }}
           />
-          <Screen 
-            name="Shorts" 
-            component={ReelsScreen} 
-            options={{ 
+          <Screen
+            name="Shorts"
+            component={ReelsScreen}
+            options={{
               tabBarButton: () => null,
               headerShown: false,
               tabBarStyle: { display: 'none' },
-            }} 
+            }}
           />
-          <Screen 
-            name="Reels" 
-            component={ReelsScreen} 
-            options={{ 
+          <Screen
+            name="Reels"
+            component={ReelsScreen}
+            options={{
               tabBarButton: () => null,
               headerShown: false,
               tabBarStyle: { display: 'none' },
-            }} 
+            }}
           />
-          <Screen 
-            name="Sounds" 
-            component={SoundsScreen} 
-            options={{ tabBarButton: () => null }} 
+          <Screen
+            name="Sounds"
+            component={SoundsScreen}
+            options={{ tabBarButton: () => null }}
           />
-          <Screen 
-            name="Live" 
-            component={LiveScreen} 
-            options={{ 
+          <Screen
+            name="Live"
+            component={LiveScreen}
+            options={{
               tabBarButton: () => null,
               headerShown: false,
               tabBarStyle: { display: 'none' },
-            }} 
+            }}
           />
-          <Screen 
-            name="Podcasts" 
-            component={PodcastsScreen} 
-            options={{ tabBarButton: () => null }} 
+          <Screen
+            name="Podcasts"
+            component={PodcastsScreen}
+            options={{ tabBarButton: () => null }}
           />
-          <Screen 
-            name="Finance" 
-            component={FinancialCenterScreen} 
-            options={{ tabBarButton: () => null }} 
+          <Screen
+            name="Finance"
+            component={FinancialCenterScreen}
+            options={{ tabBarButton: () => null }}
           />
-          <Screen 
-            name="Notifications" 
-            component={NotificationsScreen} 
-            options={{ tabBarButton: () => null }} 
+          <Screen
+            name="Notifications"
+            component={NotificationsScreen}
+            options={{ tabBarButton: () => null }}
           />
-          <Screen 
-            name="Friends" 
-            component={FriendsScreen} 
-            options={{ tabBarButton: () => null }} 
+          <Screen
+            name="Friends"
+            component={FriendsScreen}
+            options={{ tabBarButton: () => null }}
           />
-          {/* Feeds → redirects to Home (backwards-compat for old deep links / bookmarks) */}
-          <Screen 
+          {/* Feeds → redirects to Home (backwards-compat for old deep links / bookmarks referencing FeedsScreen) */}
+          <Screen
             name="Feeds"
             options={{ tabBarButton: () => null }}
           >
@@ -301,7 +300,6 @@ export default function App() {
               return null;
             }}
           </Screen>
-
         </Navigator>
       </Navigation>
 
@@ -323,5 +321,25 @@ const styles = StyleSheet.create({
   centerBox: {
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  createTabTouch: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    minWidth: 52,
+    minHeight: 48,
+  },
+  createTabPill: {
+    width: 44,
+    height: 34,
+    borderRadius: 12,
+    backgroundColor: TOKENS.teal,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: TOKENS.teal,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.32,
+    shadowRadius: 8,
+    elevation: 4,
   },
 });

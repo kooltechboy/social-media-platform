@@ -4,7 +4,7 @@ type: changelog
 status: verified
 owner: Release Manager
 created: 2026-10-28
-updated: 2026-10-28
+updated: 2026-10-30
 tags:
   - tukubi
   - changelog
@@ -15,6 +15,28 @@ related:
 ---
 
 # ENGINEERING_CHANGELOG — TUKUBI
+
+## [2026-10-30] — TUKUBI: "Midnight Reef" Mobile App & Mobile Web Refactor
+
+### 1. Universal Native Expo App (`apps/mobile`) — Complete 17-Screen Midnight Reef Upgrade
+- Upgraded native design tokens (`apps/mobile/src/theme/tokens.ts`) and `apps/mobile/app.json` from legacy dark-plum Island Vibes (`#110D17` / `#1D1429` / `#FF7A59`) to official **Midnight Reef** (`canvas: '#070D1A'`, `oceanDepth: '#0B1B3B'`, `surface: '#0D1628'`, `raised: '#15213A'`, `teal: '#00C2A8'`, `action: '#0EA5E9'`, `actionText: '#041019'`, `purple: '#8B5CF6'`, `accent: '#F59E0B'`, `textPrimary: '#E8EDF5'`), preserving `LEGACY_ISLAND_VIBES_TOKENS` for historical reference.
+- Refactored native navigation shell (`apps/mobile/App.tsx`, `Header.tsx`, `BottomNav.tsx`, `CreateActionSheet.tsx`) with `@expo/vector-icons` (`Ionicons`), official `tukubi-emblem.png` lockup, WCAG `44x44pt` touch targets, and a flush-integrated `44x34` `#00C2A8` `+` creation pill button.
+- Refactored all **17 native screens** (`AuthScreen`, `HomeScreen`, `FeedsScreen`, `ExploreScreen`, `ProfileScreen`, `ReelsScreen`, `LiveScreen`, `SoundsScreen`, `PodcastsScreen`, `CreateScreen`, `MessagesScreen`, `CommunitiesScreen`, `MarketplaceScreen`, `SellProductScreen`, `FinancialCenterScreen`, `NotificationsScreen`, `FriendsScreen`) to Midnight Reef:
+  - Added `62x62` circular ringed Stories/Moments bar, executive `#0D1628` composer with vector actions, edge-to-edge underline feed tabs, and 2-line editorial post headers in `HomeScreen` and `FeedsScreen`.
+  - Enforced optional, private-by-default cultural heritage selectors (`country` defaults to `''` / unspecified) in `AuthScreen`, `CreateScreen`, and `SellProductScreen` (`AGENTS.md` Rule #8).
+  - Preserved all §3.1.1 Apple/Google IAP vs. Marketplace rail separation notices in `FinancialCenterScreen` (`AGENTS.md` Rule #9), fullscreen escape controls on `ReelsScreen` and `LiveScreen`, and Supabase Realtime + RPC read-receipt wiring in `MessagesScreen`.
+
+### 2. Mobile Web & PWA (`apps/web` `< md` Responsive Viewport)
+- Decluttered mobile top header (`app-header.tsx`, `session-widget.tsx`) by hiding redundant authenticated `SessionWidget` avatar+chevron on `< md` while keeping `44x44px` touch targets for `Search`, `Notifications`, and `Menu`.
+- Replaced protruding `-mt-4` neon `Create` circle in `mobile-nav.tsx` with a sleek flush-integrated `w-11 h-8 rounded-xl` `#00C2A8 → #0EA5E9` `+` pill button, upgraded both mobile bottom sheets (`Create on TUKUBI` & `Ecosystem Menu`) to `#0D1628` Midnight Reef, and replaced all 10 raw emojis in the Create Sheet with Lucide vector icon badges.
+- Added the signature mobile (`md:hidden`) circular `60x60px` gradient-ringed Stories/Moments rail in `moments-cinema-rail.tsx`, refactored the mobile feed composer and edge-to-edge underline tab strips (`home-dashboard.tsx`, `feed-navigation.tsx`), compacted post author headers to 2 lines and suppressed redundant standalone URL text above rich embed cards (`feed-post.tsx`), and harmonized `pwa-install-banner.tsx`, `ios-install-modal.tsx`, `shorts-feed-viewer.tsx`, `explore-discovery-client.tsx`, and `profile/[username]/page.tsx`.
+
+### 3. Verification Evidence
+- **TypeScript Typecheck:** `0` errors across `@caribbean/design-system`, `apps/mobile`, and `apps/web` (`tsc --noEmit`).
+- **Mobile, Theme, Messaging, PWA & WCAG Certification Matrix:** **18 / 18 test suites passed (236 / 236 tests)** via Vitest (`vitest run`) + `0` legacy purple/coral hexes across `apps/mobile` outside `tokens.ts` + `0` prohibited references (`check-prohibited-references.js`).
+- **Live iPhone Retina (`390x844 @ 3x DPR`) Verification:** Verified `/`, `/explore` (including Midnight Reef PWA install prompt), `Create on TUKUBI` bottom sheet, `/communities`, and `/login` via headless Chromium (Playwright).
+
+---
 
 ## [2026-10-30] — TUKUBI: "Midnight Reef" Desktop Platform Refactor & Official Brand Alignment
 

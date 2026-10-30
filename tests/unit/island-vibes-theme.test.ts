@@ -59,21 +59,24 @@ describe('TUKUBI — Global Theme & Midnight Reef Desktop Architecture Verificat
     });
   });
 
-  describe('3. React Native Mobile Theme System', () => {
-    it('sets mobile tokens to match Island Vibes palette', () => {
-      expect(mobileTokens.canvas).toBe('#110D17');
-      expect(mobileTokens.surface).toBe('#1D1429');
-      expect(mobileTokens.raised).toBe('#2A1B38');
-      expect(mobileTokens.textPrimary).toBe('#FDF2E9');
-      expect(mobileTokens.action).toBe('#FF7A59');
-      expect(mobileTokens.accent).toBe('#FFB347');
-      expect(mobileTokens.sea).toBe('#00B4D8');
+  describe('3. React Native Mobile Theme System (Midnight Reef Parity)', () => {
+    it('sets mobile tokens to match official Midnight Reef brand palette', () => {
+      expect(mobileTokens.canvas).toBe('#070D1A');
+      expect(mobileTokens.surface).toBe('#0D1628');
+      expect(mobileTokens.raised).toBe('#15213A');
+      expect(mobileTokens.oceanDepth).toBe('#0B1B3B');
+      expect(mobileTokens.textPrimary).toBe('#E8EDF5');
+      expect(mobileTokens.action).toBe('#0EA5E9');
+      expect(mobileTokens.teal).toBe('#00C2A8');
+      expect(mobileTokens.accent).toBe('#F59E0B');
+      expect(mobileTokens.sea).toBe('#0EA5E9');
     });
 
-    it('configures app.json splash to Island Vibes twilight #110D17', () => {
+    it('configures app.json splash and adaptive icon to Midnight Reef #070D1A', () => {
       const appJsonPath = path.resolve(__dirname, '../../apps/mobile/app.json');
       const appJson = JSON.parse(fs.readFileSync(appJsonPath, 'utf-8'));
-      expect(appJson.expo.splash.backgroundColor).toBe('#110D17');
+      expect(appJson.expo.splash.backgroundColor).toBe('#070D1A');
+      expect(appJson.expo.android.adaptiveIcon.backgroundColor).toBe('#070D1A');
     });
   });
 

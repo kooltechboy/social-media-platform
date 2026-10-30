@@ -68,14 +68,14 @@ export default function SessionWidget() {
 
   return (
     <div className="relative" ref={menuRef}>
-      {/* ── AVATAR-FIRST PRIMARY HEADER BUTTON ── */}
+      {/* ── AVATAR-FIRST PRIMARY HEADER BUTTON (Hidden on mobile < md where Bottom Bar Profile + Menu Drawer serve) ── */}
       <button
         type="button"
         onClick={() => setIsOpen((prev) => !prev)}
         aria-haspopup="menu"
         aria-expanded={isOpen}
         aria-label={`Account menu for ${user.displayName || user.username}`}
-        className="flex items-center gap-1.5 px-1.5 h-10 rounded-xl hover:bg-white/[0.06] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-caribbeanSea/60 transition-colors group cursor-pointer"
+        className="hidden md:flex items-center gap-1.5 px-1.5 h-10 rounded-xl hover:bg-white/[0.06] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-caribbeanSea/60 transition-colors group cursor-pointer"
       >
         <div className="relative">
           <UserAvatar

@@ -274,22 +274,18 @@ export default function HomeDashboard({
   return (
     <div className="flex flex-col lg:flex-row gap-6 xl:gap-8 items-start w-full">
       {/* ── Main Center Column: Personalized TUKUBI Home & Feed ── */}
-      <div className="flex-1 min-w-0 space-y-6 w-full max-w-[740px] xl:max-w-[760px] mx-auto lg:mx-0">
-        {/* 1. Moments Cinema Rail (Ephemeral 24h Stories) */}
-        {liveStories && liveStories.length > 0 && (
-          <section aria-label="Caribbean Moments">
-            <MomentsCinemaRail
-              initialStories={liveStories}
-              currentUserId={user.id}
-              currentUserAvatar={user.avatarUrl || undefined}
-              currentUserName={user.displayName}
-            />
-          </section>
-        )}
+      <div className="flex-1 min-w-0 space-y-3.5 md:space-y-6 w-full max-w-[740px] xl:max-w-[760px] mx-auto lg:mx-0">
+        {/* 1. Moments Cinema Rail (Circular Ringed Stories Bar on Mobile, Cinema Cards on Desktop) */}
+        <MomentsCinemaRail
+          initialStories={liveStories || []}
+          currentUserId={user.id}
+          currentUserAvatar={user.avatarUrl || undefined}
+          currentUserName={user.displayName}
+        />
 
-        {/* ── 2A. Mobile Creation Card (Concept Image 1 & 2 Aligned 1-Tap Composer) ── */}
-        <div className="md:hidden glass-aerospace rounded-2xl p-3.5 border border-white/12 shadow-md space-y-3">
-          <div className="flex items-center gap-3">
+        {/* ── 2A. Mobile Creation Card (Midnight Reef Editorial 1-Tap Composer) ── */}
+        <div className="md:hidden tk-panel p-3.5 space-y-2.5">
+          <div className="flex items-center gap-2.5">
             <UserAvatar src={user.avatarUrl} name={user.displayName} size="sm" />
             <button
               type="button"
@@ -297,61 +293,42 @@ export default function HomeDashboard({
                 setComposerMode('text');
                 setShowComposer((prev) => !prev);
               }}
-              className="flex-1 px-4 py-2.5 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 text-left text-xs text-brand-mist transition-colors flex items-center justify-between"
+              className="flex-1 h-10 px-4 rounded-full bg-[#111C33]/85 hover:bg-[#162440] border border-white/[0.07] text-left text-[13px] text-[#94A3B8] transition-colors flex items-center justify-between"
             >
               <span className="truncate">What&apos;s on your mind?</span>
-              <span className="text-[10px] font-black text-brand-caribbeanSea bg-brand-caribbeanSea/10 px-2 py-0.5 rounded-full shrink-0 ml-1">
-                {showComposer ? 'Close' : 'Post'}
-              </span>
+              {showComposer && (
+                <span className="text-[11px] font-semibold text-[#00C2A8] shrink-0 ml-2">
+                  Close
+                </span>
+              )}
             </button>
           </div>
 
-          {/* Mobile fast action chips: Photo, Video, Poll, Feeling */}
-          <div className="flex items-center justify-between pt-1 border-t border-white/5 text-[11px] font-bold text-slate-300">
-            <button
-              type="button"
-              onClick={() => {
-                setComposerMode('photo');
-                setShowComposer(true);
-              }}
-              className="flex items-center gap-1.5 px-2 py-1 rounded-lg hover:bg-white/5 text-emerald-400"
-            >
-              <span>📷</span> Photo
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setComposerMode('video');
-                setShowComposer(true);
-              }}
-              className="flex items-center gap-1.5 px-2 py-1 rounded-lg hover:bg-white/5 text-sky-400"
-            >
-              <span>🎬</span> Video
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setComposerMode('poll');
-                setShowComposer(true);
-              }}
-              className="flex items-center gap-1.5 px-2 py-1 rounded-lg hover:bg-white/5 text-amber-400"
-            >
-              <span>📊</span> Poll
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setComposerMode('text');
-                setShowComposer(true);
-              }}
-              className="flex items-center gap-1.5 px-2 py-1 rounded-lg hover:bg-white/5 text-brand-sunriseCoral"
-            >
-              <span>😊</span> Feeling
-            </button>
+          {/* Mobile fast action chips: Sleek vector icons (no rainbow emoji clutter) */}
+          <div className="flex items-center justify-between pt-2 border-t border-white/[0.06] text-[12px] font-medium text-[#94A3B8]">
+            {([
+              { mode: 'photo', label: 'Photo', Icon: ImageIcon },
+              { mode: 'video', label: 'Video', Icon: Video },
+              { mode: 'poll', label: 'Poll', Icon: BarChart3 },
+              { mode: 'text', label: 'Feeling', Icon: Smile },
+            ] as const).map(({ mode, label, Icon }) => (
+              <button
+                key={label}
+                type="button"
+                onClick={() => {
+                  setComposerMode(mode as ComposerMode);
+                  setShowComposer(true);
+                }}
+                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg hover:bg-white/[0.05] hover:text-[#F8FAFC] transition-colors"
+              >
+                <Icon className="w-4 h-4 text-[#00C2A8]" aria-hidden="true" />
+                <span>{label}</span>
+              </button>
+            ))}
           </div>
 
           {showComposer && (
-            <div className="pt-1 animate-fadeIn border-t border-white/10">
+            <div className="pt-2 animate-fadeIn border-t border-white/[0.08]">
               <UniversalComposer
                 key={composerMode}
                 displayName={user.displayName}
@@ -596,11 +573,11 @@ export default function HomeDashboard({
         </div>
 
         {/* 6. PRIMARY HOME FEED ENGINE & CONTROL AREA */}
-        <section aria-label="Home Feed Stream" className="space-y-4">
-          {/* Feed tabs — understated segmented underline */}
-          <div className="tk-panel px-2 sm:px-3">
+        <section aria-label="Home Feed Stream" className="space-y-3.5 md:space-y-4">
+          {/* Feed tabs — sleek edge-to-edge underline on mobile, understated panel on desktop */}
+          <div className="border-b border-white/[0.08] md:border md:rounded-2xl md:bg-[#0D1526]/85 md:px-3">
             <nav aria-label="Home Feed Tabs">
-              <div className="flex items-center gap-1 overflow-x-auto scrollbar-none" role="tablist">
+              <div className="flex items-center gap-0.5 sm:gap-1 overflow-x-auto scrollbar-none" role="tablist">
                 {FEED_TABS.map((tab) => {
                   const isActive = activeTab === tab.id;
 
@@ -613,17 +590,17 @@ export default function HomeDashboard({
                       aria-controls={`feed-panel-${tab.id}`}
                       title={tab.description}
                       onClick={() => handleTabChange(tab)}
-                      className={`relative px-3.5 h-12 text-[13.5px] whitespace-nowrap transition-colors ${
+                      className={`relative px-3 sm:px-3.5 h-11 md:h-12 text-[13px] md:text-[13.5px] whitespace-nowrap transition-colors ${
                         isActive
-                          ? 'text-white font-semibold'
-                          : 'text-brand-mist font-medium hover:text-white'
+                          ? 'text-[#F8FAFC] font-semibold'
+                          : 'text-[#94A3B8] font-medium hover:text-white'
                       }`}
                     >
                       {tab.label}
                       {isActive && (
                         <span
                           aria-hidden="true"
-                          className="absolute left-3 right-3 bottom-0 h-[2px] rounded-full bg-gradient-to-r from-brand-caribbeanTeal to-brand-caribbeanSea"
+                          className="absolute left-2.5 right-2.5 bottom-0 h-[2px] rounded-full bg-gradient-to-r from-[#00C2A8] to-[#0EA5E9]"
                         />
                       )}
                     </button>

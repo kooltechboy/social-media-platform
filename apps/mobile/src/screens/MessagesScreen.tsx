@@ -13,8 +13,11 @@ import {
   Modal,
   SafeAreaView,
 } from 'react-native';
+import { Ionicons as ExpoIonicons } from '@expo/vector-icons';
 import { TOKENS } from '../theme/tokens';
 import { supabase } from '../lib/supabase';
+
+const Ionicons = ExpoIonicons as unknown as React.ComponentType<any>;
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -58,7 +61,7 @@ function formatTime(iso?: string | null): string {
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
-export function MessagesScreen({ route, navigation }: any) {
+export function MessagesScreen({ route }: any) {
   const [conversations, setConversations] = useState<ConversationItem[]>([]);
   const [loadingConversations, setLoadingConversations] = useState(true);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -79,7 +82,7 @@ export function MessagesScreen({ route, navigation }: any) {
 
   const flatListRef = useRef<FlatList>(null);
   const realtimeChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
-  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // ── Load current user ──────────────────────────────────────────────────────
   useEffect(() => {
@@ -88,23 +91,14 @@ export function MessagesScreen({ route, navigation }: any) {
     });
   }, []);
 
-  // ── Check route params for direct conversation deep link ──────────────────
-  useEffect(() => {
-    if (route?.params?.conversationId) {
-      handleSelectConversation({
-        id: route.params.conversationId,
-        name: route.params.targetName || 'Direct Message',
-        preview: 'Conversation opened',
-        unread: 0,
-      });
-    }
-  }, [route?.params?.conversationId]);
-
   // ── Load conversations list ────────────────────────────────────────────────
   const loadConversations = useCallback(async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) { setLoadingConversations(false); return; }
+      if (!user) {
+        setLoadingConversations(false);
+        return;
+      }
 
       const { data: members, error } = await supabase
         .from('conversation_members')
@@ -121,7 +115,7 @@ export function MessagesScreen({ route, navigation }: any) {
         return {
           id: conv?.id || m.conversation_id,
           name: conv?.title || (conv?.kind === 'group' ? 'Group Chat' : 'Direct Message'),
-          preview: 'Tap to view messages',
+          preview: 'Tap to open conversation',
           unread,
           lastMessageAt: conv?.last_message_at,
         };
@@ -134,7 +128,9 @@ export function MessagesScreen({ route, navigation }: any) {
     }
   }, []);
 
-  useEffect(() => { loadConversations(); }, [loadConversations]);
+  useEffect(() => {
+    loadConversations();
+  }, [loadConversations]);
 
   // ── Load messages for selected conversation ───────────────────────────────
   const loadMessages = useCallback(async (conversationId: string) => {
@@ -155,7 +151,6 @@ export function MessagesScreen({ route, navigation }: any) {
         content: m.body || m.content || '',
       }));
       setMessages(normalized);
-      // Scroll to bottom
       setTimeout(() => flatListRef.current?.scrollToEnd({ animated: false }), 100);
     } catch (err) {
       console.warn('[MessagesScreen] loadMessages error:', err);
@@ -166,7 +161,6 @@ export function MessagesScreen({ route, navigation }: any) {
 
   // ── Handle conversation selection ─────────────────────────────────────────
   const handleSelectConversation = useCallback((item: ConversationItem) => {
-    // Unsubscribe from previous realtime channel
     if (realtimeChannelRef.current) {
       supabase.removeChannel(realtimeChannelRef.current);
       realtimeChannelRef.current = null;
@@ -176,7 +170,6 @@ export function MessagesScreen({ route, navigation }: any) {
     setMessages([]);
     loadMessages(item.id);
 
-    // Subscribe to realtime updates for this conversation
     const channel = supabase
       .channel(`conversation:${item.id}:messages`)
       .on(
@@ -209,7 +202,7 @@ export function MessagesScreen({ route, navigation }: any) {
           setMessages((prev) =>
             prev.map((m) =>
               m.id === deleted.id
-                ? { ...m, content: 'This message was deleted.', deleted_at: new Date().toISOString() } as any
+                ? ({ ...m, content: 'This message was deleted.', deleted_at: new Date().toISOString() } as any)
                 : m
             )
           );
@@ -228,12 +221,23 @@ export function MessagesScreen({ route, navigation }: any) {
 
     realtimeChannelRef.current = channel;
 
-    // Mark conversation as read
     supabase.auth.getUser().then(({ data: { user } }) => {
       if (!user) return;
       Promise.resolve(supabase.rpc('mark_conversation_read', { conv_id: item.id })).catch(() => {});
     });
-  }, [loadMessages]);
+  }, [loadMessages, currentUserId]);
+
+  // ── Check route params for direct conversation deep link ──────────────────
+  useEffect(() => {
+    if (route?.params?.conversationId) {
+      handleSelectConversation({
+        id: route.params.conversationId,
+        name: route.params.targetName || 'Direct Message',
+        preview: 'Conversation opened',
+        unread: 0,
+      });
+    }
+  }, [route?.params?.conversationId, route?.params?.targetName, handleSelectConversation]);
 
   // Cleanup realtime on unmount
   useEffect(() => {
@@ -262,7 +266,6 @@ export function MessagesScreen({ route, navigation }: any) {
         .limit(15);
 
       if (!error && data) {
-        // Filter out self
         const filtered = data.filter((p: any) => p.id !== currentUserId);
         setSearchResults(filtered);
       }
@@ -290,7 +293,6 @@ export function MessagesScreen({ route, navigation }: any) {
       setUserSearchQuery('');
       setSearchResults([]);
 
-      // Select and open thread
       handleSelectConversation({
         id: convId,
         name: targetUser.display_name || targetUser.username,
@@ -298,7 +300,6 @@ export function MessagesScreen({ route, navigation }: any) {
         unread: 0,
       });
 
-      // Reload conversations list in background
       loadConversations();
     } catch (err: any) {
       Alert.alert('Error', err.message || 'Could not start conversation');
@@ -316,7 +317,6 @@ export function MessagesScreen({ route, navigation }: any) {
     setDraft('');
     setSending(true);
 
-    // Optimistic update
     const optimistic: MessageItem = {
       id: clientMessageId,
       sender_id: currentUserId,
@@ -338,11 +338,10 @@ export function MessagesScreen({ route, navigation }: any) {
         });
 
       if (error) {
-        // Remove optimistic message on failure
         setMessages((prev) => prev.filter((m) => m.id !== clientMessageId));
         Alert.alert('Send Failed', error.message || 'Could not send message. Please try again.');
       }
-    } catch (err: any) {
+    } catch {
       setMessages((prev) => prev.filter((m) => m.id !== clientMessageId));
       Alert.alert('Send Failed', 'Could not send message. Please try again.');
     } finally {
@@ -355,8 +354,8 @@ export function MessagesScreen({ route, navigation }: any) {
   if (loadingConversations) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator size="large" color={TOKENS.action} />
-        <Text style={styles.loadingText}>Connecting to Caribbean Messages…</Text>
+        <ActivityIndicator size="large" color={TOKENS.teal} />
+        <Text style={styles.loadingText}>Syncing encrypted inbox…</Text>
       </View>
     );
   }
@@ -369,31 +368,50 @@ export function MessagesScreen({ route, navigation }: any) {
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         keyboardVerticalOffset={80}
       >
-        {/* Header */}
+        {/* Thread Header */}
         <View style={styles.threadHeader}>
-          <TouchableOpacity onPress={() => {
-            setSelectedId(null);
-            setSelectedName('');
-            setMessages([]);
-            if (realtimeChannelRef.current) {
-              supabase.removeChannel(realtimeChannelRef.current);
-              realtimeChannelRef.current = null;
-            }
-          }} style={styles.backBtn}>
-            <Text style={styles.backBtnText}>← Back</Text>
+          <TouchableOpacity
+            onPress={() => {
+              setSelectedId(null);
+              setSelectedName('');
+              setMessages([]);
+              if (realtimeChannelRef.current) {
+                supabase.removeChannel(realtimeChannelRef.current);
+                realtimeChannelRef.current = null;
+              }
+            }}
+            style={styles.backBtn}
+            accessibilityRole="button"
+            accessibilityLabel="Back to conversations"
+          >
+            <Ionicons name="chevron-back" size={18} color={TOKENS.teal} />
+            <Text style={styles.backBtnText}>Back</Text>
           </TouchableOpacity>
-          <Text style={styles.threadTitle} numberOfLines={1}>{selectedName}</Text>
+
+          <View style={styles.threadAvatarSmall}>
+            <Text style={styles.threadAvatarSmallText}>
+              {(selectedName || 'DM').slice(0, 2).toUpperCase()}
+            </Text>
+          </View>
+
+          <View style={styles.threadHeaderMeta}>
+            <Text style={styles.threadTitle} numberOfLines={1}>{selectedName}</Text>
+            <Text style={styles.threadSubtitle}>Direct Thread</Text>
+          </View>
         </View>
 
         {/* Messages */}
         {loadingMessages ? (
           <View style={styles.centered}>
-            <ActivityIndicator size="small" color={TOKENS.action} />
+            <ActivityIndicator size="small" color={TOKENS.teal} />
           </View>
         ) : messages.length === 0 ? (
           <View style={styles.centered}>
+            <View style={styles.emptyIconCircle}>
+              <Ionicons name="chatbubble-ellipses-outline" size={26} color={TOKENS.teal} />
+            </View>
             <Text style={styles.emptyTitle}>No messages yet</Text>
-            <Text style={styles.emptySubtitle}>Say hello to start the conversation! 🌴</Text>
+            <Text style={styles.emptySubtitle}>Send a note below to begin the conversation.</Text>
           </View>
         ) : (
           <FlatList
@@ -409,7 +427,9 @@ export function MessagesScreen({ route, navigation }: any) {
                     <Text style={[styles.bubbleText, isMine && styles.bubbleTextMine]}>
                       {item.body || item.content}
                     </Text>
-                    <Text style={styles.bubbleTime}>{formatTime(item.created_at)}</Text>
+                    <Text style={[styles.bubbleTime, isMine && styles.bubbleTimeMine]}>
+                      {formatTime(item.created_at)}
+                    </Text>
                   </View>
                 </View>
               );
@@ -418,8 +438,8 @@ export function MessagesScreen({ route, navigation }: any) {
         )}
 
         {typingUsers.length > 0 && (
-          <View style={{ paddingHorizontal: 16, paddingBottom: 8 }}>
-            <Text style={{ color: TOKENS.action, fontSize: 12, fontStyle: 'italic', fontWeight: 'bold' }}>
+          <View style={styles.typingBar}>
+            <Text style={styles.typingText}>
               {typingUsers.join(', ')} is typing…
             </Text>
           </View>
@@ -430,7 +450,7 @@ export function MessagesScreen({ route, navigation }: any) {
           <TextInput
             style={styles.input}
             placeholder="Write a message…"
-            placeholderTextColor={TOKENS.textMuted}
+            placeholderTextColor={TOKENS.textDim}
             value={draft}
             onChangeText={(text) => {
               setDraft(text);
@@ -450,14 +470,16 @@ export function MessagesScreen({ route, navigation }: any) {
             onSubmitEditing={handleSend}
           />
           <TouchableOpacity
-            style={[styles.sendBtn, (!draft.trim() || sending) && { opacity: 0.5 }]}
+            style={[styles.sendBtn, (!draft.trim() || sending) && styles.sendBtnDisabled]}
             disabled={!draft.trim() || sending}
             onPress={handleSend}
+            accessibilityRole="button"
+            accessibilityLabel="Send message"
           >
             {sending ? (
-              <ActivityIndicator size="small" color="#FFFFFF" />
+              <ActivityIndicator size="small" color={TOKENS.actionText} />
             ) : (
-              <Text style={styles.sendText}>Send</Text>
+              <Ionicons name="send" size={16} color={TOKENS.actionText} />
             )}
           </TouchableOpacity>
         </View>
@@ -468,35 +490,40 @@ export function MessagesScreen({ route, navigation }: any) {
   // ── Conversation List ──────────────────────────────────────────────────────
   return (
     <View style={styles.container}>
-      {/* Header with New Chat Button */}
+      {/* Header with New Message CTA */}
       <View style={styles.listHeader}>
-        <Text style={styles.listHeaderTitle}>Messages</Text>
+        <View>
+          <Text style={styles.listHeaderTitle}>Messages</Text>
+          <Text style={styles.listHeaderSubtitle}>Direct threads &amp; creator channels</Text>
+        </View>
         <TouchableOpacity
           style={styles.newChatBtn}
           onPress={() => setNewChatModalOpen(true)}
-          activeOpacity={0.8}
+          activeOpacity={0.85}
           accessibilityRole="button"
           accessibilityLabel="Start a new message"
         >
-          <Text style={styles.newChatBtnText}>+ New Chat</Text>
+          <Ionicons name="create-outline" size={16} color={TOKENS.actionText} />
+          <Text style={styles.newChatBtnText}>New Message</Text>
         </TouchableOpacity>
       </View>
 
       {conversations.length === 0 ? (
         <View style={styles.centered}>
           <View style={styles.emptyIconCircle}>
-            <Text style={styles.emptyIconText}>💬</Text>
+            <Ionicons name="chatbubbles-outline" size={28} color={TOKENS.teal} />
           </View>
           <Text style={styles.emptyTitle}>No Conversations Yet</Text>
           <Text style={styles.emptySubtitle}>
-            Connect with friends, merchants, and creator communities across the Caribbean diaspora.
+            Connect directly with friends, verified merchants, and creator communities across the Caribbean diaspora.
           </Text>
           <TouchableOpacity
             style={styles.findPeopleBtn}
             onPress={() => setNewChatModalOpen(true)}
-            activeOpacity={0.8}
+            activeOpacity={0.85}
           >
-            <Text style={styles.findPeopleBtnText}>Find Members to Chat →</Text>
+            <Ionicons name="search-outline" size={16} color={TOKENS.actionText} />
+            <Text style={styles.findPeopleBtnText}>Find Members to Message</Text>
           </TouchableOpacity>
         </View>
       ) : (
@@ -506,19 +533,19 @@ export function MessagesScreen({ route, navigation }: any) {
           contentContainerStyle={styles.listContent}
           renderItem={({ item }) => (
             <TouchableOpacity
-              style={styles.chatCard}
+              style={[styles.chatCard, item.unread > 0 && styles.chatCardUnread]}
               onPress={() => handleSelectConversation(item)}
-              activeOpacity={0.75}
+              activeOpacity={0.78}
             >
               <View style={styles.chatAvatar}>
                 <Text style={styles.chatAvatarText}>{item.name.slice(0, 2).toUpperCase()}</Text>
               </View>
-              <View style={{ flex: 1 }}>
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+              <View style={styles.chatCardBody}>
+                <View style={styles.chatCardRow}>
                   <Text style={styles.chatName} numberOfLines={1}>{item.name}</Text>
                   <Text style={styles.chatTime}>{formatTime(item.lastMessageAt)}</Text>
                 </View>
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 3 }}>
+                <View style={styles.chatCardPreviewRow}>
                   <Text style={styles.chatPreview} numberOfLines={1}>{item.preview}</Text>
                   {item.unread > 0 && (
                     <View style={styles.unreadBadge}>
@@ -527,6 +554,7 @@ export function MessagesScreen({ route, navigation }: any) {
                   )}
                 </View>
               </View>
+              <Ionicons name="chevron-forward" size={16} color={TOKENS.textDim} />
             </TouchableOpacity>
           )}
         />
@@ -543,7 +571,7 @@ export function MessagesScreen({ route, navigation }: any) {
           <View style={styles.modalContent}>
             {/* Modal Header */}
             <View style={styles.modalHeader}>
-              <Text style={styles.modalHeaderTitle}>Start Conversation 🌴</Text>
+              <Text style={styles.modalHeaderTitle}>New Message</Text>
               <TouchableOpacity
                 onPress={() => {
                   setNewChatModalOpen(false);
@@ -551,39 +579,45 @@ export function MessagesScreen({ route, navigation }: any) {
                   setSearchResults([]);
                 }}
                 style={styles.modalCloseBtn}
+                accessibilityRole="button"
+                accessibilityLabel="Close new message search"
               >
-                <Text style={styles.modalCloseText}>✕</Text>
+                <Ionicons name="close" size={22} color={TOKENS.textMuted} />
               </TouchableOpacity>
             </View>
 
             {/* Search Input */}
             <View style={styles.modalSearchBox}>
-              <TextInput
-                style={styles.modalSearchInput}
-                placeholder="Search by name or @username..."
-                placeholderTextColor={TOKENS.textMuted}
-                value={userSearchQuery}
-                onChangeText={handleSearchUsers}
-                autoFocus
-                autoCapitalize="none"
-              />
+              <View style={styles.modalSearchInputWrap}>
+                <Ionicons name="search-outline" size={18} color={TOKENS.textDim} />
+                <TextInput
+                  style={styles.modalSearchInput}
+                  placeholder="Search by name or @username…"
+                  placeholderTextColor={TOKENS.textDim}
+                  value={userSearchQuery}
+                  onChangeText={handleSearchUsers}
+                  autoFocus
+                  autoCapitalize="none"
+                />
+              </View>
             </View>
 
             {/* Results */}
             {searchingUsers ? (
               <View style={styles.modalCentered}>
-                <ActivityIndicator size="small" color={TOKENS.action} />
-                <Text style={styles.searchStatusText}>Searching Caribbean members…</Text>
+                <ActivityIndicator size="small" color={TOKENS.teal} />
+                <Text style={styles.searchStatusText}>Searching directory…</Text>
               </View>
             ) : searchResults.length === 0 ? (
               <View style={styles.modalCentered}>
+                <Ionicons name="people-outline" size={38} color={TOKENS.textDim} style={{ marginBottom: 10 }} />
                 <Text style={styles.searchEmptyTitle}>
-                  {userSearchQuery.trim() ? 'No members found' : 'Type to search members'}
+                  {userSearchQuery.trim() ? 'No members found' : 'Search TUKUBI Members'}
                 </Text>
                 <Text style={styles.searchEmptySubtitle}>
                   {userSearchQuery.trim()
-                    ? 'Check the spelling or try searching by username'
-                    : 'Search anyone across the Caribbean network to message directly'}
+                    ? 'Check the spelling or search by exact @username.'
+                    : 'Enter a name or handle to start a direct conversation.'}
                 </Text>
               </View>
             ) : (
@@ -598,7 +632,7 @@ export function MessagesScreen({ route, navigation }: any) {
                       style={styles.userResultCard}
                       onPress={() => handleStartChatWithUser(item)}
                       disabled={isStarting}
-                      activeOpacity={0.75}
+                      activeOpacity={0.78}
                     >
                       <View style={styles.userResultAvatar}>
                         <Text style={styles.userResultAvatarText}>
@@ -606,17 +640,27 @@ export function MessagesScreen({ route, navigation }: any) {
                         </Text>
                       </View>
                       <View style={{ flex: 1 }}>
-                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                        <View style={styles.userNameRow}>
                           <Text style={styles.userResultName}>{item.display_name || item.username}</Text>
-                          {item.is_verified && <Text style={{ fontSize: 12 }}>✓</Text>}
+                          {item.is_verified && (
+                            <Ionicons name="checkmark-circle" size={14} color={TOKENS.teal} />
+                          )}
                         </View>
                         <Text style={styles.userResultHandle}>@{item.username}</Text>
-                        {item.country && <Text style={styles.userResultCountry}>📍 {item.country}</Text>}
+                        {item.country ? (
+                          <View style={styles.userCountryRow}>
+                            <Ionicons name="location-outline" size={11} color={TOKENS.teal} />
+                            <Text style={styles.userResultCountry}>{item.country}</Text>
+                          </View>
+                        ) : null}
                       </View>
                       {isStarting ? (
-                        <ActivityIndicator size="small" color={TOKENS.action} />
+                        <ActivityIndicator size="small" color={TOKENS.teal} />
                       ) : (
-                        <Text style={styles.startChatAction}>Message →</Text>
+                        <View style={styles.startChatPill}>
+                          <Text style={styles.startChatAction}>Message</Text>
+                          <Ionicons name="arrow-forward" size={12} color={TOKENS.teal} />
+                        </View>
                       )}
                     </TouchableOpacity>
                   );
@@ -637,25 +681,45 @@ const styles = StyleSheet.create({
   centered: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 },
   loadingText: { color: TOKENS.textMuted, fontSize: 13, marginTop: 12, fontWeight: '600' },
 
-  // Conversation list
+  // Conversation list header
   listHeader: {
-    paddingHorizontal: 20,
-    paddingTop: 16,
-    paddingBottom: 12,
+    paddingHorizontal: 18,
+    paddingTop: 14,
+    paddingBottom: 14,
+    backgroundColor: TOKENS.surface,
     borderBottomWidth: 1,
     borderBottomColor: TOKENS.border,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
   },
-  listHeaderTitle: { color: TOKENS.textPrimary, fontSize: 22, fontWeight: '900', letterSpacing: -0.5 },
-  newChatBtn: {
-    backgroundColor: TOKENS.action,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 999,
+  listHeaderTitle: {
+    color: TOKENS.textPrimary,
+    fontSize: 21,
+    fontWeight: '800',
+    letterSpacing: -0.4,
   },
-  newChatBtnText: { color: '#090D1A', fontSize: 12, fontWeight: '900' },
+  listHeaderSubtitle: {
+    color: TOKENS.textMuted,
+    fontSize: 12,
+    marginTop: 2,
+  },
+  newChatBtn: {
+    backgroundColor: TOKENS.teal,
+    paddingHorizontal: 14,
+    paddingVertical: 9,
+    borderRadius: 999,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  newChatBtnText: {
+    color: TOKENS.actionText,
+    fontSize: 12,
+    fontWeight: '800',
+  },
+
+  // Inbox cards
   listContent: { padding: 16, paddingBottom: 32 },
   chatCard: {
     backgroundColor: TOKENS.surface,
@@ -668,20 +732,29 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 12,
   },
+  chatCardUnread: {
+    borderColor: TOKENS.borderActive,
+    backgroundColor: TOKENS.oceanDepth,
+  },
   chatAvatar: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: 'rgba(0,180,216,0.20)',
+    width: 46,
+    height: 46,
+    borderRadius: 23,
+    backgroundColor: TOKENS.tealSoft,
+    borderWidth: 1,
+    borderColor: TOKENS.borderActive,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  chatAvatarText: { color: TOKENS.actionSecondary, fontWeight: '800', fontSize: 13 },
-  chatName: { color: TOKENS.textPrimary, fontSize: 14, fontWeight: '800', flex: 1 },
-  chatTime: { color: TOKENS.textMuted, fontSize: 10, fontWeight: '500' },
+  chatAvatarText: { color: TOKENS.teal, fontWeight: '800', fontSize: 13, letterSpacing: 0.4 },
+  chatCardBody: { flex: 1 },
+  chatCardRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  chatCardPreviewRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 4 },
+  chatName: { color: TOKENS.textPrimary, fontSize: 14, fontWeight: '700', flex: 1, marginRight: 8 },
+  chatTime: { color: TOKENS.textDim, fontSize: 11, fontWeight: '500' },
   chatPreview: { color: TOKENS.textMuted, fontSize: 12, flex: 1 },
   unreadBadge: {
-    backgroundColor: TOKENS.action,
+    backgroundColor: TOKENS.teal,
     borderRadius: 999,
     minWidth: 20,
     height: 20,
@@ -690,43 +763,76 @@ const styles = StyleSheet.create({
     paddingHorizontal: 6,
     marginLeft: 8,
   },
-  unreadText: { color: '#FFFFFF', fontSize: 10, fontWeight: '800' },
+  unreadText: { color: TOKENS.actionText, fontSize: 10, fontWeight: '800' },
+
+  // Empty state
   emptyIconCircle: {
     width: 64,
     height: 64,
     borderRadius: 32,
-    backgroundColor: 'rgba(0,180,216,0.15)',
+    backgroundColor: TOKENS.tealSoft,
+    borderWidth: 1,
+    borderColor: TOKENS.borderActive,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 16,
   },
-  emptyIconText: { fontSize: 28 },
   emptyTitle: { color: TOKENS.textPrimary, fontSize: 16, fontWeight: '800', marginBottom: 6 },
-  emptySubtitle: { color: TOKENS.textMuted, fontSize: 12, textAlign: 'center', lineHeight: 18, maxWidth: 280, marginBottom: 16 },
+  emptySubtitle: {
+    color: TOKENS.textMuted,
+    fontSize: 13,
+    textAlign: 'center',
+    lineHeight: 19,
+    maxWidth: 290,
+    marginBottom: 18,
+  },
   findPeopleBtn: {
-    backgroundColor: TOKENS.action,
+    backgroundColor: TOKENS.teal,
     paddingHorizontal: 20,
     paddingVertical: 12,
     borderRadius: 999,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
   },
-  findPeopleBtnText: { color: '#090D1A', fontSize: 13, fontWeight: '900' },
+  findPeopleBtnText: { color: TOKENS.actionText, fontSize: 13, fontWeight: '800' },
 
   // Thread view
   threadHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 16,
+    paddingHorizontal: 14,
     paddingVertical: 12,
     borderBottomWidth: 1,
     borderBottomColor: TOKENS.border,
     backgroundColor: TOKENS.surface,
-    gap: 12,
+    gap: 10,
   },
-  backBtn: { paddingVertical: 4, paddingRight: 8 },
-  backBtnText: { color: TOKENS.action, fontWeight: '700', fontSize: 14 },
-  threadTitle: { color: TOKENS.textPrimary, fontSize: 16, fontWeight: '800', flex: 1 },
-  messageListContent: { padding: 16, paddingBottom: 8 },
-  bubbleRow: { flexDirection: 'row', marginBottom: 8, justifyContent: 'flex-start' },
+  backBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 6,
+    paddingRight: 8,
+    gap: 2,
+  },
+  backBtnText: { color: TOKENS.teal, fontWeight: '700', fontSize: 14 },
+  threadAvatarSmall: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: TOKENS.tealSoft,
+    borderWidth: 1,
+    borderColor: TOKENS.borderActive,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  threadAvatarSmallText: { color: TOKENS.teal, fontSize: 12, fontWeight: '800' },
+  threadHeaderMeta: { flex: 1 },
+  threadTitle: { color: TOKENS.textPrimary, fontSize: 15, fontWeight: '800' },
+  threadSubtitle: { color: TOKENS.textDim, fontSize: 11, marginTop: 1 },
+
+  messageListContent: { padding: 16, paddingBottom: 10 },
+  bubbleRow: { flexDirection: 'row', marginBottom: 10, justifyContent: 'flex-start' },
   bubbleRowMine: { justifyContent: 'flex-end' },
   bubble: {
     maxWidth: '78%',
@@ -739,20 +845,27 @@ const styles = StyleSheet.create({
   },
   bubbleMine: {
     backgroundColor: TOKENS.action,
-    borderColor: 'transparent',
+    borderColor: TOKENS.action,
     borderBottomRightRadius: 4,
   },
   bubbleTheirs: {
+    backgroundColor: TOKENS.raised,
+    borderColor: TOKENS.borderStrong,
     borderBottomLeftRadius: 4,
   },
   bubbleText: { color: TOKENS.textPrimary, fontSize: 14, lineHeight: 20 },
-  bubbleTextMine: { color: '#090D1A', fontWeight: '600' },
-  bubbleTime: { color: 'rgba(255,255,255,0.55)', fontSize: 10, marginTop: 4, textAlign: 'right' },
+  bubbleTextMine: { color: TOKENS.actionText, fontWeight: '600' },
+  bubbleTime: { color: TOKENS.textDim, fontSize: 10, marginTop: 4, textAlign: 'right' },
+  bubbleTimeMine: { color: TOKENS.actionText, opacity: 0.72 },
+
+  typingBar: { paddingHorizontal: 16, paddingBottom: 8 },
+  typingText: { color: TOKENS.teal, fontSize: 12, fontStyle: 'italic', fontWeight: '600' },
 
   // Composer
   composerBar: {
     flexDirection: 'row',
-    padding: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
     backgroundColor: TOKENS.surface,
     borderTopWidth: 1,
     borderTopColor: TOKENS.border,
@@ -761,10 +874,10 @@ const styles = StyleSheet.create({
   },
   input: {
     flex: 1,
-    backgroundColor: TOKENS.canvas,
+    backgroundColor: TOKENS.raised,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: TOKENS.border,
+    borderColor: TOKENS.borderStrong,
     paddingHorizontal: 16,
     paddingVertical: 10,
     color: TOKENS.textPrimary,
@@ -772,15 +885,16 @@ const styles = StyleSheet.create({
     maxHeight: 100,
   },
   sendBtn: {
-    backgroundColor: TOKENS.action,
-    borderRadius: 999,
-    paddingHorizontal: 18,
-    paddingVertical: 10,
-    minWidth: 60,
+    backgroundColor: TOKENS.teal,
+    borderRadius: 21,
+    width: 42,
+    height: 42,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  sendText: { color: '#090D1A', fontSize: 13, fontWeight: '900' },
+  sendBtnDisabled: {
+    opacity: 0.45,
+  },
 
   // User Search Modal
   modalSafe: { flex: 1, backgroundColor: TOKENS.canvas },
@@ -789,29 +903,42 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 20,
+    paddingHorizontal: 18,
     paddingVertical: 14,
+    backgroundColor: TOKENS.surface,
     borderBottomWidth: 1,
     borderBottomColor: TOKENS.border,
   },
-  modalHeaderTitle: { color: TOKENS.textPrimary, fontSize: 18, fontWeight: '900' },
-  modalCloseBtn: { padding: 4 },
-  modalCloseText: { color: TOKENS.textMuted, fontSize: 18, fontWeight: '700' },
+  modalHeaderTitle: { color: TOKENS.textPrimary, fontSize: 17, fontWeight: '800' },
+  modalCloseBtn: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: TOKENS.raised,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   modalSearchBox: { paddingHorizontal: 16, paddingVertical: 12 },
-  modalSearchInput: {
+  modalSearchInputWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
     backgroundColor: TOKENS.surface,
     borderWidth: 1,
-    borderColor: TOKENS.border,
-    borderRadius: 16,
-    paddingHorizontal: 16,
+    borderColor: TOKENS.borderStrong,
+    borderRadius: 14,
+    paddingHorizontal: 14,
+    gap: 8,
+  },
+  modalSearchInput: {
+    flex: 1,
     paddingVertical: 12,
     color: TOKENS.textPrimary,
     fontSize: 14,
   },
   modalCentered: { padding: 40, alignItems: 'center' },
   searchStatusText: { color: TOKENS.textMuted, fontSize: 13, marginTop: 10 },
-  searchEmptyTitle: { color: TOKENS.textPrimary, fontSize: 15, fontWeight: '800' },
-  searchEmptySubtitle: { color: TOKENS.textMuted, fontSize: 12, textAlign: 'center', marginTop: 4 },
+  searchEmptyTitle: { color: TOKENS.textPrimary, fontSize: 15, fontWeight: '700' },
+  searchEmptySubtitle: { color: TOKENS.textMuted, fontSize: 12, textAlign: 'center', marginTop: 4, lineHeight: 18 },
   userResultCard: {
     backgroundColor: TOKENS.surface,
     borderRadius: 16,
@@ -827,15 +954,28 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: TOKENS.raised,
+    backgroundColor: TOKENS.tealSoft,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: TOKENS.border,
+    borderColor: TOKENS.borderActive,
   },
-  userResultAvatarText: { color: TOKENS.action, fontSize: 14, fontWeight: '900' },
-  userResultName: { color: TOKENS.textPrimary, fontSize: 14, fontWeight: '800' },
-  userResultHandle: { color: TOKENS.textMuted, fontSize: 11 },
-  userResultCountry: { color: TOKENS.action, fontSize: 10, marginTop: 2, fontWeight: '700' },
-  startChatAction: { color: TOKENS.action, fontSize: 12, fontWeight: '800' },
+  userResultAvatarText: { color: TOKENS.teal, fontSize: 13, fontWeight: '800' },
+  userNameRow: { flexDirection: 'row', alignItems: 'center', gap: 5 },
+  userResultName: { color: TOKENS.textPrimary, fontSize: 14, fontWeight: '700' },
+  userResultHandle: { color: TOKENS.textMuted, fontSize: 12, marginTop: 1 },
+  userCountryRow: { flexDirection: 'row', alignItems: 'center', gap: 3, marginTop: 3 },
+  userResultCountry: { color: TOKENS.teal, fontSize: 11, fontWeight: '600' },
+  startChatPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: TOKENS.tealSoft,
+    borderWidth: 1,
+    borderColor: TOKENS.borderActive,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 999,
+  },
+  startChatAction: { color: TOKENS.teal, fontSize: 12, fontWeight: '700' },
 });

@@ -25,6 +25,7 @@ interface NotificationItem {
   entity_id?: string;
   payload?: any;
   read_at?: string | null;
+  is_read?: boolean;
   created_at: string;
   profiles?: {
     username?: string;
@@ -111,23 +112,21 @@ export function NotificationsScreen({ navigation }: any) {
   };
 
   const handleNotificationPress = async (item: NotificationItem) => {
-    // Mark single notification read
     if (!item.read_at) {
       const now = new Date().toISOString();
       setNotifications((curr) =>
-        curr.map((n) => (n.id === item.id ? { ...n, read_at: now } : n))
+        curr.map((n) => (n.id === item.id ? { ...n, read_at: now, is_read: true } : n))
       );
       try {
         await supabase
           .from('notifications')
-          .update({ read_at: now })
+          .update({ read_at: now, is_read: true } as any)
           .eq('id', item.id);
       } catch (err) {
         console.warn('Error marking read:', err);
       }
     }
 
-    // Deep navigation based on notification kind & entity
     const kind = item.kind?.toLowerCase() || '';
     if (kind.includes('market') || kind.includes('offer') || kind.includes('order')) {
       navigation?.navigate('Marketplace');
@@ -150,52 +149,60 @@ export function NotificationsScreen({ navigation }: any) {
 
   const getNotificationDetails = (item: NotificationItem) => {
     const actor = item.profiles;
-    const actorName = actor?.full_name || (actor?.username ? `@${actor.username}` : 'Caribbean member');
+    const actorName = actor?.full_name || (actor?.username ? `@${actor.username}` : 'TUKUBI member');
     const kind = item.kind?.toLowerCase() || '';
 
-    let iconName = 'notifications';
-    let iconColor = TOKENS.action;
-    let title = 'Caribbean Update';
+    let iconName = 'notifications-outline';
+    let iconColor = TOKENS.teal;
+    let iconBg = TOKENS.tealSoft;
+    let title = 'Activity Update';
     let message = item.payload?.message || item.payload?.body || 'You have a new update.';
 
     if (kind.includes('like')) {
       iconName = 'heart';
-      iconColor = '#FF3366';
+      iconColor = TOKENS.danger;
+      iconBg = TOKENS.oceanSoft;
       title = `${actorName} liked your post`;
-      message = 'Your content is vibrating across the island network.';
+      message = 'Your content is resonating across the network.';
     } else if (kind.includes('comment')) {
-      iconName = 'chatbubble';
-      iconColor = TOKENS.sea;
+      iconName = 'chatbubble-ellipses-outline';
+      iconColor = TOKENS.action;
+      iconBg = TOKENS.oceanSoft;
       title = `${actorName} commented`;
       message = item.payload?.content || 'Shared a perspective on your discussion.';
     } else if (kind.includes('follow')) {
-      iconName = 'person-add';
-      iconColor = TOKENS.action;
+      iconName = 'person-add-outline';
+      iconColor = TOKENS.teal;
+      iconBg = TOKENS.tealSoft;
       title = `${actorName} followed you`;
-      message = 'Started following your island journey and updates.';
+      message = 'Started following your creator updates.';
     } else if (kind.includes('friend_request')) {
-      iconName = 'people';
-      iconColor = TOKENS.action;
+      iconName = 'people-outline';
+      iconColor = TOKENS.teal;
+      iconBg = TOKENS.tealSoft;
       title = `${actorName} sent a friend request`;
-      message = 'Wants to connect with you as a friend on TUKUBI.';
+      message = 'Wants to connect with you on TUKUBI.';
     } else if (kind.includes('friend_accepted')) {
-      iconName = 'checkmark-circle';
-      iconColor = '#10B981';
+      iconName = 'checkmark-circle-outline';
+      iconColor = TOKENS.success;
+      iconBg = TOKENS.tealSoft;
       title = `${actorName} accepted your friend request`;
-      message = 'You are now friends on TUKUBI.';
+      message = 'You are now connected as friends.';
     } else if (kind.includes('marketplace') || kind.includes('offer')) {
-      iconName = 'cart';
+      iconName = 'bag-handle-outline';
       iconColor = TOKENS.accent;
+      iconBg = TOKENS.amberSoft;
       title = `Marketplace: ${item.payload?.title || 'Offer Received'}`;
-      message = item.payload?.message || 'New offer or update on your listing.';
+      message = item.payload?.message || 'New offer or status update on your listing.';
     } else if (kind.includes('sound')) {
-      iconName = 'musical-notes';
+      iconName = 'musical-notes-outline';
       iconColor = TOKENS.purple;
-      title = 'Caribbean Sound Credit';
-      message = 'Your rhythm was used in a creator reel.';
+      iconBg = TOKENS.violetSoft;
+      title = 'Sound Royalty Credit';
+      message = 'Your audio track was featured in a creator reel.';
     }
 
-    return { iconName, iconColor, title, message };
+    return { iconName, iconColor, iconBg, title, message };
   };
 
   const filteredNotifications = notifications.filter((n) => {
@@ -217,7 +224,7 @@ export function NotificationsScreen({ navigation }: any) {
   if (loading) {
     return (
       <SafeAreaView style={[styles.container, styles.centerBox]}>
-        <ActivityIndicator size="large" color={TOKENS.action} />
+        <ActivityIndicator size="large" color={TOKENS.teal} />
       </SafeAreaView>
     );
   }
@@ -235,13 +242,14 @@ export function NotificationsScreen({ navigation }: any) {
           )}
         </View>
         {unreadCount > 0 && (
-          <TouchableOpacity onPress={markAllRead}>
+          <TouchableOpacity onPress={markAllRead} style={styles.markReadBtn}>
+            <Ionicons name="checkmark-done-outline" size={15} color={TOKENS.teal} />
             <Text style={styles.markReadText}>Mark all read</Text>
           </TouchableOpacity>
         )}
       </View>
 
-      {/* Filter Tabs */}
+      {/* High-Contrast Filter Chips */}
       <View style={styles.tabsRow}>
         {(
           [
@@ -250,55 +258,59 @@ export function NotificationsScreen({ navigation }: any) {
             { key: 'marketplace', label: 'Market' },
             { key: 'system', label: 'System' },
           ] as const
-        ).map((tab) => (
-          <TouchableOpacity
-            key={tab.key}
-            style={[styles.tabChip, activeTab === tab.key && styles.tabChipActive]}
-            onPress={() => setActiveTab(tab.key)}
-          >
-            <Text style={[styles.tabText, activeTab === tab.key && styles.tabTextActive]}>
-              {tab.label}
-            </Text>
-          </TouchableOpacity>
-        ))}
+        ).map((tab) => {
+          const active = activeTab === tab.key;
+          return (
+            <TouchableOpacity
+              key={tab.key}
+              style={[styles.tabChip, active && styles.tabChipActive]}
+              onPress={() => setActiveTab(tab.key)}
+              activeOpacity={0.82}
+            >
+              <Text style={[styles.tabText, active && styles.tabTextActive]}>
+                {tab.label}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
       </View>
 
       {/* Notifications List */}
       <FlatList
         data={filteredNotifications}
         keyExtractor={(item) => item.id}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={TOKENS.action} />}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={TOKENS.teal} />}
         contentContainerStyle={styles.listContent}
         ListEmptyComponent={
           <View style={styles.emptyBox}>
-            <Ionicons name="notifications-off-outline" size={54} color={TOKENS.textMuted} />
-            <Text style={styles.emptyTitle}>You're all caught up! 🌴</Text>
+            <View style={styles.emptyIconCircle}>
+              <Ionicons name="notifications-off-outline" size={28} color={TOKENS.teal} />
+            </View>
+            <Text style={styles.emptyTitle}>You are all caught up</Text>
             <Text style={styles.emptySubtitle}>
-              New interactions, marketplace offers, and island updates will appear here in real time.
+              New social interactions, marketplace escrow offers, and ledger settlements will appear here.
             </Text>
           </View>
         }
         renderItem={({ item }) => {
           const isUnread = !item.read_at;
-          const { iconName, iconColor, title, message } = getNotificationDetails(item);
+          const { iconName, iconColor, iconBg, title, message } = getNotificationDetails(item);
           const actor = item.profiles;
 
           return (
             <TouchableOpacity
               style={[styles.notificationCard, isUnread && styles.unreadCard]}
               onPress={() => handleNotificationPress(item)}
-              activeOpacity={0.8}
+              activeOpacity={0.82}
             >
-              {/* Avatar or Icon */}
               {actor?.avatar_url ? (
                 <Image source={{ uri: actor.avatar_url }} style={styles.avatar} />
               ) : (
-                <View style={[styles.iconContainer, { backgroundColor: iconColor + '20' }]}>
+                <View style={[styles.iconContainer, { backgroundColor: iconBg }]}>
                   <Ionicons name={iconName} size={20} color={iconColor} />
                 </View>
               )}
 
-              {/* Content */}
               <View style={styles.contentContainer}>
                 <Text style={styles.title} numberOfLines={1}>
                   {title}
@@ -316,7 +328,6 @@ export function NotificationsScreen({ navigation }: any) {
                 </Text>
               </View>
 
-              {/* Unread dot indicator */}
               {isUnread && <View style={styles.unreadDot} />}
             </TouchableOpacity>
           );
@@ -339,8 +350,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingHorizontal: 18,
+    paddingVertical: 13,
+    backgroundColor: TOKENS.surface,
     borderBottomWidth: 1,
     borderBottomColor: TOKENS.border,
   },
@@ -352,22 +364,34 @@ const styles = StyleSheet.create({
   headerTitle: {
     color: TOKENS.textPrimary,
     fontSize: 20,
-    fontWeight: '900',
+    fontWeight: '800',
+    letterSpacing: -0.3,
   },
   unreadCountBadge: {
-    backgroundColor: TOKENS.action,
+    backgroundColor: TOKENS.teal,
     paddingHorizontal: 8,
     paddingVertical: 2,
-    borderRadius: 10,
+    borderRadius: 999,
   },
   unreadCountText: {
-    color: '#FFF',
+    color: TOKENS.actionText,
     fontSize: 11,
     fontWeight: '800',
   },
+  markReadBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    backgroundColor: TOKENS.tealSoft,
+    borderWidth: 1,
+    borderColor: TOKENS.borderActive,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 999,
+  },
   markReadText: {
-    color: TOKENS.action,
-    fontSize: 13,
+    color: TOKENS.teal,
+    fontSize: 12,
     fontWeight: '700',
   },
   tabsRow: {
@@ -375,20 +399,21 @@ const styles = StyleSheet.create({
     gap: 8,
     paddingHorizontal: 16,
     paddingVertical: 10,
+    backgroundColor: TOKENS.surface,
     borderBottomWidth: 1,
     borderBottomColor: TOKENS.border,
   },
   tabChip: {
     paddingHorizontal: 14,
-    paddingVertical: 6,
-    borderRadius: 16,
-    backgroundColor: TOKENS.surface,
+    paddingVertical: 7,
+    borderRadius: 999,
+    backgroundColor: TOKENS.raised,
     borderWidth: 1,
     borderColor: TOKENS.border,
   },
   tabChipActive: {
-    backgroundColor: TOKENS.action,
-    borderColor: TOKENS.action,
+    backgroundColor: TOKENS.teal,
+    borderColor: TOKENS.teal,
   },
   tabText: {
     color: TOKENS.textMuted,
@@ -396,7 +421,8 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   tabTextActive: {
-    color: '#FFF',
+    color: TOKENS.actionText,
+    fontWeight: '800',
   },
   listContent: {
     padding: 16,
@@ -414,18 +440,21 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   unreadCard: {
-    backgroundColor: TOKENS.raised,
-    borderColor: TOKENS.action + '60',
+    backgroundColor: TOKENS.oceanDepth,
+    borderColor: TOKENS.borderActive,
   },
   avatar: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: TOKENS.raised,
   },
   iconContainer: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
+    width: 44,
+    height: 44,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: TOKENS.border,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -435,34 +464,43 @@ const styles = StyleSheet.create({
   title: {
     color: TOKENS.textPrimary,
     fontSize: 14,
-    fontWeight: '800',
+    fontWeight: '700',
     marginBottom: 2,
   },
   body: {
-    color: TOKENS.textMuted,
+    color: TOKENS.textSecondary,
     fontSize: 12,
-    lineHeight: 16,
+    lineHeight: 17,
     marginBottom: 4,
   },
   timestamp: {
-    color: TOKENS.textMuted,
+    color: TOKENS.textDim,
     fontSize: 11,
-    opacity: 0.8,
   },
   unreadDot: {
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: TOKENS.action,
+    backgroundColor: TOKENS.teal,
   },
   emptyBox: {
-    paddingVertical: 80,
+    paddingVertical: 72,
     alignItems: 'center',
     paddingHorizontal: 24,
   },
+  emptyIconCircle: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: TOKENS.tealSoft,
+    borderWidth: 1,
+    borderColor: TOKENS.borderActive,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   emptyTitle: {
     color: TOKENS.textPrimary,
-    fontSize: 18,
+    fontSize: 17,
     fontWeight: '800',
     marginTop: 14,
     marginBottom: 6,
@@ -471,6 +509,6 @@ const styles = StyleSheet.create({
     color: TOKENS.textMuted,
     fontSize: 13,
     textAlign: 'center',
-    lineHeight: 18,
+    lineHeight: 19,
   },
 });

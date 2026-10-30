@@ -1,11 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   StyleSheet,
   Text,
   View,
   ScrollView,
   TouchableOpacity,
-  TextInput,
   RefreshControl,
   SafeAreaView,
   ActivityIndicator,
@@ -14,14 +13,27 @@ import {
   Alert,
   Linking,
 } from 'react-native';
+import { Ionicons as ExpoIonicons } from '@expo/vector-icons';
 import { TOKENS } from '../theme/tokens';
 import { supabase, type MobilePost } from '../lib/supabase';
+
+type IoniconName = keyof typeof ExpoIonicons.glyphMap;
+const Ionicons = ExpoIonicons as unknown as React.ComponentType<{
+  name: IoniconName;
+  size?: number;
+  color?: string;
+  style?: any;
+}>;
 
 interface StoryItem {
   id: string;
   name: string;
   handle: string;
+  avatarUrl?: string | null;
   hasUnseen: boolean;
+  kind: 'self' | 'story' | 'channel';
+  icon?: IoniconName;
+  targetRoute?: string;
 }
 
 interface ReelPreview {
@@ -38,23 +50,71 @@ interface MarketPreview {
   country: string;
 }
 
-type HomeFeedMode = 'for_you' | 'friends' | 'following' | 'communities' | 'caribbean';
+type HomeFeedMode = 'for_you' | 'following' | 'communities' | 'caribbean' | 'live';
+
+const FEED_TABS: Array<{ key: HomeFeedMode; label: string }> = [
+  { key: 'for_you', label: 'For You' },
+  { key: 'following', label: 'Following' },
+  { key: 'communities', label: 'Communities' },
+  { key: 'caribbean', label: 'Caribbean' },
+  { key: 'live', label: 'Live' },
+];
+
+const DISCOVERY_CHANNELS: StoryItem[] = [
+  {
+    id: 'channel_pulse',
+    name: 'Discover',
+    handle: 'explore',
+    hasUnseen: true,
+    kind: 'channel',
+    icon: 'compass-outline',
+    targetRoute: 'Explore',
+  },
+  {
+    id: 'channel_creators',
+    name: 'Creators',
+    handle: 'creators',
+    hasUnseen: true,
+    kind: 'channel',
+    icon: 'people-outline',
+    targetRoute: 'Explore',
+  },
+  {
+    id: 'channel_sounds',
+    name: 'Sounds',
+    handle: 'sounds',
+    hasUnseen: true,
+    kind: 'channel',
+    icon: 'musical-notes-outline',
+    targetRoute: 'Explore',
+  },
+  {
+    id: 'channel_trade',
+    name: 'Market',
+    handle: 'market',
+    hasUnseen: true,
+    kind: 'channel',
+    icon: 'bag-handle-outline',
+    targetRoute: 'Explore',
+  },
+];
 
 export function HomeScreen({ navigation }: any) {
   const [posts, setPosts] = useState<MobilePost[]>([]);
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [draft, setDraft] = useState('');
   const [reels, setReels] = useState<ReelPreview[]>([]);
   const [products, setProducts] = useState<MarketPreview[]>([]);
   const [feedMode, setFeedMode] = useState<HomeFeedMode>('for_you');
 
   const [stories, setStories] = useState<StoryItem[]>([
-    { id: 'add_story', name: 'Your Moment', handle: 'you', hasUnseen: false },
+    { id: 'add_story', name: 'Your Story', handle: 'you', hasUnseen: false, kind: 'self' },
+    ...DISCOVERY_CHANNELS,
   ]);
   const [likedPosts, setLikedPosts] = useState<Record<string, boolean>>({});
+  const [savedPosts, setSavedPosts] = useState<Record<string, boolean>>({});
 
-  const fetchDiscoveryData = async (mode: HomeFeedMode = 'for_you') => {
+  const fetchDiscoveryData = useCallback(async (mode: HomeFeedMode = 'for_you') => {
     try {
       let postsQuery = supabase
         .from('posts')
@@ -82,13 +142,25 @@ export function HomeScreen({ navigation }: any) {
         .order('created_at', { ascending: false })
         .limit(20);
 
-      // Apply mode-specific filters
       if (mode === 'caribbean') {
         postsQuery = postsQuery.contains('cultural_tags', ['caribbean']);
       } else if (mode === 'communities') {
         postsQuery = postsQuery.not('community_id', 'is', null);
+      } else if (mode === 'live') {
+        postsQuery = postsQuery.contains('cultural_tags', ['live']);
+      } else if (mode === 'following') {
+        const { data: authData } = await supabase.auth.getUser();
+        if (authData?.user) {
+          const { data: follows } = await supabase
+            .from('follows')
+            .select('following_id')
+            .eq('follower_id', authData.user.id);
+          const ids = (follows || []).map((f: any) => f.following_id);
+          if (ids.length > 0) {
+            postsQuery = postsQuery.in('author_id', ids);
+          }
+        }
       }
-      // friends / following require auth joins — fall through to general feed for now
 
       const [postsRes, reelsRes, productsRes, storiesRes] = await Promise.all([
         postsQuery,
@@ -98,32 +170,34 @@ export function HomeScreen({ navigation }: any) {
           .eq('video_kind', 'reel')
           .eq('visibility', 'public')
           .order('view_count', { ascending: false })
-          .limit(4),
+          .limit(5),
         supabase
           .from('products')
           .select('id, title, price_minor, currency, businesses(name, country_iso)')
           .eq('is_active', true)
           .order('created_at', { ascending: false })
-          .limit(3),
+          .limit(5),
         supabase
           .from('stories')
-          .select('id, profiles(display_name, username)')
+          .select('id, profiles(display_name, username, avatar_url)')
           .gt('expires_at', new Date().toISOString())
           .limit(10),
       ]);
 
-
       if (postsRes.data) {
-        const formatted = postsRes.data.map((item: any) => {
+        const formatted: MobilePost[] = postsRes.data.map((item: any) => {
           const p = Array.isArray(item.profiles) ? item.profiles[0] : item.profiles;
           return {
             id: item.id,
             author: p?.display_name || p?.username || 'Caribbean Member',
             authorHandle: p?.username ? `@${p.username}` : '@member',
             authorAvatar: p?.avatar_url || null,
-            isVerified: p?.is_verified || false,
-            location: item.location_name || 'Caribbean 🌴',
-            time: new Date(item.created_at).toLocaleDateString(),
+            isVerified: Boolean(p?.is_verified),
+            location: item.location_name || 'Caribbean',
+            time: new Date(item.created_at).toLocaleDateString(undefined, {
+              month: 'short',
+              day: 'numeric',
+            }),
             body: item.content || '',
             likes: item.likes_count || 0,
             comments: item.comments_count || 0,
@@ -141,7 +215,7 @@ export function HomeScreen({ navigation }: any) {
             const p = Array.isArray(r.profiles) ? r.profiles[0] : r.profiles;
             return {
               id: r.id,
-              title: r.title || 'Reel',
+              title: r.title || 'Short',
               creator: p?.display_name || p?.username || 'Creator',
               views: `${r.view_count || 0} views`,
             };
@@ -156,40 +230,44 @@ export function HomeScreen({ navigation }: any) {
             return {
               id: prod.id,
               title: prod.title,
-              price: `$${(prod.price_minor / 100).toFixed(2)} ${prod.currency || 'USD'}`,
+              price: `${prod.currency || 'USD'} $${((prod.price_minor || 0) / 100).toFixed(2)}`,
               country: b?.country_iso || 'Caribbean',
             };
           })
         );
       }
 
-      const realStories: StoryItem[] = [
-        { id: 'add_story', name: 'Your Moment', handle: 'you', hasUnseen: false },
+      const nextStories: StoryItem[] = [
+        { id: 'add_story', name: 'Your Story', handle: 'you', hasUnseen: false, kind: 'self' },
       ];
       if (storiesRes.data && storiesRes.data.length > 0) {
         storiesRes.data.forEach((s: any) => {
           const p = Array.isArray(s.profiles) ? s.profiles[0] : s.profiles;
-          realStories.push({
+          nextStories.push({
             id: s.id,
             name: p?.display_name || p?.username || 'Creator',
             handle: p?.username || 'creator',
+            avatarUrl: p?.avatar_url || null,
             hasUnseen: true,
+            kind: 'story',
           });
         });
+      } else {
+        nextStories.push(...DISCOVERY_CHANNELS);
       }
-      setStories(realStories);
+      setStories(nextStories);
     } catch (err) {
       console.warn('Discovery fetch error', err);
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     setLoading(true);
     fetchDiscoveryData(feedMode);
-  }, [feedMode]);
+  }, [feedMode, fetchDiscoveryData]);
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -225,8 +303,12 @@ export function HomeScreen({ navigation }: any) {
         }
       }
     } catch {
-      // Non-blocking
+      // Non-blocking optimistic sync
     }
+  };
+
+  const handleToggleSave = (postId: string) => {
+    setSavedPosts((prev) => ({ ...prev, [postId]: !prev[postId] }));
   };
 
   const handleSharePost = async (post: MobilePost) => {
@@ -239,205 +321,253 @@ export function HomeScreen({ navigation }: any) {
     }
   };
 
-  const handleQuickPublish = async () => {
-    if (!draft.trim()) return;
-    const text = draft.trim();
-    setDraft('');
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        const { data: newPost } = await supabase
-          .from('posts')
-          .insert({
-            author_id: user.id,
-            content: text,
-            visibility: 'public',
-            cultural_tags: ['mobile', 'discovery'],
-          })
-          .select('id, content, created_at, likes_count, comments_count')
-          .single();
-
-        if (newPost) {
-          setPosts([
-            {
-              id: newPost.id,
-              author: 'You',
-              authorHandle: '@you',
-              authorAvatar: null,
-              isVerified: false,
-              location: 'Caribbean',
-              time: 'Just now',
-              body: newPost.content || text,
-              likes: 0,
-              comments: 0,
-            },
-            ...posts,
-          ]);
-        }
-      }
-    } catch (err) {
-      console.warn('Publish error', err);
-    }
-  };
-
   return (
     <SafeAreaView style={styles.container}>
-      {/* 1. Top Discovery Navigation Header */}
-      <View style={styles.topBar}>
-        <View style={styles.brandRow}>
-          <Text style={styles.brandText}>TUKUBI</Text>
-          <View style={styles.discoveryTag}>
-            <Text style={styles.discoveryTagText}>HOME</Text>
-          </View>
-        </View>
+      {/* Clean Edge-to-Edge Underline Feed Tabs */}
+      <View style={styles.tabsWrapper}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.feedTabsContent}
+          accessibilityRole="tablist"
+        >
+          {FEED_TABS.map((tab) => {
+            const active = feedMode === tab.key;
+            return (
+              <TouchableOpacity
+                key={tab.key}
+                style={[styles.feedTab, active && styles.feedTabActive]}
+                onPress={() => setFeedMode(tab.key)}
+                activeOpacity={0.75}
+                accessibilityRole="tab"
+                accessibilityState={{ selected: active }}
+                accessibilityLabel={tab.label}
+              >
+                <View style={styles.feedTabLabelRow}>
+                  {tab.key === 'live' && (
+                    <View
+                      style={[
+                        styles.liveDot,
+                        { backgroundColor: active ? TOKENS.teal : TOKENS.danger },
+                      ]}
+                    />
+                  )}
+                  <Text style={[styles.feedTabText, active && styles.feedTabTextActive]}>
+                    {tab.label}
+                  </Text>
+                </View>
+              </TouchableOpacity>
+            );
+          })}
+        </ScrollView>
       </View>
-
-      {/* Feed Filter Tabs */}
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        style={styles.feedTabsScroll}
-        contentContainerStyle={styles.feedTabsContent}
-        accessibilityRole="tablist"
-      >
-        {(
-          [
-            { key: 'for_you', label: '✨ For You' },
-            { key: 'friends', label: '👥 Friends' },
-            { key: 'following', label: '📡 Following' },
-            { key: 'communities', label: '🌴 Communities' },
-            { key: 'caribbean', label: '🌊 Caribbean' },
-          ] as Array<{ key: HomeFeedMode; label: string }>
-        ).map((tab) => (
-          <TouchableOpacity
-            key={tab.key}
-            style={[styles.feedTab, feedMode === tab.key && styles.feedTabActive]}
-            onPress={() => setFeedMode(tab.key)}
-            accessibilityRole="tab"
-            accessibilityState={{ selected: feedMode === tab.key }}
-            accessibilityLabel={tab.label}
-          >
-            <Text style={[styles.feedTabText, feedMode === tab.key && styles.feedTabTextActive]}>
-              {tab.label}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
 
       <ScrollView
         style={styles.mainScroll}
         contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={TOKENS.action} />
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={TOKENS.teal} />
         }
       >
-        {/* 2. Ephemeral Moments & Stories Rail */}
+        {/* 1. Circular Ringed Stories & Cultural Moments Bar */}
         <View style={styles.storiesContainer}>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.storiesScroll}>
-            {stories.map((story) => (
-              <TouchableOpacity
-                key={story.id}
-                style={styles.storyItem}
-                activeOpacity={0.8}
-                onPress={() => {
-                  if (story.id === 'add_story') {
-                    navigation?.navigate('Create');
-                  } else {
-                    Alert.alert('Story', `${story.name}'s story`);
-                  }
-                }}
-              >
-                <View style={[styles.storyRing, story.hasUnseen && styles.storyRingActive]}>
-                  <View style={styles.storyInner}>
-                    <Text style={styles.storyAvatarText}>
-                      {story.id === 'add_story' ? '+' : story.name.slice(0, 1)}
-                    </Text>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.storiesScroll}
+          >
+            {stories.map((story, idx) => {
+              const isSelf = story.kind === 'self';
+              const ringColor = isSelf
+                ? TOKENS.borderStrong
+                : idx % 2 === 1
+                ? TOKENS.teal
+                : TOKENS.action;
+
+              return (
+                <TouchableOpacity
+                  key={story.id}
+                  style={styles.storyItem}
+                  activeOpacity={0.8}
+                  onPress={() => {
+                    if (isSelf) {
+                      navigation?.navigate('Create');
+                    } else if (story.kind === 'channel') {
+                      navigation?.navigate(story.targetRoute || 'Explore');
+                    } else {
+                      Alert.alert('Moment', `${story.name}'s story`);
+                    }
+                  }}
+                  accessibilityRole="button"
+                  accessibilityLabel={story.name}
+                >
+                  <View style={[styles.storyOuterRing, { borderColor: ringColor }]}>
+                    <View style={styles.storyInnerCircle}>
+                      {story.avatarUrl ? (
+                        <Image source={{ uri: story.avatarUrl }} style={styles.storyAvatarImg} />
+                      ) : story.kind === 'channel' && story.icon ? (
+                        <Ionicons
+                          name={story.icon}
+                          size={22}
+                          color={idx % 2 === 1 ? TOKENS.teal : TOKENS.action}
+                        />
+                      ) : isSelf ? (
+                        <Ionicons name="person-outline" size={22} color={TOKENS.textSecondary} />
+                      ) : (
+                        <Text style={styles.storyAvatarText}>
+                          {story.name.slice(0, 1).toUpperCase()}
+                        </Text>
+                      )}
+                    </View>
+
+                    {isSelf && (
+                      <View style={styles.storyAddBadge}>
+                        <Ionicons name="add" size={13} color={TOKENS.actionText} />
+                      </View>
+                    )}
                   </View>
-                </View>
-                <Text style={styles.storyLabel} numberOfLines={1}>
-                  {story.name}
-                </Text>
-              </TouchableOpacity>
-            ))}
+                  <Text
+                    style={[styles.storyLabel, !isSelf && styles.storyLabelActive]}
+                    numberOfLines={1}
+                  >
+                    {story.name}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
           </ScrollView>
         </View>
 
-        {/* 3. Fast Creator Composer Strip ("What's happening?") */}
+        {/* 2. Executive Mobile Composer Card */}
         <View style={styles.composerCard}>
-          <View style={styles.composerInputRow}>
+          <View style={styles.composerTopRow}>
             <View style={styles.composerAvatar}>
-              <Text style={styles.composerAvatarText}>🌴</Text>
+              <Ionicons name="person-outline" size={18} color={TOKENS.teal} />
             </View>
-            <TextInput
-              style={styles.composerInput}
-              placeholder="What's happening in the Caribbean?"
-              placeholderTextColor={TOKENS.textMuted}
-              value={draft}
-              onChangeText={setDraft}
-              onSubmitEditing={handleQuickPublish}
-              returnKeyType="send"
-            />
-            {draft.trim().length > 0 && (
-              <TouchableOpacity style={styles.postBtn} onPress={handleQuickPublish}>
-                <Text style={styles.postBtnText}>Post</Text>
-              </TouchableOpacity>
-            )}
+            <TouchableOpacity
+              style={styles.composerTriggerPill}
+              onPress={() => navigation?.navigate('Create')}
+              activeOpacity={0.8}
+              accessibilityRole="button"
+              accessibilityLabel="Create a new post"
+            >
+              <Text style={styles.composerTriggerText}>What&apos;s on your mind?</Text>
+            </TouchableOpacity>
           </View>
 
-          <View style={styles.composerShortcuts}>
+          <View style={styles.composerFooter}>
             <TouchableOpacity
               style={styles.shortcutBtn}
               onPress={() => navigation?.navigate('Create')}
+              activeOpacity={0.75}
+              accessibilityRole="button"
+              accessibilityLabel="Share Photo"
             >
-              <Text style={styles.shortcutIcon}>📷</Text>
+              <Ionicons name="image-outline" size={17} color={TOKENS.teal} />
               <Text style={styles.shortcutLabel}>Photo</Text>
             </TouchableOpacity>
+
             <TouchableOpacity
               style={styles.shortcutBtn}
-              onPress={() => navigation?.navigate('Reels')}
+              onPress={() => navigation?.navigate('Shorts')}
+              activeOpacity={0.75}
+              accessibilityRole="button"
+              accessibilityLabel="Open Shorts"
             >
-              <Text style={styles.shortcutIcon}>🎬</Text>
-              <Text style={styles.shortcutLabel}>Reel</Text>
+              <Ionicons name="film-outline" size={17} color={TOKENS.action} />
+              <Text style={styles.shortcutLabel}>Shorts</Text>
             </TouchableOpacity>
+
             <TouchableOpacity
               style={styles.shortcutBtn}
               onPress={() => navigation?.navigate('Live')}
+              activeOpacity={0.75}
+              accessibilityRole="button"
+              accessibilityLabel="Go Live"
             >
-              <Text style={styles.shortcutIcon}>🔴</Text>
+              <Ionicons name="radio-outline" size={17} color={TOKENS.accent} />
               <Text style={styles.shortcutLabel}>Live</Text>
             </TouchableOpacity>
+
             <TouchableOpacity
               style={styles.shortcutBtn}
-              onPress={() => navigation?.navigate('SellProduct')}
+              onPress={() => navigation?.navigate('Marketplace')}
+              activeOpacity={0.75}
+              accessibilityRole="button"
+              accessibilityLabel="Open Marketplace"
             >
-              <Text style={styles.shortcutIcon}>🛒</Text>
-              <Text style={styles.shortcutLabel}>Sell</Text>
+              <Ionicons name="bag-handle-outline" size={17} color={TOKENS.purple} />
+              <Text style={styles.shortcutLabel}>Market</Text>
             </TouchableOpacity>
           </View>
         </View>
 
-        {/* 4. Trending Caribbean Reels Preview */}
+        {/* Live Lounge Banner when on Live Tab */}
+        {feedMode === 'live' && (
+          <TouchableOpacity
+            style={styles.liveBannerCard}
+            onPress={() => navigation?.navigate('Live')}
+            activeOpacity={0.85}
+            accessibilityRole="button"
+            accessibilityLabel="Open Live Broadcast Lounge"
+          >
+            <View style={styles.liveBannerIconWrap}>
+              <Ionicons name="radio-outline" size={20} color={TOKENS.teal} />
+            </View>
+            <View style={styles.liveBannerBody}>
+              <Text style={styles.liveBannerTitle}>Live Broadcast Lounge</Text>
+              <Text style={styles.liveBannerSubtitle}>
+                Watch active streams or start a live session across the Caribbean
+              </Text>
+            </View>
+            <Ionicons name="chevron-forward" size={18} color={TOKENS.teal} />
+          </TouchableOpacity>
+        )}
+
+        {/* 3. Trending Shorts Rail */}
         {reels.length > 0 && (
           <View style={styles.sectionContainer}>
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>🎬 Trending Caribbean Reels</Text>
-              <TouchableOpacity onPress={() => navigation?.navigate('Reels')}>
-                <Text style={styles.seeAllText}>See All →</Text>
+              <View style={styles.sectionTitleRow}>
+                <Ionicons name="film-outline" size={16} color={TOKENS.teal} />
+                <Text style={styles.sectionTitle}>Trending Shorts</Text>
+              </View>
+              <TouchableOpacity
+                style={styles.seeAllBtn}
+                onPress={() => navigation?.navigate('Shorts')}
+                accessibilityRole="button"
+              >
+                <Text style={styles.seeAllText}>See All</Text>
+                <Ionicons name="chevron-forward" size={13} color={TOKENS.action} />
               </TouchableOpacity>
             </View>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.reelsScroll}>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.railScroll}
+            >
               {reels.map((reel) => (
                 <TouchableOpacity
                   key={reel.id}
                   style={styles.reelCard}
-                  onPress={() => navigation?.navigate('Reels')}
+                  onPress={() => navigation?.navigate('Shorts')}
+                  activeOpacity={0.85}
                 >
                   <View style={styles.reelBadge}>
-                    <Text style={styles.reelBadgeText}>▶ Play</Text>
+                    <Ionicons name="play" size={10} color={TOKENS.teal} />
+                    <Text style={styles.reelBadgeText}>Short</Text>
                   </View>
                   <View style={styles.reelInfo}>
-                    <Text style={styles.reelTitle} numberOfLines={1}>{reel.title}</Text>
-                    <Text style={styles.reelCreator} numberOfLines={1}>{reel.creator}</Text>
+                    <Text style={styles.reelTitle} numberOfLines={2}>
+                      {reel.title}
+                    </Text>
+                    <Text style={styles.reelCreator} numberOfLines={1}>
+                      {reel.creator}
+                    </Text>
+                    <Text style={styles.reelViews} numberOfLines={1}>
+                      {reel.views}
+                    </Text>
                   </View>
                 </TouchableOpacity>
               ))}
@@ -445,151 +575,248 @@ export function HomeScreen({ navigation }: any) {
           </View>
         )}
 
-        {/* 5. Marketplace Discovery Horizon */}
+        {/* 4. Marketplace Picks Rail */}
         {products.length > 0 && (
           <View style={styles.sectionContainer}>
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>🛒 Marketplace Picks</Text>
-              <TouchableOpacity onPress={() => navigation?.navigate('Marketplace')}>
-                <Text style={styles.seeAllText}>Shop All →</Text>
+              <View style={styles.sectionTitleRow}>
+                <Ionicons name="bag-handle-outline" size={16} color={TOKENS.action} />
+                <Text style={styles.sectionTitle}>Marketplace Picks</Text>
+              </View>
+              <TouchableOpacity
+                style={styles.seeAllBtn}
+                onPress={() => navigation?.navigate('Marketplace')}
+                accessibilityRole="button"
+              >
+                <Text style={styles.seeAllText}>Browse</Text>
+                <Ionicons name="chevron-forward" size={13} color={TOKENS.action} />
               </TouchableOpacity>
             </View>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.marketScroll}>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.railScroll}
+            >
               {products.map((prod) => (
                 <TouchableOpacity
                   key={prod.id}
                   style={styles.productCard}
                   onPress={() => navigation?.navigate('Marketplace')}
+                  activeOpacity={0.85}
                 >
-                  <Text style={styles.productTitle} numberOfLines={1}>{prod.title}</Text>
-                  <Text style={styles.productPrice}>{prod.price}</Text>
-                  <Text style={styles.productCountry}>{prod.country} 🌴</Text>
+                  <View style={styles.productIconRow}>
+                    <View style={styles.productIconBadge}>
+                      <Ionicons name="bag-handle-outline" size={14} color={TOKENS.teal} />
+                    </View>
+                    <Text style={styles.productPrice} numberOfLines={1}>
+                      {prod.price}
+                    </Text>
+                  </View>
+                  <Text style={styles.productTitle} numberOfLines={1}>
+                    {prod.title}
+                  </Text>
+                  <View style={styles.productCountryRow}>
+                    <Ionicons name="location-outline" size={11} color={TOKENS.textMuted} />
+                    <Text style={styles.productCountry} numberOfLines={1}>
+                      {prod.country}
+                    </Text>
+                  </View>
                 </TouchableOpacity>
               ))}
             </ScrollView>
           </View>
         )}
 
-        {/* 6. Discovery Posts Feed Stream */}
-        <View style={styles.feedHeader}>
-          <Text style={styles.feedHeaderTitle}>✨ Caribbean Feed Stream</Text>
-        </View>
-
+        {/* 5. Editorial Feed Stream */}
         {loading && !refreshing ? (
           <View style={styles.centerBox}>
-            <ActivityIndicator size="large" color={TOKENS.action} />
+            <ActivityIndicator size="large" color={TOKENS.teal} />
           </View>
         ) : posts.length === 0 ? (
           <View style={styles.emptyStateBox}>
-            <Text style={styles.emptyStateEmoji}>🌴</Text>
-            <Text style={styles.emptyStateTitle}>Welcome to the Caribbean Feed</Text>
+            <View style={styles.emptyIconCircle}>
+              <Ionicons name="newspaper-outline" size={28} color={TOKENS.teal} />
+            </View>
+            <Text style={styles.emptyStateTitle}>No posts in this feed yet</Text>
             <Text style={styles.emptyStateSubtitle}>
               {feedMode === 'caribbean'
-                ? 'No regional posts found under this filter yet. Share the first island moment!'
+                ? 'No regional posts match this view yet. Share the first update with the network.'
                 : feedMode === 'communities'
-                ? 'No community posts found yet. Join a Caribbean hub or share an update!'
-                : 'No posts yet. Be the first to share an authentic update, photo, or story with the community!'}
+                ? 'Join a community hub or publish a discussion to start the conversation.'
+                : feedMode === 'following'
+                ? 'Follow creators across TUKUBI to see their updates here.'
+                : 'Be the first to share a perspective, photo, or update with the community.'}
             </Text>
             <TouchableOpacity
               style={styles.emptyStateBtn}
-              onPress={() => navigation?.navigate('Create')}
+              onPress={() =>
+                navigation?.navigate(feedMode === 'following' ? 'Explore' : 'Create')
+              }
+              activeOpacity={0.85}
               accessibilityRole="button"
-              accessibilityLabel="Create first post"
+              accessibilityLabel={
+                feedMode === 'following' ? 'Explore creators' : 'Create first post'
+              }
             >
-              <Text style={styles.emptyStateBtnText}>+ Create First Post</Text>
+              <Ionicons
+                name={feedMode === 'following' ? 'compass-outline' : 'add'}
+                size={17}
+                color={TOKENS.actionText}
+              />
+              <Text style={styles.emptyStateBtnText}>
+                {feedMode === 'following' ? 'Discover Creators' : 'Create Post'}
+              </Text>
             </TouchableOpacity>
           </View>
         ) : (
-          posts.map((post) => (
-            <View key={post.id} style={styles.postCard}>
-              <View style={styles.postHeader}>
-                <View style={styles.avatar}>
-                  <Text style={styles.avatarText}>{post.author.slice(0, 1).toUpperCase()}</Text>
-                </View>
-                <View style={styles.authorMeta}>
-                  <View style={styles.nameRow}>
-                    <Text style={styles.authorName}>{post.author}</Text>
-                    {post.isVerified && <Text style={styles.verifiedBadge}>✓</Text>}
-                  </View>
-                  <Text style={styles.authorHandle}>
-                    {post.location} • {post.time}
-                  </Text>
-                </View>
-              </View>
+          posts.map((post) => {
+            const isLiked = Boolean(likedPosts[post.id]);
+            const isSaved = Boolean(savedPosts[post.id]);
 
-              <Text style={styles.postBody}>{post.body}</Text>
-
-              {post.mediaUrls && post.mediaUrls.length > 0 && (
-                <Image
-                  source={{ uri: post.mediaUrls[0] }}
-                  style={{ width: '100%', height: 220, borderRadius: 12, marginBottom: 12 }}
-                  resizeMode="cover"
-                />
-              )}
-
-              {post.linkPreview && (
-                <TouchableOpacity
-                  style={styles.linkPreviewCard}
-                  onPress={() => {
-                    const target = post.linkPreview.original_url || post.linkPreview.url;
-                    if (target) Linking.openURL(target).catch(() => {});
-                  }}
-                  accessibilityRole="link"
-                  accessibilityLabel={`Link: ${post.linkPreview.title || post.linkPreview.url}`}
-                >
-                  {post.linkPreview.thumbnail_url && (
-                    <Image
-                      source={{ uri: post.linkPreview.thumbnail_url }}
-                      style={styles.linkPreviewThumb}
-                      resizeMode="cover"
-                    />
-                  )}
-                  <View style={styles.linkPreviewMeta}>
-                    <Text style={styles.linkPreviewDomain} numberOfLines={1}>
-                      {(post.linkPreview.provider_name || 'Link').toUpperCase()}
-                    </Text>
-                    <Text style={styles.linkPreviewTitle} numberOfLines={2}>
-                      {post.linkPreview.title || post.linkPreview.url}
-                    </Text>
-                    {post.linkPreview.description && (
-                      <Text style={styles.linkPreviewDesc} numberOfLines={2}>
-                        {post.linkPreview.description}
+            return (
+              <View key={post.id} style={styles.postCard}>
+                {/* 2-Line Editorial Author Header */}
+                <View style={styles.postHeader}>
+                  {post.authorAvatar ? (
+                    <Image source={{ uri: post.authorAvatar }} style={styles.avatarImg} />
+                  ) : (
+                    <View style={styles.avatar}>
+                      <Text style={styles.avatarText}>
+                        {post.author.slice(0, 1).toUpperCase()}
                       </Text>
-                    )}
-                  </View>
-                </TouchableOpacity>
-              )}
+                    </View>
+                  )}
 
-              <View style={styles.actionRow}>
-                <TouchableOpacity
-                  style={styles.actionBtn}
-                  onPress={() => handleToggleLike(post.id)}
-                  accessibilityRole="button"
-                  accessibilityLabel="Like post"
-                >
-                  <Text style={[styles.actionBtnText, likedPosts[post.id] && { color: TOKENS.coral, fontWeight: '900' }]}>
-                    {likedPosts[post.id] ? '❤️' : '🤍'} {post.likes}
-                  </Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.actionBtn}
-                  onPress={() => Alert.alert('Comments', `View comments on post by ${post.author}`)}
-                  accessibilityRole="button"
-                  accessibilityLabel="Comment on post"
-                >
-                  <Text style={styles.actionBtnText}>💬 {post.comments}</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.actionBtn}
-                  onPress={() => handleSharePost(post)}
-                  accessibilityRole="button"
-                  accessibilityLabel="Share post"
-                >
-                  <Text style={styles.actionBtnText}>🔁 Share</Text>
-                </TouchableOpacity>
+                  <View style={styles.authorMeta}>
+                    <View style={styles.nameRow}>
+                      <Text style={styles.authorName} numberOfLines={1}>
+                        {post.author}
+                      </Text>
+                      {post.isVerified && (
+                        <Ionicons name="checkmark-circle" size={15} color={TOKENS.teal} />
+                      )}
+                    </View>
+                    <Text style={styles.authorSubline} numberOfLines={1}>
+                      {post.authorHandle || '@member'} · {post.time} · {post.location}
+                    </Text>
+                  </View>
+                </View>
+
+                {/* Post Body */}
+                {Boolean(post.body) && <Text style={styles.postBody}>{post.body}</Text>}
+
+                {/* Media Attachment */}
+                {post.mediaUrls && post.mediaUrls.length > 0 && (
+                  <Image
+                    source={{ uri: post.mediaUrls[0] }}
+                    style={styles.postMedia}
+                    resizeMode="cover"
+                  />
+                )}
+
+                {/* Link Preview Card */}
+                {post.linkPreview && (
+                  <TouchableOpacity
+                    style={styles.linkPreviewCard}
+                    onPress={() => {
+                      const target = post.linkPreview.original_url || post.linkPreview.url;
+                      if (target) Linking.openURL(target).catch(() => {});
+                    }}
+                    activeOpacity={0.85}
+                    accessibilityRole="link"
+                    accessibilityLabel={`Link: ${post.linkPreview.title || post.linkPreview.url}`}
+                  >
+                    {post.linkPreview.thumbnail_url && (
+                      <Image
+                        source={{ uri: post.linkPreview.thumbnail_url }}
+                        style={styles.linkPreviewThumb}
+                        resizeMode="cover"
+                      />
+                    )}
+                    <View style={styles.linkPreviewMeta}>
+                      <View style={styles.linkDomainRow}>
+                        <Ionicons name="link-outline" size={12} color={TOKENS.teal} />
+                        <Text style={styles.linkPreviewDomain} numberOfLines={1}>
+                          {(post.linkPreview.provider_name || 'External Link').toUpperCase()}
+                        </Text>
+                      </View>
+                      <Text style={styles.linkPreviewTitle} numberOfLines={2}>
+                        {post.linkPreview.title || post.linkPreview.url}
+                      </Text>
+                      {post.linkPreview.description && (
+                        <Text style={styles.linkPreviewDesc} numberOfLines={2}>
+                          {post.linkPreview.description}
+                        </Text>
+                      )}
+                    </View>
+                  </TouchableOpacity>
+                )}
+
+                {/* Crisp Ionicons Engagement Bar */}
+                <View style={styles.actionRow}>
+                  <TouchableOpacity
+                    style={styles.actionBtn}
+                    onPress={() => handleToggleLike(post.id)}
+                    activeOpacity={0.75}
+                    accessibilityRole="button"
+                    accessibilityLabel="Like post"
+                  >
+                    <Ionicons
+                      name={isLiked ? 'heart' : 'heart-outline'}
+                      size={18}
+                      color={isLiked ? TOKENS.danger : TOKENS.textMuted}
+                    />
+                    <Text
+                      style={[
+                        styles.actionBtnText,
+                        isLiked && { color: TOKENS.danger, fontWeight: '700' },
+                      ]}
+                    >
+                      {post.likes}
+                    </Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={styles.actionBtn}
+                    onPress={() =>
+                      Alert.alert('Comments', `Discussion on post by ${post.author}`)
+                    }
+                    activeOpacity={0.75}
+                    accessibilityRole="button"
+                    accessibilityLabel="Comment on post"
+                  >
+                    <Ionicons name="chatbubble-outline" size={17} color={TOKENS.textMuted} />
+                    <Text style={styles.actionBtnText}>{post.comments}</Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={styles.actionBtn}
+                    onPress={() => handleSharePost(post)}
+                    activeOpacity={0.75}
+                    accessibilityRole="button"
+                    accessibilityLabel="Share post"
+                  >
+                    <Ionicons name="arrow-redo-outline" size={18} color={TOKENS.textMuted} />
+                    <Text style={styles.actionBtnText}>Share</Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={styles.bookmarkBtn}
+                    onPress={() => handleToggleSave(post.id)}
+                    activeOpacity={0.75}
+                    accessibilityRole="button"
+                    accessibilityLabel={isSaved ? 'Remove bookmark' : 'Bookmark post'}
+                  >
+                    <Ionicons
+                      name={isSaved ? 'bookmark' : 'bookmark-outline'}
+                      size={18}
+                      color={isSaved ? TOKENS.teal : TOKENS.textMuted}
+                    />
+                  </TouchableOpacity>
+                </View>
               </View>
-            </View>
-          ))
+            );
+          })
         )}
       </ScrollView>
     </SafeAreaView>
@@ -601,296 +828,375 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: TOKENS.canvas,
   },
-  topBar: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingTop: 10,
-    paddingBottom: 8,
+  tabsWrapper: {
+    backgroundColor: TOKENS.canvas,
     borderBottomWidth: 1,
     borderBottomColor: TOKENS.border,
   },
-  brandRow: {
+  feedTabsContent: {
+    paddingHorizontal: 14,
+    gap: 20,
+  },
+  feedTab: {
+    minHeight: 44,
+    justifyContent: 'center',
+    paddingHorizontal: 2,
+    borderBottomWidth: 2,
+    borderBottomColor: 'transparent',
+  },
+  feedTabActive: {
+    borderBottomColor: TOKENS.teal,
+  },
+  feedTabLabelRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 5,
   },
-  brandText: {
-    color: TOKENS.action,
-    fontSize: 22,
-    fontWeight: '900',
-    letterSpacing: 1,
+  liveDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
   },
-  discoveryTag: {
-    backgroundColor: 'rgba(0, 168, 150, 0.15)',
-    borderRadius: 12,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderWidth: 1,
-    borderColor: 'rgba(0, 168, 150, 0.3)',
+  feedTabText: {
+    color: TOKENS.textMuted,
+    fontSize: 13.5,
+    fontWeight: '600',
   },
-  discoveryTagText: {
-    color: TOKENS.action,
-    fontSize: 9,
-    fontWeight: '900',
-  },
-  topRightActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  feedsToggle: {
-    backgroundColor: TOKENS.surface,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: TOKENS.border,
-  },
-  feedsToggleText: {
-    color: '#FFFFFF',
-    fontSize: 12,
-    fontWeight: '800',
+  feedTabTextActive: {
+    color: TOKENS.textPrimary,
+    fontWeight: '700',
   },
   mainScroll: {
     flex: 1,
   },
   scrollContent: {
-    paddingBottom: 30,
+    paddingBottom: 32,
   },
   storiesContainer: {
-    paddingVertical: 12,
+    paddingVertical: 14,
     borderBottomWidth: 1,
     borderBottomColor: TOKENS.border,
   },
   storiesScroll: {
-    paddingHorizontal: 12,
-    gap: 12,
+    paddingHorizontal: 14,
+    gap: 14,
   },
   storyItem: {
     alignItems: 'center',
-    width: 64,
+    width: 68,
   },
-  storyRing: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    padding: 2,
-    backgroundColor: TOKENS.border,
+  storyOuterRing: {
+    width: 62,
+    height: 62,
+    borderRadius: 31,
+    borderWidth: 2,
+    padding: 2.5,
+    backgroundColor: TOKENS.canvas,
     alignItems: 'center',
     justifyContent: 'center',
+    position: 'relative',
   },
-  storyRingActive: {
-    backgroundColor: TOKENS.action,
-  },
-  storyInner: {
+  storyInnerCircle: {
     width: '100%',
     height: '100%',
-    borderRadius: 26,
+    borderRadius: 27,
     backgroundColor: TOKENS.surface,
     alignItems: 'center',
     justifyContent: 'center',
+    overflow: 'hidden',
+  },
+  storyAvatarImg: {
+    width: '100%',
+    height: '100%',
   },
   storyAvatarText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '900',
+    color: TOKENS.textPrimary,
+    fontSize: 17,
+    fontWeight: '800',
+  },
+  storyAddBadge: {
+    position: 'absolute',
+    bottom: -1,
+    right: -1,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: TOKENS.teal,
+    borderWidth: 2,
+    borderColor: TOKENS.canvas,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   storyLabel: {
     color: TOKENS.textMuted,
-    fontSize: 10,
-    marginTop: 4,
+    fontSize: 11,
+    fontWeight: '500',
+    marginTop: 6,
     textAlign: 'center',
   },
+  storyLabelActive: {
+    color: TOKENS.textSecondary,
+    fontWeight: '600',
+  },
   composerCard: {
-    margin: 12,
+    marginHorizontal: 14,
+    marginTop: 14,
+    marginBottom: 10,
     backgroundColor: TOKENS.surface,
-    borderRadius: 20,
-    padding: 14,
+    borderRadius: 16,
+    padding: 13,
     borderWidth: 1,
     borderColor: TOKENS.border,
   },
-  composerInputRow: {
+  composerTopRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
   },
   composerAvatar: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: TOKENS.oceanDepth,
+    borderWidth: 1,
+    borderColor: TOKENS.borderActive,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  composerAvatarText: {
-    fontSize: 18,
-  },
-  composerInput: {
+  composerTriggerPill: {
     flex: 1,
-    color: '#FFFFFF',
-    fontSize: 13,
+    minHeight: 40,
+    borderRadius: 999,
+    backgroundColor: TOKENS.raised,
+    borderWidth: 1,
+    borderColor: TOKENS.border,
+    paddingHorizontal: 15,
+    justifyContent: 'center',
   },
-  postBtn: {
-    backgroundColor: TOKENS.action,
-    paddingHorizontal: 14,
-    paddingVertical: 6,
-    borderRadius: 14,
+  composerTriggerText: {
+    color: TOKENS.textMuted,
+    fontSize: 13.5,
+    fontWeight: '500',
   },
-  postBtnText: {
-    color: '#090D1A',
-    fontWeight: '900',
-    fontSize: 12,
-  },
-  composerShortcuts: {
+  composerFooter: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
+    justifyContent: 'space-between',
     borderTopWidth: 1,
-    borderTopColor: 'rgba(255, 255, 255, 0.05)',
-    marginTop: 10,
+    borderTopColor: TOKENS.border,
+    marginTop: 12,
     paddingTop: 10,
   },
   shortcutBtn: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
-  },
-  shortcutIcon: {
-    fontSize: 14,
+    justifyContent: 'center',
+    minHeight: 36,
+    gap: 6,
   },
   shortcutLabel: {
-    color: TOKENS.textMuted,
-    fontSize: 11,
+    color: TOKENS.textSecondary,
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  liveBannerCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: TOKENS.oceanDepth,
+    borderWidth: 1,
+    borderColor: TOKENS.borderActive,
+    borderRadius: 16,
+    marginHorizontal: 14,
+    marginVertical: 8,
+    padding: 14,
+    gap: 12,
+  },
+  liveBannerIconWrap: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: TOKENS.tealSoft,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  liveBannerBody: {
+    flex: 1,
+  },
+  liveBannerTitle: {
+    color: TOKENS.textPrimary,
+    fontSize: 14,
     fontWeight: '700',
   },
+  liveBannerSubtitle: {
+    color: TOKENS.textMuted,
+    fontSize: 12,
+    marginTop: 2,
+  },
   sectionContainer: {
-    marginVertical: 8,
-    paddingHorizontal: 12,
+    marginTop: 10,
+    marginBottom: 6,
+    paddingHorizontal: 14,
   },
   sectionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: 10,
+  },
+  sectionTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 7,
   },
   sectionTitle: {
-    color: '#FFFFFF',
-    fontSize: 13,
-    fontWeight: '900',
+    color: TOKENS.textPrimary,
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  seeAllBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 2,
+    paddingVertical: 4,
   },
   seeAllText: {
     color: TOKENS.action,
-    fontSize: 11,
-    fontWeight: '700',
+    fontSize: 12,
+    fontWeight: '600',
   },
-  reelsScroll: {
-    gap: 8,
+  railScroll: {
+    gap: 10,
+    paddingRight: 4,
   },
   reelCard: {
-    width: 110,
-    height: 160,
-    backgroundColor: '#1E142B',
-    borderRadius: 16,
+    width: 126,
+    height: 164,
+    backgroundColor: TOKENS.oceanDepth,
+    borderRadius: 15,
     borderWidth: 1,
     borderColor: TOKENS.border,
-    padding: 8,
+    padding: 11,
     justifyContent: 'space-between',
   },
   reelBadge: {
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    borderRadius: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: TOKENS.tealSoft,
+    borderWidth: 1,
+    borderColor: TOKENS.borderActive,
+    borderRadius: 999,
     alignSelf: 'flex-start',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
   },
   reelBadgeText: {
-    color: '#FFFFFF',
-    fontSize: 9,
+    color: TOKENS.teal,
+    fontSize: 10,
     fontWeight: '700',
   },
   reelInfo: {
     gap: 2,
   },
   reelTitle: {
-    color: '#FFFFFF',
-    fontSize: 11,
-    fontWeight: '800',
+    color: TOKENS.textPrimary,
+    fontSize: 12.5,
+    fontWeight: '700',
+    lineHeight: 16,
   },
   reelCreator: {
-    color: TOKENS.textMuted,
-    fontSize: 9,
+    color: TOKENS.textSecondary,
+    fontSize: 11,
+    fontWeight: '500',
+    marginTop: 2,
   },
-  marketScroll: {
-    gap: 8,
-  },
-  productCard: {
-    width: 130,
-    backgroundColor: TOKENS.surface,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: TOKENS.border,
-    padding: 10,
-    gap: 2,
-  },
-  productTitle: {
-    color: '#FFFFFF',
-    fontSize: 12,
-    fontWeight: '800',
-  },
-  productPrice: {
-    color: '#FF6B6B',
-    fontSize: 12,
-    fontWeight: '900',
-  },
-  productCountry: {
+  reelViews: {
     color: TOKENS.textMuted,
     fontSize: 10,
   },
-  feedHeader: {
-    paddingHorizontal: 14,
-    paddingTop: 10,
-    paddingBottom: 4,
+  productCard: {
+    width: 156,
+    backgroundColor: TOKENS.surface,
+    borderRadius: 15,
+    borderWidth: 1,
+    borderColor: TOKENS.border,
+    padding: 12,
+    gap: 6,
   },
-  feedHeaderTitle: {
-    color: '#FFFFFF',
+  productIconRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  productIconBadge: {
+    width: 28,
+    height: 28,
+    borderRadius: 8,
+    backgroundColor: TOKENS.tealSoft,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  productPrice: {
+    color: TOKENS.teal,
+    fontSize: 12.5,
+    fontWeight: '800',
+  },
+  productTitle: {
+    color: TOKENS.textPrimary,
     fontSize: 13,
-    fontWeight: '900',
+    fontWeight: '600',
+  },
+  productCountryRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+  },
+  productCountry: {
+    color: TOKENS.textMuted,
+    fontSize: 11,
   },
   centerBox: {
-    paddingVertical: 40,
+    paddingVertical: 48,
     alignItems: 'center',
     justifyContent: 'center',
   },
   postCard: {
     backgroundColor: TOKENS.surface,
-    borderRadius: 20,
+    borderRadius: 16,
     borderWidth: 1,
     borderColor: TOKENS.border,
-    padding: 16,
-    marginHorizontal: 12,
-    marginBottom: 12,
+    padding: 15,
+    marginHorizontal: 14,
+    marginTop: 10,
   },
   postHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 10,
+    marginBottom: 11,
   },
   avatar: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    backgroundColor: 'rgba(0, 168, 150, 0.2)',
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: TOKENS.oceanDepth,
     borderWidth: 1,
-    borderColor: 'rgba(0, 168, 150, 0.4)',
+    borderColor: TOKENS.borderActive,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 10,
+    marginRight: 11,
+  },
+  avatarImg: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: TOKENS.border,
+    marginRight: 11,
   },
   avatarText: {
-    color: TOKENS.action,
-    fontSize: 16,
-    fontWeight: '900',
+    color: TOKENS.teal,
+    fontSize: 15,
+    fontWeight: '800',
   },
   authorMeta: {
     flex: 1,
@@ -898,31 +1204,34 @@ const styles = StyleSheet.create({
   nameRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 5,
   },
   authorName: {
-    color: '#FFFFFF',
-    fontSize: 14,
-    fontWeight: '800',
-    marginRight: 4,
+    color: TOKENS.textPrimary,
+    fontSize: 14.5,
+    fontWeight: '700',
+    flexShrink: 1,
   },
-  verifiedBadge: {
-    color: TOKENS.action,
-    fontSize: 12,
-    fontWeight: '900',
-  },
-  authorHandle: {
+  authorSubline: {
     color: TOKENS.textMuted,
-    fontSize: 11,
-    marginTop: 1,
+    fontSize: 12,
+    marginTop: 2,
   },
   postBody: {
     color: TOKENS.textPrimary,
-    fontSize: 14,
-    lineHeight: 20,
+    fontSize: 14.5,
+    lineHeight: 21,
+    marginBottom: 12,
+  },
+  postMedia: {
+    width: '100%',
+    height: 220,
+    borderRadius: 12,
+    backgroundColor: TOKENS.raised,
     marginBottom: 12,
   },
   linkPreviewCard: {
-    backgroundColor: TOKENS.surface,
+    backgroundColor: TOKENS.raised,
     borderRadius: 12,
     borderWidth: 1,
     borderColor: TOKENS.border,
@@ -931,25 +1240,30 @@ const styles = StyleSheet.create({
   },
   linkPreviewThumb: {
     width: '100%',
-    height: 160,
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    height: 156,
+    backgroundColor: TOKENS.oceanDepth,
   },
   linkPreviewMeta: {
     padding: 12,
   },
-  linkPreviewDomain: {
-    color: TOKENS.action,
-    fontSize: 10,
-    fontWeight: '800',
-    letterSpacing: 0.8,
+  linkDomainRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
     marginBottom: 4,
+  },
+  linkPreviewDomain: {
+    color: TOKENS.teal,
+    fontSize: 10.5,
+    fontWeight: '700',
+    letterSpacing: 0.6,
   },
   linkPreviewTitle: {
     color: TOKENS.textPrimary,
-    fontSize: 14,
+    fontSize: 13.5,
     fontWeight: '700',
     lineHeight: 18,
-    marginBottom: 4,
+    marginBottom: 3,
   },
   linkPreviewDesc: {
     color: TOKENS.textMuted,
@@ -958,89 +1272,78 @@ const styles = StyleSheet.create({
   },
   actionRow: {
     flexDirection: 'row',
+    alignItems: 'center',
     borderTopWidth: 1,
-    borderTopColor: 'rgba(255, 255, 255, 0.05)',
+    borderTopColor: TOKENS.border,
     paddingTop: 10,
-    justifyContent: 'space-around',
   },
   actionBtn: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    minHeight: 36,
+    paddingRight: 20,
   },
   actionBtnText: {
     color: TOKENS.textMuted,
-    fontSize: 12,
-    fontWeight: '700',
+    fontSize: 12.5,
+    fontWeight: '600',
   },
-  feedTabsScroll: {
-    backgroundColor: 'rgba(255,255,255,0.03)',
-    borderBottomWidth: 1,
-    borderBottomColor: TOKENS.border,
-  },
-  feedTabsContent: {
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    gap: 8,
-  },
-  feedTab: {
-    paddingHorizontal: 14,
-    paddingVertical: 7,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: TOKENS.border,
-    backgroundColor: 'transparent',
-  },
-  feedTabActive: {
-    backgroundColor: TOKENS.action,
-    borderColor: TOKENS.action,
-  },
-  feedTabText: {
-    color: TOKENS.textMuted,
-    fontSize: 12,
-    fontWeight: '700',
-  },
-  feedTabTextActive: {
-    color: TOKENS.actionText,
-    fontWeight: '900',
+  bookmarkBtn: {
+    marginLeft: 'auto',
+    minWidth: 36,
+    minHeight: 36,
+    alignItems: 'flex-end',
+    justifyContent: 'center',
   },
   emptyStateBox: {
-    padding: 32,
+    padding: 28,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: TOKENS.surface,
     borderRadius: 16,
-    marginHorizontal: 16,
-    marginVertical: 24,
+    marginHorizontal: 14,
+    marginTop: 16,
     borderWidth: 1,
     borderColor: TOKENS.border,
   },
-  emptyStateEmoji: {
-    fontSize: 48,
-    marginBottom: 12,
+  emptyIconCircle: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: TOKENS.tealSoft,
+    borderWidth: 1,
+    borderColor: TOKENS.borderActive,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 14,
   },
   emptyStateTitle: {
     color: TOKENS.textPrimary,
-    fontSize: 18,
-    fontWeight: '800',
+    fontSize: 17,
+    fontWeight: '700',
     textAlign: 'center',
-    marginBottom: 8,
+    marginBottom: 6,
   },
   emptyStateSubtitle: {
     color: TOKENS.textMuted,
-    fontSize: 14,
+    fontSize: 13.5,
     textAlign: 'center',
     lineHeight: 20,
-    marginBottom: 20,
+    marginBottom: 18,
   },
   emptyStateBtn: {
-    backgroundColor: TOKENS.action,
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: TOKENS.teal,
+    paddingHorizontal: 18,
+    minHeight: 42,
+    borderRadius: 12,
   },
   emptyStateBtnText: {
     color: TOKENS.actionText,
-    fontSize: 14,
+    fontSize: 13.5,
     fontWeight: '800',
   },
 });

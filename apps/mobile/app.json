@@ -7,10 +7,11 @@
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
     "newArchEnabled": true,
+    "backgroundColor": "#070D1A",
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#110D17"
+      "backgroundColor": "#070D1A"
     },
     "ios": {
       "supportsTablet": true,
@@ -23,7 +24,7 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#110D17"
+        "backgroundColor": "#070D1A"
       },
       "package": "com.tukubi.app",
       "permissions": [

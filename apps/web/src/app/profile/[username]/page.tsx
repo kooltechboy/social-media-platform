@@ -309,7 +309,7 @@ export default async function ProfilePage({
     .filter(Boolean)
     .join(', ');
 
-  const coverUrl = profileData.cover_url || profileData.banner_url || (isOfficialTukubi ? '/backgrounds/island-vibes.jpg' : null);
+  const coverUrl = profileData.cover_url || profileData.banner_url || (isOfficialTukubi ? '/backgrounds/caribbean-blue-hour.jpg' : null);
   const avatarUrl = profileData.avatar_url || (isOfficialTukubi ? '/brand/tukubi-emblem.png' : null);
 
   return (
@@ -402,7 +402,7 @@ export default async function ProfilePage({
                           label="Official Platform"
                         />
                       ) : profileData.is_verified ? (
-                        <BadgeCheck className="w-6 h-6 md:w-7 md:h-7 text-orange-400 shrink-0" aria-label="Verified Member" />
+                        <BadgeCheck className="w-6 h-6 md:w-7 md:h-7 text-[#00C2A8] shrink-0" aria-label="Verified Member" />
                       ) : null}
                     </h1>
 
@@ -411,7 +411,7 @@ export default async function ProfilePage({
                     )}
 
                     {profileData.account_type && profileData.account_type !== 'personal' && (
-                      <span className="text-[10px] md:text-xs px-2.5 md:px-3 py-0.5 md:py-1 rounded-full bg-orange-500/15 text-orange-300 border border-orange-500/30 font-black uppercase tracking-wider">
+                      <span className="text-[10px] md:text-xs px-2.5 md:px-3 py-0.5 md:py-1 rounded-full bg-[#0EA5E9]/12 text-[#0EA5E9] border border-[#0EA5E9]/25 font-black uppercase tracking-wider">
                         {profileData.account_type}
                       </span>
                     )}
@@ -435,7 +435,7 @@ export default async function ProfilePage({
                   </div>
 
                   {isOfficialTukubi && (
-                    <div className="pt-1 text-xs sm:text-sm md:text-base text-orange-300 font-black tracking-wide">
+                    <div className="pt-1 text-xs sm:text-sm md:text-base text-[#00C2A8] font-bold tracking-wide">
                       The Caribbean Connected. Born in the Caribbean. Built for the World.
                     </div>
                   )}
@@ -478,8 +478,8 @@ export default async function ProfilePage({
             {/* Sub-meta tags (Location, Website, Join Date) */}
             <div className="mt-5 flex flex-wrap items-center gap-y-2.5 gap-x-6 text-xs sm:text-sm md:text-base text-brand-sandstone/75 font-medium">
               {locationDisplay && (
-                <span className="flex items-center gap-2 text-orange-300 font-bold">
-                  <MapPin className="w-4 h-4 md:w-4.5 md:h-4.5 text-orange-400 shrink-0" />
+                <span className="flex items-center gap-2 text-[#E8EDF5] font-medium">
+                  <MapPin className="w-4 h-4 md:w-4.5 md:h-4.5 text-[#00C2A8] shrink-0" />
                   <span>{locationDisplay}</span>
                 </span>
               )}
@@ -489,9 +489,9 @@ export default async function ProfilePage({
                   href={profileData.website}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-2 text-orange-300 hover:underline font-bold"
+                  className="flex items-center gap-2 text-[#0EA5E9] hover:underline font-semibold"
                 >
-                  <Globe className="w-4 h-4 md:w-4.5 md:h-4.5 text-orange-400 shrink-0" />
+                  <Globe className="w-4 h-4 md:w-4.5 md:h-4.5 text-[#00C2A8] shrink-0" />
                   <span>{profileData.website.replace(/^https?:\/\//, '')}</span>
                 </a>
               )}
@@ -906,7 +906,7 @@ export default async function ProfilePage({
                             {friend.displayName}
                           </h4>
                           {friend.isVerified && (
-                            <BadgeCheck className="w-3.5 h-3.5 text-orange-400 shrink-0" />
+                            <BadgeCheck className="w-3.5 h-3.5 text-[#00C2A8] shrink-0" />
                           )}
                           <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
                             Friend
@@ -986,7 +986,7 @@ export default async function ProfilePage({
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-1.5">
                           <h4 className="text-sm font-black text-white truncate">{p.name}</h4>
-                          {p.is_verified && <BadgeCheck className="w-4 h-4 text-orange-400 shrink-0" />}
+                          {p.is_verified && <BadgeCheck className="w-4 h-4 text-[#00C2A8] shrink-0" />}
                         </div>
                         <p className="text-[11px] text-brand-sandstone/60 capitalize truncate">
                           {p.category || p.page_type || 'Universal Page'}

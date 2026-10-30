@@ -145,7 +145,7 @@ export default function ExploreDiscoveryClient({
       {/* ────────────────────────────────────────────────────────── */}
       {/* HERO & DISCOVERY SEARCH BAR                                */}
       {/* ────────────────────────────────────────────────────────── */}
-      <div className="surface-header rounded-3xl p-6 sm:p-8 md:p-10 shadow-2xl relative overflow-hidden border border-brand-caribbeanSea/30">
+      <div className="tk-panel rounded-2xl sm:rounded-3xl p-4 sm:p-7 md:p-9 relative overflow-hidden border border-white/[0.08]">
         <div className="absolute right-0 top-0 w-96 h-96 bg-brand-caribbeanSea/10 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20" />
 
         <div className="relative z-10 space-y-4 max-w-3xl">
@@ -156,7 +156,7 @@ export default function ExploreDiscoveryClient({
             <ContextualHelpButton articleSlug="how-explore-works" label="How Explore Works" compact={true} />
           </div>
 
-          <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-black text-white tracking-tight leading-tight">
+          <h1 className="font-display text-xl sm:text-3xl md:text-4xl font-bold text-[#F8FAFC] tracking-tight leading-tight">
             Explore Caribbean Vibes, Territories &amp; Global Diaspora
           </h1>
 
@@ -166,7 +166,7 @@ export default function ExploreDiscoveryClient({
 
           {/* Search Input */}
           <form onSubmit={handleSearchSubmit} className="relative pt-2 w-full max-w-xl">
-            <Search className="absolute left-4 top-5.5 md:top-6 w-4 h-4 md:w-5 md:h-5 text-brand-caribbeanSea pointer-events-none" />
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 mt-1 w-4 h-4 md:w-5 md:h-5 text-brand-caribbeanSea pointer-events-none" />
             <input
               type="text"
               value={query}
@@ -189,7 +189,7 @@ export default function ExploreDiscoveryClient({
             <button
               type="submit"
               disabled={isPending}
-              className="absolute right-2 top-3 md:top-3.5 bg-brand-caribbeanSea hover:brightness-110 text-slate-950 font-black px-4 md:px-5 py-2 rounded-xl text-xs md:text-sm transition-all flex items-center gap-1.5 shadow-md shadow-brand-caribbeanSea/20 min-h-[38px] md:min-h-[42px]"
+              className="absolute right-2 top-3 md:top-3.5 tk-btn-primary font-bold px-4 md:px-5 py-2 rounded-xl text-xs md:text-sm flex items-center gap-1.5 min-h-[38px] md:min-h-[42px]"
             >
               {isPending ? <Loader2 className="w-3.5 h-3.5 md:w-4 md:h-4 animate-spin" /> : <Search className="w-3.5 h-3.5 md:w-4 md:h-4" />}
               <span>Search</span>
@@ -250,7 +250,7 @@ export default function ExploreDiscoveryClient({
                   setQuery('');
                   updateFilters({ q: '' });
                 }}
-                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 md:py-2 rounded-full text-xs md:text-sm font-bold bg-brand-sunriseCoral/20 text-brand-sunriseCoral border border-brand-sunriseCoral/40 hover:bg-brand-sunriseCoral/30 transition-colors min-h-[34px]"
+                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 md:py-2 rounded-full text-xs md:text-sm font-bold bg-brand-sunriseCoral/20 text-[#00C2A8] border border-brand-sunriseCoral/40 hover:bg-brand-sunriseCoral/30 transition-colors min-h-[34px]"
               >
                 <span>Keyword: &quot;{query}&quot;</span>
                 <X className="w-3.5 h-3.5 md:w-4 md:h-4" />
@@ -344,7 +344,7 @@ export default function ExploreDiscoveryClient({
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
             <h2 className="text-sm md:text-base font-extrabold text-white flex items-center gap-2 uppercase tracking-wider">
-              <Globe className="w-4 h-4 md:w-5 md:h-5 text-brand-sunriseCoral" /> 2. Discover Caribbean Nations &amp; Territories
+              <Globe className="w-4 h-4 md:w-5 md:h-5 text-[#00C2A8]" /> 2. Discover Caribbean Nations &amp; Territories
             </h2>
             <span className="text-xs md:text-sm text-brand-sandstone/60">
               Select an island to filter, or open its dedicated discovery portal
@@ -658,7 +658,7 @@ export default function ExploreDiscoveryClient({
         {/* ── Creators & Profiles ── */}
         {(activeTab === 'all' || activeTab === 'creators') && initialResult.creators.length > 0 && (
           <div className="space-y-4">
-            <h3 className="text-xs md:text-sm font-black uppercase tracking-wider text-brand-sunriseCoral flex items-center gap-2">
+            <h3 className="text-xs md:text-sm font-black uppercase tracking-wider text-[#00C2A8] flex items-center gap-2">
               <Users className="w-3.5 h-3.5 md:w-4 md:h-4" /> Featured Creators &amp; Leaders
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 3xl:grid-cols-5 gap-4">
@@ -668,11 +668,11 @@ export default function ExploreDiscoveryClient({
                   className="surface-card surface-card-interactive rounded-2xl p-5 flex flex-col justify-between space-y-4 shadow-md group border border-white/10"
                 >
                   <div className="flex items-start gap-3">
-                    <div className="w-12 h-12 rounded-2xl bg-brand-sunriseCoral text-slate-950 font-black flex items-center justify-center text-sm md:text-base shadow-md flex-shrink-0">
+                    <div className="w-11 h-11 rounded-full bg-gradient-to-tr from-[#00C2A8]/20 to-[#0EA5E9]/20 border border-[#00C2A8]/35 text-[#F8FAFC] font-bold flex items-center justify-center text-xs md:text-sm flex-shrink-0">
                       {(c.display_name || 'CR').slice(0, 2).toUpperCase()}
                     </div>
                     <div className="min-w-0 flex-1">
-                      <h4 className="font-black text-sm md:text-base text-white truncate group-hover:text-brand-sunriseCoral transition-colors flex items-center gap-1.5">
+                      <h4 className="font-black text-sm md:text-base text-white truncate group-hover:text-[#00C2A8] transition-colors flex items-center gap-1.5">
                         {c.display_name}
                         {c.is_verified && <CheckCircle className="w-3.5 h-3.5 text-brand-caribbeanSea" />}
                       </h4>
@@ -692,7 +692,7 @@ export default function ExploreDiscoveryClient({
                   <div className="pt-3 border-t border-white/10">
                     <Link
                       href={`/profile/${c.username}`}
-                      className="w-full text-center bg-brand-sunriseCoral hover:brightness-110 text-slate-950 font-black py-2 rounded-xl text-xs md:text-sm transition-all block min-h-[38px] flex items-center justify-center"
+                      className="w-full text-center tk-btn-primary font-bold py-2 rounded-xl text-xs md:text-sm min-h-[38px] flex items-center justify-center"
                     >
                       View Profile
                     </Link>

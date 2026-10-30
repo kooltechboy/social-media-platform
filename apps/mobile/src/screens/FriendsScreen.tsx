@@ -99,7 +99,7 @@ export function FriendsScreen({ navigation }: any) {
         setFriends([]);
       }
 
-      // 2. Fetch Incoming Requests (status = pending, addressee_id = current user)
+      // 2. Fetch Incoming Requests
       const { data: inData } = await supabase
         .from('friendships')
         .select('id, requester_id, created_at')
@@ -134,7 +134,7 @@ export function FriendsScreen({ navigation }: any) {
         setIncomingRequests([]);
       }
 
-      // 3. Fetch Outgoing/Sent Requests (status = pending, requester_id = current user)
+      // 3. Fetch Outgoing/Sent Requests
       const { data: outData } = await supabase
         .from('friendships')
         .select('id, addressee_id, created_at')
@@ -169,7 +169,7 @@ export function FriendsScreen({ navigation }: any) {
         setOutgoingRequests([]);
       }
 
-      // 4. Fetch Discoverable Members (excluding self)
+      // 4. Fetch Discoverable Members
       const { data: discData } = await supabase
         .from('profiles')
         .select('id, display_name, username, avatar_url, bio, country, is_verified, is_official')
@@ -221,7 +221,6 @@ export function FriendsScreen({ navigation }: any) {
 
       if (error) throw error;
 
-      // Update local state
       setIncomingRequests((prev) => prev.filter((r) => r.id !== item.id));
       setFriends((prev) => [item, ...prev]);
     } catch (err: any) {
@@ -355,7 +354,7 @@ export function FriendsScreen({ navigation }: any) {
   if (loading) {
     return (
       <SafeAreaView style={[styles.container, styles.centerBox]}>
-        <ActivityIndicator size="large" color={TOKENS.action} />
+        <ActivityIndicator size="large" color={TOKENS.teal} />
       </SafeAreaView>
     );
   }
@@ -367,49 +366,52 @@ export function FriendsScreen({ navigation }: any) {
         <TouchableOpacity
           onPress={() => navigation?.goBack()}
           style={styles.backBtn}
+          accessibilityRole="button"
           accessibilityLabel="Go back"
         >
-          <Ionicons name="arrow-back" size={22} color={TOKENS.textPrimary} />
+          <Ionicons name="chevron-back" size={20} color={TOKENS.textPrimary} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Friends & Relationships</Text>
-        <View style={{ width: 32 }} />
+        <Text style={styles.headerTitle}>Friends &amp; Network</Text>
+        <View style={{ width: 34 }} />
       </View>
 
-      {/* Main Tabs */}
-      <View style={styles.tabsRow}>
-        <TouchableOpacity
-          style={[styles.tabBtn, activeTab === 'friends' && styles.tabBtnActive]}
-          onPress={() => setActiveTab('friends')}
-        >
-          <Text style={[styles.tabText, activeTab === 'friends' && styles.tabTextActive]}>
-            Friends ({friends.length})
-          </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[styles.tabBtn, activeTab === 'requests' && styles.tabBtnActive]}
-          onPress={() => setActiveTab('requests')}
-        >
-          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-            <Text style={[styles.tabText, activeTab === 'requests' && styles.tabTextActive]}>
-              Requests
+      {/* Refined Segmented Main Tabs */}
+      <View style={styles.tabsWrapper}>
+        <View style={styles.tabsTrack}>
+          <TouchableOpacity
+            style={[styles.tabBtn, activeTab === 'friends' && styles.tabBtnActive]}
+            onPress={() => setActiveTab('friends')}
+          >
+            <Text style={[styles.tabText, activeTab === 'friends' && styles.tabTextActive]}>
+              Friends ({friends.length})
             </Text>
-            {incomingRequests.length > 0 && (
-              <View style={styles.requestsBadge}>
-                <Text style={styles.requestsBadgeText}>{incomingRequests.length}</Text>
-              </View>
-            )}
-          </View>
-        </TouchableOpacity>
+          </TouchableOpacity>
 
-        <TouchableOpacity
-          style={[styles.tabBtn, activeTab === 'discover' && styles.tabBtnActive]}
-          onPress={() => setActiveTab('discover')}
-        >
-          <Text style={[styles.tabText, activeTab === 'discover' && styles.tabTextActive]}>
-            Discover
-          </Text>
-        </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.tabBtn, activeTab === 'requests' && styles.tabBtnActive]}
+            onPress={() => setActiveTab('requests')}
+          >
+            <View style={styles.requestsTabInner}>
+              <Text style={[styles.tabText, activeTab === 'requests' && styles.tabTextActive]}>
+                Requests
+              </Text>
+              {incomingRequests.length > 0 && (
+                <View style={styles.requestsBadge}>
+                  <Text style={styles.requestsBadgeText}>{incomingRequests.length}</Text>
+                </View>
+              )}
+            </View>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.tabBtn, activeTab === 'discover' && styles.tabBtnActive]}
+            onPress={() => setActiveTab('discover')}
+          >
+            <Text style={[styles.tabText, activeTab === 'discover' && styles.tabTextActive]}>
+              Discover
+            </Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       {/* Requests Sub-tabs */}
@@ -448,13 +450,13 @@ export function FriendsScreen({ navigation }: any) {
       {/* Search Input for Friends and Discover tabs */}
       {activeTab !== 'requests' && (
         <View style={styles.searchBar}>
-          <Ionicons name="search" size={16} color={TOKENS.textMuted} style={{ marginRight: 8 }} />
+          <Ionicons name="search-outline" size={17} color={TOKENS.textDim} style={{ marginRight: 8 }} />
           <TextInput
             style={styles.searchInput}
             placeholder={
-              activeTab === 'friends' ? 'Search friends...' : 'Search Caribbean diaspora...'
+              activeTab === 'friends' ? 'Search friends…' : 'Search Caribbean diaspora…'
             }
-            placeholderTextColor={TOKENS.textMuted}
+            placeholderTextColor={TOKENS.textDim}
             value={searchQuery}
             onChangeText={setSearchQuery}
           />
@@ -471,22 +473,24 @@ export function FriendsScreen({ navigation }: any) {
         data={currentList}
         keyExtractor={(item) => item.id}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={TOKENS.action} />
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={TOKENS.teal} />
         }
         contentContainerStyle={styles.listContainer}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
-            <Ionicons
-              name={
-                activeTab === 'friends'
-                  ? 'people-outline'
-                  : activeTab === 'requests'
-                  ? 'mail-open-outline'
-                  : 'compass-outline'
-              }
-              size={54}
-              color={TOKENS.action}
-            />
+            <View style={styles.emptyIconCircle}>
+              <Ionicons
+                name={
+                  activeTab === 'friends'
+                    ? 'people-outline'
+                    : activeTab === 'requests'
+                    ? 'mail-open-outline'
+                    : 'compass-outline'
+                }
+                size={28}
+                color={TOKENS.teal}
+              />
+            </View>
             <Text style={styles.emptyTitle}>
               {activeTab === 'friends'
                 ? searchQuery
@@ -500,12 +504,12 @@ export function FriendsScreen({ navigation }: any) {
             </Text>
             <Text style={styles.emptySubtitle}>
               {activeTab === 'friends'
-                ? 'Friends on TUKUBI are mutual, accepted connections. Switch to Discover to connect with Caribbean diaspora members.'
+                ? 'Friends on TUKUBI are mutual connections. Switch to Discover to connect with creators and members across the network.'
                 : activeTab === 'requests'
                 ? requestsSubTab === 'incoming'
-                  ? "You're all caught up on friend requests!"
+                  ? 'You are all caught up on incoming friend requests.'
                   : 'You have no pending outgoing friend requests.'
-                : 'Check your search query or explore other Caribbean islands.'}
+                : 'Check your search query or explore other regions.'}
             </Text>
             {activeTab === 'friends' && !searchQuery && (
               <TouchableOpacity
@@ -546,7 +550,7 @@ export function FriendsScreen({ navigation }: any) {
                       {item.display_name}
                     </Text>
                     {item.is_verified && (
-                      <Ionicons name="checkmark-circle" size={14} color={TOKENS.action} />
+                      <Ionicons name="checkmark-circle" size={14} color={TOKENS.teal} />
                     )}
                     <View
                       style={[
@@ -566,14 +570,17 @@ export function FriendsScreen({ navigation }: any) {
                   </View>
 
                   <Text style={styles.cardUsername}>@{item.username}</Text>
-                  {item.country && (
-                    <Text style={styles.cardCountry}>🌴 {item.country}</Text>
-                  )}
-                  {item.bio && (
+                  {item.country ? (
+                    <View style={styles.countryRow}>
+                      <Ionicons name="location-outline" size={11} color={TOKENS.teal} />
+                      <Text style={styles.cardCountry}>{item.country}</Text>
+                    </View>
+                  ) : null}
+                  {item.bio ? (
                     <Text style={styles.cardBio} numberOfLines={1}>
                       {item.bio}
                     </Text>
-                  )}
+                  ) : null}
                 </View>
               </TouchableOpacity>
 
@@ -584,8 +591,10 @@ export function FriendsScreen({ navigation }: any) {
                     style={styles.unfriendBtn}
                     onPress={() => handleUnfriend(item)}
                     disabled={isBusy}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Remove ${item.display_name}`}
                   >
-                    <Ionicons name="person-remove-outline" size={16} color="#F43F5E" />
+                    <Ionicons name="person-remove-outline" size={16} color={TOKENS.danger} />
                   </TouchableOpacity>
                 )}
 
@@ -597,7 +606,7 @@ export function FriendsScreen({ navigation }: any) {
                       disabled={isBusy}
                     >
                       {isBusy ? (
-                        <ActivityIndicator size="small" color="#090D1A" />
+                        <ActivityIndicator size="small" color={TOKENS.actionText} />
                       ) : (
                         <Text style={styles.acceptBtnText}>Accept</Text>
                       )}
@@ -627,7 +636,7 @@ export function FriendsScreen({ navigation }: any) {
                   <>
                     {isFriend ? (
                       <View style={styles.friendsTag}>
-                        <Ionicons name="checkmark" size={12} color="#10B981" />
+                        <Ionicons name="checkmark-circle" size={13} color={TOKENS.teal} />
                         <Text style={styles.friendsTagText}>Friends</Text>
                       </View>
                     ) : isPendingSent ? (
@@ -651,7 +660,7 @@ export function FriendsScreen({ navigation }: any) {
                         onPress={() => handleSendFriendRequest(item)}
                         disabled={isBusy}
                       >
-                        <Ionicons name="person-add" size={14} color="#090D1A" />
+                        <Ionicons name="person-add-outline" size={13} color={TOKENS.actionText} />
                         <Text style={styles.addFriendBtnText}>Add</Text>
                       </TouchableOpacity>
                     )}
@@ -680,74 +689,93 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
-    paddingVertical: 14,
+    paddingVertical: 12,
     borderBottomWidth: 1,
     borderBottomColor: TOKENS.border,
     backgroundColor: TOKENS.surface,
   },
   backBtn: {
-    padding: 4,
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: TOKENS.raised,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   headerTitle: {
     fontSize: 17,
-    fontWeight: '900',
+    fontWeight: '800',
     color: TOKENS.textPrimary,
+    letterSpacing: -0.2,
   },
-  tabsRow: {
-    flexDirection: 'row',
+  tabsWrapper: {
     backgroundColor: TOKENS.surface,
     paddingHorizontal: 16,
-    paddingVertical: 8,
+    paddingVertical: 10,
     borderBottomWidth: 1,
     borderBottomColor: TOKENS.border,
+  },
+  tabsTrack: {
+    flexDirection: 'row',
+    backgroundColor: TOKENS.raised,
+    borderRadius: 14,
+    padding: 3,
+    borderWidth: 1,
+    borderColor: TOKENS.border,
   },
   tabBtn: {
     flex: 1,
     paddingVertical: 8,
     alignItems: 'center',
-    borderRadius: 12,
+    borderRadius: 11,
   },
   tabBtnActive: {
-    backgroundColor: TOKENS.action,
+    backgroundColor: TOKENS.teal,
+  },
+  requestsTabInner: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   tabText: {
-    fontSize: 13,
-    fontWeight: '800',
+    fontSize: 12,
+    fontWeight: '700',
     color: TOKENS.textMuted,
   },
   tabTextActive: {
-    color: '#090D1A',
+    color: TOKENS.actionText,
+    fontWeight: '800',
   },
   requestsBadge: {
-    marginLeft: 6,
-    backgroundColor: '#F43F5E',
-    borderRadius: 10,
+    marginLeft: 5,
+    backgroundColor: TOKENS.danger,
+    borderRadius: 999,
     paddingHorizontal: 6,
-    paddingVertical: 2,
+    paddingVertical: 1.5,
   },
   requestsBadgeText: {
-    color: '#FFFFFF',
+    color: TOKENS.textPrimary,
     fontSize: 10,
-    fontWeight: '900',
+    fontWeight: '800',
   },
   subTabsRow: {
     flexDirection: 'row',
     paddingHorizontal: 16,
-    paddingVertical: 8,
+    paddingTop: 10,
+    paddingBottom: 6,
     backgroundColor: TOKENS.canvas,
     gap: 8,
   },
   subTabBtn: {
     paddingHorizontal: 14,
-    paddingVertical: 6,
-    borderRadius: 10,
+    paddingVertical: 7,
+    borderRadius: 999,
     backgroundColor: TOKENS.surface,
     borderWidth: 1,
     borderColor: TOKENS.border,
   },
   subTabBtnActive: {
-    backgroundColor: TOKENS.sea,
-    borderColor: TOKENS.sea,
+    backgroundColor: TOKENS.action,
+    borderColor: TOKENS.action,
   },
   subTabText: {
     fontSize: 12,
@@ -755,8 +783,8 @@ const styles = StyleSheet.create({
     color: TOKENS.textMuted,
   },
   subTabTextActive: {
-    color: '#090D1A',
-    fontWeight: '900',
+    color: TOKENS.actionText,
+    fontWeight: '800',
   },
   searchBar: {
     flexDirection: 'row',
@@ -764,30 +792,30 @@ const styles = StyleSheet.create({
     backgroundColor: TOKENS.surface,
     marginHorizontal: 16,
     marginVertical: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 9,
+    borderRadius: 14,
     borderWidth: 1,
-    borderColor: TOKENS.border,
+    borderColor: TOKENS.borderStrong,
   },
   searchInput: {
     flex: 1,
     color: TOKENS.textPrimary,
-    fontSize: 13,
+    fontSize: 14,
     padding: 0,
   },
   listContainer: {
     paddingHorizontal: 16,
-    paddingBottom: 24,
+    paddingBottom: 28,
   },
   card: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     backgroundColor: TOKENS.surface,
-    padding: 12,
+    padding: 13,
     borderRadius: 16,
-    marginVertical: 6,
+    marginVertical: 5,
     borderWidth: 1,
     borderColor: TOKENS.border,
   },
@@ -798,25 +826,25 @@ const styles = StyleSheet.create({
     marginRight: 10,
   },
   avatar: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: TOKENS.canvas,
+    width: 46,
+    height: 46,
+    borderRadius: 23,
+    backgroundColor: TOKENS.raised,
   },
   avatarFallback: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: TOKENS.canvas,
+    width: 46,
+    height: 46,
+    borderRadius: 23,
+    backgroundColor: TOKENS.tealSoft,
     borderWidth: 1,
-    borderColor: TOKENS.border,
+    borderColor: TOKENS.borderActive,
     alignItems: 'center',
     justifyContent: 'center',
   },
   avatarFallbackText: {
-    fontSize: 15,
-    fontWeight: '900',
-    color: TOKENS.action,
+    fontSize: 14,
+    fontWeight: '800',
+    color: TOKENS.teal,
   },
   cardMeta: {
     marginLeft: 12,
@@ -825,49 +853,59 @@ const styles = StyleSheet.create({
   nameRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    gap: 5,
     flexWrap: 'wrap',
   },
   cardName: {
     fontSize: 14,
-    fontWeight: '800',
+    fontWeight: '700',
     color: TOKENS.textPrimary,
-    maxWidth: 130,
+    maxWidth: 135,
   },
   badge: {
-    paddingHorizontal: 6,
-    paddingVertical: 1.5,
-    borderRadius: 8,
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    borderRadius: 999,
   },
   badgeFriend: {
-    backgroundColor: 'rgba(16, 185, 129, 0.15)',
+    backgroundColor: TOKENS.tealSoft,
+    borderWidth: 1,
+    borderColor: TOKENS.borderActive,
   },
   badgeMember: {
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    backgroundColor: TOKENS.raised,
+    borderWidth: 1,
+    borderColor: TOKENS.border,
   },
   badgeText: {
     fontSize: 9,
     fontWeight: '800',
   },
   badgeTextFriend: {
-    color: '#10B981',
+    color: TOKENS.teal,
   },
   badgeTextMember: {
     color: TOKENS.textMuted,
   },
   cardUsername: {
-    fontSize: 11,
+    fontSize: 12,
     color: TOKENS.textMuted,
     marginTop: 1,
   },
+  countryRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    marginTop: 3,
+  },
   cardCountry: {
     fontSize: 11,
-    color: TOKENS.action,
-    marginTop: 2,
+    color: TOKENS.teal,
+    fontWeight: '600',
   },
   cardBio: {
     fontSize: 11,
-    color: TOKENS.textMuted,
+    color: TOKENS.textSecondary,
     marginTop: 2,
   },
   cardActions: {
@@ -875,31 +913,33 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   unfriendBtn: {
-    padding: 8,
+    padding: 9,
     borderRadius: 10,
-    backgroundColor: 'rgba(244, 63, 94, 0.1)',
+    backgroundColor: TOKENS.raised,
+    borderWidth: 1,
+    borderColor: TOKENS.border,
   },
   requestsActionGroup: {
     flexDirection: 'row',
     gap: 6,
   },
   acceptBtn: {
-    backgroundColor: '#10B981',
+    backgroundColor: TOKENS.teal,
     paddingHorizontal: 12,
-    paddingVertical: 6,
+    paddingVertical: 7,
     borderRadius: 10,
   },
   acceptBtnText: {
-    color: '#090D1A',
-    fontWeight: '900',
+    color: TOKENS.actionText,
+    fontWeight: '800',
     fontSize: 12,
   },
   declineBtn: {
-    backgroundColor: TOKENS.canvas,
+    backgroundColor: TOKENS.raised,
     borderWidth: 1,
     borderColor: TOKENS.border,
     paddingHorizontal: 10,
-    paddingVertical: 6,
+    paddingVertical: 7,
     borderRadius: 10,
   },
   declineBtnText: {
@@ -908,11 +948,11 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },
   cancelBtn: {
-    backgroundColor: TOKENS.canvas,
+    backgroundColor: TOKENS.raised,
     borderWidth: 1,
     borderColor: TOKENS.border,
     paddingHorizontal: 12,
-    paddingVertical: 6,
+    paddingVertical: 7,
     borderRadius: 10,
   },
   cancelBtnText: {
@@ -923,24 +963,26 @@ const styles = StyleSheet.create({
   friendsTag: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 3,
-    backgroundColor: 'rgba(16, 185, 129, 0.15)',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
+    gap: 4,
+    backgroundColor: TOKENS.tealSoft,
+    borderWidth: 1,
+    borderColor: TOKENS.borderActive,
+    paddingHorizontal: 9,
+    paddingVertical: 5,
+    borderRadius: 999,
   },
   friendsTagText: {
-    color: '#10B981',
+    color: TOKENS.teal,
     fontSize: 11,
     fontWeight: '800',
   },
   sentTag: {
-    backgroundColor: TOKENS.canvas,
+    backgroundColor: TOKENS.raised,
     borderWidth: 1,
     borderColor: TOKENS.border,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 999,
   },
   sentTagText: {
     color: TOKENS.textMuted,
@@ -951,21 +993,31 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: TOKENS.action,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 10,
+    backgroundColor: TOKENS.teal,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 999,
   },
   addFriendBtnText: {
-    color: '#090D1A',
-    fontWeight: '900',
+    color: TOKENS.actionText,
+    fontWeight: '800',
     fontSize: 12,
   },
   emptyContainer: {
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 48,
+    paddingVertical: 56,
     paddingHorizontal: 24,
+  },
+  emptyIconCircle: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: TOKENS.tealSoft,
+    borderWidth: 1,
+    borderColor: TOKENS.borderActive,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   emptyTitle: {
     fontSize: 16,
@@ -975,22 +1027,22 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   emptySubtitle: {
-    fontSize: 12,
+    fontSize: 13,
     color: TOKENS.textMuted,
     marginTop: 6,
     textAlign: 'center',
-    lineHeight: 18,
+    lineHeight: 19,
   },
   emptyActionBtn: {
-    marginTop: 16,
-    backgroundColor: TOKENS.action,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 12,
+    marginTop: 18,
+    backgroundColor: TOKENS.teal,
+    paddingHorizontal: 20,
+    paddingVertical: 11,
+    borderRadius: 999,
   },
   emptyActionText: {
-    color: '#090D1A',
-    fontWeight: '900',
+    color: TOKENS.actionText,
+    fontWeight: '800',
     fontSize: 13,
   },
 });

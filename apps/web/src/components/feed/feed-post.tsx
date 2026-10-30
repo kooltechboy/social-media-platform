@@ -317,10 +317,10 @@ export default function FeedPost({
       {/* (Specular light line retired in Midnight Reef — panels use an inset hairline) */}
 
       {/* ────────────────────────────────────────────────────────── */}
-      {/* 1. POST HEADER                                            */}
+      {/* 1. POST HEADER (Compact 2-Line Editorial Hierarchy)       */}
       {/* ────────────────────────────────────────────────────────── */}
-      <div className="flex items-center justify-between gap-3">
-        <div className="flex items-center gap-3.5 min-w-0">
+      <div className="flex items-start justify-between gap-2.5">
+        <div className="flex items-center gap-3 min-w-0">
           <Link
             href={authorHref}
             className="hover:scale-105 transition-transform shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-caribbeanSea rounded-2xl"
@@ -333,11 +333,11 @@ export default function FeedPost({
             />
           </Link>
 
-          <div className="min-w-0">
-            <div className="flex items-center gap-1.5 flex-wrap">
+          <div className="min-w-0 space-y-0.5">
+            <div className="flex items-center gap-1.5 min-w-0">
               <Link
                 href={authorHref}
-                className="font-semibold text-[15px] text-white hover:underline decoration-white/30 underline-offset-2 truncate"
+                className="font-semibold text-[14.5px] sm:text-[15px] text-[#F8FAFC] hover:underline decoration-white/30 underline-offset-2 truncate"
               >
                 {post.author}
               </Link>
@@ -349,58 +349,57 @@ export default function FeedPost({
                   label={post.handle.toLowerCase() === 'tukubi' ? 'Official TUKUBI' : 'Official'}
                 />
               ) : isPage ? (
-                <span className="inline-flex items-center gap-1 text-[11px] font-bold text-sky-400 bg-sky-400/10 px-2 py-0.5 rounded-full border border-sky-400/20">
+                <span className="inline-flex items-center gap-1 text-[10.5px] font-semibold text-[#0EA5E9] bg-[#0EA5E9]/10 px-2 py-0.5 rounded-full border border-[#0EA5E9]/20 shrink-0">
                   <Building2 className="w-3 h-3" />
                   Page
                 </span>
               ) : post.verified ? (
-                <span title="Verified Member" aria-label="Verified Member" className="inline-flex items-center">
-                  <CheckCircle className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-brand-caribbeanSea fill-brand-caribbeanSea/20 drop-shadow-[0_0_6px_rgba(14,165,233,0.5)]" />
+                <span title="Verified Member" aria-label="Verified Member" className="inline-flex items-center shrink-0">
+                  <CheckCircle className="w-4 h-4 text-[#00C2A8] fill-[#00C2A8]/15" />
                 </span>
               ) : null}
 
-              <Link
-                href={authorHref}
-                className="text-xs sm:text-sm font-semibold text-white/50 hover:text-white/80 transition-colors"
-              >
-                @{post.handle}
-              </Link>
-
               {isPinned && (
-                <span className="inline-flex items-center gap-1 text-[11px] font-black text-brand-sunriseCoral bg-brand-sunriseCoral/15 px-2.5 py-0.5 rounded-full border border-brand-sunriseCoral/30">
+                <span className="inline-flex items-center gap-1 text-[10.5px] font-semibold text-[#00C2A8] bg-[#00C2A8]/12 px-2 py-0.5 rounded-full border border-[#00C2A8]/25 shrink-0">
                   <Pin className="w-3 h-3" />
                   Pinned
                 </span>
               )}
             </div>
 
-            <div className="flex items-center gap-2 text-xs font-medium text-white/60 mt-0.5 flex-wrap">
-              {post.communityName && (
+            <div className="flex items-center gap-1.5 text-[12px] text-[#94A3B8] flex-wrap leading-tight">
+              <Link
+                href={authorHref}
+                className="hover:text-[#E8EDF5] transition-colors truncate max-w-[140px] sm:max-w-[200px]"
+              >
+                @{post.handle}
+              </Link>
+              <span className="text-white/25">·</span>
+              <span className="shrink-0">{post.time}</span>
+              {post.location && (
                 <>
-                  <span className="flex items-center gap-1 text-white/80">
-                    <span className="text-white/40">in</span>
-                    <Link
-                      href={`/communities/${post.communitySlug || post.communityId}`}
-                      className="font-bold text-brand-caribbeanSea hover:underline"
-                    >
-                      {post.communityName}
-                    </Link>
+                  <span className="text-white/25">·</span>
+                  <span className="inline-flex items-center gap-1 text-[#94A3B8] truncate max-w-[155px] sm:max-w-none">
+                    <MapPin className="w-3 h-3 text-[#00C2A8] shrink-0" />
+                    <span className="truncate">{post.location}</span>
                   </span>
-                  <span className="text-white/30">•</span>
                 </>
               )}
-              {post.location && (
-                <span className="flex items-center gap-1 text-white/70">
-                  <MapPin className="w-3.5 h-3.5 text-brand-sunriseCoral shrink-0" />
-                  <span>{post.location}</span>
-                </span>
+              {post.communityName && (
+                <>
+                  <span className="text-white/25">·</span>
+                  <Link
+                    href={`/communities/${post.communitySlug || post.communityId}`}
+                    className="font-semibold text-[#00C2A8] hover:underline truncate"
+                  >
+                    {post.communityName}
+                  </Link>
+                </>
               )}
-              <span className="text-white/30">•</span>
-              <span>{post.time}</span>
               {post.officialContentType && (
                 <>
-                  <span className="text-white/30">•</span>
-                  <span className="text-[11px] font-bold text-brand-caribbeanSea capitalize px-2 py-0.5 rounded bg-brand-caribbeanSea/10 border border-brand-caribbeanSea/20">
+                  <span className="text-white/25">·</span>
+                  <span className="text-[10.5px] font-semibold text-[#0EA5E9] capitalize px-1.5 py-0.5 rounded bg-[#0EA5E9]/10 border border-[#0EA5E9]/20">
                     {post.officialContentType.replace('_', ' ')}
                   </span>
                 </>
@@ -634,8 +633,8 @@ export default function FeedPost({
             </button>
           </div>
         </div>
-      ) : (
-        <p className="text-[15px] sm:text-[15.5px] text-[#E8EDF5] leading-[1.62] font-normal whitespace-pre-wrap break-words">
+      ) : Boolean((post.linkPreviews?.length || post.linkPreview) && /^https?:\/\/\S+$/i.test(displayedContent.trim())) ? null : (
+        <p className="text-[14.5px] sm:text-[15.5px] text-[#E8EDF5] leading-[1.6] font-normal whitespace-pre-wrap break-words">
           {translation?.translatedText && !translation?.isShowingOriginal
             ? translation.translatedText
             : displayedContent}
@@ -657,8 +656,9 @@ export default function FeedPost({
         </div>
       )}
 
-      {/* Multilingual Translation Controls */}
-      <div className="flex flex-wrap items-center gap-2 pt-1">
+      {/* Multilingual Translation Controls (Hidden on pure URL-only posts with zero prose) */}
+      {!(Boolean((post.linkPreviews?.length || post.linkPreview) && /^https?:\/\/\S+$/i.test(displayedContent.trim()))) && displayedContent.trim().length > 0 && (
+      <div className="flex flex-wrap items-center gap-2 pt-0.5">
         {translation?.isTranslating ? (
           <div className="flex items-center gap-2 text-xs text-brand-sandstone/70">
             <Loader2 className="w-4 h-4 animate-spin text-brand-caribbeanSea" />
@@ -736,6 +736,7 @@ export default function FeedPost({
           </div>
         )}
       </div>
+      )}
 
       {/* ────────────────────────────────────────────────────────── */}
       {/* Embedded Repost / Shared Post Card                         */}

@@ -5,10 +5,9 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
   Home,
-  Layers,
   Compass,
+  Plus,
   PlusCircle,
-  Menu,
   ShoppingBag,
   User,
   Users,
@@ -21,7 +20,6 @@ import {
   Calendar,
   Mic,
   MessageSquare,
-  Bell,
   Settings,
   LogOut,
   X,
@@ -30,6 +28,8 @@ import {
   MapPin,
   ChevronRight,
   ShieldCheck,
+  FileText,
+  Zap,
 } from 'lucide-react';
 import { useAuth } from './auth-provider';
 import UserAvatar from './user-avatar';
@@ -97,7 +97,6 @@ export default function MobileNav() {
   const isHomeActive = pathname === '/' || pathname === '/home' || pathname === '/feeds' || pathname.startsWith('/feeds/');
   const isShortsActive = pathname === '/shorts' || pathname.startsWith('/shorts/') || pathname === '/reels' || pathname.startsWith('/reels/');
   const isExploreActive = pathname === '/explore' || pathname.startsWith('/explore/');
-  const isCommunityActive = pathname === '/communities' || pathname.startsWith('/communities/');
   const isMessagesActive = pathname === '/messages' || pathname.startsWith('/messages/');
   const isProfileActive = Boolean(pathname.startsWith('/profile') || (user && pathname === `/profile/${user.username}`));
 
@@ -112,7 +111,7 @@ export default function MobileNav() {
     };
   }, []);
 
-  // Core mobile 5-tab navigation: Home, Explore, Create, Messages, Profile
+  // Core mobile navigation tabs
   const MOBILE_TABS: MobileTab[] = [
     { href: '/', labelKey: 'nav.home', fallbackLabel: 'Home', icon: Home },
     { href: '/explore', labelKey: 'nav.explore', fallbackLabel: 'Explore', icon: Compass },
@@ -126,26 +125,28 @@ export default function MobileNav() {
 
   return (
     <>
-      {/* ── 1. Create Quick Actions Bottom Sheet ── */}
+      {/* ── 1. Create Quick Actions Bottom Sheet (Midnight Reef) ── */}
       {isCreateSheetOpen && (
         <div
-          className="fixed inset-0 z-[60] bg-black/75 backdrop-blur-md flex items-end animate-fadeIn"
+          className="fixed inset-0 z-[60] bg-[#040914]/82 backdrop-blur-md flex items-end animate-fadeIn"
           role="dialog"
           aria-modal="true"
           aria-label="Create on TUKUBI"
         >
           <div
             ref={createSheetRef}
-            className="w-full bg-[#140D20]/98 backdrop-blur-2xl border-t border-white/15 rounded-t-3xl p-5 space-y-4 shadow-2xl animate-slideUp max-h-[85vh] overflow-y-auto"
+            className="w-full bg-[#0D1628]/98 backdrop-blur-2xl border-t border-white/[0.12] rounded-t-3xl px-5 pt-3 pb-5 space-y-4 shadow-2xl animate-slideUp max-h-[85vh] overflow-y-auto"
           >
-            <div className="flex items-center justify-between pb-1 border-b border-white/10">
+            <div className="w-10 h-1 rounded-full bg-white/20 mx-auto" aria-hidden="true" />
+
+            <div className="flex items-center justify-between pb-2.5 border-b border-white/[0.08]">
               <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-brand-caribbeanTeal to-brand-caribbeanSea flex items-center justify-center text-slate-950 font-black shadow-sm">
+                <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-[#00C2A8] to-[#0EA5E9] flex items-center justify-center text-[#041019] shadow-sm">
                   <Sparkles className="w-4 h-4" />
                 </div>
                 <div>
-                  <p className="text-base font-black text-white">Create on TUKUBI</p>
-                  <p className="text-[11px] text-brand-sandstone/60">
+                  <p className="font-display text-[15px] font-bold text-[#F8FAFC]">Create on TUKUBI</p>
+                  <p className="text-[11px] text-[#94A3B8]">
                     Publish across the Caribbean and global diaspora
                   </p>
                 </div>
@@ -154,142 +155,164 @@ export default function MobileNav() {
                 type="button"
                 onClick={() => setIsCreateSheetOpen(false)}
                 aria-label="Close creation menu"
-                className="w-9 h-9 rounded-xl bg-white/10 flex items-center justify-center text-slate-300 hover:text-white transition-colors"
+                className="w-9 h-9 rounded-xl bg-[#15213A] border border-white/[0.08] flex items-center justify-center text-[#94A3B8] hover:text-white transition-colors"
               >
-                <X className="w-5 h-5" />
+                <X className="w-4.5 h-4.5" />
               </button>
             </div>
 
-            <div className="grid grid-cols-3 gap-2.5 pt-1">
+            <div className="grid grid-cols-3 gap-2.5 pt-0.5">
               <Link
                 href="/create"
                 onClick={() => setIsCreateSheetOpen(false)}
-                className="flex flex-col items-center justify-center p-3 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 text-center min-h-[88px] transition-all"
+                className="flex flex-col items-center justify-center p-3 rounded-2xl bg-[#111C33]/90 hover:bg-[#162440] border border-white/[0.07] text-center min-h-[88px] transition-colors gap-1.5"
               >
-                <span className="text-2xl mb-1">📝</span>
-                <span className="text-xs font-black text-white">Post</span>
-                <span className="text-[10px] text-brand-sandstone/60">Story &amp; Photo</span>
+                <span className="w-9 h-9 rounded-xl border flex items-center justify-center text-[#00C2A8] bg-[#00C2A8]/12 border-[#00C2A8]/25">
+                  <FileText className="w-4 h-4" />
+                </span>
+                <span className="text-xs font-semibold text-[#F8FAFC] leading-tight">Post</span>
+                <span className="text-[10px] text-[#94A3B8] leading-tight">Story &amp; Photo</span>
               </Link>
 
               <Link
                 href="/shorts?create=true"
                 onClick={() => setIsCreateSheetOpen(false)}
-                className="flex flex-col items-center justify-center p-3 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 text-center min-h-[88px] transition-all"
+                className="flex flex-col items-center justify-center p-3 rounded-2xl bg-[#111C33]/90 hover:bg-[#162440] border border-white/[0.07] text-center min-h-[88px] transition-colors gap-1.5"
               >
-                <span className="text-2xl mb-1">⚡</span>
-                <span className="text-xs font-black text-white">Shorts</span>
-                <span className="text-[10px] text-brand-sandstone/60">Short-form Video</span>
+                <span className="w-9 h-9 rounded-xl border flex items-center justify-center text-[#0EA5E9] bg-[#0EA5E9]/12 border-[#0EA5E9]/25">
+                  <Zap className="w-4 h-4" />
+                </span>
+                <span className="text-xs font-semibold text-[#F8FAFC] leading-tight">Shorts</span>
+                <span className="text-[10px] text-[#94A3B8] leading-tight">Short Video</span>
               </Link>
 
               <Link
                 href="/reels"
                 onClick={() => setIsCreateSheetOpen(false)}
-                className="flex flex-col items-center justify-center p-3 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 text-center min-h-[88px] transition-all"
+                className="flex flex-col items-center justify-center p-3 rounded-2xl bg-[#111C33]/90 hover:bg-[#162440] border border-white/[0.07] text-center min-h-[88px] transition-colors gap-1.5"
               >
-                <span className="text-2xl mb-1">🎬</span>
-                <span className="text-xs font-black text-white">Reel</span>
-                <span className="text-[10px] text-brand-sandstone/60">9:16 Video</span>
+                <span className="w-9 h-9 rounded-xl border flex items-center justify-center text-[#8B5CF6] bg-[#8B5CF6]/12 border-[#8B5CF6]/25">
+                  <Film className="w-4 h-4" />
+                </span>
+                <span className="text-xs font-semibold text-[#F8FAFC] leading-tight">Reel</span>
+                <span className="text-[10px] text-[#94A3B8] leading-tight">9:16 Video</span>
               </Link>
 
               <Link
                 href="/live"
                 onClick={() => setIsCreateSheetOpen(false)}
-                className="flex flex-col items-center justify-center p-3 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 text-center min-h-[88px] transition-all"
+                className="flex flex-col items-center justify-center p-3 rounded-2xl bg-[#111C33]/90 hover:bg-[#162440] border border-white/[0.07] text-center min-h-[88px] transition-colors gap-1.5"
               >
-                <span className="text-2xl mb-1">🔴</span>
-                <span className="text-xs font-black text-rose-400">Go Live</span>
-                <span className="text-[10px] text-brand-sandstone/60">Broadcast</span>
+                <span className="w-9 h-9 rounded-xl border flex items-center justify-center text-rose-400 bg-rose-500/12 border-rose-500/25">
+                  <Radio className="w-4 h-4" />
+                </span>
+                <span className="text-xs font-semibold text-[#F8FAFC] leading-tight">Go Live</span>
+                <span className="text-[10px] text-[#94A3B8] leading-tight">Broadcast</span>
               </Link>
 
               <Link
                 href="/events"
                 onClick={() => setIsCreateSheetOpen(false)}
-                className="flex flex-col items-center justify-center p-3 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 text-center min-h-[88px] transition-all"
+                className="flex flex-col items-center justify-center p-3 rounded-2xl bg-[#111C33]/90 hover:bg-[#162440] border border-white/[0.07] text-center min-h-[88px] transition-colors gap-1.5"
               >
-                <span className="text-2xl mb-1">🎟️</span>
-                <span className="text-xs font-black text-white">Event</span>
-                <span className="text-[10px] text-brand-sandstone/60">Cultural Fete</span>
+                <span className="w-9 h-9 rounded-xl border flex items-center justify-center text-[#F59E0B] bg-[#F59E0B]/12 border-[#F59E0B]/25">
+                  <Calendar className="w-4 h-4" />
+                </span>
+                <span className="text-xs font-semibold text-[#F8FAFC] leading-tight">Event</span>
+                <span className="text-[10px] text-[#94A3B8] leading-tight">Cultural Fete</span>
               </Link>
 
               <Link
                 href="/marketplace/seller-center/create"
                 onClick={() => setIsCreateSheetOpen(false)}
-                className="flex flex-col items-center justify-center p-3 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 text-center min-h-[88px] transition-all"
+                className="flex flex-col items-center justify-center p-3 rounded-2xl bg-[#111C33]/90 hover:bg-[#162440] border border-white/[0.07] text-center min-h-[88px] transition-colors gap-1.5"
               >
-                <span className="text-2xl mb-1">🛒</span>
-                <span className="text-xs font-black text-white">Market</span>
-                <span className="text-[10px] text-brand-sandstone/60">Sell Product</span>
+                <span className="w-9 h-9 rounded-xl border flex items-center justify-center text-[#F59E0B] bg-[#F59E0B]/12 border-[#F59E0B]/25">
+                  <ShoppingBag className="w-4 h-4" />
+                </span>
+                <span className="text-xs font-semibold text-[#F8FAFC] leading-tight">Market</span>
+                <span className="text-[10px] text-[#94A3B8] leading-tight">Sell Product</span>
               </Link>
 
               <Link
                 href="/communities/create"
                 onClick={() => setIsCreateSheetOpen(false)}
-                className="flex flex-col items-center justify-center p-3 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 text-center min-h-[88px] transition-all"
+                className="flex flex-col items-center justify-center p-3 rounded-2xl bg-[#111C33]/90 hover:bg-[#162440] border border-white/[0.07] text-center min-h-[88px] transition-colors gap-1.5"
               >
-                <span className="text-2xl mb-1">🌴</span>
-                <span className="text-xs font-black text-white">Community</span>
-                <span className="text-[10px] text-brand-sandstone/60">Diaspora Hub</span>
+                <span className="w-9 h-9 rounded-xl border flex items-center justify-center text-[#00C2A8] bg-[#00C2A8]/12 border-[#00C2A8]/25">
+                  <Users className="w-4 h-4" />
+                </span>
+                <span className="text-xs font-semibold text-[#F8FAFC] leading-tight">Community</span>
+                <span className="text-[10px] text-[#94A3B8] leading-tight">Diaspora Hub</span>
               </Link>
 
               <Link
                 href="/pages/create"
                 onClick={() => setIsCreateSheetOpen(false)}
-                className="flex flex-col items-center justify-center p-3 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 text-center min-h-[88px] transition-all"
+                className="flex flex-col items-center justify-center p-3 rounded-2xl bg-[#111C33]/90 hover:bg-[#162440] border border-white/[0.07] text-center min-h-[88px] transition-colors gap-1.5"
               >
-                <span className="text-2xl mb-1">🏢</span>
-                <span className="text-xs font-black text-white">Page</span>
-                <span className="text-[10px] text-brand-sandstone/60">Brand &amp; Org</span>
+                <span className="w-9 h-9 rounded-xl border flex items-center justify-center text-[#0EA5E9] bg-[#0EA5E9]/12 border-[#0EA5E9]/25">
+                  <Building2 className="w-4 h-4" />
+                </span>
+                <span className="text-xs font-semibold text-[#F8FAFC] leading-tight">Page</span>
+                <span className="text-[10px] text-[#94A3B8] leading-tight">Brand &amp; Org</span>
               </Link>
 
               <Link
                 href="/podcasts"
                 onClick={() => setIsCreateSheetOpen(false)}
-                className="flex flex-col items-center justify-center p-3 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 text-center min-h-[88px] transition-all"
+                className="flex flex-col items-center justify-center p-3 rounded-2xl bg-[#111C33]/90 hover:bg-[#162440] border border-white/[0.07] text-center min-h-[88px] transition-colors gap-1.5"
               >
-                <span className="text-2xl mb-1">🎙️</span>
-                <span className="text-xs font-black text-white">Podcast</span>
-                <span className="text-[10px] text-brand-sandstone/60">Audio Show</span>
+                <span className="w-9 h-9 rounded-xl border flex items-center justify-center text-[#8B5CF6] bg-[#8B5CF6]/12 border-[#8B5CF6]/25">
+                  <Mic className="w-4 h-4" />
+                </span>
+                <span className="text-xs font-semibold text-[#F8FAFC] leading-tight">Podcast</span>
+                <span className="text-[10px] text-[#94A3B8] leading-tight">Audio Show</span>
               </Link>
 
               <Link
                 href="/sounds"
                 onClick={() => setIsCreateSheetOpen(false)}
-                className="flex flex-col items-center justify-center p-3 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 text-center min-h-[88px] transition-all"
+                className="flex flex-col items-center justify-center p-3 rounded-2xl bg-[#111C33]/90 hover:bg-[#162440] border border-white/[0.07] text-center min-h-[88px] transition-colors gap-1.5"
               >
-                <span className="text-2xl mb-1">🎵</span>
-                <span className="text-xs font-black text-white">Sound</span>
-                <span className="text-[10px] text-brand-sandstone/60">Rhythm Track</span>
+                <span className="w-9 h-9 rounded-xl border flex items-center justify-center text-[#00C2A8] bg-[#00C2A8]/12 border-[#00C2A8]/25">
+                  <Music className="w-4 h-4" />
+                </span>
+                <span className="text-xs font-semibold text-[#F8FAFC] leading-tight">Sound</span>
+                <span className="text-[10px] text-[#94A3B8] leading-tight">Rhythm Track</span>
               </Link>
             </div>
 
-            <div className="pt-2 pb-2 text-center">
+            <div className="pt-1 pb-1 text-center">
               <Link
                 href="/create"
                 onClick={() => setIsCreateSheetOpen(false)}
-                className="inline-flex items-center gap-1 text-xs font-black text-brand-caribbeanSea hover:underline"
+                className="inline-flex items-center gap-1 text-xs font-semibold text-[#00C2A8] hover:text-[#0EA5E9] transition-colors"
               >
                 Open Full Universal Create Studio →
               </Link>
             </div>
-            <div className="h-safe-b pb-2" />
+            <div className="h-safe-b pb-1" />
           </div>
         </div>
       )}
 
-      {/* ── 2. Full Platform Menu Sheet ── */}
+      {/* ── 2. Full Platform Menu Sheet (Midnight Reef) ── */}
       {isMenuSheetOpen && (
         <div
-          className="fixed inset-0 z-[60] bg-black/75 backdrop-blur-md flex items-end animate-fadeIn"
+          className="fixed inset-0 z-[60] bg-[#040914]/82 backdrop-blur-md flex items-end animate-fadeIn"
           role="dialog"
           aria-modal="true"
           aria-label="Ecosystem Menu"
         >
           <div
             ref={menuSheetRef}
-            className="w-full bg-[#140D20]/98 backdrop-blur-2xl border-t border-white/15 rounded-t-3xl p-5 space-y-4 shadow-2xl animate-slideUp max-h-[88vh] overflow-y-auto"
+            className="w-full bg-[#0D1628]/98 backdrop-blur-2xl border-t border-white/[0.12] rounded-t-3xl px-5 pt-3 pb-5 space-y-4 shadow-2xl animate-slideUp max-h-[88vh] overflow-y-auto"
           >
+            <div className="w-10 h-1 rounded-full bg-white/20 mx-auto" aria-hidden="true" />
+
             {/* User Profile Header */}
-            <div className="flex items-center justify-between pb-3 border-b border-white/10">
+            <div className="flex items-center justify-between pb-3 border-b border-white/[0.08]">
               <Link
                 href={user ? `/profile/${user.username}` : '/login'}
                 onClick={() => setIsMenuSheetOpen(false)}
@@ -301,11 +324,11 @@ export default function MobileNav() {
                   size="md"
                 />
                 <div className="min-w-0">
-                  <p className="text-sm font-extrabold text-white truncate">
+                  <p className="font-display text-sm font-bold text-[#F8FAFC] truncate">
                     {user?.displayName || 'Sign in to TUKUBI'}
                   </p>
-                  <p className="text-xs text-brand-sandstone/60 truncate">
-                    {user ? `@${user.username}` : 'The Caribbean Connected'}
+                  <p className="text-xs text-[#94A3B8] truncate">
+                    {user ? `@${user.username}` : 'The Caribbean Connected.'}
                   </p>
                 </div>
               </Link>
@@ -313,9 +336,9 @@ export default function MobileNav() {
                 type="button"
                 onClick={() => setIsMenuSheetOpen(false)}
                 aria-label="Close menu"
-                className="w-9 h-9 rounded-xl bg-white/10 flex items-center justify-center text-slate-300 hover:text-white transition-colors"
+                className="w-9 h-9 rounded-xl bg-[#15213A] border border-white/[0.08] flex items-center justify-center text-[#94A3B8] hover:text-white transition-colors"
               >
-                <X className="w-5 h-5" />
+                <X className="w-4.5 h-4.5" />
               </button>
             </div>
 
@@ -325,8 +348,8 @@ export default function MobileNav() {
             </div>
 
             {/* Platform Navigation Links */}
-            <div className="space-y-1 pt-1">
-              <p className="text-[10px] font-black uppercase tracking-wider text-brand-sandstone/50 px-2 py-1">
+            <div className="space-y-1.5 pt-0.5">
+              <p className="text-[10.5px] font-semibold uppercase tracking-wider text-[#64748B] px-1.5">
                 Platform Destinations
               </p>
 
@@ -334,70 +357,70 @@ export default function MobileNav() {
                 <Link
                   href="/pages"
                   onClick={() => setIsMenuSheetOpen(false)}
-                  className="flex items-center gap-2.5 p-3 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 text-white text-xs font-bold transition-colors"
+                  className="flex items-center gap-2.5 p-3 rounded-xl bg-[#111C33]/90 hover:bg-[#162440] border border-white/[0.07] text-[#E8EDF5] text-xs font-semibold transition-colors"
                 >
-                  <Building2 className="w-4 h-4 text-orange-400 shrink-0" />
+                  <Building2 className="w-4 h-4 text-[#0EA5E9] shrink-0" />
                   <span>Pages</span>
                 </Link>
 
                 <Link
                   href="/pages?tab=my-pages"
                   onClick={() => setIsMenuSheetOpen(false)}
-                  className="flex items-center gap-2.5 p-3 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 text-white text-xs font-bold transition-colors"
+                  className="flex items-center gap-2.5 p-3 rounded-xl bg-[#111C33]/90 hover:bg-[#162440] border border-white/[0.07] text-[#E8EDF5] text-xs font-semibold transition-colors"
                 >
-                  <ShieldCheck className="w-4 h-4 text-amber-400 shrink-0" />
+                  <ShieldCheck className="w-4 h-4 text-[#00C2A8] shrink-0" />
                   <span>My Pages</span>
                 </Link>
 
                 <Link
                   href="/communities"
                   onClick={() => setIsMenuSheetOpen(false)}
-                  className="flex items-center gap-2.5 p-3 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 text-white text-xs font-bold transition-colors"
+                  className="flex items-center gap-2.5 p-3 rounded-xl bg-[#111C33]/90 hover:bg-[#162440] border border-white/[0.07] text-[#E8EDF5] text-xs font-semibold transition-colors"
                 >
-                  <Users className="w-4 h-4 text-cyan-400 shrink-0" />
+                  <Users className="w-4 h-4 text-[#00C2A8] shrink-0" />
                   <span>Communities</span>
                 </Link>
 
                 <Link
                   href="/marketplace"
                   onClick={() => setIsMenuSheetOpen(false)}
-                  className="flex items-center gap-2.5 p-3 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 text-white text-xs font-bold transition-colors"
+                  className="flex items-center gap-2.5 p-3 rounded-xl bg-[#111C33]/90 hover:bg-[#162440] border border-white/[0.07] text-[#E8EDF5] text-xs font-semibold transition-colors"
                 >
-                  <ShoppingBag className="w-4 h-4 text-brand-sunriseCoral shrink-0" />
+                  <ShoppingBag className="w-4 h-4 text-[#F59E0B] shrink-0" />
                   <span>Marketplace</span>
                 </Link>
 
                 <Link
                   href="/events"
                   onClick={() => setIsMenuSheetOpen(false)}
-                  className="flex items-center gap-2.5 p-3 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 text-white text-xs font-bold transition-colors"
+                  className="flex items-center gap-2.5 p-3 rounded-xl bg-[#111C33]/90 hover:bg-[#162440] border border-white/[0.07] text-[#E8EDF5] text-xs font-semibold transition-colors"
                 >
-                  <Calendar className="w-4 h-4 text-amber-400 shrink-0" />
+                  <Calendar className="w-4 h-4 text-[#F59E0B] shrink-0" />
                   <span>Cultural Events</span>
                 </Link>
 
                 <Link
                   href="/reels"
                   onClick={() => setIsMenuSheetOpen(false)}
-                  className="flex items-center gap-2.5 p-3 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 text-white text-xs font-bold transition-colors"
+                  className="flex items-center gap-2.5 p-3 rounded-xl bg-[#111C33]/90 hover:bg-[#162440] border border-white/[0.07] text-[#E8EDF5] text-xs font-semibold transition-colors"
                 >
-                  <Film className="w-4 h-4 text-pink-400 shrink-0" />
+                  <Film className="w-4 h-4 text-[#0EA5E9] shrink-0" />
                   <span>Reels &amp; Video</span>
                 </Link>
 
                 <Link
                   href="/podcasts"
                   onClick={() => setIsMenuSheetOpen(false)}
-                  className="flex items-center gap-2.5 p-3 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 text-white text-xs font-bold transition-colors"
+                  className="flex items-center gap-2.5 p-3 rounded-xl bg-[#111C33]/90 hover:bg-[#162440] border border-white/[0.07] text-[#E8EDF5] text-xs font-semibold transition-colors"
                 >
-                  <Mic className="w-4 h-4 text-purple-400 shrink-0" />
+                  <Mic className="w-4 h-4 text-[#8B5CF6] shrink-0" />
                   <span>Podcasts</span>
                 </Link>
 
                 <Link
                   href="/live"
                   onClick={() => setIsMenuSheetOpen(false)}
-                  className="flex items-center gap-2.5 p-3 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 text-white text-xs font-bold transition-colors"
+                  className="flex items-center gap-2.5 p-3 rounded-xl bg-[#111C33]/90 hover:bg-[#162440] border border-white/[0.07] text-[#E8EDF5] text-xs font-semibold transition-colors"
                 >
                   <Tv className="w-4 h-4 text-rose-400 shrink-0" />
                   <span>Live Broadcasts</span>
@@ -406,26 +429,26 @@ export default function MobileNav() {
                 <Link
                   href="/sounds"
                   onClick={() => setIsMenuSheetOpen(false)}
-                  className="flex items-center gap-2.5 p-3 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 text-white text-xs font-bold transition-colors"
+                  className="flex items-center gap-2.5 p-3 rounded-xl bg-[#111C33]/90 hover:bg-[#162440] border border-white/[0.07] text-[#E8EDF5] text-xs font-semibold transition-colors"
                 >
-                  <Music className="w-4 h-4 text-rose-300 shrink-0" />
+                  <Music className="w-4 h-4 text-[#8B5CF6] shrink-0" />
                   <span>Sounds &amp; Stems</span>
                 </Link>
 
                 <Link
                   href="/map"
                   onClick={() => setIsMenuSheetOpen(false)}
-                  className="flex items-center gap-2.5 p-3 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 text-white text-xs font-bold transition-colors"
+                  className="flex items-center gap-2.5 p-3 rounded-xl bg-[#111C33]/90 hover:bg-[#162440] border border-white/[0.07] text-[#E8EDF5] text-xs font-semibold transition-colors"
                 >
-                  <MapPin className="w-4 h-4 text-emerald-400 shrink-0" />
+                  <MapPin className="w-4 h-4 text-[#00C2A8] shrink-0" />
                   <span>Caribbean Map</span>
                 </Link>
               </div>
             </div>
 
             {/* Creator & Account Section */}
-            <div className="space-y-1.5 pt-2">
-              <p className="text-[10px] font-black uppercase tracking-wider text-brand-sandstone/50 px-2 py-1">
+            <div className="space-y-1.5 pt-1">
+              <p className="text-[10.5px] font-semibold uppercase tracking-wider text-[#64748B] px-1.5">
                 Account &amp; Operations
               </p>
 
@@ -433,78 +456,78 @@ export default function MobileNav() {
                 href="/messages"
                 aria-label="Messages"
                 onClick={() => setIsMenuSheetOpen(false)}
-                className="flex items-center justify-between p-3 rounded-2xl bg-brand-caribbeanSea/10 hover:bg-brand-caribbeanSea/20 border border-brand-caribbeanSea/30 text-white text-xs font-bold transition-colors"
+                className="flex items-center justify-between p-3 rounded-xl bg-[#00C2A8]/10 hover:bg-[#00C2A8]/15 border border-[#00C2A8]/25 text-[#F8FAFC] text-xs font-semibold transition-colors"
               >
                 <div className="flex items-center gap-2.5">
-                  <MessageSquare className="w-4 h-4 text-brand-caribbeanSea" />
+                  <MessageSquare className="w-4 h-4 text-[#00C2A8]" />
                   <span>Messages &amp; Direct Chat</span>
                 </div>
                 <div className="flex items-center gap-2">
                   {hasUnreadMessagesTab && (
-                    <span className="px-2 py-0.5 rounded-full bg-brand-caribbeanSea text-slate-950 text-[10px] font-black">
+                    <span className="px-2 py-0.5 rounded-full bg-[#00C2A8] text-[#041019] text-[10px] font-bold">
                       {unreadMessagesCount}
                     </span>
                   )}
-                  <ChevronRight className="w-4 h-4 text-white/40" />
+                  <ChevronRight className="w-4 h-4 text-[#64748B]" />
                 </div>
               </Link>
 
               <Link
                 href="/creator-studio"
                 onClick={() => setIsMenuSheetOpen(false)}
-                className="flex items-center justify-between p-3 rounded-2xl bg-gradient-to-r from-brand-goldenHour/15 to-transparent border border-brand-goldenHour/30 text-white text-xs font-bold"
+                className="flex items-center justify-between p-3 rounded-xl bg-[#111C33]/90 hover:bg-[#162440] border border-white/[0.07] text-[#F8FAFC] text-xs font-semibold transition-colors"
               >
                 <div className="flex items-center gap-2.5">
-                  <Radio className="w-4 h-4 text-brand-goldenHour" />
+                  <Radio className="w-4 h-4 text-[#8B5CF6]" />
                   <span>Creator Studio</span>
                 </div>
-                <span className="text-[10px] font-black uppercase text-brand-goldenHour">Studio</span>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-[#8B5CF6]">Studio</span>
               </Link>
 
               <Link
                 href="/financial-center"
                 onClick={() => setIsMenuSheetOpen(false)}
-                className="flex items-center justify-between p-3 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 text-white text-xs font-bold"
+                className="flex items-center justify-between p-3 rounded-xl bg-[#0B1B3B] hover:bg-[#11244D] border border-white/[0.08] text-[#F8FAFC] text-xs font-semibold transition-colors"
               >
                 <div className="flex items-center gap-2.5">
-                  <Wallet className="w-4 h-4 text-emerald-400" />
+                  <Wallet className="w-4 h-4 text-[#F59E0B]" />
                   <span>Financial Center &amp; Wallet</span>
                 </div>
-                <ChevronRight className="w-4 h-4 text-white/40" />
+                <ChevronRight className="w-4 h-4 text-[#64748B]" />
               </Link>
 
               <Link
                 href="/settings"
                 onClick={() => setIsMenuSheetOpen(false)}
-                className="flex items-center justify-between p-3 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 text-white text-xs font-bold"
+                className="flex items-center justify-between p-3 rounded-xl bg-[#111C33]/90 hover:bg-[#162440] border border-white/[0.07] text-[#F8FAFC] text-xs font-semibold transition-colors"
               >
                 <div className="flex items-center gap-2.5">
-                  <Settings className="w-4 h-4 text-slate-400" />
+                  <Settings className="w-4 h-4 text-[#94A3B8]" />
                   <span>Settings &amp; Privacy</span>
                 </div>
-                <ChevronRight className="w-4 h-4 text-white/40" />
+                <ChevronRight className="w-4 h-4 text-[#64748B]" />
               </Link>
 
               <Link
                 href="/help"
                 onClick={() => setIsMenuSheetOpen(false)}
-                className="flex items-center justify-between p-3 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 text-white text-xs font-bold"
+                className="flex items-center justify-between p-3 rounded-xl bg-[#111C33]/90 hover:bg-[#162440] border border-white/[0.07] text-[#F8FAFC] text-xs font-semibold transition-colors"
               >
                 <div className="flex items-center gap-2.5">
-                  <HelpCircle className="w-4 h-4 text-cyan-400" />
+                  <HelpCircle className="w-4 h-4 text-[#0EA5E9]" />
                   <span>Help &amp; Learn Center</span>
                 </div>
-                <ChevronRight className="w-4 h-4 text-white/40" />
+                <ChevronRight className="w-4 h-4 text-[#64748B]" />
               </Link>
             </div>
 
             {/* Sign Out */}
             {user && (
-              <div className="pt-2">
+              <div className="pt-1">
                 <button
                   type="button"
                   onClick={handleSignOut}
-                  className="flex items-center justify-center gap-2 w-full py-3 px-4 rounded-2xl bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 text-rose-400 text-xs font-bold transition-colors min-h-[44px]"
+                  className="flex items-center justify-center gap-2 w-full py-3 px-4 rounded-xl bg-rose-500/10 hover:bg-rose-500/18 border border-rose-500/25 text-rose-400 text-xs font-semibold transition-colors min-h-[44px]"
                 >
                   <LogOut className="w-4 h-4" />
                   <span>Sign Out</span>
@@ -512,17 +535,17 @@ export default function MobileNav() {
               </div>
             )}
 
-            <div className="h-safe-b pb-3" />
+            <div className="h-safe-b pb-2" />
           </div>
         </div>
       )}
 
-      {/* ── 3. Bottom 5-Tab Bar (Home, Explore, Create, Messages, Profile) ── */}
+      {/* ── 3. Sleek Flush-Integrated Mobile Bottom Tab Bar (Midnight Reef) ── */}
       <nav
-        className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#070D1A]/95 backdrop-blur-2xl border-t border-white/10 shadow-2xl pb-[max(0.35rem,env(safe-area-inset-bottom))]"
+        className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#070D1A]/94 backdrop-blur-2xl border-t border-white/[0.08] pb-[max(0.35rem,env(safe-area-inset-bottom))]"
         aria-label="Main mobile navigation"
       >
-        <ul className="flex items-center justify-around px-2 py-1" role="tablist">
+        <ul className="flex items-center justify-around px-1.5 py-1" role="tablist">
           {/* Tab 1: Home */}
           <li role="presentation">
             <Link
@@ -530,14 +553,14 @@ export default function MobileNav() {
               role="tab"
               aria-selected={isHomeActive}
               aria-label="Home"
-              className={`flex flex-col items-center gap-0.5 px-2 py-1.5 rounded-2xl transition-all min-w-[44px] min-h-[44px] sm:min-w-[48px] sm:min-h-[48px] justify-center ${
+              className={`flex flex-col items-center gap-1 px-2 py-1 rounded-xl transition-colors min-w-[44px] min-h-[44px] justify-center ${
                 isHomeActive
-                  ? 'text-brand-caribbeanSea font-black'
-                  : 'text-brand-sandstone/60 hover:text-slate-200 font-bold'
+                  ? 'text-[#00C2A8] font-semibold'
+                  : 'text-[#94A3B8] hover:text-white font-medium'
               }`}
             >
-              <Home className="w-5 h-5" />
-              <span className="text-[10px]">Home</span>
+              <Home className="w-[20px] h-[20px]" />
+              <span className="text-[10px] leading-none">Home</span>
             </Link>
           </li>
 
@@ -548,30 +571,29 @@ export default function MobileNav() {
               role="tab"
               aria-selected={isShortsActive}
               aria-label="TUKUBI Shorts"
-              className={`flex flex-col items-center gap-0.5 px-2 py-1.5 rounded-2xl transition-all min-w-[44px] min-h-[44px] sm:min-w-[48px] sm:min-h-[48px] justify-center ${
+              className={`flex flex-col items-center gap-1 px-2 py-1 rounded-xl transition-colors min-w-[44px] min-h-[44px] justify-center ${
                 isShortsActive
-                  ? 'text-brand-sunriseCoral font-black'
-                  : 'text-brand-sandstone/60 hover:text-slate-200 font-bold'
+                  ? 'text-[#00C2A8] font-semibold'
+                  : 'text-[#94A3B8] hover:text-white font-medium'
               }`}
             >
-              <Film className="w-5 h-5" />
-              <span className="text-[10px]">Shorts</span>
+              <Film className="w-[20px] h-[20px]" />
+              <span className="text-[10px] leading-none">Shorts</span>
             </Link>
           </li>
 
-          {/* Tab 3: Create (Floating Action Button) */}
+          {/* Tab 3: Create (Flush-Integrated Teal → Ocean Pill Action) */}
           <li role="presentation">
             <button
               type="button"
               role="tab"
               aria-label="Create on TUKUBI"
               onClick={() => setIsCreateSheetOpen(true)}
-              className="flex flex-col items-center gap-0.5 px-2 py-1 rounded-2xl transition-all min-w-[44px] min-h-[44px] sm:min-w-[48px] sm:min-h-[48px] justify-center"
+              className="flex items-center justify-center px-1.5 py-1 min-w-[44px] min-h-[44px]"
             >
-              <span className="w-11 h-11 rounded-full bg-gradient-to-tr from-brand-caribbeanTeal to-brand-caribbeanSea flex items-center justify-center -mt-4 shadow-lg shadow-brand-caribbeanSea/40 border-2 border-[#070D1A] text-slate-950 hover:scale-105 active:scale-95 transition-transform">
-                <PlusCircle className="w-6 h-6 text-slate-950" />
+              <span className="w-11 h-8 rounded-xl bg-gradient-to-tr from-[#00C2A8] to-[#0EA5E9] flex items-center justify-center shadow-[0_2px_12px_rgba(0,194,168,0.28)] text-[#041019] active:scale-95 transition-transform">
+                <Plus className="w-5 h-5 stroke-[2.6]" />
               </span>
-              <span className="text-[10px] font-black text-brand-caribbeanSea">Create</span>
             </button>
           </li>
 
@@ -582,53 +604,53 @@ export default function MobileNav() {
               role="tab"
               aria-selected={isExploreActive}
               aria-label="Explore Caribbean"
-              className={`flex flex-col items-center gap-0.5 px-2 py-1.5 rounded-2xl transition-all min-w-[44px] min-h-[44px] sm:min-w-[48px] sm:min-h-[48px] justify-center ${
+              className={`flex flex-col items-center gap-1 px-2 py-1 rounded-xl transition-colors min-w-[44px] min-h-[44px] justify-center ${
                 isExploreActive
-                  ? 'text-brand-caribbeanSea font-black'
-                  : 'text-brand-sandstone/60 hover:text-slate-200 font-bold'
+                  ? 'text-[#00C2A8] font-semibold'
+                  : 'text-[#94A3B8] hover:text-white font-medium'
               }`}
             >
-              <Compass className="w-5 h-5" />
-              <span className="text-[10px]">Explore</span>
+              <Compass className="w-[20px] h-[20px]" />
+              <span className="text-[10px] leading-none">Explore</span>
             </Link>
           </li>
 
-          {/* Tab 4: Messages */}
+          {/* Tab 5: Messages */}
           <li role="presentation">
             <Link
               href="/messages"
               role="tab"
               aria-selected={isMessagesActive}
               aria-label="Messages"
-              className={`flex flex-col items-center gap-0.5 px-2.5 py-1.5 rounded-2xl transition-all min-w-[44px] min-h-[44px] sm:min-w-[48px] sm:min-h-[48px] justify-center ${
+              className={`flex flex-col items-center gap-1 px-2 py-1 rounded-xl transition-colors min-w-[44px] min-h-[44px] justify-center ${
                 isMessagesActive
-                  ? 'text-brand-caribbeanSea font-black'
-                  : 'text-brand-sandstone/60 hover:text-slate-200 font-bold'
+                  ? 'text-[#00C2A8] font-semibold'
+                  : 'text-[#94A3B8] hover:text-white font-medium'
               }`}
             >
               <div className="relative">
-                <MessageSquare className="w-5 h-5" />
+                <MessageSquare className="w-[20px] h-[20px]" />
                 {unreadMessagesCount > 0 && (
-                  <span className="absolute -top-1.5 -right-2 px-1 min-w-[16px] h-4 rounded-full bg-brand-sunriseCoral text-slate-950 font-black text-[9px] flex items-center justify-center shadow-sm">
+                  <span className="absolute -top-1.5 -right-2 px-1 min-w-[16px] h-4 rounded-full bg-[#00C2A8] text-[#041019] font-bold text-[9px] flex items-center justify-center">
                     {unreadMessagesCount > 99 ? '99+' : unreadMessagesCount}
                   </span>
                 )}
               </div>
-              <span className="text-[10px]">Messages</span>
+              <span className="text-[10px] leading-none">Messages</span>
             </Link>
           </li>
 
-          {/* Tab 5: Profile */}
+          {/* Tab 6: Profile */}
           <li role="presentation">
             <Link
               href={user ? `/profile/${user.username}` : '/login'}
               role="tab"
               aria-selected={isProfileActive}
               aria-label="Profile"
-              className={`flex flex-col items-center gap-0.5 px-2.5 py-1.5 rounded-2xl transition-all min-w-[44px] min-h-[44px] sm:min-w-[48px] sm:min-h-[48px] justify-center ${
+              className={`flex flex-col items-center gap-1 px-2 py-1 rounded-xl transition-colors min-w-[44px] min-h-[44px] justify-center ${
                 isProfileActive
-                  ? 'text-brand-caribbeanSea font-black'
-                  : 'text-brand-sandstone/60 hover:text-slate-200 font-bold'
+                  ? 'text-[#00C2A8] font-semibold'
+                  : 'text-[#94A3B8] hover:text-white font-medium'
               }`}
             >
               <div className="relative">
@@ -639,13 +661,13 @@ export default function MobileNav() {
                     size="xs"
                   />
                 ) : (
-                  <User className="w-5 h-5" />
+                  <User className="w-[20px] h-[20px]" />
                 )}
                 {unreadNotificationsCount > 0 && (
-                  <span className="absolute -top-1 -right-1 w-2 h-2 bg-brand-sunriseCoral rounded-full animate-pulse shadow-[0_0_6px_rgba(255,107,107,0.9)]" />
+                  <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-[#00C2A8] rounded-full ring-2 ring-[#070D1A]" />
                 )}
               </div>
-              <span className="text-[10px]">Profile</span>
+              <span className="text-[10px] leading-none">Profile</span>
             </Link>
           </li>
         </ul>
