@@ -4,7 +4,7 @@ type: changelog
 status: verified
 owner: Release Manager
 created: 2026-10-28
-updated: 2026-10-30
+updated: 2026-10-31
 tags:
   - tukubi
   - changelog
@@ -15,6 +15,34 @@ related:
 ---
 
 # ENGINEERING_CHANGELOG — TUKUBI
+
+## [2026-10-31] — TUKUBI: Android CLI, Device Hub Sidecar & Expo Go Monorepo Integration
+
+### 1. Android Development Toolchain & Sidecars
+- Installed Google Android CLI binary `1.1.16717390` at `C:\Users\Owner\AppData\AndroidCLI\android.exe` and configured user environment variables.
+- Initialized and integrated Android agent skills (`adaptive`, `android-cli`, `android-device-hub`, `android-profiler`, `anr-audit-and-fix`, `compose-preview`, `testing-setup`).
+- Configured and pre-warmed Google Antigravity UI extension sidecars:
+  - `sidecar://android-cli-plugin/device-hub/` (Android Device Hub — interactive device mirroring and hardware controls)
+  - `sidecar://android-cli-plugin/compose-preview/` (Android Compose Preview)
+- Upgraded Android Emulator from `36.4.9` to `37.2.13.0` via `android sdk update emulator`, fixing WHPX acceleration and `VulkanVirtualQueue` compatibility with Android 16 (API 36).
+- Resolved SDK system image linking: created NTFS junction from incomplete stub `system-images/android-36` to complete `system-images/android-36.1/google_apis_playstore/x86_64`.
+- Provisioned and launched AVD `medium_phone` (serial `emulator-5554`) with WHPX hardware acceleration.
+
+### 2. Universal Native Expo Monorepo Architecture (`apps/mobile`)
+- Created dedicated root entrypoint `apps/mobile/index.js` registering `registerRootComponent(App)` and configured `apps/mobile/package.json` (`"main": "index.js"`), resolving pnpm symlink resolution failures in Expo AppEntry.
+- Configured `apps/mobile/metro.config.js` to watch the monorepo root and resolve packages from `.pnpm/node_modules`.
+- Aligned dependency compatibility for React Native `0.76.5` / Expo SDK `52`:
+  - Downgraded `react-native-screens` from `^4.27.0` to `~4.4.0` (eliminating `DirectEventHandler` codegen syntax mismatch).
+  - Downgraded `expo-image-picker` from `^57.0.19` to `~16.0.6` (eliminating missing `createPermissionHook` runtime error).
+- Configured local environment `.env` (git-ignored) with `EXPO_PUBLIC_SUPABASE_URL` and `EXPO_PUBLIC_SUPABASE_ANON_KEY`.
+
+### 3. Verification & Live Preview
+- **TypeScript Typecheck:** Caribbean-mobile passed `tsc --noEmit` with `0` errors.
+- **Metro Compilation:** Bundled 1062 modules with HTTP 200 via `apps/mobile`.
+- **Live Device Preview:** Expo Go (`2.32.20`) loaded and rendered on Android emulator (`emulator-5554`) via reverse port forward `tcp:8081`. Verified full Midnight Reef authentication and brand shell rendering.
+- **Git & Compliance:** Clean working tree with commit `67c2892` pushed to GitHub `origin/main`. Zero secrets committed.
+
+---
 
 ## [2026-10-30] — TUKUBI: "Midnight Reef" Mobile App & Mobile Web Refactor
 
