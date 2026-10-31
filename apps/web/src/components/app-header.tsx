@@ -323,7 +323,7 @@ export default function AppHeader() {
 
         <Link
           href="/messages"
-          className="hidden md:flex min-h-[44px] min-w-[44px] text-[#C3CCDA] hover:text-white rounded-xl hover:bg-white/[0.06] relative transition-colors items-center justify-center"
+          className="flex min-h-[44px] min-w-[44px] text-[#C3CCDA] hover:text-white rounded-xl hover:bg-white/[0.06] relative transition-colors items-center justify-center"
           aria-label={t('nav.messages')}
         >
           <MessageSquare className="w-5 h-5" aria-hidden="true" />
