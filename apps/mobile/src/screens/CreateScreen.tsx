@@ -11,32 +11,15 @@ import {
   Image,
   ActivityIndicator,
 } from 'react-native';
-import { Ionicons as ExpoIonicons } from '@expo/vector-icons';
 import { TOKENS } from '../theme/tokens';
+import { Ionicons } from '../components/Icon';
 import { supabase } from '../lib/supabase';
+import { useTerritories } from '../lib/territories';
 import * as ImagePicker from 'expo-image-picker';
 import { uploadMedia } from '../lib/mediaUpload';
 
-const Ionicons = ExpoIonicons as unknown as React.ComponentType<any>;
-
-const CARIBBEAN_COUNTRIES = [
-  'Jamaica',
-  'Trinidad and Tobago',
-  'Barbados',
-  'Bahamas',
-  'Dominican Republic',
-  'Guyana',
-  'Haiti',
-  'Antigua and Barbuda',
-  'Saint Lucia',
-  'Grenada',
-  'Saint Vincent and the Grenadines',
-  'Belize',
-  'Suriname',
-  'Diaspora',
-];
-
 export function CreateScreen({ navigation }: any = {}) {
+  const { territories } = useTerritories();
   const [draft, setDraft] = useState('');
   const [country, setCountry] = useState('');
   const [tags, setTags] = useState('');
@@ -367,16 +350,16 @@ export function CreateScreen({ navigation }: any = {}) {
           showsHorizontalScrollIndicator={false}
           style={styles.countryScroll}
         >
-          {CARIBBEAN_COUNTRIES.map((c) => {
-            const isSelected = country === c;
+          {territories.map((t) => {
+            const isSelected = country === t.name;
             return (
               <TouchableOpacity
-                key={c}
+                key={t.iso}
                 style={[
                   styles.countryChip,
                   isSelected && styles.countryChipActive,
                 ]}
-                onPress={() => setCountry((prev) => (prev === c ? '' : c))}
+                onPress={() => setCountry((prev) => (prev === t.name ? '' : t.name))}
                 activeOpacity={0.8}
               >
                 <Text
@@ -385,7 +368,7 @@ export function CreateScreen({ navigation }: any = {}) {
                     isSelected && styles.countryTextActive,
                   ]}
                 >
-                  {c}
+                  {t.flag ? `${t.flag} ${t.name}` : t.name}
                 </Text>
               </TouchableOpacity>
             );

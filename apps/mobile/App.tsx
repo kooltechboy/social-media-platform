@@ -1,15 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, SafeAreaView, StatusBar, View, ActivityIndicator, TouchableOpacity } from 'react-native';
+import { StyleSheet, SafeAreaView, StatusBar, View, ActivityIndicator, TouchableOpacity, Image, Text } from 'react-native';
 import { NavigationContainer, DefaultTheme, createNavigationContainerRef } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { Ionicons as ExpoIonicons } from '@expo/vector-icons';
 import { TOKENS } from './src/theme/tokens';
-
-const Ionicons = ExpoIonicons as unknown as React.ComponentType<{
-  name: keyof typeof ExpoIonicons.glyphMap;
-  size?: number;
-  color?: string;
-}>;
+import { Ionicons, type IoniconName } from './src/components/Icon';
 import { Header } from './src/components/Header';
 import { CreateActionSheet } from './src/components/CreateActionSheet';
 import { HomeScreen } from './src/screens/HomeScreen';
@@ -29,7 +23,7 @@ import { LiveScreen } from './src/screens/LiveScreen';
 import { PodcastsScreen } from './src/screens/PodcastsScreen';
 import { FriendsScreen } from './src/screens/FriendsScreen';
 import { FeedsScreen } from './src/screens/FeedsScreen';
-import { supabase } from './src/lib/supabase';
+import { supabase, isSupabaseConfigured } from './src/lib/supabase';
 
 export const navigationRef = createNavigationContainerRef<any>();
 
@@ -90,10 +84,20 @@ export default function App() {
   };
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
-      setSession(currentSession);
+    if (!isSupabaseConfigured) {
       setLoading(false);
-    });
+      return;
+    }
+
+    supabase.auth
+      .getSession()
+      .then(({ data: { session: currentSession } }) => {
+        setSession(currentSession);
+        setLoading(false);
+      })
+      .catch(() => {
+        setLoading(false);
+      });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, currentSession) => {
       setSession(currentSession);
@@ -108,7 +112,39 @@ export default function App() {
     return (
       <SafeAreaView style={[styles.container, styles.centerBox]}>
         <StatusBar barStyle="light-content" backgroundColor={TOKENS.canvas} />
-        <ActivityIndicator size="large" color={TOKENS.teal} />
+        <View style={styles.bootBrandStack}>
+          <View style={styles.bootIconTile}>
+            <Image
+              source={require('./assets/icon.png')}
+              style={styles.bootIconImage}
+              resizeMode="cover"
+            />
+          </View>
+          <Text style={styles.bootWordmark}>TUKUBI</Text>
+          <Text style={styles.bootTagline}>THE CARIBBEAN CONNECTED</Text>
+          <ActivityIndicator size="small" color={TOKENS.teal} style={styles.bootSpinner} />
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  if (!isSupabaseConfigured) {
+    return (
+      <SafeAreaView style={[styles.container, styles.centerBox]}>
+        <StatusBar barStyle="light-content" backgroundColor={TOKENS.canvas} />
+        <View style={styles.configCard}>
+          <View style={styles.bootIconTile}>
+            <Image
+              source={require('./assets/icon.png')}
+              style={styles.bootIconImage}
+              resizeMode="cover"
+            />
+          </View>
+          <Text style={styles.configTitle}>Configuration Required</Text>
+          <Text style={styles.configBody}>
+            Set EXPO_PUBLIC_SUPABASE_URL and EXPO_PUBLIC_SUPABASE_ANON_KEY to connect TUKUBI Mobile to your live environment.
+          </Text>
+        </View>
       </SafeAreaView>
     );
   }
@@ -172,7 +208,7 @@ export default function App() {
               letterSpacing: 0.1,
             },
             tabBarIcon: ({ focused, color }: any) => {
-              let iconName: keyof typeof ExpoIonicons.glyphMap = focused ? 'home' : 'home-outline';
+              let iconName: IoniconName = focused ? 'home' : 'home-outline';
               if (route.name === 'Home') iconName = focused ? 'home' : 'home-outline';
               else if (route.name === 'Explore') iconName = focused ? 'compass' : 'compass-outline';
               else if (route.name === 'Communities') iconName = focused ? 'people' : 'people-outline';
@@ -321,6 +357,64 @@ const styles = StyleSheet.create({
   centerBox: {
     alignItems: 'center',
     justifyContent: 'center',
+    paddingHorizontal: 24,
+  },
+  bootBrandStack: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  bootIconTile: {
+    width: 76,
+    height: 76,
+    borderRadius: 20,
+    overflow: 'hidden',
+    backgroundColor: TOKENS.oceanDepth,
+    borderWidth: 1,
+    borderColor: TOKENS.borderActive,
+    marginBottom: 16,
+  },
+  bootIconImage: {
+    width: '100%',
+    height: '100%',
+  },
+  bootWordmark: {
+    fontSize: 22,
+    fontWeight: '900',
+    letterSpacing: 2.2,
+    color: TOKENS.textPrimary,
+    marginBottom: 4,
+  },
+  bootTagline: {
+    fontSize: 10.5,
+    fontWeight: '700',
+    letterSpacing: 1.1,
+    color: TOKENS.teal,
+  },
+  bootSpinner: {
+    marginTop: 22,
+  },
+  configCard: {
+    width: '100%',
+    maxWidth: 380,
+    backgroundColor: TOKENS.surface,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: TOKENS.border,
+    padding: 24,
+    alignItems: 'center',
+  },
+  configTitle: {
+    fontSize: 17,
+    fontWeight: '800',
+    color: TOKENS.textPrimary,
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  configBody: {
+    fontSize: 13,
+    lineHeight: 19,
+    color: TOKENS.textMuted,
+    textAlign: 'center',
   },
   createTabTouch: {
     flex: 1,

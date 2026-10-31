@@ -8,20 +8,14 @@ import {
   TouchableWithoutFeedback,
   ScrollView,
 } from 'react-native';
-import { Ionicons as ExpoIonicons } from '@expo/vector-icons';
 import { TOKENS } from '../theme/tokens';
-
-const Ionicons = ExpoIonicons as unknown as React.ComponentType<{
-  name: keyof typeof ExpoIonicons.glyphMap;
-  size?: number;
-  color?: string;
-}>;
+import { Ionicons, type IoniconName } from './Icon';
 
 export interface CreateOption {
   id: string;
   title: string;
   subtitle: string;
-  icon: keyof typeof ExpoIonicons.glyphMap;
+  icon: IoniconName;
   iconColor: string;
   iconBg: string;
   badge?: string;
@@ -233,7 +227,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 18,
     fontWeight: '800',
-    color: '#F8FAFC',
+    color: TOKENS.textPrimary,
     letterSpacing: -0.2,
   },
   subtitle: {
@@ -242,9 +236,9 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   closeIconBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
+    width: 44,
+    height: 44,
+    borderRadius: 11,
     backgroundColor: TOKENS.raised,
     borderWidth: 1,
     borderColor: TOKENS.border,
@@ -286,7 +280,7 @@ const styles = StyleSheet.create({
   optionTitle: {
     fontSize: 14,
     fontWeight: '700',
-    color: '#F8FAFC',
+    color: TOKENS.textPrimary,
   },
   badge: {
     backgroundColor: TOKENS.tealSoft,

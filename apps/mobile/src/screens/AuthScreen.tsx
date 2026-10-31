@@ -12,38 +12,14 @@ import {
   ScrollView,
   Image,
 } from 'react-native';
-import { Ionicons as ExpoIonicons } from '@expo/vector-icons';
+import { Ionicons } from '../components/Icon';
 import { TOKENS } from '../theme/tokens';
 import { supabase } from '../lib/supabase';
-
-type IoniconName = keyof typeof ExpoIonicons.glyphMap;
-const Ionicons = ExpoIonicons as unknown as React.ComponentType<{
-  name: IoniconName;
-  size?: number;
-  color?: string;
-  style?: any;
-}>;
+import { useTerritories, findTerritory } from '../lib/territories';
 
 interface AuthScreenProps {
   onAuthSuccess: (session: any) => void;
 }
-
-const CARIBBEAN_COUNTRIES = [
-  'Jamaica',
-  'Trinidad and Tobago',
-  'Barbados',
-  'Bahamas',
-  'Dominican Republic',
-  'Guyana',
-  'Haiti',
-  'Antigua and Barbuda',
-  'Saint Lucia',
-  'Grenada',
-  'Saint Vincent and the Grenadines',
-  'Belize',
-  'Suriname',
-  'Global Diaspora (USA/UK/Canada)',
-];
 
 export function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
   const [isSignUp, setIsSignUp] = useState(false);
@@ -56,6 +32,28 @@ export function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
+  const {
+    territories,
+    loading: territoriesLoading,
+    error: territoriesError,
+    retry: retryTerritories,
+  } = useTerritories();
+
+  const syncProfileOnSignUp = async (
+    userId: string,
+    cleanDisplayName: string,
+    cleanCountry: string | null
+  ) => {
+    const updatePayload: Record<string, any> = {
+      display_name: cleanDisplayName,
+      updated_at: new Date().toISOString(),
+    };
+    if (cleanCountry) {
+      updatePayload.country = cleanCountry;
+    }
+    await supabase.from('profiles').update(updatePayload).eq('id', userId);
+  };
+
   const handleAuth = async () => {
     if (!email.trim() || !password.trim()) {
       setErrorMessage('Please enter both your email address and password.');
@@ -67,18 +65,32 @@ export function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
 
     try {
       if (isSignUp) {
-        if (!username.trim() || !displayName.trim()) {
+        const cleanUsername = username.trim().toLowerCase().replace(/^@/, '');
+        const cleanDisplayName = displayName.trim();
+        const cleanCountry = country.trim() || null;
+
+        if (!cleanUsername || !cleanDisplayName) {
           setErrorMessage('Please enter your display name and a unique username.');
           setLoading(false);
           return;
         }
 
+        if (cleanUsername.length < 3) {
+          setErrorMessage('Username must be at least 3 characters.');
+          setLoading(false);
+          return;
+        }
+
         const metadata: Record<string, string> = {
-          username: username.trim().toLowerCase(),
-          display_name: displayName.trim(),
+          username: cleanUsername,
+          display_name: cleanDisplayName,
         };
-        if (country.trim()) {
-          metadata.country = country.trim();
+        if (cleanCountry) {
+          metadata.country = cleanCountry;
+          const matchedTerritory = findTerritory(territories, cleanCountry);
+          if (matchedTerritory?.iso) {
+            metadata.origin_country_iso = matchedTerritory.iso;
+          }
         }
 
         const { data, error } = await supabase.auth.signUp({
@@ -92,6 +104,9 @@ export function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
         if (error) {
           setErrorMessage(error.message);
         } else if (data.session) {
+          if (data.session.user?.id) {
+            await syncProfileOnSignUp(data.session.user.id, cleanDisplayName, cleanCountry);
+          }
           onAuthSuccess(data.session);
         } else {
           const { data: signInData, error: signInErr } = await supabase.auth.signInWithPassword({
@@ -102,6 +117,13 @@ export function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
             setErrorMessage('Account created. Please sign in to continue.');
             setIsSignUp(false);
           } else if (signInData.session) {
+            if (signInData.session.user?.id) {
+              await syncProfileOnSignUp(
+                signInData.session.user.id,
+                cleanDisplayName,
+                cleanCountry
+              );
+            }
             onAuthSuccess(signInData.session);
           }
         }
@@ -139,9 +161,10 @@ export function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
           <View style={styles.header}>
             <View style={styles.emblemFrame}>
               <Image
-                source={require('../../assets/tukubi-emblem.png')}
+                source={require('../../assets/icon.png')}
                 style={styles.emblemImage}
-                resizeMode="contain"
+                resizeMode="cover"
+                accessibilityLabel="TUKUBI app icon"
               />
             </View>
             <Text style={styles.wordmark}>TUKUBI</Text>
@@ -199,7 +222,7 @@ export function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
                   <Ionicons name="person-outline" size={18} color={TOKENS.textMuted} />
                   <TextInput
                     style={styles.input}
-                    placeholder="Maya Chen"
+                    placeholder="Your full name"
                     placeholderTextColor={TOKENS.textDim}
                     value={displayName}
                     onChangeText={setDisplayName}
@@ -212,7 +235,7 @@ export function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
                   <Ionicons name="at-outline" size={18} color={TOKENS.textMuted} />
                   <TextInput
                     style={styles.input}
-                    placeholder="mayachen"
+                    placeholder="username"
                     placeholderTextColor={TOKENS.textDim}
                     value={username}
                     onChangeText={setUsername}
@@ -228,6 +251,7 @@ export function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
                   </Text>
                   {country !== '' && (
                     <TouchableOpacity
+                      style={styles.clearHeritageBtn}
                       onPress={() => setCountry('')}
                       accessibilityRole="button"
                       accessibilityLabel="Clear cultural heritage selection"
@@ -239,29 +263,50 @@ export function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
                 <Text style={styles.privacyHint}>
                   Hidden by default. You control identity visibility at all times.
                 </Text>
-                <ScrollView
-                  horizontal
-                  showsHorizontalScrollIndicator={false}
-                  contentContainerStyle={styles.countryScroll}
-                >
-                  {CARIBBEAN_COUNTRIES.map((c) => {
-                    const selected = country === c;
-                    return (
-                      <TouchableOpacity
-                        key={c}
-                        style={[styles.countryChip, selected && styles.countryChipActive]}
-                        onPress={() => setCountry(selected ? '' : c)}
-                        activeOpacity={0.8}
-                        accessibilityRole="button"
-                        accessibilityState={{ selected }}
-                      >
-                        <Text style={[styles.countryText, selected && styles.countryTextActive]}>
-                          {c}
-                        </Text>
-                      </TouchableOpacity>
-                    );
-                  })}
-                </ScrollView>
+
+                {territoriesLoading ? (
+                  <View style={styles.territoriesStatusRow}>
+                    <ActivityIndicator size="small" color={TOKENS.teal} />
+                    <Text style={styles.territoriesStatusText}>Loading territories…</Text>
+                  </View>
+                ) : territoriesError ? (
+                  <View style={styles.territoriesStatusRow}>
+                    <Text style={styles.territoriesStatusText}>{territoriesError}</Text>
+                    <TouchableOpacity
+                      style={styles.retryTerritoriesBtn}
+                      onPress={retryTerritories}
+                      accessibilityRole="button"
+                      accessibilityLabel="Retry loading territories"
+                    >
+                      <Text style={styles.clearHeritageText}>Retry</Text>
+                    </TouchableOpacity>
+                  </View>
+                ) : (
+                  <ScrollView
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    contentContainerStyle={styles.countryScroll}
+                  >
+                    {territories.map((t) => {
+                      const selected = country === t.name;
+                      return (
+                        <TouchableOpacity
+                          key={t.iso}
+                          style={[styles.countryChip, selected && styles.countryChipActive]}
+                          onPress={() => setCountry(selected ? '' : t.name)}
+                          activeOpacity={0.8}
+                          accessibilityRole="button"
+                          accessibilityState={{ selected }}
+                          accessibilityLabel={`Select ${t.name}`}
+                        >
+                          <Text style={[styles.countryText, selected && styles.countryTextActive]}>
+                            {t.flag ? `${t.flag} ${t.name}` : t.name}
+                          </Text>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </ScrollView>
+                )}
               </>
             )}
 
@@ -270,7 +315,7 @@ export function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
               <Ionicons name="mail-outline" size={18} color={TOKENS.textMuted} />
               <TextInput
                 style={styles.input}
-                placeholder="you@tukubi.com"
+                placeholder="Email address"
                 placeholderTextColor={TOKENS.textDim}
                 value={email}
                 onChangeText={setEmail}
@@ -363,7 +408,8 @@ const styles = StyleSheet.create({
   emblemFrame: {
     width: 68,
     height: 68,
-    borderRadius: 20,
+    borderRadius: 16,
+    overflow: 'hidden',
     backgroundColor: TOKENS.oceanDepth,
     borderWidth: 1,
     borderColor: TOKENS.borderActive,
@@ -372,11 +418,11 @@ const styles = StyleSheet.create({
     marginBottom: 14,
   },
   emblemImage: {
-    width: 44,
-    height: 44,
+    width: '100%',
+    height: '100%',
   },
   wordmark: {
-    color: '#F8FAFC',
+    color: TOKENS.textPrimary,
     fontSize: 27,
     fontWeight: '800',
     letterSpacing: 2.2,
@@ -412,7 +458,7 @@ const styles = StyleSheet.create({
   },
   segmentBtn: {
     flex: 1,
-    minHeight: 40,
+    minHeight: 44,
     borderRadius: 9,
     alignItems: 'center',
     justifyContent: 'center',
@@ -433,7 +479,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    backgroundColor: 'rgba(244, 63, 94, 0.12)',
+    backgroundColor: TOKENS.oceanDepth,
     borderColor: TOKENS.danger,
     borderWidth: 1,
     borderRadius: 12,
@@ -466,6 +512,13 @@ const styles = StyleSheet.create({
     color: TOKENS.textSecondary,
     fontSize: 12,
     fontWeight: '600',
+    flex: 1,
+  },
+  clearHeritageBtn: {
+    minHeight: 44,
+    minWidth: 44,
+    alignItems: 'flex-end',
+    justifyContent: 'center',
   },
   clearHeritageText: {
     color: TOKENS.teal,
@@ -476,6 +529,24 @@ const styles = StyleSheet.create({
     color: TOKENS.textDim,
     fontSize: 11,
     marginBottom: 8,
+  },
+  territoriesStatusRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingVertical: 8,
+  },
+  territoriesStatusText: {
+    color: TOKENS.textMuted,
+    fontSize: 12,
+    flex: 1,
+  },
+  retryTerritoriesBtn: {
+    minHeight: 44,
+    minWidth: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 10,
   },
   inputRow: {
     flexDirection: 'row',
@@ -495,7 +566,7 @@ const styles = StyleSheet.create({
     paddingVertical: 11,
   },
   eyeToggle: {
-    minWidth: 40,
+    minWidth: 44,
     minHeight: 44,
     alignItems: 'center',
     justifyContent: 'center',
@@ -507,7 +578,9 @@ const styles = StyleSheet.create({
   countryChip: {
     backgroundColor: TOKENS.raised,
     paddingHorizontal: 12,
-    paddingVertical: 7,
+    minHeight: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
     borderRadius: 999,
     borderWidth: 1,
     borderColor: TOKENS.border,

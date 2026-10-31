@@ -1,14 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, Text, View, TouchableOpacity, Image } from 'react-native';
-import { Ionicons as ExpoIonicons } from '@expo/vector-icons';
 import { TOKENS } from '../theme/tokens';
-
-const Ionicons = ExpoIonicons as unknown as React.ComponentType<{
-  name: keyof typeof ExpoIonicons.glyphMap;
-  size?: number;
-  color?: string;
-}>;
-import { supabase } from '../lib/supabase';
+import { Ionicons } from './Icon';
+import { supabase, getCurrentUserId } from '../lib/supabase';
 
 export interface HeaderProps {
   onWalletPress?: () => void;
@@ -28,17 +22,19 @@ export function Header({
   const [unreadCount, setUnreadCount] = useState<number>(0);
 
   useEffect(() => {
+    let active = true;
+
     async function loadUnreadCount() {
       try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user) {
+        const userId = await getCurrentUserId();
+        if (userId) {
           const { count, error } = await supabase
             .from('notifications')
             .select('id', { count: 'exact', head: true })
-            .eq('recipient_id', user.id)
+            .eq('recipient_id', userId)
             .eq('is_read', false);
 
-          if (!error && typeof count === 'number') {
+          if (active && !error && typeof count === 'number') {
             setUnreadCount(count);
           }
         }
@@ -48,17 +44,22 @@ export function Header({
     }
 
     loadUnreadCount();
+    return () => {
+      active = false;
+    };
   }, []);
 
   return (
     <View style={styles.header}>
-      {/* Official Brand Lockup */}
+      {/* Official Brand Lockup — App Icon Badge + Wordmark */}
       <View style={styles.brandContainer}>
-        <Image
-          source={require('../../assets/tukubi-emblem.png')}
-          style={styles.logoEmblem}
-          resizeMode="contain"
-        />
+        <View style={styles.appIconBadge}>
+          <Image
+            source={require('../../assets/icon.png')}
+            style={styles.logoEmblem}
+            resizeMode="cover"
+          />
+        </View>
         <View>
           <Text style={styles.headerTitle}>TUKUBI</Text>
           <Text style={styles.headerTagline}>The Caribbean Connected.</Text>
@@ -148,14 +149,23 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 9,
   },
+  appIconBadge: {
+    width: 32,
+    height: 32,
+    borderRadius: 9,
+    overflow: 'hidden',
+    backgroundColor: TOKENS.oceanDepth,
+    borderWidth: 1,
+    borderColor: TOKENS.borderActive,
+  },
   logoEmblem: {
-    width: 30,
-    height: 30,
+    width: '100%',
+    height: '100%',
   },
   headerTitle: {
     fontSize: 16.5,
     fontWeight: '800',
-    color: '#F8FAFC',
+    color: TOKENS.textPrimary,
     letterSpacing: 0.4,
     lineHeight: 19,
   },

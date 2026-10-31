@@ -10,11 +10,10 @@ import {
   RefreshControl,
   Image,
 } from 'react-native';
-import { Ionicons as ExpoIonicons } from '@expo/vector-icons';
 import { TOKENS } from '../theme/tokens';
-import { supabase } from '../lib/supabase';
-
-const Ionicons = ExpoIonicons as unknown as React.ComponentType<any>;
+import { Ionicons, type IoniconName } from '../components/Icon';
+import { timeAgo, initialsOf } from '../lib/format';
+import { supabase, getCurrentUserId } from '../lib/supabase';
 
 interface NotificationItem {
   id: string;
@@ -44,8 +43,8 @@ export function NotificationsScreen({ navigation }: any) {
 
   const fetchNotifications = useCallback(async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
+      const userId = await getCurrentUserId();
+      if (!userId) {
         setLoading(false);
         setRefreshing(false);
         return;
@@ -69,7 +68,7 @@ export function NotificationsScreen({ navigation }: any) {
             avatar_url
           )
         `)
-        .eq('recipient_id', user.id)
+        .eq('recipient_id', userId)
         .order('created_at', { ascending: false })
         .limit(50);
 
@@ -95,14 +94,14 @@ export function NotificationsScreen({ navigation }: any) {
 
   const markAllRead = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      const userId = await getCurrentUserId();
+      if (!userId) return;
 
       const now = new Date().toISOString();
       await supabase
         .from('notifications')
         .update({ read_at: now, is_read: true } as any)
-        .eq('recipient_id', user.id)
+        .eq('recipient_id', userId)
         .is('read_at', null);
 
       setNotifications((curr) => curr.map((n) => ({ ...n, read_at: now, is_read: true })));
@@ -149,57 +148,57 @@ export function NotificationsScreen({ navigation }: any) {
 
   const getNotificationDetails = (item: NotificationItem) => {
     const actor = item.profiles;
-    const actorName = actor?.full_name || (actor?.username ? `@${actor.username}` : 'TUKUBI member');
+    const actorName = actor?.full_name || (actor?.username ? `@${actor.username}` : '');
     const kind = item.kind?.toLowerCase() || '';
 
-    let iconName = 'notifications-outline';
-    let iconColor = TOKENS.teal;
-    let iconBg = TOKENS.tealSoft;
-    let title = 'Activity Update';
-    let message = item.payload?.message || item.payload?.body || 'You have a new update.';
+    let iconName: IoniconName = 'notifications-outline';
+    let iconColor: string = TOKENS.teal;
+    let iconBg: string = TOKENS.tealSoft;
+    let title: string = 'Activity Update';
+    let message: string = item.payload?.message || item.payload?.body || 'You have a new update.';
 
     if (kind.includes('like')) {
       iconName = 'heart';
       iconColor = TOKENS.danger;
       iconBg = TOKENS.oceanSoft;
-      title = `${actorName} liked your post`;
-      message = 'Your content is resonating across the network.';
+      title = actorName ? `${actorName} liked your post` : 'Someone liked your post';
+      message = 'Your content received a reaction.';
     } else if (kind.includes('comment')) {
       iconName = 'chatbubble-ellipses-outline';
       iconColor = TOKENS.action;
       iconBg = TOKENS.oceanSoft;
-      title = `${actorName} commented`;
-      message = item.payload?.content || 'Shared a perspective on your discussion.';
+      title = actorName ? `${actorName} commented` : 'New comment on your post';
+      message = item.payload?.content || 'Shared a perspective on your post.';
     } else if (kind.includes('follow')) {
       iconName = 'person-add-outline';
       iconColor = TOKENS.teal;
       iconBg = TOKENS.tealSoft;
-      title = `${actorName} followed you`;
-      message = 'Started following your creator updates.';
+      title = actorName ? `${actorName} started following you` : 'New follower';
+      message = 'Started following your updates.';
     } else if (kind.includes('friend_request')) {
       iconName = 'people-outline';
       iconColor = TOKENS.teal;
       iconBg = TOKENS.tealSoft;
-      title = `${actorName} sent a friend request`;
-      message = 'Wants to connect with you on TUKUBI.';
+      title = actorName ? `${actorName} sent a friend request` : 'New friend request';
+      message = 'Wants to connect with you.';
     } else if (kind.includes('friend_accepted')) {
       iconName = 'checkmark-circle-outline';
       iconColor = TOKENS.success;
       iconBg = TOKENS.tealSoft;
-      title = `${actorName} accepted your friend request`;
-      message = 'You are now connected as friends.';
+      title = actorName ? `${actorName} accepted your friend request` : 'Friend request accepted';
+      message = 'You are now connected.';
     } else if (kind.includes('marketplace') || kind.includes('offer')) {
       iconName = 'bag-handle-outline';
       iconColor = TOKENS.accent;
       iconBg = TOKENS.amberSoft;
-      title = `Marketplace: ${item.payload?.title || 'Offer Received'}`;
+      title = item.payload?.title ? `Marketplace: ${item.payload.title}` : 'Marketplace Update';
       message = item.payload?.message || 'New offer or status update on your listing.';
     } else if (kind.includes('sound')) {
       iconName = 'musical-notes-outline';
       iconColor = TOKENS.purple;
       iconBg = TOKENS.violetSoft;
       title = 'Sound Royalty Credit';
-      message = 'Your audio track was featured in a creator reel.';
+      message = item.payload?.message || 'Your audio track was featured.';
     }
 
     return { iconName, iconColor, iconBg, title, message };
@@ -319,12 +318,7 @@ export function NotificationsScreen({ navigation }: any) {
                   {message}
                 </Text>
                 <Text style={styles.timestamp}>
-                  {new Date(item.created_at).toLocaleDateString(undefined, {
-                    month: 'short',
-                    day: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit',
-                  })}
+                  {timeAgo(item.created_at)}
                 </Text>
               </View>
 

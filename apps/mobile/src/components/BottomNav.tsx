@@ -1,13 +1,7 @@
 import React from 'react';
 import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
-import { Ionicons as ExpoIonicons } from '@expo/vector-icons';
 import { TOKENS } from '../theme/tokens';
-
-const Ionicons = ExpoIonicons as unknown as React.ComponentType<{
-  name: keyof typeof ExpoIonicons.glyphMap;
-  size?: number;
-  color?: string;
-}>;
+import { Ionicons, type IoniconName } from './Icon';
 
 export type MobileTab = 'home' | 'shorts' | 'explore' | 'communities' | 'messages' | 'payments';
 
@@ -21,8 +15,8 @@ export function BottomNav({ currentTab, onSelectTab, onCreatePress }: BottomNavP
   const tabs: Array<{
     key: MobileTab;
     label: string;
-    icon: keyof typeof ExpoIonicons.glyphMap;
-    activeIcon: keyof typeof ExpoIonicons.glyphMap;
+    icon: IoniconName;
+    activeIcon: IoniconName;
   }> = [
     { key: 'home', label: 'Home', icon: 'home-outline', activeIcon: 'home' },
     { key: 'shorts', label: 'Shorts', icon: 'film-outline', activeIcon: 'film' },

@@ -4,6 +4,8 @@ import {
   Text,
   View,
   ScrollView,
+  FlatList,
+  TextInput,
   TouchableOpacity,
   RefreshControl,
   SafeAreaView,
@@ -11,18 +13,20 @@ import {
   Image,
   Share,
   Alert,
+  Modal,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
-import { Ionicons as ExpoIonicons } from '@expo/vector-icons';
 import { TOKENS } from '../theme/tokens';
-import { supabase, type MobilePost } from '../lib/supabase';
-
-type IoniconName = keyof typeof ExpoIonicons.glyphMap;
-const Ionicons = ExpoIonicons as unknown as React.ComponentType<{
-  name: IoniconName;
-  size?: number;
-  color?: string;
-  style?: any;
-}>;
+import { Ionicons } from '../components/Icon';
+import {
+  profileLabel,
+  profileHandle,
+  timeAgo,
+  firstRelation,
+  initialsOf,
+} from '../lib/format';
+import { supabase, getCurrentUserId, type MobilePost } from '../lib/supabase';
 
 type FeedFilter = 'all' | 'following' | 'friends' | 'favorites' | 'communities' | 'caribbean';
 
@@ -35,6 +39,21 @@ const FILTERS: Array<{ id: FeedFilter; label: string }> = [
   { id: 'caribbean', label: 'Caribbean' },
 ];
 
+interface PostComment {
+  id: string;
+  content: string;
+  created_at: string;
+  profiles?: {
+    display_name?: string;
+    username?: string;
+    avatar_url?: string;
+  } | Array<{
+    display_name?: string;
+    username?: string;
+    avatar_url?: string;
+  }> | null;
+}
+
 export function FeedsScreen({ navigation }: any) {
   const [activeFilter, setActiveFilter] = useState<FeedFilter>('all');
   const [posts, setPosts] = useState<MobilePost[]>([]);
@@ -43,12 +62,17 @@ export function FeedsScreen({ navigation }: any) {
   const [likedPosts, setLikedPosts] = useState<Record<string, boolean>>({});
   const [savedPosts, setSavedPosts] = useState<Record<string, boolean>>({});
 
+  // Real Comments Bottom Sheet State
+  const [commentsVisible, setCommentsVisible] = useState(false);
+  const [activeCommentPost, setActiveCommentPost] = useState<MobilePost | null>(null);
+  const [comments, setComments] = useState<PostComment[]>([]);
+  const [loadingComments, setLoadingComments] = useState(false);
+  const [commentInput, setCommentInput] = useState('');
+  const [submittingComment, setSubmittingComment] = useState(false);
+
   const fetchFeedPosts = useCallback(async () => {
     try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      const currentUserId = user?.id;
+      const currentUserId = await getCurrentUserId();
 
       let query = supabase
         .from('posts')
@@ -135,18 +159,18 @@ export function FeedsScreen({ navigation }: any) {
 
       if (!error && data) {
         const formatted: MobilePost[] = data.map((item: any) => {
-          const profile = Array.isArray(item.profiles) ? item.profiles[0] : item.profiles;
+          const profile = firstRelation(item.profiles);
+          const authorName = profileLabel(profile) || 'Member';
+          const authorHandle = profileHandle(profile);
+
           return {
             id: item.id,
-            author: profile?.display_name || profile?.username || 'Caribbean Member',
-            authorHandle: profile?.username ? `@${profile.username}` : '@member',
+            author: authorName,
+            authorHandle: authorHandle || undefined,
             authorAvatar: profile?.avatar_url || null,
             isVerified: Boolean(profile?.is_verified),
-            location: item.location_name || 'Caribbean',
-            time: new Date(item.created_at).toLocaleDateString(undefined, {
-              month: 'short',
-              day: 'numeric',
-            }),
+            location: item.location_name || '',
+            time: timeAgo(item.created_at),
             body: item.content || '',
             likes: item.likes_count || 0,
             comments: item.comments_count || 0,
@@ -154,6 +178,37 @@ export function FeedsScreen({ navigation }: any) {
           };
         });
         setPosts(formatted);
+
+        // Fetch user reactions and saved posts
+        if (currentUserId && data.length > 0) {
+          const postIds = data.map((p: any) => p.id);
+          const [likesRes, savesRes] = await Promise.all([
+            supabase
+              .from('post_reactions')
+              .select('post_id')
+              .eq('user_id', currentUserId)
+              .in('post_id', postIds),
+            supabase
+              .from('saved_posts')
+              .select('post_id')
+              .eq('profile_id', currentUserId)
+              .in('post_id', postIds),
+          ]);
+          if (likesRes.data) {
+            const lMap: Record<string, boolean> = {};
+            likesRes.data.forEach((r: any) => {
+              lMap[r.post_id] = true;
+            });
+            setLikedPosts(lMap);
+          }
+          if (savesRes.data) {
+            const sMap: Record<string, boolean> = {};
+            savesRes.data.forEach((s: any) => {
+              sMap[s.post_id] = true;
+            });
+            setSavedPosts(sMap);
+          }
+        }
       }
     } catch (err) {
       console.warn('Could not fetch feeds', err);
@@ -185,12 +240,13 @@ export function FeedsScreen({ navigation }: any) {
     );
 
     try {
-      const { data: userData } = await supabase.auth.getUser();
-      if (userData?.user) {
+      const userId = await getCurrentUserId();
+      if (userId) {
         if (!isCurrentlyLiked) {
           await supabase.from('post_reactions').insert({
             post_id: postId,
-            profile_id: userData.user.id,
+            user_id: userId,
+            profile_id: userId,
             reaction_type: 'like',
           });
         } else {
@@ -198,16 +254,127 @@ export function FeedsScreen({ navigation }: any) {
             .from('post_reactions')
             .delete()
             .eq('post_id', postId)
-            .eq('profile_id', userData.user.id);
+            .eq('user_id', userId);
         }
       }
     } catch {
-      // Non-blocking optimistic sync
+      // Non-blocking optimistic sync rollback
+      setLikedPosts((prev) => ({ ...prev, [postId]: isCurrentlyLiked }));
+      setPosts((prev) =>
+        prev.map((p) =>
+          p.id === postId
+            ? { ...p, likes: Math.max(0, isCurrentlyLiked ? p.likes + 1 : p.likes - 1) }
+            : p
+        )
+      );
     }
   };
 
-  const handleToggleSave = (postId: string) => {
-    setSavedPosts((prev) => ({ ...prev, [postId]: !prev[postId] }));
+  const handleToggleSave = async (postId: string) => {
+    const isCurrentlySaved = Boolean(savedPosts[postId]);
+    setSavedPosts((prev) => ({ ...prev, [postId]: !isCurrentlySaved }));
+
+    try {
+      const userId = await getCurrentUserId();
+      if (userId) {
+        if (!isCurrentlySaved) {
+          await supabase.from('saved_posts').insert({
+            post_id: postId,
+            profile_id: userId,
+          });
+        } else {
+          await supabase
+            .from('saved_posts')
+            .delete()
+            .eq('post_id', postId)
+            .eq('profile_id', userId);
+        }
+      }
+    } catch {
+      setSavedPosts((prev) => ({ ...prev, [postId]: isCurrentlySaved }));
+    }
+  };
+
+  const openComments = async (post: MobilePost) => {
+    setActiveCommentPost(post);
+    setCommentsVisible(true);
+    setLoadingComments(true);
+    try {
+      const { data, error } = await supabase
+        .from('comments')
+        .select(`
+          id,
+          content,
+          created_at,
+          profiles:author_id (
+            display_name,
+            username,
+            avatar_url
+          )
+        `)
+        .eq('post_id', post.id)
+        .order('created_at', { ascending: true })
+        .limit(50);
+      if (data && !error) {
+        setComments(data as unknown as PostComment[]);
+      } else {
+        setComments([]);
+      }
+    } catch {
+      setComments([]);
+    } finally {
+      setLoadingComments(false);
+    }
+  };
+
+  const handleAddComment = async () => {
+    if (!commentInput.trim() || !activeCommentPost || submittingComment) return;
+    const content = commentInput.trim();
+    const userId = await getCurrentUserId();
+    if (!userId) {
+      Alert.alert('Sign In Required', 'Please sign in to join the discussion.');
+      return;
+    }
+
+    setSubmittingComment(true);
+    try {
+      const { data, error } = await supabase
+        .from('comments')
+        .insert({
+          post_id: activeCommentPost.id,
+          author_id: userId,
+          content,
+        })
+        .select(`
+          id,
+          content,
+          created_at,
+          profiles:author_id (
+            display_name,
+            username,
+            avatar_url
+          )
+        `)
+        .single();
+
+      if (error) throw error;
+
+      if (data) {
+        setComments((prev) => [...prev, data as unknown as PostComment]);
+        setCommentInput('');
+        setPosts((prev) =>
+          prev.map((p) =>
+            p.id === activeCommentPost.id
+              ? { ...p, comments: (p.comments || 0) + 1 }
+              : p
+          )
+        );
+      }
+    } catch (err: any) {
+      Alert.alert('Comment Failed', err.message || 'Could not post comment.');
+    } finally {
+      setSubmittingComment(false);
+    }
   };
 
   const handleSharePost = async (post: MobilePost) => {
@@ -336,7 +503,7 @@ export function FeedsScreen({ navigation }: any) {
                   ) : (
                     <View style={styles.avatar}>
                       <Text style={styles.avatarText}>
-                        {post.author.slice(0, 1).toUpperCase()}
+                        {initialsOf(post.author)}
                       </Text>
                     </View>
                   )}
@@ -351,7 +518,7 @@ export function FeedsScreen({ navigation }: any) {
                       )}
                     </View>
                     <Text style={styles.authorSubline} numberOfLines={1}>
-                      {post.authorHandle || '@member'} · {post.time} · {post.location}
+                      {post.authorHandle ? `${post.authorHandle} · ` : ''}{post.time}{post.location ? ` · ${post.location}` : ''}
                     </Text>
                   </View>
                 </View>
@@ -394,9 +561,7 @@ export function FeedsScreen({ navigation }: any) {
 
                   <TouchableOpacity
                     style={styles.actionButton}
-                    onPress={() =>
-                      Alert.alert('Comments', `Discussion on post by ${post.author}`)
-                    }
+                    onPress={() => openComments(post)}
                     activeOpacity={0.75}
                     accessibilityRole="button"
                     accessibilityLabel="Comment on post"
@@ -435,6 +600,121 @@ export function FeedsScreen({ navigation }: any) {
           })
         )}
       </ScrollView>
+
+      {/* Real Comments Bottom Sheet Modal */}
+      <Modal
+        visible={commentsVisible}
+        animationType="slide"
+        transparent
+        onRequestClose={() => setCommentsVisible(false)}
+      >
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          style={styles.modalBackdrop}
+        >
+          <View style={styles.commentsSheet}>
+            <View style={styles.sheetHandleWrap}>
+              <View style={styles.sheetHandle} />
+            </View>
+
+            <View style={styles.commentsHeader}>
+              <Text style={styles.commentsTitle}>Comments</Text>
+              <TouchableOpacity
+                style={styles.closeCommentsBtn}
+                onPress={() => setCommentsVisible(false)}
+                accessibilityRole="button"
+                accessibilityLabel="Close comments"
+                hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+              >
+                <Ionicons name="close" size={20} color={TOKENS.textPrimary} />
+              </TouchableOpacity>
+            </View>
+
+            {loadingComments ? (
+              <View style={styles.commentsLoading}>
+                <ActivityIndicator size="small" color={TOKENS.teal} />
+              </View>
+            ) : (
+              <FlatList
+                data={comments}
+                keyExtractor={(item) => item.id}
+                style={styles.commentsList}
+                showsVerticalScrollIndicator={false}
+                ListEmptyComponent={
+                  <View style={styles.emptyCommentsBox}>
+                    <Ionicons
+                      name="chatbubble-ellipses-outline"
+                      size={28}
+                      color={TOKENS.textDim}
+                      style={{ marginBottom: 8 }}
+                    />
+                    <Text style={styles.emptyCommentsText}>
+                      No comments yet. Start the conversation.
+                    </Text>
+                  </View>
+                }
+                renderItem={({ item }) => {
+                  const author = firstRelation(item.profiles);
+                  const authorName = profileLabel(author) || 'Member';
+                  return (
+                    <View style={styles.commentItem}>
+                      {author?.avatar_url ? (
+                        <Image
+                          source={{ uri: author.avatar_url }}
+                          style={styles.commentAvatar}
+                        />
+                      ) : (
+                        <View style={[styles.commentAvatar, styles.commentAvatarFallback]}>
+                          <Text style={styles.commentAvatarLetter}>
+                            {initialsOf(authorName)}
+                          </Text>
+                        </View>
+                      )}
+                      <View style={styles.commentContentCol}>
+                        <View style={styles.commentUserRow}>
+                          <Text style={styles.commentUserName}>{authorName}</Text>
+                          <Text style={styles.commentTime}>{timeAgo(item.created_at)}</Text>
+                        </View>
+                        <Text style={styles.commentBody}>{item.content}</Text>
+                      </View>
+                    </View>
+                  );
+                }}
+              />
+            )}
+
+            {/* Comment Composer */}
+            <View style={styles.commentInputRow}>
+              <TextInput
+                style={styles.commentInput}
+                placeholder="Write a comment..."
+                placeholderTextColor={TOKENS.textDim}
+                value={commentInput}
+                onChangeText={setCommentInput}
+                maxLength={500}
+                returnKeyType="send"
+                onSubmitEditing={handleAddComment}
+              />
+              <TouchableOpacity
+                style={[
+                  styles.sendCommentBtn,
+                  (!commentInput.trim() || submittingComment) && styles.sendCommentDisabled,
+                ]}
+                onPress={handleAddComment}
+                disabled={!commentInput.trim() || submittingComment}
+                accessibilityRole="button"
+                accessibilityLabel="Send comment"
+              >
+                {submittingComment ? (
+                  <ActivityIndicator size="small" color={TOKENS.actionText} />
+                ) : (
+                  <Ionicons name="send" size={16} color={TOKENS.actionText} />
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -672,5 +952,151 @@ const styles = StyleSheet.create({
     minHeight: 36,
     alignItems: 'flex-end',
     justifyContent: 'center',
+  },
+  modalBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.72)',
+    justifyContent: 'flex-end',
+  },
+  commentsSheet: {
+    backgroundColor: TOKENS.surface,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    maxHeight: '75%',
+    minHeight: '40%',
+    paddingBottom: 24,
+    borderTopWidth: 1,
+    borderColor: TOKENS.border,
+  },
+  sheetHandleWrap: {
+    alignItems: 'center',
+    paddingVertical: 10,
+  },
+  sheetHandle: {
+    width: 38,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: TOKENS.border,
+  },
+  commentsHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingBottom: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: TOKENS.border,
+  },
+  commentsTitle: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: TOKENS.textPrimary,
+  },
+  closeCommentsBtn: {
+    padding: 6,
+    minWidth: 44,
+    minHeight: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  commentsLoading: {
+    paddingVertical: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  commentsList: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  emptyCommentsBox: {
+    paddingVertical: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  emptyCommentsText: {
+    color: TOKENS.textDim,
+    fontSize: 13,
+  },
+  commentItem: {
+    flexDirection: 'row',
+    marginBottom: 14,
+    alignItems: 'flex-start',
+  },
+  commentAvatar: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    marginRight: 10,
+  },
+  commentAvatarFallback: {
+    backgroundColor: TOKENS.raised,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: TOKENS.border,
+  },
+  commentAvatarLetter: {
+    color: TOKENS.teal,
+    fontWeight: '700',
+    fontSize: 12,
+  },
+  commentContentCol: {
+    flex: 1,
+    backgroundColor: TOKENS.raised,
+    borderRadius: 12,
+    padding: 10,
+    borderWidth: 1,
+    borderColor: TOKENS.border,
+  },
+  commentUserRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 4,
+  },
+  commentUserName: {
+    fontSize: 12.5,
+    fontWeight: '700',
+    color: TOKENS.textPrimary,
+  },
+  commentTime: {
+    fontSize: 10.5,
+    color: TOKENS.textDim,
+  },
+  commentBody: {
+    fontSize: 13,
+    color: TOKENS.textSecondary,
+    lineHeight: 18,
+  },
+  commentInputRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 14,
+    paddingTop: 10,
+    borderTopWidth: 1,
+    borderTopColor: TOKENS.border,
+    gap: 8,
+  },
+  commentInput: {
+    flex: 1,
+    minHeight: 42,
+    backgroundColor: TOKENS.raised,
+    borderRadius: 21,
+    paddingHorizontal: 14,
+    color: TOKENS.textPrimary,
+    fontSize: 13.5,
+    borderWidth: 1,
+    borderColor: TOKENS.border,
+  },
+  sendCommentBtn: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: TOKENS.teal,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  sendCommentDisabled: {
+    opacity: 0.4,
   },
 });

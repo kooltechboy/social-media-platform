@@ -12,18 +12,35 @@ import {
   Share,
   Alert,
   Linking,
+  Modal,
+  TextInput,
+  KeyboardAvoidingView,
+  Platform,
+  FlatList,
 } from 'react-native';
-import { Ionicons as ExpoIonicons } from '@expo/vector-icons';
 import { TOKENS } from '../theme/tokens';
-import { supabase, type MobilePost } from '../lib/supabase';
+import { Ionicons, type IoniconName } from '../components/Icon';
+import {
+  formatCompactNumber,
+  formatMinorCurrency,
+  timeAgo,
+  profileLabel,
+  profileHandle,
+  firstRelation,
+  initialsOf,
+} from '../lib/format';
+import { supabase, getCurrentUserId, type MobilePost } from '../lib/supabase';
 
-type IoniconName = keyof typeof ExpoIonicons.glyphMap;
-const Ionicons = ExpoIonicons as unknown as React.ComponentType<{
-  name: IoniconName;
-  size?: number;
-  color?: string;
-  style?: any;
-}>;
+interface PostComment {
+  id: string;
+  content: string;
+  created_at: string;
+  profiles?: {
+    display_name?: string | null;
+    username?: string | null;
+    avatar_url?: string | null;
+  } | null;
+}
 
 interface StoryItem {
   id: string;
@@ -47,7 +64,8 @@ interface MarketPreview {
   id: string;
   title: string;
   price: string;
-  country: string;
+  country?: string;
+  imageUrl?: string | null;
 }
 
 type HomeFeedMode = 'for_you' | 'following' | 'communities' | 'caribbean' | 'live';
@@ -65,7 +83,7 @@ const DISCOVERY_CHANNELS: StoryItem[] = [
     id: 'channel_pulse',
     name: 'Discover',
     handle: 'explore',
-    hasUnseen: true,
+    hasUnseen: false,
     kind: 'channel',
     icon: 'compass-outline',
     targetRoute: 'Explore',
@@ -74,7 +92,7 @@ const DISCOVERY_CHANNELS: StoryItem[] = [
     id: 'channel_creators',
     name: 'Creators',
     handle: 'creators',
-    hasUnseen: true,
+    hasUnseen: false,
     kind: 'channel',
     icon: 'people-outline',
     targetRoute: 'Explore',
@@ -83,19 +101,19 @@ const DISCOVERY_CHANNELS: StoryItem[] = [
     id: 'channel_sounds',
     name: 'Sounds',
     handle: 'sounds',
-    hasUnseen: true,
+    hasUnseen: false,
     kind: 'channel',
     icon: 'musical-notes-outline',
-    targetRoute: 'Explore',
+    targetRoute: 'Sounds',
   },
   {
     id: 'channel_trade',
     name: 'Market',
     handle: 'market',
-    hasUnseen: true,
+    hasUnseen: false,
     kind: 'channel',
     icon: 'bag-handle-outline',
-    targetRoute: 'Explore',
+    targetRoute: 'Marketplace',
   },
 ];
 
@@ -113,6 +131,12 @@ export function HomeScreen({ navigation }: any) {
   ]);
   const [likedPosts, setLikedPosts] = useState<Record<string, boolean>>({});
   const [savedPosts, setSavedPosts] = useState<Record<string, boolean>>({});
+  const [commentsVisible, setCommentsVisible] = useState(false);
+  const [activeCommentPost, setActiveCommentPost] = useState<MobilePost | null>(null);
+  const [comments, setComments] = useState<PostComment[]>([]);
+  const [loadingComments, setLoadingComments] = useState(false);
+  const [newCommentText, setNewCommentText] = useState('');
+  const [postingComment, setPostingComment] = useState(false);
 
   const fetchDiscoveryData = useCallback(async (mode: HomeFeedMode = 'for_you') => {
     try {
@@ -149,16 +173,20 @@ export function HomeScreen({ navigation }: any) {
       } else if (mode === 'live') {
         postsQuery = postsQuery.contains('cultural_tags', ['live']);
       } else if (mode === 'following') {
-        const { data: authData } = await supabase.auth.getUser();
-        if (authData?.user) {
+        const currentUserId = await getCurrentUserId();
+        if (currentUserId) {
           const { data: follows } = await supabase
             .from('follows')
             .select('following_id')
-            .eq('follower_id', authData.user.id);
+            .eq('follower_id', currentUserId);
           const ids = (follows || []).map((f: any) => f.following_id);
           if (ids.length > 0) {
             postsQuery = postsQuery.in('author_id', ids);
+          } else {
+            postsQuery = postsQuery.in('author_id', ['00000000-0000-0000-0000-000000000000']);
           }
+        } else {
+          postsQuery = postsQuery.in('author_id', ['00000000-0000-0000-0000-000000000000']);
         }
       }
 
@@ -173,7 +201,15 @@ export function HomeScreen({ navigation }: any) {
           .limit(5),
         supabase
           .from('products')
-          .select('id, title, price_minor, currency, businesses(name, country_iso)')
+          .select(`
+            id,
+            title,
+            price_minor,
+            currency,
+            location_country_iso,
+            businesses(name),
+            marketplace_product_media(media_url)
+          `)
           .eq('is_active', true)
           .order('created_at', { ascending: false })
           .limit(5),
@@ -186,18 +222,17 @@ export function HomeScreen({ navigation }: any) {
 
       if (postsRes.data) {
         const formatted: MobilePost[] = postsRes.data.map((item: any) => {
-          const p = Array.isArray(item.profiles) ? item.profiles[0] : item.profiles;
+          const p = firstRelation(item.profiles);
+          const authorDisplayName = profileLabel(p) || 'Member';
+          const authorHandle = profileHandle(p);
           return {
             id: item.id,
-            author: p?.display_name || p?.username || 'Caribbean Member',
-            authorHandle: p?.username ? `@${p.username}` : '@member',
+            author: authorDisplayName,
+            authorHandle: authorHandle || undefined,
             authorAvatar: p?.avatar_url || null,
             isVerified: Boolean(p?.is_verified),
-            location: item.location_name || 'Caribbean',
-            time: new Date(item.created_at).toLocaleDateString(undefined, {
-              month: 'short',
-              day: 'numeric',
-            }),
+            location: item.location_name || '',
+            time: timeAgo(item.created_at),
             body: item.content || '',
             likes: item.likes_count || 0,
             comments: item.comments_count || 0,
@@ -207,17 +242,49 @@ export function HomeScreen({ navigation }: any) {
           };
         });
         setPosts(formatted);
+
+        // Fetch real reaction and bookmark state for the signed-in user
+        const currentUserId = await getCurrentUserId();
+        const postIds = postsRes.data.map((p: any) => p.id);
+        if (currentUserId && postIds.length > 0) {
+          const [likesRes, savesRes] = await Promise.all([
+            supabase
+              .from('post_reactions')
+              .select('post_id')
+              .eq('user_id', currentUserId)
+              .in('post_id', postIds),
+            supabase
+              .from('saved_posts')
+              .select('post_id')
+              .eq('profile_id', currentUserId)
+              .in('post_id', postIds),
+          ]);
+          if (likesRes.data) {
+            const likesMap: Record<string, boolean> = {};
+            likesRes.data.forEach((r: any) => {
+              likesMap[r.post_id] = true;
+            });
+            setLikedPosts(likesMap);
+          }
+          if (savesRes.data) {
+            const savesMap: Record<string, boolean> = {};
+            savesRes.data.forEach((s: any) => {
+              savesMap[s.post_id] = true;
+            });
+            setSavedPosts(savesMap);
+          }
+        }
       }
 
       if (reelsRes.data) {
         setReels(
           reelsRes.data.map((r: any) => {
-            const p = Array.isArray(r.profiles) ? r.profiles[0] : r.profiles;
+            const p = firstRelation(r.profiles);
             return {
               id: r.id,
               title: r.title || 'Short',
-              creator: p?.display_name || p?.username || 'Creator',
-              views: `${r.view_count || 0} views`,
+              creator: profileLabel(p) || 'Creator',
+              views: `${formatCompactNumber(r.view_count)} views`,
             };
           })
         );
@@ -226,12 +293,15 @@ export function HomeScreen({ navigation }: any) {
       if (productsRes.data) {
         setProducts(
           productsRes.data.map((prod: any) => {
-            const b = Array.isArray(prod.businesses) ? prod.businesses[0] : prod.businesses;
+            const b = firstRelation(prod.businesses);
+            const mediaList = prod.marketplace_product_media || [];
+            const imageUrl = mediaList.length > 0 ? mediaList[0].media_url : null;
             return {
               id: prod.id,
               title: prod.title,
-              price: `${prod.currency || 'USD'} $${((prod.price_minor || 0) / 100).toFixed(2)}`,
-              country: b?.country_iso || 'Caribbean',
+              price: formatMinorCurrency(prod.price_minor, prod.currency),
+              country: prod.location_country_iso || b?.name || undefined,
+              imageUrl,
             };
           })
         );
@@ -242,10 +312,10 @@ export function HomeScreen({ navigation }: any) {
       ];
       if (storiesRes.data && storiesRes.data.length > 0) {
         storiesRes.data.forEach((s: any) => {
-          const p = Array.isArray(s.profiles) ? s.profiles[0] : s.profiles;
+          const p = firstRelation(s.profiles);
           nextStories.push({
             id: s.id,
-            name: p?.display_name || p?.username || 'Creator',
+            name: profileLabel(p) || 'Creator',
             handle: p?.username || 'creator',
             avatarUrl: p?.avatar_url || null,
             hasUnseen: true,
@@ -286,12 +356,13 @@ export function HomeScreen({ navigation }: any) {
     );
 
     try {
-      const { data: userData } = await supabase.auth.getUser();
-      if (userData?.user) {
+      const userId = await getCurrentUserId();
+      if (userId) {
         if (!isCurrentlyLiked) {
           await supabase.from('post_reactions').insert({
             post_id: postId,
-            profile_id: userData.user.id,
+            user_id: userId,
+            profile_id: userId,
             reaction_type: 'like',
           });
         } else {
@@ -299,16 +370,124 @@ export function HomeScreen({ navigation }: any) {
             .from('post_reactions')
             .delete()
             .eq('post_id', postId)
-            .eq('profile_id', userData.user.id);
+            .eq('user_id', userId);
         }
       }
     } catch {
-      // Non-blocking optimistic sync
+      // Rollback on network failure
+      setLikedPosts((prev) => ({ ...prev, [postId]: isCurrentlyLiked }));
+      setPosts((prev) =>
+        prev.map((p) =>
+          p.id === postId
+            ? { ...p, likes: Math.max(0, isCurrentlyLiked ? p.likes + 1 : p.likes - 1) }
+            : p
+        )
+      );
     }
   };
 
-  const handleToggleSave = (postId: string) => {
-    setSavedPosts((prev) => ({ ...prev, [postId]: !prev[postId] }));
+  const handleToggleSave = async (postId: string) => {
+    const isCurrentlySaved = Boolean(savedPosts[postId]);
+    setSavedPosts((prev) => ({ ...prev, [postId]: !isCurrentlySaved }));
+
+    try {
+      const userId = await getCurrentUserId();
+      if (userId) {
+        if (!isCurrentlySaved) {
+          await supabase.from('saved_posts').insert({
+            post_id: postId,
+            profile_id: userId,
+          });
+        } else {
+          await supabase
+            .from('saved_posts')
+            .delete()
+            .eq('post_id', postId)
+            .eq('profile_id', userId);
+        }
+      }
+    } catch {
+      setSavedPosts((prev) => ({ ...prev, [postId]: isCurrentlySaved }));
+    }
+  };
+
+  const openComments = async (post: MobilePost) => {
+    setActiveCommentPost(post);
+    setCommentsVisible(true);
+    setLoadingComments(true);
+    try {
+      const { data, error } = await supabase
+        .from('comments')
+        .select(`
+          id,
+          content,
+          created_at,
+          profiles:author_id (
+            display_name,
+            username,
+            avatar_url
+          )
+        `)
+        .eq('post_id', post.id)
+        .order('created_at', { ascending: true })
+        .limit(50);
+      if (data && !error) {
+        setComments(data as unknown as PostComment[]);
+      } else {
+        setComments([]);
+      }
+    } catch {
+      setComments([]);
+    } finally {
+      setLoadingComments(false);
+    }
+  };
+
+  const handlePostComment = async () => {
+    const text = newCommentText.trim();
+    if (!text || !activeCommentPost || postingComment) return;
+
+    const currentUserId = await getCurrentUserId();
+    if (!currentUserId) {
+      Alert.alert('Sign In Required', 'Please sign in to join the discussion.');
+      return;
+    }
+
+    setPostingComment(true);
+    try {
+      const { data, error } = await supabase
+        .from('comments')
+        .insert({
+          post_id: activeCommentPost.id,
+          author_id: currentUserId,
+          content: text,
+        })
+        .select(`
+          id,
+          content,
+          created_at,
+          profiles:author_id (
+            display_name,
+            username,
+            avatar_url
+          )
+        `)
+        .single();
+
+      if (!error && data) {
+        setComments((prev) => [...prev, data as unknown as PostComment]);
+        setNewCommentText('');
+        setPosts((prev) =>
+          prev.map((p) =>
+            p.id === activeCommentPost.id ? { ...p, comments: p.comments + 1 } : p
+          )
+        );
+      }
+    } catch {
+      // Non-blocking
+    } finally {
+      setPostingComment(false);
+    }
   };
 
   const handleSharePost = async (post: MobilePost) => {
@@ -697,7 +876,7 @@ export function HomeScreen({ navigation }: any) {
                       )}
                     </View>
                     <Text style={styles.authorSubline} numberOfLines={1}>
-                      {post.authorHandle || '@member'} · {post.time} · {post.location}
+                      {[post.authorHandle, post.time, post.location].filter(Boolean).join(' · ')}
                     </Text>
                   </View>
                 </View>
@@ -778,9 +957,7 @@ export function HomeScreen({ navigation }: any) {
 
                   <TouchableOpacity
                     style={styles.actionBtn}
-                    onPress={() =>
-                      Alert.alert('Comments', `Discussion on post by ${post.author}`)
-                    }
+                    onPress={() => openComments(post)}
                     activeOpacity={0.75}
                     accessibilityRole="button"
                     accessibilityLabel="Comment on post"
@@ -819,6 +996,118 @@ export function HomeScreen({ navigation }: any) {
           })
         )}
       </ScrollView>
+
+      {/* Real Comments Bottom Sheet Modal */}
+      <Modal
+        visible={commentsVisible}
+        animationType="slide"
+        transparent
+        onRequestClose={() => setCommentsVisible(false)}
+      >
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          style={styles.modalBackdrop}
+        >
+          <View style={styles.commentsSheet}>
+            <View style={styles.sheetHandleWrap}>
+              <View style={styles.sheetHandle} />
+            </View>
+
+            <View style={styles.commentsHeader}>
+              <Text style={styles.commentsTitle}>Comments</Text>
+              <TouchableOpacity
+                style={styles.closeCommentsBtn}
+                onPress={() => setCommentsVisible(false)}
+                accessibilityRole="button"
+                accessibilityLabel="Close comments"
+                hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+              >
+                <Ionicons name="close" size={20} color={TOKENS.textPrimary} />
+              </TouchableOpacity>
+            </View>
+
+            {loadingComments ? (
+              <View style={styles.commentsLoading}>
+                <ActivityIndicator size="small" color={TOKENS.teal} />
+              </View>
+            ) : (
+              <FlatList
+                data={comments}
+                keyExtractor={(item) => item.id}
+                style={styles.commentsList}
+                showsVerticalScrollIndicator={false}
+                ListEmptyComponent={
+                  <View style={styles.emptyCommentsBox}>
+                    <Ionicons
+                      name="chatbubble-ellipses-outline"
+                      size={28}
+                      color={TOKENS.textDim}
+                      style={{ marginBottom: 8 }}
+                    />
+                    <Text style={styles.emptyCommentsText}>
+                      No comments yet. Start the conversation.
+                    </Text>
+                  </View>
+                }
+                renderItem={({ item }) => {
+                  const author = item.profiles;
+                  const label = profileLabel(author) || profileHandle(author) || 'Member';
+                  const initials = initialsOf(label);
+
+                  return (
+                    <View style={styles.commentRow}>
+                      {author?.avatar_url ? (
+                        <Image source={{ uri: author.avatar_url }} style={styles.commentAvatar} />
+                      ) : (
+                        <View style={[styles.commentAvatar, styles.commentAvatarFallback]}>
+                          <Text style={styles.commentAvatarInitial}>{initials || 'M'}</Text>
+                        </View>
+                      )}
+                      <View style={styles.commentBody}>
+                        <View style={styles.commentMetaRow}>
+                          <Text style={styles.commentAuthor}>{label}</Text>
+                          <Text style={styles.commentTime}>{timeAgo(item.created_at)}</Text>
+                        </View>
+                        <Text style={styles.commentContent}>{item.content}</Text>
+                      </View>
+                    </View>
+                  );
+                }}
+              />
+            )}
+
+            {/* Comment Composer */}
+            <View style={styles.commentInputRow}>
+              <TextInput
+                style={styles.commentInput}
+                placeholder="Join the discussion..."
+                placeholderTextColor={TOKENS.textDim}
+                value={newCommentText}
+                onChangeText={setNewCommentText}
+                maxLength={500}
+                returnKeyType="send"
+                onSubmitEditing={handlePostComment}
+              />
+              <TouchableOpacity
+                style={[
+                  styles.sendButton,
+                  (!newCommentText.trim() || postingComment) && { opacity: 0.5 },
+                ]}
+                onPress={handlePostComment}
+                disabled={!newCommentText.trim() || postingComment}
+                accessibilityRole="button"
+                accessibilityLabel="Send comment"
+              >
+                {postingComment ? (
+                  <ActivityIndicator size="small" color={TOKENS.actionText} />
+                ) : (
+                  <Ionicons name="send" size={16} color={TOKENS.actionText} />
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -1345,5 +1634,145 @@ const styles = StyleSheet.create({
     color: TOKENS.actionText,
     fontSize: 13.5,
     fontWeight: '800',
+  },
+  modalBackdrop: {
+    flex: 1,
+    backgroundColor: TOKENS.scrim,
+    justifyContent: 'flex-end',
+  },
+  commentsSheet: {
+    backgroundColor: TOKENS.surface,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    borderTopWidth: 1,
+    borderColor: TOKENS.borderStrong,
+    maxHeight: '75%',
+    paddingBottom: Platform.OS === 'ios' ? 24 : 12,
+  },
+  sheetHandleWrap: {
+    alignItems: 'center',
+    paddingVertical: 10,
+  },
+  sheetHandle: {
+    width: 36,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: TOKENS.borderStrong,
+  },
+  commentsHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingBottom: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: TOKENS.border,
+  },
+  commentsTitle: {
+    color: TOKENS.textPrimary,
+    fontSize: 16,
+    fontWeight: '800',
+  },
+  closeCommentsBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: TOKENS.raised,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  commentsLoading: {
+    paddingVertical: 36,
+    alignItems: 'center',
+  },
+  commentsList: {
+    maxHeight: 360,
+    paddingHorizontal: 16,
+  },
+  emptyCommentsBox: {
+    paddingVertical: 36,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  emptyCommentsText: {
+    color: TOKENS.textMuted,
+    fontSize: 13.5,
+    textAlign: 'center',
+  },
+  commentRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 12,
+    paddingVertical: 12,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: TOKENS.border,
+  },
+  commentAvatar: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+  },
+  commentAvatarFallback: {
+    backgroundColor: TOKENS.oceanDepth,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: TOKENS.borderActive,
+  },
+  commentAvatarInitial: {
+    color: TOKENS.teal,
+    fontWeight: '700',
+    fontSize: 13,
+  },
+  commentBody: {
+    flex: 1,
+  },
+  commentMetaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 4,
+  },
+  commentAuthor: {
+    color: TOKENS.textPrimary,
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  commentTime: {
+    color: TOKENS.textDim,
+    fontSize: 11,
+  },
+  commentContent: {
+    color: TOKENS.textSecondary,
+    fontSize: 13,
+    lineHeight: 18,
+  },
+  commentInputRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 14,
+    paddingTop: 10,
+    gap: 8,
+    borderTopWidth: 1,
+    borderTopColor: TOKENS.border,
+  },
+  commentInput: {
+    flex: 1,
+    backgroundColor: TOKENS.raised,
+    color: TOKENS.textPrimary,
+    fontSize: 14,
+    borderRadius: 20,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderWidth: 1,
+    borderColor: TOKENS.border,
+  },
+  sendButton: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: TOKENS.teal,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });

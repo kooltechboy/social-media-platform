@@ -11,11 +11,11 @@ import {
   TextInput,
   Alert,
 } from 'react-native';
-import { Ionicons as ExpoIonicons } from '@expo/vector-icons';
 import { TOKENS } from '../theme/tokens';
+import { Ionicons, type IoniconName } from '../components/Icon';
+import { formatCompactNumber } from '../lib/format';
+import { useTerritories } from '../lib/territories';
 import { supabase } from '../lib/supabase';
-
-const Ionicons = ExpoIonicons as unknown as React.ComponentType<any>;
 
 interface CommunityItem {
   id: string;
@@ -29,13 +29,14 @@ interface CommunityItem {
   created_by?: string;
 }
 
-function getHubIconName(policy: string): string {
+function getHubIconName(policy: string): IoniconName {
   if (policy === 'private') return 'lock-closed-outline';
   if (policy === 'invite_only') return 'people-outline';
   return 'earth-outline';
 }
 
 export function CommunitiesScreen({ navigation: _navigation }: any) {
+  const { territories } = useTerritories();
   const [communities, setCommunities] = useState<CommunityItem[]>([]);
   const [joinedIds, setJoinedIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
@@ -47,7 +48,7 @@ export function CommunitiesScreen({ navigation: _navigation }: any) {
   const [modalVisible, setModalVisible] = useState(false);
   const [hubName, setHubName] = useState('');
   const [hubDesc, setHubDesc] = useState('');
-  const [hubCountry, setHubCountry] = useState('JAM');
+  const [hubCountry, setHubCountry] = useState('');
   const [hubPolicy, setHubPolicy] = useState<'public' | 'private' | 'invite_only'>('public');
   const [creatingHub, setCreatingHub] = useState(false);
 
@@ -166,7 +167,7 @@ export function CommunitiesScreen({ navigation: _navigation }: any) {
           slug,
           description: hubDesc.trim(),
           join_policy: hubPolicy,
-          country_iso: hubCountry,
+          country_iso: hubCountry || null,
           member_count: 1,
           created_by: userId,
         })
@@ -363,20 +364,29 @@ export function CommunitiesScreen({ navigation: _navigation }: any) {
               multiline
             />
 
-            <Text style={styles.inputLabel}>Territory / Regional Focus</Text>
-            <View style={styles.countryPicker}>
-              {(['JAM', 'TTO', 'HTI', 'DOM', 'BRB', 'BHS', 'GUY'] as const).map((iso) => (
+            <Text style={styles.inputLabel}>Territory / Regional Focus (Optional)</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.countryPicker}>
+              <TouchableOpacity
+                key="ALL"
+                style={[styles.countryBtn, !hubCountry && styles.countryBtnActive]}
+                onPress={() => setHubCountry('')}
+              >
+                <Text style={[styles.countryBtnText, !hubCountry && styles.countryBtnTextActive]}>
+                  Regional / All
+                </Text>
+              </TouchableOpacity>
+              {territories.map((t) => (
                 <TouchableOpacity
-                  key={iso}
-                  style={[styles.countryBtn, hubCountry === iso && styles.countryBtnActive]}
-                  onPress={() => setHubCountry(iso)}
+                  key={t.iso}
+                  style={[styles.countryBtn, hubCountry === t.iso && styles.countryBtnActive]}
+                  onPress={() => setHubCountry(t.iso)}
                 >
-                  <Text style={[styles.countryBtnText, hubCountry === iso && styles.countryBtnTextActive]}>
-                    {iso}
+                  <Text style={[styles.countryBtnText, hubCountry === t.iso && styles.countryBtnTextActive]}>
+                    {t.flag ? `${t.flag} ${t.iso}` : t.iso}
                   </Text>
                 </TouchableOpacity>
               ))}
-            </View>
+            </ScrollView>
 
             <Text style={styles.inputLabel}>Membership Policy</Text>
             <View style={styles.countryPicker}>

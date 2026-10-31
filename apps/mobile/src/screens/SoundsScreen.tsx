@@ -11,11 +11,11 @@ import {
   RefreshControl,
 } from 'react-native';
 import { Audio } from 'expo-av';
-import { Ionicons as ExpoIonicons } from '@expo/vector-icons';
 import { TOKENS } from '../theme/tokens';
+import { Ionicons } from '../components/Icon';
+import { formatDuration, formatCompactNumber } from '../lib/format';
+import { useTerritories } from '../lib/territories';
 import { supabase } from '../lib/supabase';
-
-const Ionicons = ExpoIonicons as unknown as React.ComponentType<any>;
 
 interface SoundItem {
   id: string;
@@ -43,17 +43,8 @@ const GENRES = [
   'Chutney',
 ];
 
-const TERRITORIES = [
-  { iso: 'ALL', name: 'All Islands' },
-  { iso: 'JAM', name: 'Jamaica' },
-  { iso: 'TTO', name: 'Trinidad & Tobago' },
-  { iso: 'BRB', name: 'Barbados' },
-  { iso: 'HTI', name: 'Haiti' },
-  { iso: 'DOM', name: 'Dom. Rep.' },
-  { iso: 'GUY', name: 'Guyana' },
-];
-
 export function SoundsScreen({ navigation }: any = {}) {
+  const { territories } = useTerritories();
   const [sounds, setSounds] = useState<SoundItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -89,13 +80,13 @@ export function SoundsScreen({ navigation }: any = {}) {
         const mapped: SoundItem[] = data.map((d: any) => ({
           id: d.id,
           title: d.title,
-          artist: d.artist,
+          artist: d.artist || 'Artist',
           artistHandle: d.artist_handle,
-          genre: d.genre || 'Caribbean',
-          durationFormatted: `${Math.floor((d.duration_seconds || 30) / 60)}:${String((d.duration_seconds || 30) % 60).padStart(2, '0')}`,
+          genre: d.genre || 'General',
+          durationFormatted: formatDuration(d.duration_seconds || 0),
           audioUrl: d.audio_url,
           usageCount: d.usage_count || 0,
-          countryIso: d.country_iso || 'CAR',
+          countryIso: d.country_iso || '',
           licenseType: d.license_type || 'CC-BY-4.0',
           bpm: d.bpm,
         }));
@@ -218,7 +209,22 @@ export function SoundsScreen({ navigation }: any = {}) {
           style={styles.rail}
           contentContainerStyle={styles.railContent}
         >
-          {TERRITORIES.map((t) => {
+          <TouchableOpacity
+            key="ALL"
+            style={[styles.chip, activeTerritory === 'ALL' && styles.chipActiveOcean]}
+            onPress={() => setActiveTerritory('ALL')}
+            activeOpacity={0.8}
+          >
+            <Text
+              style={[
+                styles.chipText,
+                activeTerritory === 'ALL' && styles.chipTextActiveOcean,
+              ]}
+            >
+              All Islands
+            </Text>
+          </TouchableOpacity>
+          {territories.map((t) => {
             const isActive = activeTerritory === t.iso;
             return (
               <TouchableOpacity
@@ -233,7 +239,7 @@ export function SoundsScreen({ navigation }: any = {}) {
                     isActive && styles.chipTextActiveOcean,
                   ]}
                 >
-                  {t.name}
+                  {t.flag ? `${t.flag} ${t.name}` : t.name}
                 </Text>
               </TouchableOpacity>
             );

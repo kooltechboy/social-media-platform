@@ -1,7 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { mobileAuthStorage } from './storage';
 
-// Mobile Supabase Client with graceful fallback for offline / development
+// Mobile Supabase client. Requires EXPO_PUBLIC_SUPABASE_URL / EXPO_PUBLIC_SUPABASE_ANON_KEY.
 export interface MobileProfile {
   id: string;
   username: string;
@@ -26,15 +26,36 @@ export interface MobilePost {
   linkPreviews?: any[];
 }
 
-const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL || 'http://localhost:54321';
-const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || 'public-anon-key';
+const envUrl = process.env.EXPO_PUBLIC_SUPABASE_URL?.trim() || '';
+const envAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY?.trim() || '';
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-  auth: {
-    storage: mobileAuthStorage,
-    autoRefreshToken: true,
-    persistSession: true,
-    detectSessionInUrl: false,
-  },
-});
+/**
+ * True only when real project credentials are present. The app renders a
+ * configuration error instead of silently talking to a fake endpoint/key.
+ */
+export const isSupabaseConfigured = envUrl.length > 0 && envAnonKey.length > 0;
+
+// createClient throws on an empty URL, so an inert, non-routable URL is used purely to
+// let the module load; App.tsx blocks all usage when `isSupabaseConfigured` is false.
+export const supabase = createClient(
+  isSupabaseConfigured ? envUrl : 'https://unconfigured.invalid',
+  isSupabaseConfigured ? envAnonKey : 'unconfigured',
+  {
+    auth: {
+      storage: mobileAuthStorage,
+      autoRefreshToken: true,
+      persistSession: true,
+      detectSessionInUrl: false,
+    },
+  }
+);
+
+/**
+ * Current signed-in user id from the locally persisted session (no network round-trip).
+ * Authorization is still enforced by RLS on every query — this is only for scoping UI reads.
+ */
+export async function getCurrentUserId(): Promise<string | null> {
+  const { data } = await supabase.auth.getSession();
+  return data.session?.user?.id ?? null;
+}
 

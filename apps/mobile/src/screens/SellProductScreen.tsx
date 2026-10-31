@@ -11,13 +11,16 @@ import {
   Alert,
   Image,
 } from 'react-native';
-import { Ionicons as ExpoIonicons } from '@expo/vector-icons';
 import { TOKENS } from '../theme/tokens';
+import { Ionicons, type IoniconName } from '../components/Icon';
+import { useTerritories } from '../lib/territories';
 import { supabase } from '../lib/supabase';
 
-const Ionicons = ExpoIonicons as unknown as React.ComponentType<any>;
-
-const MARKETPLACE_CATEGORIES = [
+const MARKETPLACE_CATEGORIES: Array<{
+  slug: string;
+  title: string;
+  icon: IoniconName;
+}> = [
   { slug: 'food-spices', title: 'Food & Spices', icon: 'restaurant-outline' },
   { slug: 'carnival-mas', title: 'Carnival & Mas', icon: 'sparkles-outline' },
   { slug: 'art-decor', title: 'Art & Living', icon: 'color-palette-outline' },
@@ -36,21 +39,8 @@ const CONDITIONS = [
   { value: 'refurbished', label: 'Refurbished' },
 ];
 
-const TERRITORIES: Array<{ iso: string; name: string; flag?: string; icon?: string }> = [
-  { iso: '', name: 'Optional / Unspecified', icon: 'earth-outline' },
-  { iso: 'JAM', name: 'Jamaica', flag: '🇯🇲' },
-  { iso: 'TTO', name: 'Trinidad & Tobago', flag: '🇹🇹' },
-  { iso: 'BRB', name: 'Barbados', flag: '🇧🇧' },
-  { iso: 'HTI', name: 'Haiti', flag: '🇭🇹' },
-  { iso: 'DOM', name: 'Dominican Republic', flag: '🇩🇴' },
-  { iso: 'BHS', name: 'Bahamas', flag: '🇧🇸' },
-  { iso: 'GUY', name: 'Guyana', flag: '🇬🇾' },
-  { iso: 'LCA', name: 'Saint Lucia', flag: '🇱🇨' },
-  { iso: 'GRD', name: 'Grenada', flag: '🇬🇩' },
-  { iso: 'USA', name: 'Diaspora (USA/UK/CAN)', icon: 'globe-outline' },
-];
-
 export function SellProductScreen({ navigation }: any) {
+  const { territories } = useTerritories();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [price, setPrice] = useState('');
@@ -127,7 +117,7 @@ export function SellProductScreen({ navigation }: any) {
         .insert({
           seller_id: user.id,
           title: title.trim(),
-          description: description.trim() || 'Authentic Caribbean goods.',
+          description: description.trim() || null,
           price_minor: priceMinor,
           currency: 'USD',
           condition,
@@ -241,11 +231,25 @@ export function SellProductScreen({ navigation }: any) {
           <Text style={styles.optionalTag}>Optional</Text>
         </View>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipRow}>
-          {TERRITORIES.map((t) => {
+          <TouchableOpacity
+            key="OPTIONAL"
+            style={[styles.chip, !territoryIso && styles.chipActive]}
+            onPress={() => setTerritoryIso('')}
+          >
+            <Ionicons
+              name="earth-outline"
+              size={13}
+              color={!territoryIso ? TOKENS.teal : TOKENS.textMuted}
+            />
+            <Text style={[styles.chipText, !territoryIso && styles.chipTextActive]}>
+              Unspecified
+            </Text>
+          </TouchableOpacity>
+          {territories.map((t) => {
             const active = territoryIso === t.iso;
             return (
               <TouchableOpacity
-                key={t.iso || 'OPTIONAL'}
+                key={t.iso}
                 style={[styles.chip, active && styles.chipActive]}
                 onPress={() => setTerritoryIso(t.iso)}
               >
@@ -253,7 +257,7 @@ export function SellProductScreen({ navigation }: any) {
                   <Text style={styles.flagText}>{t.flag}</Text>
                 ) : (
                   <Ionicons
-                    name={t.icon || 'earth-outline'}
+                    name="flag-outline"
                     size={13}
                     color={active ? TOKENS.teal : TOKENS.textMuted}
                   />

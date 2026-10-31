@@ -13,11 +13,11 @@ import {
   ActivityIndicator,
   Alert,
 } from 'react-native';
-import { Ionicons as ExpoIonicons } from '@expo/vector-icons';
 import { TOKENS } from '../theme/tokens';
+import { Ionicons, type IoniconName } from '../components/Icon';
+import { formatMinorCurrency } from '../lib/format';
+import { useTerritories, type Territory } from '../lib/territories';
 import { supabase } from '../lib/supabase';
-
-const Ionicons = ExpoIonicons as unknown as React.ComponentType<any>;
 
 interface MobileProduct {
   id: string;
@@ -47,24 +47,14 @@ const CATEGORIES = [
   'Tech',
 ];
 
-const TERRITORIES: Array<{ code: string; flag?: string; name: string }> = [
-  { code: 'ALL', name: 'All' },
-  { code: 'JAM', flag: '🇯🇲', name: 'Jamaica' },
-  { code: 'DOM', flag: '🇩🇴', name: 'Dom. Rep.' },
-  { code: 'TTO', flag: '🇹🇹', name: 'Trinidad' },
-  { code: 'HTI', flag: '🇭🇹', name: 'Haiti' },
-  { code: 'BRB', flag: '🇧🇧', name: 'Barbados' },
-  { code: 'BHS', flag: '🇧🇸', name: 'Bahamas' },
-  { code: 'GUY', flag: '🇬🇾', name: 'Guyana' },
-];
-
-function getProductKindIcon(kind: string): string {
+function getProductKindIcon(kind: string): IoniconName {
   if (kind === 'service') return 'shield-checkmark-outline';
   if (kind === 'digital') return 'layers-outline';
   return 'cube-outline';
 }
 
 export function MarketplaceScreen({ navigation }: any) {
+  const { territories } = useTerritories();
   const [products, setProducts] = useState<MobileProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -84,6 +74,7 @@ export function MarketplaceScreen({ navigation }: any) {
         .select(`
           id, title, description, price_minor, currency, product_kind,
           condition, location_city, location_country_iso, inventory_count, seller_id, media_urls,
+          marketplace_product_media(media_url),
           marketplace_categories(title, slug),
           profiles(display_name, username),
           businesses(name)
@@ -122,20 +113,22 @@ export function MarketplaceScreen({ navigation }: any) {
       if (data && !error) {
         const mapped: MobileProduct[] = data.map((item: any) => {
           const media = item.media_urls;
-          const firstImage = Array.isArray(media) && media.length > 0 ? media[0] : null;
+          const firstImage =
+            item.marketplace_product_media?.[0]?.media_url ||
+            (Array.isArray(media) && media.length > 0 ? media[0] : null);
 
           return {
             id: item.id,
             title: item.title,
-            description: item.description || 'Authentic Caribbean listing with escrow buyer protection.',
+            description: item.description || '',
             priceMinor: item.price_minor,
-            priceFormatted: `$${(item.price_minor / 100).toFixed(2)} ${item.currency || 'USD'}`,
+            priceFormatted: formatMinorCurrency(item.price_minor, item.currency),
             currency: item.currency || 'USD',
             productKind: item.product_kind || 'physical',
             condition: (item.condition || 'new').replace('_', ' '),
             sellerName: item.businesses?.name || item.profiles?.display_name || item.profiles?.username || 'Merchant',
             sellerId: item.seller_id,
-            location: [item.location_city, item.location_country_iso].filter(Boolean).join(', ') || 'Caribbean',
+            location: [item.location_city, item.location_country_iso].filter(Boolean).join(', '),
             inventoryCount: item.inventory_count,
             imageUrl: firstImage,
             categoryTitle: item.marketplace_categories?.title,
@@ -294,19 +287,38 @@ export function MarketplaceScreen({ navigation }: any) {
           style={styles.territoryRail}
           contentContainerStyle={styles.territoryRailContent}
         >
-          {TERRITORIES.map((t) => {
-            const active = activeTerritory === t.code;
+          <TouchableOpacity
+            key="ALL"
+            onPress={() => setActiveTerritory('ALL')}
+            style={[styles.territoryChip, activeTerritory === 'ALL' && styles.territoryChipActive]}
+          >
+            <Ionicons
+              name="earth-outline"
+              size={13}
+              color={activeTerritory === 'ALL' ? TOKENS.actionText : TOKENS.teal}
+            />
+            <Text
+              style={[
+                styles.territoryText,
+                activeTerritory === 'ALL' && styles.territoryTextActive,
+              ]}
+            >
+              All
+            </Text>
+          </TouchableOpacity>
+          {territories.map((t) => {
+            const active = activeTerritory === t.iso;
             return (
               <TouchableOpacity
-                key={t.code}
-                onPress={() => setActiveTerritory(t.code)}
+                key={t.iso}
+                onPress={() => setActiveTerritory(t.iso)}
                 style={[styles.territoryChip, active && styles.territoryChipActive]}
               >
                 {t.flag ? (
                   <Text style={styles.territoryFlag}>{t.flag}</Text>
                 ) : (
                   <Ionicons
-                    name="earth-outline"
+                    name="flag-outline"
                     size={13}
                     color={active ? TOKENS.actionText : TOKENS.teal}
                   />

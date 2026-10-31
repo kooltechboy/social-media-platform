@@ -13,11 +13,10 @@ import {
   Modal,
   SafeAreaView,
 } from 'react-native';
-import { Ionicons as ExpoIonicons } from '@expo/vector-icons';
 import { TOKENS } from '../theme/tokens';
+import { Ionicons } from '../components/Icon';
+import { profileLabel, profileHandle, initialsOf } from '../lib/format';
 import { supabase } from '../lib/supabase';
-
-const Ionicons = ExpoIonicons as unknown as React.ComponentType<any>;
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 

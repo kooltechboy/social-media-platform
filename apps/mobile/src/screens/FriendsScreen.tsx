@@ -12,11 +12,10 @@ import {
   Alert,
   RefreshControl,
 } from 'react-native';
-import { Ionicons as ExpoIonicons } from '@expo/vector-icons';
 import { TOKENS } from '../theme/tokens';
+import { Ionicons } from '../components/Icon';
+import { profileLabel, profileHandle, initialsOf } from '../lib/format';
 import { supabase } from '../lib/supabase';
-
-const Ionicons = ExpoIonicons as unknown as React.ComponentType<any>;
 
 export interface FriendProfile {
   id: string;
@@ -85,8 +84,8 @@ export function FriendsScreen({ navigation }: any) {
           return {
             id: friendId,
             friendship_id: f.id,
-            display_name: p?.display_name || p?.username || 'Caribbean Member',
-            username: p?.username || friendId.slice(0, 8),
+            display_name: profileLabel(p) || 'Member',
+            username: profileHandle(p) || p?.username || friendId.slice(0, 8),
             avatar_url: p?.avatar_url,
             bio: p?.bio,
             country: p?.country,
@@ -120,8 +119,8 @@ export function FriendsScreen({ navigation }: any) {
           return {
             id: r.requester_id,
             friendship_id: r.id,
-            display_name: p?.display_name || p?.username || 'Caribbean Member',
-            username: p?.username || r.requester_id.slice(0, 8),
+            display_name: profileLabel(p) || 'Member',
+            username: profileHandle(p) || p?.username || r.requester_id.slice(0, 8),
             avatar_url: p?.avatar_url,
             bio: p?.bio,
             country: p?.country,
@@ -155,8 +154,8 @@ export function FriendsScreen({ navigation }: any) {
           return {
             id: r.addressee_id,
             friendship_id: r.id,
-            display_name: p?.display_name || p?.username || 'Caribbean Member',
-            username: p?.username || r.addressee_id.slice(0, 8),
+            display_name: profileLabel(p) || 'Member',
+            username: profileHandle(p) || p?.username || r.addressee_id.slice(0, 8),
             avatar_url: p?.avatar_url,
             bio: p?.bio,
             country: p?.country,
@@ -181,8 +180,8 @@ export function FriendsScreen({ navigation }: any) {
         setDiscoverMembers(
           discData.map((p) => ({
             id: p.id,
-            display_name: p.display_name || p.username || 'Caribbean Member',
-            username: p.username || p.id.slice(0, 8),
+            display_name: profileLabel(p) || 'Member',
+            username: profileHandle(p) || p.username || p.id.slice(0, 8),
             avatar_url: p.avatar_url,
             bio: p.bio,
             country: p.country,

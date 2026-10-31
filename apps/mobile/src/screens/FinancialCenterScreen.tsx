@@ -12,11 +12,10 @@ import {
   TextInput,
   Alert,
 } from 'react-native';
-import { Ionicons as ExpoIonicons } from '@expo/vector-icons';
 import { TOKENS } from '../theme/tokens';
+import { Ionicons } from '../components/Icon';
+import { formatMinorCurrency } from '../lib/format';
 import { supabase } from '../lib/supabase';
-
-const Ionicons = ExpoIonicons as unknown as React.ComponentType<any>;
 
 interface LedgerEntry {
   id: string;
@@ -104,10 +103,10 @@ export function FinancialCenterScreen({ navigation: _navigation }: any) {
           setEntries(ledgerData as LedgerEntry[]);
           // Strictly calculate by aggregating ledger records (Rule 3)
           const total = ledgerData.reduce((acc, entry) => {
-            const val = Number(entry.amount) || 0;
-            return acc + val;
+            const raw = Math.abs(Number(entry.amount) || 0);
+            return entry.entry_type === 'CREDIT' ? acc + raw : acc - raw;
           }, 0);
-          setBalanceUSD(total);
+          setBalanceUSD(Math.max(0, total));
         }
       } else {
         setBalanceUSD(0);

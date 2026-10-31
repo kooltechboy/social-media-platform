@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   StyleSheet,
   Text,
@@ -13,46 +13,33 @@ import {
   RefreshControl,
   Dimensions,
 } from 'react-native';
-import { Ionicons as ExpoIonicons } from '@expo/vector-icons';
+import { Ionicons } from '../components/Icon';
 import { TOKENS } from '../theme/tokens';
-import { supabase } from '../lib/supabase';
+import { supabase, getCurrentUserId } from '../lib/supabase';
+import {
+  formatCompactNumber,
+  formatMinorCurrency,
+  initialsOf,
+  profileHandle,
+  profileLabel,
+} from '../lib/format';
+import { useTerritories } from '../lib/territories';
 
-type IoniconName = keyof typeof ExpoIonicons.glyphMap;
-const Ionicons = ExpoIonicons as unknown as React.ComponentType<{
-  name: IoniconName;
-  size?: number;
-  color?: string;
-  style?: any;
-}>;
 const { width: screenWidth } = Dimensions.get('window');
 
 interface ProfileScreenProps {
   onLogout: () => void;
   navigation: any;
+  route?: any;
 }
 
 type ProfileTab = 'posts' | 'reels' | 'listings';
 
-const CARIBBEAN_COUNTRIES = [
-  'Jamaica',
-  'Trinidad and Tobago',
-  'Barbados',
-  'Bahamas',
-  'Dominican Republic',
-  'Guyana',
-  'Haiti',
-  'Antigua and Barbuda',
-  'Saint Lucia',
-  'Grenada',
-  'Saint Vincent and the Grenadines',
-  'Belize',
-  'Suriname',
-  'Diaspora (USA/UK/Canada)',
-];
-
-export function ProfileScreen({ onLogout, navigation }: ProfileScreenProps) {
+export function ProfileScreen({ onLogout, navigation, route }: ProfileScreenProps) {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [profile, setProfile] = useState<any>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [displayName, setDisplayName] = useState('');
@@ -73,94 +60,163 @@ export function ProfileScreen({ onLogout, navigation }: ProfileScreenProps) {
   const [userReels, setUserReels] = useState<any[]>([]);
   const [userProducts, setUserProducts] = useState<any[]>([]);
 
+  const mountedRef = useRef(true);
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
+
+  const {
+    territories,
+    loading: territoriesLoading,
+    error: territoriesError,
+    retry: retryTerritories,
+  } = useTerritories();
+
+  const requestedUserId: string | undefined = route?.params?.userId;
+
   const loadUserProfile = useCallback(async () => {
+    setError(null);
     try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (!user) {
+      let authUid = await getCurrentUserId();
+      if (!authUid) {
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+        authUid = user?.id ?? null;
+      }
+
+      if (!mountedRef.current) return;
+      setCurrentUserId(authUid);
+
+      const targetUserId = requestedUserId || authUid;
+      if (!targetUserId) {
         setLoading(false);
         setRefreshing(false);
         return;
       }
 
       // 1. Fetch Profile
-      const { data: profData } = await supabase
+      const { data: profData, error: profError } = await supabase
         .from('profiles')
-        .select('*')
-        .eq('id', user.id)
+        .select(
+          'id, username, display_name, first_name, last_name, bio, avatar_url, banner_url, cover_url, country, city, is_verified, is_official, created_at'
+        )
+        .eq('id', targetUserId)
         .maybeSingle();
+
+      if (profError) throw profError;
+      if (!mountedRef.current) return;
 
       if (profData) {
         setProfile(profData);
-        setDisplayName(profData.display_name || profData.full_name || '');
+        const fullNameFallback = [profData.first_name, profData.last_name]
+          .filter(Boolean)
+          .join(' ');
+        setDisplayName(profData.display_name || fullNameFallback || '');
         setBio(profData.bio || '');
         setCountry(profData.country || '');
         setCity(profData.city || '');
+      } else {
+        setProfile(null);
       }
 
-      // 2. Fetch Verified Counters from profile_counts
+      // 2. Fetch Verified Counters from profile_counts, falling back to live row counts
       const { data: countData } = await supabase
         .from('profile_counts')
         .select(
           'posts_count, followers_count, following_count, likes_received_count, friends_count'
         )
-        .eq('profile_id', user.id)
+        .eq('profile_id', targetUserId)
         .maybeSingle();
 
+      if (!mountedRef.current) return;
+
       if (countData) {
-        setPostsCount(countData.posts_count || 0);
-        setFollowersCount(countData.followers_count || 0);
-        setFollowingCount(countData.following_count || 0);
-        setFriendsCount(countData.friends_count || 0);
+        setPostsCount(countData.posts_count ?? 0);
+        setFollowersCount(countData.followers_count ?? 0);
+        setFollowingCount(countData.following_count ?? 0);
+        setFriendsCount(countData.friends_count ?? 0);
       } else {
-        const { count: pCount } = await supabase
-          .from('posts')
-          .select('id', { count: 'exact', head: true })
-          .eq('author_id', user.id);
-        setPostsCount(pCount || 0);
+        const [postsRes, followersRes, followingRes, friendsRes] = await Promise.all([
+          supabase
+            .from('posts')
+            .select('id', { count: 'exact', head: true })
+            .eq('author_id', targetUserId),
+          supabase
+            .from('follows')
+            .select('follower_id', { count: 'exact', head: true })
+            .eq('following_id', targetUserId),
+          supabase
+            .from('follows')
+            .select('following_id', { count: 'exact', head: true })
+            .eq('follower_id', targetUserId),
+          supabase
+            .from('friendships')
+            .select('id', { count: 'exact', head: true })
+            .eq('status', 'accepted')
+            .or(`requester_id.eq.${targetUserId},addressee_id.eq.${targetUserId}`),
+        ]);
+        if (!mountedRef.current) return;
+        setPostsCount(postsRes.count ?? 0);
+        setFollowersCount(followersRes.count ?? 0);
+        setFollowingCount(followingRes.count ?? 0);
+        setFriendsCount(friendsRes.count ?? 0);
       }
 
-      // 3. Fetch User's Posts
-      const { data: postsData } = await supabase
-        .from('posts')
-        .select('id, content, media_urls, likes_count, comments_count, created_at')
-        .eq('author_id', user.id)
-        .order('created_at', { ascending: false })
-        .limit(20);
-      if (postsData) setUserPosts(postsData);
+      // 3. Fetch User's Posts, Shorts/Reels, and Marketplace Listings in parallel
+      const [postsResult, reelsResult, prodsResult] = await Promise.all([
+        supabase
+          .from('posts')
+          .select('id, content, media_urls, likes_count, comments_count, created_at')
+          .eq('author_id', targetUserId)
+          .order('created_at', { ascending: false })
+          .limit(20),
+        supabase
+          .from('videos')
+          .select(
+            'id, title, storage_path, thumbnail_path, likes_count, comments_count, view_count, created_at'
+          )
+          .eq('creator_id', targetUserId)
+          .in('video_kind', ['reel', 'short'])
+          .order('created_at', { ascending: false })
+          .limit(20),
+        supabase
+          .from('products')
+          .select(
+            'id, title, price_minor, currency, status, condition, is_active, created_at, marketplace_product_media(media_url, thumbnail_url, display_order)'
+          )
+          .eq('seller_id', targetUserId)
+          .order('created_at', { ascending: false })
+          .limit(20),
+      ]);
 
-      // 4. Fetch User's Shorts / Reels
-      const { data: reelsData } = await supabase
-        .from('videos')
-        .select(
-          'id, title, storage_path, thumbnail_path, likes_count, comments_count, created_at'
-        )
-        .eq('creator_id', user.id)
-        .eq('video_kind', 'reel')
-        .order('created_at', { ascending: false })
-        .limit(20);
-      if (reelsData) setUserReels(reelsData);
+      if (!mountedRef.current) return;
 
-      // 5. Fetch User's Marketplace Listings
-      const { data: prodsData } = await supabase
-        .from('products')
-        .select(
-          'id, title, price_amount, currency, media_urls, status, condition, created_at'
-        )
-        .eq('seller_id', user.id)
-        .order('created_at', { ascending: false })
-        .limit(20);
-      if (prodsData) setUserProducts(prodsData);
-    } catch (err) {
-      console.warn('Error loading profile:', err);
+      if (postsResult.error) throw postsResult.error;
+      if (reelsResult.error) throw reelsResult.error;
+      if (prodsResult.error) throw prodsResult.error;
+
+      setUserPosts(postsResult.data || []);
+      setUserReels(reelsResult.data || []);
+      setUserProducts(prodsResult.data || []);
+    } catch (err: any) {
+      if (mountedRef.current) {
+        setError(err?.message || 'Unable to load profile.');
+      }
     } finally {
-      setLoading(false);
-      setRefreshing(false);
+      if (mountedRef.current) {
+        setLoading(false);
+        setRefreshing(false);
+      }
     }
-  }, []);
+  }, [requestedUserId]);
 
   useEffect(() => {
+    setLoading(true);
+    setIsEditing(false);
     loadUserProfile();
   }, [loadUserProfile]);
 
@@ -169,28 +225,41 @@ export function ProfileScreen({ onLogout, navigation }: ProfileScreenProps) {
     loadUserProfile();
   };
 
+  const isOwnProfile = Boolean(
+    currentUserId && (!requestedUserId || requestedUserId === currentUserId)
+  );
+
   const handleSaveProfile = async () => {
-    if (!profile?.id) return;
+    if (!profile?.id || !isOwnProfile) return;
+    const cleanDisplayName = displayName.trim();
+    if (!cleanDisplayName) {
+      Alert.alert('Display Name Required', 'Please enter a display name.');
+      return;
+    }
+
     setUpdating(true);
     try {
       const nextCountry = country.trim() || null;
       const nextCity = city.trim() || null;
-      const { error } = await supabase
+      const nextBio = bio.trim() || null;
+      const { error: updateErr } = await supabase
         .from('profiles')
         .update({
-          display_name: displayName.trim(),
-          bio: bio.trim(),
+          display_name: cleanDisplayName,
+          bio: nextBio,
           country: nextCountry,
           city: nextCity,
           updated_at: new Date().toISOString(),
         })
         .eq('id', profile.id);
 
-      if (!error) {
+      if (updateErr) throw updateErr;
+
+      if (mountedRef.current) {
         setProfile({
           ...profile,
-          display_name: displayName.trim(),
-          bio: bio.trim(),
+          display_name: cleanDisplayName,
+          bio: nextBio,
           country: nextCountry,
           city: nextCity,
         });
@@ -198,9 +267,11 @@ export function ProfileScreen({ onLogout, navigation }: ProfileScreenProps) {
         Alert.alert('Profile Updated', 'Your TUKUBI profile changes have been saved.');
       }
     } catch (err: any) {
-      Alert.alert('Error', err.message || 'Unable to update profile.');
+      Alert.alert('Error', err?.message || 'Unable to update profile.');
     } finally {
-      setUpdating(false);
+      if (mountedRef.current) {
+        setUpdating(false);
+      }
     }
   };
 
@@ -214,19 +285,52 @@ export function ProfileScreen({ onLogout, navigation }: ProfileScreenProps) {
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.centerBox}>
           <ActivityIndicator size="large" color={TOKENS.teal} />
-          <Text style={styles.loadingText}>Loading Profile...</Text>
+          <Text style={styles.loadingText}>Loading Profile…</Text>
         </View>
       </SafeAreaView>
     );
   }
 
+  if (error) {
+    return (
+      <SafeAreaView style={styles.safeArea}>
+        <View style={styles.centerBox}>
+          <View style={styles.emptyIconCircle}>
+            <Ionicons name="alert-circle-outline" size={26} color={TOKENS.danger} />
+          </View>
+          <Text style={styles.errorTitle}>Could not load profile</Text>
+          <Text style={styles.errorSubtitle}>{error}</Text>
+          <TouchableOpacity
+            style={styles.retryBtn}
+            onPress={() => {
+              setLoading(true);
+              loadUserProfile();
+            }}
+            activeOpacity={0.85}
+            accessibilityRole="button"
+            accessibilityLabel="Retry loading profile"
+          >
+            <Ionicons name="refresh" size={16} color={TOKENS.actionText} />
+            <Text style={styles.retryBtnText}>Retry</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  const resolvedLabel =
+    profileLabel(profile) ||
+    [profile?.first_name, profile?.last_name].filter(Boolean).join(' ') ||
+    'Unknown user';
+  const resolvedHandle = profileHandle(profile);
+  const avatarInitials = initialsOf(profileLabel(profile) || resolvedLabel) || '?';
   const locationSummary = [profile?.city, profile?.country].filter(Boolean).join(', ');
   const joinedLabel = profile?.created_at
     ? `Joined ${new Date(profile.created_at).toLocaleDateString(undefined, {
         month: 'short',
         year: 'numeric',
       })}`
-    : 'Member on TUKUBI';
+    : null;
   const isVerifiedProfile = Boolean(profile?.is_verified || profile?.is_official);
 
   return (
@@ -255,43 +359,54 @@ export function ProfileScreen({ onLogout, navigation }: ProfileScreenProps) {
                 <Image source={{ uri: profile.avatar_url }} style={styles.avatarImg} />
               ) : (
                 <View style={styles.avatar}>
-                  <Text style={styles.avatarText}>
-                    {(profile?.display_name || profile?.username || 'TK')
-                      .slice(0, 2)
-                      .toUpperCase()}
-                  </Text>
+                  <Text style={styles.avatarText}>{avatarInitials}</Text>
                 </View>
               )}
             </View>
 
             <View style={styles.topRightActions}>
-              <TouchableOpacity
-                style={[styles.editButton, isEditing && styles.editButtonActive]}
-                onPress={() => setIsEditing(!isEditing)}
-                activeOpacity={0.8}
-                accessibilityRole="button"
-                accessibilityLabel={isEditing ? 'Cancel editing profile' : 'Edit Profile'}
-              >
-                <Ionicons
-                  name={isEditing ? 'close-circle' : 'create-outline'}
-                  size={15}
-                  color={isEditing ? TOKENS.teal : TOKENS.textPrimary}
-                />
-                <Text style={[styles.editButtonText, isEditing && styles.editButtonTextActive]}>
-                  {isEditing ? 'Cancel' : 'Edit Profile'}
-                </Text>
-              </TouchableOpacity>
+              {isOwnProfile ? (
+                <>
+                  <TouchableOpacity
+                    style={[styles.editButton, isEditing && styles.editButtonActive]}
+                    onPress={() => setIsEditing(!isEditing)}
+                    activeOpacity={0.8}
+                    accessibilityRole="button"
+                    accessibilityLabel={isEditing ? 'Cancel editing profile' : 'Edit Profile'}
+                  >
+                    <Ionicons
+                      name={isEditing ? 'close-circle' : 'create-outline'}
+                      size={15}
+                      color={isEditing ? TOKENS.teal : TOKENS.textPrimary}
+                    />
+                    <Text style={[styles.editButtonText, isEditing && styles.editButtonTextActive]}>
+                      {isEditing ? 'Cancel' : 'Edit Profile'}
+                    </Text>
+                  </TouchableOpacity>
 
-              <TouchableOpacity
-                style={styles.logoutButton}
-                onPress={handleLogoutPress}
-                activeOpacity={0.8}
-                accessibilityRole="button"
-                accessibilityLabel="Sign Out"
-              >
-                <Ionicons name="log-out-outline" size={16} color={TOKENS.danger} />
-                <Text style={styles.logoutButtonText}>Sign Out</Text>
-              </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.logoutButton}
+                    onPress={handleLogoutPress}
+                    activeOpacity={0.8}
+                    accessibilityRole="button"
+                    accessibilityLabel="Sign Out"
+                  >
+                    <Ionicons name="log-out-outline" size={16} color={TOKENS.danger} />
+                    <Text style={styles.logoutButtonText}>Sign Out</Text>
+                  </TouchableOpacity>
+                </>
+              ) : (
+                <TouchableOpacity
+                  style={styles.editButton}
+                  onPress={() => navigation?.setParams?.({ userId: undefined })}
+                  activeOpacity={0.8}
+                  accessibilityRole="button"
+                  accessibilityLabel="Back to my profile"
+                >
+                  <Ionicons name="arrow-back-outline" size={15} color={TOKENS.textPrimary} />
+                  <Text style={styles.editButtonText}>My Profile</Text>
+                </TouchableOpacity>
+              )}
             </View>
           </View>
 
@@ -299,40 +414,44 @@ export function ProfileScreen({ onLogout, navigation }: ProfileScreenProps) {
           <View style={styles.identityBlock}>
             <View style={styles.nameRow}>
               <Text style={styles.displayName} numberOfLines={1}>
-                {profile?.display_name || profile?.full_name || 'Caribbean Member'}
+                {resolvedLabel}
               </Text>
               {isVerifiedProfile && (
                 <Ionicons name="checkmark-circle" size={18} color={TOKENS.teal} />
               )}
             </View>
-            <Text style={styles.username}>@{profile?.username || 'member'}</Text>
+            {resolvedHandle ? <Text style={styles.username}>{resolvedHandle}</Text> : null}
 
             {profile?.bio ? (
               <Text style={styles.bio}>{profile.bio}</Text>
-            ) : (
+            ) : isOwnProfile ? (
               <Text style={styles.bioEmpty}>
                 Add a bio to share your perspective, craft, or interests on TUKUBI.
               </Text>
-            )}
+            ) : null}
 
             {/* Single-Line Metadata */}
-            <View style={styles.metadataRow}>
-              <View style={styles.metaItem}>
-                <Ionicons name="location-outline" size={14} color={TOKENS.teal} />
-                <Text style={styles.metaText}>
-                  {locationSummary || 'Private location'}
-                </Text>
+            {(locationSummary || joinedLabel) ? (
+              <View style={styles.metadataRow}>
+                {locationSummary ? (
+                  <View style={styles.metaItem}>
+                    <Ionicons name="location-outline" size={14} color={TOKENS.teal} />
+                    <Text style={styles.metaText}>{locationSummary}</Text>
+                  </View>
+                ) : null}
+                {joinedLabel ? (
+                  <View style={styles.metaItem}>
+                    <Ionicons name="calendar-outline" size={14} color={TOKENS.textMuted} />
+                    <Text style={styles.metaTextMuted}>{joinedLabel}</Text>
+                  </View>
+                ) : null}
               </View>
-              <View style={styles.metaItem}>
-                <Ionicons name="calendar-outline" size={14} color={TOKENS.textMuted} />
-                <Text style={styles.metaTextMuted}>{joinedLabel}</Text>
-              </View>
-            </View>
+            ) : null}
           </View>
         </View>
 
         {/* Inline Edit Profile Card (Midnight Reef) */}
-        {isEditing && (
+        {isEditing && isOwnProfile && (
           <View style={styles.editCard}>
             <View style={styles.editHeaderRow}>
               <Ionicons name="create-outline" size={17} color={TOKENS.teal} />
@@ -344,8 +463,9 @@ export function ProfileScreen({ onLogout, navigation }: ProfileScreenProps) {
               style={styles.input}
               value={displayName}
               onChangeText={setDisplayName}
-              placeholder="Display Name"
+              placeholder="Your full name"
               placeholderTextColor={TOKENS.textDim}
+              accessibilityLabel="Display Name"
             />
 
             <Text style={styles.label}>Bio</Text>
@@ -353,48 +473,77 @@ export function ProfileScreen({ onLogout, navigation }: ProfileScreenProps) {
               style={[styles.input, styles.bioInput]}
               value={bio}
               onChangeText={setBio}
-              placeholder="Share your story..."
+              placeholder="Share your story…"
               placeholderTextColor={TOKENS.textDim}
               multiline
+              accessibilityLabel="Bio"
             />
 
             <View style={styles.countryHeaderRow}>
               <Text style={styles.labelInline}>Cultural Heritage / Country (Optional)</Text>
               {country !== '' && (
-                <TouchableOpacity onPress={() => setCountry('')}>
+                <TouchableOpacity
+                  style={styles.clearCountryBtn}
+                  onPress={() => setCountry('')}
+                  accessibilityRole="button"
+                  accessibilityLabel="Clear country and set private"
+                >
                   <Text style={styles.clearCountryText}>Set Private</Text>
                 </TouchableOpacity>
               )}
             </View>
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.countryScroll}
-            >
-              {CARIBBEAN_COUNTRIES.map((c) => {
-                const selected = country === c;
-                return (
-                  <TouchableOpacity
-                    key={c}
-                    style={[styles.countryChip, selected && styles.countryChipActive]}
-                    onPress={() => setCountry(selected ? '' : c)}
-                    activeOpacity={0.8}
-                  >
-                    <Text style={[styles.countryText, selected && styles.countryTextActive]}>
-                      {c}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </ScrollView>
+            {territoriesLoading ? (
+              <View style={styles.territoriesStatusRow}>
+                <ActivityIndicator size="small" color={TOKENS.teal} />
+                <Text style={styles.territoriesStatusText}>Loading territories…</Text>
+              </View>
+            ) : territoriesError ? (
+              <View style={styles.territoriesStatusRow}>
+                <Text style={styles.territoriesStatusText}>{territoriesError}</Text>
+                <TouchableOpacity
+                  style={styles.clearCountryBtn}
+                  onPress={retryTerritories}
+                  accessibilityRole="button"
+                  accessibilityLabel="Retry loading territories"
+                >
+                  <Text style={styles.clearCountryText}>Retry</Text>
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.countryScroll}
+              >
+                {territories.map((t) => {
+                  const selected = country === t.name;
+                  return (
+                    <TouchableOpacity
+                      key={t.iso}
+                      style={[styles.countryChip, selected && styles.countryChipActive]}
+                      onPress={() => setCountry(selected ? '' : t.name)}
+                      activeOpacity={0.8}
+                      accessibilityRole="button"
+                      accessibilityState={{ selected }}
+                      accessibilityLabel={`Select ${t.name}`}
+                    >
+                      <Text style={[styles.countryText, selected && styles.countryTextActive]}>
+                        {t.flag ? `${t.flag} ${t.name}` : t.name}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </ScrollView>
+            )}
 
             <Text style={styles.label}>City / Parish / District (Optional)</Text>
             <TextInput
               style={styles.input}
               value={city}
               onChangeText={setCity}
-              placeholder="Kingston, Port of Spain, Bridgetown..."
+              placeholder="City, parish, or district"
               placeholderTextColor={TOKENS.textDim}
+              accessibilityLabel="City, Parish, or District"
             />
 
             <TouchableOpacity
@@ -417,17 +566,17 @@ export function ProfileScreen({ onLogout, navigation }: ProfileScreenProps) {
         {/* Clean 4-Column Stat Bar: Posts · Followers · Following · Friends */}
         <View style={styles.statsCard}>
           <View style={styles.statItem}>
-            <Text style={styles.statNumber}>{postsCount}</Text>
+            <Text style={styles.statNumber}>{formatCompactNumber(postsCount)}</Text>
             <Text style={styles.statLabel}>Posts</Text>
           </View>
           <View style={styles.statDivider} />
           <View style={styles.statItem}>
-            <Text style={styles.statNumber}>{followersCount}</Text>
+            <Text style={styles.statNumber}>{formatCompactNumber(followersCount)}</Text>
             <Text style={styles.statLabel}>Followers</Text>
           </View>
           <View style={styles.statDivider} />
           <View style={styles.statItem}>
-            <Text style={styles.statNumber}>{followingCount}</Text>
+            <Text style={styles.statNumber}>{formatCompactNumber(followingCount)}</Text>
             <Text style={styles.statLabel}>Following</Text>
           </View>
           <View style={styles.statDivider} />
@@ -435,8 +584,12 @@ export function ProfileScreen({ onLogout, navigation }: ProfileScreenProps) {
             style={styles.statItem}
             onPress={() => navigation?.navigate('Friends')}
             activeOpacity={0.75}
+            accessibilityRole="button"
+            accessibilityLabel={`Friends: ${friendsCount}`}
           >
-            <Text style={[styles.statNumber, { color: TOKENS.teal }]}>{friendsCount}</Text>
+            <Text style={[styles.statNumber, { color: TOKENS.teal }]}>
+              {formatCompactNumber(friendsCount)}
+            </Text>
             <Text style={styles.statLabel}>Friends</Text>
           </TouchableOpacity>
         </View>
@@ -497,6 +650,7 @@ export function ProfileScreen({ onLogout, navigation }: ProfileScreenProps) {
             activeOpacity={0.75}
             accessibilityRole="tab"
             accessibilityState={{ selected: activeTab === 'posts' }}
+            accessibilityLabel={`Posts (${userPosts.length})`}
           >
             <Ionicons
               name="grid-outline"
@@ -519,6 +673,7 @@ export function ProfileScreen({ onLogout, navigation }: ProfileScreenProps) {
             activeOpacity={0.75}
             accessibilityRole="tab"
             accessibilityState={{ selected: activeTab === 'reels' }}
+            accessibilityLabel={`Shorts (${userReels.length})`}
           >
             <Ionicons
               name="film-outline"
@@ -541,6 +696,7 @@ export function ProfileScreen({ onLogout, navigation }: ProfileScreenProps) {
             activeOpacity={0.75}
             accessibilityRole="tab"
             accessibilityState={{ selected: activeTab === 'listings' }}
+            accessibilityLabel={`Trade (${userProducts.length})`}
           >
             <Ionicons
               name="bag-handle-outline"
@@ -567,19 +723,23 @@ export function ProfileScreen({ onLogout, navigation }: ProfileScreenProps) {
                   <Ionicons name="newspaper-outline" size={26} color={TOKENS.teal} />
                 </View>
                 <Text style={styles.emptyTabText}>No posts published yet</Text>
-                <TouchableOpacity
-                  style={styles.createShortcutBtn}
-                  onPress={() => navigation?.navigate('Create')}
-                  activeOpacity={0.85}
-                >
-                  <Ionicons name="add" size={16} color={TOKENS.actionText} />
-                  <Text style={styles.createShortcutText}>Create Post</Text>
-                </TouchableOpacity>
+                {isOwnProfile && (
+                  <TouchableOpacity
+                    style={styles.createShortcutBtn}
+                    onPress={() => navigation?.navigate('Create')}
+                    activeOpacity={0.85}
+                    accessibilityRole="button"
+                    accessibilityLabel="Create Post"
+                  >
+                    <Ionicons name="add" size={16} color={TOKENS.actionText} />
+                    <Text style={styles.createShortcutText}>Create Post</Text>
+                  </TouchableOpacity>
+                )}
               </View>
             ) : (
               userPosts.map((post) => (
                 <View key={post.id} style={styles.postItem}>
-                  <Text style={styles.postText}>{post.content}</Text>
+                  {post.content ? <Text style={styles.postText}>{post.content}</Text> : null}
                   {post.media_urls && post.media_urls.length > 0 && (
                     <Image
                       source={{ uri: post.media_urls[0] }}
@@ -589,20 +749,26 @@ export function ProfileScreen({ onLogout, navigation }: ProfileScreenProps) {
                   )}
                   <View style={styles.postMeta}>
                     <Text style={styles.postDate}>
-                      {new Date(post.created_at).toLocaleDateString(undefined, {
-                        month: 'short',
-                        day: 'numeric',
-                        year: 'numeric',
-                      })}
+                      {post.created_at
+                        ? new Date(post.created_at).toLocaleDateString(undefined, {
+                            month: 'short',
+                            day: 'numeric',
+                            year: 'numeric',
+                          })
+                        : ''}
                     </Text>
                     <View style={styles.postStats}>
                       <View style={styles.postStatPair}>
                         <Ionicons name="heart-outline" size={14} color={TOKENS.textMuted} />
-                        <Text style={styles.postStat}>{post.likes_count || 0}</Text>
+                        <Text style={styles.postStat}>
+                          {formatCompactNumber(post.likes_count || 0)}
+                        </Text>
                       </View>
                       <View style={styles.postStatPair}>
                         <Ionicons name="chatbubble-outline" size={14} color={TOKENS.textMuted} />
-                        <Text style={styles.postStat}>{post.comments_count || 0}</Text>
+                        <Text style={styles.postStat}>
+                          {formatCompactNumber(post.comments_count || 0)}
+                        </Text>
                       </View>
                     </View>
                   </View>
@@ -621,14 +787,18 @@ export function ProfileScreen({ onLogout, navigation }: ProfileScreenProps) {
                   <Ionicons name="film-outline" size={26} color={TOKENS.teal} />
                 </View>
                 <Text style={styles.emptyTabText}>No Shorts published yet</Text>
-                <TouchableOpacity
-                  style={styles.createShortcutBtn}
-                  onPress={() => navigation?.navigate('Create')}
-                  activeOpacity={0.85}
-                >
-                  <Ionicons name="add" size={16} color={TOKENS.actionText} />
-                  <Text style={styles.createShortcutText}>Upload Short</Text>
-                </TouchableOpacity>
+                {isOwnProfile && (
+                  <TouchableOpacity
+                    style={styles.createShortcutBtn}
+                    onPress={() => navigation?.navigate('Create')}
+                    activeOpacity={0.85}
+                    accessibilityRole="button"
+                    accessibilityLabel="Upload Short"
+                  >
+                    <Ionicons name="add" size={16} color={TOKENS.actionText} />
+                    <Text style={styles.createShortcutText}>Upload Short</Text>
+                  </TouchableOpacity>
+                )}
               </View>
             ) : (
               <View style={styles.reelsGrid}>
@@ -638,6 +808,8 @@ export function ProfileScreen({ onLogout, navigation }: ProfileScreenProps) {
                     style={styles.reelThumb}
                     onPress={() => navigation?.navigate('Shorts')}
                     activeOpacity={0.85}
+                    accessibilityRole="button"
+                    accessibilityLabel={reel.title || 'Open Short'}
                   >
                     {reel.thumbnail_path ? (
                       <Image source={{ uri: reel.thumbnail_path }} style={styles.reelThumbImg} />
@@ -648,7 +820,9 @@ export function ProfileScreen({ onLogout, navigation }: ProfileScreenProps) {
                     )}
                     <View style={styles.reelOverlay}>
                       <Ionicons name="heart" size={11} color={TOKENS.textPrimary} />
-                      <Text style={styles.reelLikes}>{reel.likes_count || 0}</Text>
+                      <Text style={styles.reelLikes}>
+                        {formatCompactNumber(reel.likes_count || 0)}
+                      </Text>
                     </View>
                   </TouchableOpacity>
                 ))}
@@ -666,42 +840,58 @@ export function ProfileScreen({ onLogout, navigation }: ProfileScreenProps) {
                   <Ionicons name="pricetag-outline" size={26} color={TOKENS.teal} />
                 </View>
                 <Text style={styles.emptyTabText}>No active trade listings</Text>
-                <TouchableOpacity
-                  style={styles.createShortcutBtn}
-                  onPress={() => navigation?.navigate('SellProduct')}
-                  activeOpacity={0.85}
-                >
-                  <Ionicons name="add" size={16} color={TOKENS.actionText} />
-                  <Text style={styles.createShortcutText}>List an Item</Text>
-                </TouchableOpacity>
+                {isOwnProfile && (
+                  <TouchableOpacity
+                    style={styles.createShortcutBtn}
+                    onPress={() => navigation?.navigate('SellProduct')}
+                    activeOpacity={0.85}
+                    accessibilityRole="button"
+                    accessibilityLabel="List an Item"
+                  >
+                    <Ionicons name="add" size={16} color={TOKENS.actionText} />
+                    <Text style={styles.createShortcutText}>List an Item</Text>
+                  </TouchableOpacity>
+                )}
               </View>
             ) : (
-              userProducts.map((prod) => (
-                <TouchableOpacity
-                  key={prod.id}
-                  style={styles.prodRow}
-                  onPress={() => navigation?.navigate('Marketplace')}
-                  activeOpacity={0.85}
-                >
-                  {prod.media_urls && prod.media_urls.length > 0 ? (
-                    <Image source={{ uri: prod.media_urls[0] }} style={styles.prodImg} />
-                  ) : (
-                    <View style={styles.prodImgPlaceholder}>
-                      <Ionicons name="bag-handle-outline" size={20} color={TOKENS.textMuted} />
+              userProducts.map((prod) => {
+                const mediaRows = Array.isArray(prod.marketplace_product_media)
+                  ? [...prod.marketplace_product_media].sort(
+                      (a: any, b: any) => (a.display_order ?? 0) - (b.display_order ?? 0)
+                    )
+                  : [];
+                const primaryMediaUrl =
+                  mediaRows[0]?.thumbnail_url || mediaRows[0]?.media_url || null;
+                const statusLabel = (prod.status || (prod.is_active ? 'active' : 'archived')).toUpperCase();
+
+                return (
+                  <TouchableOpacity
+                    key={prod.id}
+                    style={styles.prodRow}
+                    onPress={() => navigation?.navigate('Marketplace')}
+                    activeOpacity={0.85}
+                    accessibilityRole="button"
+                    accessibilityLabel={`${prod.title}, ${formatMinorCurrency(prod.price_minor, prod.currency)}`}
+                  >
+                    {primaryMediaUrl ? (
+                      <Image source={{ uri: primaryMediaUrl }} style={styles.prodImg} />
+                    ) : (
+                      <View style={styles.prodImgPlaceholder}>
+                        <Ionicons name="bag-handle-outline" size={20} color={TOKENS.textMuted} />
+                      </View>
+                    )}
+                    <View style={styles.prodInfoCol}>
+                      <Text style={styles.prodTitle} numberOfLines={1}>
+                        {prod.title}
+                      </Text>
+                      <Text style={styles.prodPrice}>
+                        {formatMinorCurrency(prod.price_minor, prod.currency)} · {statusLabel}
+                      </Text>
                     </View>
-                  )}
-                  <View style={styles.prodInfoCol}>
-                    <Text style={styles.prodTitle} numberOfLines={1}>
-                      {prod.title}
-                    </Text>
-                    <Text style={styles.prodPrice}>
-                      {prod.currency || 'USD'} ${((prod.price_amount || 0) / 100).toFixed(2)} ·{' '}
-                      {(prod.status || 'active').toUpperCase()}
-                    </Text>
-                  </View>
-                  <Ionicons name="chevron-forward" size={16} color={TOKENS.textMuted} />
-                </TouchableOpacity>
-              ))
+                    <Ionicons name="chevron-forward" size={16} color={TOKENS.textMuted} />
+                  </TouchableOpacity>
+                );
+              })
             )}
           </View>
         )}
@@ -722,12 +912,42 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+    paddingHorizontal: 24,
   },
   loadingText: {
     color: TOKENS.textMuted,
     fontSize: 13,
     marginTop: 10,
     fontWeight: '600',
+  },
+  errorTitle: {
+    color: TOKENS.textPrimary,
+    fontSize: 16,
+    fontWeight: '800',
+    marginTop: 6,
+    textAlign: 'center',
+  },
+  errorSubtitle: {
+    color: TOKENS.textMuted,
+    fontSize: 13,
+    marginTop: 6,
+    marginBottom: 16,
+    textAlign: 'center',
+    lineHeight: 19,
+  },
+  retryBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: TOKENS.teal,
+    paddingHorizontal: 18,
+    minHeight: 44,
+    borderRadius: 12,
+  },
+  retryBtnText: {
+    color: TOKENS.actionText,
+    fontSize: 13,
+    fontWeight: '800',
   },
   banner: {
     height: 112,
@@ -805,7 +1025,7 @@ const styles = StyleSheet.create({
     backgroundColor: TOKENS.raised,
     borderColor: TOKENS.borderStrong,
     borderWidth: 1,
-    minHeight: 38,
+    minHeight: 44,
     paddingHorizontal: 13,
     borderRadius: 11,
   },
@@ -828,7 +1048,7 @@ const styles = StyleSheet.create({
     backgroundColor: TOKENS.surface,
     borderColor: TOKENS.border,
     borderWidth: 1,
-    minHeight: 38,
+    minHeight: 44,
     paddingHorizontal: 12,
     borderRadius: 11,
   },
@@ -929,11 +1149,29 @@ const styles = StyleSheet.create({
     color: TOKENS.textSecondary,
     fontSize: 12,
     fontWeight: '600',
+    flex: 1,
+  },
+  clearCountryBtn: {
+    minHeight: 44,
+    minWidth: 44,
+    alignItems: 'flex-end',
+    justifyContent: 'center',
   },
   clearCountryText: {
     color: TOKENS.teal,
     fontSize: 11.5,
     fontWeight: '700',
+  },
+  territoriesStatusRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingVertical: 8,
+  },
+  territoriesStatusText: {
+    color: TOKENS.textMuted,
+    fontSize: 12,
+    flex: 1,
   },
   input: {
     backgroundColor: TOKENS.raised,
@@ -942,6 +1180,7 @@ const styles = StyleSheet.create({
     borderColor: TOKENS.border,
     paddingHorizontal: 13,
     paddingVertical: 10,
+    minHeight: 44,
     color: TOKENS.textPrimary,
     fontSize: 13.5,
   },
@@ -956,7 +1195,9 @@ const styles = StyleSheet.create({
   countryChip: {
     backgroundColor: TOKENS.raised,
     paddingHorizontal: 12,
-    paddingVertical: 6,
+    minHeight: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
     borderRadius: 999,
     borderWidth: 1,
     borderColor: TOKENS.border,
@@ -1001,7 +1242,9 @@ const styles = StyleSheet.create({
   },
   statItem: {
     flex: 1,
+    minHeight: 44,
     alignItems: 'center',
+    justifyContent: 'center',
   },
   statNumber: {
     color: TOKENS.textPrimary,
@@ -1112,7 +1355,7 @@ const styles = StyleSheet.create({
     gap: 5,
     backgroundColor: TOKENS.teal,
     paddingHorizontal: 16,
-    minHeight: 40,
+    minHeight: 44,
     borderRadius: 11,
   },
   createShortcutText: {

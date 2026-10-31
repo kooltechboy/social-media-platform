@@ -11,17 +11,20 @@ import {
   Image,
   Dimensions,
 } from 'react-native';
-import { Ionicons as ExpoIonicons } from '@expo/vector-icons';
 import { TOKENS } from '../theme/tokens';
+import { Ionicons, type IoniconName } from '../components/Icon';
+import {
+  formatCompactNumber,
+  formatMinorCurrency,
+  timeAgo,
+  profileLabel,
+  profileHandle,
+  firstRelation,
+  initialsOf,
+} from '../lib/format';
+import { useTerritories, type Territory } from '../lib/territories';
 import { supabase } from '../lib/supabase';
 
-type IoniconName = keyof typeof ExpoIonicons.glyphMap;
-const Ionicons = ExpoIonicons as unknown as React.ComponentType<{
-  name: IoniconName;
-  size?: number;
-  color?: string;
-  style?: any;
-}>;
 const { width: screenWidth } = Dimensions.get('window');
 
 type SearchTab = 'all' | 'people' | 'posts' | 'market' | 'sounds';
@@ -33,15 +36,6 @@ const CATEGORY_TILES: Array<{ key: SearchTab; label: string; icon: IoniconName }
   { key: 'market', label: 'Marketplace', icon: 'bag-handle-outline' },
   { key: 'sounds', label: 'Sounds', icon: 'musical-notes-outline' },
 ];
-
-interface CountryItem {
-  id: string;
-  iso_code: string;
-  iso2_code: string;
-  name: string;
-  flag_emoji: string;
-  slug?: string;
-}
 
 interface ProfileResult {
   id: string;
@@ -66,18 +60,24 @@ interface PostResult {
     full_name?: string;
     avatar_url?: string;
     is_verified?: boolean;
-  } | null;
+  } | Array<{
+    username?: string;
+    full_name?: string;
+    avatar_url?: string;
+    is_verified?: boolean;
+  }> | null;
 }
 
 interface ProductResult {
   id: string;
   title: string;
   description?: string;
-  price_amount: number;
+  price_minor: number;
   currency: string;
-  media_urls?: string[];
+  marketplace_product_media?: Array<{ media_url: string }>;
   condition?: string;
-  location_territory?: string;
+  location_city?: string;
+  location_country_iso?: string;
 }
 
 interface SoundResult {
@@ -92,8 +92,8 @@ interface SoundResult {
 export function ExploreScreen({ navigation }: any) {
   const [query, setQuery] = useState('');
   const [activeTab, setActiveTab] = useState<SearchTab>('all');
-  const [countries, setCountries] = useState<CountryItem[]>([]);
-  const [selectedCountry, setSelectedCountry] = useState<CountryItem | null>(null);
+  const { territories } = useTerritories();
+  const [selectedCountry, setSelectedCountry] = useState<Territory | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -102,22 +102,6 @@ export function ExploreScreen({ navigation }: any) {
   const [products, setProducts] = useState<ProductResult[]>([]);
   const [sounds, setSounds] = useState<SoundResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
-
-  const fetchCountries = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('countries')
-        .select('id, iso_code, iso2_code, name, flag_emoji, slug')
-        .order('name', { ascending: true })
-        .limit(30);
-
-      if (!error && data) {
-        setCountries(data);
-      }
-    } catch (err) {
-      console.warn('Error fetching countries:', err);
-    }
-  };
 
   const fetchDiscoveryData = useCallback(async () => {
     setLoading(true);
@@ -153,7 +137,7 @@ export function ExploreScreen({ navigation }: any) {
         .order('created_at', { ascending: false })
         .limit(10);
       if (selectedCountry) {
-        postsQuery = postsQuery.eq('country_id', selectedCountry.id);
+        postsQuery = postsQuery.eq('country_code', selectedCountry.iso);
       }
       const { data: postData } = await postsQuery;
       if (postData) setPosts(postData as unknown as PostResult[]);
@@ -161,18 +145,18 @@ export function ExploreScreen({ navigation }: any) {
       let productsQuery = supabase
         .from('products')
         .select(
-          'id, title, description, price_amount, currency, media_urls, condition, location_territory'
+          'id, title, description, price_minor, currency, condition, location_city, location_country_iso, marketplace_product_media(media_url)'
         )
         .eq('status', 'active')
         .order('created_at', { ascending: false })
         .limit(6);
       if (selectedCountry) {
         productsQuery = productsQuery.or(
-          `location_territory.ilike.%${selectedCountry.name}%,location_territory.ilike.%${selectedCountry.iso2_code}%`
+          `location_country_iso.ilike.%${selectedCountry.iso}%,location_country_iso.ilike.%${selectedCountry.iso2}%`
         );
       }
       const { data: prodData } = await productsQuery;
-      if (prodData) setProducts(prodData);
+      if (prodData) setProducts(prodData as unknown as ProductResult[]);
 
       const { data: soundData } = await supabase
         .from('sounds')
@@ -238,11 +222,12 @@ export function ExploreScreen({ navigation }: any) {
         const { data: prodData } = await supabase
           .from('products')
           .select(
-            'id, title, description, price_amount, currency, media_urls, condition, location_territory'
+            'id, title, description, price_minor, currency, condition, location_city, location_country_iso, marketplace_product_media(media_url)'
           )
+          .eq('status', 'active')
           .or(`title.ilike.%${q}%,description.ilike.%${q}%`)
           .limit(15);
-        if (prodData) setProducts(prodData);
+        if (prodData) setProducts(prodData as unknown as ProductResult[]);
       }
 
       if (targetTab === 'all' || targetTab === 'sounds') {
@@ -261,10 +246,6 @@ export function ExploreScreen({ navigation }: any) {
   };
 
   useEffect(() => {
-    fetchCountries();
-  }, []);
-
-  useEffect(() => {
     if (!query) {
       fetchDiscoveryData();
     }
@@ -272,16 +253,11 @@ export function ExploreScreen({ navigation }: any) {
 
   const onRefresh = () => {
     setRefreshing(true);
-    fetchCountries();
     if (query) {
       handleSearch(query);
     } else {
       fetchDiscoveryData();
     }
-  };
-
-  const formatPrice = (cents: number, currency: string) => {
-    return `${currency || 'USD'} $${((cents || 0) / 100).toFixed(2)}`;
   };
 
   return (
@@ -377,19 +353,19 @@ export function ExploreScreen({ navigation }: any) {
             </Text>
           </TouchableOpacity>
 
-          {countries.map((c) => {
-            const isSelected = selectedCountry?.id === c.id;
+          {territories.map((c) => {
+            const isSelected = selectedCountry?.iso === c.iso;
             return (
               <TouchableOpacity
-                key={c.id}
+                key={c.iso}
                 style={[styles.countryChip, isSelected && styles.countryChipActive]}
                 onPress={() => setSelectedCountry(isSelected ? null : c)}
                 activeOpacity={0.8}
                 accessibilityRole="button"
                 accessibilityState={{ selected: isSelected }}
               >
-                {c.flag_emoji ? (
-                  <Text style={styles.countryEmoji}>{c.flag_emoji}</Text>
+                {c.flag ? (
+                  <Text style={styles.countryEmoji}>{c.flag}</Text>
                 ) : (
                   <Ionicons
                     name="flag-outline"
@@ -423,8 +399,8 @@ export function ExploreScreen({ navigation }: any) {
             {/* Trending in the Caribbean Spotlight Banner */}
             <View style={styles.spotlightBanner}>
               <View style={styles.spotlightIconBox}>
-                {selectedCountry?.flag_emoji ? (
-                  <Text style={styles.bannerFlag}>{selectedCountry.flag_emoji}</Text>
+                {selectedCountry?.flag ? (
+                  <Text style={styles.bannerFlag}>{selectedCountry.flag}</Text>
                 ) : (
                   <Ionicons name="trending-up-outline" size={22} color={TOKENS.teal} />
                 )}
@@ -432,7 +408,7 @@ export function ExploreScreen({ navigation }: any) {
               <View style={styles.spotlightTextCol}>
                 <View style={styles.spotlightKickerRow}>
                   <Text style={styles.spotlightKicker}>
-                    {selectedCountry ? `${selectedCountry.iso_code} SPOTLIGHT` : 'REGIONAL PULSE'}
+                    {selectedCountry ? `${selectedCountry.iso} SPOTLIGHT` : 'REGIONAL PULSE'}
                   </Text>
                 </View>
                 <Text style={styles.bannerTitle}>
@@ -473,7 +449,7 @@ export function ExploreScreen({ navigation }: any) {
                       ) : (
                         <View style={[styles.creatorAvatar, styles.avatarFallback]}>
                           <Text style={styles.avatarLetter}>
-                            {(p.full_name || p.username || 'U')[0].toUpperCase()}
+                            {initialsOf(p.full_name || p.username)}
                           </Text>
                         </View>
                       )}
@@ -523,38 +499,41 @@ export function ExploreScreen({ navigation }: any) {
                   </TouchableOpacity>
                 </View>
                 <View style={styles.productsGrid}>
-                  {products.map((item) => (
-                    <TouchableOpacity
-                      key={item.id}
-                      style={styles.productCard}
-                      onPress={() => navigation?.navigate('Marketplace')}
-                      activeOpacity={0.85}
-                    >
-                      {item.media_urls && item.media_urls.length > 0 ? (
-                        <Image source={{ uri: item.media_urls[0] }} style={styles.productImage} />
-                      ) : (
-                        <View style={styles.productPlaceholder}>
-                          <Ionicons name="bag-handle-outline" size={26} color={TOKENS.textDim} />
-                        </View>
-                      )}
-                      <View style={styles.productDetails}>
-                        <Text style={styles.productPrice} numberOfLines={1}>
-                          {formatPrice(item.price_amount, item.currency)}
-                        </Text>
-                        <Text style={styles.productTitle} numberOfLines={1}>
-                          {item.title}
-                        </Text>
-                        {item.location_territory && (
-                          <View style={styles.productTerritoryRow}>
-                            <Ionicons name="location-outline" size={11} color={TOKENS.textMuted} />
-                            <Text style={styles.productTerritory} numberOfLines={1}>
-                              {item.location_territory}
-                            </Text>
+                  {products.map((item) => {
+                    const firstImage = item.marketplace_product_media?.[0]?.media_url;
+                    return (
+                      <TouchableOpacity
+                        key={item.id}
+                        style={styles.productCard}
+                        onPress={() => navigation?.navigate('Marketplace')}
+                        activeOpacity={0.85}
+                      >
+                        {firstImage ? (
+                          <Image source={{ uri: firstImage }} style={styles.productImage} />
+                        ) : (
+                          <View style={styles.productPlaceholder}>
+                            <Ionicons name="bag-handle-outline" size={26} color={TOKENS.textDim} />
                           </View>
                         )}
-                      </View>
-                    </TouchableOpacity>
-                  ))}
+                        <View style={styles.productDetails}>
+                          <Text style={styles.productPrice} numberOfLines={1}>
+                            {formatMinorCurrency(item.price_minor, item.currency)}
+                          </Text>
+                          <Text style={styles.productTitle} numberOfLines={1}>
+                            {item.title}
+                          </Text>
+                          {item.location_country_iso && (
+                            <View style={styles.productTerritoryRow}>
+                              <Ionicons name="location-outline" size={11} color={TOKENS.textMuted} />
+                              <Text style={styles.productTerritory} numberOfLines={1}>
+                                {item.location_city ? `${item.location_city}, ${item.location_country_iso}` : item.location_country_iso}
+                              </Text>
+                            </View>
+                          )}
+                        </View>
+                      </TouchableOpacity>
+                    );
+                  })}
                 </View>
               </View>
             )}
@@ -609,11 +588,10 @@ export function ExploreScreen({ navigation }: any) {
                   </Text>
                 </View>
                 {posts.map((post) => {
-                  const author = Array.isArray(post.profiles) ? post.profiles[0] : post.profiles;
-                  const formattedDate = new Date(post.created_at).toLocaleDateString(undefined, {
-                    month: 'short',
-                    day: 'numeric',
-                  });
+                  const author = firstRelation(post.profiles);
+                  const authorName = profileLabel(author) || 'Member';
+                  const authorHandle = profileHandle(author);
+                  const formattedDate = timeAgo(post.created_at);
 
                   return (
                     <View key={post.id} style={styles.postCard}>
@@ -623,21 +601,21 @@ export function ExploreScreen({ navigation }: any) {
                         ) : (
                           <View style={[styles.postAvatar, styles.avatarFallback]}>
                             <Text style={styles.postAvatarLetter}>
-                              {(author?.full_name || author?.username || 'C')[0].toUpperCase()}
+                              {initialsOf(authorName)}
                             </Text>
                           </View>
                         )}
                         <View style={styles.postAuthorMeta}>
                           <View style={styles.postNameRow}>
                             <Text style={styles.postAuthorName} numberOfLines={1}>
-                              {author?.full_name || author?.username || 'Caribbean Member'}
+                              {authorName}
                             </Text>
                             {author?.is_verified && (
                               <Ionicons name="checkmark-circle" size={14} color={TOKENS.teal} />
                             )}
                           </View>
                           <Text style={styles.postAuthorHandle} numberOfLines={1}>
-                            @{author?.username || 'member'} · {formattedDate}
+                            {authorHandle} · {formattedDate}
                           </Text>
                         </View>
                       </View>
@@ -652,11 +630,11 @@ export function ExploreScreen({ navigation }: any) {
                       <View style={styles.postStats}>
                         <View style={styles.postStatItem}>
                           <Ionicons name="heart-outline" size={16} color={TOKENS.textMuted} />
-                          <Text style={styles.postStatText}>{post.likes_count || 0}</Text>
+                          <Text style={styles.postStatText}>{formatCompactNumber(post.likes_count || 0)}</Text>
                         </View>
                         <View style={styles.postStatItem}>
                           <Ionicons name="chatbubble-outline" size={15} color={TOKENS.textMuted} />
-                          <Text style={styles.postStatText}>{post.comments_count || 0}</Text>
+                          <Text style={styles.postStatText}>{formatCompactNumber(post.comments_count || 0)}</Text>
                         </View>
                       </View>
                     </View>

@@ -15,12 +15,12 @@ import {
   Platform,
 } from 'react-native';
 import { Video as ExpoVideo, ResizeMode } from 'expo-av';
-import { Ionicons as ExpoIonicons } from '@expo/vector-icons';
 import { TOKENS } from '../theme/tokens';
+import { Ionicons } from '../components/Icon';
+import { profileLabel, profileHandle, formatCompactNumber } from '../lib/format';
 import { supabase } from '../lib/supabase';
 
 const Video = ExpoVideo as unknown as React.ComponentType<any>;
-const Ionicons = ExpoIonicons as unknown as React.ComponentType<any>;
 
 interface StreamItem {
   id: string;
@@ -100,13 +100,13 @@ export function LiveScreen({ navigation }: any = {}) {
           return {
             id: d.id,
             title: d.title,
-            creatorName: p?.display_name || p?.username || 'Caribbean Broadcaster',
-            creatorHandle: p?.username ? `@${p.username}` : '@broadcaster',
+            creatorName: profileLabel(p) || 'Broadcaster',
+            creatorHandle: profileHandle(p) || (p?.username ? `@${p.username}` : '@broadcaster'),
             creatorAvatar: p?.avatar_url,
             state: d.state,
-            peakViewers: d.peak_viewers || 1,
-            category: d.category || 'Culture & Talk',
-            location: d.location_tag || 'Caribbean',
+            peakViewers: d.peak_viewers || 0,
+            category: d.category || 'General',
+            location: d.location_tag || '',
             videoUrl: livePlaybackUrl,
             playbackHlsUrl: d.playback_hls_url,
             rtmpsUrl: d.rtmps_url,

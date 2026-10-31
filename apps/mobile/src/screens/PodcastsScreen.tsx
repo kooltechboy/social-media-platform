@@ -12,11 +12,11 @@ import {
   Alert,
 } from 'react-native';
 import { Audio } from 'expo-av';
-import { Ionicons as ExpoIonicons } from '@expo/vector-icons';
 import { TOKENS } from '../theme/tokens';
+import { Ionicons } from '../components/Icon';
+import { formatDuration, profileLabel } from '../lib/format';
+import { useTerritories } from '../lib/territories';
 import { supabase } from '../lib/supabase';
-
-const Ionicons = ExpoIonicons as unknown as React.ComponentType<any>;
 
 interface EpisodeItem {
   id: string;
@@ -55,23 +55,8 @@ const PODCAST_CATEGORIES = [
   'Sports & Cricket',
 ];
 
-const TERRITORIES = [
-  { iso: 'ALL', name: 'All Islands' },
-  { iso: 'TTO', name: 'Trinidad & Tobago' },
-  { iso: 'JAM', name: 'Jamaica' },
-  { iso: 'BRB', name: 'Barbados' },
-  { iso: 'GUY', name: 'Guyana' },
-  { iso: 'HTI', name: 'Haiti' },
-  { iso: 'BHS', name: 'Bahamas' },
-  { iso: 'DMA', name: 'Dominica' },
-  { iso: 'LCA', name: 'Saint Lucia' },
-  { iso: 'GRD', name: 'Grenada' },
-  { iso: 'ATG', name: 'Antigua & Barbuda' },
-  { iso: 'PRI', name: 'Puerto Rico' },
-  { iso: 'CUB', name: 'Cuba' },
-];
-
 export function PodcastsScreen() {
+  const { territories } = useTerritories();
   const [podcasts, setPodcasts] = useState<PodcastShow[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -135,7 +120,7 @@ export function PodcastsScreen() {
             return {
               id: ep.id,
               title: ep.title,
-              durationFormatted: `${Math.floor((ep.duration_seconds || 1800) / 60)} mins`,
+              durationFormatted: formatDuration(ep.duration_seconds || 0),
               audioUrl: resolvedUrl,
               videoUrl: resolvedVideo || null,
               hasVideo: Boolean(ep.has_video || resolvedVideo),
@@ -149,15 +134,10 @@ export function PodcastsScreen() {
           return {
             id: d.id,
             title: d.title,
-            description:
-              d.description ||
-              'Caribbean audio documentary and cultural talk.',
-            author:
-              d.profiles?.display_name ||
-              d.profiles?.username ||
-              'Caribbean Host',
-            category: d.category || 'Culture & History',
-            countryIso: d.country_iso || 'CAR',
+            description: d.description || '',
+            author: profileLabel(d.profiles) || 'Host',
+            category: d.category || 'General',
+            countryIso: d.country_iso || '',
             coverUrl: d.cover_path,
             followerCount: d.follower_count || 0,
             episodes: eps,
@@ -324,7 +304,22 @@ export function PodcastsScreen() {
           style={styles.rail}
           contentContainerStyle={styles.railContent}
         >
-          {TERRITORIES.map((t) => {
+          <TouchableOpacity
+            key="ALL"
+            style={[styles.chip, activeTerritory === 'ALL' && styles.chipActiveTeal]}
+            onPress={() => setActiveTerritory('ALL')}
+            activeOpacity={0.8}
+          >
+            <Text
+              style={[
+                styles.chipText,
+                activeTerritory === 'ALL' && styles.chipTextActiveTeal,
+              ]}
+            >
+              All Islands
+            </Text>
+          </TouchableOpacity>
+          {territories.map((t) => {
             const isActive = activeTerritory === t.iso;
             return (
               <TouchableOpacity
@@ -339,7 +334,7 @@ export function PodcastsScreen() {
                     isActive && styles.chipTextActiveTeal,
                   ]}
                 >
-                  {t.name}
+                  {t.flag ? `${t.flag} ${t.name}` : t.name}
                 </Text>
               </TouchableOpacity>
             );
