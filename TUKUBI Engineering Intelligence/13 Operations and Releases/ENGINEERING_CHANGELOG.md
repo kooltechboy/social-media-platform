@@ -50,6 +50,14 @@ related:
   - 12 passed in `tests/e2e/navigation-and-routing.spec.ts`
   - 31 passed in `tests/e2e/content-pages.spec.ts` (verifying unauthenticated guest redirects across all 21 app routes, public legal docs, health API, and authenticated member access).
 
+### 6. Public Homepage Simplification & Cognitive Overload Elimination
+- Replaced the over-engineered 914-line simulated desktop dashboard with a streamlined, welcoming Caribbean front door directly matching the approved design reference.
+- Net reduction: Deleted 813 lines of simulated widgets, tabs, and fake desktop controls in favor of clean, declarative Next.js/Tailwind components.
+- Top Hero: Scenic coastal sunset backdrop, punchy headline (*The Caribbean Connected.*), 5 quick action badges (*Share, Connect, Create, Buy & Sell, Discover*), and sleek iPhone mobile app showcase displaying authentic vertical Caribbean content.
+- 5 Core Highlight Cards on light elevated surface: Community, Shorts, Music, Events, and Marketplace.
+- High-impact island banner: *Built for the Caribbean. Open to the World.* with custom tropical palm emblem and instant account creation CTA.
+- 3 Clear Value & Trust Pillars: Safe & Secure, Simple & Easy, and Caribbean First.
+
 ---
 
 ## [2026-10-31] — TUKUBI: Android CLI, Device Hub Sidecar & Expo Go Monorepo Integration
