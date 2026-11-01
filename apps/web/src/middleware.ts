@@ -42,6 +42,7 @@ const PUBLIC_EXEMPT_ROUTES = [
   '/privacy',
   '/help',
   '/learn',
+  '/about',
   '/api/v1/help',
 ];
 
@@ -77,9 +78,9 @@ export async function middleware(request: NextRequest) {
     (pathname.startsWith('/api/v1/podcasts/') && pathname.endsWith('/rss'));
 
   // Determine if this route actually needs an auth check. Public-exempt
-  // routes and the root `/` page (which renders its own public front door)
-  // never need getUser(), so we can skip the expensive Supabase call entirely.
-  const needsAuthCheck = !isPublicExemptRoute && pathname !== '/';
+  // routes never need getUser(), but the root `/` (for authenticated home feed vs login redirect)
+  // and all application/auth routes do.
+  const needsAuthCheck = !isPublicExemptRoute;
 
   // ── Rate limit tier selection (no I/O) ──
   const clientIp =
@@ -222,9 +223,14 @@ export async function middleware(request: NextRequest) {
       );
     }
 
-    // 4b. Root route (/) renders the Public Front Door for first-time / unauthenticated visitors
+    // 4b. Root route (/) immediately redirects unauthenticated visitors to /login (Facebook/Instagram gateway pattern)
     if (pathname === '/') {
-      return response;
+      const loginUrl = new URL('/login', request.url);
+      const redirectResponse = NextResponse.redirect(loginUrl);
+      redirectResponse.headers.set('Cache-Control', 'no-store, max-age=0, must-revalidate');
+      redirectResponse.headers.set('Pragma', 'no-cache');
+      redirectResponse.headers.set('Expires', '0');
+      return redirectResponse;
     }
 
     // 4c. All other protected application routes redirect to /login with preserved next destination

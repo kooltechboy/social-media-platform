@@ -94,6 +94,7 @@ describe('Production Authentication, Data Authenticity & Caribbean Content Integ
       expect(exemptList).toContain("'/privacy'");
       expect(exemptList).toContain("'/help'");
       expect(exemptList).toContain("'/learn'");
+      expect(exemptList).toContain("'/about'");
       expect(exemptList).toContain("'/auth/callback'");
       expect(exemptList).toContain("'/api/v1/health'");
 
@@ -101,6 +102,10 @@ describe('Production Authentication, Data Authenticity & Caribbean Content Integ
       expect(content).toContain('sanitizeRedirectUrl');
       expect(content).toContain("loginUrl.searchParams.set('next', safeNext);");
       expect(content).toContain("redirectResponse.headers.set('Cache-Control', 'no-store, max-age=0, must-revalidate');");
+
+      // Assert root / immediately redirects unauthenticated visitors to /login (Facebook/Instagram gateway pattern)
+      expect(content).toContain("if (pathname === '/')");
+      expect(content).toContain("const loginUrl = new URL('/login', request.url);");
 
       // Assert authenticated responses set private cache-control headers
       expect(content).toContain("response.headers.set('Cache-Control', 'private, no-cache, no-store, must-revalidate');");

@@ -1,4 +1,5 @@
 import React from 'react';
+import { redirect } from 'next/navigation';
 import {
   createSupabaseServerClient,
   getCurrentUser,
@@ -10,7 +11,6 @@ import { hydratePostsEngagement } from '../lib/feed/hydrate-posts';
 import { fetchActiveStoriesAction } from '../lib/social/actions';
 import { fetchTrendingSignalsAction } from '../lib/explore/actions';
 import { fetchMyPagesAction, fetchFollowedPagesAction } from '../lib/pages/actions';
-import PublicFrontDoor from '../components/public-front-door';
 import HomeDashboard from '../components/home/home-dashboard';
 import { type FeedPostData } from '../components/feed-stream';
 
@@ -23,7 +23,7 @@ interface RootPageProps {
 export default async function RootPage(props: RootPageProps) {
   const user = await getCurrentUser();
   if (!user) {
-    return <PublicFrontDoor />;
+    redirect('/login');
   }
 
   const searchParams = props.searchParams ? await props.searchParams : {};

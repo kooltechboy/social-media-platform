@@ -8,11 +8,12 @@ import { sanitizeRedirectUrl } from '../../lib/auth/redirect-utils';
 import {
   Sparkles,
   UserPlus,
-  Flame,
+  ShieldCheck,
+  Music,
+  Compass,
 } from 'lucide-react';
 import { LanguageDropdown } from './LanguageDropdown';
 import { SignInForm } from './SignInForm';
-import { ShowcaseMoments } from './ShowcaseMoments';
 import { TukubiLogo } from '../brand/tukubi-logo';
 import { useTranslation } from '@caribbean/localization';
 
@@ -31,29 +32,15 @@ export function TukubiMasterGateway() {
   }, [isAuthenticated, loading, router, searchParams]);
 
   return (
-    <div className="min-h-screen w-full bg-transparent text-brand-sandstone relative overflow-x-hidden select-none">
+    <div className="min-h-screen w-full bg-[#070D1A] text-brand-sandstone relative flex flex-col justify-between selection:bg-brand-caribbeanSea/30 overflow-x-hidden">
+      {/* ── Background Atmospheric Scrims & Glows ── */}
+      <div className="fixed top-0 left-0 right-0 h-[380px] bg-gradient-to-b from-[#0EA5E9]/12 via-[#F4AE45]/6 to-transparent pointer-events-none z-0" />
+      <div className="fixed -top-32 -left-32 w-[600px] h-[600px] rounded-full bg-[#0EA5E9]/15 blur-[160px] pointer-events-none z-0" />
+      <div className="fixed -bottom-32 -right-32 w-[600px] h-[600px] rounded-full bg-[#8B5CF6]/12 blur-[160px] pointer-events-none z-0" />
+
       {/* ── 1. Top Navigation Bar ── */}
       <header className="relative z-30 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 flex items-center justify-between border-b border-white/10 glass rounded-b-2xl mt-0">
         <TukubiLogo variant="horizontal" size="sm" href="/" priority />
-
-        {/* Center Desktop Links */}
-        <nav className="hidden md:flex items-center gap-6 text-xs font-semibold text-brand-sandstone/90">
-          <Link href="/explore" className="hover:text-brand-caribbeanSea transition-colors">
-            {t('nav.explore')}
-          </Link>
-          <Link href="/map" className="hover:text-brand-caribbeanSea transition-colors">
-            {t('nav.map')}
-          </Link>
-          <Link href="/live" className="hover:text-brand-caribbeanSea transition-colors">
-            {t('nav.live_streams')}
-          </Link>
-          <Link href="/podcasts" className="hover:text-brand-caribbeanSea transition-colors">
-            {t('nav.podcasts')}
-          </Link>
-          <Link href="/financial-center" className="hover:text-brand-caribbeanSea transition-colors">
-            {t('nav.financial_center')}
-          </Link>
-        </nav>
 
         {/* Right Top Actions */}
         <div className="flex items-center gap-3">
@@ -61,84 +48,70 @@ export function TukubiMasterGateway() {
 
           <Link
             href="/signup"
-            className="hidden sm:inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-black bg-gradient-to-r from-brand-caribbeanTeal to-brand-caribbeanSea text-[#060A12] hover:opacity-95 transition-all shadow-lg shadow-brand-caribbeanSea/30 active:scale-95"
+            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold bg-gradient-to-r from-brand-caribbeanTeal to-brand-caribbeanSea text-[#060A12] hover:opacity-95 transition-all shadow-lg shadow-brand-caribbeanSea/30 active:scale-95"
           >
             <UserPlus className="w-3.5 h-3.5" />
-            <span>{t('gateway.join_tukubi')}</span>
+            <span>{t('gateway.create_account')}</span>
           </Link>
         </div>
       </header>
 
-      {/* ── 2. Master Hero Showcase ── */}
-      <section className="relative z-20 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-16 lg:pt-14 lg:pb-24">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
+      {/* ── 2. Focused Authentication Gateway (Facebook/Instagram Style) ── */}
+      <main className="relative z-20 flex-1 flex items-center justify-center w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 lg:py-16">
+        <div className="w-full grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 items-center">
           {/* Left Column: Brand & Value Proposition */}
-          <div className="lg:col-span-7 space-y-6">
-            <div className="flex flex-wrap items-center gap-2">
-              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#0B1B3B]/85 border border-brand-caribbeanTeal/30 text-brand-porcelain text-xs font-semibold tracking-[0.04em] backdrop-blur-md">
-                <Sparkles className="w-3.5 h-3.5 text-brand-caribbeanTeal" />
-                <span>{t('gateway.tagline')}</span>
-              </div>
-
-              <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/[0.04] border border-white/[0.10] text-brand-goldenHour text-[11px] font-semibold backdrop-blur-md">
-                <Flame className="w-3.5 h-3.5 text-brand-goldenHour" />
-                <span>{t('gateway.spotlight')}</span>
-              </div>
+          <div className="lg:col-span-6 space-y-6 text-center lg:text-left">
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#0B1B3B]/85 border border-brand-caribbeanTeal/30 text-brand-porcelain text-xs font-semibold tracking-[0.04em] backdrop-blur-md">
+              <Sparkles className="w-3.5 h-3.5 text-brand-caribbeanTeal" />
+              <span>Born in the Caribbean. Built for the World.</span>
             </div>
 
             <div className="space-y-3">
-              <h1 className="font-display text-4xl sm:text-5xl xl:text-6xl font-bold text-white tracking-[-0.025em] leading-[1.08]">
-                {t('gateway.hero_title_1')}{' '}
-                <span className="tk-text-gradient">
-                  {t('gateway.hero_connected')}
-                </span>{' '}
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-caribbeanSea to-violet-400">
-                  {t('gateway.hero_empowered')}
+              <h1 className="font-display text-4xl sm:text-5xl xl:text-6xl font-extrabold text-white tracking-[-0.025em] leading-[1.08]">
+                The Caribbean<br />
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-caribbeanTeal via-brand-caribbeanSea to-violet-400">
+                  Connected.
                 </span>
               </h1>
 
-              <p className="text-base sm:text-lg text-brand-mist leading-relaxed max-w-xl">
-                {t('gateway.hero_subtitle')}
+              <p className="text-base sm:text-lg text-brand-mist leading-relaxed max-w-lg mx-auto lg:mx-0">
+                Connect with Caribbean people, culture, music, businesses, and creators across the islands and the global diaspora.
               </p>
             </div>
 
-            {/* CTAs */}
-            <div className="flex flex-wrap items-center gap-3.5 pt-2">
-              <Link
-                href="/signup"
-                className="tk-btn-primary px-6 py-3.5 rounded-xl text-sm flex items-center gap-2 min-h-[46px]"
-              >
-                <UserPlus className="w-4 h-4" />
-                <span>{t('gateway.create_account')}</span>
-              </Link>
-            </div>
-
-            <div className="pt-6 border-t border-white/[0.08]">
-              <p className="text-xs text-brand-mist leading-relaxed max-w-xl">
-                Discover communities, creators, culture, and commerce as real members and businesses join the network.
-              </p>
+            {/* Value Markers */}
+            <div className="pt-2 flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 text-xs text-brand-sandstone/80">
+              <div className="flex items-center gap-2">
+                <Compass className="w-4 h-4 text-brand-caribbeanSea" />
+                <span>30+ Islands & Territories</span>
+              </div>
+              <span className="hidden sm:inline text-white/20">•</span>
+              <div className="flex items-center gap-2">
+                <Music className="w-4 h-4 text-brand-caribbeanTeal" />
+                <span>Authentic Stems & Sounds</span>
+              </div>
+              <span className="hidden sm:inline text-white/20">•</span>
+              <div className="flex items-center gap-2">
+                <ShieldCheck className="w-4 h-4 text-emerald-400" />
+                <span>Sovereign Privacy</span>
+              </div>
             </div>
           </div>
 
-          {/* Right Column: Floating Auth Container */}
-          <div className="lg:col-span-5 relative">
-            <div className="relative">
-              <div className="absolute -inset-6 bg-gradient-to-br from-brand-caribbeanTeal/15 via-brand-caribbeanSea/12 to-transparent blur-3xl rounded-[40px] pointer-events-none" />
-              <div className="relative z-10 w-full max-w-md mx-auto">
+          {/* Right Column: Floating Auth Card (SignInForm) */}
+          <div className="lg:col-span-6 relative flex justify-center lg:justify-end">
+            <div className="relative w-full max-w-md">
+              <div className="absolute -inset-4 bg-gradient-to-br from-brand-caribbeanTeal/20 via-brand-caribbeanSea/15 to-violet-600/10 blur-2xl rounded-[40px] pointer-events-none" />
+              <div className="relative z-10 w-full">
                 <SignInForm />
               </div>
             </div>
           </div>
         </div>
-      </section>
+      </main>
 
-      {/* ── 3. Section: The Caribbean in Every Moment ── */}
-      <section className="relative z-20 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 border-t border-white/10 glass rounded-2xl mb-8">
-        <ShowcaseMoments />
-      </section>
-
-      {/* ── 4. Master Footer ── */}
-      <footer className="relative z-20 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 border-t border-white/10 glass rounded-t-2xl flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-brand-sandstone/70">
+      {/* ── 3. Clean Legal & Safety Footer ── */}
+      <footer className="relative z-20 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 border-t border-white/10 glass rounded-t-2xl flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-brand-sandstone/70">
         <div className="flex items-center gap-3">
           <TukubiLogo variant="symbol" size="xs" href="/" />
           <span className="font-bold text-white font-display">TUKUBI</span>
@@ -155,12 +128,16 @@ export function TukubiMasterGateway() {
             Terms of Service
           </Link>
           <span>•</span>
-          <Link href="/settings/security" className="hover:text-brand-caribbeanSea transition-colors">
-            Security
+          <Link href="/safety" className="hover:text-brand-caribbeanSea transition-colors">
+            Safety
           </Link>
           <span>•</span>
-          <Link href="/explore" className="hover:text-brand-goldenHour transition-colors font-semibold">
-            Explore Platform
+          <Link href="/help" className="hover:text-brand-caribbeanSea transition-colors">
+            Help Center
+          </Link>
+          <span>•</span>
+          <Link href="/learn" className="hover:text-brand-caribbeanSea transition-colors">
+            Learn More
           </Link>
         </div>
       </footer>

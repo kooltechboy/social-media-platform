@@ -16,6 +16,32 @@ related:
 
 # ENGINEERING_CHANGELOG — TUKUBI
 
+## [2026-11-01] — TUKUBI: Authentication-First Gateway Architecture (Facebook/Instagram Model)
+
+### 1. Authentication-First Gateway Architecture
+- Transformed entry flow on `www.tukubi.com`:
+  - Unauthenticated visitors accessing `/` are immediately redirected via Next.js Edge Middleware (`middleware.ts`) to `/login` with anti-cache headers (`Cache-Control: no-store, max-age=0, must-revalidate`, `Pragma: no-cache`, `Expires: 0`).
+  - Authenticated members accessing `/` immediately render their authenticated Home Feed directly in `apps/web/src/app/page.tsx` (`buildRankedFeed`, `HomeDashboard`), eliminating redirect loops.
+  - Authenticated members navigating to `/login` or `/signup` are redirected to `safeNext` (defaulting to `/` Home Feed).
+- Rebuilt `TukubiMasterGateway.tsx` into a high-performance, focused Caribbean login gateway:
+  - Clean top bar with horizontal `TukubiLogo`, `LanguageDropdown`, and "Create Account" CTA.
+  - Left hero column presenting the core value proposition (*The Caribbean Connected. Born in the Caribbean. Built for the World.*) with 3 value markers (*30+ Islands & Territories*, *Authentic Stems & Sounds*, *Sovereign Privacy*).
+  - Right column hosting the floating `SignInForm` card supporting Email/Password, Google/Facebook/Apple OAuth, Magic Link, and account recovery.
+  - Clean, responsive legal footer linking to `/privacy`, `/terms`, `/safety`, `/help`, and `/learn`.
+
+### 2. Dedicated Separation for Public Marketing/About Page
+- Created `apps/web/src/app/about/page.tsx` rendering `PublicFrontDoor`:
+  - Contains the complete, approved Caribbean marketing landing page matching the mobile mockup visual identity (*Everything You Love in One Place*, *Built for the Caribbean. Open to the World.*).
+  - Added `'/about'` to `PUBLIC_EXEMPT_ROUTES` in `middleware.ts`, enabling search indexing, advertising traffic, partnerships, and future delegation to `about.tukubi.com` while keeping the main app domain strictly auth-gated.
+
+### 3. Verification & Evidence
+- **TypeScript Typecheck:** 31 of 31 monorepo packages passed with 0 errors (`pnpm.cmd run typecheck`).
+- **Production Web Build:** `pnpm.cmd --filter caribbean-web run build` completed with exit code 0 (41/41 static pages generated including `/about`).
+- **Core Unit Suites:** 122 of 122 tests passed across 7 test suites.
+- **Playwright E2E Tests:**
+  - `tests/e2e/content-pages.spec.ts`: 31 of 31 passed in real Chromium (verifying unauthenticated `/` -> `/login` redirect, public legal docs, 21 protected route redirects, and authenticated content rendering).
+  - `tests/e2e/navigation-and-routing.spec.ts`: 13 of 13 passed in real Chromium (verifying unauthenticated `/` -> `/login` redirect, public exempt routes including `/about`, protected routes with `next` param, and authenticated member navigation).
+
 ## [2026-11-01] — TUKUBI: Production Authentication, Data Authenticity & Caribbean Content Integrity Sprint
 
 ### 1. Server-Side Route Security & Authentication Lockdown

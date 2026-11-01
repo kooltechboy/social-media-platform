@@ -5,10 +5,10 @@ test.describe('TUKUBI Content Pages & Route Protection', () => {
     // Unauthenticated context
     test.use({ storageState: { cookies: [], origins: [] } });
 
-    test('Homepage loads public front door for guests', async ({ page }) => {
+    test('Homepage immediately redirects unauthenticated guests to /login', async ({ page }) => {
       await page.goto('/');
       await page.waitForLoadState('networkidle');
-      expect(new URL(page.url()).pathname).toBe('/');
+      expect(new URL(page.url()).pathname).toBe('/login');
       await expect(page.locator('body')).toBeVisible();
     });
 

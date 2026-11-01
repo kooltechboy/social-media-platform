@@ -5,16 +5,16 @@ test.describe('Navigation & Routing - Unauthenticated', () => {
   // We want no stored state for these
   test.use({ storageState: { cookies: [], origins: [] } });
 
-  test('Public marketing and legal routes should be accessible without auth', async ({ page }) => {
+  test('Public auth and legal routes should be accessible without auth', async ({ page }) => {
     test.slow();
     const publicRoutes = [
-      '/',
       '/login',
       '/signup',
       '/terms',
       '/privacy',
       '/help',
-      '/learn'
+      '/learn',
+      '/about'
     ];
 
     for (const route of publicRoutes) {
@@ -22,6 +22,13 @@ test.describe('Navigation & Routing - Unauthenticated', () => {
       await page.waitForLoadState('networkidle');
       expect(new URL(page.url()).pathname).toBe(route);
     }
+  });
+
+  test('Root / should immediately redirect unauthenticated visitors to /login', async ({ page }) => {
+    await page.goto('/');
+    await page.waitForLoadState('networkidle');
+    expect(new URL(page.url()).pathname).toBe('/login');
+    await expect(page.locator('body')).toBeVisible();
   });
 
   test('Protected application routes should redirect to login with next param', async ({ page }) => {
