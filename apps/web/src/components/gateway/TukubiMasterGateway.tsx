@@ -2,8 +2,9 @@
 
 import React, { useEffect } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '../auth-provider';
+import { sanitizeRedirectUrl } from '../../lib/auth/redirect-utils';
 import {
   Sparkles,
   UserPlus,
@@ -19,12 +20,15 @@ export function TukubiMasterGateway() {
   const { isAuthenticated, loading } = useAuth();
   const { t } = useTranslation();
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   useEffect(() => {
     if (!loading && isAuthenticated) {
-      router.replace('/');
+      const rawNext = searchParams.get('next') || searchParams.get('redirect');
+      const safeNext = sanitizeRedirectUrl(rawNext);
+      router.replace(safeNext);
     }
-  }, [isAuthenticated, loading, router]);
+  }, [isAuthenticated, loading, router, searchParams]);
 
   return (
     <div className="min-h-screen w-full bg-transparent text-brand-sandstone relative overflow-x-hidden select-none">

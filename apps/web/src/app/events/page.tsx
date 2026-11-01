@@ -1,8 +1,9 @@
 import React from 'react';
-import { Calendar, MapPin, Users, Radio, Sparkles, Ticket, CheckCircle, Clock, ArrowRight } from 'lucide-react';
+import { Calendar, MapPin, Users, Radio, Sparkles, Ticket, CheckCircle, Clock, ArrowRight, Landmark, ExternalLink, ShieldCheck } from 'lucide-react';
 import Link from 'next/link';
 import { createSupabaseServerClient, getCurrentUser } from '../../lib/supabase/server';
-import { rsvpEventFormAction } from '../../lib/events/actions';
+import { rsvpEventFormAction, fetchCulturalObservancesAction } from '../../lib/events/actions';
+import type { CulturalObservance } from '../../lib/events/types';
 import EventCreateForm, { type CityOption } from '../../components/event-create-form';
 import EventCard, { type LiveEventItem } from '../../components/events/event-card';
 import RightRail from '../../components/right-rail';
@@ -23,11 +24,12 @@ export default async function EventsPage({
 
   let events: LiveEventItem[] = [];
   let cities: CityOption[] = [];
+  let observances: CulturalObservance[] = [];
 
   if (supabase) {
     let query = supabase
       .from('events')
-      .select('id, title, description, event_kind, venue, starts_at, capacity, host_id, is_cancelled, cancellation_reason, cities(name, country_iso), event_attendees(profile_id, rsvp_status)')
+      .select('id, title, description, event_kind, venue, starts_at, capacity, host_id, is_cancelled, cancellation_reason, source_type, verification_status, official_source_url, cities(name, country_iso), event_attendees(profile_id, rsvp_status)')
       .gte('starts_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
       .order('starts_at', { ascending: true })
       .limit(30);
@@ -42,14 +44,16 @@ export default async function EventsPage({
       }
     }
 
-    const [eventsResult, citiesResult] = await Promise.all([
+    const [eventsResult, citiesResult, observancesResult] = await Promise.all([
       query,
       supabase.from('cities').select('id, name, country_iso').order('name'),
+      fetchCulturalObservancesAction(),
     ]);
     if (eventsResult.data && eventsResult.data.length > 0) {
       events = eventsResult.data as unknown as LiveEventItem[];
     }
     cities = (citiesResult.data ?? []) as CityOption[];
+    observances = observancesResult ?? [];
   }
 
   return (
@@ -81,6 +85,67 @@ export default async function EventsPage({
               </Link>
             )}
           </div>
+        </div>
+
+        {/* Authoritative Annual Cultural Observances & Traditions */}
+        {observances.length > 0 && (
+          <section className="space-y-3" aria-labelledby="cultural-observances-heading">
+            <div className="flex items-center justify-between">
+              <h2 id="cultural-observances-heading" className="text-sm font-black text-white flex items-center gap-2 uppercase tracking-wider">
+                <Landmark className="w-4 h-4 text-amber-400" /> Annual Caribbean Cultural Traditions
+              </h2>
+              <span className="text-[11px] text-brand-sandstone/70 font-semibold">
+                Verified Cultural Authorities
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {observances.slice(0, 4).map((obs) => (
+                <div
+                  key={obs.id}
+                  className="surface-card rounded-2xl p-4 border border-amber-500/20 space-y-2.5 bg-gradient-to-br from-amber-500/5 to-transparent"
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-xs font-black text-amber-300 flex items-center gap-1.5">
+                      <ShieldCheck className="w-3.5 h-3.5 text-amber-400" />
+                      {obs.territory_name}
+                    </span>
+                    <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-white/10 text-brand-sandstone">
+                      {obs.typical_season}
+                    </span>
+                  </div>
+                  <h3 className="text-sm font-black text-white">{obs.name}</h3>
+                  <p className="text-xs text-brand-sandstone/80 line-clamp-2 leading-relaxed">
+                    {obs.historical_significance}
+                  </p>
+                  <div className="pt-1 flex items-center justify-between text-[11px] text-brand-sandstone/70 border-t border-white/5">
+                    <span className="truncate max-w-[200px]">{obs.official_authority_name}</span>
+                    {obs.official_source_url && (
+                      <a
+                        href={obs.official_source_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-amber-300 hover:text-amber-200 inline-flex items-center gap-1 font-semibold"
+                      >
+                        Official Authority
+                        <ExternalLink className="w-3 h-3" />
+                      </a>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* Section Heading for Scheduled Events */}
+        <div className="pt-2 flex items-center justify-between">
+          <h2 className="text-sm font-black text-white flex items-center gap-2 uppercase tracking-wider">
+            <Calendar className="w-4 h-4 text-yellow-400" /> Confirmed &amp; Scheduled Events
+          </h2>
+          <span className="text-xs text-brand-sandstone/70">
+            {events.length} {events.length === 1 ? 'event' : 'events'} scheduled
+          </span>
         </div>
 
         {/* Events Grid */}

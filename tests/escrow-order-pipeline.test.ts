@@ -434,9 +434,8 @@ describe('Task 7: Escrow Order Pipeline, Cart Store & Escrow Status Tracking', (
 
       expect(vdom).not.toBeNull();
       const json = JSON.stringify(vdom);
-      // Confirms 30-day escrow guarantee is present and checkout cta is rendered
-      expect(json).toContain('Escrow');
-      expect(json).toContain('Backed by TUKUBI 30-Day Escrow Guarantee');
+      // Confirms verified purchase protection trust badge is present and checkout cta is rendered
+      expect(json).toContain('Backed by TUKUBI Verified Purchase Protection');
       expect(json).toContain('Proceed to Secure Checkout');
     });
 
@@ -454,7 +453,7 @@ describe('Task 7: Escrow Order Pipeline, Cart Store & Escrow Status Tracking', (
 
         const json = JSON.stringify(vdom);
         expect(json).toContain('Transactions Begin Sept 30');
-        expect(json).toContain('Escrow');
+        expect(json).toContain('Backed by TUKUBI Verified Purchase Protection');
       } finally {
         vi.useRealTimers();
       }

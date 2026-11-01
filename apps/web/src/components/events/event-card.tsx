@@ -10,6 +10,8 @@ import {
   Settings,
   AlertTriangle,
   CheckCircle2,
+  ShieldCheck,
+  ExternalLink,
 } from 'lucide-react';
 import EventManageModal from './event-manage-modal';
 import { rsvpEventFormAction } from '../../lib/events/actions';
@@ -26,6 +28,9 @@ export interface LiveEventItem {
   host_id?: string | null;
   is_cancelled?: boolean;
   cancellation_reason?: string | null;
+  source_type?: string;
+  verification_status?: string;
+  official_source_url?: string | null;
   cities: { name: string; country_iso: string } | null;
   event_attendees: Array<{ profile_id: string; rsvp_status: string }>;
 }
@@ -67,10 +72,15 @@ export default function EventCard({ event, currentUserId }: EventCardProps) {
         <div className="space-y-3.5">
           {/* Top badges */}
           <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <span className="text-[10px] md:text-xs font-black px-2.5 md:px-3 py-1 md:py-1.5 rounded-full bg-brand-caribbeanSea/15 text-brand-caribbeanSea border border-brand-caribbeanSea/30 uppercase tracking-wider">
                 {event.event_kind.replace('_', ' ')}
               </span>
+              {event.verification_status === 'confirmed' && (
+                <span className="flex items-center gap-1 text-[10px] md:text-xs font-black px-2 md:px-2.5 py-0.5 md:py-1 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
+                  <CheckCircle2 className="w-3 h-3 text-emerald-400" /> Confirmed
+                </span>
+              )}
               {event.event_kind !== 'in_person' && (
                 <span className="flex items-center gap-1.5 text-[10px] md:text-xs font-black text-rose-300 bg-rose-500/15 px-2.5 md:px-3 py-1 md:py-1.5 rounded-full border border-rose-500/30 animate-pulse">
                   <Radio className="w-3 h-3 md:w-3.5 md:h-3.5" /> Live Stream
@@ -135,6 +145,20 @@ export default function EventCard({ event, currentUserId }: EventCardProps) {
                 <span className="font-black text-white text-xs md:text-sm">{event.price}</span>
               )}
             </p>
+            {event.official_source_url && (
+              <p className="pt-0.5">
+                <a
+                  href={event.official_source_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 text-xs text-amber-300/90 hover:text-amber-200 hover:underline font-semibold"
+                >
+                  <ShieldCheck className="w-3.5 h-3.5 text-amber-400" />
+                  <span>Official Event Source</span>
+                  <ExternalLink className="w-3 h-3 opacity-70" />
+                </a>
+              </p>
+            )}
           </div>
         </div>
 

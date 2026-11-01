@@ -6,6 +6,40 @@
 export type EventKind = 'in_person' | 'livestream' | 'hybrid';
 export type EventPrivacy = 'public' | 'community_only' | 'invite_only';
 export type RSVPStatus = 'going' | 'interested' | 'cancelled';
+export type EventSourceType =
+  | 'official_board'
+  | 'festival_organizer'
+  | 'verified_organizer'
+  | 'cultural_calendar'
+  | 'community_submission';
+export type EventVerificationStatus =
+  | 'confirmed'
+  | 'pending_review'
+  | 're_verification_needed'
+  | 'rejected';
+export type TicketAvailability =
+  | 'available'
+  | 'sold_out'
+  | 'free_entry'
+  | 'not_applicable'
+  | 'unverified';
+
+export interface CulturalObservance {
+  id: string;
+  name: string;
+  slug: string;
+  territory_iso: string;
+  territory_name: string;
+  category: string;
+  description: string;
+  historical_significance: string;
+  typical_season: string;
+  official_authority_name: string;
+  official_source_url?: string | null;
+  source_verification_status: 'confirmed' | 'pending_editorial_review' | 'historical_archive';
+  is_annual_tradition: boolean;
+  tags: string[];
+}
 
 export interface EventAttendee {
   event_id: string;
@@ -50,6 +84,15 @@ export interface LiveEventItem {
   is_cancelled?: boolean;
   cancelled_at?: string | null;
   cancellation_reason?: string | null;
+  source_type?: EventSourceType;
+  verification_status?: EventVerificationStatus;
+  official_source_url?: string | null;
+  last_verified_at?: string | null;
+  timezone?: string;
+  organizer_name?: string | null;
+  ticket_source_url?: string | null;
+  ticket_availability?: TicketAvailability;
+  cultural_observance_id?: string | null;
   created_at?: string;
   cities?: {
     name: string;

@@ -191,7 +191,7 @@ export default async function MarketplacePage({
             </h1>
           </div>
           <p className="text-xs sm:text-sm md:text-base text-brand-sandstone/80 leading-relaxed font-medium">
-            Discover verified authentic island crafts, coffee, carnival apparel, electronics, and digital creator goods — backed by 30-day double-entry escrow buyer protection.
+            Discover verified authentic island crafts, coffee, carnival apparel, and digital creator goods from authentic Caribbean businesses and creators.
           </p>
         </div>
 
@@ -360,12 +360,12 @@ export default async function MarketplacePage({
         </div>
       </div>
 
-      {/* Trust & Escrow Guarantee Box */}
+      {/* Trust & Verified Commerce Box */}
       <div className="surface-card border border-white/10 rounded-3xl p-5 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-lg text-xs md:text-sm">
         <div className="flex items-center gap-3">
           <ShieldCheck className="w-6 h-6 text-brand-sunriseCoral shrink-0" />
           <p className="text-brand-sandstone/90 leading-relaxed">
-            <strong className="text-white font-bold">TUKUBI Buyer &amp; Seller Protection:</strong> Every purchase is backed by automated dispute settlement and escrow resolution via authorized Caribbean and international payment processors.
+            <strong className="text-white font-bold">TUKUBI Verified Commerce:</strong> Secure payment processing via licensed payment providers, verified creator and business storefronts, and dedicated dispute resolution support.
           </p>
         </div>
         <div className="flex items-center gap-4 text-xs text-brand-sandstone/70 shrink-0">
@@ -497,7 +497,7 @@ export default async function MarketplacePage({
                       </Link>
 
                       <p className="text-xs text-brand-sandstone/80 line-clamp-2 min-h-[32px] leading-relaxed">
-                        {p.description || 'Authentic Caribbean offering with guaranteed buyer protection.'}
+                        {p.description || 'Authentic Caribbean offering from verified platform sellers.'}
                       </p>
                     </div>
 

@@ -321,7 +321,7 @@ export default function AppSidebar({ currentPath }: { currentPath?: string }) {
                       item.badge === 'OFFICIAL'
                         ? 'bg-brand-caribbeanSea/10 text-sky-300'
                         : item.badge === 'LIVE'
-                        ? 'bg-rose-500/12 text-rose-300'
+                        ? 'bg-rose-500/12 text-rose-300 animate-pulse'
                         : item.badge === 'STUDIO'
                         ? 'bg-brand-goldenHour/10 text-brand-goldenHour'
                         : 'bg-white/[0.06] text-brand-mist'

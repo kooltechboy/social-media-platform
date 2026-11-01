@@ -24,7 +24,7 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#0B1B3B"
+        "backgroundColor": "#070D1A"
       },
       "package": "com.tukubi.app",
       "permissions": [

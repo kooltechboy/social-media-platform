@@ -38,6 +38,13 @@ TUKUBI's data layer is managed exclusively via versioned SQL migrations in `supa
   - Hardens `record_ad_impression_and_spend` with server-computed CPM, moderation check, 5-minute viewer deduplication, self-impression guard, and double-entry `ledger_entries` (`SEC-01`).
   - Hardens `get_user_messaging_friends`, `is_staff_or_ad_moderator`, `is_page_member`, and `can_manage_page` against IDOR (`SEC-02`, `SEC-03`, `SEC-04`).
   - Adds `enforce_campaign_and_ad_security` trigger and atomic `fund_campaign_from_intent` RPC (`SEC-03`, `P0-1`, `P0-7`).
+- **`00117_production_auth_rls_and_content_authenticity.sql` (Added in Production Auth & Data Authenticity Sprint):**
+  - Creates `public.cultural_observances` table for recurring annual Caribbean traditions (with full RLS and 8 verified regional traditions seeded).
+  - Alters `public.events` adding authoritative provenance columns: `source_type`, `verification_status`, `official_source_url`, `last_verified_at`, `timezone`, `organizer_name`, `ticket_source_url`, `ticket_availability`, and FK `cultural_observance_id`.
+  - Replaces `public.events` public SELECT policy so anonymous visitors can only inspect confirmed, non-cancelled events (`verification_status = 'confirmed' AND status != 'cancelled'`).
+  - Hardens `public.sounds` RLS: eliminates anonymous insertion hole (`creator_id IS NULL`), requiring authenticated creator ownership (`auth.uid() = creator_id`).
+  - Adds strict RLS to `public.podcast_analytics`.
+  - Fully paired with reversible rollback script `00117_production_auth_rls_and_content_authenticity_rollback.sql`.
 
 ---
 

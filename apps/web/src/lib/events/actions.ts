@@ -8,6 +8,7 @@ import type {
   EventKind,
   EventPrivacy,
   LiveEventItem,
+  CulturalObservance,
 } from './types';
 
 export interface EventActionState {
@@ -465,4 +466,33 @@ export async function deleteEventAction(
   safeRevalidatePath('/events');
   safeRevalidatePath(`/events/${eventId}`);
   return { error: null, success: true };
+}
+
+/**
+ * Fetches verified Caribbean cultural observances and annual traditions.
+ */
+export async function fetchCulturalObservancesAction(
+  territoryIso?: string | null
+): Promise<CulturalObservance[]> {
+  const supabase = await createSupabaseServerClient();
+  if (!supabase) return [];
+
+  try {
+    let query = supabase
+      .from('cultural_observances')
+      .select('*')
+      .eq('source_verification_status', 'confirmed')
+      .order('name', { ascending: true });
+
+    if (territoryIso && territoryIso !== 'ALL') {
+      query = query.eq('territory_iso', territoryIso.toUpperCase());
+    }
+
+    const { data, error } = await query;
+    if (error || !data) return [];
+    return data as CulturalObservance[];
+  } catch (err) {
+    console.error('fetchCulturalObservancesAction error:', err);
+    return [];
+  }
 }

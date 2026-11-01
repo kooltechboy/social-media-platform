@@ -16,6 +16,42 @@ related:
 
 # ENGINEERING_CHANGELOG — TUKUBI
 
+## [2026-11-01] — TUKUBI: Production Authentication, Data Authenticity & Caribbean Content Integrity Sprint
+
+### 1. Server-Side Route Security & Authentication Lockdown
+- Hardened Next.js edge `middleware.ts`:
+  - Removed all protected application routes from `PUBLIC_EXEMPT_ROUTES` (`/explore`, `/sounds`, `/map`, `/events`, `/podcasts`, `/marketplace`, `/communities`, `/pages`, `/shorts`, `/reels`, `/live`, `/diaspora`, `/search`, `/messages`, `/notifications`, `/settings`, `/financial-center`, `/creator-studio`, `/create`, `/admin`, `/moderation`).
+  - Added strict server-side authentication redirect to `/login?next=<sanitized_path>` for unauthenticated guests.
+  - Attached anti-cache headers `Cache-Control: no-store, max-age=0, must-revalidate` on protected route redirects and private authenticated responses.
+- Hardened open-redirect sanitizer `apps/web/src/lib/auth/redirect-utils.ts` with whitelisted application routes (`/terms`, `/privacy`, `/shorts`, `/financial-center`, `/marketplace`, etc.) rejecting dangerous URI schemes and protocol overrides.
+- Updated `TukubiMasterGateway.tsx` to read the `next` search parameter and seamlessly redirect authenticated users to their requested destination.
+
+### 2. Database RLS Hardening & Cultural Observances Architecture (`00117`)
+- Authored versioned migration `supabase/migrations/00117_production_auth_rls_and_content_authenticity.sql` and rollback `00117_..._rollback.sql`:
+  - Created `public.cultural_observances` table for recurring annual Caribbean traditions (seeded with 8 authentic cultural traditions across Trinidad, Barbados, Jamaica, The Bahamas, Saint Lucia, Dominican Republic, Puerto Rico, and Haiti).
+  - Extended `public.events` with authoritative provenance columns: `source_type`, `verification_status`, `official_source_url`, `last_verified_at`, `timezone`, `organizer_name`, `ticket_source_url`, `ticket_availability`, `cultural_observance_id`.
+  - Hardened `public.events` RLS: anonymous/public queries can only read `verification_status = 'confirmed' AND status != 'cancelled'`.
+  - Hardened `public.sounds` RLS: closed anonymous insertion vulnerability (`creator_id IS NULL`), enforcing `auth.uid() = creator_id` for authenticated creators only.
+  - Hardened `public.podcast_analytics` RLS: restricted access to creator ownership.
+
+### 3. Media Integrity & Content Rights Governance
+- Enforced mandatory intellectual property and distribution rights declarations on sound uploads in `apps/web/src/lib/sounds/actions.ts` and `SoundsDirectoryClient.tsx`.
+- Verified all 12 platform rhythm stems in Supabase storage (HTTP 200) with authentic zero baseline metrics.
+- Added verified audio badges and empty library states with rights declaration flows.
+
+### 4. Marketplace Truthfulness & Verified Commerce Alignment
+- Replaced unbacked 30-day automated escrow claims in `marketplace/page.tsx`, `marketplace-rail.tsx`, `ai-shopping-assistant.tsx`, and `cart-drawer.tsx` with truthful "TUKUBI Verified Purchase Protection" copy aligning with licensed PSP processing (Stripe/PayPal) and manual dispute resolution.
+
+### 5. Verification & Test Evidence
+- **TypeScript Typecheck:** Passed across all 31 monorepo packages with 0 errors (`pnpm.cmd run typecheck`).
+- **Production Web Build:** `pnpm.cmd --filter caribbean-web run build` completed successfully (exit code 0, 40 static pages generated).
+- **Unit & Integration Tests:** 132 tests passed across 8 test suites (`tests/unit/production-auth-and-data-integrity.test.ts`, `tests/unified-social-commerce.test.ts`, `tests/escrow-order-pipeline.test.ts`, `tests/unit/pwa.test.ts`, `tests/unit/phase21-pwa-offline-service-worker-certification.test.ts`, `tests/unit/island-vibes-theme.test.ts`, `tests/unit/mobile-screen-parity.test.ts`, `tests/unit/mobile-hardening.test.ts`).
+- **Playwright E2E Tests:** 43 passed in real Chromium:
+  - 12 passed in `tests/e2e/navigation-and-routing.spec.ts`
+  - 31 passed in `tests/e2e/content-pages.spec.ts` (verifying unauthenticated guest redirects across all 21 app routes, public legal docs, health API, and authenticated member access).
+
+---
+
 ## [2026-10-31] — TUKUBI: Android CLI, Device Hub Sidecar & Expo Go Monorepo Integration
 
 ### 1. Android Development Toolchain & Sidecars

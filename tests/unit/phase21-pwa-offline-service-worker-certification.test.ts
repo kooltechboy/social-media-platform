@@ -24,8 +24,8 @@ describe('Phase 21 — PWA, Service Worker & Offline Experience Certification', 
       expect(manifest.description).toBe('The Caribbean Connected.');
       expect(manifest.display).toBe('standalone');
       expect(manifest.start_url).toBe('/');
-      expect(manifest.theme_color).toBe('#0a0612');
-      expect(manifest.background_color).toBe('#060A13');
+      expect(manifest.theme_color).toBe('#070D1A');
+      expect(manifest.background_color).toBe('#070D1A');
 
       // Verify required icons (standard & maskable 192 and 512)
       const icons = manifest.icons || [];

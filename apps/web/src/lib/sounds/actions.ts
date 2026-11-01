@@ -275,6 +275,11 @@ export async function uploadSoundAction(formData: FormData): Promise<SoundAction
     return { success: false, error: 'Audio file must be under 25MB.' };
   }
 
+  const rightsCertified = formData.get('rightsCertified') === 'on' || formData.get('rightsCertified') === 'true';
+  if (!rightsCertified) {
+    return { success: false, error: 'You must certify copyright ownership or legitimate licensing authorization before publishing audio stems.' };
+  }
+
   const title = String(formData.get('title') ?? '').trim();
   const genre = String(formData.get('genre') ?? 'Soca').trim();
   const countryIso = String(formData.get('countryIso') ?? 'TTO').trim().toUpperCase();

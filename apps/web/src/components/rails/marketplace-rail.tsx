@@ -137,10 +137,10 @@ export default function MarketplaceRail({
         </div>
       </section>
 
-      {/* 4. Trust & Buyer Protection Badge */}
+      {/* 4. Trust & Verified Commerce Badge */}
       <div className="p-4 rounded-2xl bg-white/5 border border-white/10 space-y-2 text-center">
         <ShieldCheck className="w-6 h-6 text-emerald-400 mx-auto" />
-        <p className="text-xs font-black text-white">TUKUBI Verified Escrow</p>
+        <p className="text-xs font-black text-white">TUKUBI Verified Commerce</p>
         <p className="text-[11px] text-brand-mist leading-relaxed">
           Protected marketplace payments with zero credit card storage and multi-currency Caribbean settlement.
         </p>

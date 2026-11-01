@@ -5,31 +5,38 @@ test.describe('Navigation & Routing - Unauthenticated', () => {
   // We want no stored state for these
   test.use({ storageState: { cookies: [], origins: [] } });
 
-  test('Public routes should be accessible without auth', async ({ page }) => {
+  test('Public marketing and legal routes should be accessible without auth', async ({ page }) => {
     test.slow();
     const publicRoutes = [
       '/',
-      '/explore',
-      '/map',
-      '/reels',
-      '/live',
-      '/podcasts',
-      '/communities',
-      '/marketplace',
-      '/events',
-      '/pages'
+      '/login',
+      '/signup',
+      '/terms',
+      '/privacy',
+      '/help',
+      '/learn'
     ];
 
     for (const route of publicRoutes) {
       await page.goto(route);
-      // Wait for page to load to ensure it doesn't redirect
       await page.waitForLoadState('networkidle');
       expect(new URL(page.url()).pathname).toBe(route);
     }
   });
 
-  test('Protected routes should redirect to login with next param', async ({ page }) => {
+  test('Protected application routes should redirect to login with next param', async ({ page }) => {
     const protectedRoutes = [
+      '/explore',
+      '/sounds',
+      '/map',
+      '/events',
+      '/podcasts',
+      '/marketplace',
+      '/communities',
+      '/pages',
+      '/shorts',
+      '/reels',
+      '/live',
       '/settings',
       '/creator-studio',
       '/financial-center',
@@ -45,14 +52,16 @@ test.describe('Navigation & Routing - Unauthenticated', () => {
       await page.waitForLoadState('networkidle');
       const currentUrl = new URL(page.url());
       expect(currentUrl.pathname).toBe('/login');
-      expect(currentUrl.searchParams.get('next')).toBe(encodeURIComponent(route).replace(/%2F/g, '/')); // Might be unescaped depending on Next.js setup, let's just check standard encoding
+      expect(currentUrl.searchParams.get('next')).toBe(route);
     }
   });
 
-  test('Admin bootstrap should be exempt from protection', async ({ page }) => {
+  test('Admin bootstrap route requires authentication', async ({ page }) => {
     await page.goto('/admin/bootstrap');
     await page.waitForLoadState('networkidle');
-    expect(new URL(page.url()).pathname).toBe('/admin/bootstrap');
+    const currentUrl = new URL(page.url());
+    expect(currentUrl.pathname).toBe('/login');
+    expect(currentUrl.searchParams.get('next')).toBe('/admin/bootstrap');
   });
 
   test('Header session widget shows Sign In when unauth', async ({ page }) => {
@@ -88,23 +97,23 @@ test.describe('Navigation & Routing - Authenticated', () => {
     const links = [
       { name: 'Home', href: '/' },
       { name: 'Explore', href: '/explore' },
-      { name: 'Reels', href: '/reels' },
+      { name: 'Shorts', href: '/shorts' },
       { name: 'Communities', href: '/communities' },
       { name: 'Pages', href: '/pages' },
       { name: 'Marketplace', href: '/marketplace' },
       { name: 'Events', href: '/events' },
-      { name: 'Podcasts Network', href: '/podcasts' },
+      { name: 'Creator Studio', href: '/creator-studio' },
     ];
 
     for (const link of links) {
-      const linkLocator = page.locator('aside').getByRole('link', { name: new RegExp(`^${link.name}$`, 'i') }).first();
+      const linkLocator = page.locator('aside').getByRole('link', { name: new RegExp(`^${link.name}`, 'i') }).first();
       await expect(linkLocator).toBeVisible();
       await expect(linkLocator).toHaveAttribute('href', link.href);
     }
   });
 
   test('Tools & Ecosystem Accordion toggles and contains links', async ({ page }) => {
-    const moreBtn = page.locator('aside').getByRole('button', { name: /Tools & Ecosystem|More Ecosystem Features/i });
+    const moreBtn = page.locator('aside').getByRole('button', { name: /Discover more|Tools & Ecosystem|More Ecosystem Features/i });
     await expect(moreBtn).toBeVisible();
     await moreBtn.click();
     await page.waitForTimeout(300);

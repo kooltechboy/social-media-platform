@@ -49,7 +49,7 @@ export default function AiShoppingAssistant({ productContext }: AiShoppingAssist
         const qNorm = userText.toLowerCase();
         let reply = '';
         if (qNorm.includes('shipping') || qNorm.includes('deliver') || qNorm.includes('protection')) {
-          reply = `This listing is sold by ${productContext.sellerName} and backed by TUKUBI 30-day Buyer Protection. Payments are held safely in verified escrow until delivery is confirmed.`;
+          reply = `This listing is sold by ${productContext.sellerName} with verified seller credentials and secure payment processing via licensed payment providers. In the event of an issue, TUKUBI dispute support is available to assist.`;
         } else if (qNorm.includes('condition') || qNorm.includes('quality')) {
           reply = `The seller has listed this item in "${productContext.condition || 'verified'}" condition. Description provided: "${productContext.description || 'Authentic Caribbean offering'}".`;
         } else if (qNorm.includes('similar') || qNorm.includes('cheaper') || qNorm.includes('more')) {

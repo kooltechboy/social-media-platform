@@ -967,18 +967,33 @@ export default function SoundsDirectoryClient({
                 </div>
               </div>
 
-              <div className="flex items-center gap-2 pt-2">
-                <input
-                  type="checkbox"
-                  id="commercialUse"
-                  name="commercialUseAllowed"
-                  value="true"
-                  defaultChecked
-                  className="rounded border-white/20 bg-slate-950 text-rose-500 focus:ring-rose-500"
-                />
-                <label htmlFor="commercialUse" className="text-xs text-brand-sandstone/90">
-                  Allow commercial use in monetized creator reels
-                </label>
+              <div className="space-y-2.5 pt-2">
+                <div className="flex items-start gap-2 p-3 rounded-xl bg-slate-950/80 border border-white/10">
+                  <input
+                    type="checkbox"
+                    id="rightsCertified"
+                    name="rightsCertified"
+                    required
+                    className="mt-0.5 rounded border-white/20 bg-slate-900 text-rose-500 focus:ring-rose-500 shrink-0"
+                  />
+                  <label htmlFor="rightsCertified" className="text-xs text-brand-sandstone/90 leading-tight">
+                    <strong className="text-white font-bold">Content Rights Declaration:</strong> I certify that I am the copyright owner of this audio stem or hold the authorized rights to license and distribute it on TUKUBI.
+                  </label>
+                </div>
+
+                <div className="flex items-center gap-2 px-1">
+                  <input
+                    type="checkbox"
+                    id="commercialUse"
+                    name="commercialUseAllowed"
+                    value="true"
+                    defaultChecked
+                    className="rounded border-white/20 bg-slate-950 text-rose-500 focus:ring-rose-500"
+                  />
+                  <label htmlFor="commercialUse" className="text-xs text-brand-sandstone/90">
+                    Allow commercial use in monetized creator reels and shorts
+                  </label>
+                </div>
               </div>
 
               <div className="pt-4 flex items-center justify-end gap-3 border-t border-white/10">

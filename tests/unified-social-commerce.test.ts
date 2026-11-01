@@ -510,7 +510,7 @@ describe('Task 8: End-to-End Suite & Acceptance Verification for Sub-Project 3 (
 
       expect(drawerVdom).not.toBeNull();
       const serialized = JSON.stringify(drawerVdom);
-      expect(serialized).toContain('Backed by TUKUBI 30-Day Escrow Guarantee');
+      expect(serialized).toContain('Backed by TUKUBI Verified Purchase Protection');
       expect(serialized).toContain('Proceed to Secure Checkout');
     });
   });

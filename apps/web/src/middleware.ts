@@ -17,6 +17,12 @@ const AUTH_GATEWAY_ROUTES = [
 /**
  * Public routes explicitly exempt from authentication requirements.
  */
+/**
+ * Public routes explicitly exempt from authentication requirements.
+ * Essential public marketing, legal docs, help docs, and system webhooks only.
+ * Every core application feature (Explore, Shorts, Sounds, Events, Podcasts,
+ * Marketplace, Communities, Pages, Messaging, Studio, Map, etc.) is strictly protected.
+ */
 const PUBLIC_EXEMPT_ROUTES = [
   '/auth/callback',
   '/api/auth/check-username',
@@ -37,20 +43,6 @@ const PUBLIC_EXEMPT_ROUTES = [
   '/help',
   '/learn',
   '/api/v1/help',
-  '/explore',
-  '/search',
-  '/sounds',
-  '/map',
-  '/podcasts',
-  '/reels',
-  '/marketplace',
-  '/events',
-  '/post',
-  '/profile',
-  '/live',
-  '/communities',
-  '/pages',
-  '/admin/bootstrap',
 ];
 
 import { checkRateLimit, getRateLimitHeaders, type RateLimitTier } from './lib/rate-limit/sliding-window';
@@ -238,11 +230,19 @@ export async function middleware(request: NextRequest) {
     // 4c. All other protected application routes redirect to /login with preserved next destination
     const loginUrl = new URL('/login', request.url);
     const returnPath = pathname + (request.nextUrl.search || '');
-    loginUrl.searchParams.set('next', returnPath);
-    return NextResponse.redirect(loginUrl);
+    const safeNext = sanitizeRedirectUrl(returnPath);
+    loginUrl.searchParams.set('next', safeNext);
+    const redirectResponse = NextResponse.redirect(loginUrl);
+    redirectResponse.headers.set('Cache-Control', 'no-store, max-age=0, must-revalidate');
+    redirectResponse.headers.set('Pragma', 'no-cache');
+    redirectResponse.headers.set('Expires', '0');
+    return redirectResponse;
   }
 
   // 5. Authenticated user accessing protected application route
+  response.headers.set('Cache-Control', 'private, no-cache, no-store, must-revalidate');
+  response.headers.set('Pragma', 'no-cache');
+  response.headers.set('Expires', '0');
   return response;
 }
 

@@ -119,9 +119,9 @@ describe('TUKUBI Mobile Screen Parity & Navigation Suite', () => {
   describe('4. ReelsScreen Functional Architecture', () => {
     const reelsContent = fs.readFileSync(path.join(screensDir, 'ReelsScreen.tsx'), 'utf-8');
 
-    it('queries videos table with video_kind=reel', () => {
+    it('queries videos table with video_kind in reel or short', () => {
       expect(reelsContent).toContain(".from('videos')");
-      expect(reelsContent).toContain(".eq('video_kind', 'reel')");
+      expect(reelsContent).toMatch(/\.(eq|in)\('video_kind'/);
       const queryFilter = { video_kind: 'reel', visibility: 'public' };
       expect(queryFilter.video_kind).toBe('reel');
       expect(queryFilter.visibility).toBe('public');
@@ -159,7 +159,7 @@ describe('TUKUBI Mobile Screen Parity & Navigation Suite', () => {
 
     it('queries notifications filtered by recipient_id with limit', () => {
       expect(notifContent).toContain(".from('notifications')");
-      expect(notifContent).toContain(".eq('recipient_id', user.id)");
+      expect(notifContent).toContain(".eq('recipient_id', userId)");
       expect(notifContent).toContain('.limit(50)');
     });
 

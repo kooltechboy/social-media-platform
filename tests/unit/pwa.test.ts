@@ -21,8 +21,8 @@ describe('TUKUBI PWA Implementation Suite', () => {
       expect(manifest.scope).toBe('/');
       expect(manifest.display).toBe('standalone');
       expect(manifest.orientation).toBe('portrait-primary');
-      expect(manifest.theme_color).toBe('#0a0612');
-      expect(manifest.background_color).toBe('#060A13');
+      expect(manifest.theme_color).toBe('#070D1A');
+      expect(manifest.background_color).toBe('#070D1A');
       expect(manifest.categories).toContain('social');
       expect(manifest.categories).toContain('entertainment');
 
@@ -63,8 +63,8 @@ describe('TUKUBI PWA Implementation Suite', () => {
       expect(staticManifest.name).toBe('TUKUBI');
       expect(staticManifest.short_name).toBe('TUKUBI');
       expect(staticManifest.display).toBe('standalone');
-      expect(staticManifest.theme_color).toBe('#0a0612');
-      expect(staticManifest.background_color).toBe('#060A13');
+      expect(staticManifest.theme_color).toBe('#070D1A');
+      expect(staticManifest.background_color).toBe('#070D1A');
     });
 
     it('verifies all icon files physically exist in public directory', () => {

@@ -796,8 +796,7 @@ export function ReelsScreen({ navigation, route }: any = {}) {
     const soundTitle = sound
       ? `${sound.title}${sound.artist ? ` • ${sound.artist}` : ''}`
       : item.audio_track || null;
-    const videoUri =
-      item.resolvedVideoUrl || resolveReelMediaUrl(item.storage_path, 'videos');
+    const videoUri = item.resolvedVideoUrl || resolveReelMediaUrl(item.storage_path, 'videos');
     const isFollowingCreator = followedCreatorIds.has(item.creator_id);
     const showFollowBtn = Boolean(
       item.creator_id && item.creator_id !== currentUserId

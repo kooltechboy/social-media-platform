@@ -362,7 +362,7 @@ export default function CartDrawer({
               <div className="flex items-center justify-between text-xs pt-1">
                 <div className="flex items-center gap-1.5 text-[10px] text-slate-400">
                   <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-                  <span>Backed by TUKUBI 30-Day Escrow Guarantee</span>
+                  <span>Backed by TUKUBI Verified Purchase Protection</span>
                 </div>
                 <OrderEscrowBadge status="held" variant="pill" />
               </div>
@@ -383,7 +383,7 @@ export default function CartDrawer({
                   {isSubmitting ? (
                     <>
                       <Loader2 className="w-4 h-4 text-slate-950 animate-spin" />
-                      <span>Securing Escrow...</span>
+                      <span>Processing Order...</span>
                     </>
                   ) : (
                     <>
