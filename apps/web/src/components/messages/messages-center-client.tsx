@@ -79,6 +79,7 @@ interface MessagesCenterClientProps {
   selectedId: string | null;
   threadMessages: ThreadMessage[];
   currentUserId: string;
+  currentUserName?: string;
   friends?: NewMessageMember[];
   onlineMembers?: NewMessageMember[];
   pendingRequests?: PendingRequest[];
@@ -92,6 +93,7 @@ export default function MessagesCenterClient({
   selectedId,
   threadMessages,
   currentUserId,
+  currentUserName,
   friends,
   onlineMembers,
   pendingRequests = [],
@@ -849,6 +851,7 @@ export default function MessagesCenterClient({
             conversationId={selectedId}
             initialMessages={threadMessages}
             currentUserId={currentUserId}
+            currentUserName={currentUserName}
             peerName={resolvedPeerName}
             peerAvatarUrl={resolvedPeerAvatar}
             isOnline={partnerIsOnline}

@@ -72,6 +72,7 @@ export default function MessageThread({
   conversationId,
   initialMessages,
   currentUserId,
+  currentUserName,
   peerName = 'Caribbean Member',
   peerAvatarUrl,
   isOnline = false,
@@ -83,6 +84,7 @@ export default function MessageThread({
   conversationId: string;
   initialMessages: ThreadMessage[];
   currentUserId: string;
+  currentUserName?: string;
   peerName?: string;
   peerAvatarUrl?: string | null;
   isOnline?: boolean;
@@ -361,7 +363,7 @@ export default function MessageThread({
       broadcastChannelRef.current.send({
         type: 'broadcast',
         event: 'typing',
-        payload: { userId: currentUserId, userName: 'User' },
+        payload: { userId: currentUserId, userName: currentUserName || 'Member' },
       });
       typingTimeoutRef.current = setTimeout(() => {
         typingTimeoutRef.current = null;

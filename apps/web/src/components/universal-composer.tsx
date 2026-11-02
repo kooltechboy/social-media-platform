@@ -38,7 +38,9 @@ import {
   clearComposerDraft,
   hasMeaningfulDraftContent,
   subscribeToDraftChanges,
+  type ComposerDraftData,
 } from '../lib/social/draft-manager';
+import { DraftRestoreBanner } from './composer/draft-restore-banner';
 import { isBannedTesterAccount } from '../lib/auth/banned-testers';
 import {
   type PostingState,
@@ -356,6 +358,7 @@ export default function UniversalComposer({
   const [captionSuggestions, setCaptionSuggestions] = useState<string[]>([]);
   const [hashtagSuggestions, setHashtagSuggestions] = useState<string[]>([]);
   const [aiTooltip, setAiTooltip] = useState<string | null>(null);
+  const [recoverableDraft, setRecoverableDraft] = useState<ComposerDraftData | null>(null);
 
   const firstName = displayName.split(' ')[0]?.replace('@', '') || 'Friend';
   const isBannedTester = isBannedTesterAccount({ id: userId, displayName });
@@ -366,6 +369,7 @@ export default function UniversalComposer({
     try {
       const saved = getComposerDraft();
       if (saved) {
+        setRecoverableDraft(saved);
         if (saved.content) setContent(saved.content);
         if (saved.audience) setAudience(saved.audience as any);
         if (saved.mode) setMode(saved.mode as any);
@@ -605,6 +609,7 @@ export default function UniversalComposer({
     isPublishingRef.current = false;
     setClientPublishId(generateIdempotencyKey(userId));
     clearComposerDraft();
+    setRecoverableDraft(null);
     setIsExpanded(false);
   }, [mediaList, userId]);
 
@@ -1724,6 +1729,20 @@ export default function UniversalComposer({
               </button>
             </div>
 
+            {/* Draft Recovery Banner */}
+            {recoverableDraft && (
+              <DraftRestoreBanner
+                draft={recoverableDraft}
+                onRestore={() => {
+                  setRecoverableDraft(null);
+                }}
+                onDiscard={() => {
+                  handleDiscardDraft();
+                  setRecoverableDraft(null);
+                }}
+              />
+            )}
+
             {/* Main Content & Caption Input */}
             <div className="relative">
               <textarea
@@ -1731,6 +1750,12 @@ export default function UniversalComposer({
                 onChange={(e) => {
                   setContent(e.target.value);
                   clearErrorState();
+                }}
+                onKeyDown={(e) => {
+                  if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+                    e.preventDefault();
+                    e.currentTarget.form?.requestSubmit();
+                  }
                 }}
                 placeholder={
                   mediaList.length > 0

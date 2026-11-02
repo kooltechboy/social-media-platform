@@ -361,6 +361,7 @@ export default async function MessagesPage({
           selectedId={selectedId}
           threadMessages={threadMessages}
           currentUserId={user.id}
+          currentUserName={user.displayName || user.username}
           friends={realFriends}
           onlineMembers={realFriends}
           pendingRequests={pendingRequests}

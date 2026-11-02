@@ -1,9 +1,16 @@
 export type CommunityJoinPolicy = 'public' | 'private' | 'invite_only';
 
-export type CommunityRoleName = 'owner' | 'moderator' | 'member';
+export type CommunityRoleName = 'owner' | 'admin' | 'moderator' | 'member';
 
 export type CommunityPermission =
-  | 'post' | 'moderate' | 'invite' | 'edit_settings' | 'remove_member' | 'manage_roles';
+  | 'post'
+  | 'moderate'
+  | 'invite'
+  | 'edit_settings'
+  | 'remove_member'
+  | 'manage_roles'
+  | 'pin_post'
+  | 'transfer_ownership';
 
 export interface CommunityRoleCapabilities {
   name: CommunityRoleName;
@@ -13,11 +20,32 @@ export interface CommunityRoleCapabilities {
 export const ROLE_CAPABILITIES: Record<CommunityRoleName, CommunityRoleCapabilities> = {
   owner: {
     name: 'owner',
-    permissions: ['post', 'moderate', 'invite', 'edit_settings', 'remove_member', 'manage_roles'],
+    permissions: [
+      'post',
+      'moderate',
+      'invite',
+      'edit_settings',
+      'remove_member',
+      'manage_roles',
+      'pin_post',
+      'transfer_ownership',
+    ],
+  },
+  admin: {
+    name: 'admin',
+    permissions: [
+      'post',
+      'moderate',
+      'invite',
+      'edit_settings',
+      'remove_member',
+      'manage_roles',
+      'pin_post',
+    ],
   },
   moderator: {
     name: 'moderator',
-    permissions: ['post', 'moderate', 'invite', 'remove_member'],
+    permissions: ['post', 'moderate', 'invite', 'remove_member', 'pin_post'],
   },
   member: {
     name: 'member',
@@ -26,7 +54,8 @@ export const ROLE_CAPABILITIES: Record<CommunityRoleName, CommunityRoleCapabilit
 };
 
 export const ROLE_HIERARCHY: Record<CommunityRoleName, number> = {
-  owner: 3,
+  owner: 4,
+  admin: 3,
   moderator: 2,
   member: 1,
 };
@@ -67,6 +96,10 @@ export class CommunityPolicy {
     if (actor.roleName === 'owner') return true;
     if (!actor.roleName || !target.roleName) return false;
     return ROLE_HIERARCHY[actor.roleName] > ROLE_HIERARCHY[target.roleName];
+  }
+
+  public canTransferOwnership(actor: MembershipContext): boolean {
+    return actor.membershipStatus === 'active' && actor.roleName === 'owner';
   }
 
   public canViewContent(policy: CommunityJoinPolicy, context: MembershipContext): boolean {

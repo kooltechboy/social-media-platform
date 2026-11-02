@@ -23,24 +23,7 @@ import { GatewayShell } from '../../../components/gateway/GatewayShell';
 import { StepProgress } from '../../../components/gateway/signup/StepProgress';
 import { TukubiCulturalPassport } from '../../../components/gateway/TukubiCulturalPassport';
 import { getSignupSession, saveSignupSession, type SignupState } from '../../../lib/auth/signup-session';
-
-function calculatePasswordStrength(pass: string): { score: number; label: string; color: string } {
-  if (!pass) return { score: 0, label: '', color: '' };
-  let score = 0;
-  if (pass.length >= 8) score++;
-  if (pass.length >= 12) score++;
-  if (/[A-Z]/.test(pass) && /[a-z]/.test(pass)) score++;
-  if (/[0-9]/.test(pass) || /[^A-Za-z0-9]/.test(pass)) score++;
-
-  const map: Record<number, { label: string; color: string }> = {
-    1: { label: 'Weak', color: 'bg-rose-500' },
-    2: { label: 'Fair', color: 'bg-brand-goldenHour' },
-    3: { label: 'Good', color: 'bg-brand-caribbeanSea' },
-    4: { label: 'Strong (Fortune-100 Grade)', color: 'bg-emerald-400' },
-  };
-
-  return { score, ...(map[score] || { label: '', color: '' }) };
-}
+import { calculatePasswordStrength, validateUsername } from '../../../lib/auth/validation';
 
 function calculateAgeFromDob(dobString: string): number | null {
   if (!dobString) return null;
@@ -99,6 +82,14 @@ export default function SignupAccountPage() {
     if (!username.trim() || username.length < 3) {
       setUsernameAvailable(null);
       setUsernameError(null);
+      setUsernameSuggestions([]);
+      return;
+    }
+
+    const localValidation = validateUsername(username.trim());
+    if (!localValidation.isValid) {
+      setUsernameAvailable(false);
+      setUsernameError(localValidation.error || 'Invalid username');
       setUsernameSuggestions([]);
       return;
     }

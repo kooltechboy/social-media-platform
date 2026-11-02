@@ -4,7 +4,7 @@ import React from 'react';
 
 export function CaribbeanAtmosphere() {
   return (
-    <div className="absolute inset-0 overflow-hidden pointer-events-none select-none z-0">
+    <div className="absolute inset-0 overflow-hidden pointer-events-none select-none z-0 transform-gpu" aria-hidden="true">
       {/* ── 1. Deep Midnight Oceanic Background Canvas ── */}
       <div className="absolute inset-0 bg-gradient-to-b from-[#050B14] via-[#071322] to-[#040912]" />
 

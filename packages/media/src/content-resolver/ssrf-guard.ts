@@ -124,6 +124,39 @@ export function isPrivateIpv6(ip: string): boolean {
 }
 
 /**
+ * Synchronous client & server pre-validation: returns true only if URL is a valid http/https public destination.
+ */
+export function isSafePublicUrl(targetUrl: string): boolean {
+  try {
+    const url = new URL(targetUrl);
+    if (url.protocol !== 'http:' && url.protocol !== 'https:') return false;
+    if (url.username || url.password) return false;
+    const hostname = url.hostname.toLowerCase();
+    const forbiddenHostnames = [
+      'localhost',
+      'localhost.localdomain',
+      'metadata.google.internal',
+      '169.254.169.254',
+      'instance-data',
+      'router.local',
+      'broadcasthost',
+    ];
+    if (forbiddenHostnames.includes(hostname) || hostname.endsWith('.local') || hostname.endsWith('.internal')) {
+      return false;
+    }
+    if (/^\d+\.\d+\.\d+\.\d+$/.test(hostname) && isPrivateIpv4(hostname)) {
+      return false;
+    }
+    if ((hostname.includes(':') || hostname.startsWith('[')) && isPrivateIpv6(hostname.replace(/[\[\]]/g, ''))) {
+      return false;
+    }
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
  * Verifies that a target URL is safe from SSRF before any network connection is attempted.
  */
 export async function assertSafeUrl(

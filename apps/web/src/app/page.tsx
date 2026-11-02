@@ -1,10 +1,10 @@
 import React from 'react';
-import { redirect } from 'next/navigation';
 import {
   createSupabaseServerClient,
   getCurrentUser,
 } from '../lib/supabase/server';
-import { isFeedMode, type FeedMode } from '@caribbean/social';
+import { type FeedMode } from '@caribbean/social';
+import { normalizeFeedMode } from '../lib/feed/feed-mode-utils';
 import { encodeCursor } from '@caribbean/database';
 import { buildRankedFeed } from '../lib/feed/ranking';
 import { hydratePostsEngagement } from '../lib/feed/hydrate-posts';
@@ -13,6 +13,7 @@ import { fetchTrendingSignalsAction } from '../lib/explore/actions';
 import { fetchMyPagesAction, fetchFollowedPagesAction } from '../lib/pages/actions';
 import HomeDashboard from '../components/home/home-dashboard';
 import { type FeedPostData } from '../components/feed-stream';
+import PublicFrontDoor from '../components/public-front-door';
 
 export const dynamic = 'force-dynamic';
 
@@ -23,16 +24,13 @@ interface RootPageProps {
 export default async function RootPage(props: RootPageProps) {
   const user = await getCurrentUser();
   if (!user) {
-    redirect('/login');
+    return <PublicFrontDoor />;
   }
 
   const searchParams = props.searchParams ? await props.searchParams : {};
-  const rawMode = searchParams.tab || searchParams.filter || searchParams.mode || 'for_you';
+  const rawMode = searchParams.tab || searchParams.filter || searchParams.mode;
   const cursor = typeof searchParams.cursor === 'string' ? searchParams.cursor : undefined;
-
-  let normalizedMode = typeof rawMode === 'string' ? rawMode.toLowerCase().replace(/-/g, '_') : 'for_you';
-  if (normalizedMode === 'foryou') normalizedMode = 'for_you';
-  const activeMode: FeedMode = isFeedMode(normalizedMode) ? (normalizedMode as FeedMode) : 'for_you';
+  const activeMode: FeedMode = normalizeFeedMode(rawMode);
 
   const supabase = await createSupabaseServerClient();
   const { stories: liveStories } = await fetchActiveStoriesAction();

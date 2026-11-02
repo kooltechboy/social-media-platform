@@ -61,32 +61,24 @@ export default function SignupCompletePage() {
           return;
         }
 
-        // ── CRITICAL: Establish browser-side session ──────────────────────
-        // auth.signUp() ran server-side and does NOT propagate the session
-        // cookies to the browser client automatically. We must call
-        // signInWithPassword on the browser client to fire onAuthStateChange
-        // (SIGNED_IN), which the AuthProvider listens to. Without this, the
-        // user is registered but NOT logged in on the client.
-        const browserClient = createSupabaseBrowserClient();
-        if (browserClient && data.email && data.password) {
-          const { error: signInError } = await browserClient.auth.signInWithPassword({
-            email: data.email,
-            password: data.password,
-          });
-          if (signInError) {
-            // Email confirmation may be required in production dashboard.
-            // The user is registered — they'll need to verify email then log in.
-            console.warn('[signup/complete] Auto sign-in failed after registration:', signInError.message);
-            if (signInError.message.toLowerCase().includes('email not confirmed')) {
-              setError(
-                'Your account was created! Please check your email and click the confirmation link to activate your account, then sign in.'
-              );
-              setLoading(false);
-              return;
-            }
-            // Other sign-in error — still proceed; middleware will handle auth
-          }
+        if (res.requiresEmailConfirmation) {
+          setError(
+            'Your account was created! Please check your email and click the confirmation link to activate your account, then sign in.'
+          );
+          setLoading(false);
+          clearSignupSession();
+          return;
         }
+
+        // ── Direct Session Establishment ────────────────────────────────
+        // Session cookies are written via @supabase/ssr in the server action response.
+        // We notify the browser client to sync session state immediately without re-sending credentials.
+        const browserClient = createSupabaseBrowserClient();
+        if (browserClient) {
+          await browserClient.auth.getSession().catch(() => {});
+        }
+        // Wipe all transient draft state and credentials from memory & storage immediately
+        clearSignupSession();
         // ─────────────────────────────────────────────────────────────────
         // Animate task progression smoothly
         setTimeout(() => {

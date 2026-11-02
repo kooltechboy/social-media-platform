@@ -11,6 +11,7 @@
 
 export const TUKUBI_COMPOSER_DRAFT_KEY = 'tukubi_composer_draft_v3';
 export const DRAFT_STORAGE_KEY = TUKUBI_COMPOSER_DRAFT_KEY;
+export const DRAFT_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
 const LEGACY_DRAFT_KEYS = ['tukubi_composer_draft_v2', 'tukubi_composer_draft'];
 
 export type ComposerDraftStatus = 'empty' | 'editing' | 'dirty' | 'saved' | 'publishing' | 'published' | 'error';
@@ -81,6 +82,10 @@ export function getComposerDraft(): ComposerDraftData | null {
     if (!raw) return null;
 
     const parsed: ComposerDraftData = JSON.parse(raw);
+    if (parsed.updatedAt && Date.now() - parsed.updatedAt > DRAFT_TTL_MS) {
+      clearComposerDraft();
+      return null;
+    }
     if (hasMeaningfulDraftContent(parsed)) {
       return parsed;
     }
@@ -95,6 +100,10 @@ export function getComposerDraft(): ComposerDraftData | null {
 }
 
 export const loadComposerDraft = getComposerDraft;
+
+export function hasRecoverableDraft(): boolean {
+  return getComposerDraft() !== null;
+}
 
 /**
  * Persists a meaningful draft to storage and notifies listening components.

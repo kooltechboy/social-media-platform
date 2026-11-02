@@ -45,6 +45,9 @@ import {
 } from '../../../lib/social/relationship-actions';
 import FeedStream, { type FeedPostData } from '../../../components/feed-stream';
 import { hydratePostsEngagement } from '@/lib/feed/hydrate-posts';
+import { sanitizeProfileIdentity } from '../../../lib/profile/privacy-sanitizer';
+import { ProfileIdentityCard } from '../../../components/profile/profile-identity-card';
+import { ProfileEmptyState } from '../../../components/profile/profile-empty-state';
 
 export const dynamic = 'force-dynamic';
 
@@ -215,7 +218,7 @@ export default async function ProfilePage({
   // Fetch real counts, posts, and recognition in parallel
   const isOfficialTukubi = profileData.username.toLowerCase() === 'tukubi';
   const recognitionService = new RecognitionService(supabase);
-  const [countsResult, postsResult, recognition, friendsResult, pagesResult, communitiesResult, podcastsResult] = await Promise.all([
+  const [countsResult, postsResult, recognition, friendsResult, pagesResult, communitiesResult, podcastsResult, identityResult] = await Promise.all([
     supabase
       .from('profile_counts')
       .select('followers_count, following_count, posts_count, likes_received_count, friends_count')
@@ -250,7 +253,18 @@ export default async function ProfilePage({
       .select('id, title, subtitle, slug, description, category, follower_count, cover_path')
       .eq('creator_id', profileData.id)
       .limit(12),
+    supabase
+      .from('profile_identity')
+      .select('*')
+      .eq('profile_id', profileData.id)
+      .maybeSingle(),
   ]);
+
+  const sanitizedIdentity = sanitizeProfileIdentity(
+    identityResult?.data,
+    currentUser?.id,
+    profileData.id
+  );
 
   const userPages = pagesResult?.data ?? [];
   const userCommunities = ((communitiesResult?.data ?? []) as any[])
@@ -522,6 +536,21 @@ export default async function ProfilePage({
                 <strong className="text-white font-black text-base sm:text-lg md:text-2xl">{counts.following_count.toLocaleString()}</strong>{' '}
                 <span className="text-brand-sandstone/70 md:text-base">Following</span>
               </span>
+            </div>
+
+            {/* Cultural Identity & Passport Card */}
+            <div className="mt-6">
+              <ProfileIdentityCard
+                displayName={profileData.display_name}
+                username={profileData.username}
+                bio={profileData.bio}
+                avatarUrl={avatarUrl}
+                accountType={profileData.account_type || 'personal'}
+                identity={sanitizedIdentity}
+                isOwnProfile={isOwnProfile}
+                isVerified={profileData.is_verified}
+                isOfficial={profileData.is_official}
+              />
             </div>
           </div>
         </section>
@@ -837,28 +866,8 @@ export default async function ProfilePage({
         {tab === 'posts' && (
           <section className="space-y-5">
             {posts.length === 0 ? (
-              <div className="surface-card rounded-3xl p-12 text-center space-y-4 max-w-md mx-auto border border-white/10">
-                <div className="w-16 h-16 rounded-2xl bg-white/5 border border-white/15 flex items-center justify-center mx-auto text-brand-sandstone/60">
-                  <FileText className="w-8 h-8" />
-                </div>
-                <div className="space-y-1">
-                  <h4 className="text-lg md:text-xl font-black text-white">No posts published yet</h4>
-                  <p className="text-xs sm:text-sm md:text-base text-brand-sandstone/70 max-w-sm mx-auto leading-relaxed md:leading-[1.6]">
-                    {isOwnProfile
-                      ? 'Share your thoughts, music, diaspora updates, or stories with the Caribbean network.'
-                      : `@${profileData.username} hasn't published any posts yet.`}
-                  </p>
-                </div>
-                {isOwnProfile && (
-                  <div className="pt-2">
-                    <Link
-                      href="/create"
-                      className="inline-flex items-center justify-center bg-gradient-to-r from-orange-500 via-amber-500 to-emerald-400 hover:brightness-110 text-slate-950 text-xs sm:text-sm md:text-base font-black px-6 md:px-7 py-3 rounded-2xl transition-all shadow-md min-h-[44px] md:min-h-[48px]"
-                    >
-                      Create First Post
-                    </Link>
-                  </div>
-                )}
+              <div className="surface-card rounded-3xl p-6 text-center border border-white/10 max-w-lg mx-auto">
+                <ProfileEmptyState tab="posts" isOwner={isOwnProfile} username={profileData.username} />
               </div>
             ) : (
               <FeedStream

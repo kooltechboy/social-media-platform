@@ -17,5 +17,6 @@ export * from './entitlements';
 export * from './reconciliation';
 export * from './launch-config';
 export * from './transaction-service';
+export * from './currencies';
 
 

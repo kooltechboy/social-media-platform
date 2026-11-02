@@ -87,16 +87,128 @@ export class LedgerOrchestrator {
     amount: number,
     idempotencyKey: string,
     reason: string,
+    currency: string = "USD",
   ): GeneratedLedgerPair {
     return this.createDoubleEntryPayload({
       transactionId: reversalTransactionId,
       sourceAccountId: destinationAccountId, // Invert source & dest
       destinationAccountId: sourceAccountId,
       amount,
-      currency: "USD",
+      currency,
       idempotencyKey: `rev_${idempotencyKey}`,
       description: `Reversal of tx ${originalTransactionId}: ${reason}`,
     });
+  }
+
+  /**
+   * Generates a multi-split balanced compensating reversing ledger set for refunds:
+   * Buyer Credit (+RefundGross) + Seller Debit (-SellerRefundDebit) + Platform Revenue Debit (-PlatformCommissionDebit)
+   * + Tax Clearing Debit (-TaxRefundDebit) = 0
+   */
+  public createMultiSplitRefundPayload(input: {
+    refundTransactionId: string;
+    originalTransactionId: string;
+    buyerAccountId: string;
+    sellerAccountId: string;
+    platformRevenueAccountId: string;
+    taxClearingAccountId?: string;
+    refundGrossMinor: number;
+    sellerRefundDebitMinor: number;
+    platformCommissionRefundDebitMinor: number;
+    taxRefundDebitMinor?: number;
+    currency: string;
+    idempotencyKey: string;
+    reason: string;
+  }): {
+    entries: Array<{
+      transaction_id: string;
+      account_id: string;
+      amount: number;
+      entry_type: "DEBIT" | "CREDIT";
+      category: string;
+      idempotency_key: string;
+      description: string;
+    }>;
+    totalDebitMinor: number;
+    totalCreditMinor: number;
+    netZeroVerified: boolean;
+  } {
+    if (!Number.isSafeInteger(input.refundGrossMinor) || input.refundGrossMinor <= 0) {
+      throw new Error('Refund gross amount must be a positive integer in minor units.');
+    }
+
+    const taxRefundDebit = input.taxRefundDebitMinor ?? 0;
+    const totalDebits =
+      input.sellerRefundDebitMinor +
+      input.platformCommissionRefundDebitMinor +
+      taxRefundDebit;
+
+    if (totalDebits !== input.refundGrossMinor) {
+      throw new Error(
+        `Ledger integrity violation: Total debits (${totalDebits}) must equal refund gross (${input.refundGrossMinor})`
+      );
+    }
+
+    const entries = [
+      // 1. Buyer Credit (funds restored to buyer)
+      {
+        transaction_id: input.refundTransactionId,
+        account_id: input.buyerAccountId,
+        amount: input.refundGrossMinor,
+        entry_type: "CREDIT" as const,
+        category: "BUYER_REFUND_CREDIT",
+        idempotency_key: `${input.idempotencyKey}_buyer_refund_credit`,
+        description: `Refund credit for tx ${input.originalTransactionId}: ${input.reason}`,
+      },
+      // 2. Seller Debit (funds deducted from seller)
+      {
+        transaction_id: input.refundTransactionId,
+        account_id: input.sellerAccountId,
+        amount: -input.sellerRefundDebitMinor,
+        entry_type: "DEBIT" as const,
+        category: "SELLER_REFUND_DEBIT",
+        idempotency_key: `${input.idempotencyKey}_seller_refund_debit`,
+        description: `Seller refund clawback for tx ${input.originalTransactionId}: ${input.reason}`,
+      },
+    ];
+
+    // 3. Platform Revenue Debit (commission returned)
+    if (input.platformCommissionRefundDebitMinor > 0) {
+      entries.push({
+        transaction_id: input.refundTransactionId,
+        account_id: input.platformRevenueAccountId,
+        amount: -input.platformCommissionRefundDebitMinor,
+        entry_type: "DEBIT" as const,
+        category: "PLATFORM_REVENUE_REFUND_DEBIT",
+        idempotency_key: `${input.idempotencyKey}_plat_rev_refund_debit`,
+        description: `Platform fee refund reversal for tx ${input.originalTransactionId}`,
+      });
+    }
+
+    // 4. Tax Clearing Debit
+    if (taxRefundDebit > 0 && input.taxClearingAccountId) {
+      entries.push({
+        transaction_id: input.refundTransactionId,
+        account_id: input.taxClearingAccountId,
+        amount: -taxRefundDebit,
+        entry_type: "DEBIT" as const,
+        category: "TAX_REFUND_DEBIT",
+        idempotency_key: `${input.idempotencyKey}_tax_refund_debit`,
+        description: `Jurisdictional tax refund reversal for tx ${input.originalTransactionId}`,
+      });
+    }
+
+    const sum = sumLedgerMinorUnits(entries);
+    if (sum !== 0) {
+      throw new Error(`Ledger refund sum mismatch: expected 0, got ${sum}`);
+    }
+
+    return {
+      entries,
+      totalDebitMinor: totalDebits,
+      totalCreditMinor: input.refundGrossMinor,
+      netZeroVerified: true,
+    };
   }
 
   /**

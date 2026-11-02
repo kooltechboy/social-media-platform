@@ -76,6 +76,28 @@ export interface OrderContextPayload {
   orderUrl: string;
 }
 
+export function isValidProductContext(payload: any): payload is ProductContextPayload {
+  if (!payload || typeof payload !== 'object') return false;
+  if (typeof payload.productId !== 'string' || !payload.productId.trim()) return false;
+  if (typeof payload.title !== 'string' || !payload.title.trim()) return false;
+  if (!Number.isSafeInteger(payload.priceMinor) || payload.priceMinor < 0) return false;
+  if (typeof payload.currency !== 'string' || !/^[A-Z]{3}$/.test(payload.currency)) return false;
+  if (typeof payload.listingUrl !== 'string' || !payload.listingUrl.trim()) return false;
+  return true;
+}
+
+export function isValidOrderContext(payload: any): payload is OrderContextPayload {
+  if (!payload || typeof payload !== 'object') return false;
+  if (typeof payload.orderId !== 'string' || !payload.orderId.trim()) return false;
+  if (typeof payload.orderNumber !== 'string' || !payload.orderNumber.trim()) return false;
+  if (!Number.isSafeInteger(payload.totalMinor) || payload.totalMinor < 0) return false;
+  if (typeof payload.currency !== 'string' || !/^[A-Z]{3}$/.test(payload.currency)) return false;
+  const validStatuses = ['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled'];
+  if (!validStatuses.includes(payload.status)) return false;
+  if (typeof payload.orderUrl !== 'string' || !payload.orderUrl.trim()) return false;
+  return true;
+}
+
 export interface EventContextPayload {
   eventId: string;
   title: string;

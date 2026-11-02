@@ -1,66 +1,53 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { createSupabaseServerClient } from '../../../../lib/supabase/server';
-
-const USERNAME_REGEX = /^[a-zA-Z0-9_.]{3,30}$/;
+import {
+  validateUsername,
+  generateUsernameSuggestions,
+} from '../../../../lib/auth/validation';
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
-  const rawUsername = searchParams.get('username')?.trim().toLowerCase();
+  const rawUsername = searchParams.get('username') || '';
 
-  if (!rawUsername) {
-    return NextResponse.json({ error: 'Username is required' }, { status: 400 });
-  }
-
-  if (!USERNAME_REGEX.test(rawUsername)) {
+  const validation = validateUsername(rawUsername);
+  if (!validation.isValid) {
+    if (validation.isReserved) {
+      return NextResponse.json(
+        {
+          available: false,
+          error: validation.error,
+          suggestions: generateUsernameSuggestions(rawUsername),
+        },
+        { status: 200 }
+      );
+    }
     return NextResponse.json(
       {
         available: false,
-        error: 'Username must be 3-30 characters (letters, numbers, underscores, dots).',
+        error: validation.error,
       },
       { status: 400 }
     );
   }
 
-  const reserved = [
-    'admin', 'root', 'support', 'tukubi', 'official', 'help', 'api',
-    'auth', 'explore', 'login', 'signup', 'settings', 'moderation', 'security'
-  ];
-
-  if (reserved.includes(rawUsername)) {
-    return NextResponse.json(
-      {
-        available: false,
-        error: 'This username is reserved by the platform.',
-        suggestions: [`${rawUsername}_caribbean`, `${rawUsername}_official`, `the_${rawUsername}`],
-      },
-      { status: 200 }
-    );
-  }
+  const cleanUsername = rawUsername.trim().toLowerCase();
 
   try {
     const supabase = await createSupabaseServerClient();
     if (!supabase) {
-      // Fallback if supabase not reachable
       return NextResponse.json({ available: true });
     }
 
     const { data: existingUser } = await supabase
       .from('profiles')
       .select('id, username')
-      .ilike('username', rawUsername)
+      .ilike('username', cleanUsername)
       .maybeSingle();
 
     if (existingUser) {
-      const randomSuffix = Math.floor(10 + Math.random() * 90);
-      const suggestions = [
-        `${rawUsername}${randomSuffix}`,
-        `${rawUsername}_carib`,
-        `iam_${rawUsername}`,
-      ];
-
       return NextResponse.json({
         available: false,
-        suggestions,
+        suggestions: generateUsernameSuggestions(cleanUsername),
       });
     }
 

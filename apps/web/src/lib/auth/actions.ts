@@ -3,6 +3,7 @@
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import { sanitizeRedirectUrl } from './redirect-utils';
+import { validateUsername } from './validation';
 
 const MFA_UNSUPPORTED_ERROR =
   'Custom MFA actions are unavailable. Use Supabase Auth MFA after signing in.';
@@ -74,8 +75,9 @@ export async function completeFullRegistrationAction(payload: CompleteRegistrati
   }
 
   const cleanUsername = username.toLowerCase().trim().replace(/[^a-zA-Z0-9_.]/g, '').slice(0, 30);
-  if (cleanUsername.length < 3) {
-    return { error: 'Username must be at least 3 characters long.' };
+  const usernameValidation = validateUsername(cleanUsername);
+  if (!usernameValidation.isValid) {
+    return { error: usernameValidation.error || 'Invalid username.' };
   }
 
   const supabase = await createSupabaseServerClient();
@@ -194,7 +196,37 @@ export async function completeFullRegistrationAction(payload: CompleteRegistrati
   const { track } = await import('../monitoring/analytics');
   track('user_registered', { accountType: validDbAccountType }, data.user?.id);
 
-  return { success: true, user: data.user };
+  let hasSession = Boolean(data.session);
+
+  // If no session was established yet (e.g. signUp did not immediately return session),
+  // attempt server-side signInWithPassword so SSR cookies are set in response headers
+  if (!hasSession && data.user) {
+    try {
+      const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+        email: email.trim().toLowerCase(),
+        password,
+      });
+      if (signInData?.session) {
+        hasSession = true;
+      } else if (signInError?.message?.toLowerCase().includes('email not confirmed')) {
+        return {
+          success: true,
+          user: data.user,
+          hasSession: false,
+          requiresEmailConfirmation: true,
+        };
+      }
+    } catch {
+      // Continue with hasSession status
+    }
+  }
+
+  return {
+    success: true,
+    user: data.user,
+    hasSession,
+    requiresEmailConfirmation: !hasSession,
+  };
 }
 
 export async function signUpAction(prevState: AuthFormState, formData: FormData): Promise<AuthFormState> {

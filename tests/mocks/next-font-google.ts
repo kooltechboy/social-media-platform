@@ -7,4 +7,5 @@ const createFontLoader = (opts?: { variable?: string }) => ({
 
 export const Inter = createFontLoader;
 export const Plus_Jakarta_Sans = createFontLoader;
+export const Playfair_Display = createFontLoader;
 export const JetBrains_Mono = createFontLoader;
