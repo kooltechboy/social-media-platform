@@ -6,9 +6,10 @@ import { createSupabaseBrowserClient } from '../../lib/supabase/browser';
 interface SocialAuthButtonsProps {
   redirectTo?: string;
   onError?: (error: string) => void;
+  variant?: 'mockup' | 'light';
 }
 
-export function SocialAuthButtons({ redirectTo = '/', onError }: SocialAuthButtonsProps) {
+export function SocialAuthButtons({ redirectTo = '/', onError, variant = 'mockup' }: SocialAuthButtonsProps) {
   const [loadingProvider, setLoadingProvider] = useState<string | null>(null);
 
   const handleOAuthSignIn = async (provider: 'google' | 'apple' | 'facebook') => {
@@ -43,17 +44,17 @@ export function SocialAuthButtons({ redirectTo = '/', onError }: SocialAuthButto
   };
 
   return (
-    <div className="space-y-2.5">
+    <div className="space-y-3">
       {/* ── Google Button ── */}
       <button
         type="button"
         disabled={!!loadingProvider}
         onClick={() => handleOAuthSignIn('google')}
         aria-label="Continue with Google"
-        className="w-full flex items-center justify-center gap-3 py-3 px-4 rounded-xl font-semibold text-sm bg-white hover:bg-slate-50 text-slate-900 border border-slate-200 transition-all shadow-sm hover:shadow active:scale-[0.99] disabled:opacity-60 disabled:cursor-not-allowed"
+        className="w-full flex items-center justify-center gap-3 py-3.5 px-4 rounded-xl font-medium text-sm bg-[#081220]/80 hover:bg-[#0E1E34] text-white border border-white/15 hover:border-white/25 transition-all shadow-sm active:scale-[0.99] disabled:opacity-60 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00C2A8]"
       >
         {loadingProvider === 'google' ? (
-          <span className="w-4 h-4 border-2 border-slate-900 border-t-transparent rounded-full animate-spin" />
+          <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
         ) : (
           <svg className="w-4 h-4 flex-shrink-0" viewBox="0 0 24 24">
             <path
@@ -83,7 +84,7 @@ export function SocialAuthButtons({ redirectTo = '/', onError }: SocialAuthButto
         disabled={!!loadingProvider}
         onClick={() => handleOAuthSignIn('facebook')}
         aria-label="Continue with Facebook"
-        className="w-full flex items-center justify-center gap-3 py-3 px-4 rounded-xl font-semibold text-sm bg-[#1877F2] hover:bg-[#166FE5] text-white border border-[#1877F2]/50 transition-all shadow-sm hover:shadow active:scale-[0.99] disabled:opacity-60 disabled:cursor-not-allowed"
+        className="w-full flex items-center justify-center gap-3 py-3.5 px-4 rounded-xl font-medium text-sm bg-[#1877F2] hover:bg-[#166FE5] text-white border border-[#1877F2]/60 transition-all shadow-md shadow-blue-950/40 active:scale-[0.99] disabled:opacity-60 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00C2A8]"
       >
         {loadingProvider === 'facebook' ? (
           <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />

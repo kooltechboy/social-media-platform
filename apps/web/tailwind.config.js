@@ -25,6 +25,7 @@ module.exports = {
       fontFamily: {
         sans: ['var(--font-sans)', 'Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
         display: ['var(--font-display)', 'var(--font-sans)', 'Inter', 'sans-serif'],
+        serif: ['var(--font-serif)', 'Playfair Display', 'Georgia', 'Cambria', 'serif'],
       },
       // Mature typographic weight scale (ADR-UI-002 "Midnight Reef"):
       // the legacy UI leaned on font-black (900) for small labels, which reads

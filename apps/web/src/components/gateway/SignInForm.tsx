@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useTransition } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { Mail, Lock, Eye, EyeOff, AlertCircle, Sparkles } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, AlertCircle, ArrowRight } from 'lucide-react';
 import { SocialAuthButtons } from './SocialAuthButtons';
 import { MagicLinkForm } from './MagicLinkForm';
 import { signInAction } from '../../lib/auth/actions';
@@ -32,7 +32,7 @@ export function SignInForm() {
     setErrorMessage(null);
 
     if (!email.trim() || !password) {
-      setErrorMessage('Please provide both email and password.');
+      setErrorMessage('Please provide both email/phone and password.');
       return;
     }
 
@@ -49,7 +49,6 @@ export function SignInForm() {
           setErrorMessage(result.error);
         }
       } catch (err: any) {
-        // In Next.js redirect throws, so if error is not a NEXT_REDIRECT, show it
         if (err?.digest?.includes('NEXT_REDIRECT')) {
           return;
         }
@@ -59,17 +58,17 @@ export function SignInForm() {
   };
 
   return (
-    <div className="bg-[#0C1322]/90 backdrop-blur-2xl border border-white/15 rounded-3xl p-6 sm:p-8 shadow-2xl shadow-black/60 relative overflow-hidden">
-      {/* Top subtle glow edge */}
-      <div className="absolute top-0 left-10 right-10 h-[1px] bg-gradient-to-r from-transparent via-brand-caribbeanSea/40 to-transparent" />
+    <div className="bg-[#0A1728]/80 backdrop-blur-2xl border border-cyan-400/25 rounded-[28px] p-7 sm:p-9 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.85),0_0_40px_rgba(0,194,168,0.12)] relative overflow-hidden">
+      {/* Top subtle cyan glow edge */}
+      <div className="absolute top-0 left-12 right-12 h-[1px] bg-gradient-to-r from-transparent via-[#00E5C9]/60 to-transparent" />
 
       {/* Heading */}
-      <div className="mb-6 text-center sm:text-left">
-        <h2 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
-          {t('auth.welcome_back')}
+      <div className="mb-6 text-left">
+        <h2 className="font-serif text-3xl sm:text-4xl font-bold text-white tracking-tight">
+          {t('auth.welcome_back') || 'Welcome back'}
         </h2>
-        <p className="text-xs sm:text-sm text-brand-sandstone/70 mt-1">
-          {t('auth.signin_subtitle')}
+        <p className="text-xs sm:text-sm text-slate-300/80 mt-1.5 font-normal">
+          Sign in to TUKUBI — The Caribbean Connected.
         </p>
       </div>
 
@@ -78,45 +77,45 @@ export function SignInForm() {
       ) : (
         <form onSubmit={handlePasswordSubmit} className="space-y-4" noValidate aria-describedby={errorMessage ? 'signin-error-banner' : undefined}>
           {/* Email / Phone Field */}
-          <div className="space-y-1">
-            <label htmlFor="signin-email" className="block text-xs font-semibold text-brand-sandstone/90">
-              {t('auth.email_label')}
+          <div className="space-y-1.5">
+            <label htmlFor="signin-email" className="block text-xs font-semibold text-slate-200">
+              Email or phone
             </label>
             <div className="relative flex items-center">
-              <Mail className="absolute left-3.5 w-4 h-4 text-brand-sandstone/50 pointer-events-none" />
+              <Mail className="absolute left-3.5 w-4 h-4 text-slate-400 pointer-events-none" />
               <input
                 id="signin-email"
                 name="email"
-                type="email"
+                type="text"
                 required
-                autoComplete="email"
+                autoComplete="username email tel"
                 value={email}
                 onChange={(e) => {
                   setEmail(e.target.value);
                   if (errorMessage) setErrorMessage(null);
                 }}
-                placeholder="you@example.com"
+                placeholder="danieljwilliams2401@gmail.com"
                 aria-invalid={errorMessage ? 'true' : 'false'}
-                className="w-full bg-[#080D18] border border-white/15 rounded-xl pl-10 pr-4 py-3 text-sm text-white placeholder-brand-sandstone/40 focus:outline-none focus:border-brand-caribbeanSea focus:ring-2 focus:ring-brand-caribbeanSea/40 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-caribbeanSea"
+                className="w-full bg-[#07111E]/90 border border-white/15 focus:border-[#00C2A8] focus:ring-2 focus:ring-[#00C2A8]/30 rounded-xl pl-10 pr-4 py-3 text-sm text-white placeholder-slate-400/70 transition-all focus:outline-none"
               />
             </div>
           </div>
 
           {/* Password Field */}
-          <div className="space-y-1">
+          <div className="space-y-1.5">
             <div className="flex items-center justify-between">
-              <label htmlFor="signin-password" className="block text-xs font-semibold text-brand-sandstone/90">
-                {t('auth.password_label')}
+              <label htmlFor="signin-password" className="block text-xs font-semibold text-slate-200">
+                Password
               </label>
               <Link
                 href="/forgot-password"
-                className="text-xs text-brand-caribbeanSea hover:text-brand-goldenHour transition-colors font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-caribbeanSea rounded-md px-1"
+                className="text-xs font-semibold text-[#00C2A8] hover:text-[#38BDF8] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00C2A8] rounded-md px-1"
               >
-                {t('auth.forgot_password')}
+                Forgot password?
               </Link>
             </div>
             <div className="relative flex items-center">
-              <Lock className="absolute left-3.5 w-4 h-4 text-brand-sandstone/50 pointer-events-none" />
+              <Lock className="absolute left-3.5 w-4 h-4 text-slate-400 pointer-events-none" />
               <input
                 id="signin-password"
                 name="password"
@@ -130,13 +129,13 @@ export function SignInForm() {
                 }}
                 placeholder="••••••••••••"
                 aria-invalid={errorMessage ? 'true' : 'false'}
-                className="w-full bg-[#080D18] border border-white/15 rounded-xl pl-10 pr-11 py-3 text-sm text-white placeholder-brand-sandstone/40 focus:outline-none focus:border-brand-caribbeanSea focus:ring-2 focus:ring-brand-caribbeanSea/40 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-caribbeanSea"
+                className="w-full bg-[#07111E]/90 border border-white/15 focus:border-[#00C2A8] focus:ring-2 focus:ring-[#00C2A8]/30 rounded-xl pl-10 pr-11 py-3 text-sm text-white placeholder-slate-400/70 tracking-widest transition-all focus:outline-none"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
                 aria-label={showPassword ? 'Hide password' : 'Show password'}
-                className="absolute right-3.5 text-brand-sandstone/50 hover:text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-caribbeanSea rounded-lg p-0.5"
+                className="absolute right-3.5 text-slate-400 hover:text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00C2A8] rounded-lg p-0.5"
               >
                 {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
@@ -144,23 +143,23 @@ export function SignInForm() {
           </div>
 
           {/* Remember Me & Magic Link Switcher */}
-          <div className="flex items-center justify-between pt-0.5">
+          <div className="flex items-center justify-between pt-1">
             <label className="flex items-center gap-2 cursor-pointer select-none group">
               <input
                 type="checkbox"
                 checked={rememberMe}
                 onChange={(e) => setRememberMe(e.target.checked)}
-                className="w-4 h-4 rounded border-slate-700 bg-[#080D18] text-brand-caribbeanSea focus:ring-brand-caribbeanSea/50"
+                className="w-4 h-4 rounded border-slate-700 bg-[#07111E] text-[#00C2A8] accent-[#00C2A8] focus:ring-[#00C2A8]/40"
               />
-              <span className="text-xs text-brand-sandstone/80 group-hover:text-white transition-colors">
-                {t('auth.remember_me')}
+              <span className="text-xs text-slate-300 group-hover:text-white transition-colors font-medium">
+                Remember me
               </span>
             </label>
 
             <button
               type="button"
               onClick={() => setAuthMode('magic_link')}
-              className="text-xs text-brand-sandstone/60 hover:text-brand-sandstone transition-colors underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-caribbeanSea rounded-md px-1"
+              className="text-xs text-slate-300 hover:text-[#00C2A8] transition-colors underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00C2A8] rounded-md px-1"
             >
               Email magic link
             </button>
@@ -183,15 +182,18 @@ export function SignInForm() {
           <button
             type="submit"
             disabled={isPending}
-            className="tk-btn-primary w-full py-3.5 px-4 rounded-xl text-sm tracking-wide flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white cursor-pointer"
+            className="w-full py-3.5 px-4 rounded-xl text-sm font-bold tracking-wider text-[#06101E] bg-gradient-to-r from-[#00C2A8] via-[#00D2B8] to-[#00E5C9] hover:brightness-110 shadow-[0_0_25px_rgba(0,194,168,0.45)] active:scale-[0.99] transition-all flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white cursor-pointer mt-2"
           >
             {isPending ? (
               <>
-                <span className="w-4 h-4 border-2 border-slate-950 border-t-transparent rounded-full animate-spin" />
-                <span>Signing in…</span>
+                <span className="w-4 h-4 border-2 border-[#06101E] border-t-transparent rounded-full animate-spin" />
+                <span>SIGNING IN…</span>
               </>
             ) : (
-              <span>{t('auth.sign_in').toUpperCase()}</span>
+              <>
+                <span>SIGN IN</span>
+                <ArrowRight className="w-4 h-4 stroke-[2.5]" />
+              </>
             )}
           </button>
         </form>
@@ -203,8 +205,8 @@ export function SignInForm() {
           <div className="w-full border-t border-white/10" />
         </div>
         <div className="relative flex justify-center text-xs uppercase">
-          <span className="bg-[#0C1322] px-3 text-brand-sandstone/50 font-semibold tracking-wider">
-            or
+          <span className="bg-[#0A1728] px-3 text-slate-400 font-semibold tracking-widest text-[11px]">
+            OR
           </span>
         </div>
       </div>
@@ -212,15 +214,15 @@ export function SignInForm() {
       {/* ── Social OAuth Buttons ── */}
       <SocialAuthButtons onError={(err) => setErrorMessage(err)} />
 
-      {/* ── Create Account & Explore First Links ── */}
-      <div className="mt-6 pt-5 border-t border-white/10 space-y-3 text-center">
-        <p className="text-xs text-brand-sandstone/80">
-          {t('auth.dont_have_account')}{' '}
+      {/* ── Create Account Link ── */}
+      <div className="mt-6 text-center">
+        <p className="text-xs text-slate-300">
+          Don&apos;t have an account?{' '}
           <Link
             href="/signup"
-            className="font-bold text-transparent bg-clip-text bg-gradient-to-r from-brand-caribbeanTeal to-brand-caribbeanSea hover:underline underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-caribbeanSea rounded-md px-1"
+            className="font-bold text-[#00C2A8] hover:text-[#00E5C9] hover:underline underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00C2A8] rounded-md px-1 transition-colors"
           >
-            {t('gateway.create_account')}
+            Create your account
           </Link>
         </p>
       </div>

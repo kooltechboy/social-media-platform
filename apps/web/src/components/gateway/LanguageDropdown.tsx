@@ -24,10 +24,10 @@ export const CARIBBEAN_LOCALES: LanguageOption[] = [
 
 export interface LanguageDropdownProps {
   className?: string;
-  variant?: 'default' | 'compact';
+  variant?: 'default' | 'compact' | 'pill';
 }
 
-export function LanguageDropdown({ className = '', variant = 'default' }: LanguageDropdownProps) {
+export function LanguageDropdown({ className = '', variant = 'pill' }: LanguageDropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
   const { locale, setLocale } = useTranslation();
   const router = useRouter();
@@ -65,23 +65,22 @@ export function LanguageDropdown({ className = '', variant = 'default' }: Langua
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className={`inline-flex items-center gap-2 rounded-xl border transition-colors ${
-          variant === 'compact'
-            ? 'px-3 h-10 bg-white/[0.03] hover:bg-white/[0.06] border-white/[0.08] text-[13px] font-medium text-[#C3CCDA] hover:text-white'
-            : 'px-3.5 h-10 bg-white/[0.06] hover:bg-white/[0.10] border-white/[0.10] text-[13px] font-medium text-white'
+        className={`inline-flex items-center gap-2 transition-all ${
+          variant === 'pill'
+            ? 'px-4 py-2 rounded-full bg-white/[0.04] hover:bg-white/[0.08] border border-cyan-400/20 text-xs sm:text-sm font-medium text-slate-200 hover:text-white backdrop-blur-md'
+            : variant === 'compact'
+            ? 'px-3 h-10 rounded-xl bg-white/[0.03] hover:bg-white/[0.06] border border-white/[0.08] text-[13px] font-medium text-[#C3CCDA] hover:text-white'
+            : 'px-3.5 h-10 rounded-xl bg-white/[0.06] hover:bg-white/[0.10] border border-white/[0.10] text-[13px] font-medium text-white'
         }`}
         aria-expanded={isOpen}
         aria-haspopup="true"
         aria-label="Change language"
       >
-        <Globe className="w-4 h-4 text-brand-mist shrink-0" />
-        <span className={variant === 'compact' ? 'hidden xl:inline' : 'hidden sm:inline'}>
+        <Globe className="w-4 h-4 text-cyan-300/80 shrink-0" />
+        <span className={variant === 'compact' ? 'hidden xl:inline' : 'inline'}>
           {selectedLang.nativeLabel}
         </span>
-        <span className={variant === 'compact' ? 'xl:hidden uppercase text-xs font-semibold' : 'sm:hidden uppercase text-xs font-semibold'}>
-          {selectedLang.code}
-        </span>
-        <ChevronDown className={`w-3.5 h-3.5 text-brand-mist transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
+        <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
       </button>
 
       {isOpen && (

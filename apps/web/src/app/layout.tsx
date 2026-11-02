@@ -17,7 +17,7 @@ import { PwaProvider } from '../components/pwa/pwa-provider';
 import { NotificationsRealtimeProvider } from '../components/notifications-realtime-provider';
 import { createSupabaseServerClient } from '../lib/supabase/server';
 import { PostHogProvider } from '../components/posthog-provider';
-import { Inter, Plus_Jakarta_Sans } from 'next/font/google';
+import { Inter, Plus_Jakarta_Sans, Playfair_Display } from 'next/font/google';
 
 // Self-hosted at build time by next/font (no runtime request to Google).
 const fontSans = Inter({
@@ -30,6 +30,12 @@ const fontDisplay = Plus_Jakarta_Sans({
   display: 'swap',
   weight: ['500', '600', '700'],
   variable: '--font-display',
+});
+const fontSerif = Playfair_Display({
+  subsets: ['latin'],
+  display: 'swap',
+  weight: ['400', '600', '700', '800'],
+  variable: '--font-serif',
 });
 
 export const metadata: Metadata = {
@@ -136,7 +142,7 @@ export default async function RootLayout({
       lang={activeLocale}
       dir={dir}
       data-theme={activeTheme}
-      className={`${isDaylight ? '' : 'dark '}${fontSans.variable} ${fontDisplay.variable} overflow-x-hidden max-w-full`}
+      className={`${isDaylight ? '' : 'dark '}${fontSans.variable} ${fontDisplay.variable} ${fontSerif.variable} overflow-x-hidden max-w-full`}
       suppressHydrationWarning
     >
       <body
