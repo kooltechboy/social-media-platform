@@ -133,12 +133,47 @@ export default async function RootPage(props: RootPageProps) {
     culturalEvents = eventsRes.data || [];
 
     const followingSet = new Set(followsRes.data?.map((f: any) => f.following_id) || []);
-    suggestedPeople = (peopleRes.data || []).map((p: any) => ({
+    const allCandidates = (peopleRes.data || []).map((p: any) => ({
       ...p,
       is_following: followingSet.has(p.id),
     }));
+    const notFollowing = allCandidates.filter((p) => !p.is_following);
+    suggestedPeople = notFollowing.length > 0 ? notFollowing : allCandidates;
 
     const rawPosts = postsRes.data || [];
+    if (trendingTopics.length === 0 && rawPosts.length > 0) {
+      const tagCounts = new Map<string, number>();
+      for (const p of rawPosts) {
+        if (Array.isArray(p.cultural_tags)) {
+          for (const t of p.cultural_tags) {
+            const cleanTag = String(t).replace(/^#/, '').trim();
+            if (cleanTag) {
+              tagCounts.set(cleanTag, (tagCounts.get(cleanTag) || 0) + 1);
+            }
+          }
+        }
+        if (p.content) {
+          const matched = p.content.match(/#([a-zA-Z0-9_\u00C0-\u017F]+)/g);
+          if (matched) {
+            for (const tagWithHash of matched) {
+              const clean = tagWithHash.slice(1).trim();
+              if (clean) {
+                tagCounts.set(clean, (tagCounts.get(clean) || 0) + 1);
+              }
+            }
+          }
+        }
+      }
+      if (tagCounts.size > 0) {
+        trendingTopics = Array.from(tagCounts.entries())
+          .sort((a, b) => b[1] - a[1])
+          .slice(0, 5)
+          .map(([tag, count]) => ({
+            tag,
+            post_count: count,
+          }));
+      }
+    }
     if (postsRes.nextCursor) {
       nextCursor = postsRes.nextCursor;
     } else if (rawPosts.length === 30) {

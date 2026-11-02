@@ -15,6 +15,7 @@ import {
   Building2,
   ShieldCheck,
   Plus,
+  Compass,
 } from 'lucide-react';
 import UserAvatar from '../user-avatar';
 import FollowButton from '../follow-button';
@@ -73,53 +74,6 @@ export interface HomeRailProps {
   }>;
 }
 
-const DEFAULT_CARIBBEAN_TRENDS = [
-  { tag: 'DominicanRepublic', post_count: 124000 },
-  { tag: 'CaribbeanMusic', post_count: 96000 },
-  { tag: 'Travel', post_count: 87000 },
-  { tag: 'Food', post_count: 76000 },
-  { tag: 'Culture', post_count: 64000 },
-];
-
-const DEFAULT_SUGGESTED_PEOPLE = [
-  {
-    id: 'sug-1',
-    display_name: 'Maria Rodriguez',
-    username: 'mariarodriguez',
-    avatar_url: null,
-    is_verified: true,
-    origin_country_iso: 'DO',
-    is_following: false,
-  },
-  {
-    id: 'sug-2',
-    display_name: 'Jahmar Reid',
-    username: 'jahmarreid',
-    avatar_url: null,
-    is_verified: true,
-    origin_country_iso: 'JM',
-    is_following: false,
-  },
-  {
-    id: 'sug-3',
-    display_name: 'Caribbean Eats',
-    username: 'caribbeaneats',
-    avatar_url: null,
-    is_verified: true,
-    origin_country_iso: 'TT',
-    is_following: false,
-  },
-  {
-    id: 'sug-4',
-    display_name: 'Travel DR',
-    username: 'traveldr',
-    avatar_url: null,
-    is_verified: true,
-    origin_country_iso: 'DO',
-    is_following: false,
-  },
-];
-
 function formatPostCount(count?: number): string {
   if (count === undefined) return '';
   if (count >= 1000000) return `${(count / 1000000).toFixed(1)}M posts`;
@@ -136,8 +90,8 @@ export default function HomeRail({
   managedPages = [],
   followedPages = [],
 }: HomeRailProps) {
-  const displayTrends = trendingTopics && trendingTopics.length > 0 ? trendingTopics : DEFAULT_CARIBBEAN_TRENDS;
-  const displayPeople = suggestedPeople && suggestedPeople.length > 0 ? suggestedPeople : DEFAULT_SUGGESTED_PEOPLE;
+  const displayTrends = trendingTopics || [];
+  const displayPeople = suggestedPeople || [];
 
   return (
     <div className="space-y-4">
@@ -149,7 +103,7 @@ export default function HomeRail({
               <h4 className="text-[13.5px] font-semibold text-white line-clamp-1">{activeLiveStream.title}</h4>
               <p className="text-xs text-brand-mist truncate mt-0.5">
                 {activeLiveStream.creator_name ? `by ${activeLiveStream.creator_name}` : 'Live on TUKUBI'}
-                {activeLiveStream.peak_viewers !== undefined && ` Â· ${activeLiveStream.peak_viewers} watching`}
+                {activeLiveStream.peak_viewers !== undefined && ` \u00B7 ${activeLiveStream.peak_viewers} watching`}
               </p>
             </div>
             <Link
@@ -167,27 +121,36 @@ export default function HomeRail({
         label="Trending in the Caribbean"
         title="Trending now"
         icon={<TrendingUp className="w-4 h-4 text-brand-goldenHour" />}
-        action={{ href: '/explore', label: 'View all' }}
+        action={displayTrends.length > 0 ? { href: '/explore', label: 'View all' } : undefined}
       >
-        <ol className="-mx-2">
-          {displayTrends.slice(0, 5).map((trend, idx) => (
-            <li key={trend.tag}>
-              <Link
-                href={`/explore?q=${encodeURIComponent('#' + trend.tag)}`}
-                className="flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-white/[0.04] transition-colors group"
-              >
-                <span className="text-xs font-medium text-[#6B7A90] w-4 shrink-0 text-center tabular-nums">{idx + 1}</span>
-                <div className="min-w-0 flex-1">
-                  <p className="text-[13.5px] font-semibold text-white truncate">#{trend.tag}</p>
-                  {trend.post_count !== undefined && (
-                    <span className="text-[11.5px] text-brand-mist">{formatPostCount(trend.post_count)}</span>
-                  )}
-                </div>
-                <ArrowRight className="w-3.5 h-3.5 text-[#6B7A90] opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
-              </Link>
-            </li>
-          ))}
-        </ol>
+        {displayTrends.length > 0 ? (
+          <ol className="-mx-2">
+            {displayTrends.slice(0, 5).map((trend, idx) => (
+              <li key={trend.tag}>
+                <Link
+                  href={`/explore?q=${encodeURIComponent('#' + trend.tag)}`}
+                  className="flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-white/[0.04] transition-colors group"
+                >
+                  <span className="text-xs font-medium text-[#6B7A90] w-4 shrink-0 text-center tabular-nums">{idx + 1}</span>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[13.5px] font-semibold text-white truncate">#{trend.tag}</p>
+                    {trend.post_count !== undefined && (
+                      <span className="text-[11.5px] text-brand-mist">{formatPostCount(trend.post_count)}</span>
+                    )}
+                  </div>
+                  <ArrowRight className="w-3.5 h-3.5 text-[#6B7A90] opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
+                </Link>
+              </li>
+            ))}
+          </ol>
+        ) : (
+          <div className="py-2.5 px-1 text-left">
+            <p className="text-[13px] text-brand-sandstone font-medium">No trending topics right now</p>
+            <p className="text-[11.5px] text-brand-mist mt-0.5 leading-snug">
+              Tag your posts with hashtags like #Carnival or #CaribbeanMusic to start a trend.
+            </p>
+          </div>
+        )}
       </RailSection>
 
       {/* 3. Suggested People / Creators */}
@@ -195,30 +158,45 @@ export default function HomeRail({
         label="Suggested people"
         title="Suggested people"
         icon={<Users className="w-4 h-4 text-brand-caribbeanSea" />}
-        action={{ href: '/people', label: 'See more' }}
+        action={displayPeople.length > 0 ? { href: '/people', label: 'See more' } : undefined}
       >
-        <ul className="space-y-3">
-          {displayPeople.slice(0, 4).map((person) => (
-            <li key={person.id} className="flex items-center justify-between gap-3">
-              <Link href={`/profile/${person.username}`} className="flex items-center gap-3 min-w-0 flex-1 group">
-                <UserAvatar src={person.avatar_url} name={person.display_name} size="sm" />
-                <div className="min-w-0">
-                  <p className="text-[13.5px] font-semibold text-white truncate flex items-center gap-1 group-hover:underline decoration-white/30 underline-offset-2">
-                    <span className="truncate">{person.display_name}</span>
-                    {person.is_verified && <CheckCircle className="w-3.5 h-3.5 text-brand-caribbeanSea shrink-0" />}
-                  </p>
-                  <p className="text-[11.5px] text-brand-mist truncate">
-                    @{person.username}
-                    {person.origin_country_iso && ` Â· ${person.origin_country_iso}`}
-                  </p>
+        {displayPeople.length > 0 ? (
+          <ul className="space-y-3">
+            {displayPeople.slice(0, 4).map((person) => (
+              <li key={person.id} className="flex items-center justify-between gap-3">
+                <Link href={`/profile/${person.username}`} className="flex items-center gap-3 min-w-0 flex-1 group">
+                  <UserAvatar src={person.avatar_url} name={person.display_name} size="sm" />
+                  <div className="min-w-0">
+                    <p className="text-[13.5px] font-semibold text-white truncate flex items-center gap-1 group-hover:underline decoration-white/30 underline-offset-2">
+                      <span className="truncate">{person.display_name}</span>
+                      {person.is_verified && <CheckCircle className="w-3.5 h-3.5 text-brand-caribbeanSea shrink-0" />}
+                    </p>
+                    <p className="text-[11.5px] text-brand-mist truncate">
+                      @{person.username}
+                      {person.origin_country_iso && ` \u00B7 ${person.origin_country_iso}`}
+                    </p>
+                  </div>
+                </Link>
+                <div className="shrink-0">
+                  <FollowButton targetUserId={person.id} isFollowing={!!person.is_following} />
                 </div>
-              </Link>
-              <div className="shrink-0">
-                <FollowButton targetUserId={person.id} isFollowing={!!person.is_following} />
-              </div>
-            </li>
-          ))}
-        </ul>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <div className="py-2 px-1 space-y-2">
+            <p className="text-[12.5px] text-brand-mist leading-relaxed">
+              Explore authentic Caribbean creators, artists, and businesses across the diaspora.
+            </p>
+            <Link
+              href="/explore"
+              className="w-full flex items-center justify-center gap-1.5 h-8 rounded-lg bg-white/[0.05] hover:bg-white/[0.08] text-[#C3CCDA] hover:text-white text-xs font-semibold transition-colors"
+            >
+              <Compass className="w-3.5 h-3.5 text-brand-caribbeanSea" />
+              Explore community
+            </Link>
+          </div>
+        )}
       </RailSection>
 
       {/* 4. Pages You Manage (Ecosystem RBAC) */}
@@ -243,7 +221,7 @@ export default function HomeRail({
                       {page.isVerified && <CheckCircle className="w-3.5 h-3.5 text-brand-caribbeanSea shrink-0" />}
                     </p>
                     <p className="text-[11.5px] text-brand-mist truncate">
-                      {page.userRole ? `${page.userRole.charAt(0).toUpperCase() + page.userRole.slice(1)} Â· ` : ''}
+                      {page.userRole ? `${page.userRole.charAt(0).toUpperCase() + page.userRole.slice(1)} \u00B7 ` : ''}
                       {page.followerCount !== undefined ? `${page.followerCount} followers` : page.category || 'Page'}
                     </p>
                   </div>
@@ -391,7 +369,7 @@ export default function HomeRail({
   );
 }
 
-/** Shared right-rail section â€” quiet panel, small title, single text action. */
+/** Shared right-rail section — quiet panel, small title, single text action. */
 function RailSection({
   label,
   title,
