@@ -11,24 +11,22 @@ test.describe('Authentication Flows', () => {
     });
 
     test('has correct header links', async ({ page }) => {
-      await expect(page.getByRole('link', { name: /explore/i }).first()).toHaveAttribute('href', '/explore');
-      await expect(page.getByRole('link', { name: /caribbean map/i })).toHaveAttribute('href', '/map');
-      await expect(page.getByRole('link', { name: /(live streams|live shows|live)/i })).toHaveAttribute('href', '/live');
-      await expect(page.getByRole('link', { name: /podcasts/i })).toHaveAttribute('href', '/podcasts');
-      await expect(page.getByRole('link', { name: /financial center/i })).toHaveAttribute('href', '/financial-center');
-      await expect(page.getByRole('link', { name: /join tukubi/i })).toHaveAttribute('href', '/signup');
+      await expect(page.getByRole('link', { name: /(TUKUBI|The Caribbean Connected)/i }).first()).toHaveAttribute('href', '/');
+      await expect(page.getByRole('link', { name: /create your account/i }).first()).toHaveAttribute('href', '/signup');
+      await expect(page.locator('button[aria-haspopup="true"]').first()).toBeVisible();
     });
 
     test('has correct hero section elements', async ({ page }) => {
-      const createAccountBtn = page.getByRole('link', { name: /create.*account/i }).or(page.getByRole('button', { name: /create.*account/i }));
-      await expect(createAccountBtn.first()).toBeVisible();
+      await expect(page.getByRole('heading', { name: /The Caribbean.*Connected/i }).first()).toBeVisible();
+      await expect(page.getByText(/Born in the Caribbean\. Built for the World\./i).first()).toBeVisible();
+      const createAccountBtn = page.getByRole('link', { name: /create your account/i }).first();
+      await expect(createAccountBtn).toBeVisible();
     });
 
     test('renders sign in form correctly', async ({ page }) => {
       const emailInput = page.locator('input#signin-email');
       await expect(emailInput).toBeVisible();
-      await expect(emailInput).toHaveAttribute('type', 'email');
-      await expect(emailInput).toHaveAttribute('placeholder', 'you@example.com');
+      await expect(emailInput).toHaveAttribute('type', 'text');
       await expect(emailInput).toHaveAttribute('required', '');
 
       const passwordInput = page.locator('input#signin-password');
@@ -50,14 +48,16 @@ test.describe('Authentication Flows', () => {
     });
 
     test('renders social auth buttons', async ({ page }) => {
+      await expect(page.locator('button[aria-label="Continue with Google"]')).toBeVisible();
       await expect(page.locator('button[aria-label="Continue with Facebook"]')).toBeVisible();
     });
 
     test('has correct footer links', async ({ page }) => {
       await expect(page.getByRole('link', { name: /privacy policy/i })).toHaveAttribute('href', '/privacy');
       await expect(page.getByRole('link', { name: /terms of service/i })).toHaveAttribute('href', '/terms');
-      await expect(page.getByRole('link', { name: /security/i })).toHaveAttribute('href', '/settings/security');
-      await expect(page.getByRole('link', { name: /explore platform/i })).toHaveAttribute('href', '/explore');
+      await expect(page.getByRole('link', { name: /safety/i })).toHaveAttribute('href', '/safety');
+      await expect(page.getByRole('link', { name: /help center/i })).toHaveAttribute('href', '/help');
+      await expect(page.getByRole('link', { name: /learn more/i })).toHaveAttribute('href', '/learn');
     });
 
     test('has carnival backdrop switcher', async ({ page }) => {
@@ -107,7 +107,7 @@ test.describe('Authentication Flows', () => {
       await expect(page.getByLabel(/first name/i)).toBeVisible();
       await expect(page.getByLabel(/last name/i)).toBeVisible();
       await expect(page.getByLabel(/@username/i)).toBeVisible();
-      await expect(page.getByLabel(/email/i)).toBeVisible();
+      await expect(page.locator('input#email')).toBeVisible();
       await expect(page.getByLabel(/password/i).first()).toBeVisible();
       
       const termsCheckbox = page.getByRole('checkbox');
@@ -150,7 +150,7 @@ test.describe('Authentication Flows', () => {
       await expect(errorBanner).toBeVisible();
       await expect(errorBanner).toHaveAttribute('role', 'alert');
       await expect(errorBanner).toHaveAttribute('aria-live', 'polite');
-      await expect(errorBanner).toContainText('Please provide both email and password.');
+      await expect(errorBanner).toContainText('Please provide both email/phone and password.');
     });
 
     test('shows validation error for email only submission', async ({ page }) => {
@@ -162,7 +162,7 @@ test.describe('Authentication Flows', () => {
 
       const errorBanner = page.locator('#signin-error-banner');
       await expect(errorBanner).toBeVisible();
-      await expect(errorBanner).toContainText('Please provide both email and password.');
+      await expect(errorBanner).toContainText('Please provide both email/phone and password.');
     });
 
     test('shows validation error for password only submission', async ({ page }) => {
@@ -174,7 +174,7 @@ test.describe('Authentication Flows', () => {
 
       const errorBanner = page.locator('#signin-error-banner');
       await expect(errorBanner).toBeVisible();
-      await expect(errorBanner).toContainText('Please provide both email and password.');
+      await expect(errorBanner).toContainText('Please provide both email/phone and password.');
     });
   });
 

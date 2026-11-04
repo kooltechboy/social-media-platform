@@ -1,29 +1,30 @@
 import { test, expect } from '@playwright/test';
 
-test.describe('Critical journeys', () => {
+test.describe('Critical Journeys - Unauthenticated Guest', () => {
   test.use({ storageState: { cookies: [], origins: [] } });
 
-  test('home page loads with public front door and discovery portals', async ({ page }) => {
+  test('home page redirects unauthenticated guests to login gateway', async ({ page }) => {
     await page.goto('/');
     await page.waitForLoadState('networkidle');
+    const url = new URL(page.url());
+    expect(url.pathname).toBe('/login');
+  });
+
+  test('public front door (/about) loads brand and discovery portals', async ({ page }) => {
+    await page.goto('/about');
+    await page.waitForLoadState('networkidle');
     await expect(page.getByRole('link', { name: /(TUKUBI|TUKUBI)/i }).first()).toBeVisible();
-    await expect(page.getByRole('heading', { name: /Born in the Caribbean/i })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /Born in the Caribbean/i }).first()).toBeVisible();
     await expect(page.getByRole('link', { name: /Join the Caribbean Network/i })).toBeVisible();
-    await expect(page.getByRole('link', { name: /Explore Culture & Islands/i })).toBeVisible();
+    await expect(page.getByRole('link', { name: /Explore Culture/i })).toBeVisible();
   });
 
-  test('explore renders the Caribbean country grid', async ({ page }) => {
+  test('protected explore route redirects unauthenticated guest to login', async ({ page }) => {
     await page.goto('/explore');
     await page.waitForLoadState('networkidle');
-    await expect(page.getByRole('heading', { name: /Explore Caribbean Vibes/i })).toBeVisible();
-    await expect(page.getByRole('heading', { name: /Discover Caribbean Nations & Territories/i })).toBeVisible();
-  });
-
-  test('explore renders diaspora hubs', async ({ page }) => {
-    await page.goto('/explore');
-    await page.waitForLoadState('networkidle');
-    await expect(page.getByRole('heading', { name: /Global Diaspora Hubs/i })).toBeVisible();
-    await expect(page.getByText(/Toronto/i).first()).toBeVisible();
+    const url = new URL(page.url());
+    expect(url.pathname).toBe('/login');
+    expect(url.searchParams.get('next')).toBe('/explore');
   });
 
   test('messages page redirects unauthenticated user to login', async ({ page }) => {
@@ -56,5 +57,23 @@ test.describe('Critical journeys', () => {
     const body = await response.json();
     expect(['ok', 'degraded']).toContain(body.status);
     expect(typeof body.latencyMs).toBe('number');
+  });
+});
+
+test.describe('Critical Journeys - Authenticated Member', () => {
+  test.use({ storageState: 'playwright/.auth/user.json' });
+
+  test('explore renders the Caribbean country grid', async ({ page }) => {
+    await page.goto('/explore');
+    await page.waitForLoadState('networkidle');
+    await expect(page.getByRole('heading', { name: /Explore Caribbean Vibes/i })).toBeVisible({ timeout: 15000 });
+    await expect(page.getByRole('heading', { name: /Discover Caribbean Nations & Territories/i })).toBeVisible();
+  });
+
+  test('explore renders diaspora hubs', async ({ page }) => {
+    await page.goto('/explore');
+    await page.waitForLoadState('networkidle');
+    await expect(page.getByRole('heading', { name: /Global Diaspora Hubs/i })).toBeVisible({ timeout: 15000 });
+    await expect(page.getByText(/Toronto/i).first()).toBeVisible();
   });
 });

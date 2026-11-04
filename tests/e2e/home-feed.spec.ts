@@ -4,29 +4,23 @@ test.describe('Home Feed Page - Unauthenticated', () => {
   // Override storageState to ensure unauthenticated state for these tests
   test.use({ storageState: { cookies: [], origins: [] } });
 
-  test.beforeEach(async ({ page }) => {
+  test('Root / redirects unauthenticated guests to login gateway', async ({ page }) => {
     await page.goto('/');
     await page.waitForLoadState('networkidle');
+    const url = new URL(page.url());
+    expect(url.pathname).toBe('/login');
   });
 
-  test('Page Load & Basic Structure', async ({ page }) => {
-    const brandLink = page.getByRole('link', { name: /(TUKUBI|TUKUBI)/i }).first();
-    await expect(brandLink).toBeVisible();
+  test('Public Marketing Portal (/about) loads clean Caribbean structure', async ({ page }) => {
+    await page.goto('/about');
+    await page.waitForLoadState('networkidle');
 
-    // Main feed area renders (checking for main role or content section)
-    await expect(page.getByRole('main').or(page.locator('main'))).toBeVisible();
+    const brandLockup = page.getByText('TUKUBI').first();
+    await expect(brandLockup).toBeVisible();
 
-    // Sidebar renders (desktop)
-    const sidebar = page.locator('aside').first();
-    if (await sidebar.count() > 0) {
-      await expect(sidebar).toBeVisible();
-    }
-  });
-
-  test('Unauthenticated State - Hero and Call to Actions', async ({ page }) => {
     // Tagline badge and master headline
     await expect(page.getByText('The Caribbean Connected.').first()).toBeVisible();
-    await expect(page.getByText(/Born in the Caribbean/i).first()).toBeVisible();
+    await expect(page.getByRole('heading', { name: /Born in the Caribbean/i }).first()).toBeVisible();
 
     // Primary CTA buttons
     const joinBtn = page.getByRole('link', { name: /Join the Caribbean Network/i });
@@ -42,12 +36,18 @@ test.describe('Home Feed Page - Unauthenticated', () => {
     await expect(signInLink).toHaveAttribute('href', '/login');
   });
 
-  test('Caribbean Identity & Six Pillars', async ({ page }) => {
+  test('Public Marketing Portal displays Caribbean Identity & Six Pillars', async ({ page }) => {
+    await page.goto('/about');
+    await page.waitForLoadState('networkidle');
+
     await expect(page.getByText(/Engineered Around Caribbean Identity/i)).toBeVisible();
     await expect(page.getByText(/30\+ Islands & Territories/i).first()).toBeVisible();
   });
 
-  test('Global Diaspora Hubs', async ({ page }) => {
+  test('Public Marketing Portal displays Global Diaspora Hubs', async ({ page }) => {
+    await page.goto('/about');
+    await page.waitForLoadState('networkidle');
+
     await expect(page.getByText(/Global Diaspora Hubs/i)).toBeVisible();
     const hubs = ['Miami', 'Toronto', 'London'];
     for (const hub of hubs) {
@@ -65,23 +65,20 @@ test.describe('Home Feed Page - Authenticated', () => {
     await page.waitForLoadState('networkidle');
   });
 
-  test('Authenticated Horizon Card & Quick Actions', async ({ page }) => {
-    // Welcome back heading for authenticated user
-    await expect(page.getByText(/Welcome back/i).first()).toBeVisible();
+  test('Authenticated Home Stream & Editorial Composer', async ({ page }) => {
+    // Composer trigger button for authenticated user
+    const composerTrigger = page.getByRole('button', { name: /What's on your mind/i }).first();
+    await expect(composerTrigger).toBeVisible({ timeout: 10000 });
 
-    // Quick Creation Bar Trigger
-    await expect(page.getByText(/What’s happening across your Caribbean world\?/i)).toBeVisible();
-
-    // Quick creation action links
-    const quickActions = ['Post', 'Reel', 'Go Live'];
-    for (const action of quickActions) {
-      await expect(page.getByRole('link', { name: new RegExp(action, 'i') }).first()).toBeVisible();
-    }
+    // Quick creation shortcuts
+    await expect(page.getByRole('button', { name: /Photo/i }).first()).toBeVisible();
+    await expect(page.getByRole('button', { name: /Video/i }).first()).toBeVisible();
+    await expect(page.getByRole('button', { name: /Poll/i }).first()).toBeVisible();
   });
 
   test('Feed Stream & Interaction Bar', async ({ page }) => {
-    // Feed container renders "Home Stream"
-    await expect(page.getByText(/Home Stream|Happening in Your World/i).first()).toBeVisible();
+    // Mode tabs render For You tab by default
+    await expect(page.getByRole('tab', { name: /For You/i })).toBeVisible({ timeout: 10000 });
 
     const emptyState = page.getByText(/No Content Found in This Feed|Your Following Stream is Quiet|No Friends Posts Yet|No Community Posts Yet/i).first();
     const postArticle = page.locator('article').first();
