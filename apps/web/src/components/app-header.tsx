@@ -164,9 +164,21 @@ export default function AppHeader() {
       role="banner"
     >
       {/* ────────────────────────────────────────────────────────── */}
-      {/* 1. LEFT: PROMINENT TUKUBI BRAND & OFFICIAL TAGLINE         */}
+      {/* 1. LEFT: MENU DRAWER TRIGGER (MOBILE) & BRAND LOGO         */}
       {/* ────────────────────────────────────────────────────────── */}
-      <div className="flex items-center shrink-0">
+      <div className="flex items-center gap-1 sm:gap-2.5 shrink-0">
+        <button
+          type="button"
+          onClick={() => {
+            if (typeof window !== 'undefined') {
+              window.dispatchEvent(new CustomEvent('tukubi:open-ecosystem-menu'));
+            }
+          }}
+          className="md:hidden text-[#C3CCDA] hover:text-white rounded-xl hover:bg-white/[0.06] transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center -ml-1"
+          aria-label="Open TUKUBI Navigation Menu"
+        >
+          <Menu className="w-5 h-5" aria-hidden="true" />
+        </button>
         <TukubiLogo variant="horizontal" size="sm" href="/" priority />
       </div>
 
@@ -332,19 +344,7 @@ export default function AppHeader() {
           )}
         </Link>
 
-        {/* Mobile Ecosystem Drawer Quick Trigger */}
-        <button
-          type="button"
-          onClick={() => {
-            if (typeof window !== 'undefined') {
-              window.dispatchEvent(new CustomEvent('tukubi:open-ecosystem-menu'));
-            }
-          }}
-          className="md:hidden text-[#C3CCDA] hover:text-white rounded-xl hover:bg-white/[0.06] transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
-          aria-label="Open TUKUBI Navigation Menu"
-        >
-          <Menu className="w-5 h-5" aria-hidden="true" />
-        </button>
+
 
         <div className="hidden sm:block">
           <IdentitySwitcher />

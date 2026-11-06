@@ -58,6 +58,7 @@ export interface FeedPostProps {
   onReactWithEmoji?: (postId: string, emoji: string) => void;
   customEmojiList?: Array<{ emoji: string; count: number; users: string[] }>;
   onShare: (post: FeedPostData) => void;
+  onRepost?: (post: FeedPostData) => void;
   onDeletePost: (postId: string) => void;
   onReportPost: (postId: string) => void;
   onTipCreator: (target: { name: string; handle: string }) => void;
@@ -133,6 +134,7 @@ export default function FeedPost({
   onReactWithEmoji,
   customEmojiList = [],
   onShare,
+  onRepost,
   onDeletePost,
   onReportPost,
   onTipCreator,
@@ -334,13 +336,16 @@ export default function FeedPost({
           </Link>
 
           <div className="min-w-0 space-y-0.5">
-            <div className="flex items-center gap-1.5 min-w-0">
+            {/* Line 1: Author Name · Time + Badges */}
+            <div className="flex items-center gap-1.5 min-w-0 flex-wrap leading-tight">
               <Link
                 href={authorHref}
                 className="font-semibold text-[14.5px] sm:text-[15px] text-[#F8FAFC] hover:underline decoration-white/30 underline-offset-2 truncate"
               >
                 {post.author}
               </Link>
+              <span className="text-white/30 text-xs select-none">·</span>
+              <span className="text-xs text-[#94A3B8] shrink-0">{post.time}</span>
 
               {isOfficialPost ? (
                 <OfficialBadge
@@ -367,35 +372,29 @@ export default function FeedPost({
               )}
             </div>
 
-            <div className="flex items-center gap-1.5 text-[12px] text-[#94A3B8] flex-wrap leading-tight">
-              <Link
-                href={authorHref}
-                className="hover:text-[#E8EDF5] transition-colors truncate max-w-[140px] sm:max-w-[200px]"
-              >
-                @{post.handle}
-              </Link>
-              <span className="text-white/25">·</span>
-              <span className="shrink-0">{post.time}</span>
-              {post.location && (
-                <>
-                  <span className="text-white/25">·</span>
-                  <span className="inline-flex items-center gap-1 text-[#94A3B8] truncate max-w-[155px] sm:max-w-none">
-                    <MapPin className="w-3 h-3 text-[#00C2A8] shrink-0" />
-                    <span className="truncate">{post.location}</span>
-                  </span>
-                </>
+            {/* Line 2: Territory Context / Location Pill with Globe Icon */}
+            <div className="flex items-center gap-1.5 text-[12px] text-[#94A3B8] leading-tight">
+              {post.location ? (
+                <span className="inline-flex items-center gap-1 text-[#94A3B8] truncate">
+                  <span className="truncate">{post.location}</span>
+                  <Globe className="w-3 h-3 text-[#00C2A8] shrink-0" aria-hidden="true" />
+                </span>
+              ) : post.communityName ? (
+                <Link
+                  href={`/communities/${post.communitySlug || post.communityId}`}
+                  className="font-semibold text-[#00C2A8] hover:underline truncate"
+                >
+                  {post.communityName}
+                </Link>
+              ) : (
+                <span className="inline-flex items-center gap-1 text-[#94A3B8] truncate">
+                  <span>@{post.handle}</span>
+                  <span className="text-white/20">·</span>
+                  <span>Caribbean</span>
+                  <Globe className="w-3 h-3 text-[#00C2A8] shrink-0" aria-hidden="true" />
+                </span>
               )}
-              {post.communityName && (
-                <>
-                  <span className="text-white/25">·</span>
-                  <Link
-                    href={`/communities/${post.communitySlug || post.communityId}`}
-                    className="font-semibold text-[#00C2A8] hover:underline truncate"
-                  >
-                    {post.communityName}
-                  </Link>
-                </>
-              )}
+
               {post.officialContentType && (
                 <>
                   <span className="text-white/25">·</span>
@@ -525,6 +524,20 @@ export default function FeedPost({
                   <MessageSquare className="w-4 h-4 text-brand-caribbeanSea" />
                   <span>Message Author</span>
                 </Link>
+              )}
+
+              {!isAuthor && post.author && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    onTipCreator({ name: post.author, handle: post.handle });
+                    setIsMenuOpen(false);
+                  }}
+                  className="w-full text-left px-3 py-2.5 rounded-xl text-brand-goldenHour hover:bg-brand-goldenHour/10 flex items-center gap-2.5 font-semibold transition-colors min-h-[40px]"
+                >
+                  <Wallet className="w-4 h-4 text-brand-goldenHour" />
+                  <span>Send Tip to Creator</span>
+                </button>
               )}
 
               {isAuthor ? (
@@ -839,65 +852,77 @@ export default function FeedPost({
       {/* ────────────────────────────────────────────────────────── */}
       {/* 4. INTERACTION BAR                                        */}
       {/* ────────────────────────────────────────────────────────── */}
-      <div className="flex items-center justify-between pt-2 border-t border-white/[0.06] text-brand-mist text-[13px]">
-        {/* Reaction Picker & Counter */}
-        <div className="flex items-center gap-1.5">
-          <ReactionPicker
-            currentReaction={currentReaction}
-            onSelect={(type) => onToggleReaction(post.id, type)}
-          />
-          <span className="text-[13px] font-medium text-[#C3CCDA] tabular-nums">
-            {likeCount || 0}
-          </span>
+      {/* 4. INTERACTION BAR (Standardized Mobile & Desktop 5-Action Social Bar) */}
+      <div className="flex items-center justify-between pt-2 border-t border-white/[0.06] text-brand-mist text-[12.5px] sm:text-[13px]">
+        {/* Left Action Cluster: Like, Comment, Repost, Share */}
+        <div className="flex items-center gap-1 sm:gap-3">
+          {/* 1. Like / Reactions */}
+          <div className="flex items-center">
+            <ReactionPicker
+              currentReaction={currentReaction}
+              onSelect={(type) => onToggleReaction(post.id, type)}
+            />
+            <span className="text-[12px] sm:text-[13px] font-medium text-[#C3CCDA] tabular-nums ml-1">
+              {likeCount && likeCount > 0 ? likeCount : 'Like'}
+            </span>
+          </div>
+
+          {/* 2. Comments */}
+          <button
+            type="button"
+            aria-label={`View comments (${post.comments})`}
+            onClick={() => onToggleComments(post.id)}
+            className={`flex items-center gap-1.5 hover:text-white hover:bg-white/[0.04] transition-colors px-2 py-1.5 sm:px-2.5 sm:py-2 min-h-[40px] rounded-lg font-medium select-none ${
+              isCommentsExpanded ? 'text-white' : ''
+            }`}
+          >
+            <MessageCircle className="w-4 h-4 sm:w-[18px] sm:h-[18px]" />
+            <span className="text-[12px] sm:text-[13px] font-medium text-[#C3CCDA] tabular-nums">
+              {post.comments > 0 ? post.comments : 'Comment'}
+            </span>
+          </button>
+
+          {/* 3. Repost */}
+          <button
+            type="button"
+            aria-label={`Repost (${post.reposts})`}
+            onClick={() => (onRepost ? onRepost(post) : onShare(post))}
+            className="flex items-center gap-1.5 hover:text-white hover:bg-white/[0.04] transition-colors px-2 py-1.5 sm:px-2.5 sm:py-2 min-h-[40px] rounded-lg font-medium select-none"
+          >
+            <Repeat className="w-4 h-4 sm:w-[18px] sm:h-[18px]" />
+            <span className="text-[12px] sm:text-[13px] font-medium text-[#C3CCDA] tabular-nums">
+              {post.reposts > 0 ? post.reposts : 'Repost'}
+            </span>
+          </button>
+
+          {/* 4. Share */}
+          <button
+            type="button"
+            aria-label="Share post"
+            onClick={() => onShare(post)}
+            className="flex items-center gap-1.5 hover:text-white hover:bg-white/[0.04] transition-colors px-2 py-1.5 sm:px-2.5 sm:py-2 min-h-[40px] rounded-lg font-medium select-none"
+          >
+            <Share2 className="w-4 h-4 sm:w-[18px] sm:h-[18px]" />
+            <span className="hidden xs:inline text-[12px] sm:text-[13px] font-medium text-[#C3CCDA]">
+              Share
+            </span>
+          </button>
         </div>
 
-        {/* Comments Toggle */}
-        <button
-          type="button"
-          aria-label={`View comments (${post.comments})`}
-          onClick={() => onToggleComments(post.id)}
-          className={`flex items-center gap-2 hover:text-white hover:bg-white/[0.04] transition-colors px-2.5 py-2 min-h-[44px] rounded-lg font-medium select-none ${
-            isCommentsExpanded ? 'text-white' : ''
-          }`}
-        >
-          <MessageCircle className="w-5 h-5" />
-          <span>{post.comments}</span>
-        </button>
-
-        {/* Share Button */}
-        <button
-          type="button"
-          aria-label="Share post"
-          onClick={() => onShare(post)}
-          className="flex items-center gap-2 hover:text-white hover:bg-white/[0.04] transition-colors px-2.5 py-2 min-h-[44px] rounded-lg font-medium select-none"
-        >
-          <Share2 className="w-5 h-5" />
-          <span>{post.reposts > 0 ? post.reposts : 'Share'}</span>
-        </button>
-
-        {/* Bookmark Button */}
-        <button
-          type="button"
-          onClick={() => onSavePost(post.id)}
-          className={`p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-xl transition-colors ${
-            isSaved ? 'text-brand-caribbeanSea' : 'text-slate-400 hover:text-slate-200'
-          }`}
-          title={isSaved ? 'Unsave post' : 'Save post'}
-          aria-label={isSaved ? 'Unsave post' : 'Save post'}
-        >
-          <Bookmark className={`w-5 h-5 ${isSaved ? 'fill-brand-caribbeanSea' : ''}`} />
-        </button>
-
-        {/* Creator Tip Trigger */}
-        <button
-          type="button"
-          aria-label={`Send Tip to ${post.author}`}
-          onClick={() => onTipCreator({ name: post.author, handle: post.handle })}
-          className="flex items-center gap-1.5 text-brand-goldenHour font-semibold hover:bg-brand-goldenHour/10 transition-colors px-3 sm:px-3.5 py-2 min-h-[44px] rounded-lg border border-brand-goldenHour/25 text-[13px]"
-        >
-          <Wallet className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
-          <span className="hidden sm:inline">Tip</span>
-        </button>
+        {/* Right Action Cluster: Bookmark / Save */}
+        <div className="flex items-center gap-1">
+          <button
+            type="button"
+            onClick={() => onSavePost(post.id)}
+            className={`p-2 sm:p-2.5 min-w-[40px] min-h-[40px] flex items-center justify-center rounded-xl transition-colors ${
+              isSaved ? 'text-[#00C2A8]' : 'text-slate-400 hover:text-white'
+            }`}
+            title={isSaved ? 'Unsave post' : 'Save post'}
+            aria-label={isSaved ? 'Unsave post' : 'Save post'}
+          >
+            <Bookmark className={`w-4 h-4 sm:w-[18px] sm:h-[18px] ${isSaved ? 'fill-[#00C2A8]' : ''}`} />
+          </button>
+        </div>
       </div>
 
       {/* ────────────────────────────────────────────────────────── */}

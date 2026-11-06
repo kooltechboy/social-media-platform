@@ -86,7 +86,7 @@ export interface HomeDashboardProps {
   }>;
 }
 
-const FEED_TABS: Array<{
+export const PRIMARY_FEED_TABS: Array<{
   id: FeedMode;
   slug: string;
   label: string;
@@ -103,20 +103,46 @@ const FEED_TABS: Array<{
     color: 'text-brand-caribbeanSea',
   },
   {
-    id: 'friends',
-    slug: 'friends',
-    label: 'Friends',
-    description: 'Mutual accepted friends only — 0% algorithmic injection',
-    icon: Users,
-    color: 'text-emerald-400',
-  },
-  {
     id: 'following',
     slug: 'following',
     label: 'Following',
     description: 'People, creators & verified pages you follow',
     icon: Layers,
     color: 'text-sky-400',
+  },
+  {
+    id: 'caribbean',
+    slug: 'caribbean',
+    label: 'Caribbean',
+    description: 'Updates from island territories and regional cultural tags',
+    icon: Globe,
+    color: 'text-amber-400',
+  },
+  {
+    id: 'communities',
+    slug: 'communities',
+    label: 'Communities',
+    description: 'Discussions from your joined diaspora hubs',
+    icon: Flame,
+    color: 'text-rose-400',
+  },
+];
+
+export const SECONDARY_FEED_TABS: Array<{
+  id: FeedMode;
+  slug: string;
+  label: string;
+  description: string;
+  icon: React.ComponentType<{ className?: string }>;
+  color: string;
+}> = [
+  {
+    id: 'friends',
+    slug: 'friends',
+    label: 'Friends',
+    description: 'Mutual accepted friends only — 0% algorithmic injection',
+    icon: Users,
+    color: 'text-emerald-400',
   },
   {
     id: 'pages',
@@ -142,23 +168,9 @@ const FEED_TABS: Array<{
     icon: ShieldCheck,
     color: 'text-brand-goldenHour',
   },
-  {
-    id: 'caribbean',
-    slug: 'caribbean',
-    label: 'Caribbean',
-    description: 'Updates from island territories and regional cultural tags',
-    icon: Globe,
-    color: 'text-amber-400',
-  },
-  {
-    id: 'communities',
-    slug: 'communities',
-    label: 'Communities',
-    description: 'Discussions from your joined diaspora hubs',
-    icon: Flame,
-    color: 'text-rose-400',
-  },
 ];
+
+const FEED_TABS = [...PRIMARY_FEED_TABS, ...SECONDARY_FEED_TABS];
 
 export default function HomeDashboard({
   user,
@@ -275,16 +287,42 @@ export default function HomeDashboard({
     <div className="flex flex-col lg:flex-row gap-6 xl:gap-8 items-start w-full">
       {/* ── Main Center Column: Personalized TUKUBI Home & Feed ── */}
       <div className="flex-1 min-w-0 space-y-3.5 md:space-y-6 w-full max-w-[740px] xl:max-w-[760px] mx-auto lg:mx-0">
-        {/* 1. Moments Cinema Rail (Circular Ringed Stories Bar on Mobile, Cinema Cards on Desktop) */}
-        <MomentsCinemaRail
-          initialStories={liveStories || []}
-          currentUserId={user.id}
-          currentUserAvatar={user.avatarUrl || undefined}
-          currentUserName={user.displayName}
-        />
+        {/* ── 1. Top Primary Feed Tabs (Mobile: Sticky directly below compact header) ── */}
+        <div className="md:hidden sticky top-[var(--app-header-h,70px)] z-30 bg-[#070D1A]/95 backdrop-blur-xl border-b border-white/[0.08] -mx-3 px-3 pt-1">
+          <nav aria-label="Mobile Feed Tabs">
+            <div className="flex items-center justify-between" role="tablist">
+              {PRIMARY_FEED_TABS.map((tab) => {
+                const isActive = activeTab === tab.id;
+                return (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    role="tab"
+                    aria-selected={isActive}
+                    aria-controls={`feed-panel-${tab.id}`}
+                    onClick={() => handleTabChange(tab)}
+                    className={`relative flex-1 text-center py-2.5 text-[13.5px] transition-colors ${
+                      isActive
+                        ? 'text-[#F8FAFC] font-semibold'
+                        : 'text-[#94A3B8] font-medium hover:text-white'
+                    }`}
+                  >
+                    {tab.label}
+                    {isActive && (
+                      <span
+                        aria-hidden="true"
+                        className="absolute left-2 right-2 bottom-0 h-[2.5px] rounded-full bg-gradient-to-r from-[#00C2A8] to-[#0EA5E9]"
+                      />
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </nav>
+        </div>
 
-        {/* ── 2A. Mobile Creation Card (Midnight Reef Editorial 1-Tap Composer) ── */}
-        <div className="md:hidden tk-panel p-3.5 space-y-2.5">
+        {/* ── 2. Mobile 1-Tap Sleek Composer Pill (Matches Proposed Mobile Experience) ── */}
+        <div className="md:hidden tk-panel p-3">
           <div className="flex items-center gap-2.5">
             <UserAvatar src={user.avatarUrl} name={user.displayName} size="sm" />
             <button
@@ -293,42 +331,24 @@ export default function HomeDashboard({
                 setComposerMode('text');
                 setShowComposer((prev) => !prev);
               }}
-              className="flex-1 h-10 px-4 rounded-full bg-[#111C33]/85 hover:bg-[#162440] border border-white/[0.07] text-left text-[13px] text-[#94A3B8] transition-colors flex items-center justify-between"
+              className="flex-1 h-10 px-4 rounded-full bg-[#111C33]/90 hover:bg-[#162440] border border-white/[0.08] text-left text-[13px] text-[#94A3B8] transition-colors flex items-center justify-between shadow-sm"
             >
-              <span className="truncate">What&apos;s on your mind?</span>
-              {showComposer && (
-                <span className="text-[11px] font-semibold text-[#00C2A8] shrink-0 ml-2">
-                  Close
-                </span>
-              )}
+              <span className="truncate">Share something with the Caribbean...</span>
+              <ImageIcon className="w-4 h-4 text-[#00C2A8] shrink-0 ml-2" />
             </button>
           </div>
 
-          {/* Mobile fast action chips: Sleek vector icons (no rainbow emoji clutter) */}
-          <div className="flex items-center justify-between pt-2 border-t border-white/[0.06] text-[12px] font-medium text-[#94A3B8]">
-            {([
-              { mode: 'photo', label: 'Photo', Icon: ImageIcon },
-              { mode: 'video', label: 'Video', Icon: Video },
-              { mode: 'poll', label: 'Poll', Icon: BarChart3 },
-              { mode: 'text', label: 'Feeling', Icon: Smile },
-            ] as const).map(({ mode, label, Icon }) => (
-              <button
-                key={label}
-                type="button"
-                onClick={() => {
-                  setComposerMode(mode as ComposerMode);
-                  setShowComposer(true);
-                }}
-                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg hover:bg-white/[0.05] hover:text-[#F8FAFC] transition-colors"
-              >
-                <Icon className="w-4 h-4 text-[#00C2A8]" aria-hidden="true" />
-                <span>{label}</span>
-              </button>
-            ))}
-          </div>
-
           {showComposer && (
-            <div className="pt-2 animate-fadeIn border-t border-white/[0.08]">
+            <div className="pt-3 mt-3 animate-fadeIn border-t border-white/[0.08]">
+              <div className="flex justify-end pb-1">
+                <button
+                  type="button"
+                  onClick={() => setShowComposer(false)}
+                  className="text-xs font-medium text-brand-mist hover:text-white px-2 py-1 rounded-md hover:bg-white/[0.06] transition-colors"
+                >
+                  Close
+                </button>
+              </div>
               <UniversalComposer
                 key={composerMode}
                 displayName={user.displayName}
@@ -340,6 +360,16 @@ export default function HomeDashboard({
               />
             </div>
           )}
+        </div>
+
+        {/* ── Desktop Stories & Moments Cinema Rail (Hidden on mobile to prioritize first post) ── */}
+        <div className="hidden md:block">
+          <MomentsCinemaRail
+            initialStories={liveStories || []}
+            currentUserId={user.id}
+            currentUserAvatar={user.avatarUrl || undefined}
+            currentUserName={user.displayName}
+          />
         </div>
 
         {/* ── 2B. Desktop Workspace Header & Rich Horizon Discovery (Hidden on mobile) ── */}
@@ -574,9 +604,9 @@ export default function HomeDashboard({
 
         {/* 6. PRIMARY HOME FEED ENGINE & CONTROL AREA */}
         <section aria-label="Home Feed Stream" className="space-y-3.5 md:space-y-4">
-          {/* Feed tabs — sleek edge-to-edge underline on mobile, understated panel on desktop */}
-          <div className="border-b border-white/[0.08] md:border md:rounded-2xl md:bg-[#0D1526]/85 md:px-3">
-            <nav aria-label="Home Feed Tabs">
+          {/* Desktop Feed tabs — sleek understated panel (mobile tabs are pinned at top of feed) */}
+          <div className="hidden md:block md:border md:rounded-2xl md:bg-[#0D1526]/85 md:px-3">
+            <nav aria-label="Desktop Home Feed Tabs">
               <div className="flex items-center gap-0.5 sm:gap-1 overflow-x-auto scrollbar-none" role="tablist">
                 {FEED_TABS.map((tab) => {
                   const isActive = activeTab === tab.id;

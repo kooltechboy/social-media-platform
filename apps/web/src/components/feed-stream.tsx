@@ -71,6 +71,7 @@ import TukubiVideoPlayer from './media/tukubi-video-player';
 import InteractivePollWidget from './polls/interactive-poll-widget';
 import type { PollData } from '../lib/polls/types';
 import FeedPost from './feed/feed-post';
+import MobileCommentsSheet from './feed/mobile-comments-sheet';
 import SponsoredFeedCard from './feed/sponsored-feed-card';
 
 export interface FeedPostData {
@@ -142,6 +143,7 @@ export default function FeedStream({
   const { t, locale } = useTranslation();
   const [posts, setPosts] = useState<FeedPostData[]>(initialPosts);
   const [expandedCommentsPostId, setExpandedCommentsPostId] = useState<string | null>(null);
+  const [mobileCommentsPost, setMobileCommentsPost] = useState<FeedPostData | null>(null);
   const [commentInputs, setCommentInputs] = useState<Record<string, string>>({});
   const [commentLists, setCommentLists] = useState<Record<string, any[]>>({});
   const [isSubmittingComment, setIsSubmittingComment] = useState<string | null>(null);
@@ -579,6 +581,20 @@ export default function FeedStream({
   }
 
   async function handleToggleComments(postId: string) {
+    const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+    const targetPost = posts.find((p) => p.id === postId);
+
+    if (isMobile && targetPost) {
+      setMobileCommentsPost(targetPost);
+      if (!commentLists[postId]) {
+        const res = await fetchPostCommentsAction(postId);
+        if (res.comments) {
+          setCommentLists((prev) => ({ ...prev, [postId]: res.comments }));
+        }
+      }
+      return;
+    }
+
     if (expandedCommentsPostId === postId) {
       setExpandedCommentsPostId(null);
       return;
@@ -1009,6 +1025,7 @@ export default function FeedStream({
                   onHidePost={handleHidePost}
                   onUnhidePost={handleUnhidePost}
                   onShare={handleShare}
+                  onRepost={handleShare}
                   onDeletePost={handleDeletePost}
                   onTogglePin={handleTogglePin}
                   onReportPost={(postId) => {
@@ -1047,6 +1064,28 @@ export default function FeedStream({
           onClose={() => setTipTarget(null)}
           creatorName={tipTarget.name}
           creatorHandle={tipTarget.handle}
+        />
+      )}
+
+      {/* Mobile Comments Bottom Sheet */}
+      {mobileCommentsPost && (
+        <MobileCommentsSheet
+          isOpen={!!mobileCommentsPost}
+          onClose={() => setMobileCommentsPost(null)}
+          post={mobileCommentsPost}
+          currentUserId={currentUserId}
+          commentList={commentLists[mobileCommentsPost.id] || []}
+          commentInput={commentInputs[mobileCommentsPost.id] || ''}
+          onCommentInputChange={(postId, text) =>
+            setCommentInputs((prev) => ({ ...prev, [postId]: text }))
+          }
+          onSubmitComment={handleSubmitComment}
+          isSubmittingComment={isSubmittingComment === mobileCommentsPost.id}
+          onDeleteComment={handleDeleteComment}
+          replyingTo={replyingTo[mobileCommentsPost.id]}
+          onSetReplyingTo={(postId, target) =>
+            setReplyingTo((prev) => ({ ...prev, [postId]: target }))
+          }
         />
       )}
 

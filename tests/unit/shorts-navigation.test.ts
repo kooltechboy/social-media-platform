@@ -17,11 +17,12 @@ describe('TUKUBI Shorts Cross-Device Navigation', () => {
     expect(content).toContain('Shorts');
   });
 
-  it('Mobile web navigation includes Shorts with accessible touch targets', () => {
+  it('Mobile web navigation includes Reels (Feed 2.0) with accessible touch targets', () => {
     expect(existsSync(mobileNavPath)).toBe(true);
     const content = readFileSync(mobileNavPath, 'utf-8');
-    expect(content).toContain('href="/shorts"');
-    expect(content).toContain('aria-label="TUKUBI Shorts"');
+    // Feed 2.0: Bottom nav tab renamed from Shorts to Reels (/reels route)
+    expect(content).toContain('href="/reels"');
+    expect(content).toContain('aria-label="Caribbean Reels"');
     expect(content).toContain('min-w-[44px]');
     expect(content).toContain('min-h-[44px]');
   });

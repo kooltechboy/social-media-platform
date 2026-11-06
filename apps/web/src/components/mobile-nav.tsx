@@ -7,7 +7,6 @@ import {
   Home,
   Compass,
   Plus,
-  PlusCircle,
   ShoppingBag,
   User,
   Users,
@@ -114,9 +113,9 @@ export default function MobileNav() {
   // Core mobile navigation tabs
   const MOBILE_TABS: MobileTab[] = [
     { href: '/', labelKey: 'nav.home', fallbackLabel: 'Home', icon: Home },
+    { href: '/reels', fallbackLabel: 'Reels', icon: Film },
+    { href: '/create', fallbackLabel: 'Create', icon: Plus, isAction: true },
     { href: '/explore', labelKey: 'nav.explore', fallbackLabel: 'Explore', icon: Compass },
-    { href: '/create', fallbackLabel: 'Create', icon: PlusCircle, isAction: true },
-    { href: '/messages', labelKey: 'nav.messages', fallbackLabel: 'Messages', icon: MessageSquare },
     { href: user ? `/profile/${user.username}` : '/login', labelKey: 'nav.profile', fallbackLabel: 'Profile', icon: User },
   ];
 
@@ -545,15 +544,15 @@ export default function MobileNav() {
         className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#070D1A]/94 backdrop-blur-2xl border-t border-white/[0.08] pb-[max(0.35rem,env(safe-area-inset-bottom))]"
         aria-label="Main mobile navigation"
       >
-        <ul className="flex items-center justify-around px-1.5 py-1" role="tablist">
+        <ul className="flex items-center justify-around px-1 py-1" role="tablist">
           {/* Tab 1: Home */}
-          <li role="presentation">
+          <li role="presentation" className="flex-1">
             <Link
               href="/"
               role="tab"
               aria-selected={isHomeActive}
               aria-label="Home"
-              className={`flex flex-col items-center gap-1 px-2 py-1 rounded-xl transition-colors min-w-[44px] min-h-[44px] justify-center ${
+              className={`flex flex-col items-center gap-1 py-1 rounded-xl transition-colors min-w-[44px] min-h-[44px] justify-center ${
                 isHomeActive
                   ? 'text-[#00C2A8] font-semibold'
                   : 'text-[#94A3B8] hover:text-white font-medium'
@@ -564,47 +563,48 @@ export default function MobileNav() {
             </Link>
           </li>
 
-          {/* Tab 2: Shorts */}
-          <li role="presentation">
+          {/* Tab 2: Reels */}
+          <li role="presentation" className="flex-1">
             <Link
-              href="/shorts"
+              href="/reels"
               role="tab"
               aria-selected={isShortsActive}
-              aria-label="TUKUBI Shorts"
-              className={`flex flex-col items-center gap-1 px-2 py-1 rounded-xl transition-colors min-w-[44px] min-h-[44px] justify-center ${
+              aria-label="Caribbean Reels"
+              className={`flex flex-col items-center gap-1 py-1 rounded-xl transition-colors min-w-[44px] min-h-[44px] justify-center ${
                 isShortsActive
                   ? 'text-[#00C2A8] font-semibold'
                   : 'text-[#94A3B8] hover:text-white font-medium'
               }`}
             >
               <Film className="w-[20px] h-[20px]" />
-              <span className="text-[10px] leading-none">Shorts</span>
+              <span className="text-[10px] leading-none">Reels</span>
             </Link>
           </li>
 
-          {/* Tab 3: Create (Flush-Integrated Teal → Ocean Pill Action) */}
-          <li role="presentation">
+          {/* Tab 3: Create (Pill / Central Action with label) */}
+          <li role="presentation" className="flex-1">
             <button
               type="button"
               role="tab"
               aria-label="Create on TUKUBI"
               onClick={() => setIsCreateSheetOpen(true)}
-              className="flex items-center justify-center px-1.5 py-1 min-w-[44px] min-h-[44px]"
+              className="flex flex-col items-center gap-1 py-1 min-w-[44px] min-h-[44px] justify-center w-full group"
             >
-              <span className="w-11 h-8 rounded-xl bg-gradient-to-tr from-[#00C2A8] to-[#0EA5E9] flex items-center justify-center shadow-[0_2px_12px_rgba(0,194,168,0.28)] text-[#041019] active:scale-95 transition-transform">
-                <Plus className="w-5 h-5 stroke-[2.6]" />
+              <span className="w-10 h-7 rounded-xl bg-[#15213A] border border-white/[0.12] group-hover:border-[#00C2A8]/50 flex items-center justify-center text-[#F8FAFC] group-active:scale-95 transition-all shadow-sm">
+                <Plus className="w-4 h-4 stroke-[2.4]" />
               </span>
+              <span className="text-[10px] leading-none text-[#94A3B8] group-hover:text-white font-medium">Create</span>
             </button>
           </li>
 
           {/* Tab 4: Explore */}
-          <li role="presentation">
+          <li role="presentation" className="flex-1">
             <Link
               href="/explore"
               role="tab"
               aria-selected={isExploreActive}
               aria-label="Explore Caribbean"
-              className={`flex flex-col items-center gap-1 px-2 py-1 rounded-xl transition-colors min-w-[44px] min-h-[44px] justify-center ${
+              className={`flex flex-col items-center gap-1 py-1 rounded-xl transition-colors min-w-[44px] min-h-[44px] justify-center ${
                 isExploreActive
                   ? 'text-[#00C2A8] font-semibold'
                   : 'text-[#94A3B8] hover:text-white font-medium'
@@ -615,39 +615,14 @@ export default function MobileNav() {
             </Link>
           </li>
 
-          {/* Tab 5: Messages */}
-          <li role="presentation">
-            <Link
-              href="/messages"
-              role="tab"
-              aria-selected={isMessagesActive}
-              aria-label="Messages"
-              className={`flex flex-col items-center gap-1 px-2 py-1 rounded-xl transition-colors min-w-[44px] min-h-[44px] justify-center ${
-                isMessagesActive
-                  ? 'text-[#00C2A8] font-semibold'
-                  : 'text-[#94A3B8] hover:text-white font-medium'
-              }`}
-            >
-              <div className="relative">
-                <MessageSquare className="w-[20px] h-[20px]" />
-                {unreadMessagesCount > 0 && (
-                  <span className="absolute -top-1.5 -right-2 px-1 min-w-[16px] h-4 rounded-full bg-[#00C2A8] text-[#041019] font-bold text-[9px] flex items-center justify-center">
-                    {unreadMessagesCount > 99 ? '99+' : unreadMessagesCount}
-                  </span>
-                )}
-              </div>
-              <span className="text-[10px] leading-none">Messages</span>
-            </Link>
-          </li>
-
-          {/* Tab 6: Profile */}
-          <li role="presentation">
+          {/* Tab 5: Profile */}
+          <li role="presentation" className="flex-1">
             <Link
               href={user ? `/profile/${user.username}` : '/login'}
               role="tab"
               aria-selected={isProfileActive}
               aria-label="Profile"
-              className={`flex flex-col items-center gap-1 px-2 py-1 rounded-xl transition-colors min-w-[44px] min-h-[44px] justify-center ${
+              className={`flex flex-col items-center gap-1 py-1 rounded-xl transition-colors min-w-[44px] min-h-[44px] justify-center ${
                 isProfileActive
                   ? 'text-[#00C2A8] font-semibold'
                   : 'text-[#94A3B8] hover:text-white font-medium'
