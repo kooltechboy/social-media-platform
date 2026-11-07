@@ -19,7 +19,6 @@ import {
   type TaggedProductSummary,
   formatProductPrice,
 } from '@caribbean/marketplace';
-import { DEFAULT_CARIBBEAN_PRODUCTS } from './product-tagging-tray';
 import { createOrderAction, type MarketplaceActionState } from '../../lib/marketplace/actions';
 
 function useSafeState<T>(initialValue: T | (() => T)): [T, React.Dispatch<React.SetStateAction<T>>] {
@@ -68,25 +67,16 @@ export function resolveReelProducts({
     return products;
   }
   if (productIds && productIds.length > 0) {
-    const list: TaggedProductSummary[] = [];
-    for (const id of productIds) {
-      const match = DEFAULT_CARIBBEAN_PRODUCTS.find((p) => p.id === id);
-      if (match) {
-        list.push(match);
-      } else {
-        list.push({
-          id,
-          title: `Featured Product (${id})`,
-          priceMinor: 2500,
-          currency: 'USD',
-          originTerritory: 'Caribbean',
-          originCountry: 'Caribbean',
-          sellerName: 'Caribbean Artisan',
-          isAvailable: true,
-        });
-      }
-    }
-    return list;
+    return productIds.map((id) => ({
+      id,
+      title: `Product (${id.slice(0, 8)})`,
+      priceMinor: 0,
+      currency: 'USD',
+      originTerritory: 'Caribbean',
+      originCountry: 'Caribbean',
+      sellerName: 'Merchant',
+      isAvailable: true,
+    }));
   }
   return [];
 }

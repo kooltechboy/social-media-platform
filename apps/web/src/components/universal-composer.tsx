@@ -61,7 +61,7 @@ import MultiLinkContainer from './media/multi-link-container';
 import TukubiImage from './ui/tukubi-image';
 import UserAvatar from './user-avatar';
 import { fetchUserOperatingIdentitiesAction, type UserOperatingIdentity } from '../lib/auth/actions';
-import ProductTaggingTray, { DEFAULT_CARIBBEAN_PRODUCTS } from './commerce/product-tagging-tray';
+import ProductTaggingTray from './commerce/product-tagging-tray';
 import { type TaggedProductSummary, formatProductPrice } from '@caribbean/marketplace';
 import { createEventAction } from '../lib/events/actions';
 import { createReliefCampaignAction } from '../lib/relief/actions';
@@ -813,18 +813,13 @@ export default function UniversalComposer({
         const newProducts: TaggedProductSummary[] = [];
         for (const id of payload.taggedProductIds!) {
           if (!existingIds.has(id)) {
-            const found = DEFAULT_CARIBBEAN_PRODUCTS.find((p) => p.id === id);
-            if (found) {
-              newProducts.push(found);
-            } else {
-              newProducts.push({
-                id,
-                title: `Product ${id}`,
-                priceMinor: 0,
-                currency: 'USD',
-                isAvailable: true,
-              });
-            }
+            newProducts.push({
+              id,
+              title: `Product ${id.slice(0, 8)}`,
+              priceMinor: 0,
+              currency: 'USD',
+              isAvailable: true,
+            });
             existingIds.add(id);
           }
         }

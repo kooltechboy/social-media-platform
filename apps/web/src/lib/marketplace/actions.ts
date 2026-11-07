@@ -11,6 +11,7 @@ import {
   estimateCaribbeanCustomsDuties,
   type OfferStatus,
   type DisputeReason,
+  type TaggedProductSummary,
 } from '@caribbean/marketplace';
 import { validateLiveProductPin } from '@caribbean/live';
 import { CommissionEngine, isMarketplaceCommerceActive, type AccountCategory } from '@caribbean/payments';
@@ -1196,5 +1197,101 @@ export async function deleteProductListingAction(
   revalidateMarketplacePaths();
   return { error: null, success: true };
 }
+
+export async function searchMarketplaceProductsAction(
+  query?: string,
+  limit: number = 10
+): Promise<{ products: TaggedProductSummary[]; error: string | null }> {
+  try {
+    const supabase = await createSupabaseServerClient();
+    if (!supabase) {
+      return { products: [], error: 'Database service unavailable' };
+    }
+
+    let dbQuery = supabase
+      .from('products')
+      .select(`
+        id, title, price_minor, currency, is_active, inventory_count, seller_id, business_id, location_country_iso,
+        businesses:business_id(id, name, country_iso, avatar_url),
+        profiles:seller_id(id, display_name, username, avatar_url),
+        media:marketplace_product_media(media_url, thumbnail_url, display_order)
+      `)
+      .eq('is_active', true)
+      .order('created_at', { ascending: false })
+      .limit(limit);
+
+    if (query && query.trim()) {
+      dbQuery = dbQuery.ilike('title', `%${query.trim()}%`);
+    }
+
+    const { data, error } = await dbQuery;
+
+    if (error) {
+      // Fallback query if joins fail on optional relation names
+      let fallbackQuery = supabase
+        .from('products')
+        .select('id, title, price_minor, currency, is_active, inventory_count, seller_id')
+        .eq('is_active', true)
+        .order('created_at', { ascending: false })
+        .limit(limit);
+
+      if (query && query.trim()) {
+        fallbackQuery = fallbackQuery.ilike('title', `%${query.trim()}%`);
+      }
+
+      const { data: fallbackData, error: fallbackError } = await fallbackQuery;
+
+      if (fallbackError) {
+        return { products: [], error: fallbackError.message };
+      }
+
+      const products: TaggedProductSummary[] = (fallbackData || []).map((row: any) => ({
+        id: row.id,
+        title: row.title,
+        priceMinor: row.price_minor || 0,
+        currency: row.currency || 'USD',
+        originTerritory: 'Caribbean',
+        originCountry: 'Caribbean',
+        sellerId: row.seller_id || 'unknown',
+        sellerName: 'Local Merchant',
+        inventoryCount: row.inventory_count ?? 1,
+        isAvailable: row.is_active ?? true,
+        thumbnailUrl: null,
+      }));
+
+      return { products, error: null };
+    }
+
+    const products: TaggedProductSummary[] = (data || []).map((row: any) => {
+      const biz = Array.isArray(row.businesses) ? row.businesses[0] : row.businesses;
+      const prof = Array.isArray(row.profiles) ? row.profiles[0] : row.profiles;
+      const mediaList = Array.isArray(row.media) ? row.media : [];
+      const firstMedia = mediaList.sort((a: any, b: any) => (a.display_order ?? 0) - (b.display_order ?? 0))[0];
+
+      return {
+        id: row.id,
+        title: row.title,
+        priceMinor: row.price_minor || 0,
+        currency: row.currency || 'USD',
+        originTerritory: biz?.country_iso || row.location_country_iso || 'Caribbean',
+        originCountry: biz?.country_iso || row.location_country_iso || 'Caribbean',
+        sellerId: biz?.id || prof?.id || row.seller_id || 'unknown',
+        sellerName: biz?.name || prof?.display_name || 'Local Merchant',
+        sellerAvatar: biz?.avatar_url || prof?.avatar_url || undefined,
+        inventoryCount: row.inventory_count ?? 1,
+        isAvailable: row.is_active ?? true,
+        thumbnailUrl: firstMedia?.thumbnail_url || firstMedia?.media_url || null,
+      };
+    });
+
+    return { products, error: null };
+  } catch (err) {
+    return {
+      products: [],
+      error: err instanceof Error ? err.message : 'Failed to search marketplace products',
+    };
+  }
+}
+
 
 

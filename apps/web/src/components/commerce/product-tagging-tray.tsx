@@ -18,6 +18,7 @@ import {
   formatProductPrice,
   MAX_TAGGED_PRODUCTS_PER_POST,
 } from '@caribbean/marketplace';
+import { searchMarketplaceProductsAction } from '../../lib/marketplace/actions';
 
 /**
  * Interface contract for ProductTaggingTray.
@@ -67,90 +68,6 @@ function useSafeCallback<T extends (...args: any[]) => any>(callback: T, deps: R
   }
   return callback;
 }
-
-/**
- * Curated authentic Caribbean diaspora mock catalog for fast client search fallback.
- */
-export const DEFAULT_CARIBBEAN_PRODUCTS: TaggedProductSummary[] = [
-  {
-    id: 'prod-jam-01',
-    title: 'Blue Mountain Peaberry Coffee',
-    priceMinor: 3200,
-    currency: 'USD',
-    originTerritory: 'Jamaica',
-    originCountry: 'Jamaica',
-    sellerId: 'seller-jam-1',
-    sellerName: 'Kingston Roasters',
-    inventoryCount: 24,
-    isAvailable: true,
-    thumbnailUrl: 'https://cdn.tukubi.com/products/peaberry.jpg',
-  },
-  {
-    id: 'prod-slu-02',
-    title: 'St. Lucian Organic Cocoa Sticks',
-    priceMinor: 1850,
-    currency: 'USD',
-    originTerritory: 'Saint Lucia',
-    originCountry: 'Saint Lucia',
-    sellerId: 'seller-slu-1',
-    sellerName: 'Soufrière Artisan Estate',
-    inventoryCount: 30,
-    isAvailable: true,
-    thumbnailUrl: 'https://cdn.tukubi.com/products/cocoa.jpg',
-  },
-  {
-    id: 'prod-tto-03',
-    title: 'Trinidad Moruga Scorpion Sauce',
-    priceMinor: 1400,
-    currency: 'USD',
-    originTerritory: 'Trinidad & Tobago',
-    originCountry: 'Trinidad & Tobago',
-    sellerId: 'seller-tto-1',
-    sellerName: 'Maracas Flavors',
-    inventoryCount: 12,
-    isAvailable: true,
-    thumbnailUrl: 'https://cdn.tukubi.com/products/sauce.jpg',
-  },
-  {
-    id: 'prod-brb-04',
-    title: 'Barbados Vintage Rum Cake',
-    priceMinor: 2400,
-    currency: 'USD',
-    originTerritory: 'Barbados',
-    originCountry: 'Barbados',
-    sellerId: 'seller-brb-1',
-    sellerName: 'Bridgetown Bakeries',
-    inventoryCount: 0,
-    isAvailable: false,
-    thumbnailUrl: 'https://cdn.tukubi.com/products/cake.jpg',
-  },
-  {
-    id: 'prod-bhs-05',
-    title: 'Bahamian Handcrafted Sea Glass Pendant',
-    priceMinor: 4500,
-    currency: 'USD',
-    originTerritory: 'Bahamas',
-    originCountry: 'Bahamas',
-    sellerId: 'seller-bhs-1',
-    sellerName: 'Nassau Artisans',
-    inventoryCount: 5,
-    isAvailable: true,
-    thumbnailUrl: 'https://cdn.tukubi.com/products/seaglass.jpg',
-  },
-  {
-    id: 'prod-grd-06',
-    title: 'Grenada Whole Spice & Nutmeg Collection',
-    priceMinor: 2200,
-    currency: 'USD',
-    originTerritory: 'Grenada',
-    originCountry: 'Grenada',
-    sellerId: 'seller-grd-1',
-    sellerName: 'Spice Isle Harvest',
-    inventoryCount: 18,
-    isAvailable: true,
-    thumbnailUrl: 'https://cdn.tukubi.com/products/nutmeg.jpg',
-  },
-];
 
 /**
  * Pure helper function to filter product catalog by text search and optional seller ID.
@@ -235,9 +152,7 @@ export default function ProductTaggingTray({
   const [debouncedQuery, setDebouncedQuery] = useSafeState('');
   const [isSearching, setIsSearching] = useSafeState(false);
   const [warningMessage, setWarningMessage] = useSafeState<string | null>(null);
-  const [searchResults, setSearchResults] = useSafeState<TaggedProductSummary[]>(() =>
-    filterProducts(DEFAULT_CARIBBEAN_PRODUCTS, '', sellerId)
-  );
+  const [searchResults, setSearchResults] = useSafeState<TaggedProductSummary[]>([]);
 
   // Debounce search input (200ms)
   useSafeEffect(() => {
@@ -247,7 +162,7 @@ export default function ProductTaggingTray({
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
-  // Execute search via onSearch prop or built-in filter
+  // Execute search via onSearch prop or live server action
   useSafeEffect(() => {
     let cancelled = false;
 
@@ -260,14 +175,19 @@ export default function ProductTaggingTray({
             setSearchResults(filterProducts(results, '', sellerId));
           }
         } else {
-          const results = filterProducts(DEFAULT_CARIBBEAN_PRODUCTS, debouncedQuery, sellerId);
+          const { products, error } = await searchMarketplaceProductsAction(debouncedQuery);
           if (!cancelled) {
-            setSearchResults(results);
+            if (error) {
+              setWarningMessage(error);
+              setSearchResults([]);
+            } else {
+              setSearchResults(filterProducts(products || [], '', sellerId));
+            }
           }
         }
       } catch (err) {
         if (!cancelled) {
-          setSearchResults(filterProducts(DEFAULT_CARIBBEAN_PRODUCTS, debouncedQuery, sellerId));
+          setSearchResults([]);
         }
       } finally {
         if (!cancelled) {
@@ -499,9 +419,9 @@ export default function ProductTaggingTray({
         {searchResults.length === 0 ? (
           <div className="py-12 text-center text-brand-sandstone/60">
             <ShoppingBag className="w-10 h-10 mx-auto mb-2 text-brand-sandstone/30" />
-            <p className="text-sm font-medium">No matching products found</p>
-            <p className="text-xs text-brand-sandstone/40 mt-1">
-              Try searching with different island terms or keywords
+            <p className="text-sm font-medium">No marketplace products found</p>
+            <p className="text-xs text-brand-sandstone/40 mt-1 max-w-xs mx-auto">
+              Local merchants can list authentic products in the Business Studio.
             </p>
           </div>
         ) : (

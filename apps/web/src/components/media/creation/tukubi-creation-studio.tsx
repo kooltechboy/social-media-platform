@@ -18,9 +18,7 @@ import StudioViewfinder from './studio-viewfinder';
 import PhotoEditor from './photo-editor';
 import VideoTimelineEditor from './video-timeline-editor';
 import { createSupabaseBrowserClient } from '../../../lib/supabase/browser';
-import ProductTaggingTray, {
-  DEFAULT_CARIBBEAN_PRODUCTS,
-} from '../../commerce/product-tagging-tray';
+import ProductTaggingTray from '../../commerce/product-tagging-tray';
 import {
   type TaggedProductSummary,
   formatProductPrice,
