@@ -98,6 +98,15 @@ export interface UniversalComposerProps {
   defaultPublishAsType?: 'personal' | 'official' | 'page' | 'community' | 'creator';
   defaultPublishAsId?: string;
   initialMedia?: UploadedMediaItem[];
+  quotedPost?: {
+    id: string;
+    author: string;
+    handle: string;
+    content: string;
+    avatarUrl?: string | null;
+    mediaUrls?: string[];
+  } | null;
+  onRemoveQuotedPost?: () => void;
 }
 
 export interface UploadedMediaItem {
@@ -210,11 +219,22 @@ export default function UniversalComposer({
   defaultPublishAsType,
   defaultPublishAsId,
   initialMedia,
+  quotedPost,
+  onRemoveQuotedPost,
 }: UniversalComposerProps) {
   const router = useRouter();
   const { t } = useTranslation();
 
-  const [isExpanded, setIsExpanded] = useState(defaultExpanded || initialMode !== 'text' || (initialMedia && initialMedia.length > 0));
+  const [activeQuotedPost, setActiveQuotedPost] = useState(quotedPost || null);
+
+  useEffect(() => {
+    if (quotedPost) {
+      setActiveQuotedPost(quotedPost);
+      setIsExpanded(true);
+    }
+  }, [quotedPost]);
+
+  const [isExpanded, setIsExpanded] = useState(defaultExpanded || initialMode !== 'text' || (initialMedia && initialMedia.length > 0) || Boolean(quotedPost));
   const [mode, setMode] = useState<ComposerMode>(initialMode);
   const [content, setContent] = useState('');
   const [audience, setAudience] = useState<AudienceSelection>('everyone');
@@ -565,6 +585,8 @@ export default function UniversalComposer({
     }
 
     setContent('');
+    setActiveQuotedPost(null);
+    onRemoveQuotedPost?.();
     mediaList.forEach((m) => {
       if (m.previewUrl?.startsWith('blob:')) {
         try { URL.revokeObjectURL(m.previewUrl); } catch {}
@@ -1203,6 +1225,10 @@ export default function UniversalComposer({
       if (createdReliefCampaignId) {
         formData.set('relief_campaign_id', createdReliefCampaignId);
       }
+      if (activeQuotedPost?.id) {
+        formData.set('shared_post_id', activeQuotedPost.id);
+        formData.set('share_commentary', finalContent);
+      }
 
       setPostingState('publishing');
       formData.set('client_request_id', clientPublishId);
@@ -1789,6 +1815,43 @@ export default function UniversalComposer({
                 onRemovePreview={handleRemoveLinkPreview}
                 className="w-full"
               />
+            )}
+
+            {/* Embedded Quote Post Preview */}
+            {activeQuotedPost && (
+              <div className="relative rounded-2xl border border-brand-caribbeanSea/30 bg-brand-caribbeanSea/5 p-3.5 space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <UserAvatar
+                      avatarUrl={activeQuotedPost.avatarUrl}
+                      displayName={activeQuotedPost.author}
+                      username={activeQuotedPost.handle}
+                      size="xs"
+                    />
+                    <span className="text-xs font-bold text-white">{activeQuotedPost.author}</span>
+                    <span className="text-xs text-brand-mist">@{activeQuotedPost.handle}</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setActiveQuotedPost(null);
+                      onRemoveQuotedPost?.();
+                    }}
+                    aria-label="Remove quoted post"
+                    className="p-1 rounded-lg text-brand-sandstone/60 hover:text-white hover:bg-white/10 transition-colors"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+                <p className="text-xs text-brand-sandstone line-clamp-3 leading-relaxed">
+                  {activeQuotedPost.content}
+                </p>
+                {activeQuotedPost.mediaUrls && activeQuotedPost.mediaUrls.length > 0 && (
+                  <div className="text-[11px] text-brand-caribbeanSea font-medium">
+                    📷 {activeQuotedPost.mediaUrls.length} {activeQuotedPost.mediaUrls.length === 1 ? 'attachment' : 'attachments'}
+                  </div>
+                )}
+              </div>
             )}
 
             {/* Post Scheduling (creator/business accounts only) */}
