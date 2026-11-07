@@ -48,6 +48,7 @@ playwright/.auth/
 .vercel
 .env*
 .superpowers/
+AURGO docs legal/
 scripts/generated_audio/
 
 # Obsidian local workspace state & caches (keep markdown notes tracked)
