@@ -1256,7 +1256,7 @@ export async function searchMarketplaceProductsAction(
         sellerName: 'Local Merchant',
         inventoryCount: row.inventory_count ?? 1,
         isAvailable: row.is_active ?? true,
-        thumbnailUrl: null,
+        thumbnailUrl: undefined,
       }));
 
       return { products, error: null };
@@ -1280,7 +1280,7 @@ export async function searchMarketplaceProductsAction(
         sellerAvatar: biz?.avatar_url || prof?.avatar_url || undefined,
         inventoryCount: row.inventory_count ?? 1,
         isAvailable: row.is_active ?? true,
-        thumbnailUrl: firstMedia?.thumbnail_url || firstMedia?.media_url || null,
+        thumbnailUrl: firstMedia?.thumbnail_url || firstMedia?.media_url || undefined,
       };
     });
 

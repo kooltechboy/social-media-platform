@@ -1824,8 +1824,7 @@ export default function UniversalComposer({
                   <div className="flex items-center gap-2">
                     <UserAvatar
                       avatarUrl={activeQuotedPost.avatarUrl}
-                      displayName={activeQuotedPost.author}
-                      username={activeQuotedPost.handle}
+                      name={activeQuotedPost.author}
                       size="xs"
                     />
                     <span className="text-xs font-bold text-white">{activeQuotedPost.author}</span>

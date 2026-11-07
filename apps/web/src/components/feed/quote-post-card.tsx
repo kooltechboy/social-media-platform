@@ -18,8 +18,7 @@ export default function QuotePostCard({ quotedPost }: QuotePostCardProps) {
       <div className="flex items-center gap-2">
         <UserAvatar
           avatarUrl={quotedPost.avatarUrl}
-          displayName={quotedPost.author}
-          username={quotedPost.handle}
+          name={quotedPost.author}
           size="xs"
         />
         <span className="text-xs font-bold text-white group-hover:text-brand-caribbeanSea transition-colors">
