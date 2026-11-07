@@ -24,7 +24,7 @@ export async function joinCommunityAction(
 
   const { data: community, error: fetchErr } = await supabase
     .from('communities')
-    .select('id, join_policy, member_count')
+    .select('id, join_policy')
     .eq('id', communityId)
     .maybeSingle();
 
@@ -67,12 +67,8 @@ export async function joinCommunityAction(
 
   if (insertErr) return { error: insertErr.message, success: null };
 
-  if (membershipStatus === 'active') {
-    await supabase
-      .from('communities')
-      .update({ member_count: community.member_count + 1 })
-      .eq('id', communityId);
-  }
+  // NOTE: member_count is now maintained by the fn_sync_community_member_count
+  // Postgres trigger (migration 00119). No mutable application-layer increment needed.
 
   revalidatePath('/communities');
   return {
@@ -99,7 +95,7 @@ export async function leaveCommunityAction(
 
   const { data: community } = await supabase
     .from('communities')
-    .select('id, member_count, created_by')
+    .select('id, created_by')
     .eq('id', communityId)
     .maybeSingle();
 
@@ -115,11 +111,8 @@ export async function leaveCommunityAction(
 
   if (delErr) return { error: delErr.message, success: null };
 
-  const newCount = Math.max(0, (community.member_count ?? 1) - 1);
-  await supabase
-    .from('communities')
-    .update({ member_count: newCount })
-    .eq('id', communityId);
+  // NOTE: member_count is now maintained by the fn_sync_community_member_count
+  // Postgres trigger (migration 00119). No mutable application-layer decrement needed.
 
   revalidatePath('/communities');
   return { error: null, success: 'You have left this community.' };

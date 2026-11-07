@@ -254,6 +254,17 @@ export async function verifyReliefCampaignAction(
   const supabase = await createSupabaseServerClient();
   if (!supabase) return { success: false, error: 'Database unavailable.' };
 
+  // Authorization: only platform admins may verify relief campaigns
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', user.id)
+    .maybeSingle();
+
+  if (!profile || profile.role !== 'admin') {
+    return { success: false, error: 'Only platform administrators can verify relief campaigns.' };
+  }
+
   const updatePayload: Record<string, unknown> = {
     verification_status: status,
     verified_at: new Date().toISOString(),
