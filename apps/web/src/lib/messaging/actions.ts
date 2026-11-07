@@ -659,6 +659,202 @@ export async function toggleMessageReactionAction(
 /**
  * Handle Message Request Action (Accept, Decline, Block)
  */
+// =============================================================================
+// GROUP CONVERSATION MANAGEMENT
+// =============================================================================
+
+export interface CreateGroupResult {
+  conversationId: string | null;
+  error: string | null;
+}
+
+/**
+ * Creates a new Caribbean group chat with designated members and admin role for creator.
+ */
+export async function createGroupConversationAction(params: {
+  title: string;
+  memberIds: string[];
+  category?: ConversationCategory;
+}): Promise<CreateGroupResult> {
+  const user = await getCurrentUser();
+  if (!user) return { conversationId: null, error: 'Sign in to create a group chat.' };
+
+  const cleanTitle = (params.title || '').trim();
+  if (!cleanTitle) {
+    return { conversationId: null, error: 'Please enter a name for your group chat.' };
+  }
+  if (cleanTitle.length > 100) {
+    return { conversationId: null, error: 'Group title must be 100 characters or fewer.' };
+  }
+
+  // Deduplicate and filter out creator from memberIds
+  const uniqueMemberIds = Array.from(new Set(params.memberIds.filter((id) => id && id !== user.id)));
+  if (uniqueMemberIds.length === 0) {
+    return { conversationId: null, error: 'Please select at least one member to join the group.' };
+  }
+  if (uniqueMemberIds.length + 1 > 256) {
+    return { conversationId: null, error: 'Group chats are limited to 256 members maximum.' };
+  }
+
+  const supabase = await createSupabaseServerClient();
+  if (!supabase) return { conversationId: null, error: 'Database service is unavailable.' };
+
+  // 1. Insert Group Conversation
+  const { data: convData, error: convError } = await supabase
+    .from('conversations')
+    .insert({
+      kind: 'group',
+      title: cleanTitle,
+      category: params.category || 'community',
+      created_by: user.id,
+      last_message_at: new Date().toISOString(),
+    })
+    .select('id')
+    .single();
+
+  if (convError || !convData) {
+    console.error('[createGroupConversationAction] Conversation creation failed:', convError);
+    return { conversationId: null, error: convError?.message || 'Failed to create group.' };
+  }
+
+  const conversationId = convData.id;
+
+  // 2. Insert Members (Creator as Admin, Peers as Members)
+  const memberRows = [
+    {
+      conversation_id: conversationId,
+      profile_id: user.id,
+      role: 'admin',
+      status: 'active',
+      joined_at: new Date().toISOString(),
+    },
+    ...uniqueMemberIds.map((id) => ({
+      conversation_id: conversationId,
+      profile_id: id,
+      role: 'member',
+      status: 'active',
+      joined_at: new Date().toISOString(),
+    })),
+  ];
+
+  const { error: membersError } = await supabase
+    .from('conversation_members')
+    .insert(memberRows);
+
+  if (membersError) {
+    console.error('[createGroupConversationAction] Member insertion failed:', membersError);
+    await supabase.from('conversations').delete().eq('id', conversationId);
+    return { conversationId: null, error: membersError.message };
+  }
+
+  // 3. Post Initial System Audit Message
+  const creatorName = user.displayName || user.username || 'Creator';
+  try {
+    await supabase.from('messages').insert({
+      conversation_id: conversationId,
+      sender_id: user.id,
+      body: `🌴 ${creatorName} created the group "${cleanTitle}"`,
+      message_kind: 'system',
+    });
+  } catch (sysErr) {
+    console.warn('[createGroupConversationAction] System message warning:', sysErr);
+  }
+
+  revalidatePath('/messages');
+  return { conversationId, error: null };
+}
+
+/**
+ * Adds new members to an existing group chat.
+ */
+export async function addGroupMembersAction(params: {
+  conversationId: string;
+  memberIds: string[];
+}): Promise<{ success: boolean; error: string | null }> {
+  const user = await getCurrentUser();
+  if (!user) return { success: false, error: 'Sign in to add members.' };
+
+  const { conversationId, memberIds } = params;
+  if (!conversationId || !memberIds || memberIds.length === 0) {
+    return { success: false, error: 'Valid conversation and member list required.' };
+  }
+
+  const supabase = await createSupabaseServerClient();
+  if (!supabase) return { success: false, error: 'Database service is unavailable.' };
+
+  // Verify caller is active member of the conversation
+  const { data: callerMembership } = await supabase
+    .from('conversation_members')
+    .select('role')
+    .eq('conversation_id', conversationId)
+    .eq('profile_id', user.id)
+    .is('left_at', null)
+    .maybeSingle();
+
+  if (!callerMembership) {
+    return { success: false, error: 'You are not an active member of this group.' };
+  }
+
+  // Fetch current members count
+  const { count } = await supabase
+    .from('conversation_members')
+    .select('*', { count: 'exact', head: true })
+    .eq('conversation_id', conversationId)
+    .is('left_at', null);
+
+  const currentCount = count || 0;
+  const newMemberIds = Array.from(new Set(memberIds.filter((id) => id && id !== user.id)));
+
+  if (currentCount + newMemberIds.length > 256) {
+    return { success: false, error: 'Cannot exceed maximum limit of 256 members in group.' };
+  }
+
+  const newRows = newMemberIds.map((id) => ({
+    conversation_id: conversationId,
+    profile_id: id,
+    role: 'member',
+    status: 'active',
+    joined_at: new Date().toISOString(),
+  }));
+
+  const { error } = await supabase
+    .from('conversation_members')
+    .upsert(newRows, { onConflict: 'conversation_id,profile_id' });
+
+  if (error) {
+    return { success: false, error: error.message };
+  }
+
+  revalidatePath('/messages');
+  return { success: true, error: null };
+}
+
+/**
+ * Leaves a group conversation.
+ */
+export async function leaveGroupConversationAction(
+  conversationId: string
+): Promise<{ success: boolean; error: string | null }> {
+  const user = await getCurrentUser();
+  if (!user) return { success: false, error: 'Sign in to leave group.' };
+
+  const supabase = await createSupabaseServerClient();
+  if (!supabase) return { success: false, error: 'Database service is unavailable.' };
+
+  const { error } = await supabase
+    .from('conversation_members')
+    .update({ left_at: new Date().toISOString() })
+    .eq('conversation_id', conversationId)
+    .eq('profile_id', user.id);
+
+  if (error) {
+    return { success: false, error: error.message };
+  }
+
+  revalidatePath('/messages');
+  return { success: true, error: null };
+}
+
 export async function handleMessageRequestAction(
   conversationId: string,
   action: 'accept' | 'decline' | 'block',

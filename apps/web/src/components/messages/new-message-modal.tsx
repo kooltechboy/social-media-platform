@@ -11,10 +11,14 @@ import {
   Sparkles,
   Loader2,
   ArrowRight,
+  Check,
 } from 'lucide-react';
 import { createBrowserClient } from '@supabase/ssr';
 import UserAvatar from '../user-avatar';
-import { getOrCreateDirectConversationAction } from '../../lib/messaging/actions';
+import {
+  getOrCreateDirectConversationAction,
+  createGroupConversationAction,
+} from '../../lib/messaging/actions';
 
 export interface NewMessageMember {
   id: string;
@@ -45,6 +49,12 @@ export default function NewMessageModal({
   onConversationCreated,
 }: NewMessageModalProps) {
   const router = useRouter();
+  const [mode, setMode] = useState<'direct' | 'group'>('direct');
+  const [groupTitle, setGroupTitle] = useState('');
+  const [selectedMembers, setSelectedMembers] = useState<NewMessageMember[]>([]);
+  const [isCreatingGroup, setIsCreatingGroup] = useState(false);
+  const [groupError, setGroupError] = useState<string | null>(null);
+
   const [search, setSearch] = useState('');
   const [searchResults, setSearchResults] = useState<NewMessageMember[]>([]);
   const [loading, setLoading] = useState(false);
@@ -148,6 +158,56 @@ export default function NewMessageModal({
     router.push(`/messages?u=${encodeURIComponent(member.username)}`);
   };
 
+  const handleToggleMember = (member: NewMessageMember) => {
+    setGroupError(null);
+    setSelectedMembers((prev) => {
+      const exists = prev.some((m) => m.id === member.id);
+      if (exists) {
+        return prev.filter((m) => m.id !== member.id);
+      } else {
+        return [...prev, member];
+      }
+    });
+  };
+
+  const handleCreateGroup = async () => {
+    if (!groupTitle.trim()) {
+      setGroupError('Please enter a group title.');
+      return;
+    }
+    if (selectedMembers.length === 0) {
+      setGroupError('Please select at least one member to join.');
+      return;
+    }
+
+    setIsCreatingGroup(true);
+    setGroupError(null);
+    try {
+      const res = await createGroupConversationAction({
+        title: groupTitle.trim(),
+        memberIds: selectedMembers.map((m) => m.id),
+      });
+
+      if (res.error) {
+        setGroupError(res.error);
+        return;
+      }
+
+      if (res.conversationId) {
+        onClose();
+        if (onConversationCreated) {
+          onConversationCreated(res.conversationId);
+        } else {
+          router.push(`/messages?c=${res.conversationId}`);
+        }
+      }
+    } catch (err: any) {
+      setGroupError(err?.message || 'Failed to create group');
+    } finally {
+      setIsCreatingGroup(false);
+    }
+  };
+
   return (
     <div
       className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fadeIn"
@@ -181,6 +241,73 @@ export default function NewMessageModal({
             <X className="w-5 h-5" />
           </button>
         </div>
+
+        {/* Mode Selector Tabs */}
+        <div className="flex p-1 bg-white/5 rounded-2xl border border-white/10">
+          <button
+            type="button"
+            onClick={() => {
+              setMode('direct');
+              setGroupError(null);
+            }}
+            className={`flex-1 py-1.5 text-xs font-black rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+              mode === 'direct'
+                ? 'bg-brand-caribbeanSea text-slate-950 shadow-sm'
+                : 'text-slate-400 hover:text-white'
+            }`}
+          >
+            <MessageSquare className="w-3.5 h-3.5" />
+            <span>Direct Message</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setMode('group');
+              setGroupError(null);
+            }}
+            className={`flex-1 py-1.5 text-xs font-black rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+              mode === 'group'
+                ? 'bg-brand-caribbeanSea text-slate-950 shadow-sm'
+                : 'text-slate-400 hover:text-white'
+            }`}
+          >
+            <Users className="w-3.5 h-3.5" />
+            <span>New Group</span>
+          </button>
+        </div>
+
+        {/* Group Name & Selected Members in Group Mode */}
+        {mode === 'group' && (
+          <div className="space-y-2.5">
+            <input
+              type="text"
+              value={groupTitle}
+              onChange={(e) => setGroupTitle(e.target.value)}
+              placeholder="Group Name (e.g. Trinidad Carnival Crew 2026)…"
+              className="w-full bg-[#1E142D] border border-white/15 rounded-2xl px-4 py-2.5 text-sm text-white placeholder-slate-400 focus:outline-none focus:border-brand-caribbeanSea transition-all"
+            />
+
+            {selectedMembers.length > 0 && (
+              <div className="flex flex-wrap gap-1.5 p-2 bg-white/5 rounded-2xl border border-white/10 max-h-24 overflow-y-auto">
+                {selectedMembers.map((m) => (
+                  <span
+                    key={m.id}
+                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-brand-caribbeanSea/20 border border-brand-caribbeanSea/40 text-brand-caribbeanSea text-xs font-bold"
+                  >
+                    {m.name}
+                    <button
+                      type="button"
+                      onClick={() => setSelectedMembers((prev) => prev.filter((x) => x.id !== m.id))}
+                      className="hover:text-white cursor-pointer ml-0.5"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Search Bar */}
         <div className="relative">
@@ -219,13 +346,107 @@ export default function NewMessageModal({
                 <p className="text-[11px] font-black text-slate-400 uppercase tracking-wider px-1">
                   Search Results ({searchResults.length})
                 </p>
-                {searchResults.map((member) => (
+                {searchResults.map((member) => {
+                  const isSelected = selectedMembers.some((m) => m.id === member.id);
+                  return (
+                    <button
+                      key={member.id}
+                      type="button"
+                      onClick={() => {
+                        if (mode === 'group') {
+                          handleToggleMember(member);
+                        } else {
+                          handleSelectUser(member);
+                        }
+                      }}
+                      disabled={startingChatWith === member.id}
+                      className={`w-full text-left flex items-center justify-between p-3 rounded-2xl transition-all group cursor-pointer ${
+                        isSelected
+                          ? 'bg-brand-caribbeanSea/15 border border-brand-caribbeanSea/50'
+                          : 'bg-white/[0.03] hover:bg-white/[0.08] border border-white/5 hover:border-brand-caribbeanSea/40'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3 min-w-0 pr-2">
+                        <UserAvatar
+                          src={member.avatarUrl}
+                          name={member.name}
+                          size="md"
+                        />
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span className="text-xs font-black text-white truncate">
+                              {member.name}
+                            </span>
+                            {member.isVerified && (
+                              <BadgeCheck className="w-3.5 h-3.5 text-brand-caribbeanSea flex-shrink-0" />
+                            )}
+                            <span
+                              className={`text-[9px] font-black px-1.5 py-0.5 rounded-full border ${
+                                member.isFriend
+                                  ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
+                                  : 'bg-white/5 text-slate-400 border-white/10'
+                              }`}
+                            >
+                              {member.isFriend ? 'Friend' : 'Member'}
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-slate-400 truncate font-mono">
+                            @{member.username}
+                          </p>
+                        </div>
+                      </div>
+                      {mode === 'group' ? (
+                        <div
+                          className={`w-5 h-5 rounded-full border flex items-center justify-center transition-colors ${
+                            isSelected
+                              ? 'bg-brand-caribbeanSea border-brand-caribbeanSea text-slate-950 font-bold'
+                              : 'border-white/30 bg-transparent'
+                          }`}
+                        >
+                          {isSelected && <Check className="w-3.5 h-3.5 stroke-[3]" />}
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-1 text-xs font-bold text-brand-caribbeanSea opacity-0 group-hover:opacity-100 transition-opacity">
+                          <span>Chat</span>
+                          <ArrowRight className="w-3.5 h-3.5" />
+                        </div>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="py-8 text-center space-y-1.5">
+                <p className="text-xs font-bold text-slate-300">No members found</p>
+                <p className="text-[11px] text-slate-500">
+                  Try searching with a different name or @handle.
+                </p>
+              </div>
+            )
+          ) : membersList.length > 0 ? (
+            <div className="space-y-1.5">
+              <p className="text-[11px] font-black text-slate-400 uppercase tracking-wider px-1 flex items-center gap-1.5">
+                <Users className="w-3.5 h-3.5 text-brand-caribbeanSea" /> Suggested Connections
+              </p>
+              {membersList.map((member) => {
+                const isSelected = selectedMembers.some((m) => m.id === member.id);
+                return (
                   <button
                     key={member.id}
                     type="button"
-                    onClick={() => handleSelectUser(member)}
+                    onClick={() => {
+                      if (mode === 'group') {
+                        handleToggleMember(member);
+                      } else {
+                        handleSelectUser(member);
+                      }
+                    }}
                     disabled={startingChatWith === member.id}
-                    className="w-full text-left flex items-center justify-between p-3 rounded-2xl bg-white/[0.03] hover:bg-white/[0.08] border border-white/5 hover:border-brand-caribbeanSea/40 transition-all group"
+                    className={`w-full text-left flex items-center justify-between p-3 rounded-2xl transition-all group cursor-pointer ${
+                      isSelected
+                        ? 'bg-brand-caribbeanSea/15 border border-brand-caribbeanSea/50'
+                        : 'bg-white/[0.03] hover:bg-white/[0.08] border border-white/5 hover:border-brand-caribbeanSea/40'
+                    }`}
                   >
                     <div className="flex items-center gap-3 min-w-0 pr-2">
                       <UserAvatar
@@ -256,69 +477,25 @@ export default function NewMessageModal({
                         </p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-1 text-xs font-bold text-brand-caribbeanSea opacity-0 group-hover:opacity-100 transition-opacity">
-                      <span>Chat</span>
-                      <ArrowRight className="w-3.5 h-3.5" />
-                    </div>
-                  </button>
-                ))}
-              </div>
-            ) : (
-              <div className="py-8 text-center space-y-1.5">
-                <p className="text-xs font-bold text-slate-300">No members found</p>
-                <p className="text-[11px] text-slate-500">
-                  Try searching with a different name or @handle.
-                </p>
-              </div>
-            )
-          ) : membersList.length > 0 ? (
-            <div className="space-y-1.5">
-              <p className="text-[11px] font-black text-slate-400 uppercase tracking-wider px-1 flex items-center gap-1.5">
-                <Users className="w-3.5 h-3.5 text-brand-caribbeanSea" /> Suggested Connections
-              </p>
-              {membersList.map((member) => (
-                <button
-                  key={member.id}
-                  type="button"
-                  onClick={() => handleSelectUser(member)}
-                  disabled={startingChatWith === member.id}
-                  className="w-full text-left flex items-center justify-between p-3 rounded-2xl bg-white/[0.03] hover:bg-white/[0.08] border border-white/5 hover:border-brand-caribbeanSea/40 transition-all group"
-                >
-                  <div className="flex items-center gap-3 min-w-0 pr-2">
-                    <UserAvatar
-                      src={member.avatarUrl}
-                      name={member.name}
-                      size="md"
-                    />
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-1.5 flex-wrap">
-                        <span className="text-xs font-black text-white truncate">
-                          {member.name}
-                        </span>
-                        {member.isVerified && (
-                          <BadgeCheck className="w-3.5 h-3.5 text-brand-caribbeanSea flex-shrink-0" />
-                        )}
-                        <span
-                          className={`text-[9px] font-black px-1.5 py-0.5 rounded-full border ${
-                            member.isFriend
-                              ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
-                              : 'bg-white/5 text-slate-400 border-white/10'
-                          }`}
-                        >
-                          {member.isFriend ? 'Friend' : 'Member'}
-                        </span>
+                    {mode === 'group' ? (
+                      <div
+                        className={`w-5 h-5 rounded-full border flex items-center justify-center transition-colors ${
+                          isSelected
+                            ? 'bg-brand-caribbeanSea border-brand-caribbeanSea text-slate-950 font-bold'
+                            : 'border-white/30 bg-transparent'
+                        }`}
+                      >
+                        {isSelected && <Check className="w-3.5 h-3.5 stroke-[3]" />}
                       </div>
-                      <p className="text-[11px] text-slate-400 truncate font-mono">
-                        @{member.username}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-1 text-xs font-bold text-brand-caribbeanSea opacity-0 group-hover:opacity-100 transition-opacity">
-                    <span>Chat</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </div>
-                </button>
-              ))}
+                    ) : (
+                      <div className="flex items-center gap-1 text-xs font-bold text-brand-caribbeanSea opacity-0 group-hover:opacity-100 transition-opacity">
+                        <span>Chat</span>
+                        <ArrowRight className="w-3.5 h-3.5" />
+                      </div>
+                    )}
+                  </button>
+                );
+              })}
             </div>
           ) : (
             <div className="py-8 text-center space-y-1.5">
@@ -329,6 +506,28 @@ export default function NewMessageModal({
             </div>
           )}
         </div>
+
+        {/* Create Group Action Dock in Group Mode */}
+        {mode === 'group' && (
+          <div className="pt-2 border-t border-white/10 space-y-2">
+            {groupError && (
+              <p className="text-xs text-rose-400 font-semibold text-center">{groupError}</p>
+            )}
+            <button
+              type="button"
+              onClick={handleCreateGroup}
+              disabled={isCreatingGroup || !groupTitle.trim() || selectedMembers.length === 0}
+              className="w-full py-3 rounded-2xl bg-gradient-to-r from-brand-caribbeanTeal to-brand-caribbeanSea text-slate-950 font-black text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg shadow-brand-caribbeanSea/20 disabled:opacity-40 transition-all cursor-pointer"
+            >
+              {isCreatingGroup ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Users className="w-4 h-4" />
+              )}
+              <span>Create Group ({selectedMembers.length} selected)</span>
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

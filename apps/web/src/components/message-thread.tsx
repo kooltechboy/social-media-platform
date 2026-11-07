@@ -28,6 +28,7 @@ import {
   CheckCheck,
   Bot,
   Users,
+  Loader2,
 } from 'lucide-react';
 import { createSupabaseBrowserClient } from '../lib/supabase/browser';
 import {
@@ -100,6 +101,8 @@ export default function MessageThread({
   const [isAiResponding, setIsAiResponding] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const textInputRef = useRef<HTMLInputElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isUploadingMedia, setIsUploadingMedia] = useState(false);
 
   // Calling state
   const [isCallOpen, setIsCallOpen] = useState(false);
@@ -544,6 +547,75 @@ export default function MessageThread({
     });
   }
 
+  // Handle file attachment upload (images, videos)
+  async function handleAttachmentSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploadingMedia(true);
+    try {
+      const supabase = createSupabaseBrowserClient();
+      if (!supabase) throw new Error('Database service unavailable');
+
+      const isVideo = file.type.startsWith('video/');
+      const rawExt = file.name.split('.').pop() || (isVideo ? 'mp4' : 'jpg');
+      const cleanExt = rawExt.toLowerCase();
+      const storagePath = `chat-media/${currentUserId}/${conversationId}/${Date.now()}_${Math.random().toString(36).slice(2, 8)}.${cleanExt}`;
+
+      const { error: uploadErr } = await supabase.storage
+        .from('post-media')
+        .upload(storagePath, file, {
+          contentType: file.type,
+          upsert: false,
+        });
+
+      if (uploadErr) throw uploadErr;
+
+      const { data: pubData } = supabase.storage.from('post-media').getPublicUrl(storagePath);
+      const publicUrl = pubData?.publicUrl;
+      if (!publicUrl) throw new Error('Failed to resolve uploaded media URL');
+
+      const clientMsgId = generateClientMessageId();
+      const mediaBody = isVideo ? '[Video]' : '[Photo]';
+      const optimisticMsg: ThreadMessage = {
+        id: clientMsgId,
+        sender_id: currentUserId,
+        body: mediaBody,
+        created_at: new Date().toISOString(),
+        profiles: { display_name: currentUserName || 'You' },
+        message_kind: 'media',
+        client_message_id: clientMsgId,
+        metadata: { media_urls: [publicUrl] },
+        status: 'sending',
+      };
+
+      setMessages((prev) => [...prev, optimisticMsg]);
+
+      const formData = new FormData();
+      formData.set('conversationId', conversationId);
+      formData.set('body', mediaBody);
+      formData.set('message_kind', 'media');
+      formData.set('client_message_id', clientMsgId);
+      formData.set('media_urls', JSON.stringify([publicUrl]));
+      formData.set('metadata', JSON.stringify({ media_urls: [publicUrl] }));
+
+      const res = await sendMessageAction({ error: null }, formData);
+      if (res.error) {
+        setMessages((prev) =>
+          prev.map((m) => (m.client_message_id === clientMsgId ? { ...m, status: 'failed' } : m))
+        );
+      } else {
+        onMessageSent?.(conversationId, isVideo ? 'Sent a video' : 'Sent a photo');
+      }
+    } catch (err: any) {
+      console.error('[handleAttachmentSelect] Upload error:', err);
+      setState({ error: err?.message || 'Failed to upload attachment.' });
+    } finally {
+      setIsUploadingMedia(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  }
+
   // Handle message edit save
   async function handleSaveEdit() {
     if (!editingMessage || !editInput.trim()) return;
@@ -790,6 +862,25 @@ export default function MessageThread({
                         }`}
                       >
                         {/* Voice Note Player or Text Content */}
+                        {msg.metadata?.media_urls && msg.metadata.media_urls.length > 0 && !isDeleted && (
+                          <div className="mb-2 rounded-xl overflow-hidden max-w-sm">
+                            {msg.metadata.media_urls.map((url, i) => {
+                              const isVideo = url.endsWith('.mp4') || url.endsWith('.webm') || url.endsWith('.mov');
+                              return isVideo ? (
+                                <video key={i} src={url} controls className="rounded-xl max-h-60 w-full object-cover" />
+                              ) : (
+                                /* eslint-disable-next-line @next/next/no-img-element */
+                                <img
+                                  key={i}
+                                  src={url}
+                                  alt="Media attachment"
+                                  className="rounded-xl max-h-60 w-full object-cover cursor-pointer hover:opacity-95 transition-opacity"
+                                  onClick={() => window.open(url, '_blank')}
+                                />
+                              );
+                            })}
+                          </div>
+                        )}
                         {isVoice && !isDeleted ? (
                           <div className="min-w-[220px] sm:min-w-[260px]">
                             <AudioVoiceNotePlayer
@@ -1053,9 +1144,31 @@ export default function MessageThread({
             type="button"
             onClick={() => setIsRecordingVoice(true)}
             title="Record Voice Note"
-            className="p-2 md:p-2.5 rounded-xl text-slate-300 hover:text-brand-caribbeanSea hover:bg-white/5 border border-white/10 transition-all min-w-[38px] min-h-[38px] md:min-w-[44px] md:min-h-[44px] flex items-center justify-center"
+            className="p-2 md:p-2.5 rounded-xl text-slate-300 hover:text-brand-caribbeanSea hover:bg-white/5 border border-white/10 transition-all min-w-[38px] min-h-[38px] md:min-w-[44px] md:min-h-[44px] flex items-center justify-center cursor-pointer"
           >
             <Mic className="w-4 h-4 md:w-5 md:h-5 text-brand-caribbeanSea" />
+          </button>
+
+          {/* Media Attachment Button */}
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleAttachmentSelect}
+            accept="image/*,video/*"
+            className="hidden"
+          />
+          <button
+            type="button"
+            disabled={isUploadingMedia}
+            onClick={() => fileInputRef.current?.click()}
+            title="Attach Image or Video"
+            className="p-2 md:p-2.5 rounded-xl text-slate-300 hover:text-brand-caribbeanSea hover:bg-white/5 border border-white/10 disabled:opacity-40 transition-all min-w-[38px] min-h-[38px] md:min-w-[44px] md:min-h-[44px] flex items-center justify-center cursor-pointer"
+          >
+            {isUploadingMedia ? (
+              <Loader2 className="w-4 h-4 md:w-5 md:h-5 animate-spin text-brand-caribbeanSea" />
+            ) : (
+              <Paperclip className="w-4 h-4 md:w-5 md:h-5 text-slate-300 hover:text-brand-caribbeanSea" />
+            )}
           </button>
 
           {/* Text Input */}
