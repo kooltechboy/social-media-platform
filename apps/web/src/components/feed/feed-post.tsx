@@ -44,6 +44,7 @@ import MultiLinkContainer from '../media/multi-link-container';
 import UniversalContentCard from '../media/universal-content-card';
 import ShoppablePostWidget from '../shoppable-post-widget';
 import InteractivePollWidget from '../polls/interactive-poll-widget';
+import QuotePostCard from './quote-post-card';
 import { useTranslation, LOCALE_DETAILS, LOCALES, type Locale } from '@caribbean/localization';
 import type { FeedPostData } from '../feed-stream';
 
@@ -59,6 +60,7 @@ export interface FeedPostProps {
   customEmojiList?: Array<{ emoji: string; count: number; users: string[] }>;
   onShare: (post: FeedPostData) => void;
   onRepost?: (post: FeedPostData) => void;
+  onQuotePost?: (post: FeedPostData) => void;
   onDeletePost: (postId: string) => void;
   onReportPost: (postId: string) => void;
   onTipCreator: (target: { name: string; handle: string }) => void;
@@ -888,6 +890,11 @@ export default function FeedPost({
 
       {/* Interactive Poll Widget */}
       {post.poll && <InteractivePollWidget initialPoll={post.poll} currentUserId={currentUserId} />}
+
+      {/* Embedded Quote Post Card */}
+      {(post.sharedPost || post.sharedPostId) && (
+        <QuotePostCard quotedPost={post.sharedPost} />
+      )}
 
       {/* ────────────────────────────────────────────────────────── */}
       {/* 4. INTERACTION BAR                                        */}
