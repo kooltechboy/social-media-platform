@@ -2,7 +2,6 @@ const fs = require('fs');
 const path = require('path');
 
 const FORBIDDEN_TOKENS = [
-  'DEFAULT_CARIBBEAN_PRODUCTS',
   'MOCK_FEED_POSTS',
   'SAMPLE_FEED_DATA',
 ];

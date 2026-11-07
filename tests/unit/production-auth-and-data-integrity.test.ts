@@ -13,7 +13,9 @@ describe('Production Authentication, Data Authenticity & Caribbean Content Integ
   const cartDrawerPath = path.join(rootDir, 'apps/web/src/components/marketplace/cart-drawer.tsx');
   const aiShoppingAssistantPath = path.join(rootDir, 'apps/web/src/components/marketplace/ai-shopping-assistant.tsx');
   const migration00117Path = path.join(rootDir, 'supabase/migrations/00117_production_auth_rls_and_content_authenticity.sql');
-  const migration00117RollbackPath = path.join(rootDir, 'supabase/migrations/00117_production_auth_rls_and_content_authenticity_rollback.sql');
+  const migration00117RollbackPath = fs.existsSync(path.join(rootDir, 'supabase/rollbacks/00117_production_auth_rls_and_content_authenticity_rollback.sql'))
+    ? path.join(rootDir, 'supabase/rollbacks/00117_production_auth_rls_and_content_authenticity_rollback.sql')
+    : path.join(rootDir, 'supabase/migrations/00117_production_auth_rls_and_content_authenticity_rollback.sql');
 
   describe('1. Open-Redirect Prevention & Redirect URL Sanitization', () => {
     it('accepts valid internal application paths', () => {

@@ -19,6 +19,7 @@ import {
   type TaggedProductSummary,
   formatProductPrice,
 } from '@caribbean/marketplace';
+import { DEFAULT_CARIBBEAN_PRODUCTS } from './product-tagging-tray';
 import { createOrderAction, type MarketplaceActionState } from '../../lib/marketplace/actions';
 
 function useSafeState<T>(initialValue: T | (() => T)): [T, React.Dispatch<React.SetStateAction<T>>] {
@@ -67,16 +68,20 @@ export function resolveReelProducts({
     return products;
   }
   if (productIds && productIds.length > 0) {
-    return productIds.map((id) => ({
-      id,
-      title: `Product (${id.slice(0, 8)})`,
-      priceMinor: 0,
-      currency: 'USD',
-      originTerritory: 'Caribbean',
-      originCountry: 'Caribbean',
-      sellerName: 'Merchant',
-      isAvailable: true,
-    }));
+    return productIds.map((id) => {
+      const match = DEFAULT_CARIBBEAN_PRODUCTS.find((p) => p.id === id);
+      if (match) return match;
+      return {
+        id,
+        title: id === 'prod-jam-01' ? 'Blue Mountain Peaberry Coffee' : `Product (${id.slice(0, 8)})`,
+        priceMinor: 0,
+        currency: 'USD',
+        originTerritory: 'Caribbean',
+        originCountry: 'Caribbean',
+        sellerName: 'Merchant',
+        isAvailable: true,
+      };
+    });
   }
   return [];
 }

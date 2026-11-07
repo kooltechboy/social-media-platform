@@ -227,10 +227,10 @@ describe('TUKUBI-RTP-001 — Publishing, Media, Draft Lifecycle & Design System 
     it('preserves RETURNS JSONB and all 6 identity keys in migration 00108 get_available_identities while enforcing auth.uid() IDOR guard', async () => {
       const fs = await import('node:fs');
       const path = await import('node:path');
-      const sql = fs.readFileSync(
-        path.resolve(__dirname, '../../supabase/migrations/00108_phase2_security_rls_and_publishing_lifecycle.sql'),
-        'utf-8'
-      );
+      const migrationFile = fs.existsSync(path.resolve(__dirname, '../../supabase/migrations/00122_phase2_security_rls_and_publishing_lifecycle.sql'))
+        ? path.resolve(__dirname, '../../supabase/migrations/00122_phase2_security_rls_and_publishing_lifecycle.sql')
+        : path.resolve(__dirname, '../../supabase/migrations/00108_phase2_security_rls_and_publishing_lifecycle.sql');
+      const sql = fs.readFileSync(migrationFile, 'utf-8');
       expect(sql).toContain('CREATE OR REPLACE FUNCTION public.get_available_identities(p_user_id UUID)');
       expect(sql).toContain('RETURNS JSONB');
       expect(sql).not.toContain('RETURNS TABLE');
