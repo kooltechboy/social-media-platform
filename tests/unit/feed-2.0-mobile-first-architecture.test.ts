@@ -10,6 +10,7 @@ describe('TUKUBI Feed 2.0 Mobile-First Architecture & Interaction Suite', () => 
   const feedPostPath = path.join(rootDir, 'apps/web/src/components/feed/feed-post.tsx');
   const mobileCommentsSheetPath = path.join(rootDir, 'apps/web/src/components/feed/mobile-comments-sheet.tsx');
   const feedStreamPath = path.join(rootDir, 'apps/web/src/components/feed-stream.tsx');
+  const globalsCssPath = path.join(rootDir, 'apps/web/src/app/globals.css');
 
   describe('1. Mobile Header Architecture (AppHeader)', () => {
     it('positions hamburger menu trigger on the left of TukubiLogo on mobile', () => {
@@ -60,16 +61,24 @@ describe('TUKUBI Feed 2.0 Mobile-First Architecture & Interaction Suite', () => 
       expect(content).toContain("'communities'");
     });
 
-    it('renders mobile-first sticky tab bar with primary tabs', () => {
+    it('renders mobile-first sticky tab bar with primary tabs and secondary feeds selector', () => {
       const content = fs.readFileSync(homeDashboardPath, 'utf-8');
       expect(content).toContain('md:hidden sticky');
       expect(content).toContain('PRIMARY_FEED_TABS.map');
+      expect(content).toContain('isMobileSecondarySheetOpen');
+      expect(content).toContain('More Caribbean Streams');
     });
 
     it('features 1-tap streamlined composer pill on mobile', () => {
       const content = fs.readFileSync(homeDashboardPath, 'utf-8');
       expect(content).toContain('Share something with the Caribbean...');
       expect(content).toContain('setShowComposer');
+    });
+
+    it('renders compact circular Caribbean Stories/Moments rail for mobile and cinema rail on desktop', () => {
+      const content = fs.readFileSync(homeDashboardPath, 'utf-8');
+      expect(content).toContain('MomentsCinemaRail');
+      expect(content).not.toContain('<div className="hidden md:block">\n          <MomentsCinemaRail');
     });
   });
 
@@ -95,6 +104,17 @@ describe('TUKUBI Feed 2.0 Mobile-First Architecture & Interaction Suite', () => 
       const content = fs.readFileSync(feedPostPath, 'utf-8');
       expect(content).toContain('Send Tip to Creator');
       expect(content).toContain('onTipCreator');
+    });
+
+    it('implements double-tap to like with heart burst animation', () => {
+      const content = fs.readFileSync(feedPostPath, 'utf-8');
+      expect(content).toContain('handleMediaDoubleTap');
+      expect(content).toContain('showHeartBurst');
+      expect(content).toContain('animate-heartBurst');
+
+      const css = fs.readFileSync(globalsCssPath, 'utf-8');
+      expect(css).toContain('@keyframes heartBurst');
+      expect(css).toContain('.animate-heartBurst');
     });
   });
 
@@ -133,6 +153,13 @@ describe('TUKUBI Feed 2.0 Mobile-First Architecture & Interaction Suite', () => 
     it('passes onRepost callback to FeedPost instances', () => {
       const content = fs.readFileSync(feedStreamPath, 'utf-8');
       expect(content).toContain('onRepost={handleShare}');
+    });
+
+    it('implements realtime anti-jank staging queue and floating new posts pill', () => {
+      const content = fs.readFileSync(feedStreamPath, 'utf-8');
+      expect(content).toContain('pendingNewPosts');
+      expect(content).toContain('handleFlushPendingPosts');
+      expect(content).toContain('new Caribbean posts');
     });
   });
 });

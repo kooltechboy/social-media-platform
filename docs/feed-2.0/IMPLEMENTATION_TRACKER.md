@@ -47,5 +47,10 @@
   - [x] Fixed header with comment count & dismiss button
   - [x] Scrollable thread with nested replies
   - [x] Bottom sticky input bar with keyboard avoidance
-- [x] Verified in dedicated test suite `tests/unit/feed-2.0-mobile-first-architecture.test.ts` (16 tests pass)
+- [x] Mobile Feed UX Refinements (Phase 1 Polish):
+  - [x] Secondary Feeds Filter / "More" Selector Sheet (`Friends`, `Pages`, `Creators`, `Official`)
+  - [x] Double-tap on media to like with animated heart burst effect (`@keyframes heartBurst`)
+  - [x] Compact circular Caribbean Stories/Moments integration on mobile (`MomentsCinemaRail`)
+  - [x] Realtime anti-jank staging queue and floating "New Caribbean Posts" pill
+- [x] Verified in dedicated test suite `tests/unit/feed-2.0-mobile-first-architecture.test.ts` (19 tests pass)
 - [x] Verify zero scroll position loss on tab changes and modal closures

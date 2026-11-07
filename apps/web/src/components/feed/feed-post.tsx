@@ -164,6 +164,31 @@ export default function FeedPost({
   const [openUpward, setOpenUpward] = useState(false);
   const menuRef = React.useRef<HTMLDivElement>(null);
 
+  // ── Mobile Double-Tap to Like Gesture ──
+  const [showHeartBurst, setShowHeartBurst] = useState(false);
+  const lastTapRef = React.useRef<number>(0);
+
+  const handleMediaDoubleTap = () => {
+    const now = Date.now();
+    if (now - lastTapRef.current < 320) {
+      if (currentReaction !== 'like') {
+        onToggleReaction(post.id, 'like');
+      }
+      setShowHeartBurst(true);
+      if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+        try {
+          navigator.vibrate?.(15);
+        } catch {
+          // ignore vibrate on unsupported environments
+        }
+      }
+      setTimeout(() => setShowHeartBurst(false), 800);
+      lastTapRef.current = 0;
+    } else {
+      lastTapRef.current = now;
+    }
+  };
+
   React.useEffect(() => {
     if (!isMenuOpen) return;
     function handleClickOutside(event: MouseEvent) {
@@ -823,16 +848,31 @@ export default function FeedPost({
       )}
 
       {/* ────────────────────────────────────────────────────────── */}
-      {/* 3. POST MEDIA GALLERY                                     */}
+      {/* 3. POST MEDIA GALLERY (With Mobile Double-Tap to Like)    */}
       {/* ────────────────────────────────────────────────────────── */}
       {post.mediaUrls && post.mediaUrls.length > 0 && (
-        <TukubiGallery
-          mediaUrls={post.mediaUrls}
-          mediaItems={post.mediaItems}
-          altText={`Post by ${post.author}`}
-          authorName={post.author}
-          className="w-full"
-        />
+        <div
+          className="relative w-full rounded-2xl overflow-hidden select-none cursor-pointer"
+          onClick={handleMediaDoubleTap}
+        >
+          <TukubiGallery
+            mediaUrls={post.mediaUrls}
+            mediaItems={post.mediaItems}
+            altText={`Post by ${post.author}`}
+            authorName={post.author}
+            className="w-full"
+          />
+
+          {/* Animated Heart Burst on Double-Tap */}
+          {showHeartBurst && (
+            <div
+              className="absolute inset-0 z-30 pointer-events-none flex items-center justify-center bg-black/15 backdrop-blur-[1px]"
+              aria-hidden="true"
+            >
+              <Heart className="w-24 h-24 text-rose-500 fill-rose-500 drop-shadow-[0_4px_24px_rgba(244,63,94,0.7)] animate-heartBurst" />
+            </div>
+          )}
+        </div>
       )}
 
       {/* Universal Content & Rich Media Preview */}

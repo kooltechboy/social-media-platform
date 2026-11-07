@@ -34,6 +34,8 @@ import {
   Radio,
   CalendarPlus,
   Store,
+  ChevronDown,
+  X,
 } from 'lucide-react';
 import { type FeedMode } from '@caribbean/social';
 import UserAvatar from '../user-avatar';
@@ -192,6 +194,7 @@ export default function HomeDashboard({
   const [showComposer, setShowComposer] = useState(false);
   const [composerMode, setComposerMode] = useState<ComposerMode>('text');
   const [activeTab, setActiveTab] = useState<FeedMode>(initialMode);
+  const [isMobileSecondarySheetOpen, setIsMobileSecondarySheetOpen] = useState(false);
   const [feedPosts, setFeedPosts] = useState<FeedPostData[]>(initialPosts);
   const [currentCursor, setCurrentCursor] = useState<string | undefined>(nextCursor);
   const [isLoadingTab, setIsLoadingTab] = useState(false);
@@ -207,6 +210,7 @@ export default function HomeDashboard({
   }));
 
   const activeTabMeta = FEED_TABS.find((t) => t.id === activeTab) || FEED_TABS[0];
+  const activeSecondaryTab = SECONDARY_FEED_TABS.find((t) => t.id === activeTab);
 
   // Secondary creation shortcuts (icon buttons in the composer footer)
   const QUICK_ACTIONS = [
@@ -290,7 +294,7 @@ export default function HomeDashboard({
         {/* ── 1. Top Primary Feed Tabs (Mobile: Sticky directly below compact header) ── */}
         <div className="md:hidden sticky top-[var(--app-header-h,70px)] z-30 bg-[#070D1A]/95 backdrop-blur-xl border-b border-white/[0.08] -mx-3 px-3 pt-1">
           <nav aria-label="Mobile Feed Tabs">
-            <div className="flex items-center justify-between" role="tablist">
+            <div className="flex items-center justify-between gap-0.5" role="tablist">
               {PRIMARY_FEED_TABS.map((tab) => {
                 const isActive = activeTab === tab.id;
                 return (
@@ -301,7 +305,7 @@ export default function HomeDashboard({
                     aria-selected={isActive}
                     aria-controls={`feed-panel-${tab.id}`}
                     onClick={() => handleTabChange(tab)}
-                    className={`relative flex-1 text-center py-2.5 text-[13.5px] transition-colors ${
+                    className={`relative flex-1 text-center py-2.5 text-[13px] transition-colors ${
                       isActive
                         ? 'text-[#F8FAFC] font-semibold'
                         : 'text-[#94A3B8] font-medium hover:text-white'
@@ -311,15 +315,102 @@ export default function HomeDashboard({
                     {isActive && (
                       <span
                         aria-hidden="true"
-                        className="absolute left-2 right-2 bottom-0 h-[2.5px] rounded-full bg-gradient-to-r from-[#00C2A8] to-[#0EA5E9]"
+                        className="absolute left-1 right-1 bottom-0 h-[2.5px] rounded-full bg-gradient-to-r from-[#00C2A8] to-[#0EA5E9]"
                       />
                     )}
                   </button>
                 );
               })}
+
+              {/* Secondary Feeds Filter / "More" Selector */}
+              <button
+                type="button"
+                role="tab"
+                aria-selected={Boolean(activeSecondaryTab)}
+                aria-label="More feeds"
+                onClick={() => setIsMobileSecondarySheetOpen(true)}
+                className={`relative px-2 py-2.5 text-[13px] flex items-center justify-center gap-0.5 transition-colors shrink-0 ${
+                  activeSecondaryTab
+                    ? 'text-[#00C2A8] font-semibold'
+                    : 'text-[#94A3B8] font-medium hover:text-white'
+                }`}
+              >
+                <span>{activeSecondaryTab ? activeSecondaryTab.label : 'More'}</span>
+                <ChevronDown className="w-3.5 h-3.5 opacity-70" />
+                {activeSecondaryTab && (
+                  <span
+                    aria-hidden="true"
+                    className="absolute left-1 right-1 bottom-0 h-[2.5px] rounded-full bg-gradient-to-r from-[#00C2A8] to-[#0EA5E9]"
+                  />
+                )}
+              </button>
             </div>
           </nav>
         </div>
+
+        {/* ── Mobile Secondary Feeds Bottom Sheet ── */}
+        {isMobileSecondarySheetOpen && (
+          <div
+            className="fixed inset-0 z-[70] bg-black/80 backdrop-blur-sm flex items-end animate-fadeIn md:hidden"
+            role="dialog"
+            aria-modal="true"
+            aria-label="More Caribbean Streams"
+            onClick={() => setIsMobileSecondarySheetOpen(false)}
+          >
+            <div
+              className="w-full bg-[#0B1424] border-t border-white/[0.12] rounded-t-3xl p-4 pb-8 space-y-3 shadow-2xl animate-slideUp"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="w-10 h-1 rounded-full bg-white/20 mx-auto" aria-hidden="true" />
+              <div className="flex items-center justify-between pb-2 border-b border-white/[0.08]">
+                <h3 className="font-semibold text-[15px] text-[#F8FAFC]">
+                  More Caribbean Streams
+                </h3>
+                <button
+                  type="button"
+                  onClick={() => setIsMobileSecondarySheetOpen(false)}
+                  className="w-8 h-8 rounded-full bg-white/[0.06] text-[#94A3B8] hover:text-white flex items-center justify-center transition-colors"
+                  aria-label="Close"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              <div className="space-y-1.5 pt-1">
+                {SECONDARY_FEED_TABS.map((tab) => {
+                  const Icon = tab.icon;
+                  const isSelected = activeTab === tab.id;
+                  return (
+                    <button
+                      key={tab.id}
+                      type="button"
+                      onClick={() => {
+                        handleTabChange(tab as any);
+                        setIsMobileSecondarySheetOpen(false);
+                      }}
+                      className={`w-full flex items-center gap-3 p-3 rounded-2xl transition-all text-left ${
+                        isSelected
+                          ? 'bg-[#00C2A8]/12 border border-[#00C2A8]/30 text-white'
+                          : 'bg-white/[0.03] hover:bg-white/[0.06] border border-white/[0.05] text-[#94A3B8]'
+                      }`}
+                    >
+                      <span className={`w-9 h-9 rounded-xl flex items-center justify-center bg-white/[0.06] ${tab.color}`}>
+                        <Icon className="w-4.5 h-4.5" />
+                      </span>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between">
+                          <p className="font-semibold text-sm text-[#F8FAFC]">{tab.label}</p>
+                          {isSelected && <CheckCircle className="w-4 h-4 text-[#00C2A8]" />}
+                        </div>
+                        <p className="text-xs text-[#94A3B8] truncate">{tab.description}</p>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* ── 2. Mobile 1-Tap Sleek Composer Pill (Matches Proposed Mobile Experience) ── */}
         <div className="md:hidden tk-panel p-3">
@@ -362,8 +453,8 @@ export default function HomeDashboard({
           )}
         </div>
 
-        {/* ── Desktop Stories & Moments Cinema Rail (Hidden on mobile to prioritize first post) ── */}
-        <div className="hidden md:block">
+        {/* ── Caribbean Stories & Moments (Mobile: Compact circular avatars; Desktop: Cinema cards) ── */}
+        <div className="pt-0.5">
           <MomentsCinemaRail
             initialStories={liveStories || []}
             currentUserId={user.id}

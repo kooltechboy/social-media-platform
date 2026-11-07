@@ -35,6 +35,7 @@ import {
   Check,
   Users,
   Flame,
+  ArrowUp,
 } from 'lucide-react';
 import {
   toggleLikeAction,
@@ -157,6 +158,20 @@ export default function FeedStream({
   );
   const [currentCursor, setCurrentCursor] = useState<string | undefined>(nextCursor);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [pendingNewPosts, setPendingNewPosts] = useState<FeedPostData[]>([]);
+
+  const handleFlushPendingPosts = () => {
+    if (pendingNewPosts.length === 0) return;
+    setPosts((prev) => {
+      const existingIds = new Set(prev.map((p) => p.id));
+      const toAdd = pendingNewPosts.filter((p) => !existingIds.has(p.id));
+      return [...toAdd, ...prev];
+    });
+    setPendingNewPosts([]);
+    if (typeof window !== 'undefined') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
 
   useEffect(() => {
     setCurrentCursor(nextCursor);
@@ -489,10 +504,18 @@ export default function FeedStream({
                 linkPreviews: (postWithProfile as any).link_previews || (postWithProfile.link_preview ? [postWithProfile.link_preview] : []),
               };
 
-              setPosts((prev) => {
-                if (prev.some((p) => p.id === livePost.id)) return prev;
-                return [livePost, ...prev];
-              });
+              const isNearTop = typeof window !== 'undefined' ? window.scrollY < 140 : true;
+              if (isNearTop) {
+                setPosts((prev) => {
+                  if (prev.some((p) => p.id === livePost.id)) return prev;
+                  return [livePost, ...prev];
+                });
+              } else {
+                setPendingNewPosts((prev) => {
+                  if (prev.some((p) => p.id === livePost.id)) return prev;
+                  return [livePost, ...prev];
+                });
+              }
             }
           } catch {
             // Ignore realtime fetch errors
@@ -922,6 +945,25 @@ export default function FeedStream({
 
       {/* Feed Stream */}
       <div className="space-y-4">
+        {/* Floating New Posts Realtime Pill */}
+        {pendingNewPosts.length > 0 && (
+          <div className="sticky top-[calc(var(--app-header-h,70px)+44px)] z-20 flex justify-center py-1 animate-fadeIn">
+            <button
+              type="button"
+              onClick={handleFlushPendingPosts}
+              className="px-4 py-2 rounded-full bg-gradient-to-r from-[#00C2A8] to-[#0EA5E9] text-[#041019] text-xs font-bold shadow-xl hover:shadow-[#00C2A8]/25 active:scale-95 transition-all flex items-center gap-1.5 cursor-pointer"
+              aria-label="Load new posts"
+            >
+              <ArrowUp className="w-3.5 h-3.5 stroke-[2.8]" />
+              <span>
+                {pendingNewPosts.length === 1
+                  ? '1 new Caribbean post'
+                  : `${pendingNewPosts.length} new Caribbean posts`}
+              </span>
+            </button>
+          </div>
+        )}
+
         {displayedPosts.length === 0 ? (
           <div className="p-8 sm:p-12 text-center glass-aerospace rounded-3xl space-y-4 border border-white/10 shadow-xl animate-fadeIn">
             {mode === 'following' ? (
