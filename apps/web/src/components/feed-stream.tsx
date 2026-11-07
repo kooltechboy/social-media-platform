@@ -387,7 +387,7 @@ export default function FeedStream({
   }
 
   // Creator Tip state
-  const [tipTarget, setTipTarget] = useState<{ name: string; handle: string } | null>(null);
+  const [tipTarget, setTipTarget] = useState<{ name: string; handle: string; creatorId?: string } | null>(null);
 
   // 1. Listen for immediate post-creation events from UniversalComposer
   useEffect(() => {
@@ -1106,6 +1106,7 @@ export default function FeedStream({
           onClose={() => setTipTarget(null)}
           creatorName={tipTarget.name}
           creatorHandle={tipTarget.handle}
+          creatorId={tipTarget.creatorId}
         />
       )}
 

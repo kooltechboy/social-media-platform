@@ -1,9 +1,10 @@
 'use client';
 
-import React, { useState } from 'react';
-import { Radio, Sparkles, X, Check, ShieldCheck, DollarSign, Users, Award, Loader2 } from 'lucide-react';
+import React, { useState, useTransition } from 'react';
+import { Radio, Sparkles, X, Check, ShieldCheck, DollarSign, Users, Award, Loader2, AlertCircle } from 'lucide-react';
 import { applyFees, DEFAULT_FEES } from '@caribbean/creator';
 import { getCreatorLaunchMessaging } from '@caribbean/payments';
+import { createCreatorPlanAction } from '@/lib/creator/monetization-actions';
 
 interface CreatorTierModalProps {
   isOpen: boolean;
@@ -15,8 +16,9 @@ export default function CreatorTierModal({ isOpen, onClose, creatorName }: Creat
   const [tierPrice, setTierPrice] = useState(499); // $4.99 in minor units
   const [tierName, setTierName] = useState('VIP Patron Circle');
   const [perks, setPerks] = useState<string>('Exclusive behind-the-scenes streams\nEarly access to music & carnival riddims\nVIP subscriber badge & private chat access');
-  const [isSaving, setIsSaving] = useState(false);
+  const [isPending, startTransition] = useTransition();
   const [isSaved, setIsSaved] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const launchInfo = getCreatorLaunchMessaging();
 
@@ -28,17 +30,33 @@ export default function CreatorTierModal({ isOpen, onClose, creatorName }: Creat
   const pspFee = (breakdown.processingFeeMinor / 100).toFixed(2);
   const net = (breakdown.netToCreatorMinor / 100).toFixed(2);
 
-  async function handleSave(e: React.FormEvent) {
+  function handleSave(e: React.FormEvent) {
     e.preventDefault();
-    setIsSaving(true);
-    setTimeout(() => {
-      setIsSaving(false);
-      setIsSaved(true);
-      setTimeout(() => {
-        setIsSaved(false);
-        onClose();
-      }, 2000);
-    }, 1000);
+    setErrorMsg(null);
+
+    const formData = new FormData();
+    formData.set('name', tierName.trim());
+    formData.set('price', (tierPrice / 100).toFixed(2));
+    formData.set('billingInterval', 'monthly');
+    formData.set('benefits', perks);
+    formData.set('description', `Exclusive membership tier for ${creatorName}`);
+
+    startTransition(async () => {
+      try {
+        const res = await createCreatorPlanAction(formData);
+        if (!res.success) {
+          setErrorMsg(res.error || 'Failed to publish membership tier.');
+        } else {
+          setIsSaved(true);
+          setTimeout(() => {
+            setIsSaved(false);
+            onClose();
+          }, 1500);
+        }
+      } catch (err: any) {
+        setErrorMsg(err?.message || 'Network error saving tier.');
+      }
+    });
   }
 
   return (
@@ -47,7 +65,7 @@ export default function CreatorTierModal({ isOpen, onClose, creatorName }: Creat
         <button
           type="button"
           onClick={onClose}
-          className="absolute top-4 right-4 p-1.5 rounded-full text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+          className="absolute top-4 right-4 p-1.5 rounded-full text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
         >
           <X className="w-5 h-5" />
         </button>
@@ -62,7 +80,7 @@ export default function CreatorTierModal({ isOpen, onClose, creatorName }: Creat
           </div>
         </div>
 
-        {/* Promotional Launch Banner (Directives 3, 4, 6) */}
+        {/* Promotional Launch Banner */}
         <div className="p-3.5 rounded-2xl bg-purple-500/10 border border-purple-500/30 text-purple-200 text-xs space-y-1">
           <div className="flex items-center gap-1.5 font-bold text-purple-300">
             <Sparkles className="w-3.5 h-3.5 text-purple-400" />
@@ -72,6 +90,13 @@ export default function CreatorTierModal({ isOpen, onClose, creatorName }: Creat
             {launchInfo.bannerBody}
           </p>
         </div>
+
+        {errorMsg && (
+          <div className="p-3 rounded-2xl bg-rose-500/15 border border-rose-500/30 text-rose-300 text-xs flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 shrink-0 text-rose-400" />
+            <span>{errorMsg}</span>
+          </div>
+        )}
 
         {isSaved ? (
           <div className="py-8 text-center space-y-3">
@@ -108,7 +133,7 @@ export default function CreatorTierModal({ isOpen, onClose, creatorName }: Creat
                     key={opt.minor}
                     type="button"
                     onClick={() => setTierPrice(opt.minor)}
-                    className={`py-2 rounded-xl border text-xs font-black transition-all ${
+                    className={`py-2 rounded-xl border text-xs font-black transition-all cursor-pointer ${
                       tierPrice === opt.minor
                         ? 'border-brand-caribbeanSea bg-brand-caribbeanSea/20 text-brand-caribbeanSea'
                         : 'border-slate-800 bg-slate-900/60 text-slate-400'
@@ -162,10 +187,10 @@ export default function CreatorTierModal({ isOpen, onClose, creatorName }: Creat
 
             <button
               type="submit"
-              disabled={isSaving}
-              className="w-full py-3 rounded-2xl bg-gradient-to-r from-brand-caribbeanSea via-brand-sunriseCoral to-brand-goldenHour font-black text-slate-950 text-xs uppercase tracking-wider transition-all disabled:opacity-50 flex items-center justify-center gap-2 shadow-lg"
+              disabled={isPending}
+              className="w-full py-3 rounded-2xl bg-gradient-to-r from-brand-caribbeanSea via-brand-sunriseCoral to-brand-goldenHour font-black text-slate-950 text-xs uppercase tracking-wider transition-all disabled:opacity-50 flex items-center justify-center gap-2 shadow-lg cursor-pointer"
             >
-              {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Publish Membership Tier'}
+              {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Publish Membership Tier'}
             </button>
           </form>
         )}

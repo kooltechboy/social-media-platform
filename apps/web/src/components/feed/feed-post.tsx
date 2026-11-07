@@ -63,7 +63,7 @@ export interface FeedPostProps {
   onQuotePost?: (post: FeedPostData) => void;
   onDeletePost: (postId: string) => void;
   onReportPost: (postId: string) => void;
-  onTipCreator: (target: { name: string; handle: string }) => void;
+  onTipCreator: (target: { name: string; handle: string; creatorId?: string }) => void;
   onHidePost?: (postId: string, reason: 'hide' | 'not_interested') => void;
   onUnhidePost?: (postId: string) => void;
   onTogglePin?: (postId: string, isPinned: boolean) => void;
@@ -557,7 +557,7 @@ export default function FeedPost({
                 <button
                   type="button"
                   onClick={() => {
-                    onTipCreator({ name: post.author, handle: post.handle });
+                    onTipCreator({ name: post.author, handle: post.handle, creatorId: post.authorId });
                     setIsMenuOpen(false);
                   }}
                   className="w-full text-left px-3 py-2.5 rounded-xl text-brand-goldenHour hover:bg-brand-goldenHour/10 flex items-center gap-2.5 font-semibold transition-colors min-h-[40px]"
