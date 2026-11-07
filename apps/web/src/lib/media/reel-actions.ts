@@ -326,3 +326,157 @@ export async function unsaveReelAction(reelId: string): Promise<ReelActionResult
   return { success: true, data: { saved: false } };
 }
 
+// ===== KEYSET CURSOR PAGINATION =====
+
+export interface ReelKeysetCursor {
+  createdAt: string;
+  id: string;
+}
+
+export async function fetchMoreReelsAction(params: {
+  cursor?: ReelKeysetCursor;
+  limit?: number;
+  tab?: string;
+  category?: string;
+  country?: string;
+}): Promise<{
+  reels: any[];
+  nextCursor: ReelKeysetCursor | null;
+  error?: string | null;
+}> {
+  const supabase = await createSupabaseServerClient();
+  if (!supabase) return { reels: [], nextCursor: null, error: 'Database unavailable.' };
+
+  const user = await getCurrentUser();
+  const limit = Math.min(Math.max(params.limit || 20, 1), 50);
+  const currentTab = params.tab || 'for_you';
+
+  let query = supabase
+    .from('videos')
+    .select('id, title, storage_path, duration_seconds, view_count, likes_count, comments_count, audio_track, sound_id, location_tag, country_id, captions, created_at, profiles(id, display_name, username, avatar_url)')
+    .eq('video_kind', 'reel')
+    .eq('visibility', 'public')
+    .order('created_at', { ascending: false })
+    .order('id', { ascending: false })
+    .limit(limit);
+
+  if (params.cursor?.createdAt) {
+    query = query.lt('created_at', params.cursor.createdAt);
+  }
+
+  if (currentTab === 'following' && user) {
+    const { data: followRows } = await supabase
+      .from('follows')
+      .select('following_id')
+      .eq('follower_id', user.id);
+
+    const followingIds = (followRows || []).map((f) => f.following_id);
+    if (followingIds.length > 0) {
+      query = query.in('creator_id', followingIds);
+    } else {
+      return { reels: [], nextCursor: null };
+    }
+  } else if (currentTab === 'caribbean') {
+    if (params.country) {
+      query = query.or(`location_tag.ilike.%${params.country}%,title.ilike.%${params.country}%`);
+    } else {
+      query = query.not('location_tag', 'is', null);
+    }
+  }
+
+  if (params.category) {
+    query = query.ilike('title', `%${params.category}%`);
+  }
+
+  const { data: dbVideos, error } = await query;
+  if (error) {
+    return { reels: [], nextCursor: null, error: error.message };
+  }
+
+  const validVideos = (dbVideos || []).filter(
+    (v: any) => typeof v.storage_path === 'string' && v.storage_path.trim().length > 0
+  );
+
+  let likedReelIds = new Set<string>();
+  if (user && validVideos.length > 0) {
+    const videoIds = validVideos.map((v) => v.id);
+    const { data: likedRows } = await supabase
+      .from('video_views')
+      .select('video_id')
+      .eq('viewer_id', user.id)
+      .eq('completed', true)
+      .in('video_id', videoIds);
+
+    likedReelIds = new Set((likedRows || []).map((r) => r.video_id));
+  }
+
+  const gradients = [
+    'from-purple-900/60 via-slate-900 to-[#070D1A]',
+    'from-amber-900/60 via-slate-900 to-[#070D1A]',
+    'from-sky-900/60 via-slate-900 to-[#070D1A]',
+    'from-rose-900/60 via-slate-900 to-[#070D1A]',
+  ];
+
+  const reels = validVideos.map((v: any, index: number) => {
+    const p = v.profiles;
+    const durationSecs = v.duration_seconds || 30;
+    return {
+      id: v.id,
+      title: v.title,
+      creatorId: p?.id,
+      creator: p?.display_name || (p?.username ? `@${p.username}` : 'Creator'),
+      handle: p?.username || '',
+      views: `${(v.view_count || 0).toLocaleString()} views`,
+      likes: String(v.likes_count || 0),
+      comments: String(v.comments_count || 0),
+      sound: v.audio_track || 'Original Caribbean Audio',
+      soundId: v.sound_id || undefined,
+      location: v.location_tag || '',
+      duration: `${Math.floor(durationSecs / 60)}:${String(durationSecs % 60).padStart(2, '0')}`,
+      gradient: gradients[index % gradients.length],
+      videoUrl: v.storage_path,
+      initialLiked: likedReelIds.has(v.id),
+      captions: v.captions && Object.keys(v.captions).length > 0 ? v.captions : undefined,
+    };
+  });
+
+  const nextCursor: ReelKeysetCursor | null =
+    validVideos.length >= limit
+      ? {
+          createdAt: validVideos[validVideos.length - 1].created_at,
+          id: validVideos[validVideos.length - 1].id,
+        }
+      : null;
+
+  return { reels, nextCursor };
+}
+
+// ===== CREATOR VIDEO MANAGEMENT =====
+
+export async function deleteVideoAction(videoId: string): Promise<ReelActionResult> {
+  const user = await getCurrentUser();
+  if (!user) return { success: false, error: 'Sign in to delete content.' };
+
+  const supabase = await createSupabaseServerClient();
+  if (!supabase) return { success: false, error: 'Database unavailable.' };
+
+  const { data: video } = await supabase
+    .from('videos')
+    .select('creator_id')
+    .eq('id', videoId)
+    .maybeSingle();
+
+  if (!video) return { success: false, error: 'Video not found.' };
+  if (video.creator_id !== user.id) {
+    return { success: false, error: 'You are not authorized to delete this video.' };
+  }
+
+  const { error } = await supabase.from('videos').delete().eq('id', videoId);
+  if (error) return { success: false, error: error.message };
+
+  revalidatePath('/reels');
+  revalidatePath('/shorts');
+  revalidatePath('/creator-studio/videos');
+  return { success: true };
+}
+

@@ -16,6 +16,8 @@ import {
   recordReelViewAction,
   saveReelAction,
   unsaveReelAction,
+  fetchMoreReelsAction,
+  type ReelKeysetCursor,
 } from '../../lib/media/reel-actions';
 import { followAction, unfollowAction } from '../../lib/social/profile-actions';
 import UseThisSoundButton from '../sounds/use-this-sound-button';
@@ -446,6 +448,32 @@ export default function ReelsFeedViewer({ initialReels, user }: ReelsFeedViewerP
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [activeShareReelId, setActiveShareReelId] = useState<string | null>(null);
   const [copiedLink, setCopiedLink] = useState(false);
+  const [cursor, setCursor] = useState<ReelKeysetCursor | null>(null);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+
+  const loadMoreReels = useCallback(async () => {
+    if (isLoadingMore || !hasMore || reels.length === 0) return;
+    setIsLoadingMore(true);
+    try {
+      const lastReel = reels[reels.length - 1];
+      const res = await fetchMoreReelsAction({
+        cursor: cursor || { createdAt: new Date().toISOString(), id: lastReel.id },
+        tab: currentTab,
+      });
+      if (res.reels && res.reels.length > 0) {
+        setReels((prev) => [...prev, ...res.reels]);
+        setCursor(res.nextCursor);
+        setHasMore(Boolean(res.nextCursor));
+      } else {
+        setHasMore(false);
+      }
+    } catch {
+      setHasMore(false);
+    } finally {
+      setIsLoadingMore(false);
+    }
+  }, [isLoadingMore, hasMore, reels, cursor, currentTab]);
 
   useEffect(() => {
     const options = { root: null, rootMargin: '0px', threshold: 0.6 };
@@ -456,6 +484,10 @@ export default function ReelsFeedViewer({ initialReels, user }: ReelsFeedViewerP
           if (id) {
             setActiveReelId(id);
             void recordReelViewAction(id, 3);
+            const index = reels.findIndex((r) => r.id === id);
+            if (index >= reels.length - 2) {
+              void loadMoreReels();
+            }
           }
         }
       });
@@ -463,7 +495,7 @@ export default function ReelsFeedViewer({ initialReels, user }: ReelsFeedViewerP
     const elements = document.querySelectorAll('.reel-container');
     elements.forEach((el) => observer.observe(el));
     return () => observer.disconnect();
-  }, [reels]);
+  }, [reels, loadMoreReels]);
 
   const toggleMute = useCallback(() => setIsMuted(prev => !prev), []);
 

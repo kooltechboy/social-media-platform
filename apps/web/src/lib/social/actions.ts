@@ -1184,6 +1184,43 @@ export async function deleteStoryAction(storyId: string): Promise<{ success: boo
   return { success: true, error: null };
 }
 
+/**
+ * Adds or updates an emoji quick-reaction to a Story.
+ */
+export async function reactToStoryAction(
+  storyId: string,
+  emoji: string
+): Promise<{ success: boolean; error: string | null }> {
+  const user = await getCurrentUser();
+  if (!user) return { success: false, error: 'Unauthorized' };
+
+  const validEmojis = ['❤️', '🔥', '😂', '😮', '😢', '👏', '🌴', '🎉'];
+  if (!validEmojis.includes(emoji)) {
+    return { success: false, error: 'Invalid emoji reaction' };
+  }
+
+  const supabase = await createSupabaseServerClient();
+  if (!supabase) return { success: false, error: 'Database not configured' };
+
+  const { error } = await supabase
+    .from('story_reactions')
+    .upsert(
+      {
+        story_id: storyId,
+        reactor_id: user.id,
+        emoji,
+        created_at: new Date().toISOString(),
+      },
+      { onConflict: 'story_id,reactor_id' }
+    );
+
+  if (error) {
+    return { success: false, error: error.message };
+  }
+
+  return { success: true, error: null };
+}
+
 export async function toggleLikeAction(postId: string): Promise<{ liked: boolean; likesCount: number; error: string | null }> {
   const res = await toggleReactionAction(postId, 'like');
   if (res.error) {

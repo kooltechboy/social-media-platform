@@ -16,6 +16,8 @@ import {
   recordShortViewAction,
   saveShortAction,
   unsaveShortAction,
+  fetchMoreShortsAction,
+  type ShortKeysetCursor,
 } from '../../lib/media/short-actions';
 
 interface CommentItem {
@@ -114,7 +116,36 @@ export default function ShortsFeedViewer({ initialShorts, user }: ShortsFeedView
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [activeReportShortId, setActiveReportShortId] = useState<string | null>(null);
 
-  // IntersectionObserver for active Short
+  // Keyset cursor pagination state
+  const [cursor, setCursor] = useState<ShortKeysetCursor | null>(null);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+
+  const loadMoreShorts = useCallback(async () => {
+    if (isLoadingMore || !hasMore || shorts.length === 0) return;
+    setIsLoadingMore(true);
+    try {
+      const lastShort = shorts[shorts.length - 1];
+      const res = await fetchMoreShortsAction({
+        cursor: cursor || { createdAt: new Date().toISOString(), id: lastShort.id },
+        tab: currentTab,
+        category: currentCategory,
+      });
+      if (res.shorts && res.shorts.length > 0) {
+        setShorts((prev) => [...prev, ...res.shorts]);
+        setCursor(res.nextCursor);
+        setHasMore(Boolean(res.nextCursor));
+      } else {
+        setHasMore(false);
+      }
+    } catch {
+      setHasMore(false);
+    } finally {
+      setIsLoadingMore(false);
+    }
+  }, [isLoadingMore, hasMore, shorts, cursor, currentTab, currentCategory]);
+
+  // IntersectionObserver for active Short & infinite scroll
   useEffect(() => {
     const options = { root: null, rootMargin: '0px', threshold: 0.6 };
     const observer = new IntersectionObserver((entries) => {
@@ -124,6 +155,10 @@ export default function ShortsFeedViewer({ initialShorts, user }: ShortsFeedView
           if (id) {
             setActiveShortId(id);
             void recordShortViewAction(id, 3);
+            const index = shorts.findIndex((s) => s.id === id);
+            if (index >= shorts.length - 2) {
+              void loadMoreShorts();
+            }
           }
         }
       });
@@ -131,7 +166,7 @@ export default function ShortsFeedViewer({ initialShorts, user }: ShortsFeedView
     const elements = document.querySelectorAll('.short-container');
     elements.forEach((el) => observer.observe(el));
     return () => observer.disconnect();
-  }, [shorts]);
+  }, [shorts, loadMoreShorts]);
 
   const toggleMute = useCallback(() => setIsMuted(prev => !prev), []);
 

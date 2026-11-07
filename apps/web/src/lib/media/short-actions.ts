@@ -562,3 +562,156 @@ export async function fetchUserManagedPagesAction(): Promise<{ id: string; name:
   }
 }
 
+// ===== KEYSET CURSOR PAGINATION =====
+
+export interface ShortKeysetCursor {
+  createdAt: string;
+  id: string;
+}
+
+export async function fetchMoreShortsAction(params: {
+  cursor?: ShortKeysetCursor;
+  limit?: number;
+  tab?: string;
+  category?: string;
+  country?: string;
+}): Promise<{
+  shorts: any[];
+  nextCursor: ShortKeysetCursor | null;
+  error?: string | null;
+}> {
+  const supabase = await createSupabaseServerClient();
+  if (!supabase) return { shorts: [], nextCursor: null, error: 'Database unavailable.' };
+
+  const user = await getCurrentUser();
+  const limit = Math.min(Math.max(params.limit || 20, 1), 50);
+  const currentTab = params.tab || 'for_you';
+
+  let followingIds: string[] | null = null;
+  if (currentTab === 'following' && user) {
+    const { data: followRows } = await supabase
+      .from('follows')
+      .select('following_id')
+      .eq('follower_id', user.id);
+    followingIds = (followRows || []).map((f) => f.following_id);
+    if (!followingIds || followingIds.length === 0) {
+      return { shorts: [], nextCursor: null };
+    }
+  }
+
+  const ENHANCED_SELECT = `
+    id, title, storage_path, thumbnail_path, duration_seconds, view_count, likes_count,
+    comments_count, audio_track, sound_id, location_tag, country_id, category, captions,
+    created_at, page_id, creator_id,
+    profiles(id, display_name, username, avatar_url, is_verified),
+    businesses:page_id(id, name, slug, avatar_url, is_verified)
+  `;
+
+  let query: any = supabase
+    .from('videos')
+    .select(ENHANCED_SELECT)
+    .in('video_kind', ['short', 'reel'])
+    .eq('visibility', 'public')
+    .eq('moderation_status', 'approved')
+    .limit(limit);
+
+  if (params.cursor?.createdAt) {
+    query = query.lt('created_at', params.cursor.createdAt);
+  }
+
+  if (currentTab === 'following' && followingIds) {
+    query = query.in('creator_id', followingIds).order('created_at', { ascending: false });
+  } else if (currentTab === 'trending') {
+    query = query.order('likes_count', { ascending: false }).order('view_count', { ascending: false });
+  } else if (currentTab === 'caribbean') {
+    if (params.country) {
+      query = query.or(`location_tag.ilike.%${params.country}%,title.ilike.%${params.country}%`).order('created_at', { ascending: false });
+    } else {
+      query = query.not('location_tag', 'is', null).order('created_at', { ascending: false });
+    }
+  } else {
+    query = query.order('created_at', { ascending: false });
+  }
+
+  if (params.category) {
+    query = query.eq('category', params.category);
+  }
+
+  const { data: dbVideos, error } = await query;
+  if (error) {
+    return { shorts: [], nextCursor: null, error: error.message };
+  }
+
+  const validVideos = (dbVideos || []).filter(
+    (v: any) => typeof v.storage_path === 'string' && v.storage_path.trim().length > 0
+  );
+
+  let likedShortIds = new Set<string>();
+  if (user && validVideos.length > 0) {
+    const videoIds: string[] = validVideos.map((v: any) => v.id);
+    const { data: likedRows } = await supabase
+      .from('video_views')
+      .select('video_id')
+      .eq('viewer_id', user.id)
+      .eq('completed', true)
+      .in('video_id', videoIds);
+
+    likedShortIds = new Set((likedRows || []).map((r) => r.video_id));
+  }
+
+  const gradients = [
+    'from-purple-900/60 via-slate-900 to-[#070D1A]',
+    'from-amber-900/60 via-slate-900 to-[#070D1A]',
+    'from-sky-900/60 via-slate-900 to-[#070D1A]',
+    'from-rose-900/60 via-slate-900 to-[#070D1A]',
+    'from-emerald-900/60 via-slate-900 to-[#070D1A]',
+  ];
+
+  const shorts = validVideos.map((v: any, index: number) => {
+    const p = v.profiles;
+    const b = v.businesses;
+    const durationSecs = v.duration_seconds || 30;
+
+    const creatorName = b?.name || p?.display_name || (p?.username ? `@${p.username}` : 'Caribbean Creator');
+    const handle = (b?.slug || p?.username || '').replace(/^@+/, '');
+    const avatarUrl = b?.avatar_url || p?.avatar_url || null;
+    const isVerified = b?.is_verified || p?.is_verified || false;
+
+    return {
+      id: v.id,
+      title: v.title,
+      creatorId: v.creator_id || p?.id,
+      creator: creatorName,
+      handle,
+      avatarUrl,
+      isVerified,
+      pageId: b?.id || null,
+      pageName: b?.name || null,
+      pageSlug: b?.slug || null,
+      views: `${(v.view_count || 0).toLocaleString()} views`,
+      likes: String(v.likes_count || 0),
+      comments: String(v.comments_count || 0),
+      sound: v.audio_track || 'Original Caribbean Audio',
+      soundId: v.sound_id || undefined,
+      location: v.location_tag || '',
+      category: v.category || 'culture',
+      duration: `${Math.floor(durationSecs / 60)}:${String(durationSecs % 60).padStart(2, '0')}`,
+      gradient: gradients[index % gradients.length],
+      videoUrl: v.storage_path,
+      thumbnailUrl: v.thumbnail_path || undefined,
+      initialLiked: likedShortIds.has(v.id),
+      captions: v.captions && Object.keys(v.captions).length > 0 ? v.captions : undefined,
+    };
+  });
+
+  const nextCursor: ShortKeysetCursor | null =
+    validVideos.length >= limit
+      ? {
+          createdAt: validVideos[validVideos.length - 1].created_at,
+          id: validVideos[validVideos.length - 1].id,
+        }
+      : null;
+
+  return { shorts, nextCursor };
+}
+

@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { X, Pause, Play } from 'lucide-react';
+import { recordStoryViewAction, reactToStoryAction } from '../../lib/social/actions';
 
 export interface StoryViewerModalProps {
   stories: Array<{
@@ -24,8 +25,25 @@ export default function StoryViewerModal({ stories, initialIndex = 0, onClose }:
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
   const [progress, setProgress] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
+  const [reactionToast, setReactionToast] = useState<string | null>(null);
   
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Automatically record story view for current story
+  useEffect(() => {
+    const active = stories[currentIndex];
+    if (active?.id) {
+      void recordStoryViewAction(active.id);
+    }
+  }, [currentIndex, stories]);
+
+  const handleReaction = async (emoji: string) => {
+    const active = stories[currentIndex];
+    if (!active?.id) return;
+    setReactionToast(`${emoji} Sent!`);
+    setTimeout(() => setReactionToast(null), 1800);
+    await reactToStoryAction(active.id, emoji);
+  };
 
   useEffect(() => {
     setCurrentIndex(initialIndex);
@@ -170,15 +188,40 @@ export default function StoryViewerModal({ stories, initialIndex = 0, onClose }:
           />
         </div>
 
-        {/* Bottom Reply Area */}
-        <div className="absolute bottom-0 inset-x-0 p-4 z-20 bg-gradient-to-t from-black/80 to-transparent pointer-events-auto">
-          <input
-            type="text"
-            placeholder={`Reply to ${currentStory.creatorName}...`}
-            onKeyDown={handleReplySubmit}
-            onClick={(e) => e.stopPropagation()}
-            className="w-full bg-black/40 text-white border border-white/30 rounded-full px-5 py-3 outline-none focus:border-white transition-colors"
-          />
+        {/* Bottom Reply Area & Quick Reactions */}
+        <div className="absolute bottom-0 inset-x-0 p-4 z-20 bg-gradient-to-t from-black/85 via-black/60 to-transparent pointer-events-auto flex flex-col gap-2.5">
+          {/* Quick Reaction Emojis */}
+          <div className="flex items-center justify-around px-2">
+            {['❤️', '🔥', '😂', '😮', '👏', '🌴'].map((emoji) => (
+              <button
+                key={emoji}
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleReaction(emoji);
+                }}
+                className="text-2xl transform active:scale-125 hover:scale-110 transition-transform p-1 cursor-pointer"
+                aria-label={`React with ${emoji}`}
+              >
+                {emoji}
+              </button>
+            ))}
+          </div>
+
+          <div className="relative flex items-center">
+            <input
+              type="text"
+              placeholder={`Reply to ${currentStory.creatorName}...`}
+              onKeyDown={handleReplySubmit}
+              onClick={(e) => e.stopPropagation()}
+              className="w-full bg-black/40 text-white text-xs sm:text-sm border border-white/30 rounded-full px-5 py-2.5 outline-none focus:border-white transition-colors"
+            />
+            {reactionToast && (
+              <span className="absolute right-4 text-xs font-bold text-brand-goldenHour animate-bounce pointer-events-none">
+                {reactionToast}
+              </span>
+            )}
+          </div>
         </div>
       </div>
     </div>
